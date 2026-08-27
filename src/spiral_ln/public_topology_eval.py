@@ -80,6 +80,7 @@ class PublicTopologyEvalConfig:
     online_risk_penalty_msat: float = 5_000.0
     connector_capital: int = 120_000
     connector_bond_fraction: float = 0.20
+    seed_offset: int = 0
 
     def __post_init__(self) -> None:
         if not 2 <= self.topology_sample_count or not 1 <= self.calibration_sample_count < self.topology_sample_count:
@@ -98,6 +99,8 @@ class PublicTopologyEvalConfig:
             raise ValueError("route attempt budget exceeds the candidate path limit")
         if self.connector_capital <= 0 or not 0 <= self.connector_bond_fraction <= 1:
             raise ValueError("connector capital or bond fraction is invalid")
+        if self.seed_offset < 0:
+            raise ValueError("seed_offset must be nonnegative")
 
 
 @dataclass(frozen=True)
@@ -347,6 +350,7 @@ def load_config(path: str | Path) -> PublicTopologyEvalConfig:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     data.pop("schema_version", None)
     data.pop("description", None)
+    data.pop("preregistered_hypotheses", None)
     if "amounts" in data:
         data["amounts"] = tuple(int(value) for value in data["amounts"])
     return PublicTopologyEvalConfig(**data)
@@ -363,8 +367,9 @@ def run_episode(
     config: PublicTopologyEvalConfig,
     base_catalog: PathCatalog | None = None,
 ) -> PublicEvalRow:
-    capacity_seed = topology_index
-    balance_seed = 10_000 * topology_index + balance_draw
+    experiment_seed = config.seed_offset + topology_index
+    capacity_seed = experiment_seed
+    balance_seed = 10_000 * experiment_seed + balance_draw
     state = network_state_from_public_sample(
         sample,
         capacity_seed,
@@ -377,7 +382,7 @@ def run_episode(
     )
     demands, training_hotspot, shifted_hotspot = public_demand_stream(
         sample.graph,
-        seed=20_000 * topology_index + balance_draw,
+        seed=20_000 * experiment_seed + balance_draw,
         steps=config.steps,
         holdout_start=config.evaluation_start,
         regime=demand_regime,
@@ -400,7 +405,7 @@ def run_episode(
                 state,
                 capital_policy,
                 tracker,
-                seed=30_000 * topology_index + balance_draw,
+                seed=30_000 * experiment_seed + balance_draw,
                 amount=config.connector_capital,
                 bond_fraction=config.connector_bond_fraction,
             )
@@ -514,6 +519,35 @@ def _paired(
     }
 
 
+def _paired_temporal_change(
+    rows: list[PublicEvalRow],
+    left: tuple[str, str],
+    right: tuple[str, str],
+    demand_regime: str,
+) -> dict[str, object]:
+    left_rows = _condition_rows(rows, *left, demand_regime=demand_regime)
+    right_rows = _condition_rows(rows, *right, demand_regime=demand_regime)
+    keys = sorted(set(left_rows) & set(right_rows))
+    differences = [
+        (
+            left_rows[key].late_evaluation.success_rate
+            - left_rows[key].early_evaluation.success_rate
+        )
+        - (
+            right_rows[key].late_evaluation.success_rate
+            - right_rows[key].early_evaluation.success_rate
+        )
+        for key in keys
+    ]
+    return {
+        "left": "|".join(left),
+        "right": "|".join(right),
+        "metric": "(late_success_rate - early_success_rate) difference-in-differences",
+        "demand_regime": demand_regime,
+        "left_minus_right": _mean_ci(differences),
+    }
+
+
 def summarize(
     rows: list[PublicEvalRow],
     config: PublicTopologyEvalConfig,
@@ -586,6 +620,15 @@ def summarize(
         "late_minus_early": _mean_ci(
             [row.late_evaluation.success_rate - row.early_evaluation.success_rate for row in shift_online]
         ),
+        "online_minus_retry_early": _paired(
+            rows, ("online", "none"), ("retry", "none"), "early_success_rate", demand_regime="shifted_hotspot"
+        ),
+        "online_minus_retry_late": _paired(
+            rows, ("online", "none"), ("retry", "none"), "late_success_rate", demand_regime="shifted_hotspot"
+        ),
+        "online_temporal_advantage_over_retry": _paired_temporal_change(
+            rows, ("online", "none"), ("retry", "none"), "shifted_hotspot"
+        ),
     }
     return {
         "schema_version": "1.0",
@@ -597,6 +640,7 @@ def summarize(
             "calibration_sample_count": config.calibration_sample_count,
             "sealed_holdout_sample_count": config.topology_sample_count - config.calibration_sample_count,
             "balance_draws_per_topology": config.balance_draws,
+            "seed_offset": config.seed_offset,
             "balance_models": list(BALANCE_MODELS),
             "demand_regimes": list(DEMAND_REGIMES),
             "routing_conditions": ["|".join(condition) for condition in CONDITIONS],
@@ -705,7 +749,7 @@ def run_campaign(
     samples = [
         sample_connected_subgraph(
             source_graph,
-            seed=index,
+            seed=config.seed_offset + index,
             node_count=config.node_count,
             mode=SAMPLING_MODES[index % len(SAMPLING_MODES)],
         )
@@ -749,6 +793,15 @@ def run_campaign(
         "topology_provenance_file": provenance_path.as_posix(),
         "topology_provenance_hash": hashlib.sha256(provenance_path.read_bytes()).hexdigest(),
         "topology_snapshot_hash": actual_hash,
+        "implementation_hashes": {
+            relative_path: hashlib.sha256(Path(relative_path).read_bytes()).hexdigest()
+            for relative_path in (
+                "src/spiral_ln/public_topology_eval.py",
+                "src/spiral_ln/public_topology.py",
+                "src/spiral_ln/algebra.py",
+                "src/spiral_ln/simulator.py",
+            )
+        },
         "result_file": summary_path.as_posix(),
         "result_hash": hashlib.sha256(summary_path.read_bytes()).hexdigest(),
         "live_network": False,

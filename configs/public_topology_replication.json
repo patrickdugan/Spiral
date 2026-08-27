@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.1",
+  "description": "Independent-seed confirmatory replication of the sealed public-topology capability evaluation.",
+  "preregistered_hypotheses": [
+    "retry_minus_public_success has a positive 95% confidence interval",
+    "online_minus_retry_success remains below a one-percentage-point practical-effect bound",
+    "oracle_minus_online_success is positive and oracle leakage is zero",
+    "failure-aware capital beats equal random capital under stationary hotspots but differs by less than one percentage point under diffuse and shifted demand",
+    "online routing has no positive shift-adaptation advantage over retries in the paired early-versus-late comparison"
+  ],
+  "snapshot_path": "data/topology/20230716.gml.geo",
+  "snapshot_sha256": "ee1b054a6ba2cb0ea3184f9f68f5cca7d8e70d17ff2d9e44e5e8871be8a8b855",
+  "topology_sample_count": 10,
+  "calibration_sample_count": 4,
+  "balance_draws": 3,
+  "node_count": 64,
+  "steps": 220,
+  "evaluation_start": 110,
+  "early_evaluation_steps": 25,
+  "hotspot_probability": 0.35,
+  "amounts": [1000, 2000, 5000, 8000],
+  "capacity_median": 100000,
+  "capacity_log_sigma": 0.85,
+  "capacity_minimum": 20000,
+  "capacity_maximum": 1500000,
+  "candidate_path_limit": 8,
+  "max_route_attempts": 3,
+  "online_risk_penalty_msat": 5000.0,
+  "connector_capital": 120000,
+  "connector_bond_fraction": 0.20,
+  "seed_offset": 100
+}

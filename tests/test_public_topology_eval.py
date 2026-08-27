@@ -77,3 +77,22 @@ def test_public_episode_is_deterministic_and_sealed():
     assert left.training.attempted == config.evaluation_start
     assert left.evaluation.attempted == config.steps - config.evaluation_start
     assert left.connector_capital == config.connector_capital
+
+
+def test_seed_offset_changes_episode_randomization_without_changing_split():
+    sample = _sample()
+    base = _config()
+    shifted = PublicTopologyEvalConfig(
+        topology_sample_count=2,
+        calibration_sample_count=1,
+        balance_draws=1,
+        node_count=18,
+        steps=40,
+        evaluation_start=20,
+        early_evaluation_steps=5,
+        seed_offset=100,
+    )
+    left = run_episode(sample, 1, 0, "uniform", "diffuse", "public", "none", base)
+    right = run_episode(sample, 1, 0, "uniform", "diffuse", "public", "none", shifted)
+    assert left.evaluation_split == right.evaluation_split == "sealed_holdout"
+    assert left != right
