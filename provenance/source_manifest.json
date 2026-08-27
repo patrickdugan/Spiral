@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "reconstruction_date": "2026-08-25",
+  "recovery_status": "rebuilt from surviving metadata and task history; original payloads were null-filled",
+  "original_task_id": "01a02a0d-66d2-7f23-8c03-88da155aa410",
+  "surviving_local_evidence": [
+    "pyproject.toml package identity and description",
+    "src/spiral_ln/__init__.py package identity",
+    "recovered filenames, sizes, timestamps, and render sequence",
+    "nineteen recovered user prompts"
+  ],
+  "authoritative_public_sources": [
+    "Lightning Network white paper",
+    "BOLT specifications 2, 4, 7, and 12",
+    "peer-reviewed and preprint Lightning routing, privacy, and jamming literature",
+    "Ark protocol documentation"
+  ],
+  "not_recovered": ["original prose", "original equations", "original experimental outputs", "original Git objects"]
+}
+

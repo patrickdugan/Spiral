@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-26T00:44:31.747947+00:00",
+  "seed_count": 24,
+  "invariants": {
+    "attempts": 600,
+    "applied": 599,
+    "rejected": 1,
+    "capacity_conserved": true,
+    "channel_invariants_hold": true
+  },
+  "connectors": {
+    "baseline": {
+      "n": 24,
+      "success_rate_mean": 0.6688657407407408,
+      "volume_rate_mean": 0.5808983413439837,
+      "leakage_proxy_mean": 2.885648148148148,
+      "imbalance_end_mean": 0.22777481520693663,
+      "fee_msat_mean": 1026350,
+      "connector_capital_mean": 0
+    },
+    "random_connector": {
+      "n": 24,
+      "success_rate_mean": 0.705324074074074,
+      "volume_rate_mean": 0.6172740157543863,
+      "leakage_proxy_mean": 2.6899305555555557,
+      "imbalance_end_mean": 0.32102113080042227,
+      "fee_msat_mean": 1021285.4166666666,
+      "connector_capital_mean": 115000
+    },
+    "ghost_connector": {
+      "n": 24,
+      "success_rate_mean": 0.7072916666666667,
+      "volume_rate_mean": 0.620467424345261,
+      "leakage_proxy_mean": 2.6658564814814816,
+      "imbalance_end_mean": 0.3067099754201114,
+      "fee_msat_mean": 1016702.0833333334,
+      "connector_capital_mean": 120000
+    },
+    "paired_ghost_minus_baseline_success": {
+      "mean": 0.03842592592592592,
+      "ci95_half_width": 0.00492303288211591
+    },
+    "paired_ghost_minus_random_success": {
+      "mean": 0.001967592592592581,
+      "ci95_half_width": 0.006213494134235244
+    }
+  },
+  "privacy_frontier": {
+    "public": {
+      "n": 24,
+      "success_rate_mean": 0.6442129629629629,
+      "volume_rate_mean": 0.5620195648787384,
+      "leakage_proxy_mean": 0.355787037037037,
+      "imbalance_end_mean": 0.2091165911266734,
+      "fee_msat_mean": 904531.25,
+      "connector_capital_mean": 0
+    },
+    "adaptive": {
+      "n": 24,
+      "success_rate_mean": 0.6688657407407408,
+      "volume_rate_mean": 0.5808983413439837,
+      "leakage_proxy_mean": 2.885648148148148,
+      "imbalance_end_mean": 0.22777481520693663,
+      "fee_msat_mean": 1026350,
+      "connector_capital_mean": 0
+    },
+    "oracle": {
+      "n": 24,
+      "success_rate_mean": 0.6688657407407408,
+      "volume_rate_mean": 0.5808983413439837,
+      "leakage_proxy_mean": 0.33113425925925927,
+      "imbalance_end_mean": 0.22777481520693663,
+      "fee_msat_mean": 1026350,
+      "connector_capital_mean": 0
+    },
+    "interpretation": "failed route attempts are used only as an information-leakage proxy"
+  },
+  "jamming": {
+    "jammed_baseline": {
+      "n": 24,
+      "success_rate_mean": 0.5048611111111111,
+      "volume_rate_mean": 0.3831403572619706,
+      "leakage_proxy_mean": 4.119560185185185,
+      "imbalance_end_mean": 0.1603386099902504,
+      "fee_msat_mean": 672897.9166666666,
+      "connector_capital_mean": 0
+    },
+    "jammed_ghost_connector": {
+      "n": 24,
+      "success_rate_mean": 0.6760416666666667,
+      "volume_rate_mean": 0.5863242248940804,
+      "leakage_proxy_mean": 2.992476851851852,
+      "imbalance_end_mean": 0.24783983567357384,
+      "fee_msat_mean": 989829.1666666666,
+      "connector_capital_mean": 120000
+    },
+    "paired_success_delta": {
+      "mean": 0.17118055555555556,
+      "ci95_half_width": 0.01664858226122636
+    },
+    "scope": "synthetic lock model; no live-network attack traffic"
+  },
+  "sybil": {
+    "pool": 100000,
+    "rows": [
+      {
+        "identities": 1,
+        "invariant_total": 100000,
+        "naive_total": 100000
+      },
+      {
+        "identities": 2,
+        "invariant_total": 100000,
+        "naive_total": 200000
+      },
+      {
+        "identities": 4,
+        "invariant_total": 100000,
+        "naive_total": 400000
+      },
+      {
+        "identities": 8,
+        "invariant_total": 100000,
+        "naive_total": 800000
+      },
+      {
+        "identities": 16,
+        "invariant_total": 100000,
+        "naive_total": 1600000
+      },
+      {
+        "identities": 32,
+        "invariant_total": 100000,
+        "naive_total": 3200000
+      }
+    ],
+    "split_invariant": true
+  },
+  "bonding": {
+    "required_example": 24000,
+    "honest": {
+      "released": 24749,
+      "slashed": 251,
+      "score": 0.946
+    },
+    "flaky": {
+      "released": 21125,
+      "slashed": 3875,
+      "score": 0.357
+    }
+  },
+  "limitations": [
+    "synthetic topology rather than a live Lightning snapshot",
+    "additive fee abstraction and no HTLC timing engine",
+    "failed attempts are a leakage proxy, not deanonymization measurements",
+    "no local zero-knowledge proving or transaction broadcast"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiral.example/schemas/proof_card_summary.v1.schema.json",
+  "title": "Connector Calculus Proof Card",
+  "type": "object",
+  "required": ["id", "claim", "evidence", "status"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^P[0-9]+$"},
+    "claim": {"type": "string", "minLength": 1},
+    "evidence": {"type": "object"},
+    "status": {"enum": ["supported", "not supported", "failed"]}
+  },
+  "additionalProperties": false
+}
+

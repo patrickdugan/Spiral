@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiral.example/schemas/protocol_witness_receipt.v1.schema.json",
+  "title": "Bounded Protocol Witness Receipt",
+  "type": "object",
+  "required": ["experiment_id", "configuration_hash", "result_hash", "live_network"],
+  "properties": {
+    "experiment_id": {"type": "string"},
+    "configuration_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "result_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "live_network": {"const": false},
+    "zk_proof": {"const": false}
+  },
+  "additionalProperties": true
+}
+

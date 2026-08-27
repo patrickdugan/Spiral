@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiral.example/schemas/hive_design_summary.v1.schema.json",
+  "title": "Sealed Hive Design Campaign Summary",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "phase_transition",
+    "ablations",
+    "paired_signaling_only_success_delta",
+    "accounting_holds",
+    "safety_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "phase_transition": {
+      "type": "object",
+      "required": ["giant_component_definition", "cells"]
+    },
+    "ablations": {"type": "object", "minProperties": 1},
+    "paired_signaling_only_success_delta": {
+      "type": "object",
+      "required": ["n", "mean", "ci95_half_width"]
+    },
+    "accounting_holds": {"const": true},
+    "safety_boundary": {
+      "type": "object",
+      "required": ["synthetic_only", "live_network", "payload_codec"],
+      "properties": {
+        "synthetic_only": {"const": true},
+        "live_network": {"const": false},
+        "payload_codec": {"const": false}
+      }
+    }
+  },
+  "additionalProperties": true
+}

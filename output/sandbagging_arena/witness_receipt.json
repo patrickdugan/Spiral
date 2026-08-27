@@ -1,0 +1,8 @@
+{
+  "artifacts": {
+    "arena_rows.csv": "64b3edeaa78e431c73d449569ba3f545fb53ca036741ef3343c39b793b2a5f9d",
+    "summary.json": "9c09edefed2963864ca154a36cc11068e74f89143298ed36cce6d68ded9d66cb"
+  },
+  "combined_sha256": "3542e6ae6004d1f7bb3bfd16ef621f627301c5a80a2bf1e89b5dccdd9e25c602",
+  "schema_version": "1.0"
+}

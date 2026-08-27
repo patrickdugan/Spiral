@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "claims": [
+    {"id": "P1", "mechanic": "payment conservation", "falsifier": "any channel sum or total capacity changes"},
+    {"id": "P2", "mechanic": "demand-cut completion", "falsifier": "paired connector success delta is non-positive"},
+    {"id": "P3", "mechanic": "Sybil-invariant reward", "falsifier": "coalition reward rises with identity count"},
+    {"id": "P4", "mechanic": "bond discrimination", "falsifier": "unreliable service loses no more bond than reliable service"}
+  ],
+  "evidence_class": "bounded synthetic mechanism evidence"
+}
+

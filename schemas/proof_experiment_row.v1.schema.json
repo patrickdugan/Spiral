@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiral.example/schemas/proof_experiment_row.v1.schema.json",
+  "title": "Connector Calculus Experiment Row",
+  "type": "object",
+  "required": ["strategy", "seed", "attempted", "succeeded", "delivered_volume"],
+  "properties": {
+    "strategy": {"type": "string"},
+    "seed": {"type": "integer", "minimum": 0},
+    "attempted": {"type": "integer", "minimum": 0},
+    "succeeded": {"type": "integer", "minimum": 0},
+    "delivered_volume": {"type": "integer", "minimum": 0},
+    "success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "leakage_proxy": {"type": "number", "minimum": 0}
+  },
+  "additionalProperties": true
+}
+

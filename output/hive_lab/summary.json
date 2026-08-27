@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-26T23:03:16.499776+00:00",
+  "seed_count": 12,
+  "scenarios": {
+    "ordinary_commerce": {
+      "success_rate": {
+        "n": 12,
+        "mean": 0.971370515666227,
+        "ci95_half_width": 0.006039029640685993
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "delivered_volume": {
+        "n": 12,
+        "mean": 2522698.9166666665,
+        "ci95_half_width": 83219.5286799888
+      },
+      "abstract_signal_units": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "hive_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_capital": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 702902.0,
+        "ci95_half_width": 26501.39948770413
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.3221016225807409,
+        "ci95_half_width": 0.03746408913607089
+      },
+      "observer_alert_count": {
+        "n": 12,
+        "mean": 23.666666666666668,
+        "ci95_half_width": 2.1623799085005553
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    "private_unicast": {
+      "success_rate": {
+        "n": 12,
+        "mean": 0.944496856373717,
+        "ci95_half_width": 0.01618893904489642
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9118682959473794,
+        "ci95_half_width": 0.008558009124496859
+      },
+      "delivered_volume": {
+        "n": 12,
+        "mean": 2381951.0,
+        "ci95_half_width": 75825.00295381171
+      },
+      "abstract_signal_units": {
+        "n": 12,
+        "mean": 327.8333333333333,
+        "ci95_half_width": 12.53117115456694
+      },
+      "hive_count": {
+        "n": 12,
+        "mean": 1.0,
+        "ci95_half_width": 0.0
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_capital": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 720515.0833333334,
+        "ci95_half_width": 27167.330874795058
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.41803807388921715,
+        "ci95_half_width": 0.04049256580227785
+      },
+      "observer_alert_count": {
+        "n": 12,
+        "mean": 7.416666666666667,
+        "ci95_half_width": 1.2642157308550683
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.27515196156500504,
+        "ci95_half_width": 0.03916789551354205
+      }
+    },
+    "hive_reinvestment": {
+      "success_rate": {
+        "n": 12,
+        "mean": 0.9584988777812693,
+        "ci95_half_width": 0.00703803510928674
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9132967341133063,
+        "ci95_half_width": 0.009270119522697455
+      },
+      "delivered_volume": {
+        "n": 12,
+        "mean": 2446157.75,
+        "ci95_half_width": 64900.72645648744
+      },
+      "abstract_signal_units": {
+        "n": 12,
+        "mean": 331.5833333333333,
+        "ci95_half_width": 10.517518382645829
+      },
+      "hive_count": {
+        "n": 12,
+        "mean": 1.0,
+        "ci95_half_width": 0.0
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 4.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_capital": {
+        "n": 12,
+        "mean": 80000.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 901421.0833333334,
+        "ci95_half_width": 32155.541745229155
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.42825838680002914,
+        "ci95_half_width": 0.03833052249506106
+      },
+      "observer_alert_count": {
+        "n": 12,
+        "mean": 7.416666666666667,
+        "ci95_half_width": 1.5904522576419526
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.2683501822749135,
+        "ci95_half_width": 0.0510697272453149
+      }
+    }
+  },
+  "paired_hive_minus_private": {
+    "success_rate": {
+      "n": 12,
+      "mean": 0.014002021407552162,
+      "ci95_half_width": 0.011341637270822987
+    },
+    "external_income": {
+      "n": 12,
+      "mean": 180906,
+      "ci95_half_width": 11025.73845311437
+    }
+  },
+  "accounting_holds": true,
+  "network_invariants_hold": true,
+  "interpretation": {
+    "abstract_signal_units": "dimensionless coordination demand; no content or codec exists",
+    "private_relationship": "simulation overlay, not a claim of protocol-level invisibility",
+    "observer_hive_edge_recall": "fraction of mature private edges appearing in a simple sampled-link alert set"
+  },
+  "safety_boundary": {
+    "synthetic_only": true,
+    "live_network": false,
+    "payload_codec": false,
+    "wallet_or_node_connection": false,
+    "network_transport": false,
+    "transaction_broadcast": false
+  }
+}

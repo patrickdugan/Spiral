@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "seed_count": 24,
+  "steps_per_seed": 360,
+  "topology": {
+    "clusters": 2,
+    "nodes_per_cluster": 8,
+    "thin_cut_channels": 2
+  },
+  "payment_amounts_sat": [1000, 2000, 5000, 8000],
+  "demand_mix": {
+    "left_to_right": 0.58,
+    "right_to_left": 0.15,
+    "within_cluster": 0.27
+  },
+  "connector_capital_sat": 120000
+}
+

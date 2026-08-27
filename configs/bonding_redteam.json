@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "bond_policy": {
+    "capital_rate": 0.10,
+    "failure_rate": 0.50,
+    "downtime_rate": 0.25,
+    "minimum_bond_sat": 1000
+  },
+  "sybil_identity_counts": [1, 2, 4, 8, 16, 32],
+  "reward_pool_units": 100000,
+  "jamming": {
+    "target_edges": 2,
+    "locked_fraction": 0.90,
+    "selection": "highest edge betweenness"
+  },
+  "safety": {
+    "live_network": false,
+    "wallet_access": false,
+    "transaction_broadcast": false
+  }
+}
+

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiral.example/schemas/hive_lab_result.v1.schema.json",
+  "title": "Sealed Hive Laboratory Result",
+  "type": "object",
+  "required": [
+    "scenario",
+    "seed",
+    "rounds",
+    "event_count",
+    "successful_payments",
+    "delivered_volume",
+    "private_delivered_volume",
+    "abstract_signal_units",
+    "hive_count",
+    "connector_count",
+    "accounting_error",
+    "safety_boundary"
+  ],
+  "properties": {
+    "scenario": {
+      "enum": ["ordinary_commerce", "private_unicast", "hive_reinvestment"]
+    },
+    "seed": {"type": "integer", "minimum": 0},
+    "rounds": {"type": "integer", "minimum": 1},
+    "event_count": {"type": "integer", "minimum": 0},
+    "successful_payments": {"type": "integer", "minimum": 0},
+    "delivered_volume": {"type": "integer", "minimum": 0},
+    "private_delivered_volume": {"type": "integer", "minimum": 0},
+    "abstract_signal_units": {"type": "integer", "minimum": 0},
+    "hive_count": {"type": "integer", "minimum": 0},
+    "connector_count": {"type": "integer", "minimum": 0},
+    "accounting_error": {"const": 0},
+    "safety_boundary": {
+      "type": "object",
+      "required": ["synthetic_only", "payload_codec", "wallet_or_node_connection", "network_transport", "transaction_broadcast"],
+      "properties": {
+        "synthetic_only": {"const": true},
+        "payload_codec": {"const": false},
+        "wallet_or_node_connection": {"const": false},
+        "network_transport": {"const": false},
+        "transaction_broadcast": {"const": false}
+      }
+    }
+  },
+  "additionalProperties": true
+}

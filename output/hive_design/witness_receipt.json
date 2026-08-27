@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-hive-design-phase-and-ablation",
+  "configuration_files": [
+    "configs/stego_hive_lab.json",
+    "configs/hive_design_campaign.json"
+  ],
+  "configuration_hash": "ac2220e97f3ab6b3a133d019914065aac53bb151cf10b2c80e5ad2c76b312f1f",
+  "result_file": "output/hive_design/summary.json",
+  "result_hash": "b855c0b4214613d43e3a036c29f720694891e769087a0371ef0030aa70d7bcb7",
+  "live_network": false,
+  "payload_codec": false
+}

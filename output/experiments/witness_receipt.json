@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "connector-calculus-synthetic-24-seeds",
+  "configuration_file": "configs/proof_mechanics.json",
+  "configuration_hash": "fb7979b66ad50214695690c8c1b2900b88f6db795340cbfe25479a640f4447ed",
+  "result_file": "output/experiments/summary.json",
+  "result_hash": "27a7e1681c57b71b81b1f0588227b93a158bd52eb53d69cb026aaedc02543650",
+  "live_network": false,
+  "zk_proof": false
+}

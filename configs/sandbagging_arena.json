@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "seeds": [7, 19, 41, 73],
+  "discovery_pairs": 4,
+  "holdout_pairs": 24,
+  "calibration_pairs_per_family": 16,
+  "stress_seed_count": 100
+}

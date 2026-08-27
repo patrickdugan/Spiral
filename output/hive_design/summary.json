@@ -1,0 +1,785 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-27T01:41:17.552592+00:00",
+  "phase_transition": {
+    "giant_component_definition": 0.5,
+    "cells": [
+      {
+        "repeat_probability": 0.0,
+        "reciprocity_threshold": 0.0,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9802285528719007,
+          "ci95_half_width": 0.01784893439014387
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.03230376028202115,
+          "ci95_half_width": 0.01593806605332315
+        }
+      },
+      {
+        "repeat_probability": 0.0,
+        "reciprocity_threshold": 0.15,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9802285528719007,
+          "ci95_half_width": 0.01784893439014387
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.03173920679281013,
+          "ci95_half_width": 0.016805622374865298
+        }
+      },
+      {
+        "repeat_probability": 0.0,
+        "reciprocity_threshold": 0.3,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9802285528719007,
+          "ci95_half_width": 0.01784893439014387
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.037171717171717175,
+          "ci95_half_width": 0.020064937532721632
+        }
+      },
+      {
+        "repeat_probability": 0.0,
+        "reciprocity_threshold": 0.5,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9802285528719007,
+          "ci95_half_width": 0.01784893439014387
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.03954466893140235,
+          "ci95_half_width": 0.02537357282194734
+        }
+      },
+      {
+        "repeat_probability": 0.0,
+        "reciprocity_threshold": 0.7,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 15.0,
+          "ci95_half_width": 0.6198064213930023
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9802285528719007,
+          "ci95_half_width": 0.01784893439014387
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.058383838383838385,
+          "ci95_half_width": 0.053025332561674667
+        }
+      },
+      {
+        "repeat_probability": 0.25,
+        "reciprocity_threshold": 0.0,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9651222777711504,
+          "ci95_half_width": 0.02373648675018944
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.06070217917675545,
+          "ci95_half_width": 0.03782372881355932
+        }
+      },
+      {
+        "repeat_probability": 0.25,
+        "reciprocity_threshold": 0.15,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9651222777711504,
+          "ci95_half_width": 0.02373648675018944
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.06416211142066326,
+          "ci95_half_width": 0.04002390783640944
+        }
+      },
+      {
+        "repeat_probability": 0.25,
+        "reciprocity_threshold": 0.3,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9651222777711504,
+          "ci95_half_width": 0.02373648675018944
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.06348917748917748,
+          "ci95_half_width": 0.04322175155555179
+        }
+      },
+      {
+        "repeat_probability": 0.25,
+        "reciprocity_threshold": 0.5,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9651222777711504,
+          "ci95_half_width": 0.02373648675018944
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.05716386361547652,
+          "ci95_half_width": 0.03567407182435461
+        }
+      },
+      {
+        "repeat_probability": 0.25,
+        "reciprocity_threshold": 0.7,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 13.4,
+          "ci95_half_width": 2.0179435076334515
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9651222777711504,
+          "ci95_half_width": 0.02373648675018944
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.08606060606060606,
+          "ci95_half_width": 0.06370951754849997
+        }
+      },
+      {
+        "repeat_probability": 0.5,
+        "reciprocity_threshold": 0.0,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9663971188729893,
+          "ci95_half_width": 0.014482109708994396
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.10749804367344586,
+          "ci95_half_width": 0.0212667055442875
+        }
+      },
+      {
+        "repeat_probability": 0.5,
+        "reciprocity_threshold": 0.15,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9663971188729893,
+          "ci95_half_width": 0.014482109708994396
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.11515073333958782,
+          "ci95_half_width": 0.02166855024806827
+        }
+      },
+      {
+        "repeat_probability": 0.5,
+        "reciprocity_threshold": 0.3,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9663971188729893,
+          "ci95_half_width": 0.014482109708994396
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.11879064542102592,
+          "ci95_half_width": 0.03897073067427654
+        }
+      },
+      {
+        "repeat_probability": 0.5,
+        "reciprocity_threshold": 0.5,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9663971188729893,
+          "ci95_half_width": 0.014482109708994396
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.13524079537292286,
+          "ci95_half_width": 0.048826621201045
+        }
+      },
+      {
+        "repeat_probability": 0.5,
+        "reciprocity_threshold": 0.7,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 15.0,
+          "ci95_half_width": 1.0735362127101253
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9663971188729893,
+          "ci95_half_width": 0.014482109708994396
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.14587068160597572,
+          "ci95_half_width": 0.06258329890616082
+        }
+      },
+      {
+        "repeat_probability": 0.7,
+        "reciprocity_threshold": 0.0,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9390150412766832,
+          "ci95_half_width": 0.03033763704971393
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.24240968801313628,
+          "ci95_half_width": 0.08185885076161054
+        }
+      },
+      {
+        "repeat_probability": 0.7,
+        "reciprocity_threshold": 0.15,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9390150412766832,
+          "ci95_half_width": 0.03033763704971393
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.2682409863444346,
+          "ci95_half_width": 0.07717988213013745
+        }
+      },
+      {
+        "repeat_probability": 0.7,
+        "reciprocity_threshold": 0.3,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 15.8,
+          "ci95_half_width": 0.39199999999999996
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9390150412766832,
+          "ci95_half_width": 0.03033763704971393
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.28046265328874026,
+          "ci95_half_width": 0.05528407544952248
+        }
+      },
+      {
+        "repeat_probability": 0.7,
+        "reciprocity_threshold": 0.5,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 14.8,
+          "ci95_half_width": 1.5679999999999998
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9390150412766832,
+          "ci95_half_width": 0.03033763704971393
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.3187793630518089,
+          "ci95_half_width": 0.09444281912052795
+        }
+      },
+      {
+        "repeat_probability": 0.7,
+        "reciprocity_threshold": 0.7,
+        "giant_component_probability": 0.6,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 7.8,
+          "ci95_half_width": 2.8672328123122477
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9390150412766832,
+          "ci95_half_width": 0.03033763704971393
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.2424242424242424,
+          "ci95_half_width": 0.09201269525535195
+        }
+      },
+      {
+        "repeat_probability": 0.9,
+        "reciprocity_threshold": 0.0,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 16.0,
+          "ci95_half_width": 0.0
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9201584582081003,
+          "ci95_half_width": 0.04477577636590488
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.3056866096866097,
+          "ci95_half_width": 0.0663872372606856
+        }
+      },
+      {
+        "repeat_probability": 0.9,
+        "reciprocity_threshold": 0.15,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 15.8,
+          "ci95_half_width": 0.39199999999999996
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9201584582081003,
+          "ci95_half_width": 0.04477577636590488
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.3376858648597779,
+          "ci95_half_width": 0.07406848215006218
+        }
+      },
+      {
+        "repeat_probability": 0.9,
+        "reciprocity_threshold": 0.3,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 15.8,
+          "ci95_half_width": 0.39199999999999996
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9201584582081003,
+          "ci95_half_width": 0.04477577636590488
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.36118326118326116,
+          "ci95_half_width": 0.07004726493274895
+        }
+      },
+      {
+        "repeat_probability": 0.9,
+        "reciprocity_threshold": 0.5,
+        "giant_component_probability": 1,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 14.8,
+          "ci95_half_width": 1.1428665713896788
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9201584582081003,
+          "ci95_half_width": 0.04477577636590488
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.37501167133520075,
+          "ci95_half_width": 0.06559778035608961
+        }
+      },
+      {
+        "repeat_probability": 0.9,
+        "reciprocity_threshold": 0.7,
+        "giant_component_probability": 0.2,
+        "largest_hive_size": {
+          "n": 5,
+          "mean": 5.6,
+          "ci95_half_width": 1.3293366766925523
+        },
+        "success_rate": {
+          "n": 5,
+          "mean": 0.9201584582081003,
+          "ci95_half_width": 0.04477577636590488
+        },
+        "observer_hive_edge_recall": {
+          "n": 5,
+          "mean": 0.351010101010101,
+          "ci95_half_width": 0.1881198789827455
+        }
+      }
+    ]
+  },
+  "ablations": {
+    "ordinary": {
+      "enabled_tropes": [
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.971370515666227,
+        "ci95_half_width": 0.006039029640685993
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 702902.0,
+        "ci95_half_width": 26501.39948770413
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.3221016225807409,
+        "ci95_half_width": 0.03746408913607089
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    "relationships_only": {
+      "enabled_tropes": [
+        "private_relationships",
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.971370515666227,
+        "ci95_half_width": 0.006039029640685993
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.8724871514761919,
+        "ci95_half_width": 0.01615070462564207
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 702902.0,
+        "ci95_half_width": 26501.39948770413
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.3221016225807409,
+        "ci95_half_width": 0.03746408913607089
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.030713550804192115,
+        "ci95_half_width": 0.00875158519766981
+      }
+    },
+    "repeat_and_trust": {
+      "enabled_tropes": [
+        "private_relationships",
+        "repeat_counterparties",
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.944496856373717,
+        "ci95_half_width": 0.01618893904489642
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9118682959473794,
+        "ci95_half_width": 0.008558009124496859
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 720515.0833333334,
+        "ci95_half_width": 27167.330874795058
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.41803807388921715,
+        "ci95_half_width": 0.04049256580227785
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.27515196156500504,
+        "ci95_half_width": 0.03916789551354205
+      }
+    },
+    "abstract_signaling": {
+      "enabled_tropes": [
+        "private_relationships",
+        "repeat_counterparties",
+        "abstract_signaling",
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.944496856373717,
+        "ci95_half_width": 0.01618893904489642
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9118682959473794,
+        "ci95_half_width": 0.008558009124496859
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 720515.0833333334,
+        "ci95_half_width": 27167.330874795058
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.41803807388921715,
+        "ci95_half_width": 0.04049256580227785
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.27515196156500504,
+        "ci95_half_width": 0.03916789551354205
+      }
+    },
+    "coordination_bonus": {
+      "enabled_tropes": [
+        "private_relationships",
+        "repeat_counterparties",
+        "abstract_signaling",
+        "coordination_bonus",
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.9461902499608641,
+        "ci95_half_width": 0.013068828572057281
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9125577038214894,
+        "ci95_half_width": 0.008387883843608702
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 906025.25,
+        "ci95_half_width": 31391.758269998823
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.4157006882556244,
+        "ci95_half_width": 0.04224939621970757
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.2700322208655542,
+        "ci95_half_width": 0.03906620076297602
+      }
+    },
+    "full_reinvestment": {
+      "enabled_tropes": [
+        "private_relationships",
+        "repeat_counterparties",
+        "abstract_signaling",
+        "coordination_bonus",
+        "liquidity_reinvestment",
+        "partial_observer"
+      ],
+      "success_rate": {
+        "n": 12,
+        "mean": 0.9584988777812693,
+        "ci95_half_width": 0.00703803510928674
+      },
+      "private_flow_share": {
+        "n": 12,
+        "mean": 0.9132967341133063,
+        "ci95_half_width": 0.009270119522697455
+      },
+      "largest_hive_size": {
+        "n": 12,
+        "mean": 16.0,
+        "ci95_half_width": 0.0
+      },
+      "connector_count": {
+        "n": 12,
+        "mean": 4.0,
+        "ci95_half_width": 0.0
+      },
+      "external_income": {
+        "n": 12,
+        "mean": 901421.0833333334,
+        "ci95_half_width": 32155.541745229155
+      },
+      "ending_imbalance": {
+        "n": 12,
+        "mean": 0.42825838680002914,
+        "ci95_half_width": 0.03833052249506106
+      },
+      "observer_hive_edge_recall": {
+        "n": 12,
+        "mean": 0.2683501822749135,
+        "ci95_half_width": 0.0510697272453149
+      }
+    }
+  },
+  "paired_signaling_only_success_delta": {
+    "n": 12,
+    "mean": 0.0,
+    "ci95_half_width": 0.0
+  },
+  "accounting_holds": true,
+  "interpretation": {
+    "trope": "one switchable environment mechanism, not a claim about real agent behavior",
+    "phase_transition": "parameter region where a component reaches the configured share of agents",
+    "signaling_only_delta": "control expected to be zero because signal units have no economic semantics"
+  },
+  "safety_boundary": {
+    "synthetic_only": true,
+    "live_network": false,
+    "payload_codec": false,
+    "wallet_or_node_connection": false,
+    "network_transport": false,
+    "transaction_broadcast": false
+  }
+}

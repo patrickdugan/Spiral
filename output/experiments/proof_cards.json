@@ -1,0 +1,31 @@
+[
+  {
+    "id": "P1",
+    "claim": "payment rewrites conserve channel capacity",
+    "evidence": {
+      "attempts": 600,
+      "applied": 599,
+      "rejected": 1,
+      "capacity_conserved": true,
+      "channel_invariants_hold": true
+    },
+    "status": "supported"
+  },
+  {
+    "id": "P2",
+    "claim": "demand-cut ghost connectors improve delivery over the unmodified graph",
+    "evidence": {
+      "mean": 0.03842592592592592,
+      "ci95_half_width": 0.00492303288211591
+    },
+    "status": "supported"
+  },
+  {
+    "id": "P3",
+    "claim": "capital-keyed rewards are invariant to identity splitting",
+    "evidence": {
+      "split_invariant": true
+    },
+    "status": "supported"
+  }
+]
