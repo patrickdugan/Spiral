@@ -125,6 +125,24 @@ The environment supports safer versions of the core questions:
 
 The initial campaign does not measure the Lightning Network, establish anonymity, demonstrate covert communication, prove that an autonomous society will emerge, or show that private agent activity solves liquidity. It is a controlled mechanism study whose assumptions are exposed in one JSON configuration.
 
+## Defensive financial-abuse evaluation
+
+The next campaign treats illicit common control as a ground-truth experimental label rather than trying to infer intent from privacy alone. It compares benign private commerce with two deliberately simple synthetic patterns: repeated value circulation around a closed relay and circulation among multiple identities assigned to one controller. These are adversarial fixtures for testing monitors, not operational strategies. They use dimensionless balances and contain no invoices, wallets, payloads, route selection, network transport, or broadcast mechanism.
+
+The detector receives only sampled and linkable metadata: round index, payer, payee, synthetic amount, and delivery status. It cannot see the private-relationship flag, abstract signal units, agent wealth, the common-controller assignment, or unsampled events. Its initial score combines four declared features: the share of observed events on repeated edges, the share inside repeated directed cycles, reciprocal repeated flow, and balance between repeated inflow and outflow. The campaign does not optimize behavior against this detector.
+
+Evaluation separates episode classification from operational consequences. Precision, recall, specificity, and false-positive rate measure the monitor. Entity recall and collateral flags measure who the monitor implicates. Observer event share records the strength of the measurement surface. Payment failure, gross-to-net transfer ratio, and change in network imbalance measure whether the injected behavior consumes or redistributes liquidity even when it is detected. The gross-to-net ratio is a ground-truth diagnostic and is not exposed to the detector.
+
+This creates a baseline for later defensive ablations: observer coverage, attribution noise, alert thresholds, common-controller population, and bounded interventions can be varied independently. A useful follow-on intervention must reduce labeled abuse harm without treating ordinary private commerce as guilt and without assuming a global identity system.
+
+### Initial defensive baseline
+
+Across 20 paired seeds per scenario, the observer saw 13.37% of benign events, 11.69% of cyclic-relay events, and 10.88% of Sybil-recycling events on average. At the declared threshold of 0.55, the detector produced no false-positive episodes and precision of 1.00, but recall was only 0.225: it alerted on 9 of 40 labeled episodes, all from the larger Sybil fixture, and missed every four-member cyclic relay. The conservative threshold therefore discarded substantial signal under partial observation.
+
+The raw score perfectly ranked the deliberately simple labeled fixtures above benign runs in this campaign (ROC AUC 1.00). A threshold of 0.15 selected only on seeds 0–9 then classified all 20 labeled and all 10 benign holdout episodes correctly on seeds 10–19. This is a harness sanity check, not an estimate of field performance: the behaviors are clean, the simulator distribution is narrow, and the detector features directly target the injected motifs. Later campaigns need harder benign controls, imperfect common control, topology variation, intensity sweeps, and a sealed final holdout.
+
+The Sybil fixture increased mean network-imbalance energy by 0.214, compared with 0.068 for benign commerce and 0.092 for the smaller cyclic relay. Mean payment failure was 0.98%, 0.39%, and 0.61%, respectively. A naive ground-truth gross-to-net churn ratio failed as a discriminator: benign commerce scored 12.63, while both labeled patterns were near 7.56. Random multilateral trade can net out strongly without illicit common control, so high churn cannot stand alone as evidence of abuse.
+
 ## Reproduction
 
 ```powershell
@@ -132,6 +150,7 @@ $env:PYTHONPATH = "src"
 python -m pytest -q
 python -m spiral_ln.hive_experiment --output output/hive_lab --seeds 12 --config configs/stego_hive_lab.json
 python -m spiral_ln.hive_design_experiment --output output/hive_design --base-config configs/stego_hive_lab.json --campaign configs/hive_design_campaign.json
+python -m spiral_ln.financial_abuse_eval --output output/financial_abuse_eval --base-config configs/stego_hive_lab.json --config configs/financial_abuse_eval.json
 ```
 
 The baseline campaign writes paired rows, a summary, two figures, and a receipt under `output/hive_lab`. The design campaign writes phase and ablation rows, two figures, a summary, and a receipt under `output/hive_design`. Each receipt binds exact configuration and result bytes with SHA-256 and states that the run has no live-network or payload-codec capability.

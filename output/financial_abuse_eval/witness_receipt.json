@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-financial-abuse-detection-eval",
+  "configuration_files": [
+    "configs/stego_hive_lab.json",
+    "configs/financial_abuse_eval.json"
+  ],
+  "configuration_hash": "6598cb10120aa58bcb7c895a1a3bfbb03623b19b950b70ecef1058365d9a509e",
+  "result_file": "output/financial_abuse_eval/summary.json",
+  "result_hash": "03e60ee706920b13a6b2297bcc6e7ac0c2cf941517b845ac1042220c1fe437b0",
+  "live_network": false,
+  "payload_codec": false,
+  "evasion_optimizer": false
+}

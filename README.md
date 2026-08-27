@@ -123,6 +123,20 @@ python -m spiral_ln.hive_design_experiment `
 
 The signaling variable is a dimensionless demand counter. There is deliberately no message field, payload codec, network transport, wallet connection, node connection, transaction constructor, or broadcast capability. A private relationship is an experimental overlay and is not a claim that Lightning activity is invisible.
 
+## Defensive financial-abuse evaluation
+
+The sealed lab also supports a labeled defensive evaluation of suspicious economic-flow structure. It compares benign private commerce with two abstract common-control patterns: a repeated cyclic relay and a Sybil recycling cluster. The detector receives only sampled, linkable event metadata—round, endpoints, synthetic amount, and delivery status—and never receives private labels, signaling counters, wallet data, or route internals.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m spiral_ln.financial_abuse_eval `
+  --base-config configs/stego_hive_lab.json `
+  --config configs/financial_abuse_eval.json `
+  --output output/financial_abuse_eval
+```
+
+The campaign reports episode precision and recall, false-positive rate, entity recall, collateral flags, observer coverage, payment failure, gross-to-net churn, and change in network imbalance. It contains no evasion optimizer and cannot connect to a wallet, node, transport, or live network.
+
 ## Scope
 
 Synthetic evidence in this repository illustrates mechanisms and falsifiable claims. It is not a measurement of current mainnet topology, an implementation of BOLT routing, or a production liquidity marketplace.

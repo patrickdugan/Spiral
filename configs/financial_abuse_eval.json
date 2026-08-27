@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "description": "Sealed defensive evaluation of labeled synthetic circulation patterns; no live-network, wallet, payload, or evasion capability.",
+  "seed_count": 20,
+  "rounds": 120,
+  "benign_action_probability": 0.35,
+  "background_action_probability": 0.18,
+  "pattern_action_probability": 0.62,
+  "private_action_probability": 0.78,
+  "amount_units": [1000, 2000],
+  "detector_min_edge_observations": 3,
+  "detector_threshold": 0.55
+}
