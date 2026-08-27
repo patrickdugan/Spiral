@@ -1,0 +1,1085 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-27T15:03:20.077776+00:00",
+  "design": {
+    "paired_seed_count": 30,
+    "knowledge_levels": [
+      "public",
+      "adaptive",
+      "oracle"
+    ],
+    "connector_policies": [
+      "none",
+      "random",
+      "demand_aware"
+    ],
+    "stress_levels": [
+      "normal",
+      "jammed"
+    ],
+    "warmup_steps": 90,
+    "stress_start": 180,
+    "future_demand_visible_to_planner": false,
+    "equal_connector_capital": true
+  },
+  "cells": {
+    "public|none|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6456481481481482,
+        "ci95_half_width": 0.013212094260473874
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.5637798845243197,
+        "ci95_half_width": 0.01223052119616955
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.35435185185185186,
+        "ci95_half_width": 0.013212094260473874
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6294444444444445,
+        "ci95_half_width": 0.020119820302579458
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5495567043896266,
+        "ci95_half_width": 0.017589162659511638
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3705555555555556,
+        "ci95_half_width": 0.02011982030257946
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 811666.6666666666,
+        "ci95_half_width": 17344.993390278712
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1135976429039316,
+        "ci95_half_width": 0.023196559535978628
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.20839504220116742,
+        "ci95_half_width": 0.01936610664116932
+      }
+    },
+    "public|none|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.5493518518518519,
+        "ci95_half_width": 0.011064829130520776
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.4575872550886657,
+        "ci95_half_width": 0.011092191646903102
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.45064814814814813,
+        "ci95_half_width": 0.011064829130520778
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.4368518518518518,
+        "ci95_half_width": 0.017137371775625316
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.3351035768888651,
+        "ci95_half_width": 0.01766039165306588
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.5631481481481482,
+        "ci95_half_width": 0.01713737177562532
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 658800.0,
+        "ci95_half_width": 15881.85361080194
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.0899614956769914,
+        "ci95_half_width": 0.02618286962742886
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.19254637460918878,
+        "ci95_half_width": 0.019819825256772183
+      }
+    },
+    "public|random|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6807407407407408,
+        "ci95_half_width": 0.013896446406996941
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6022412739944342,
+        "ci95_half_width": 0.013325474912552038
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.31925925925925924,
+        "ci95_half_width": 0.013896446406996941
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6498148148148148,
+        "ci95_half_width": 0.019999794190322735
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5663755702990207,
+        "ci95_half_width": 0.019391546813192367
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3501851851851852,
+        "ci95_half_width": 0.019999794190322735
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 867133.3333333334,
+        "ci95_half_width": 19439.10018572494
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.0444118003633684,
+        "ci95_half_width": 0.018182280219111203
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.2627264740475266,
+        "ci95_half_width": 0.017769812583633426
+      }
+    },
+    "public|random|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6198148148148148,
+        "ci95_half_width": 0.011687920472940812
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.5372637181599379,
+        "ci95_half_width": 0.01052231819533242
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3801851851851852,
+        "ci95_half_width": 0.01168792047294081
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.527962962962963,
+        "ci95_half_width": 0.01835090062268055
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.4354248043359822,
+        "ci95_half_width": 0.017205692939587465
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.47203703703703703,
+        "ci95_half_width": 0.018350900622680553
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 773600.0,
+        "ci95_half_width": 15650.572385698868
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.0349287975909167,
+        "ci95_half_width": 0.02037923959395445
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.24683917055946558,
+        "ci95_half_width": 0.01764116197988689
+      }
+    },
+    "public|demand_aware|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6812962962962963,
+        "ci95_half_width": 0.012782844165596415
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6026295855620456,
+        "ci95_half_width": 0.01345935587162237
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3187037037037037,
+        "ci95_half_width": 0.012782844165596418
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6494444444444445,
+        "ci95_half_width": 0.01637999295329497
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5648454870312662,
+        "ci95_half_width": 0.0168842880265178
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.35055555555555556,
+        "ci95_half_width": 0.016379992953294974
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 867766.6666666666,
+        "ci95_half_width": 20126.561274105086
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.0414635676373092,
+        "ci95_half_width": 0.022311337559459257
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.268551475384605,
+        "ci95_half_width": 0.020616263610263398
+      }
+    },
+    "public|demand_aware|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6222222222222222,
+        "ci95_half_width": 0.010116817330800344
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.5380264277808537,
+        "ci95_half_width": 0.011337336645667521
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.37777777777777777,
+        "ci95_half_width": 0.010116817330800344
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.5312962962962963,
+        "ci95_half_width": 0.015684061367970875
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.4346341166201984,
+        "ci95_half_width": 0.01760597854398022
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.4687037037037037,
+        "ci95_half_width": 0.015684061367970875
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 774666.6666666666,
+        "ci95_half_width": 16604.668539841667
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.0357234630831071,
+        "ci95_half_width": 0.024302205772502687
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.25429005544650873,
+        "ci95_half_width": 0.022126217531281092
+      }
+    },
+    "adaptive|none|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.667962962962963,
+        "ci95_half_width": 0.013735659196771027
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.5805775342503243,
+        "ci95_half_width": 0.013214362315965357
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 2.8850925925925925,
+        "ci95_half_width": 0.10762035474044007
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6585185185185185,
+        "ci95_half_width": 0.016963523110317347
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5720102952426864,
+        "ci95_half_width": 0.01583959841213318
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 2.977777777777778,
+        "ci95_half_width": 0.13547607158216288
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 835966.6666666666,
+        "ci95_half_width": 19440.179128197313
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.2173257004181401,
+        "ci95_half_width": 0.03153069457330632
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.22711876342413476,
+        "ci95_half_width": 0.01692363529496711
+      }
+    },
+    "adaptive|none|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.5880555555555556,
+        "ci95_half_width": 0.01120395710214479
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.4878078949370769,
+        "ci95_half_width": 0.012801801129436621
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 3.478148148148148,
+        "ci95_half_width": 0.08615454146965201
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.4987037037037037,
+        "ci95_half_width": 0.020485880834402174
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.3845547830905939,
+        "ci95_half_width": 0.022475572927566308
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 4.163888888888889,
+        "ci95_half_width": 0.15211218580736416
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 702466.6666666666,
+        "ci95_half_width": 19185.53475529789
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.2046610636812805,
+        "ci95_half_width": 0.03567818190521017
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.20672349651903615,
+        "ci95_half_width": 0.02134493094580483
+      }
+    },
+    "adaptive|random|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.7038888888888889,
+        "ci95_half_width": 0.013170553392197817
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6198203823519886,
+        "ci95_half_width": 0.013304763512328684
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 2.6849074074074073,
+        "ci95_half_width": 0.10696498642452326
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6637037037037037,
+        "ci95_half_width": 0.017524656297766738
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5697665186126277,
+        "ci95_half_width": 0.01681238850326047
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 3.0214814814814814,
+        "ci95_half_width": 0.14482559427859315
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 892400.0,
+        "ci95_half_width": 19212.18345247344
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1602885226849278,
+        "ci95_half_width": 0.02596092919816437
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.3073927228649156,
+        "ci95_half_width": 0.025713888617188655
+      }
+    },
+    "adaptive|random|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6934259259259259,
+        "ci95_half_width": 0.01259907745651679
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6092303007174922,
+        "ci95_half_width": 0.013745363734290883
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 2.7816666666666667,
+        "ci95_half_width": 0.09997350487658965
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6427777777777778,
+        "ci95_half_width": 0.017859105641688435
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5485541726879016,
+        "ci95_half_width": 0.018240981973958764
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 3.215,
+        "ci95_half_width": 0.1430487771683293
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 877233.3333333334,
+        "ci95_half_width": 20359.525020617108
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1673848856182254,
+        "ci95_half_width": 0.026561899712999375
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.3008724049503539,
+        "ci95_half_width": 0.024056841595340654
+      }
+    },
+    "adaptive|demand_aware|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.7055555555555556,
+        "ci95_half_width": 0.013415076163892713
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6195853630682732,
+        "ci95_half_width": 0.013701808933850822
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 2.6746296296296297,
+        "ci95_half_width": 0.1031164453322158
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6646296296296297,
+        "ci95_half_width": 0.018043840729173477
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5687520808199049,
+        "ci95_half_width": 0.01699793984257243
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 3.033148148148148,
+        "ci95_half_width": 0.13770456155523167
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 892033.3333333334,
+        "ci95_half_width": 19611.59511429917
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1628276842992116,
+        "ci95_half_width": 0.027936857478328865
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.304390006709481,
+        "ci95_half_width": 0.01816178696960628
+      }
+    },
+    "adaptive|demand_aware|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6953703703703704,
+        "ci95_half_width": 0.013211191652627552
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6087265143032418,
+        "ci95_half_width": 0.013805029492302997
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 2.767685185185185,
+        "ci95_half_width": 0.10724803724246339
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6442592592592593,
+        "ci95_half_width": 0.01775450738600619
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.546697380278418,
+        "ci95_half_width": 0.017681177226670522
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 3.219259259259259,
+        "ci95_half_width": 0.1399099938667856
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 876433.3333333334,
+        "ci95_half_width": 19906.846294929834
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1730114216502585,
+        "ci95_half_width": 0.030039792178645813
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.2985945762381039,
+        "ci95_half_width": 0.02069410298087946
+      }
+    },
+    "oracle|none|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.667962962962963,
+        "ci95_half_width": 0.013735659196771027
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.5805775342503243,
+        "ci95_half_width": 0.013214362315965357
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.332037037037037,
+        "ci95_half_width": 0.013735659196771033
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6585185185185185,
+        "ci95_half_width": 0.016963523110317347
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5720102952426864,
+        "ci95_half_width": 0.01583959841213318
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3414814814814815,
+        "ci95_half_width": 0.01696352311031735
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 835966.6666666666,
+        "ci95_half_width": 19440.179128197313
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.2173257004181401,
+        "ci95_half_width": 0.03153069457330632
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.22711876342413476,
+        "ci95_half_width": 0.01692363529496711
+      }
+    },
+    "oracle|none|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.5880555555555556,
+        "ci95_half_width": 0.01120395710214479
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.4878078949370769,
+        "ci95_half_width": 0.012801801129436621
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.41194444444444445,
+        "ci95_half_width": 0.011203957102144793
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.4987037037037037,
+        "ci95_half_width": 0.020485880834402174
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.3845547830905939,
+        "ci95_half_width": 0.022475572927566308
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.5012962962962964,
+        "ci95_half_width": 0.020485880834402174
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 702466.6666666666,
+        "ci95_half_width": 19185.53475529789
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.2046610636812805,
+        "ci95_half_width": 0.03567818190521017
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.20672349651903615,
+        "ci95_half_width": 0.02134493094580483
+      }
+    },
+    "oracle|random|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.7038888888888889,
+        "ci95_half_width": 0.013170553392197817
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6198203823519886,
+        "ci95_half_width": 0.013304763512328684
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.2961111111111111,
+        "ci95_half_width": 0.013170553392197814
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6637037037037037,
+        "ci95_half_width": 0.017524656297766738
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5697665186126277,
+        "ci95_half_width": 0.01681238850326047
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3362962962962963,
+        "ci95_half_width": 0.01752465629776674
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 892400.0,
+        "ci95_half_width": 19212.18345247344
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1602885226849278,
+        "ci95_half_width": 0.02596092919816437
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.3073927228649156,
+        "ci95_half_width": 0.025713888617188655
+      }
+    },
+    "oracle|random|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6934259259259259,
+        "ci95_half_width": 0.01259907745651679
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6092303007174922,
+        "ci95_half_width": 0.013745363734290883
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.30657407407407405,
+        "ci95_half_width": 0.01259907745651679
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6427777777777778,
+        "ci95_half_width": 0.017859105641688435
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5485541726879016,
+        "ci95_half_width": 0.018240981973958764
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3572222222222222,
+        "ci95_half_width": 0.01785910564168843
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 877233.3333333334,
+        "ci95_half_width": 20359.525020617108
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1673848856182254,
+        "ci95_half_width": 0.026561899712999375
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.3008724049503539,
+        "ci95_half_width": 0.024056841595340654
+      }
+    },
+    "oracle|demand_aware|normal": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.7055555555555556,
+        "ci95_half_width": 0.013415076163892713
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6195853630682732,
+        "ci95_half_width": 0.013701808933850822
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.29444444444444445,
+        "ci95_half_width": 0.013415076163892715
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6646296296296297,
+        "ci95_half_width": 0.018043840729173477
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.5687520808199049,
+        "ci95_half_width": 0.01699793984257243
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.3353703703703704,
+        "ci95_half_width": 0.018043840729173477
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 892033.3333333334,
+        "ci95_half_width": 19611.59511429917
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1628276842992116,
+        "ci95_half_width": 0.027936857478328865
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.304390006709481,
+        "ci95_half_width": 0.01816178696960628
+      }
+    },
+    "oracle|demand_aware|jammed": {
+      "total_success_rate": {
+        "n": 30,
+        "mean": 0.6953703703703704,
+        "ci95_half_width": 0.013211191652627552
+      },
+      "total_volume_rate": {
+        "n": 30,
+        "mean": 0.6087265143032418,
+        "ci95_half_width": 0.013805029492302997
+      },
+      "total_leakage_proxy": {
+        "n": 30,
+        "mean": 0.30462962962962964,
+        "ci95_half_width": 0.013211191652627552
+      },
+      "post_stress_success_rate": {
+        "n": 30,
+        "mean": 0.6442592592592593,
+        "ci95_half_width": 0.01775450738600619
+      },
+      "post_stress_volume_rate": {
+        "n": 30,
+        "mean": 0.546697380278418,
+        "ci95_half_width": 0.017681177226670522
+      },
+      "post_stress_leakage_proxy": {
+        "n": 30,
+        "mean": 0.35574074074074075,
+        "ci95_half_width": 0.01775450738600619
+      },
+      "delivered_volume": {
+        "n": 30,
+        "mean": 876433.3333333334,
+        "ci95_half_width": 19906.846294929834
+      },
+      "fee_per_delivered_sat": {
+        "n": 30,
+        "mean": 1.1730114216502585,
+        "ci95_half_width": 0.030039792178645813
+      },
+      "imbalance_end": {
+        "n": 30,
+        "mean": 0.2985945762381039,
+        "ci95_half_width": 0.02069410298087946
+      }
+    }
+  },
+  "paired_contrasts": {
+    "adaptive_minus_public_no_connector_normal": {
+      "left": "adaptive|none|normal",
+      "right": "public|none|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.029074074074074054,
+        "ci95_half_width": 0.010358871658294468
+      }
+    },
+    "oracle_minus_adaptive_leakage_normal": {
+      "left": "oracle|none|normal",
+      "right": "adaptive|none|normal",
+      "metric": "post_stress_leakage_proxy",
+      "left_minus_right": {
+        "n": 30,
+        "mean": -2.636296296296296,
+        "ci95_half_width": 0.11896000724758742
+      }
+    },
+    "demand_minus_random_equal_capital_normal": {
+      "left": "adaptive|demand_aware|normal",
+      "right": "adaptive|random|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.0009259259259259152,
+        "ci95_half_width": 0.0051968387563003085
+      }
+    },
+    "demand_minus_random_fee_efficiency_normal": {
+      "left": "adaptive|demand_aware|normal",
+      "right": "adaptive|random|normal",
+      "metric": "fee_per_delivered_sat",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.0025391616142837027,
+        "ci95_half_width": 0.012733260963407426
+      }
+    },
+    "demand_capital_minus_none_normal": {
+      "left": "adaptive|demand_aware|normal",
+      "right": "adaptive|none|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.006111111111111111,
+        "ci95_half_width": 0.006028863454323111
+      }
+    },
+    "random_capital_minus_none_normal": {
+      "left": "adaptive|random|normal",
+      "right": "adaptive|none|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.005185185185185196,
+        "ci95_half_width": 0.004271300874808835
+      }
+    },
+    "demand_capital_imbalance_minus_none_normal": {
+      "left": "adaptive|demand_aware|normal",
+      "right": "adaptive|none|normal",
+      "metric": "imbalance_end",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.07727124328534625,
+        "ci95_half_width": 0.018052889232446648
+      }
+    },
+    "adaptive_minus_public_no_connector_jammed": {
+      "left": "adaptive|none|jammed",
+      "right": "public|none|jammed",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.061851851851851866,
+        "ci95_half_width": 0.013460545685339338
+      }
+    },
+    "oracle_minus_adaptive_leakage_jammed": {
+      "left": "oracle|none|jammed",
+      "right": "adaptive|none|jammed",
+      "metric": "post_stress_leakage_proxy",
+      "left_minus_right": {
+        "n": 30,
+        "mean": -3.6625925925925924,
+        "ci95_half_width": 0.13185128686721548
+      }
+    },
+    "demand_minus_random_equal_capital_jammed": {
+      "left": "adaptive|demand_aware|jammed",
+      "right": "adaptive|random|jammed",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.0014814814814814836,
+        "ci95_half_width": 0.013482801782288343
+      }
+    },
+    "demand_minus_random_fee_efficiency_jammed": {
+      "left": "adaptive|demand_aware|jammed",
+      "right": "adaptive|random|jammed",
+      "metric": "fee_per_delivered_sat",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.00562653603203298,
+        "ci95_half_width": 0.013334427209810767
+      }
+    },
+    "demand_capital_minus_none_jammed": {
+      "left": "adaptive|demand_aware|jammed",
+      "right": "adaptive|none|jammed",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.14555555555555555,
+        "ci95_half_width": 0.01848348174690832
+      }
+    },
+    "random_capital_minus_none_jammed": {
+      "left": "adaptive|random|jammed",
+      "right": "adaptive|none|jammed",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.14407407407407405,
+        "ci95_half_width": 0.021783617778053016
+      }
+    },
+    "demand_capital_imbalance_minus_none_jammed": {
+      "left": "adaptive|demand_aware|jammed",
+      "right": "adaptive|none|jammed",
+      "metric": "imbalance_end",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.09187107971906774,
+        "ci95_half_width": 0.02407863266038621
+      }
+    },
+    "jam_penalty_adaptive_demand": {
+      "left": "adaptive|demand_aware|jammed",
+      "right": "adaptive|demand_aware|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": -0.020370370370370372,
+        "ci95_half_width": 0.008849769175256712
+      }
+    },
+    "oracle_minus_adaptive_success_normal": {
+      "left": "oracle|none|normal",
+      "right": "adaptive|none|normal",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    "oracle_minus_adaptive_success_jammed": {
+      "left": "oracle|none|jammed",
+      "right": "adaptive|none|jammed",
+      "metric": "post_stress_success_rate",
+      "left_minus_right": {
+        "n": 30,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    "information_capital_complement_under_jam": {
+      "treatment_difference": "adaptive|demand_aware|jammed minus public|demand_aware|jammed",
+      "control_difference": "adaptive|none|jammed minus public|none|jammed",
+      "metric": "post_stress_success_rate",
+      "difference_in_differences": {
+        "n": 30,
+        "mean": 0.051111111111111086,
+        "ci95_half_width": 0.02150319878125172
+      }
+    },
+    "capital_reduction_in_jam_penalty": {
+      "treatment_difference": "adaptive|demand_aware|jammed minus adaptive|demand_aware|normal",
+      "control_difference": "adaptive|none|jammed minus adaptive|none|normal",
+      "metric": "post_stress_success_rate",
+      "difference_in_differences": {
+        "n": 30,
+        "mean": 0.13944444444444443,
+        "ci95_half_width": 0.019516032712896817
+      }
+    }
+  },
+  "invariants": {
+    "all_connectors_capital_bearing": true,
+    "all_rows_complete": true,
+    "network_invariants_hold": true
+  },
+  "interpretation": {
+    "public": "one cheapest public-topology path; no retry after hidden-liquidity failure",
+    "adaptive": "tries the same bounded candidate set until a feasible path succeeds",
+    "oracle": "upper bound that filters the candidate set using hidden directional state",
+    "demand_aware": "places equal-budget capital using only warm-up demand endpoints",
+    "post_stress": "fixed evaluation window after the configured stress boundary"
+  },
+  "safety_boundary": {
+    "synthetic_only": true,
+    "live_network": false,
+    "wallet_or_node_connection": false,
+    "invoice_or_payload": false,
+    "network_transport": false,
+    "transaction_broadcast": false
+  }
+}

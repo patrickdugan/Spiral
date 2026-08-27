@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "description": "Paired synthetic capability ladder: routing information, causal equal-budget capital placement, and liquidity stress.",
+  "seed_count": 30,
+  "steps": 360,
+  "warmup_steps": 90,
+  "stress_start": 180,
+  "connector_capital": 120000,
+  "connector_bond_fraction": 0.20,
+  "jam_fraction": 0.90
+}

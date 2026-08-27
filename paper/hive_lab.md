@@ -143,6 +143,25 @@ The raw score perfectly ranked the deliberately simple labeled fixtures above be
 
 The Sybil fixture increased mean network-imbalance energy by 0.214, compared with 0.068 for benign commerce and 0.092 for the smaller cyclic relay. Mean payment failure was 0.98%, 0.39%, and 0.61%, respectively. A naive ground-truth gross-to-net churn ratio failed as a discriminator: benign commerce scored 12.63, while both labeled patterns were near 7.56. Random multilateral trade can net out strongly without illicit common control, so high churn cannot stand alone as evidence of abuse.
 
+## Agent capability frontier
+
+To separate agent capability from capital and privileged state access, a paired factorial campaign crosses three routing-information levels, three connector policies, and two stress conditions. Public routing tries one cheapest path. Adaptive routing tries the same bounded candidate set until one succeeds. The oracle filters that set using hidden directional balances and is an upper bound, not a deployable policy. Connector policies deploy no capital, random cross-cut capital, or equal-budget capital placed from the endpoints of the first 90 observed demands. Placement occurs after the warm-up and cannot inspect future demand. Each of the 18 cells contains the same 30 seeds and 360 exogenous demands per seed; stress begins at demand 180.
+
+Four conclusions are exact or stable within this model.
+
+1. **Adaptive search improves delivery but leaks failures.** Without new capital, adaptive routing raises post-boundary success over public-only routing by 2.91 percentage points with a 95% half-width of 1.04 points under normal conditions and by 6.19 points with a half-width of 1.35 points under jamming. The price is repeated failed-route exposure: adaptive search produces 2.64 more failed attempts per demand than the oracle normally and 3.66 more under jamming.
+2. **Perfect balance knowledge changes privacy cost, not the delivery ceiling.** Oracle and adaptive policies have exactly equal success and delivered volume in every paired run because both ultimately choose the first feasible path from the same candidate set. The oracle merely avoids testing infeasible candidates. Better state information is therefore valuable here as a leakage and latency capability, not as additional reachability.
+3. **Capital, not clever placement, supplies most resilience on the base topology.** Under jamming, demand-aware connector capital raises post-stress success by 14.56 points over no connector, while random equal-budget capital raises it by 14.41 points. Demand-aware placement exceeds random placement by only 0.15 points with a 1.35-point half-width and does not improve fee efficiency. On the normal base topology, its advantage is likewise indistinguishable from zero. The initial heuristic therefore does not earn a claim of placement intelligence.
+4. **Information and capital are complements under stress.** Capital reduces the adaptive policy's jam penalty by 13.94 points with a 1.95-point half-width. The adaptive-over-public advantage is 5.11 points larger with demand-aware capital than without it, with a 2.15-point half-width. Capital creates alternate feasible paths on which routing capability can act. However, the connector also raises ending imbalance energy by 0.092 under jamming and 0.077 normally, so higher short-run delivery is not equivalent to a balanced network.
+
+### Placement-value boundary
+
+The null placement result is topology-dependent. A second campaign holds capital, routing policy, timing, and future-information constraints fixed while sweeping persistent demand for one endpoint pair and the fraction of pre-existing liquidity reserved on edges incident to those endpoints. It uses 20 paired seeds for each of 16 planned cells and applies a Bonferroni family-wise normal interval with z = 2.96.
+
+Nine cells retain positive placement value after that correction. With no endpoint isolation, demand-aware placement clears random capital only when 75% of demands persist at the hotspot, gaining 1.60 percentage points. At 50% isolation, the boundary moves to 50% hotspot demand; at 80% and 95% isolation, 25% hotspot demand is sufficient. The strongest cell—75% hotspot demand and 95% isolation—gains 4.36 points over random equal-budget capital with a family-wise half-width of 1.59 points, gains 8.20 points over no connector with a conventional 95% half-width of 0.69 points, and reduces fees by 0.210 msat per delivered sat with a 0.050 half-width.
+
+The bounded conclusion is sharper than "AI solves liquidity." Capital dominates when a whole cut is scarce and internal paths make placement fungible. Demand-learning adds measurable value when demand is persistent and access is localized, and the required persistence falls as endpoint constraints strengthen. Routing adaptation adds resilience only where liquidity leaves feasible alternatives; privileged balance knowledge chiefly suppresses failed probes. These are capability conditions inside the sealed algebra, not measurements of current Lightning or evidence that a general AI agent can obtain the required observations, capital, permissions, or execution reliability.
+
 ## Reproduction
 
 ```powershell
@@ -151,6 +170,8 @@ python -m pytest -q
 python -m spiral_ln.hive_experiment --output output/hive_lab --seeds 12 --config configs/stego_hive_lab.json
 python -m spiral_ln.hive_design_experiment --output output/hive_design --base-config configs/stego_hive_lab.json --campaign configs/hive_design_campaign.json
 python -m spiral_ln.financial_abuse_eval --output output/financial_abuse_eval --base-config configs/stego_hive_lab.json --config configs/financial_abuse_eval.json
+python -m spiral_ln.agent_capability_eval --output output/agent_capability_eval --config configs/agent_capability_eval.json
+python -m spiral_ln.placement_boundary_eval --output output/placement_boundary_eval --config configs/placement_boundary_eval.json
 ```
 
 The baseline campaign writes paired rows, a summary, two figures, and a receipt under `output/hive_lab`. The design campaign writes phase and ablation rows, two figures, a summary, and a receipt under `output/hive_design`. Each receipt binds exact configuration and result bytes with SHA-256 and states that the run has no live-network or payload-codec capability.

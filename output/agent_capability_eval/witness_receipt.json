@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-agent-capability-frontier",
+  "configuration_file": "configs/agent_capability_eval.json",
+  "configuration_hash": "c75e83009242f97a7823f0ae1d5592125db088cf9846b59f1dee3f6837165c0a",
+  "result_file": "output/agent_capability_eval/summary.json",
+  "result_hash": "e3f81b60dfcf724ae1109daf6f87c90104d5cf7cc065c9186ec8d3421e9a9775",
+  "live_network": false,
+  "wallet_or_node_connection": false
+}

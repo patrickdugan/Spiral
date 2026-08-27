@@ -1,0 +1,419 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-27T15:11:35.958094+00:00",
+  "design": {
+    "paired_seed_count": 20,
+    "hotspot_probabilities": [
+      0.0,
+      0.25,
+      0.5,
+      0.75
+    ],
+    "isolation_fractions": [
+      0.0,
+      0.5,
+      0.8,
+      0.95
+    ],
+    "future_demand_visible_to_planner": false,
+    "equal_connector_capital": true,
+    "familywise_correction": "Bonferroni normal interval across 16 phase cells (z=2.96)"
+  },
+  "phase_cells": [
+    {
+      "hotspot_probability": 0.0,
+      "isolation_fraction": 0.0,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.003999999999999998,
+        "ci95_half_width": 0.0059250386860170996,
+        "familywise_half_width": 0.008948017607454395
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.058888888888888886,
+        "ci95_half_width": 0.006024471645670403
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": 0.01976112058737046,
+        "ci95_half_width": 0.026053127594259276
+      }
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.0,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": -0.0019999999999999905,
+        "ci95_half_width": 0.012974261960678211,
+        "familywise_half_width": 0.0195937833691875
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.05933333333333334,
+        "ci95_half_width": 0.00800073057093013
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.13782293167222756,
+        "ci95_half_width": 0.043973500531998284
+      }
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.0,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.01044444444444444,
+        "ci95_half_width": 0.007824064376385328,
+        "familywise_half_width": 0.01181593395617376
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.072,
+        "ci95_half_width": 0.006211340191823136
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.26319827854094574,
+        "ci95_half_width": 0.050908047471006204
+      }
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.0,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.015999999999999997,
+        "ci95_half_width": 0.009145029093174594,
+        "familywise_half_width": 0.01381086026316163
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.07733333333333332,
+        "ci95_half_width": 0.006847480453714533
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.43804894702426544,
+        "ci95_half_width": 0.07249999477093964
+      }
+    },
+    {
+      "hotspot_probability": 0.0,
+      "isolation_fraction": 0.5,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.002222222222222231,
+        "ci95_half_width": 0.00785526778466597,
+        "familywise_half_width": 0.011863057470720037
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.057999999999999996,
+        "ci95_half_width": 0.009036845580050972
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": 0.01949366930502091,
+        "ci95_half_width": 0.02390206232343302
+      }
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.5,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.008000000000000007,
+        "ci95_half_width": 0.010717443276423998,
+        "familywise_half_width": 0.016185526580721955
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.06933333333333334,
+        "ci95_half_width": 0.007928647624368049
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.12778594947456065,
+        "ci95_half_width": 0.044520574658757306
+      }
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.5,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.02355555555555555,
+        "ci95_half_width": 0.011875327938428652,
+        "familywise_half_width": 0.017934168723341228
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.08044444444444444,
+        "ci95_half_width": 0.009307360352170004
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.20996747761961046,
+        "ci95_half_width": 0.0536408965196205
+      }
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.5,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.02266666666666666,
+        "ci95_half_width": 0.011250138585530057,
+        "familywise_half_width": 0.01699000521080049
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.07844444444444444,
+        "ci95_half_width": 0.008318877067220022
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.3437230063748892,
+        "ci95_half_width": 0.06505088633251854
+      }
+    },
+    {
+      "hotspot_probability": 0.0,
+      "isolation_fraction": 0.8,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.004444444444444429,
+        "ci95_half_width": 0.00717780421120184,
+        "familywise_half_width": 0.010839949216917064
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.06355555555555555,
+        "ci95_half_width": 0.008528089031788595
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.004026928761042376,
+        "ci95_half_width": 0.03026005692038237
+      }
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.8,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.020000000000000004,
+        "ci95_half_width": 0.012897461960255754,
+        "familywise_half_width": 0.01947779969508012
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.07755555555555556,
+        "ci95_half_width": 0.01043181996759229
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.09595189700876108,
+        "ci95_half_width": 0.044382494507806125
+      }
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.8,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.023777777777777783,
+        "ci95_half_width": 0.010636552226866268,
+        "familywise_half_width": 0.01606336458751232
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.076,
+        "ci95_half_width": 0.007230470791189756
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.11642413311707323,
+        "ci95_half_width": 0.051517507401630115
+      }
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.8,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.03644444444444444,
+        "ci95_half_width": 0.010736059658834366,
+        "familywise_half_width": 0.01621364111742333
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.07822222222222222,
+        "ci95_half_width": 0.008078352111631808
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.21634883672472024,
+        "ci95_half_width": 0.0882121657340021
+      }
+    },
+    {
+      "hotspot_probability": 0.0,
+      "isolation_fraction": 0.95,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.01688888888888887,
+        "ci95_half_width": 0.013548361085724048,
+        "familywise_half_width": 0.02046079021109346
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.076,
+        "ci95_half_width": 0.013284914189758235
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": 0.02817941393339095,
+        "ci95_half_width": 0.030040552325827793
+      }
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.95,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.032,
+        "ci95_half_width": 0.008883625108126094,
+        "familywise_half_width": 0.013416086897986346
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.09177777777777778,
+        "ci95_half_width": 0.008508748943117194
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.07282599748723523,
+        "ci95_half_width": 0.032478905156918716
+      }
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.95,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.032,
+        "ci95_half_width": 0.011663236298800754,
+        "familywise_half_width": 0.017613867063495013
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.084,
+        "ci95_half_width": 0.010962455580693335
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.13842363581950184,
+        "ci95_half_width": 0.044091369689113494
+      }
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.95,
+      "demand_minus_random_success": {
+        "n": 20,
+        "mean": 0.04355555555555555,
+        "ci95_half_width": 0.010529469323594477,
+        "familywise_half_width": 0.01590164754991819
+      },
+      "demand_minus_none_success": {
+        "n": 20,
+        "mean": 0.082,
+        "ci95_half_width": 0.006907728699758964
+      },
+      "demand_minus_random_fee_per_delivered_sat": {
+        "n": 20,
+        "mean": -0.21015994705820873,
+        "ci95_half_width": 0.05046334658324842
+      }
+    }
+  ],
+  "placement_value_supported_cells": [
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.0
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.5
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.5
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.8
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.8
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.8
+    },
+    {
+      "hotspot_probability": 0.25,
+      "isolation_fraction": 0.95
+    },
+    {
+      "hotspot_probability": 0.5,
+      "isolation_fraction": 0.95
+    },
+    {
+      "hotspot_probability": 0.75,
+      "isolation_fraction": 0.95
+    }
+  ],
+  "strongest_observed_cell": {
+    "hotspot_probability": 0.75,
+    "isolation_fraction": 0.95,
+    "demand_minus_random_success": {
+      "n": 20,
+      "mean": 0.04355555555555555,
+      "ci95_half_width": 0.010529469323594477,
+      "familywise_half_width": 0.01590164754991819
+    },
+    "demand_minus_none_success": {
+      "n": 20,
+      "mean": 0.082,
+      "ci95_half_width": 0.006907728699758964
+    },
+    "demand_minus_random_fee_per_delivered_sat": {
+      "n": 20,
+      "mean": -0.21015994705820873,
+      "ci95_half_width": 0.05046334658324842
+    }
+  },
+  "invariants": {
+    "all_rows_complete": true,
+    "network_invariants_hold": true
+  },
+  "interpretation": {
+    "hotspot_probability": "share of demands persistently assigned to one endpoint pair",
+    "isolation_fraction": "share of pre-existing endpoint-adjacent liquidity reserved from the experiment",
+    "placement_value": "paired success-rate gain over random placement at identical capital"
+  },
+  "safety_boundary": {
+    "synthetic_only": true,
+    "live_network": false,
+    "wallet_or_node_connection": false,
+    "invoice_or_payload": false,
+    "network_transport": false,
+    "transaction_broadcast": false
+  }
+}

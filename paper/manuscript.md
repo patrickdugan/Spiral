@@ -429,9 +429,25 @@ The capital-keyed pool is exactly invariant across all tested identity counts. T
 |---|---|---|
 | P1 | Payment rewrites conserve channel capacity | Supported by 599 applied randomized routes and unit tests |
 | P2 | A demand-cut connector improves delivery over the unmodified graph | Supported in the specified synthetic topology |
-| P2b | The demand-cut endpoint rule beats random cross-cut placement | Not supported at 95% in this experiment |
+| P2b | The demand-cut endpoint rule beats random cross-cut placement | Not supported on the base topology; conditionally supported in the preregistered placement-boundary sweep |
 | P3 | Capital-keyed reward is invariant to identity splitting | Supported analytically and for 1-32 identities |
 | P4 | Bond settlement discriminates reliable from unreliable service | Supported for the worked records; schedule remains illustrative |
+
+### 9.7 Agent capability frontier
+
+A second paired campaign separates three resources often blurred together as agent intelligence: routing information, deployable capital, and capital-placement policy. Public routing tries one cheapest path; adaptive routing searches the same bounded candidate set after failures; and an oracle upper bound filters that set using hidden directional state. At demand 90, the capital policies either do nothing, add a random 120,000-unit cross-cut connector, or place the same capital using only the endpoints of the first 90 demands. Stress begins at demand 180. The 18 factorial cells contain the same 30 seeds and 360 demands per seed.
+
+Adaptive search without capital improves post-boundary success over public-only routing by 2.91 percentage points with a 95% half-width of 1.04 points normally and by 6.19 points with a half-width of 1.35 points under jamming. Oracle and adaptive delivery are exactly equal in every paired run because they choose from the same path set. The oracle instead avoids 2.64 failed attempts per demand normally and 3.66 under jamming. In this model, privileged balance knowledge is a privacy and latency capability rather than additional reachability.
+
+Under jamming, demand-aware capital raises adaptive success by 14.56 points over no connector; random equal-budget capital raises it by 14.41 points. Demand-aware placement exceeds random placement by only 0.15 points with a 1.35-point half-width. Capital reduces the adaptive policy's jam penalty by 13.94 points and makes the adaptive-over-public advantage 5.11 points larger, so routing information and capital are complements under stress. Yet the added connector raises ending imbalance energy by 0.092. Delivery resilience, placement skill, and global balance are distinct objectives.
+
+![Agent capability frontier](output/agent_capability_eval/figures/capability_success.png)
+
+The null placement result is not universal. A preregistered phase sweep holds capital and timing fixed while varying persistent demand for one endpoint pair and the fraction of pre-existing liquidity reserved near those endpoints. Across 20 paired seeds in each of 16 cells, nine placement advantages survive a Bonferroni family-wise interval. With no endpoint isolation, demand-aware placement beats random capital only at 75% hotspot demand. The boundary falls to 50% hotspot demand at 50% isolation and 25% hotspot demand at 80% or 95% isolation. The strongest cell gains 4.36 success points over random equal-budget capital with a family-wise half-width of 1.59 points and reduces fees by 0.210 msat per delivered sat with a conventional 95% half-width of 0.050.
+
+![Placement-value boundary](output/placement_boundary_eval/figures/placement_value_phase.png)
+
+The bounded conclusion is that capital dominates when a scarce cut is the problem and internal paths make placement fungible. Demand-learning adds value when demand persists at locally constrained endpoints. Adaptive routing adds resilience only when liquidity leaves alternate feasible paths; balance knowledge suppresses the failed probes needed to find those paths. None of these tests establishes that a general AI system can obtain the required observations, capital, permissions, uptime, or execution reliability on the live network.
 
 ## 10. Implications for AI Agents and Lightning Liquidity
 

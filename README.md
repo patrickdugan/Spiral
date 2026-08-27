@@ -137,6 +137,23 @@ python -m spiral_ln.financial_abuse_eval `
 
 The campaign reports episode precision and recall, false-positive rate, entity recall, collateral flags, observer coverage, payment failure, gross-to-net churn, and change in network imbalance. It contains no evasion optimizer and cannot connect to a wallet, node, transport, or live network.
 
+## Agent capability frontier
+
+The capability campaign separates three resources that are often blurred together as "agent intelligence": routing information, deployable capital, and placement policy. Each seed runs public-only routing, bounded adaptive retries, and an oracle ceiling; no connector, random equal-budget capital, and past-demand-aware equal-budget capital; and normal and jammed conditions. Demand-aware placement occurs only after a warm-up window and cannot inspect future demand.
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m spiral_ln.agent_capability_eval `
+  --config configs/agent_capability_eval.json `
+  --output output/agent_capability_eval
+
+python -m spiral_ln.placement_boundary_eval `
+  --config configs/placement_boundary_eval.json `
+  --output output/placement_boundary_eval
+```
+
+The placement-boundary sweep then varies persistent endpoint demand and endpoint liquidity isolation while holding connector capital fixed. Its phase cells use paired seeds and a Bonferroni family-wise interval across the 16 planned comparisons.
+
 ## Scope
 
 Synthetic evidence in this repository illustrates mechanisms and falsifiable claims. It is not a measurement of current mainnet topology, an implementation of BOLT routing, or a production liquidity marketplace.

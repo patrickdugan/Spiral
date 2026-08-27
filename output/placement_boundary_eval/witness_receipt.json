@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-placement-value-boundary",
+  "configuration_file": "configs/placement_boundary_eval.json",
+  "configuration_hash": "d30804aeb2dad273d0604778730780d57325c195123a6d6936a174a46061846f",
+  "result_file": "output/placement_boundary_eval/summary.json",
+  "result_hash": "343e5efc5a12bf9b72298902bc7e1bb1d264a212221af424c8182dacf5090730",
+  "live_network": false,
+  "wallet_or_node_connection": false
+}

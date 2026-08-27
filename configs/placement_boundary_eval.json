@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "description": "Sealed phase sweep for the value of past-demand-aware placement under persistent endpoint demand and local liquidity isolation.",
+  "seed_count": 20,
+  "steps": 300,
+  "warmup_steps": 75,
+  "connector_capital": 120000,
+  "connector_bond_fraction": 0.20,
+  "hotspot_source": "A7",
+  "hotspot_target": "B7",
+  "hotspot_probabilities": [0.0, 0.25, 0.50, 0.75],
+  "isolation_fractions": [0.0, 0.50, 0.80, 0.95]
+}
