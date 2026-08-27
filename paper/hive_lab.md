@@ -162,6 +162,14 @@ Nine cells retain positive placement value after that correction. With no endpoi
 
 The bounded conclusion is sharper than "AI solves liquidity." Capital dominates when a whole cut is scarce and internal paths make placement fungible. Demand-learning adds measurable value when demand is persistent and access is localized, and the required persistence falls as endpoint constraints strengthen. Routing adaptation adds resilience only where liquidity leaves feasible alternatives; privileged balance knowledge chiefly suppresses failed probes. These are capability conditions inside the sealed algebra, not measurements of current Lightning or evidence that a general AI agent can obtain the required observations, capital, permissions, or execution reliability.
 
+### Public-topology validation
+
+Three preregistered campaigns replace the generated graph with 28 sealed connected samples from the July 16, 2023 public-gossip topology. Capacities and directional balances remain paired synthetic hidden variables because the source GML does not contain them. Topology-cluster Student-t intervals show that bounded retries add 5.14 success points over one-shot public routing (95% CI 3.08 to 7.20), while terminal-feedback learning adds only 0.35 points beyond retries (0.15 to 0.55). Oracle hidden-state filtering adds 1.11 points (0.64 to 1.58) and emits no infeasible probes.
+
+Failure-aware equal-budget capital adds 6.13 points over random capital under stationary hotspots (4.91 to 7.35), but only 0.14 under diffuse demand (-0.02 to 0.31) and 0.44 after an unseen hotspot shift (-0.21 to 1.09). The online learner's shift-adaptation advantage over retries is 0.22 points (-0.46 to 0.91). Within this model, retries are the main routing capability, terminal-only learning is marginal, and capital placement requires persistent demand.
+
+![Public-topology capability boundary](output/public_topology_combined/cluster_forest.png)
+
 ## Reproduction
 
 ```powershell
@@ -172,6 +180,10 @@ python -m spiral_ln.hive_design_experiment --output output/hive_design --base-co
 python -m spiral_ln.financial_abuse_eval --output output/financial_abuse_eval --base-config configs/stego_hive_lab.json --config configs/financial_abuse_eval.json
 python -m spiral_ln.agent_capability_eval --output output/agent_capability_eval --config configs/agent_capability_eval.json
 python -m spiral_ln.placement_boundary_eval --output output/placement_boundary_eval --config configs/placement_boundary_eval.json
+python -m spiral_ln.public_topology_eval --output output/public_topology_eval --config configs/public_topology_eval.json
+python -m spiral_ln.public_topology_eval --output output/public_topology_replication --config configs/public_topology_replication.json
+python -m spiral_ln.public_topology_eval --output output/public_topology_precision --config configs/public_topology_precision.json
+python -m spiral_ln.public_topology_analysis --campaign original=output/public_topology_eval/rows.csv --campaign replication=output/public_topology_replication/rows.csv --campaign precision=output/public_topology_precision/rows.csv --output output/public_topology_combined
 ```
 
 The baseline campaign writes paired rows, a summary, two figures, and a receipt under `output/hive_lab`. The design campaign writes phase and ablation rows, two figures, a summary, and a receipt under `output/hive_design`. Each receipt binds exact configuration and result bytes with SHA-256 and states that the run has no live-network or payload-codec capability.

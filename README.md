@@ -150,9 +150,21 @@ python -m spiral_ln.agent_capability_eval `
 python -m spiral_ln.placement_boundary_eval `
   --config configs/placement_boundary_eval.json `
   --output output/placement_boundary_eval
+
+python -m spiral_ln.public_topology_eval `
+  --config configs/public_topology_precision.json `
+  --output output/public_topology_precision
+
+python -m spiral_ln.public_topology_analysis `
+  --campaign original=output/public_topology_eval/rows.csv `
+  --campaign replication=output/public_topology_replication/rows.csv `
+  --campaign precision=output/public_topology_precision/rows.csv `
+  --output output/public_topology_combined
 ```
 
 The placement-boundary sweep then varies persistent endpoint demand and endpoint liquidity isolation while holding connector capital fixed. Its phase cells use paired seeds and a Bonferroni family-wise interval across the 16 planned comparisons.
+
+The public-topology sequence uses the hash-bound July 16, 2023 gossip graph with paired synthetic capacities and hidden balances. Across 28 sealed topology clusters, retries add 5.14 success points over one-shot public routing, while terminal-feedback learning adds only 0.35 points beyond retries. Failure-aware equal-budget capital adds 6.13 points over random placement under stationary hotspots, but its diffuse and shifted-demand effects are practically negligible or unresolved around zero. These are topology-conditioned simulator results, not mainnet measurements.
 
 ## Scope
 

@@ -432,6 +432,8 @@ The capital-keyed pool is exactly invariant across all tested identity counts. T
 | P2b | The demand-cut endpoint rule beats random cross-cut placement | Not supported on the base topology; conditionally supported in the preregistered placement-boundary sweep |
 | P3 | Capital-keyed reward is invariant to identity splitting | Supported analytically and for 1-32 identities |
 | P4 | Bond settlement discriminates reliable from unreliable service | Supported for the worked records; schedule remains illustrative |
+| P5 | Terminal-feedback learning adds material reach beyond bounded retries | Not supported at a predeclared one-percentage-point practical bound |
+| P6 | Failure-aware equal-budget capital beats random placement under stationary demand | Supported across public-topology holdouts with synthetic hidden state |
 
 ### 9.7 Agent capability frontier
 
@@ -448,6 +450,20 @@ The null placement result is not universal. A preregistered phase sweep holds ca
 ![Placement-value boundary](output/placement_boundary_eval/figures/placement_value_phase.png)
 
 The bounded conclusion is that capital dominates when a scarce cut is the problem and internal paths make placement fungible. Demand-learning adds value when demand persists at locally constrained endpoints. Adaptive routing adds resilience only when liquidity leaves alternate feasible paths; balance knowledge suppresses the failed probes needed to find those paths. None of these tests establishes that a general AI system can obtain the required observations, capital, permissions, uptime, or execution reliability on the live network.
+
+### 9.8 Public-topology sealed validation
+
+The synthetic phase diagrams establish mechanics but may inherit their topology. A final sequence therefore replaces the generated graph with connected 64-node samples from the July 16, 2023 public-gossip snapshot published by Valko and Gomez [2025]. The source graph contains 15,100 nodes, 64,212 undirected channels, 15 components, and a 15,071-node giant component. Its exact local member is bound by SHA-256 in the provenance record. Gossip supplies public structure and policy fields but not channel capacity or directional balance, so each sampled topology receives paired lognormal capacities and three hidden-balance ensembles: balanced-band, uniform, and polarized.
+
+The online agent receives candidate paths, public fee cost, and only its own terminal path success or failure. It never receives capacity, balance, failing-edge identity, future demand, or the simulator state object. Three preregistered campaigns cover 28 sealed topology samples and 558 paired balance-model/demand-regime cells per routing condition. Inference treats the sampled topology, not each repeated cell, as the independent unit and uses two-sided Student-t intervals over topology-cluster means.
+
+The resulting capability boundary is sharp. Bounded retries improve success over one-shot public routing by 5.14 percentage points (95% CI 3.08 to 7.20). Terminal-feedback learning adds 0.35 points beyond retries (0.15 to 0.55): detectable, but wholly inside the predeclared plus-or-minus one-point practical-equivalence band. Exact hidden-state filtering adds another 1.11 points over the online learner (0.64 to 1.58) and produces exactly zero infeasible probe attempts. Thus, in this environment, most deployable routing gain comes from trying alternatives; coarse terminal learning contributes a small ordering gain, while privileged state remains valuable for both reach and probe suppression.
+
+Equal-budget failure-aware capital beats random capital by 2.24 points overall (1.73 to 2.74), but the average hides the decisive condition. Under stationary hotspots the gain is 6.13 points (4.91 to 7.35). Under diffuse demand it is 0.14 points (-0.02 to 0.31), and after an unseen hotspot shift it is 0.44 points (-0.21 to 1.09). An apparent periphery-topology effect in the first replication failed in the preregistered precision extension. The online learner's early-to-late adaptation advantage over retries after a shift is likewise only 0.22 points (-0.46 to 0.91). Past failures therefore support capital placement when demand persists, but neither static placement nor this terminal-feedback learner meaningfully predicts a new demand regime.
+
+![Public-topology capability boundary](output/public_topology_combined/cluster_forest.png)
+
+This is public-topology validation, not a mainnet performance estimate. The gossip archive is best effort and partial; capacities, balances, payment demand, and execution remain synthetic; the sampled subgraphs are small; and the model omits MPP, HTLC timing, node churn, channel-opening delay, and on-chain cost. The defensible claim is conditional: within these paired hidden-state ensembles, simple retry competence is real, terminal-only learning is marginal, and demand-aware capital is materially useful only when its demand signal is stationary.
 
 ## 10. Implications for AI Agents and Lightning Liquidity
 
@@ -540,9 +556,9 @@ Lightning liquidity is a graph-state problem before it is a marketplace slogan. 
 
 The connector calculus makes a missing intervention explicit as a ghost plan and refuses to count it until it compiles into capital, policy, horizon, and bond. The resulting framework links graph theory to operational accountability. It also gives autonomous agents a constructive role: they may transform observed demand into funded service, but only under reward caps and evidence that prevent identity multiplication and wash flow from masquerading as liquidity.
 
-The experiments support three narrow conclusions. Payment rewrites conserve modeled channel capacity. Added cross-cut capital improves delivery and resilience in the specified synthetic graphs. Capital-keyed rewards are exactly invariant to identity splitting. The experiments do not show that the simple demand-cut heuristic is better than random placement, nor do they establish mainnet economics.
+The experiments support five narrow conclusions. Payment rewrites conserve modeled channel capacity. Added cross-cut capital improves delivery and resilience in the specified synthetic graphs. Capital-keyed rewards are exactly invariant to identity splitting. On sampled public topology with synthetic hidden state, bounded retries provide most of the deployable routing gain, while terminal-feedback learning adds less than one percentage point. Failure-aware equal-budget placement beats random placement under stationary demand but not under diffuse or shifted demand. None of these results establishes mainnet economics.
 
-The next research gate is a time-sliced, holdout evaluation on realistic Lightning snapshots with calibrated hidden balances, MPP, HTLC timing, on-chain cost, and adversarial demand. If the connector rule continues to improve delivery after capital and privacy costs, the bonding layer can move from illustrative records to regtest service contracts. ZK proofs, Ark adapters, and asset settlement belong after that gate, not before it.
+The next research gate is a time-sliced evaluation across multiple historical snapshots with independently calibrated capacity and balance priors, MPP, HTLC timing, channel-opening delay, churn, on-chain cost, and adversarial demand. If the connector rule continues to improve delivery after capital and privacy costs, the bonding layer can move from illustrative records to regtest service contracts. ZK proofs, Ark adapters, and asset settlement belong after that gate, not before it.
 
 \pagebreak
 
@@ -635,7 +651,20 @@ The theorem assumes that duplicate-capital detection is correct. If an operator 
 
 **Boundary:** this is resource removal, not an HTLC attack implementation.
 
-## B.5 Sybil campaign
+## B.5 Public-topology capability campaign
+
+1. Verify the SHA-256 of the July 16, 2023 public-gossip GML snapshot.
+2. Draw connected 64-node hub, random, and periphery samples under fixed seeds.
+3. Pair synthetic capacity and hidden-balance draws across public, retry, online, and oracle routing conditions.
+4. Give the online learner only public path costs and terminal path outcomes.
+5. After 110 warm-up demands, add no connector, random equal-budget capital, or failure-aware equal-budget capital.
+6. Evaluate diffuse, stationary-hotspot, and unseen shifted-hotspot demand.
+7. Keep topology samples outside the calibration indices sealed; bind configuration, source, implementation, rows, and summaries by hash.
+8. Aggregate paired effects within each topology before computing Student-t confidence intervals.
+
+**Practical boundary:** an online-over-retry interval entirely inside plus or minus one percentage point is treated as no material incremental capability. Public topology does not make synthetic capacities, balances, or demand empirical.
+
+## B.6 Sybil campaign
 
 1. Define one capital identifier with 100,000 capital units and score 0.9.
 2. Split the claim across m identities for m in {1,2,4,8,16,32}.
@@ -689,6 +718,7 @@ The receipt binds the exact proof configuration to the exact `summary.json` byte
 6. Compare `summary.json` with the tables in Section 9.
 7. Build the PDF with `python -m spiral_ln.paper`.
 8. Render every page and inspect equations, tables, figures, references, headers, and page numbers.
+9. Run the public-topology evaluator with each of the three fixed configurations, then run `python -m spiral_ln.public_topology_analysis` over their sealed row files.
 
 # References
 
@@ -721,6 +751,8 @@ Shikhelman, Clara, and Sergei Tikhomirov. 2022. "Unjamming Lightning: A Systemat
 Tikhomirov, Sergei, Pedro Moreno-Sanchez, and Matteo Maffei. 2020. "A Quantitative Analysis of Security, Anonymity and Scalability for the Lightning Network." *IEEE EuroS&P Workshops*, 387-396.
 
 Tikhomirov, Sergei, Rene Pickhardt, Alex Biryukov, and Mariusz Nowostawski. 2020. "Probing Channel Balances in the Lightning Network." arXiv:2004.00333.
+
+Valko, Danila, and Jorge Marx Gomez. 2025. "Geolocated Lightning Network Topology Snapshots: A Dataset Covering 2019-2023." *Scientific Data* 12: 1939. https://doi.org/10.1038/s41597-025-06413-7
 
 van Dam, Gijs, Rabiah Abdul Kadir, Sharifah Md Yasin, and Halimah Badioze Zaman. 2026. "Payment Splitting in Lightning Network as a Mitigation Against Balance Discovery Attacks." *Blockchain: Research and Applications*. doi:10.1016/j.bcra.2026.100500.
 

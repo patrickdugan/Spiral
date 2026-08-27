@@ -3,5 +3,5 @@
   "analysis_file": "src/spiral_ln/public_topology_analysis.py",
   "analysis_sha256": "38d66fbab946a422efdad0fc5947a570a0d1889c723fa266a69d982def588337",
   "result_file": "output/public_topology_combined/summary.json",
-  "result_sha256": "d253360f518b4aebfbb83b01265b4fc92df1a2cefce83ded58ed37bc0729c14e"
+  "result_sha256": "4dbebc450ae0bd4153ab739c354131184addd7eb5b1505a0d1574540275a3d3c"
 }

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-public-topology-agent-capability",
+  "configuration_file": "configs/public_topology_precision.json",
+  "configuration_hash": "641e7d367c972c2a29db31d41a1114c2a764df6adb88c1ef11063500a3a1335f",
+  "topology_provenance_file": "data/topology/snapshot_provenance.json",
+  "topology_provenance_hash": "883c669c1bfaa8551e4fcff7b2c271ddcdfd94b9cce9ef8d2619946be3be69c4",
+  "topology_snapshot_hash": "ee1b054a6ba2cb0ea3184f9f68f5cca7d8e70d17ff2d9e44e5e8871be8a8b855",
+  "implementation_hashes": {
+    "src/spiral_ln/public_topology_eval.py": "edfa34ddee5d84adcee269108d820b091f05f84630a5d0f93b978d49e47e69e0",
+    "src/spiral_ln/public_topology.py": "87a56049a918a9f48c34850e82cc7b5c2bb63ce6b90f8ec6d7a9b36b87641724",
+    "src/spiral_ln/algebra.py": "f4542d5fdcbf023cbb2e8b527dd4ba00ece7e586c7b18f3f16f83ab7edfa8b6e",
+    "src/spiral_ln/simulator.py": "194b7828fbc53b193e9e8e0c1d9a46df967558d65e6613322a62d3053259bd51"
+  },
+  "result_file": "output/public_topology_precision/summary.json",
+  "result_hash": "01452309567ad196b9c3058a17fd36c057d3a993ce88f81dccd44935af4ce465",
+  "live_network": false,
+  "wallet_or_node_connection": false
+}
