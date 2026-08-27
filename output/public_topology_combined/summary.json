@@ -1,0 +1,685 @@
+{
+  "schema_version": "1.0",
+  "inference_unit": "sampled public-topology cluster",
+  "confidence_interval": "two-sided 95% Student-t interval over topology-cluster means",
+  "practical_equivalence_bound": 0.01,
+  "contrasts": {
+    "retry_minus_public_success": {
+      "left": "retry|none",
+      "right": "public|none",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "all",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 234,
+        "mean": 0.051212121212121216,
+        "ci95_half_width": 0.049348894230472284,
+        "ci95_lower": 0.0018632269816489314,
+        "ci95_upper": 0.1005610154425935,
+        "cluster_means": [
+          0.023232323232323222,
+          0.0,
+          0.002020202020202021,
+          0.1,
+          0.09090909090909091,
+          0.0,
+          0.028619528619528628,
+          0.04915824915824915,
+          0.21683501683501685,
+          0.0013468013468013473
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 72,
+          "mean": 0.031313131313131314,
+          "ci95_half_width": 0.07474750589224942,
+          "ci95_lower": -0.043434374579118105,
+          "ci95_upper": 0.10606063720538073,
+          "cluster_means": [
+            0.023232323232323222,
+            0.0,
+            0.002020202020202021,
+            0.1
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 162,
+          "mean": 0.06447811447811448,
+          "ci95_half_width": 0.08600977945682306,
+          "ci95_lower": -0.02153166497870858,
+          "ci95_upper": 0.15048789393493756,
+          "cluster_means": [
+            0.09090909090909091,
+            0.0,
+            0.028619528619528628,
+            0.04915824915824915,
+            0.21683501683501685,
+            0.0013468013468013473
+          ]
+        }
+      }
+    },
+    "online_minus_retry_success": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "all",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 234,
+        "mean": 0.003030303030303029,
+        "ci95_half_width": 0.0034850817306740687,
+        "ci95_lower": -0.0004547787003710397,
+        "ci95_upper": 0.006515384760977098,
+        "cluster_means": [
+          0.0005050505050505021,
+          0.0,
+          0.0,
+          0.007575757575757575,
+          0.011784511784511786,
+          0.0,
+          0.0,
+          0.0,
+          0.010437710437710426,
+          0.0
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 72,
+          "mean": 0.0020202020202020193,
+          "ci95_half_width": 0.00590475481934551,
+          "ci95_lower": -0.0038845527991434904,
+          "ci95_upper": 0.007924956839547529,
+          "cluster_means": [
+            0.0005050505050505021,
+            0.0,
+            0.0,
+            0.007575757575757575
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 162,
+          "mean": 0.003703703703703702,
+          "ci95_half_width": 0.006038949916748514,
+          "ci95_lower": -0.002335246213044812,
+          "ci95_upper": 0.009742653620452216,
+          "cluster_means": [
+            0.011784511784511786,
+            0.0,
+            0.0,
+            0.0,
+            0.010437710437710426,
+            0.0
+          ]
+        }
+      }
+    },
+    "online_minus_retry_leakage": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "evaluation_leakage_proxy",
+      "demand_regime": "all",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 234,
+        "mean": -0.019377104377104378,
+        "ci95_half_width": 0.028557302712070808,
+        "ci95_lower": -0.047934407089175186,
+        "ci95_upper": 0.00918019833496643,
+        "cluster_means": [
+          -0.0020202020202020163,
+          0.0,
+          0.0,
+          -0.02777777777777778,
+          -0.02592592592592593,
+          0.0,
+          0.003703703703703699,
+          -0.013468013468013466,
+          -0.12828282828282828,
+          0.0
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 72,
+          "mean": -0.007449494949494949,
+          "ci95_half_width": 0.021614702723728424,
+          "ci95_lower": -0.029064197673223373,
+          "ci95_upper": 0.014165207774233475,
+          "cluster_means": [
+            -0.0020202020202020163,
+            0.0,
+            0.0,
+            -0.02777777777777778
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 162,
+          "mean": -0.027328843995510662,
+          "ci95_half_width": 0.05319453921957744,
+          "ci95_lower": -0.0805233832150881,
+          "ci95_upper": 0.025865695224066777,
+          "cluster_means": [
+            -0.02592592592592593,
+            0.0,
+            0.003703703703703699,
+            -0.013468013468013466,
+            -0.12828282828282828,
+            0.0
+          ]
+        }
+      }
+    },
+    "oracle_minus_online_success": {
+      "left": "oracle|none",
+      "right": "online|none",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "all",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 234,
+        "mean": 0.011835016835016835,
+        "ci95_half_width": 0.012461478567264607,
+        "ci95_lower": -0.0006264617322477711,
+        "ci95_upper": 0.024296495402281442,
+        "cluster_means": [
+          0.0030303030303030377,
+          0.0,
+          0.0,
+          0.015656565656565653,
+          0.03501683501683502,
+          0.0,
+          0.006397306397306394,
+          0.007744107744107749,
+          0.050505050505050504,
+          0.0
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 72,
+          "mean": 0.004671717171717172,
+          "ci95_half_width": 0.011870858153528483,
+          "ci95_lower": -0.007199140981811311,
+          "ci95_upper": 0.016542575325245654,
+          "cluster_means": [
+            0.0030303030303030377,
+            0.0,
+            0.0,
+            0.015656565656565653
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 162,
+          "mean": 0.01661054994388328,
+          "ci95_half_width": 0.022128397402723817,
+          "ci95_lower": -0.005517847458840538,
+          "ci95_upper": 0.0387389473466071,
+          "cluster_means": [
+            0.03501683501683502,
+            0.0,
+            0.006397306397306394,
+            0.007744107744107749,
+            0.050505050505050504,
+            0.0
+          ]
+        }
+      }
+    },
+    "failure_capital_minus_random_success": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "all",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 234,
+        "mean": 0.029730639730639732,
+        "ci95_half_width": 0.010596109825941447,
+        "ci95_lower": 0.019134529904698286,
+        "ci95_upper": 0.04032674955658118,
+        "cluster_means": [
+          0.03080808080808081,
+          0.03787878787878788,
+          0.030303030303030293,
+          0.02323232323232323,
+          0.013131313131313134,
+          0.027946127946127962,
+          0.04646464646464647,
+          0.0585858585858586,
+          0.012457912457912465,
+          0.016498316498316495
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 72,
+          "mean": 0.03055555555555555,
+          "ci95_half_width": 0.009518870312953445,
+          "ci95_lower": 0.021036685242602104,
+          "ci95_upper": 0.040074425868509,
+          "cluster_means": [
+            0.03080808080808081,
+            0.03787878787878788,
+            0.030303030303030293,
+            0.02323232323232323
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 162,
+          "mean": 0.02918069584736252,
+          "ci95_half_width": 0.020260391457348773,
+          "ci95_lower": 0.008920304390013747,
+          "ci95_upper": 0.04944108730471129,
+          "cluster_means": [
+            0.013131313131313134,
+            0.027946127946127962,
+            0.04646464646464647,
+            0.0585858585858586,
+            0.012457912457912465,
+            0.016498316498316495
+          ]
+        }
+      }
+    },
+    "failure_capital_diffuse": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "diffuse",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 78,
+        "mean": 0.0019191919191919222,
+        "ci95_half_width": 0.0017763788802882268,
+        "ci95_lower": 0.00014281303890369547,
+        "ci95_upper": 0.003695570799480149,
+        "cluster_means": [
+          0.0015151515151515433,
+          0.0,
+          0.007575757575757587,
+          0.0,
+          -0.0010101010101010166,
+          0.003030303030303025,
+          0.0,
+          0.0030303030303030377,
+          0.002020202020202021,
+          0.003030303030303025
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 24,
+          "mean": 0.0022727272727272826,
+          "ci95_half_width": 0.005738390217076609,
+          "ci95_lower": -0.003465662944349326,
+          "ci95_upper": 0.008011117489803892,
+          "cluster_means": [
+            0.0015151515151515433,
+            0.0,
+            0.007575757575757587,
+            0.0
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 54,
+          "mean": 0.0016835016835016821,
+          "ci95_half_width": 0.0018566264924469538,
+          "ci95_lower": -0.00017312480894527164,
+          "ci95_upper": 0.003540128175948636,
+          "cluster_means": [
+            -0.0010101010101010166,
+            0.003030303030303025,
+            0.0,
+            0.0030303030303030377,
+            0.002020202020202021,
+            0.003030303030303025
+          ]
+        }
+      }
+    },
+    "failure_capital_stationary": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "stationary_hotspot",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 78,
+        "mean": 0.07500000000000001,
+        "ci95_half_width": 0.020050368171173623,
+        "ci95_lower": 0.05494963182882639,
+        "ci95_upper": 0.09505036817117363,
+        "cluster_means": [
+          0.09999999999999999,
+          0.11060606060606061,
+          0.07878787878787878,
+          0.07272727272727271,
+          0.040404040404040414,
+          0.08080808080808084,
+          0.07474747474747476,
+          0.11212121212121215,
+          0.033333333333333354,
+          0.046464646464646465
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 24,
+          "mean": 0.09053030303030302,
+          "ci95_half_width": 0.02827542606168833,
+          "ci95_lower": 0.06225487696861469,
+          "ci95_upper": 0.11880572909199134,
+          "cluster_means": [
+            0.09999999999999999,
+            0.11060606060606061,
+            0.07878787878787878,
+            0.07272727272727271
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 54,
+          "mean": 0.06464646464646466,
+          "ci95_half_width": 0.03154365103180488,
+          "ci95_lower": 0.03310281361465978,
+          "ci95_upper": 0.09619011567826954,
+          "cluster_means": [
+            0.040404040404040414,
+            0.08080808080808084,
+            0.07474747474747476,
+            0.11212121212121215,
+            0.033333333333333354,
+            0.046464646464646465
+          ]
+        }
+      }
+    },
+    "failure_capital_shifted": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "shifted_hotspot",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 78,
+        "mean": 0.01227272727272727,
+        "ci95_half_width": 0.019181579354208132,
+        "ci95_lower": -0.006908852081480862,
+        "ci95_upper": 0.0314543066269354,
+        "cluster_means": [
+          -0.009090909090909113,
+          0.003030303030303031,
+          0.004545454545454519,
+          -0.003030303030303031,
+          0.0,
+          1.2335811384723961e-17,
+          0.06464646464646466,
+          0.060606060606060615,
+          0.002020202020202021,
+          -1.2335811384723961e-17
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 24,
+          "mean": -0.0011363636363636485,
+          "ci95_half_width": 0.009914792738733148,
+          "ci95_lower": -0.011051156375096797,
+          "ci95_upper": 0.008778429102369499,
+          "cluster_means": [
+            -0.009090909090909113,
+            0.003030303030303031,
+            0.004545454545454519,
+            -0.003030303030303031
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 54,
+          "mean": 0.021212121212121217,
+          "ci95_half_width": 0.033707292792347514,
+          "ci95_lower": -0.012495171580226297,
+          "ci95_upper": 0.05491941400446873,
+          "cluster_means": [
+            0.0,
+            1.2335811384723961e-17,
+            0.06464646464646466,
+            0.060606060606060615,
+            0.002020202020202021,
+            -1.2335811384723961e-17
+          ]
+        }
+      }
+    },
+    "online_shift_temporal_advantage_over_retry": {
+      "metric": "(online late-early) - (retry late-early)",
+      "demand_regime": "shifted_hotspot",
+      "combined": {
+        "cluster_n": 10,
+        "atomic_n": 78,
+        "mean": -0.003516339869281041,
+        "ci95_half_width": 0.016188471732431684,
+        "ci95_lower": -0.019704811601712724,
+        "ci95_upper": 0.012672131863150643,
+        "cluster_means": [
+          -0.0019607843137254832,
+          0.0,
+          0.0,
+          0.003921568627451004,
+          -0.06379084967320259,
+          0.0,
+          0.0,
+          0.0013071895424836555,
+          0.025359477124183,
+          0.0
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 4,
+          "atomic_n": 24,
+          "mean": 0.0004901960784313801,
+          "ci95_half_width": 0.00392542045310974,
+          "ci95_lower": -0.0034352243746783593,
+          "ci95_upper": 0.00441561653154112,
+          "cluster_means": [
+            -0.0019607843137254832,
+            0.0,
+            0.0,
+            0.003921568627451004
+          ]
+        },
+        "replication": {
+          "cluster_n": 6,
+          "atomic_n": 54,
+          "mean": -0.0061873638344226555,
+          "ci95_half_width": 0.03143350589715467,
+          "ci95_lower": -0.03762086973157733,
+          "ci95_upper": 0.025246142062732013,
+          "cluster_means": [
+            -0.06379084967320259,
+            0.0,
+            0.0,
+            0.0013071895424836555,
+            0.025359477124183,
+            0.0
+          ]
+        }
+      }
+    },
+    "failure_capital_shifted_hub": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "shifted_hotspot",
+      "topology_mode": "hub",
+      "combined": {
+        "cluster_n": 3,
+        "atomic_n": 24,
+        "mean": -0.0030303030303030338,
+        "ci95_half_width": 0.01303939393939398,
+        "ci95_lower": -0.016069696969697015,
+        "ci95_upper": 0.010009090909090947,
+        "cluster_means": [
+          -0.009090909090909113,
+          0.0,
+          1.2335811384723961e-17
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 1,
+          "atomic_n": 6,
+          "mean": -0.009090909090909113,
+          "ci95_half_width": 0.0,
+          "ci95_lower": -0.009090909090909113,
+          "ci95_upper": -0.009090909090909113,
+          "cluster_means": [
+            -0.009090909090909113
+          ]
+        },
+        "replication": {
+          "cluster_n": 2,
+          "atomic_n": 18,
+          "mean": 6.1679056923619804e-18,
+          "ci95_half_width": 7.836940972715132e-17,
+          "ci95_lower": -7.220150403478933e-17,
+          "ci95_upper": 8.45373154195133e-17,
+          "cluster_means": [
+            0.0,
+            1.2335811384723961e-17
+          ]
+        }
+      }
+    },
+    "failure_capital_shifted_random": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "shifted_hotspot",
+      "topology_mode": "random",
+      "combined": {
+        "cluster_n": 4,
+        "atomic_n": 30,
+        "mean": 0.0008838383838383742,
+        "ci95_half_width": 0.005097860319912913,
+        "ci95_lower": -0.004214021936074539,
+        "ci95_upper": 0.005981698703751287,
+        "cluster_means": [
+          0.004545454545454519,
+          -0.003030303030303031,
+          0.002020202020202021,
+          -1.2335811384723961e-17
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 2,
+          "atomic_n": 12,
+          "mean": 0.000757575757575744,
+          "ci95_half_width": 0.048128787878787715,
+          "ci95_lower": -0.047371212121211974,
+          "ci95_upper": 0.04888636363636346,
+          "cluster_means": [
+            0.004545454545454519,
+            -0.003030303030303031
+          ]
+        },
+        "replication": {
+          "cluster_n": 2,
+          "atomic_n": 18,
+          "mean": 0.0010101010101010045,
+          "ci95_half_width": 0.012834343434343518,
+          "ci95_lower": -0.011824242424242513,
+          "ci95_upper": 0.013844444444444522,
+          "cluster_means": [
+            0.002020202020202021,
+            -1.2335811384723961e-17
+          ]
+        }
+      }
+    },
+    "failure_capital_shifted_periphery": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "demand_regime": "shifted_hotspot",
+      "topology_mode": "periphery",
+      "combined": {
+        "cluster_n": 3,
+        "atomic_n": 24,
+        "mean": 0.04276094276094277,
+        "ci95_half_width": 0.08562768240464964,
+        "ci95_lower": -0.04286673964370687,
+        "ci95_upper": 0.1283886251655924,
+        "cluster_means": [
+          0.003030303030303031,
+          0.06464646464646466,
+          0.060606060606060615
+        ]
+      },
+      "by_campaign": {
+        "original": {
+          "cluster_n": 1,
+          "atomic_n": 6,
+          "mean": 0.003030303030303031,
+          "ci95_half_width": 0.0,
+          "ci95_lower": 0.003030303030303031,
+          "ci95_upper": 0.003030303030303031,
+          "cluster_means": [
+            0.003030303030303031
+          ]
+        },
+        "replication": {
+          "cluster_n": 2,
+          "atomic_n": 18,
+          "mean": 0.06262626262626264,
+          "ci95_half_width": 0.0256686868686869,
+          "ci95_lower": 0.036957575757575745,
+          "ci95_upper": 0.08829494949494954,
+          "cluster_means": [
+            0.06464646464646466,
+            0.060606060606060615
+          ]
+        }
+      }
+    }
+  },
+  "hypothesis_checks": {
+    "retry_beats_public": true,
+    "online_increment_below_one_pp": true,
+    "oracle_beats_online": false,
+    "oracle_has_zero_failed_probe_leakage": true,
+    "stationary_capital_beats_random": true,
+    "diffuse_capital_within_one_pp": true,
+    "shifted_capital_within_one_pp": false,
+    "positive_online_shift_adaptation": false
+  },
+  "campaigns": {
+    "original": {
+      "rows_file": "output/public_topology_eval/rows.csv",
+      "rows_sha256": "13257865497da5faf20734392074059509e36835eceeb56be415b154f7265f37"
+    },
+    "replication": {
+      "rows_file": "output/public_topology_replication/rows.csv",
+      "rows_sha256": "46f0e4612903b9c0f47c4771a33c70291546fb9b99de9e50bf6f3a0fd9b89c36"
+    }
+  }
+}

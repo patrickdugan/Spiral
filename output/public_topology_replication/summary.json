@@ -1,0 +1,593 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-27T15:40:57.520286+00:00",
+  "source_topology": {
+    "nodes": 15100,
+    "edges": 64212,
+    "component_count": 15,
+    "largest_component_nodes": 15071,
+    "largest_component_share": 0.9980794701986755,
+    "mean_degree": 8.504900662251655,
+    "max_degree": 2293,
+    "snapshot_sha256": "ee1b054a6ba2cb0ea3184f9f68f5cca7d8e70d17ff2d9e44e5e8871be8a8b855"
+  },
+  "sample_topologies": [
+    {
+      "sample_id": "public-hub-100-aa9d146e13c3",
+      "mode": "hub",
+      "nodes": 64,
+      "edges": 126,
+      "mean_degree": 3.9375,
+      "max_degree": 63,
+      "density": 0.0625,
+      "bridge_count": 28,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-random-101-d6de9229e83d",
+      "mode": "random",
+      "nodes": 64,
+      "edges": 105,
+      "mean_degree": 3.28125,
+      "max_degree": 63,
+      "density": 0.052083333333333336,
+      "bridge_count": 38,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-periphery-102-cec220632af6",
+      "mode": "periphery",
+      "nodes": 64,
+      "edges": 75,
+      "mean_degree": 2.34375,
+      "max_degree": 63,
+      "density": 0.03720238095238095,
+      "bridge_count": 52,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-hub-103-492c6e51d475",
+      "mode": "hub",
+      "nodes": 64,
+      "edges": 67,
+      "mean_degree": 2.09375,
+      "max_degree": 63,
+      "density": 0.033234126984126984,
+      "bridge_count": 56,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-random-104-7ad33e073229",
+      "mode": "random",
+      "nodes": 64,
+      "edges": 206,
+      "mean_degree": 6.4375,
+      "max_degree": 61,
+      "density": 0.10218253968253968,
+      "bridge_count": 7,
+      "diameter": 3
+    },
+    {
+      "sample_id": "public-periphery-105-7534d6b1c584",
+      "mode": "periphery",
+      "nodes": 64,
+      "edges": 96,
+      "mean_degree": 3,
+      "max_degree": 62,
+      "density": 0.047619047619047616,
+      "bridge_count": 38,
+      "diameter": 3
+    },
+    {
+      "sample_id": "public-hub-106-33eda9c47c96",
+      "mode": "hub",
+      "nodes": 64,
+      "edges": 238,
+      "mean_degree": 7.4375,
+      "max_degree": 63,
+      "density": 0.11805555555555555,
+      "bridge_count": 4,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-random-107-7c70e10832a7",
+      "mode": "random",
+      "nodes": 64,
+      "edges": 64,
+      "mean_degree": 2,
+      "max_degree": 63,
+      "density": 0.031746031746031744,
+      "bridge_count": 61,
+      "diameter": 2
+    },
+    {
+      "sample_id": "public-periphery-108-8f05dad52c47",
+      "mode": "periphery",
+      "nodes": 64,
+      "edges": 74,
+      "mean_degree": 2.3125,
+      "max_degree": 62,
+      "density": 0.03670634920634921,
+      "bridge_count": 51,
+      "diameter": 3
+    },
+    {
+      "sample_id": "public-hub-109-69c804332e54",
+      "mode": "hub",
+      "nodes": 64,
+      "edges": 63,
+      "mean_degree": 1.96875,
+      "max_degree": 63,
+      "density": 0.03125,
+      "bridge_count": 63,
+      "diameter": 2
+    }
+  ],
+  "design": {
+    "topology_sample_count": 10,
+    "calibration_sample_count": 4,
+    "sealed_holdout_sample_count": 6,
+    "balance_draws_per_topology": 3,
+    "seed_offset": 100,
+    "balance_models": [
+      "balanced_band",
+      "uniform",
+      "polarized"
+    ],
+    "demand_regimes": [
+      "diffuse",
+      "stationary_hotspot",
+      "shifted_hotspot"
+    ],
+    "routing_conditions": [
+      "public|none",
+      "retry|none",
+      "online|none",
+      "oracle|none",
+      "online|random",
+      "online|failure_aware"
+    ],
+    "agent_feedback": "terminal path success or failure only",
+    "future_demand_visible": false,
+    "hidden_capacity_visible": false,
+    "hidden_balance_visible": false,
+    "failing_edge_visible": false,
+    "claims_use_sealed_holdout_only": true
+  },
+  "holdout_cells": {
+    "public|none": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.8152076318742986,
+        "ci95_half_width": 0.019245412401112452
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.7570142750228885,
+        "ci95_half_width": 0.02295406817536063
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.18479236812570146,
+        "ci95_half_width": 0.019245412401112452
+      }
+    },
+    "retry|none": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.879685746352413,
+        "ci95_half_width": 0.01289636595840786
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.828354235099819,
+        "ci95_half_width": 0.017960732904244655
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.29528619528619526,
+        "ci95_half_width": 0.040291154751417244
+      }
+    },
+    "online|none": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.8833894500561167,
+        "ci95_half_width": 0.0124331292051495
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.8335893669304061,
+        "ci95_half_width": 0.0171386242936806
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.2679573512906846,
+        "ci95_half_width": 0.03333210022789739
+      }
+    },
+    "oracle|none": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.9,
+        "ci95_half_width": 0.012652864028613786
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.8588411757053234,
+        "ci95_half_width": 0.017139374530901343
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    "online|random": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.8878226711560044,
+        "ci95_half_width": 0.012082162565532364
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.8402842356230056,
+        "ci95_half_width": 0.016615609222444438
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.2632435465768799,
+        "ci95_half_width": 0.030795404494100617
+      }
+    },
+    "online|failure_aware": {
+      "evaluation_success_rate": {
+        "n": 162,
+        "mean": 0.917003367003367,
+        "ci95_half_width": 0.010502957931135183
+      },
+      "evaluation_volume_rate": {
+        "n": 162,
+        "mean": 0.8737136763518797,
+        "ci95_half_width": 0.01525272736422216
+      },
+      "evaluation_leakage_proxy": {
+        "n": 162,
+        "mean": 0.2309203142536476,
+        "ci95_half_width": 0.02769716444195866
+      }
+    }
+  },
+  "holdout_paired_contrasts": {
+    "retry_minus_public_success": {
+      "left": "retry|none",
+      "right": "public|none",
+      "metric": "evaluation_success_rate",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": 0.06447811447811448,
+        "ci95_half_width": 0.014741985383343698
+      }
+    },
+    "online_minus_retry_success": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "evaluation_success_rate",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": 0.003703703703703702,
+        "ci95_half_width": 0.0029750435775221093
+      }
+    },
+    "online_minus_retry_leakage": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "evaluation_leakage_proxy",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": -0.027328843995510662,
+        "ci95_half_width": 0.01183103832858356
+      }
+    },
+    "oracle_minus_online_success": {
+      "left": "oracle|none",
+      "right": "online|none",
+      "metric": "evaluation_success_rate",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": 0.01661054994388328,
+        "ci95_half_width": 0.005119542377974422
+      }
+    },
+    "oracle_minus_online_leakage": {
+      "left": "oracle|none",
+      "right": "online|none",
+      "metric": "evaluation_leakage_proxy",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": -0.2679573512906846,
+        "ci95_half_width": 0.03333210022789739
+      }
+    },
+    "failure_capital_minus_random_success": {
+      "left": "online|failure_aware",
+      "right": "online|random",
+      "metric": "evaluation_success_rate",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": 0.02918069584736252,
+        "ci95_half_width": 0.006994305641432752
+      }
+    },
+    "failure_capital_minus_none_success": {
+      "left": "online|failure_aware",
+      "right": "online|none",
+      "metric": "evaluation_success_rate",
+      "balance_model": "all",
+      "demand_regime": "all",
+      "left_minus_right": {
+        "n": 162,
+        "mean": 0.033613916947250286,
+        "ci95_half_width": 0.007075040773013572
+      }
+    }
+  },
+  "holdout_stratified": [
+    {
+      "balance_model": "balanced_band",
+      "demand_regime": "diffuse",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": -0.0010101010101010105,
+        "ci95_half_width": 0.0019797979797979803
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.005050505050505052,
+        "ci95_half_width": 0.003593274782681087
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    {
+      "balance_model": "balanced_band",
+      "demand_regime": "stationary_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.0035353535353535334,
+        "ci95_half_width": 0.009461329081630202
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.05404040404040407,
+        "ci95_half_width": 0.023382184767814708
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.6666666666666666,
+        "ci95_half_width": 0.22409148458621156
+      }
+    },
+    {
+      "balance_model": "balanced_band",
+      "demand_regime": "shifted_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.005050505050505046,
+        "ci95_half_width": 0.01163363587887128
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.024242424242424263,
+        "ci95_half_width": 0.015780047051441707
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    {
+      "balance_model": "uniform",
+      "demand_regime": "diffuse",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.0015151515151515188,
+        "ci95_half_width": 0.002596924665306984
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.0010101010101010042,
+        "ci95_half_width": 0.001979797979797981
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    {
+      "balance_model": "uniform",
+      "demand_regime": "stationary_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.0020202020202020146,
+        "ci95_half_width": 0.005495814478772188
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.06313131313131316,
+        "ci95_half_width": 0.024338824473591036
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.7222222222222222,
+        "ci95_half_width": 0.21291966974931725
+      }
+    },
+    {
+      "balance_model": "uniform",
+      "demand_regime": "shifted_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.011616161616161611,
+        "ci95_half_width": 0.011948941191766321
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.024747474747474747,
+        "ci95_half_width": 0.01920836209649278
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    {
+      "balance_model": "polarized",
+      "demand_regime": "diffuse",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.007757408643476304
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": -0.0010101010101010105,
+        "ci95_half_width": 0.0019797979797979742
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    },
+    {
+      "balance_model": "polarized",
+      "demand_regime": "stationary_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.006060606060606062,
+        "ci95_half_width": 0.013513224965203165
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.07676767676767676,
+        "ci95_half_width": 0.02621666255250326
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.7222222222222222,
+        "ci95_half_width": 0.21291966974931725
+      }
+    },
+    {
+      "balance_model": "polarized",
+      "demand_regime": "shifted_hotspot",
+      "online_minus_retry_success": {
+        "n": 18,
+        "mean": 0.0045454545454545435,
+        "ci95_half_width": 0.008791860920868725
+      },
+      "failure_capital_minus_random_success": {
+        "n": 18,
+        "mean": 0.014646464646464637,
+        "ci95_half_width": 0.01477064166557612
+      },
+      "failure_capital_match_rate": {
+        "n": 18,
+        "mean": 0.0,
+        "ci95_half_width": 0.0
+      }
+    }
+  ],
+  "shift_adaptation": {
+    "early_evaluation_success": {
+      "n": 54,
+      "mean": 0.8659259259259259,
+      "ci95_half_width": 0.036909118692801335
+    },
+    "late_evaluation_success": {
+      "n": 54,
+      "mean": 0.8631808278867102,
+      "ci95_half_width": 0.02244059947988003
+    },
+    "late_minus_early": {
+      "n": 54,
+      "mean": -0.0027450980392156876,
+      "ci95_half_width": 0.037731347066364836
+    },
+    "online_minus_retry_early": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "early_success_rate",
+      "balance_model": "all",
+      "demand_regime": "shifted_hotspot",
+      "left_minus_right": {
+        "n": 54,
+        "mean": 0.011851851851851851,
+        "ci95_half_width": 0.014891750475100161
+      }
+    },
+    "online_minus_retry_late": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "late_success_rate",
+      "balance_model": "all",
+      "demand_regime": "shifted_hotspot",
+      "left_minus_right": {
+        "n": 54,
+        "mean": 0.005664488017429194,
+        "ci95_half_width": 0.005544686949039227
+      }
+    },
+    "online_temporal_advantage_over_retry": {
+      "left": "online|none",
+      "right": "retry|none",
+      "metric": "(late_success_rate - early_success_rate) difference-in-differences",
+      "demand_regime": "shifted_hotspot",
+      "left_minus_right": {
+        "n": 54,
+        "mean": -0.006187363834422656,
+        "ci95_half_width": 0.014198614184205755
+      }
+    }
+  },
+  "invariants": {
+    "all_rows_complete": true,
+    "equal_connector_capital": true,
+    "network_invariants_hold": true,
+    "source_hash_verified": true
+  },
+  "interpretation": {
+    "topology": "public gossip-derived structure from 2023-07-16",
+    "capacity": "paired synthetic lognormal capacity; not present in source GML",
+    "balance": "hidden paired ensemble; not observed or measured",
+    "online": "terminal-feedback edge-risk learner with fixed preregistered parameters",
+    "sealed_holdout": "topology samples excluded from calibration indices"
+  },
+  "safety_boundary": {
+    "synthetic_execution_only": true,
+    "live_network": false,
+    "wallet_or_node_connection": false,
+    "invoice_or_payload": false,
+    "network_transport": false,
+    "transaction_broadcast": false
+  }
+}
