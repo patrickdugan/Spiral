@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "sealed-public-topology-agent-capability",
+  "configuration_file": "configs/public_topology_eval.json",
+  "configuration_hash": "c7e382125a90ea21b406b4c5686cc3415da872850f64c74218bfb3159c1cf336",
+  "topology_provenance_file": "data/topology/snapshot_provenance.json",
+  "topology_provenance_hash": "883c669c1bfaa8551e4fcff7b2c271ddcdfd94b9cce9ef8d2619946be3be69c4",
+  "topology_snapshot_hash": "ee1b054a6ba2cb0ea3184f9f68f5cca7d8e70d17ff2d9e44e5e8871be8a8b855",
+  "result_file": "output/public_topology_eval/summary.json",
+  "result_hash": "1eb9038b16f2395941ff37f0dcfeec0f73e3cd49e899f2846584ff2fa2a286d4",
+  "live_network": false,
+  "wallet_or_node_connection": false
+}
