@@ -9,3 +9,4 @@ htmlcov/
 .ruff_cache/
 Thumbs.db
 .DS_Store
+data/topology/*.gml.geo
