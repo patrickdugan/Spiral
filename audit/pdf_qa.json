@@ -1,0 +1,136 @@
+{
+  "liquidity_on_trial": {
+    "page_count": 13,
+    "pages": [
+      {
+        "page": 1,
+        "characters": 3437,
+        "text_outside_page": 0,
+        "first_body_line": "Liquidity on Trial"
+      },
+      {
+        "page": 2,
+        "characters": 3649,
+        "text_outside_page": 0,
+        "first_body_line": "The audit targets the unmodified repository at commit a0a3140. Original manuscript, source code, configurations,"
+      },
+      {
+        "page": 3,
+        "characters": 3786,
+        "text_outside_page": 0,
+        "first_body_line": "3. The algebra that survives"
+      },
+      {
+        "page": 4,
+        "characters": 3718,
+        "text_outside_page": 0,
+        "first_body_line": "5. Liquidity stock is not cumulative throughput"
+      },
+      {
+        "page": 5,
+        "characters": 3462,
+        "text_outside_page": 0,
+        "first_body_line": "In the final pinned-hash-seed diagnostic, seven policies run on 18 paired cells for 126 episodes, each 220 demands"
+      },
+      {
+        "page": 6,
+        "characters": 4228,
+        "text_outside_page": 0,
+        "first_body_line": "Finally, source and random seeds are necessary but not sufficient for this implementation's replay. Independent"
+      },
+      {
+        "page": 7,
+        "characters": 2460,
+        "text_outside_page": 0,
+        "first_body_line": "We therefore distinguish ordinal block height, miner-declared header time, and independently observed arrival or"
+      },
+      {
+        "page": 8,
+        "characters": 3425,
+        "text_outside_page": 0,
+        "first_body_line": "Available resource is ell-h-r. Reserving an operation changes h but not ownership ell. Settling it releases its"
+      },
+      {
+        "page": 9,
+        "characters": 4062,
+        "text_outside_page": 0,
+        "first_body_line": "Proposition L2: bounded simultaneous reservations"
+      },
+      {
+        "page": 10,
+        "characters": 2172,
+        "text_outside_page": 0,
+        "first_body_line": "The compilation interface has the same gap: two distinct connector IDs naming the same capital identifier can add"
+      },
+      {
+        "page": 11,
+        "characters": 4085,
+        "text_outside_page": 0,
+        "first_body_line": "The original manuscript acknowledges absent economic optimization and the supplement labels its coalition"
+      },
+      {
+        "page": 12,
+        "characters": 2167,
+        "text_outside_page": 0,
+        "first_body_line": "Appendix A. Evidence map and reproduction"
+      },
+      {
+        "page": 13,
+        "characters": 1241,
+        "text_outside_page": 0,
+        "first_body_line": "References"
+      }
+    ],
+    "contact_sheets": [
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_liquidity_on_trial_1.png",
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_liquidity_on_trial_2.png",
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_liquidity_on_trial_3.png",
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_liquidity_on_trial_4.png"
+    ]
+  },
+  "connector_calculus_critique": {
+    "page_count": 6,
+    "pages": [
+      {
+        "page": 1,
+        "characters": 1586,
+        "text_outside_page": 0,
+        "first_body_line": "Connector Calculus: Adversarial"
+      },
+      {
+        "page": 2,
+        "characters": 3020,
+        "text_outside_page": 0,
+        "first_body_line": "1. Findings matrix"
+      },
+      {
+        "page": 3,
+        "characters": 3611,
+        "text_outside_page": 0,
+        "first_body_line": "Two independent processes set PYTHONHASHSEED to 1 and 2. Both reproduce sample"
+      },
+      {
+        "page": 4,
+        "characters": 4087,
+        "text_outside_page": 0,
+        "first_body_line": "5.2 Rewards and record domains"
+      },
+      {
+        "page": 5,
+        "characters": 3326,
+        "text_outside_page": 0,
+        "first_body_line": "The greedy oracle is also not an optimal full-horizon controller: a two-demand witness delivers one payment"
+      },
+      {
+        "page": 6,
+        "characters": 1416,
+        "text_outside_page": 0,
+        "first_body_line": "9. Proposed disposition of the original paper"
+      }
+    ],
+    "contact_sheets": [
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_connector_calculus_critique_1.png",
+      "C:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\tmp\\pdfs\\liquidity_on_trial\\contact_connector_calculus_critique_2.png"
+    ]
+  }
+}

@@ -1,0 +1,469 @@
+{
+  "challenges": {
+    "A1_repeated_walk_atomicity": {
+      "after": [
+        {
+          "balance_uv": 40,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "A",
+          "v": "B"
+        },
+        {
+          "balance_uv": 40,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "B",
+          "v": "C"
+        },
+        {
+          "balance_uv": 40,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "C",
+          "v": "A"
+        }
+      ],
+      "amount": 60,
+      "before": [
+        {
+          "balance_uv": 100,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "A",
+          "v": "B"
+        },
+        {
+          "balance_uv": 100,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "B",
+          "v": "C"
+        },
+        {
+          "balance_uv": 100,
+          "base_fee_msat": 1000,
+          "capacity": 100,
+          "cltv_delta": 40,
+          "fee_ppm": 100,
+          "locked_uv": 0,
+          "locked_vu": 0,
+          "reserve": 0,
+          "u": "C",
+          "v": "A"
+        }
+      ],
+      "classification": "implementation counterexample to unconditional atomic rejection for accepted closed walks",
+      "error": "insufficient directional liquidity",
+      "exhaustive_small_grid": {
+        "cases": 312,
+        "prevalidated": 312,
+        "rejected_after_mutation": 161,
+        "successes": 151
+      },
+      "limitation": "Public-topology routing enumerates simple paths, so this does not by itself invalidate its delivery rows.",
+      "precheck": true,
+      "route": [
+        "A",
+        "B",
+        "C",
+        "A",
+        "B",
+        "C",
+        "A"
+      ]
+    },
+    "A2_net_vector_feasibility": {
+      "amount": 60,
+      "classification": "domain counterexample: net final-state admissibility is insufficient for arbitrary closed walks",
+      "explanation": "A net-zero rewrite hides a reverse-direction resource requirement. Sequential settlement could replenish it, but simultaneous pre-funded reservation cannot; the paper must choose semantics.",
+      "final_state_in_polytope": true,
+      "initial_forward": 100,
+      "initial_reverse": 0,
+      "net_delta": 0,
+      "reference_precheck": false,
+      "reservation_gross_forward": 60,
+      "reservation_gross_reverse": 60,
+      "route": [
+        "A",
+        "B",
+        "A"
+      ]
+    },
+    "A3_cut_stock_flow": {
+      "alternating": {
+        "delivered_inward": 200,
+        "delivered_outward": 200,
+        "demanded_inward": 200,
+        "demanded_outward": 200,
+        "failures": 0,
+        "initial_outbound_stock": 50,
+        "trajectory": [
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 0
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 1
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 2
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 3
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 4
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 5
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 6
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 7
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 8
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 9
+          }
+        ]
+      },
+      "classification": "ambiguous mathematical premise; false for gross demand, salvageable with net replenishment and prefix constraints",
+      "correct_inventory_identity": "Q_A(t)=Q_A(0)-F_out(0,t)+F_in(0,t), absent fees, locks and capital changes",
+      "necessary_prefix_condition": "0 <= Q_A(0)-F_out(0,t)+F_in(0,t) <= total_cut_capacity for every prefix t; not sufficient for multihop routing.",
+      "same_totals_different_order": {
+        "delivered_inward": 80,
+        "delivered_outward": 40,
+        "demanded_inward": 200,
+        "demanded_outward": 200,
+        "failures": 7,
+        "initial_outbound_stock": 50,
+        "trajectory": [
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "B",
+            "src": "A",
+            "step": 0
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": false,
+            "dst": "B",
+            "src": "A",
+            "step": 1
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": false,
+            "dst": "B",
+            "src": "A",
+            "step": 2
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": false,
+            "dst": "B",
+            "src": "A",
+            "step": 3
+          },
+          {
+            "after_outbound_stock": 10,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": false,
+            "dst": "B",
+            "src": "A",
+            "step": 4
+          },
+          {
+            "after_outbound_stock": 50,
+            "amount": 40,
+            "before_outbound_stock": 10,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 5
+          },
+          {
+            "after_outbound_stock": 90,
+            "amount": 40,
+            "before_outbound_stock": 50,
+            "delivered": true,
+            "dst": "A",
+            "src": "B",
+            "step": 6
+          },
+          {
+            "after_outbound_stock": 90,
+            "amount": 40,
+            "before_outbound_stock": 90,
+            "delivered": false,
+            "dst": "A",
+            "src": "B",
+            "step": 7
+          },
+          {
+            "after_outbound_stock": 90,
+            "amount": 40,
+            "before_outbound_stock": 90,
+            "delivered": false,
+            "dst": "A",
+            "src": "B",
+            "step": 8
+          },
+          {
+            "after_outbound_stock": 90,
+            "amount": 40,
+            "before_outbound_stock": 90,
+            "delivered": false,
+            "dst": "A",
+            "src": "B",
+            "step": 9
+          }
+        ]
+      }
+    },
+    "A4_compilation_guards": {
+      "classification": "specification/implementation gap, not a contradiction of an abstract Compile defined to require its predicates",
+      "distinct_connector_ids_same_capital_capacity": 200,
+      "duplicate_capital_capacity": 200,
+      "facts": [
+        "GhostPlan.compile has no state, funding, consent or exposure-registry argument.",
+        "NetworkState retains channels only; apply_connector discards bond, expiry and capital_id.",
+        "No time progression is claimed here: there is no lease-expiry transition to exercise."
+      ],
+      "final_total_capacity": 400,
+      "first": {
+        "amount": 100,
+        "bond": 10,
+        "capital_id": "capital:same-exposure",
+        "connector_id": "compiled:same-exposure",
+        "endpoints": [
+          "A",
+          "B"
+        ],
+        "expiry_step": 1,
+        "kind": "leased"
+      },
+      "negative_expiry_connector_accepted": true,
+      "second": {
+        "amount": 100,
+        "bond": 10,
+        "capital_id": "capital:same-exposure",
+        "connector_id": "compiled:same-exposure",
+        "endpoints": [
+          "C",
+          "D"
+        ],
+        "expiry_step": 1,
+        "kind": "leased"
+      },
+      "unbonded_connector_accepted": true
+    },
+    "A5_fee_boundary": {
+      "classification": "explicitly acknowledged idealization with discrete reachability consequence",
+      "delivered_sat": 1000,
+      "fee_adjusted_feasible": false,
+      "forwarder_fee_msat": 1000,
+      "note": "Only a two-edge fee recursion is used; no claim of complete BOLT semantics or empirically common boundary cases.",
+      "uniform_amount_feasible": true,
+      "upstream_available_msat": 1000000,
+      "upstream_required_msat": 1001000
+    }
+  },
+  "champion_controls": {
+    "identity_split_results": [
+      {
+        "coalition_reward": 47369,
+        "identities": 1
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 2
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 4
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 8
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 16
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 32
+      },
+      {
+        "coalition_reward": 47369,
+        "identities": 64
+      }
+    ],
+    "simple_path_failures": 0,
+    "simple_path_invariant_runs": 2000
+  },
+  "chronology": [
+    {
+      "event": "Begin repeated-cycle prevalidation and rollback challenge",
+      "utc": "2026-09-11T20:51:49.021015+00:00"
+    },
+    {
+      "event": "Test final-state polytope membership against pre-funded route feasibility",
+      "utc": "2026-09-11T20:51:49.042839+00:00"
+    },
+    {
+      "event": "Test horizon cut demand versus instantaneous stock with reverse replenishment",
+      "utc": "2026-09-11T20:51:49.042839+00:00"
+    },
+    {
+      "event": "Test declared compilation guards and lease retention",
+      "utc": "2026-09-11T20:51:49.042839+00:00"
+    },
+    {
+      "event": "Test fee-aware boundary as acknowledged model omission, not theorem falsification",
+      "utc": "2026-09-11T20:51:49.042839+00:00"
+    },
+    {
+      "event": "Run champion controls: valid simple-path invariants and fixed-exposure identity splits",
+      "utc": "2026-09-11T20:51:49.042839+00:00"
+    },
+    {
+      "event": "Cross-examination requested a corrected separate transactional reference; test both sequential and gross-prefunded semantics",
+      "utc": "2026-09-11T20:51:49.139159+00:00"
+    },
+    {
+      "event": "All expected counterexamples and champion controls observed; source unmodified",
+      "utc": "2026-09-11T20:51:49.173926+00:00"
+    }
+  ],
+  "interpretation": {
+    "prior_campaigns": "No counterexample here changes prior output CSVs; public routing uses simple paths.",
+    "rates": "Exhaustive small adversarial grid is not a representative population frequency.",
+    "testnet": "This file performs no testnet or network operation; root's chain observer is separate."
+  },
+  "reference_sha256": "81dc91db299b00d459bdd652fec59758bd1dba45a5268d8f053faf1bad688907",
+  "runtime_seconds": 0.17199999999866122,
+  "schema": "spiral.algebra_challenge.v1",
+  "scope": "offline toy witnesses against unmodified reference code",
+  "script_sha256": "71279917ead0e5e793030a6fc6f870a0c96051053d5fecfff25305692e1759f0",
+  "separate_transactional_reference": {
+    "apply_prefunded_transaction": {
+      "cases": 312,
+      "partial_rejections": 0,
+      "rejected_unchanged": 161,
+      "successes": 151
+    },
+    "apply_sequential_transaction": {
+      "cases": 312,
+      "partial_rejections": 0,
+      "rejected_unchanged": 161,
+      "successes": 151
+    }
+  },
+  "source_root": "C:\\projects\\Spiral",
+  "source_sha256": {
+    "paper/manuscript.md": "56f2109b793be5a06eb405bd73810573be64402682281e3e4a1bd49c406cd049",
+    "src/spiral_ln/algebra.py": "f4542d5fdcbf023cbb2e8b527dd4ba00ece7e586c7b18f3f16f83ab7edfa8b6e",
+    "src/spiral_ln/bonding.py": "692b5b7eae2f96346593971577348c7b75154f3e55fc402209dd45062ae2cf67"
+  }
+}

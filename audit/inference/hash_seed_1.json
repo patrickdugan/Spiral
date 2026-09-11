@@ -1,0 +1,64 @@
+{
+  "pythonhashseed": "1",
+  "networkx": "3.6.1",
+  "sample_id": "public-random-4-5ae5f9236d61",
+  "source_node_hash": "5ae5f9236d611e609ea0b76bc9a0206cfd90465967ce2d6960c9709e9936e16f",
+  "canonical_edges_sha256": "8d1027821dc22f789d537719d20c8b73b6ab1c7c5b789db6777ab797a5c300d9",
+  "iteration_nodes_sha256": "b8e58e48d2976f1efe1bfb5c219df1e334c723cfd499d25609b44f58fe2fe3c0",
+  "canonical_public_metadata_sha256": "e327751089fa904969273655935574760d2f8574d0073c5a8808947c3f4cb562",
+  "synthetic_state_sha256": "8a021105d1fb1febcf1a07b83fc62e5e2f1c34033fbe5bae4b7906d70d377f02",
+  "catalogue_sha256": "1dbc939250195bbdc7c39af9335ce88d41c1c9d68a5f75bf98ce03199ba6cd9c",
+  "pair_count": 512,
+  "episodes": {
+    "public": {
+      "evaluation_succeeded": 105,
+      "evaluation_failed_attempts": 5
+    },
+    "retry": {
+      "evaluation_succeeded": 105,
+      "evaluation_failed_attempts": 5
+    },
+    "online": {
+      "evaluation_succeeded": 105,
+      "evaluation_failed_attempts": 5
+    },
+    "oracle": {
+      "evaluation_succeeded": 105,
+      "evaluation_failed_attempts": 0
+    }
+  },
+  "canonical_order_reference": {
+    "synthetic_state_sha256": "b9ccbd426331a327fb70a4bbf0aa75b88112db3865a2480b680ea7214d960343",
+    "catalogue_sha256": "1dbc939250195bbdc7c39af9335ce88d41c1c9d68a5f75bf98ce03199ba6cd9c",
+    "episodes": {
+      "public": {
+        "evaluation_succeeded": 106,
+        "evaluation_failed_attempts": 4
+      },
+      "retry": {
+        "evaluation_succeeded": 106,
+        "evaluation_failed_attempts": 4
+      },
+      "online": {
+        "evaluation_succeeded": 106,
+        "evaluation_failed_attempts": 4
+      },
+      "oracle": {
+        "evaluation_succeeded": 106,
+        "evaluation_failed_attempts": 0
+      }
+    },
+    "scope": "Separate audit reference canonicalizes node and oriented-edge insertion; does not edit production sampler."
+  },
+  "path_counts": {
+    "0": 0,
+    "1": 488,
+    "2": 24,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 0
+  }
+}

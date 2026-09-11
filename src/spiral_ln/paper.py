@@ -330,7 +330,7 @@ def render(input_path: str | Path, output_path: str | Path) -> Path:
         topMargin=0.62 * inch,
         bottomMargin=0.62 * inch,
         title="Connector Calculus",
-        author="Rubio, Dugan, and Pizarro",
+        author="Dugan",
         subject="Ghost-node rewrites, bonded liquidity, and adversarial agent routing on the Lightning Network",
     )
     story = parse_markdown(input_path, LETTER[0] - document.leftMargin - document.rightMargin)
@@ -349,4 +349,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -1,0 +1,490 @@
+{
+  "schema": "spiral-testnet4-header-replay-v1",
+  "generated_utc": "2026-09-11T20:49:54.199128+00:00",
+  "data_directory": "D:\\BitcoinTestnet\\testnet4",
+  "source_log_sha256": "c556a2bf618e2ef417fbf56c915353abf78aa930735efebab3f139dd52a256c6",
+  "script_sha256": "d94c838d4d94d9145e3bbc3503fab47217fc0a85a20f0354fd5c10e049c98acf",
+  "file_receipts": [
+    {
+      "file": "blk00081.dat",
+      "bytes": 132760638,
+      "records": 601,
+      "offset_and_decoded_headers_sha256": "e625d8db7a46cbb5d87a4aa248c44ec6e52a39f005ca6e3f7e03a8bddc17f143"
+    },
+    {
+      "file": "blk00082.dat",
+      "bytes": 133311989,
+      "records": 645,
+      "offset_and_decoded_headers_sha256": "f823ee6312e1abe2e38f27ba5dcb1c93ba68268620f48506c851d473e400997a"
+    },
+    {
+      "file": "blk00083.dat",
+      "bytes": 133720068,
+      "records": 550,
+      "offset_and_decoded_headers_sha256": "abf7105f92c86626f0ff79ee38fd7f73fdf5e337be0c9b5ecf287b41641968f3"
+    },
+    {
+      "file": "blk00084.dat",
+      "bytes": 133992197,
+      "records": 995,
+      "offset_and_decoded_headers_sha256": "f4979899e1b13152df30f37855e7d406e37a65548aca203815ed2d95041f28cd"
+    },
+    {
+      "file": "blk00085.dat",
+      "bytes": 133701788,
+      "records": 1182,
+      "offset_and_decoded_headers_sha256": "a6aa137a461100e5a637c06a6562541b2c473aba1bfd78b68b8957581081589d"
+    },
+    {
+      "file": "blk00086.dat",
+      "bytes": 133969108,
+      "records": 5510,
+      "offset_and_decoded_headers_sha256": "67c25140014a9ac67d114cc66ed9103ecd2e1e32d268b69517ba0830a738ec62"
+    },
+    {
+      "file": "blk00087.dat",
+      "bytes": 133728160,
+      "records": 6701,
+      "offset_and_decoded_headers_sha256": "2b54c3b1e865969c9a201a5a3306dcaa7156a2384e814fe831306edba6d0d9d5"
+    },
+    {
+      "file": "blk00088.dat",
+      "bytes": 134190642,
+      "records": 11083,
+      "offset_and_decoded_headers_sha256": "ab4ab4226db6b0eb50d294f4aabebb55e394e0affd3f63fdaf00241c8dffbd69"
+    },
+    {
+      "file": "blk00089.dat",
+      "bytes": 117440512,
+      "records": 11640,
+      "offset_and_decoded_headers_sha256": "436cd1af44b333bc2efa928658a0a985792f224cb21fd90e84e063b85f47445a"
+    }
+  ],
+  "scope": "historical testnet4 public-header replay, not live LN, no wallet access or transactions",
+  "checks": [
+    "testnet4 magic",
+    "double-SHA256 header identity",
+    "encoded proof-of-work target",
+    "512 parent links anchored to last logged tip"
+  ],
+  "unchecked": [
+    "current active tip",
+    "full difficulty/consensus rules",
+    "transactions/merkle roots",
+    "UTXO state",
+    "actual funding inclusion",
+    "LN protocol"
+  ],
+  "rpc_status": "TCP unreachable at inspection; historical replay only",
+  "tip_log_observed_utc": "2026-08-11T21:43:10Z",
+  "tip_hash": "00000000007ebe374440a023c93aaac3a3b51198282e61c734777902550d6b6f",
+  "tip_height": 147984,
+  "first_height": 147473,
+  "header_count": 512,
+  "headers_csv_sha256": "b8dc3a8115de03fa250c8757e70646303a8c91eb31412dc5933bc729bddb9a89",
+  "header_time_intervals_seconds": {
+    "n": 511,
+    "min": -6004,
+    "median": 1201,
+    "p95_nearest_rank": 2963,
+    "max": 5708,
+    "nonpositive": 64
+  },
+  "header_time_windows_seconds": {
+    "1": {
+      "n": 511,
+      "min": -6004,
+      "median": 1201,
+      "p95_nearest_rank": 2963,
+      "max": 5708,
+      "nonpositive": 64
+    },
+    "3": {
+      "n": 509,
+      "min": -3602,
+      "median": 3603,
+      "p95_nearest_rank": 5848,
+      "max": 8110,
+      "nonpositive": 161
+    },
+    "6": {
+      "n": 506,
+      "min": -2401,
+      "median": 3176.5,
+      "p95_nearest_rank": 9091,
+      "max": 11713,
+      "nonpositive": 28
+    },
+    "12": {
+      "n": 500,
+      "min": -1199,
+      "median": 7207.0,
+      "p95_nearest_rank": 14412,
+      "max": 17551,
+      "nonpositive": 3
+    }
+  },
+  "clock_warning": "Miner timestamps are not observed arrival/inclusion times; negative differences are possible. No latency forecast or clamp-to-zero used.",
+  "settlement_scenarios": [
+    {
+      "horizon_blocks": 3,
+      "depth": 0,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 0,
+      "demand_count": 3,
+      "delivered": 3,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 0,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 0,
+      "demand_count": 3,
+      "delivered": 3,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 1,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 1,
+      "demand_count": 3,
+      "delivered": 3,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 1,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 3,
+      "demand_count": 3,
+      "delivered": 1,
+      "delivery_fraction": 0.3333333333333333,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 3,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 3,
+      "demand_count": 3,
+      "delivered": 1,
+      "delivery_fraction": 0.3333333333333333,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 3,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 5,
+      "demand_count": 3,
+      "delivered": 0,
+      "delivery_fraction": 0.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 6,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 6,
+      "demand_count": 3,
+      "delivered": 0,
+      "delivery_fraction": 0.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 3,
+      "depth": 6,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 8,
+      "demand_count": 3,
+      "delivered": 0,
+      "delivery_fraction": 0.0,
+      "nonoverlapping_header_windows": 170,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147476
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 0,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 0,
+      "demand_count": 6,
+      "delivered": 6,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 0,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 0,
+      "demand_count": 6,
+      "delivered": 6,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 1,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 1,
+      "demand_count": 6,
+      "delivered": 6,
+      "delivery_fraction": 1.0,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 1,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 3,
+      "demand_count": 6,
+      "delivered": 4,
+      "delivery_fraction": 0.6666666666666666,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 3,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 3,
+      "demand_count": 6,
+      "delivered": 4,
+      "delivery_fraction": 0.6666666666666666,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 3,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 5,
+      "demand_count": 6,
+      "delivered": 2,
+      "delivery_fraction": 0.3333333333333333,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 6,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 6,
+      "demand_count": 6,
+      "delivered": 1,
+      "delivery_fraction": 0.16666666666666666,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 6,
+      "depth": 6,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 8,
+      "demand_count": 6,
+      "delivered": 0,
+      "delivery_fraction": 0.0,
+      "nonoverlapping_header_windows": 85,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147479
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 0,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 0,
+      "demand_count": 12,
+      "delivered": 10,
+      "delivery_fraction": 0.8333333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 0,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 0,
+      "demand_count": 12,
+      "delivered": 10,
+      "delivery_fraction": 0.8333333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 1,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 1,
+      "demand_count": 12,
+      "delivered": 10,
+      "delivery_fraction": 0.8333333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 1,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 3,
+      "demand_count": 12,
+      "delivered": 10,
+      "delivery_fraction": 0.8333333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 3,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 3,
+      "demand_count": 12,
+      "delivered": 10,
+      "delivery_fraction": 0.8333333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 3,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 5,
+      "demand_count": 12,
+      "delivered": 8,
+      "delivery_fraction": 0.6666666666666666,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 6,
+      "inclusion_lag_blocks": 1,
+      "activation_offset": 6,
+      "demand_count": 12,
+      "delivered": 7,
+      "delivery_fraction": 0.5833333333333334,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    },
+    {
+      "horizon_blocks": 12,
+      "depth": 6,
+      "inclusion_lag_blocks": 3,
+      "activation_offset": 8,
+      "demand_count": 12,
+      "delivered": 5,
+      "delivery_fraction": 0.4166666666666667,
+      "nonoverlapping_header_windows": 42,
+      "first_window": {
+        "start_height": 147473,
+        "end_height": 147485
+      },
+      "interpretation": "synthetic ordinal gate, identical across windows; not independent replications"
+    }
+  ]
+}

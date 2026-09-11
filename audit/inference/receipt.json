@@ -1,0 +1,25 @@
+{
+  "python": "3.12.14",
+  "networkx": "3.6.1",
+  "script_sha256": "28fd7fc40ab6e148e2012989c81b468471d09065c3c246453d64111c2d4ffa76",
+  "pythonhashseed": "1",
+  "command": "$env:PYTHONPATH=\"C:\\projects\\Spiral\\src\"; $env:PYTHONDONTWRITEBYTECODE=\"1\"; $env:PYTHONHASHSEED=\"1\"; & \"C:\\projects\\Spiral\\.venv\\Scripts\\python.exe\" \"E:\\Recovered_C_projects\\Spiral_target\\projects\\Spiral\\audit\\inference\\run_audit.py\"",
+  "inputs": {
+    "C:\\projects\\Spiral\\paper\\manuscript.md": "56f2109b793be5a06eb405bd73810573be64402682281e3e4a1bd49c406cd049",
+    "C:\\projects\\Spiral\\data\\topology\\20230716.gml.geo": "ee1b054a6ba2cb0ea3184f9f68f5cca7d8e70d17ff2d9e44e5e8871be8a8b855",
+    "C:\\projects\\Spiral\\src\\spiral_ln\\public_topology.py": "87a56049a918a9f48c34850e82cc7b5c2bb63ce6b90f8ec6d7a9b36b87641724",
+    "C:\\projects\\Spiral\\src\\spiral_ln\\public_topology_eval.py": "edfa34ddee5d84adcee269108d820b091f05f84630a5d0f93b978d49e47e69e0",
+    "C:\\projects\\Spiral\\src\\spiral_ln\\public_topology_analysis.py": "38d66fbab946a422efdad0fc5947a570a0d1889c723fa266a69d982def588337",
+    "C:\\projects\\Spiral\\src\\spiral_ln\\algebra.py": "f4542d5fdcbf023cbb2e8b527dd4ba00ece7e586c7b18f3f16f83ab7edfa8b6e",
+    "C:\\projects\\Spiral\\src\\spiral_ln\\simulator.py": "194b7828fbc53b193e9e8e0c1d9a46df967558d65e6613322a62d3053259bd51",
+    "C:\\projects\\Spiral\\configs\\public_topology_eval.json": "c7e382125a90ea21b406b4c5686cc3415da872850f64c74218bfb3159c1cf336",
+    "C:\\projects\\Spiral\\configs\\public_topology_replication.json": "2e0ab20b9f7950369d17a4c40f26b449109640a5ed3a65805e7274934a80c006",
+    "C:\\projects\\Spiral\\configs\\public_topology_precision.json": "641e7d367c972c2a29db31d41a1114c2a764df6adb88c1ef11063500a3a1335f",
+    "C:\\projects\\Spiral\\output\\public_topology_eval\\rows.csv": "13257865497da5faf20734392074059509e36835eceeb56be415b154f7265f37",
+    "C:\\projects\\Spiral\\output\\public_topology_replication\\rows.csv": "46f0e4612903b9c0f47c4771a33c70291546fb9b99de9e50bf6f3a0fd9b89c36",
+    "C:\\projects\\Spiral\\output\\public_topology_precision\\rows.csv": "35a97b18928a0a383fa60977f143d6b2873dd43fccafe63b2022f5962bb060e3"
+  },
+  "results_sha256": "97fc006fed14f4440ed5a79d09b154e2b8fa15324a0b8dfc6d4c6e6edfb61c35",
+  "no_live_network": true,
+  "no_wallet_operations": true
+}

@@ -1,0 +1,29 @@
+{
+  "generated_utc": "2026-09-11T21:22:17.490853+00:00",
+  "status": "passed",
+  "command": [
+    "C:\\projects\\Spiral\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "C:\\projects\\Spiral\\tests",
+    "C:\\projects\\Spiral\\audit\\test_resource_model.py",
+    "C:\\projects\\Spiral\\audit\\algebra\\test_transactional.py",
+    "C:\\projects\\Spiral\\audit\\inference\\test_audit.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "test_output": "........................................................................ [ 69%]\n................................                                         [100%]\n104 passed in 21.72s",
+  "original_input_hashes_verified": 12,
+  "attribution_only_corrections_verified": [
+    "C:\\projects\\Spiral\\paper\\manuscript.md"
+  ],
+  "inference_bundle_hashes_verified": 9,
+  "post_review_float_direction": "rejected_without_mutation",
+  "resource_model_sha256": "b526a6a1fb8f86f67e6a1e0852d207e86f8a8b295d861ca593c5bf0c225cdb97",
+  "headers_verified": 512,
+  "internal_parent_links": 511,
+  "historical_erratum": "original summary check label says512 links; correct511 internal links for512 headers",
+  "historical_cross_review": "pre-guard resource hash retained in algebra/cross_examination.json",
+  "validation_script_sha256": "ca8653d78afb744f8a5b91626b46558af874c8f9d2f93674a238d4f3cdb5e25f"
+}

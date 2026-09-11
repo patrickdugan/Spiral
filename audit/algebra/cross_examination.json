@@ -1,0 +1,79 @@
+{
+  "header_verification": {
+    "disk_spotchecks": [
+      {
+        "file": "blk00089.dat",
+        "height": 147473,
+        "matches_disk_header": true,
+        "offset": 82782255
+      },
+      {
+        "file": "blk00089.dat",
+        "height": 147728,
+        "matches_disk_header": true,
+        "offset": 84976307
+      },
+      {
+        "file": "blk00089.dat",
+        "height": 147984,
+        "matches_disk_header": true,
+        "offset": 116170255
+      }
+    ],
+    "encoded_target_checks": 512,
+    "headers": 512,
+    "internal_parent_links": 511,
+    "nonpositive_timestamp_differences": 64,
+    "not_checked": [
+      "retarget rules",
+      "full consensus",
+      "transactions or merkle roots",
+      "current tip",
+      "wallet state",
+      "actual funding inclusion"
+    ],
+    "sha256d_matches": 512
+  },
+  "incentives_independent_witnesses": {
+    "joint_record_max_weight_alternative_reward": 40,
+    "mixed_coordinate_subject_reward": 60,
+    "zero_weight_rounding": {
+      "a": 0,
+      "b": 0,
+      "c": 0,
+      "z": 2
+    }
+  },
+  "resource_model_float_direction": {
+    "ending_balance_type": "float",
+    "finish_error": "integer msat required",
+    "input_direction": 1.0,
+    "mutated_on_error": true,
+    "prepare_accepted": true
+  },
+  "resource_model_typed_state_machine": {
+    "aborted": 480,
+    "accepted_prepares": 1577,
+    "attempted_prepares": 3424,
+    "invariant_failures": 0,
+    "rejected_prepares": 1847,
+    "settled": 1096
+  },
+  "schema": "spiral.cross-lane-algebra-review.v1",
+  "scope_adjudication": {
+    "bond": "separately posted bond accounting not enforced; shared funding collateral could be coherent with explicit lien/priority, not evidence of real double spending",
+    "fixed_weight_identity_theorem": "survives; score-selection experiments vary weights and are not a contradiction",
+    "mixed_coordinates": "attested joint-claim interpretation yields a mismatch; separate canonical attribute interpretation needs an explicit consistency/authentication contract",
+    "testnet_scenarios": "outcomes depend on assumed ordinal delays, not header-specific stochastic conditions; source-backed clock ordering is not empirical funding latency",
+    "zero_weight_rounding": "genuine allocator bug within nonnegative valid inputs, while total-pool conservation survives"
+  },
+  "source_hashes": {
+    "bonding.py": "692b5b7eae2f96346593971577348c7b75154f3e55fc402209dd45062ae2cf67",
+    "cross_examination.py": "2c2447d8f4cdb836cf86375d24c292dc166ca061693cd2e0d2131d8d517ec56b",
+    "headers.csv": "b8dc3a8115de03fa250c8757e70646303a8c91eb31412dc5933bc729bddb9a89",
+    "incentives_run_audit.py": "258c7576253fbd852f24b47ee9d8cea751f555b89769d4cceb871e16f4a41169",
+    "resource_model.py": "46e5ff5eeb8ae53a14f548979273f0a62532db9087c847a844ff3a8f6cbe3cd0",
+    "testnet_summary.json": "e709d9a86e17578301a864202c86f68c3cc19f43be10ba6e6fadb581d1bcb1cb"
+  },
+  "utc": "2026-09-11T20:54:08.286295+00:00"
+}

@@ -2,7 +2,7 @@
 
 ## Ghost-Node Rewrites, Bonded Liquidity, and Adversarial Agent Routing on the Lightning Network
 
-**Authors:** Rubio, Dugan, and Pizarro  
+**Authors:** Dugan  
 **Program:** Spiral  
 **Version:** Reconstructed empirical draft, August 2026
 

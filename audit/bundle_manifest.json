@@ -1,0 +1,207 @@
+{
+  "schema": "spiral-adversarial-followup-manifest-v1",
+  "generated_utc": "2026-09-11T21:22:18.240103+00:00",
+  "baseline_commit": "a0a3140",
+  "originals_modified": true,
+  "original_modification_scope": "User-requested paper attribution and PDF author metadata only; patent attribution and scientific content retained.",
+  "followup_title": "Liquidity on Trial",
+  "paper_pages": 13,
+  "critique_pages": 6,
+  "evidence_scope": "exploratory sub-agent simulations and historical public testnet4 headers, not live Lightning",
+  "tests_passed": 104,
+  "files": {
+    "audit/algebra/challenge.py": {
+      "bytes": 14289,
+      "sha256": "71279917ead0e5e793030a6fc6f870a0c96051053d5fecfff25305692e1759f0"
+    },
+    "audit/algebra/cross_examination.json": {
+      "bytes": 3049,
+      "sha256": "62cbd68d1d6c2a2b7f7585beb136e3f85b852ed9892533897b2f9b5cdcb6b12a"
+    },
+    "audit/algebra/cross_examination.py": {
+      "bytes": 8484,
+      "sha256": "2c2447d8f4cdb836cf86375d24c292dc166ca061693cd2e0d2131d8d517ec56b"
+    },
+    "audit/algebra/report.md": {
+      "bytes": 19434,
+      "sha256": "e4895bc88ebb678becec7a880e9d67f635c22fd0f15f51fb918919c400afb3cd"
+    },
+    "audit/algebra/results.json": {
+      "bytes": 14310,
+      "sha256": "b4a321702d76f5b27c6e66e5cc30fe179b9225fe8c484f64583ccef00afc4e81"
+    },
+    "audit/algebra/test_transactional.py": {
+      "bytes": 2516,
+      "sha256": "25a78c6f3deefaaefa592171589ab9ea4d79964c425373bfaa883e8c0f7b9e5d"
+    },
+    "audit/algebra/transactional_reference.py": {
+      "bytes": 1935,
+      "sha256": "81dc91db299b00d459bdd652fec59758bd1dba45a5268d8f053faf1bad688907"
+    },
+    "audit/algebra_parent_response.md": {
+      "bytes": 1698,
+      "sha256": "82a97c0ca058dd258d8c531ca04d6cd508f848d4e3dda525899419f9c1ad1d36"
+    },
+    "audit/ATTRIBUTION_CORRECTION.md": {
+      "bytes": 1212,
+      "sha256": "81a243a099108a079dde948d29033c6c3693bd4e0f8e2b4f448e7f0de56216ff"
+    },
+    "audit/build_documents.py": {
+      "bytes": 10042,
+      "sha256": "473bcc534ae32053ccf623fcf45c4069bfa1c23eac61a4269ef83005e09fa2bc"
+    },
+    "audit/figures/forecast_delay.png": {
+      "bytes": 79915,
+      "sha256": "2e3ea2500c02961152c404c72e9b65db30a18a91725a80db0e7c2fb816cf9d60"
+    },
+    "audit/figures/header_clock.png": {
+      "bytes": 96142,
+      "sha256": "d45dc877163b6c1107b4ee2c04725015c524720e73a327e9920c8eafbc3948c1"
+    },
+    "audit/incentives/CROSS_EXAM.md": {
+      "bytes": 4393,
+      "sha256": "69940ac401e918ecc76b1395a1e0066c7fec19f42f8c7f7a2933da127d611b74"
+    },
+    "audit/incentives/evidence.json": {
+      "bytes": 24962,
+      "sha256": "0a411df6d3aef04fa9e93bb397bb8d9ac63a35b95f5a6e58f7d69d15cd5b5569"
+    },
+    "audit/incentives/REPORT.md": {
+      "bytes": 15551,
+      "sha256": "c63ec0b6709dc9f6309b720cfc866d928bf48ad35e5af9abea28b0d227ec00f0"
+    },
+    "audit/incentives/run_audit.py": {
+      "bytes": 15156,
+      "sha256": "258c7576253fbd852f24b47ee9d8cea751f555b89769d4cceb871e16f4a41169"
+    },
+    "audit/inference/bundle_receipt.json": {
+      "bytes": 1219,
+      "sha256": "fe1d54b3abf4fa2f8ba5ae275a41de3864356e948960c4a8bba61a8edefa05f0"
+    },
+    "audit/inference/hash_order_witness.py": {
+      "bytes": 3651,
+      "sha256": "70b225f409cfad5b13f3567206eaee055a35bef4f17ade45293ed8f89cf79d38"
+    },
+    "audit/inference/hash_seed_1.json": {
+      "bytes": 2081,
+      "sha256": "3b98179319aa90c9e1205a83498bb79eec2a3f948ec0d3af7ab945431e46be5b"
+    },
+    "audit/inference/hash_seed_2.json": {
+      "bytes": 2081,
+      "sha256": "5674cd0ef7c968b92b6e6599f704f045641680709cfa206181c84f2df7a83818"
+    },
+    "audit/inference/overlap_interim.json": {
+      "bytes": 24100,
+      "sha256": "4ce639d5f8333be6adf8ea4b1c9b2d36bec88defb5cd7d526173371f1771a008"
+    },
+    "audit/inference/receipt.json": {
+      "bytes": 2360,
+      "sha256": "f3bf7c4bc9e1f2a2a424c1fbf0cfd124b0f350f19250dabc8701725a8bd369c8"
+    },
+    "audit/inference/report.md": {
+      "bytes": 17481,
+      "sha256": "1a8e22bec179fe3f821b0d79cf13690be2add1b6cb8dc5492c41764cdcb7076f"
+    },
+    "audit/inference/results.json": {
+      "bytes": 154626,
+      "sha256": "97fc006fed14f4440ed5a79d09b154e2b8fa15324a0b8dfc6d4c6e6edfb61c35"
+    },
+    "audit/inference/run_audit.py": {
+      "bytes": 17432,
+      "sha256": "28fd7fc40ab6e148e2012989c81b468471d09065c3c246453d64111c2d4ffa76"
+    },
+    "audit/inference/test_audit.py": {
+      "bytes": 1988,
+      "sha256": "8fea9c6c6bb7ba8b3d0ded621dd258e6843bf9c197b15964d1c1df3692b8611a"
+    },
+    "audit/inference/verify_evidence.py": {
+      "bytes": 2258,
+      "sha256": "ba37387aced7703ffd7d38931f5d693394728bf8faa93f7aae97a0a866862314"
+    },
+    "audit/make_manifest.py": {
+      "bytes": 1852,
+      "sha256": "e4317bce17440de9aa6153062722c33dd0a1f6416c88013bba3673d2d038db74"
+    },
+    "audit/pdf_qa.json": {
+      "bytes": 4841,
+      "sha256": "cfde31531f8aa828af8a0b63ddc48b4f204a42b58d7f67448b87ad2e5f57b189"
+    },
+    "audit/PDF_REVIEW.md": {
+      "bytes": 1334,
+      "sha256": "13dfa3983abefc11d5b00b027b1acc0fcfc4edac3ddd7fc9afa4356cc195292d"
+    },
+    "audit/qa_documents.py": {
+      "bytes": 2239,
+      "sha256": "41eaab46788f19aa8d3df585f246b06983fd1c2e35f44c4b8604be4d5389f5b6"
+    },
+    "audit/README.md": {
+      "bytes": 5040,
+      "sha256": "c3a9c97acad62d94a48f14d8df7d7304e1bc5fa6329ed0e3b7e0fa4fc379fb5d"
+    },
+    "audit/resource_model.py": {
+      "bytes": 4739,
+      "sha256": "b526a6a1fb8f86f67e6a1e0852d207e86f8a8b295d861ca593c5bf0c225cdb97"
+    },
+    "audit/SWARM_ARENA.md": {
+      "bytes": 8542,
+      "sha256": "a4db2ac63d2a56d27bfeb233a8e4a82f419c0367d8303cc25006697ab035b8c1"
+    },
+    "audit/test_resource_model.py": {
+      "bytes": 2860,
+      "sha256": "3b220d5ff0444781fb7a633ac57f9f86c64f58f487b4235b9b224d4161567f67"
+    },
+    "audit/testnet4/replay.py": {
+      "bytes": 9254,
+      "sha256": "d94c838d4d94d9145e3bbc3503fab47217fc0a85a20f0354fd5c10e049c98acf"
+    },
+    "audit/testnet4/results/headers.csv": {
+      "bytes": 179777,
+      "sha256": "b8dc3a8115de03fa250c8757e70646303a8c91eb31412dc5933bc729bddb9a89"
+    },
+    "audit/testnet4/results/summary.json": {
+      "bytes": 15345,
+      "sha256": "e709d9a86e17578301a864202c86f68c3cc19f43be10ba6e6fadb581d1bcb1cb"
+    },
+    "audit/validate_bundle.py": {
+      "bytes": 4514,
+      "sha256": "ca8653d78afb744f8a5b91626b46558af874c8f9d2f93674a238d4f3cdb5e25f"
+    },
+    "audit/validation.json": {
+      "bytes": 1382,
+      "sha256": "716bc3ec8c654a295fecfc3f95e159f8806f64f8ca622c58dc2a3a3c93e6d849"
+    },
+    "output/pdf/connector_calculus.pdf": {
+      "bytes": 561273,
+      "sha256": "b9c883a82b4c6ef1ad9fb9c2e8d8d706810adb614719367ab1093c2f7f766cf0"
+    },
+    "output/pdf/connector_calculus_critique.pdf": {
+      "bytes": 20187,
+      "sha256": "5018873121f907b107b20e8b0b280833c1043b7a4417290be2eeb7e515d4db7e"
+    },
+    "output/pdf/liquidity_on_trial.pdf": {
+      "bytes": 349441,
+      "sha256": "169b6d3aeb89e1b24f464edb9893477b0d1370dfa6f90014b7c38d5a9913677e"
+    },
+    "paper/connector_calculus_critique.md": {
+      "bytes": 16789,
+      "sha256": "608944bed465c10e7b7a4817babc499728f38a864cc65f017b1c43ec732f01f1"
+    },
+    "paper/liquidity_on_trial.md": {
+      "bytes": 42075,
+      "sha256": "6346316141e6305cd450b2f72528212f70fd9c8451728632ae36c47029cc3c05"
+    },
+    "paper/manuscript.md": {
+      "bytes": 67432,
+      "sha256": "d89a485f205648d090c0a6628ec4d3f2174166910a33dfc98b6460a6627a10e5"
+    },
+    "src/spiral_ln/paper.py": {
+      "bytes": 12190,
+      "sha256": "a91ae2d8942f6a66e1adbab3f78675d863279d22e9b744bfebd625f1bc1069d2"
+    }
+  },
+  "notes": [
+    "Historical receipts retained including explicitly documented corrections.",
+    "Hash-seed-1 final inference output is authoritative; earlier dialogue values are historical.",
+    "This manifest demonstrates byte integrity, not scientific truth or author approval."
+  ]
+}

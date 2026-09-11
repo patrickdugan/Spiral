@@ -1,0 +1,19 @@
+{
+  "created_utc": "2026-09-11T21:00:36.051759+00:00",
+  "status": "all_bundle_assertions_passed",
+  "files": {
+    "run_audit.py": "28fd7fc40ab6e148e2012989c81b468471d09065c3c246453d64111c2d4ffa76",
+    "results.json": "97fc006fed14f4440ed5a79d09b154e2b8fa15324a0b8dfc6d4c6e6edfb61c35",
+    "receipt.json": "f3bf7c4bc9e1f2a2a424c1fbf0cfd124b0f350f19250dabc8701725a8bd369c8",
+    "hash_order_witness.py": "70b225f409cfad5b13f3567206eaee055a35bef4f17ade45293ed8f89cf79d38",
+    "hash_seed_1.json": "3b98179319aa90c9e1205a83498bb79eec2a3f948ec0d3af7ab945431e46be5b",
+    "hash_seed_2.json": "5674cd0ef7c968b92b6e6599f704f045641680709cfa206181c84f2df7a83818",
+    "test_audit.py": "8fea9c6c6bb7ba8b3d0ded621dd258e6843bf9c197b15964d1c1df3692b8611a",
+    "report.md": "1a8e22bec179fe3f821b0d79cf13690be2add1b6cb8dc5492c41764cdcb7076f",
+    "verify_evidence.py": "ba37387aced7703ffd7d38931f5d693394728bf8faa93f7aae97a0a866862314"
+  },
+  "matched_trajectory_checks": 54,
+  "original_reproduction_checks_exact": 6,
+  "hashseed_witness": "same_sample_and_public_graph_different_original_state_equal_canonical_reference",
+  "scope": "offline, post-hoc diagnostics; no testnet4 LN execution or wallet activity"
+}

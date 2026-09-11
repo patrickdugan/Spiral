@@ -1,0 +1,775 @@
+{
+  "exact_markov_persistence_and_delay": [
+    {
+      "delay_epochs": 0,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 4.0,
+      "expected_targeted_service": 4.0,
+      "stay_probability": 0.0,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 2,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 3.0,
+      "expected_targeted_service": 3.0,
+      "stay_probability": 0.0,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 4,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 2.0,
+      "expected_targeted_service": 2.0,
+      "stay_probability": 0.0,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 8,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 0.0,
+      "expected_targeted_service": 0.0,
+      "stay_probability": 0.0,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 0,
+      "exact_targeted_minus_random": "-85/512",
+      "expected_random_service": 4.0,
+      "expected_targeted_service": 3.833984375,
+      "stay_probability": 0.25,
+      "targeted_minus_random": -0.166015625
+    },
+    {
+      "delay_epochs": 2,
+      "exact_targeted_minus_random": "-21/512",
+      "expected_random_service": 3.0,
+      "expected_targeted_service": 2.958984375,
+      "stay_probability": 0.25,
+      "targeted_minus_random": -0.041015625
+    },
+    {
+      "delay_epochs": 4,
+      "exact_targeted_minus_random": "-5/512",
+      "expected_random_service": 2.0,
+      "expected_targeted_service": 1.990234375,
+      "stay_probability": 0.25,
+      "targeted_minus_random": -0.009765625
+    },
+    {
+      "delay_epochs": 8,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 0.0,
+      "expected_targeted_service": 0.0,
+      "stay_probability": 0.25,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 0,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 4.0,
+      "expected_targeted_service": 4.0,
+      "stay_probability": 0.5,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 2,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 3.0,
+      "expected_targeted_service": 3.0,
+      "stay_probability": 0.5,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 4,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 2.0,
+      "expected_targeted_service": 2.0,
+      "stay_probability": 0.5,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 8,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 0.0,
+      "expected_targeted_service": 0.0,
+      "stay_probability": 0.5,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 0,
+      "exact_targeted_minus_random": "255/512",
+      "expected_random_service": 4.0,
+      "expected_targeted_service": 4.498046875,
+      "stay_probability": 0.75,
+      "targeted_minus_random": 0.498046875
+    },
+    {
+      "delay_epochs": 2,
+      "exact_targeted_minus_random": "63/512",
+      "expected_random_service": 3.0,
+      "expected_targeted_service": 3.123046875,
+      "stay_probability": 0.75,
+      "targeted_minus_random": 0.123046875
+    },
+    {
+      "delay_epochs": 4,
+      "exact_targeted_minus_random": "15/512",
+      "expected_random_service": 2.0,
+      "expected_targeted_service": 2.029296875,
+      "stay_probability": 0.75,
+      "targeted_minus_random": 0.029296875
+    },
+    {
+      "delay_epochs": 8,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 0.0,
+      "expected_targeted_service": 0.0,
+      "stay_probability": 0.75,
+      "targeted_minus_random": 0.0
+    },
+    {
+      "delay_epochs": 0,
+      "exact_targeted_minus_random": "4",
+      "expected_random_service": 4.0,
+      "expected_targeted_service": 8.0,
+      "stay_probability": 1.0,
+      "targeted_minus_random": 4.0
+    },
+    {
+      "delay_epochs": 2,
+      "exact_targeted_minus_random": "3",
+      "expected_random_service": 3.0,
+      "expected_targeted_service": 6.0,
+      "stay_probability": 1.0,
+      "targeted_minus_random": 3.0
+    },
+    {
+      "delay_epochs": 4,
+      "exact_targeted_minus_random": "2",
+      "expected_random_service": 2.0,
+      "expected_targeted_service": 4.0,
+      "stay_probability": 1.0,
+      "targeted_minus_random": 2.0
+    },
+    {
+      "delay_epochs": 8,
+      "exact_targeted_minus_random": "0",
+      "expected_random_service": 0.0,
+      "expected_targeted_service": 0.0,
+      "stay_probability": 1.0,
+      "targeted_minus_random": 0.0
+    }
+  ],
+  "execution_scope": {
+    "autonomous_llm_agent_runs": false,
+    "network_access": false,
+    "node_or_wallet_access": false,
+    "synthetic_only": true,
+    "transaction_broadcast": false,
+    "unmodified_original_implementation": true
+  },
+  "fixed_weight_identity_invariance": [
+    {
+      "coalition_reward": 50000,
+      "identity_count": 1
+    },
+    {
+      "coalition_reward": 50000,
+      "identity_count": 2
+    },
+    {
+      "coalition_reward": 50000,
+      "identity_count": 4
+    },
+    {
+      "coalition_reward": 50000,
+      "identity_count": 8
+    },
+    {
+      "coalition_reward": 50000,
+      "identity_count": 16
+    },
+    {
+      "coalition_reward": 50000,
+      "identity_count": 32
+    }
+  ],
+  "illustrative_cost_sensitivity": [
+    {
+      "additional_external_services": 1,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 0.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 100.0,
+      "total_resource_cost_units": 0.0
+    },
+    {
+      "additional_external_services": 10,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 0.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 1000.0,
+      "total_resource_cost_units": 0.0
+    },
+    {
+      "additional_external_services": 100,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 0.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 10000.0,
+      "total_resource_cost_units": 0.0
+    },
+    {
+      "additional_external_services": 1,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 2000.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -1900.0,
+      "total_resource_cost_units": 2000.0
+    },
+    {
+      "additional_external_services": 10,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 200.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -1000.0,
+      "total_resource_cost_units": 2000.0
+    },
+    {
+      "additional_external_services": 100,
+      "annual_opportunity_rate": 0.0,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 20.0,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 8000.0,
+      "total_resource_cost_units": 2000.0
+    },
+    {
+      "additional_external_services": 1,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 1420.2739726027398,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -1320.2739726027398,
+      "total_resource_cost_units": 1420.2739726027398
+    },
+    {
+      "additional_external_services": 10,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 142.02739726027397,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -420.2739726027397,
+      "total_resource_cost_units": 1420.2739726027398
+    },
+    {
+      "additional_external_services": 100,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 14.202739726027398,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 0,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 8579.72602739726,
+      "total_resource_cost_units": 1420.2739726027398
+    },
+    {
+      "additional_external_services": 1,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 3420.27397260274,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -3320.27397260274,
+      "total_resource_cost_units": 3420.27397260274
+    },
+    {
+      "additional_external_services": 10,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 342.027397260274,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": -2420.27397260274,
+      "total_resource_cost_units": 3420.27397260274
+    },
+    {
+      "additional_external_services": 100,
+      "annual_opportunity_rate": 0.12,
+      "bond_units": 24000,
+      "break_even_external_surplus_per_service_units": 34.202739726027396,
+      "capital_units": 120000,
+      "fixed_lifecycle_cost_units": 2000,
+      "horizon_days": 30,
+      "net_value_if_surplus_is_100_units_each": 6579.726027397261,
+      "total_resource_cost_units": 3420.27397260274
+    }
+  ],
+  "independent_maximum_mismatch": {
+    "claims": [
+      {
+        "capital": 100,
+        "capital_id": "subject-resource",
+        "identity_id": "a",
+        "service_score": 0.1
+      },
+      {
+        "capital": 50,
+        "capital_id": "subject-resource",
+        "identity_id": "b",
+        "service_score": 1.0
+      },
+      {
+        "capital": 100,
+        "capital_id": "reference-resource",
+        "identity_id": "reference",
+        "service_score": 1.0
+      }
+    ],
+    "implemented_source_weight": 100.0,
+    "implemented_subject_reward": 60,
+    "largest_attested_claim_product": 50.0,
+    "reward_if_weight_were_maximum_claim_product": 40
+  },
+  "max_score_selection_sensitivity": [
+    {
+      "exact_expected_reward": "66667/2",
+      "expected_reward": 33333.5,
+      "expected_selected_score": 0.5,
+      "independent_identity_observations": 1,
+      "true_success_probability_each": 0.5
+    },
+    {
+      "exact_expected_reward": "200001/4",
+      "expected_reward": 50000.25,
+      "expected_selected_score": 0.75,
+      "independent_identity_observations": 2,
+      "true_success_probability_each": 0.5
+    },
+    {
+      "exact_expected_reward": "1000005/16",
+      "expected_reward": 62500.3125,
+      "expected_selected_score": 0.9375,
+      "independent_identity_observations": 4,
+      "true_success_probability_each": 0.5
+    },
+    {
+      "exact_expected_reward": "17000085/256",
+      "expected_reward": 66406.58203125,
+      "expected_selected_score": 0.99609375,
+      "independent_identity_observations": 8,
+      "true_success_probability_each": 0.5
+    },
+    {
+      "exact_expected_reward": "4369021845/65536",
+      "expected_reward": 66665.98274230957,
+      "expected_selected_score": 0.9999847412109375,
+      "independent_identity_observations": 16,
+      "true_success_probability_each": 0.5
+    },
+    {
+      "exact_expected_reward": "286332584655765/4294967296",
+      "expected_reward": 66666.99998447788,
+      "expected_selected_score": 0.9999999997671694,
+      "independent_identity_observations": 32,
+      "true_success_probability_each": 0.5
+    }
+  ],
+  "programmed_coordination_bonus": [
+    {
+      "configured_bonus": 0.0,
+      "external_income": 22975,
+      "fixed_coalition_size": 1,
+      "multiplier": 1
+    },
+    {
+      "configured_bonus": 0.08,
+      "external_income": 22975,
+      "fixed_coalition_size": 1,
+      "multiplier": 1
+    },
+    {
+      "configured_bonus": 0.0,
+      "external_income": 22975,
+      "fixed_coalition_size": 3,
+      "multiplier": 1.0
+    },
+    {
+      "configured_bonus": 0.08,
+      "external_income": 23781,
+      "fixed_coalition_size": 3,
+      "multiplier": 1.16
+    },
+    {
+      "configured_bonus": 0.0,
+      "external_income": 22975,
+      "fixed_coalition_size": 5,
+      "multiplier": 1.0
+    },
+    {
+      "configured_bonus": 0.08,
+      "external_income": 25662,
+      "fixed_coalition_size": 5,
+      "multiplier": 1.32
+    }
+  ],
+  "python": "3.12.14",
+  "schema": "spiral-incentive-cross-examination/v1",
+  "script_sha256": "258c7576253fbd852f24b47ee9d8cea751f555b89769d4cceb871e16f4a41169",
+  "service_record_domain": {
+    "idle": {
+      "released": 25000,
+      "score": 0.4,
+      "slashed": 0
+    },
+    "invalid_input": {
+      "attempted_volume": 500000,
+      "attributable_failures": 0,
+      "available_steps": 120,
+      "capital_id": "source",
+      "connector_id": "service",
+      "delivered_volume": 500000,
+      "posted_bond": 25000,
+      "promised_steps": 100
+    },
+    "invalid_output": {
+      "released": 26249,
+      "score": 1.1300000000000001,
+      "slashed": -1249
+    },
+    "valid": {
+      "released": 25000,
+      "score": 1.0,
+      "slashed": 0
+    }
+  },
+  "social_value_nonidentifiability": {
+    "assumed_common_real_resource_cost_units": 1000,
+    "claim": "aggregate service records do not identify incremental social value",
+    "common_observed_record": {
+      "attempted_volume": 500000,
+      "attributable_failures": 0,
+      "available_steps": 100,
+      "capital_id": "source",
+      "connector_id": "service",
+      "delivered_volume": 500000,
+      "posted_bond": 25000,
+      "promised_steps": 100
+    },
+    "common_score": 1.0,
+    "net_social_values_units": [
+      9000,
+      -1000
+    ],
+    "worlds": [
+      {
+        "external_incremental_surplus_units": 10000,
+        "name": "externally_valuable_service"
+      },
+      {
+        "external_incremental_surplus_units": 0,
+        "name": "no_incremental_external_service"
+      }
+    ]
+  },
+  "source_root": "C:\\projects\\Spiral",
+  "source_sha256": {
+    "paper/hive_lab.md": "e5304d99d557b0d9f47e6343911bea3cfc797303e3c00f5596256ef157c5158a",
+    "paper/manuscript.md": "56f2109b793be5a06eb405bd73810573be64402682281e3e4a1bd49c406cd049",
+    "src/spiral_ln/algebra.py": "f4542d5fdcbf023cbb2e8b527dd4ba00ece7e586c7b18f3f16f83ab7edfa8b6e",
+    "src/spiral_ln/bonding.py": "692b5b7eae2f96346593971577348c7b75154f3e55fc402209dd45062ae2cf67",
+    "src/spiral_ln/hive_lab.py": "17fbcf4281edd201ef7b45741283f06792ada52b1df1076f932567727af9da39",
+    "src/spiral_ln/public_topology_eval.py": "edfa34ddee5d84adcee269108d820b091f05f84630a5d0f93b978d49e47e69e0"
+  },
+  "testnet4_ordinal_settlement_accounting": {
+    "cost_rows": [
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 0,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 1000,
+        "synthetic_delivered": 3
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 0,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 1000,
+        "synthetic_delivered": 3
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 1,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 1000,
+        "synthetic_delivered": 3
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 1,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -1000,
+        "synthetic_delivered": 1
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 3,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -1000,
+        "synthetic_delivered": 1
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 3,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -2000,
+        "synthetic_delivered": 0
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 6,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -2000,
+        "synthetic_delivered": 0
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 6,
+        "horizon_blocks": 3,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -2000,
+        "synthetic_delivered": 0
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 0,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 4000,
+        "synthetic_delivered": 6
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 0,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 4000,
+        "synthetic_delivered": 6
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 1,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 4000,
+        "synthetic_delivered": 6
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 1,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 2000,
+        "synthetic_delivered": 4
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 3,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 2000,
+        "synthetic_delivered": 4
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 3,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 0,
+        "synthetic_delivered": 2
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 6,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -1000,
+        "synthetic_delivered": 1
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 6,
+        "horizon_blocks": 6,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": -2000,
+        "synthetic_delivered": 0
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 0,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 8000,
+        "synthetic_delivered": 10
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 0,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 8000,
+        "synthetic_delivered": 10
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 1,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 8000,
+        "synthetic_delivered": 10
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 1,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 8000,
+        "synthetic_delivered": 10
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 3,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 8000,
+        "synthetic_delivered": 10
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 3,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 6000,
+        "synthetic_delivered": 8
+      },
+      {
+        "assumed_inclusion_lag_blocks": 1,
+        "depth_gate": 6,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 5000,
+        "synthetic_delivered": 7
+      },
+      {
+        "assumed_inclusion_lag_blocks": 3,
+        "depth_gate": 6,
+        "horizon_blocks": 12,
+        "hypothetical_fixed_operator_cost_units": 2000,
+        "hypothetical_receipt_per_delivery_units": 1000,
+        "operator_net_receipt_units": 3000,
+        "synthetic_delivered": 5
+      }
+    ],
+    "empirical_market_prices": false,
+    "first_height": 147473,
+    "headers_csv_sha256": "b8dc3a8115de03fa250c8757e70646303a8c91eb31412dc5933bc729bddb9a89",
+    "last_height": 147984,
+    "observed_funding_transactions": false,
+    "replay_summary_sha256": "e709d9a86e17578301a864202c86f68c3cc19f43be10ba6e6fadb581d1bcb1cb",
+    "scenario_rows_are_independent_replications": false,
+    "scope": "historical public-header ordering, synthetic depth gates and receipts; no live LN",
+    "timestamp_used_as_clock": false,
+    "verified_parent_links": 511
+  },
+  "unfunded_bond_fixture": {
+    "capacity_increment": 20000,
+    "declared_bond_from_source_rule": 4000,
+    "ending_endpoint_liquid": {
+      "A1": 0,
+      "B1": 0
+    },
+    "fixture": "explicit mature three-member relationship, endpoints have principal only",
+    "investment": {
+      "capital": 20000,
+      "connector_id": "hive:17:0",
+      "endpoints": [
+        "A1",
+        "B1"
+      ],
+      "hive_size": 3,
+      "round_index": 0
+    },
+    "liquid_debit": 20000,
+    "recorded_investment_total": 20000,
+    "reported_accounting_error": 0
+  },
+  "verification": {
+    "assertions_passed": true,
+    "exact_future_trajectories_per_cell": 256,
+    "trajectory_count_is_not_statistical_sample_size": true
+  },
+  "zero_weight_rounding": {
+    "pool": 2,
+    "rewards": {
+      "a": 0,
+      "b": 0,
+      "c": 0,
+      "z": 2
+    },
+    "zero_score_identity": "z"
+  }
+}
