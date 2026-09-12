@@ -23,6 +23,13 @@ def _tv(left: dict[str, Q], right: dict[str, Q]) -> Q:
 def _pushforward(distribution: dict[str, Q], kernel: dict[str, dict[str, Q]]) -> dict[str, Q]:
     """Apply a common finite Markov kernel to an already-produced record."""
 
+    if not distribution or sum(distribution.values()) != 1 or min(distribution.values()) < 0:
+        raise ValueError("distribution must be nonnegative and sum to one")
+    if not set(distribution) <= set(kernel):
+        raise ValueError("kernel is missing a source record")
+    if any(not row or sum(row.values()) != 1 or min(row.values()) < 0
+           for row in kernel.values()):
+        raise ValueError("every kernel row must be nonnegative and sum to one")
     output: dict[str, Q] = {}
     for source, mass in distribution.items():
         for target, probability in kernel[source].items():
@@ -50,19 +57,19 @@ def _optimal_decision_value(
 
 
 def baseline_gain_fixture() -> dict[str, Q]:
-    """Value gained by a changed controller information channel, not a regret."""
+    """Compare two policies in the same revealed-state game and case law."""
 
     states = ("left", "right")
     prior = {"left": Q(1, 2), "right": Q(1, 2)}
-    hidden = {state: {"hidden": Q(1)} for state in states}
     revealed = {state: {state: Q(1)} for state in states}
-    baseline = _optimal_decision_value(states, prior, states, hidden)
+    # Both receive the revealed state; only the candidate uses it.
+    baseline = sum(prior[state] * int(state == "left") for state in states)
     candidate = _optimal_decision_value(states, prior, states, revealed)
     return {"baseline_value": baseline, "candidate_value": candidate,
             "baseline_gain": candidate - baseline}
 
 
-def robust_regret_fixture() -> dict[str, Q]:
+def robust_regret_fixture() -> dict[str, object]:
     """Worst-case opportunity loss of one frozen policy over a stated case set."""
 
     cases = ({"left": Q(3, 4), "right": Q(1, 4)},
@@ -207,13 +214,10 @@ def incentive_design_fixture() -> dict[str, object]:
         "estimand": "held_out_incentive_response_contrast",
         "nuisance_structure": "score = difficulty + grader_severity + incentive + incentive_by_difficulty + noise",
         "matched_within": ("difficulty", "grader"),
-        "selection_confirmation": {
-            "selection": "difficulty strata, allocation, and any family target are frozen from independent training blocks",
-            "confirmation": "the displayed incentive-by-difficulty interaction uses held_out rows only",
-            "holdout_reused_for_selection": False,
-        },
+        "scope": "four arithmetic cell values; enforced selection and confirmation are in evaluation_game_confirmation",
         "allocation_pairs": allocation,
-        "score_operations": 2 * sum(allocation.values()),
+        "planned_score_operations": 2 * sum(allocation.values()),
+        "arithmetic_score_values": 2 * len(rows),
         "allocation_objective": allocation_objective,
         "allocation_objective_minimum": best_objective,
         "allocation_optimizes_equal_variance_contrast": allocation_objective == best_objective,
@@ -237,7 +241,6 @@ def verify() -> dict[str, object]:
     checks = {
         "baseline_gain_is_half": gain["baseline_gain"] == Q(1, 2),
         "robust_regret_is_half": regret["robust_regret"] == Q(1, 2),
-        "estimands_have_distinct_sources": gain["candidate_value"] != regret["robust_regret"],
         "observation_hide_is_common_and_contracts_discrimination": observed["same_kernel_for_all_policies"] and observed["data_processing_holds"] and observed["hidden_discrimination_gap"] == Q(0),
         "pre_action_hide_changes_decision_value": player_hide["game_change_value_loss"] == Q(1, 2),
         "restricted_search_is_only_a_lower_bound": exploit["restricted_is_lower_bound"] and exploit["exact_exploitability"] == Q(2),
@@ -245,11 +248,11 @@ def verify() -> dict[str, object]:
         "primal_dual_witnesses_agree": duality["primal_maximin_witness"] == duality["dual_minimax_witness"] == duality["certified_value"],
         "heldout_incentive_interaction_is_explicit": incentive["held_out_incentive_by_difficulty_interaction"] == Q(1, 5),
         "allocation_is_optimized_for_declared_contrast": incentive["allocation_optimizes_equal_variance_contrast"],
-        "selection_confirmation_is_separated": not incentive["selection_confirmation"]["holdout_reused_for_selection"],
         "incentive_fixture_does_not_identify_intent": not incentive["intent_identified"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "estimands": {"baseline_gain": gain, "robust_regret": regret,
                            "discrimination_gap": observed, "exploitability": exploit},
+            "pre_action_hide": player_hide, "primal_dual": duality,
             "incentive_design": incentive}

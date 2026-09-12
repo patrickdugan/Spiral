@@ -263,6 +263,11 @@ python -m pytest tests/test_evaluation_game_testbed.py -q
 ```
 
 See [the testbed specification and falsifiers](paper/evaluation_game_testbed.md).
+The continuation adds validated training/confirmation records, exact sign tests
+for the held-out difficulty interaction, allocation under unequal costs and
+variances, and equilibrium-versus-adaptation examples. The synthetic confirmation
+fixture explicitly counts 320 score operations; its support flag does not
+identify intent. See `tests/test_evaluation_game_confirmation.py` for falsifiers.
 
 Exact mathematical fixtures can be verified without running models:
 

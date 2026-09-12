@@ -10,7 +10,7 @@ from spiral_ln.evaluation_game_testbed import (
 def test_estimands_are_separate_exact_quantities():
     assert baseline_gain_fixture()["baseline_gain"] == Q(1, 2)
     assert robust_regret_fixture()["robust_regret"] == Q(1, 2)
-    assert baseline_gain_fixture()["candidate_value"] != robust_regret_fixture()["robust_regret"]
+    assert baseline_gain_fixture()["candidate_value"] == 1
 
 
 def test_observation_only_hide_is_a_common_post_play_kernel():
@@ -43,9 +43,9 @@ def test_zero_sum_fixture_has_primal_dual_certificate():
 def test_incentive_design_has_explicit_nuisance_cost_holdout_and_falsifier():
     result = incentive_design_fixture()
     assert result["matched_within"] == ("difficulty", "grader")
-    assert result["score_operations"] == 96
+    assert result["planned_score_operations"] == 96
+    assert result["arithmetic_score_values"] == 8
     assert result["allocation_optimizes_equal_variance_contrast"]
-    assert not result["selection_confirmation"]["holdout_reused_for_selection"]
     assert result["held_out_incentive_by_difficulty_interaction"] == Q(1, 5)
     assert not result["intent_identified"]
     assert "invalidates" in result["falsifier"]

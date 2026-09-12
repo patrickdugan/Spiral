@@ -1,0 +1,225 @@
+{
+  "schema_version": "1.1",
+  "generated_at_utc": "2026-09-12T05:16:17.559375+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "baseline_gain_is_half": true,
+    "robust_regret_is_half": true,
+    "observation_hide_is_common_and_contracts_discrimination": true,
+    "pre_action_hide_changes_decision_value": true,
+    "restricted_search_is_only_a_lower_bound": true,
+    "equilibrium_outcome_is_reported_with_rule": true,
+    "primal_dual_witnesses_agree": true,
+    "heldout_incentive_interaction_is_explicit": true,
+    "allocation_is_optimized_for_declared_contrast": true,
+    "incentive_fixture_does_not_identify_intent": true,
+    "heldout_interaction_confirmed": true,
+    "feasible_primal_dual_equal": true,
+    "balanced_allocation_optimal": true
+  },
+  "all_passed": true,
+  "estimands": {
+    "baseline_gain": {
+      "baseline_value": "1/2",
+      "candidate_value": "1",
+      "baseline_gain": "1/2"
+    },
+    "robust_regret": {
+      "candidate_policy": "left",
+      "case_regrets": [
+        "0",
+        "1/2"
+      ],
+      "robust_regret": "1/2"
+    },
+    "discrimination_gap": {
+      "operator_type": "observation_only_common_markov_kernel",
+      "visible_discrimination_gap": "1",
+      "hidden_discrimination_gap": "0",
+      "same_kernel_for_all_policies": true,
+      "acts_after_players_act": true,
+      "changes_player_information": false,
+      "data_processing_holds": true
+    },
+    "exploitability": {
+      "adaptation_rule": "enumerate_pure_nash_then_lexicographically_select",
+      "equilibrium_set": [
+        [
+          "take",
+          "take"
+        ]
+      ],
+      "selected_outcome": [
+        "take",
+        "take"
+      ],
+      "profile_evaluated": [
+        "share",
+        "share"
+      ],
+      "exact_exploitability": "2",
+      "restricted_best_response_lower_bound": "0",
+      "restricted_is_lower_bound": true
+    }
+  },
+  "pre_action_hide": {
+    "pre_action_revealed_value": "1",
+    "pre_action_hidden_value": "1/2",
+    "game_change_value_loss": "1/2"
+  },
+  "primal_dual": {
+    "primal_maximin_witness": "0",
+    "dual_minimax_witness": "0",
+    "certified_value": "0"
+  },
+  "incentive_design": {
+    "estimand": "held_out_incentive_response_contrast",
+    "nuisance_structure": "score = difficulty + grader_severity + incentive + incentive_by_difficulty + noise",
+    "matched_within": [
+      "difficulty",
+      "grader"
+    ],
+    "scope": "four arithmetic cell values; enforced selection and confirmation are in evaluation_game_confirmation",
+    "allocation_pairs": {
+      "easy:lenient": 12,
+      "easy:strict": 12,
+      "hard:lenient": 12,
+      "hard:strict": 12
+    },
+    "planned_score_operations": 96,
+    "arithmetic_score_values": 8,
+    "allocation_objective": "1/48",
+    "allocation_objective_minimum": "1/48",
+    "allocation_optimizes_equal_variance_contrast": true,
+    "held_out_gaps_by_difficulty": {
+      "easy": "1/10",
+      "hard": "3/10"
+    },
+    "held_out_incentive_by_difficulty_interaction": "1/5",
+    "intent_identified": false,
+    "falsifier": "A comparable interaction in negative-incentive controls, prompt inequivalence, or unblinded scoring invalidates the strategic interpretation."
+  },
+  "confirmation": {
+    "family": "planning",
+    "contrasts": {
+      "incentive_response": {
+        "block_mean": "1/5",
+        "block_sign_p": "1/2048",
+        "non_tie_blocks": 12,
+        "reject_sign_null": true
+      },
+      "incentive_by_difficulty": {
+        "block_mean": "1/5",
+        "block_sign_p": "1/2048",
+        "non_tie_blocks": 12,
+        "reject_sign_null": true
+      }
+    },
+    "alpha_per_test": "1/40",
+    "target_blocks": 12,
+    "negative_control_blocks": 12,
+    "fixture_controls_exactly_zero": true,
+    "fixture_interaction_supported": true,
+    "confirmation_pairs": 96,
+    "confirmation_score_operations": 192,
+    "intent_identified": false,
+    "training_pairs": 64,
+    "training_score_operations": 128,
+    "total_score_operations": 320,
+    "scope": "deterministic synthetic fixture; no empirical error-rate validation"
+  },
+  "adaptation": {
+    "equilibrium_set": [
+      [
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "1"
+      ],
+      [
+        "1/2",
+        "1/2"
+      ]
+    ],
+    "equilibrium_coordinates": "probability of action 1 for each player",
+    "simultaneous": {
+      "rule": "synchronous best response",
+      "initial": [
+        0,
+        1
+      ],
+      "path": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "last_payoffs": [
+        0,
+        0
+      ],
+      "period": 2
+    },
+    "sequential": {
+      "rule": "row then column best response",
+      "initial": [
+        0,
+        1
+      ],
+      "path": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "last_payoffs": [
+        1,
+        1
+      ]
+    }
+  },
+  "primal_dual_certificate": {
+    "primal_lower_bound": "0",
+    "dual_upper_bound": "0",
+    "duality_gap": "0",
+    "optimality_certified": true
+  },
+  "allocation": {
+    "counts": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "spent": 96,
+    "unspent": 0,
+    "contrast_variance": "1/48"
+  },
+  "source_sha256": {
+    "scripts/verify_evaluation_game_testbed.py": "3618801d07605135b8547ec3919efd5ff7d863fec40bc3de7ae272dabb171ac9",
+    "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36",
+    "src/spiral_ln/evaluation_game_confirmation.py": "0f72a119d8e8e9fdd57ecdbb023db42a8f862d1dcc92345ed304b5cf1f5b7d2a"
+  }
+}
