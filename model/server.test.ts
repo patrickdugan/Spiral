@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ArkServer, DEFAULT_SERVER, channelLiquidityDuration, rng } from "./server.ts";
+import { ArkServer, DEFAULT_SERVER, runCorner, type CornerParams } from "./server.ts";
 
 test("S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating", () => {
   const S = new ArkServer(1_300_000, { ...DEFAULT_SERVER, refreshLead: Number.NEGATIVE_INFINITY }); // holders never refresh: isolate the sweep clock
@@ -32,48 +32,64 @@ test("S2 witness: forfeit locks the fronted value for the residual lifetime; ref
   S.advance(1);
   assert.equal(S.committed, 0);
   // liquidity duration = 1000 × 50 blocks / 1000 delivered = 50 blocks (residual lifetime at forfeit)
-  assert.equal(S.liquidityDuration(), 50);
+  assert.equal(S.liquidityDuration("out"), 50);
+  // Under the round-recycle reading the same spend locks the fronted value for one round only.
+  const R = new ArkServer(10_000, { lifetimeBlocks: 100, roundInterval: 1, refreshLead: 10, spendLock: "round" });
+  R.receive("h", 1_000);
+  R.advance(50);
+  assert.ok(R.spendLightning("h", 1_000));
+  R.advance(1);
+  assert.equal(R.committed, 0);
+  assert.equal(R.liquidityDuration("out"), 1);
 });
 
 /**
- * §3.3 corner test. Same demand fed to both objects. This is a qualitative witness of the ratio's
- * direction on two constructed corners, not a reproduction of any published figure.
+ * §3.3 grid (item 2 of §7). Same demand fed to both objects; the channel model uses the stated forecast
+ * rule and the VTXO side is charged the server-tier inbound term of §3.4. Two constructed corners plus
+ * drift and horizon variation. This is a qualitative witness of the ratio's direction, not a reproduction
+ * of any published figure, and the direction it finds is conditional on the spend lock rule.
  */
-function corner(kind: "many-bursty" | "few-steady", seed: number) {
-  const r = rng(seed);
-  const lifetime = 4032;
-  const horizon = 8 * lifetime;         // long against the VTXO lifetime
-  const roundBlocks = 6;
-  const steps = horizon / roundBlocks;
-  const agents = kind === "many-bursty" ? 200 : 3;
-  const perAgent = new Map<string, Array<{ out: number; in: number }>>();
-  for (let a = 0; a < agents; a++) perAgent.set(`a${a}`, []);
-  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288 });
-  for (let t = 0; t < steps; t++) {
-    for (const [name, arr] of perAgent) {
-      let out = 0, inn = 0;
-      if (kind === "many-bursty") {
-        // Rare, large, idiosyncratic outflows funded by earlier inflows; per-agent envelope ≫ per-agent volume per step.
-        if (r() < 0.02) inn = 5_000;
-        if (r() < 0.01) out = 4_000;
-      } else {
-        // Steady bidirectional flow with fixed counterparties, recycling within the day.
-        out = 100 + Math.floor(r() * 10); inn = 100 + Math.floor(r() * 10);
-      }
-      arr.push({ out, in: inn });
-      if (inn) S.receive(name, inn);
-      if (out && S.holderValue(name) >= out) S.spendLightning(name, out);
-    }
-    S.advance(roundBlocks);
-  }
-  const ch = channelLiquidityDuration(perAgent, horizon, 0.25);
-  return { dV: S.liquidityDuration(), dC: ch.duration, failures: ch.failures };
-}
+const trailing = { kind: "trailing", intervalBlocks: 4032, roundBlocks: 6 } as const;
+const many = (over: Partial<CornerParams>): CornerParams => ({
+  agents: 200, horizonLifetimes: 8, driftPerRound: 0, burst: { vIn: 5000, vOut: 4000, pIn: 0.02 },
+  margin: 0.25, forecast: trailing, volume: "both", serverTier: true, seed: 1, ...over,
+});
+const few = (over: Partial<CornerParams>): CornerParams => ({
+  agents: 3, horizonLifetimes: 8, driftPerRound: 0, burst: { vIn: 0, vOut: 1, pIn: 0 }, steady: { base: 100, jitter: 10 },
+  margin: 0.25, forecast: trailing, volume: "both", serverTier: true, seed: 2, ...over,
+});
 
-test("§3.3 direction: Ark favored on many-bursty-long, channel favored on few-steady-recycling", () => {
-  const mb = corner("many-bursty", 1);
-  const fs = corner("few-steady", 2);
-  assert.ok(Number.isFinite(mb.dV) && Number.isFinite(mb.dC) && Number.isFinite(fs.dV) && Number.isFinite(fs.dC));
-  assert.ok(mb.dC / mb.dV > 1, `expected ratio > 1 on many-bursty, got ${mb.dC / mb.dV}`);
-  assert.ok(fs.dC / fs.dV < 1, `expected ratio < 1 on few-steady, got ${fs.dC / fs.dV}`);
+test("§3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell", () => {
+  const cells = [
+    many({ driftPerRound: 60, forecast: { kind: "oracle" } }), // the earlier draft's corner, corrected
+    many({ driftPerRound: 60 }),
+    many({}),
+    many({ horizonLifetimes: 1 }),
+    many({ driftPerRound: -30 }),
+    few({}),
+  ];
+  for (const c of cells) {
+    const x = runCorner(c);
+    assert.ok(Number.isFinite(x.ratio));
+    assert.ok(x.ratio < 1.1, `expiry lock, drift ${c.driftPerRound}, H ${c.horizonLifetimes}: ratio ${x.ratio.toFixed(2)}`);
+  }
+});
+
+test("§3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady", () => {
+  const r = (c: CornerParams) => runCorner({ ...c, spendLock: "round" }).ratio;
+  assert.ok(r(many({})) > 1, `zero drift: ${r(many({}))}`);
+  assert.ok(r(many({ horizonLifetimes: 1 })) > 1);
+  assert.ok(r(many({ driftPerRound: -30 })) > 1);
+  const corr = r(many({ driftPerRound: 60 }));
+  assert.ok(corr > 0.9 && corr < 1.2, `correlated drift: pooling has nothing to pool, got ${corr}`); // ≈ 1
+  assert.ok(r(few({})) < 1, `few-steady: ${r(few({}))}`);
+  assert.ok(r(few({ forecast: { kind: "oracle" } })) < 1);
+});
+
+test("§3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner", () => {
+  const base = many({ driftPerRound: 60, forecast: { kind: "oracle" } });
+  const full = runCorner(base).ratio;
+  const noServer = runCorner({ ...base, serverTier: false }).ratio;
+  const outOnly = runCorner({ ...base, serverTier: false, volume: "out" }).ratio;
+  assert.ok(full < 1.1 && noServer > 20 && outOnly > 5, `${full} ${noServer} ${outOnly}`);
 });

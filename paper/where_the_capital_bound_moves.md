@@ -6,7 +6,7 @@
 
 **Program:** Spiral
 
-**Version:** Model draft, September 30, 2026. Builds on the audited baseline (a0a3140) and the adversarial follow-up of September 11, 2026.
+**Version:** Model draft, September 30, 2026, revised the same day after an external check of the reference model (server-tier term, forecast rule, epoch rule; see §3.3, §4.2, Exhibit B). Builds on the audited baseline (a0a3140) and the adversarial follow-up of September 11, 2026.
 
 ## Abstract
 
@@ -114,9 +114,17 @@ For the channel, Locked_C(t) is the pre-funded inbound stock, which must be set 
 
 The ratio exceeds one when pre-funded capacity sits idle for long relative to the VTXO lifetime: many agents whose individual demand is bursty and hard to forecast, so that Σ_a f̂_a is large against pooled volume, over a horizon long against 28 days. It falls below one when balances recycle within one channel faster than the lifetime, so that a small pre-funded envelope serves a large volume: a few agents in steady bidirectional flow with fixed counterparties. Second's simulation has the same shape from the human side: weekly top-ups favor the LSP because the channel's capacity is reused every week while Ark locks each spend for up to 28 days, and quarterly top-ups favor Ark because the channel must hold a quarter's lump idle [R5].
 
+The ratio as written omits a term, and the omission is not small. §3.4 says the direction problem moves to the server's own channel set; it does not vanish. A Lightning receipt into the Ark consumes inbound capacity on the server's channels, which the server must have provisioned before the receipt, by a forecast, exactly as an LSP would for a single agent; a Lightning spend out restores it. The server's directional requirement is therefore the running peak of its aggregate net receipts, call its forecast f̂_S, held for the horizon, and
+
+$$\frac{\mathcal{D}_C}{\mathcal{D}_V}\;\approx\;\frac{H\sum_a \hat f_a}{\mathrm{Vol}\cdot \bar L\;+\;H\,\hat f_S}.$$
+
+Pooling is the gap between Σ_a f̂_a and f̂_S, a sum of peaks against the peak of a sum, and it is large only when per-agent imbalances are uncorrelated enough to net across the population. When every agent drifts the same way, as a population of net earners or net spenders does, the aggregate peak is the sum of the individual peaks and pooling buys nothing; the ratio then sits near one whatever L̄ is. The term is zero only when value enters the Ark on-chain, by boarding, which draws no channel liquidity; that is the stacker case Second simulated, and it is not the case of an agent population paid over Lightning. The same dictionary applies to Vol: it is delivered volume in both directions on both sides, or the ratio is not one ratio.
+
 What the ratio says about agents is then conditional and specific. An agent population is not favored by Ark because it is high-frequency; high frequency to a fixed counterparty is the channel's best case. It is favored when the population is large, its per-agent demand is idiosyncratic, its counterparties vary, and the forecast margin Σ_a f̂_a that a channel operator would have to carry across all of them exceeds what a single server locks by fronting spends as they occur. The pooling in S2 is the whole effect, and the liveness obligation that makes pooling safe is the one an autonomous process meets for free.
 
 That is the defensible version of the claim that Lightning does not serve an agent population without a different settlement object. It is a conjecture about a ratio, and §7 says how to measure it on the retained simulator.
+
+What the reference model finds, on the grid of §7 item 2 with the server-tier term charged and a trailing forecast that re-provisions once per lifetime, is conditional on one fact about the implementation that the cited documentation does not settle: when the server recovers value it fronted for a Lightning spend. Under the reading that a server-held HTLC output is swept only at its absolute expiry, L̄ is on the order of half a lifetime and the VTXO is not favored on any tested cell; the ratio is 0.3 to 1.05 across zero, positive and negative drift, at one and eight lifetimes of horizon, and near zero on few-steady. Under the reading that the server presents that output to the next round and reuses its value one interval later, L̄ is one round, and the ratio is 1.06 to 1.52 on the many-agent cells whose per-agent imbalances are uncorrelated, 0.99 to 1.11 on the cell where all agents accumulate together, and 0.7 to 0.9 on few-steady. The direction the conjecture predicts therefore obtains under the second reading and the uncorrelated condition, at a factor of one and a half rather than the seven the earlier draft's harness reported; that figure was manufactured by three accounting choices in the harness — an accumulating fixture presented as bursty, outbound-only volume on the VTXO side against two-way volume on the channel side, and no server-tier term — and Exhibit B now asserts as much rather than the earlier direction. The first item of the preregistration is accordingly to pin the recovery rule against the implementation, since it fixes the scale of every other result.
 
 ### 3.4 What happens to the ghost solver
 
@@ -143,6 +151,8 @@ where root_n is a commitment to 𝒮_n (a Merkle root over the settled set as th
 **Proposition S3 (Sybil-bounded weight).** If the proof system for 𝓡_cap is knowledge-sound and PRF is a pseudorandom function, then for every settled object ρ the total weight the registry attributes to claims backed by ρ is at most v_ρ, whatever the number of claimant identities, except with negligible probability. If the proof system is zero-knowledge, the registry learns nothing about ρ beyond v_ρ ≥ v and the nullifier.
 
 The bound follows because every valid claim on ρ carries nf = PRF_{k_ρ}(id_ρ), which is a function of ρ alone once k_ρ is fixed by 𝒜_ρ, so a second claim on the same ρ collides in the nullifier set and is rejected; a claim with a different nf on ρ would require a different key satisfying 𝒜_ρ, which for a single-signer object does not exist and for a threshold object is bounded by the threshold and can be handled by deriving nf from the aggregate key. Knowledge soundness reduces a claim without k_ρ to a break of the proof system. This is the Zcash nullifier argument transplanted from spend-once to claim-once, and it is the exact premise the identity-split theorem needed. With it, L4 is no longer conditional on an unauthenticated dictionary; it is conditional on a proof system and on the verifier's view of 𝒮_n being correct.
+
+The transplant carries less than it appears to. A nullifier stops a second claim on the same id; it says nothing about a claim on a successor id, and spending is the one thing a nullifier is designed to permit. Spend ρ to a fresh ρ′ under a key the same controller holds, by a self-transfer on-chain or in a round, and nf = PRF_{k_ρ′}(id_ρ′) is fresh, so S3's per-object bound is satisfied while one unit of capital is counted twice. Under Ark the case is structural rather than adversarial: every refresh rotates the id, at a time the holder chooses. The registry therefore takes claims by epoch. A claim is accepted only against the settled set as frozen at epoch start, so a successor created mid-epoch is not claimable until the next; at epoch close a claim is revoked if its object is no longer settled, unless the set's maintainer has attested a successor link, which for class V is the server's record that a refresh reissued ρ as ρ′ under the same key, and which a transfer to another key never receives. One unit of capital then counts once per epoch whatever its id history, and the honest holder's refresh does not cost it a claim. The epoch length is a parameter that should not exceed the refresh cadence by much, or an honest holder waits a lifetime to claim a boarded output; and the successor attestation is one more statement the verifier trusts the server for, added to the co-signing trust it already carries.
 
 ### 4.3 The service relation
 
@@ -234,9 +244,9 @@ What the objects add to the warden is a choice of where to stand. Under V, the s
 Preregister the following on the retained simulator, extended with the class-V ledger of §3 and the registry of §4; no live component is required for any of it.
 
 1. Fix a demand process family with three parameters: number of agents, per-agent burstiness (the ratio of an agent's imbalance envelope to its own volume), and horizon relative to VTXO lifetime. Sample the two corners the earlier campaigns did not test: many agents, bursty idiosyncratic demand, varying counterparties, horizon long against 28 days; and few agents, steady bidirectional flow to fixed counterparties, recycling within a day.
-2. For each cell, compute 𝒟_C and 𝒟_V by simulation over the horizon with the published Ark parameters as defaults (28-day lifetime, hourly rounds, refresh two days before expiry), a forfeit-to-sweep lock rule for the server, and a channel model that must pre-fund inbound to a forecast envelope carrying a declared safety margin, with payment failures counted when the realized envelope exceeds the forecast. Report the ratio with a cluster-robust interval across sampled topologies. The claim of §3.3 is falsified if the ratio does not exceed one in the first corner or does not fall below one in the second.
+2. For each cell, compute 𝒟_C and 𝒟_V by simulation over the horizon with the published Ark parameters as defaults (28-day lifetime, hourly rounds, refresh two days before expiry), a forfeit-to-sweep lock rule for the server, and a channel model that must pre-fund inbound to a forecast envelope carrying a declared safety margin, with payment failures counted when the realized envelope exceeds the forecast. Report the ratio with a cluster-robust interval across sampled topologies. The claim of §3.3 is falsified if the ratio does not exceed one in the first corner or does not fall below one in the second. Three further parameters are declared, because the reference model shows each one able to flip the sign: per-agent drift (expected net inflow per round, at zero, positive and negative values, with the population's drift correlation stated), the forecast rule (the oracle rule that sets capacity to the realized peak, which charges idle capital only, and a trailing rule that re-provisions each interval from the previous interval's peak, which charges forecast error as well), and the server's recovery rule for value fronted at a Lightning spend (swept at expiry, or reused at the next round), which is to be pinned against the implementation before any cell runs. 𝒟_V includes the server-tier directional term of §3.3, computed as the channel model applied to the server's aggregate Lightning flow under the same forecast rule, and Vol counts both directions on both sides.
 3. Implement 𝓡_cap with a real proof system on the settled set of the simulator (not the recovered project's failed configuration: a Merkle path and a PRF, nothing more) and measure prover time and memory. Report whether a claim can be produced within a stated budget. This discharges or renews the ZK obligation on evidence.
-4. Run the identity-split experiment of [R1] against the registry: one capital source, 1 to 32 identities, all claims through 𝓡_cap. Aggregate reward must be invariant, and the nullifier-collision statistic must detect every duplicate. Report both.
+4. Run the identity-split experiment of [R1] against the registry: one capital source, 1 to 32 identities, all claims through 𝓡_cap. Aggregate reward must be invariant, and the nullifier-collision statistic must detect every duplicate. Report both. Add the churn case, which identity splitting does not cover: one identity, one capital source, spent to a fresh id 1 to 32 times within an epoch, with and without an attested successor link. Aggregate reward must be invariant in the epoch and the revocation count at close must equal the number of unattested spends; a registry without the epoch rule fails this by construction, and the failure should be reported as the reference model reports it.
 5. Run the hive-lab common-control fixtures [R1, hive supplement] with ground-truth labels through the three warden rows: O_peer under C, O_server under V, and a mixed C/V relay set. Report ROC per row. The prediction of §6.4 is that O_server dominates O_peer and that the mixed set degrades both.
 6. Only then, and as a bounded appendix, define a codebook over amount and timing, a prior over payloads, and a guessing-advantage task for O_peer, and report the capacity–detectability curve. It should be read against S5, not as a headline.
 
@@ -247,8 +257,8 @@ Stopping rules, multiplicity, and the practical-equivalence band are as in the e
 | Obligation left by [R1]/[R2] | Discharged by | Still open |
 |---|---|---|
 | Virtual connector "depends on external settlement" | Class V object with clock, exit, liveness, counterparty (§2) | Live Ark measurement; pending-payment collusion |
-| Inbound provisioning under forecast error | Bound relocation S2; liquidity-duration ratio (§3) | The ratio is a conjecture until item 2 of §7 runs |
-| Registry 𝒰 "names obligations, does not authenticate" | Unique-exposure relation and S3 (§4) | Verifier; prover cost for 𝓡_svc; no settled set for channel balances |
+| Inbound provisioning under forecast error | Bound relocation S2; liquidity-duration ratio with the server-tier term (§3) | The recovery rule for fronted spends, which sets the sign; the ratio is a conjecture until item 2 of §7 runs |
+| Registry 𝒰 "names obligations, does not authenticate" | Unique-exposure relation, S3, and the epoch rule (§4) | Verifier; prover cost for 𝓡_svc; no settled set for channel balances; epoch length against refresh cadence |
 | "Bond is a field, not an account" | Escrow object and S4 (§5) | Committee and challenger assumptions; per-program setup |
 | Warden undefined; no privacy claim | Observer table and S5 (§6) | Cross-server circulation; items 5 and 6 of §7 |
 
@@ -279,7 +289,7 @@ The warden model's contribution is an ordering. Whatever a covert coalition of a
 
 # Exhibit B. Reference implementation
 
-A small executable model accompanies this draft under `model/`, in TypeScript with no dependencies, runnable with `node --experimental-strip-types --test "model/*.test.ts"`. It implements the extended ledger with per-class holdings and clocked settlement events (S1); a server liquidity ledger with the forfeit-to-sweep lock rule, VTXO lifetimes, holder refresh, and the aggregate constraint, together with the peak-balance channel model, and a direction test of the §3.3 ratio on the two constructed corners of §7.1 (S2); a registry with claim-once nullifiers keyed by the object's authority over a simulated settled set (S3); the escrow state machine with the published BitVM3 size parameters (S4); and, for S5, three warden statistics on a coalition fixture: the naive network churn ratio, direct-attester netting, and repeated-cycle share, with the first two's failure modes asserted as such rather than tuned away. The proof system is not implemented; the registry verifies a simulated attestation with the same interface a verifier would expose, and the tests say so. The implementation witnesses the propositions on finite cases in the sense of [R2, §9.2]; it proves nothing about distributed execution, its fixtures are constructed, and it contacts no network.
+A small executable model accompanies this draft under `model/`, in TypeScript with no dependencies, runnable with `node --experimental-strip-types --test "model/*.test.ts"`. It implements the extended ledger with per-class holdings and clocked settlement events (S1); a server liquidity ledger with the forfeit-to-sweep lock rule under both recovery readings, VTXO lifetimes, holder refresh, the aggregate constraint, and the server-tier directional term, together with the channel model under an oracle and a trailing forecast rule, and a direction test of the §3.3 ratio on the demand grid of §7 item 2 (S2); a registry with claim-once nullifiers keyed by the object's authority over a settled set frozen per epoch, with attested successor links (S3); the escrow state machine with the published BitVM3 size parameters (S4); and, for S5, three warden statistics on a coalition fixture: the naive network churn ratio, direct-attester netting, and repeated-cycle share, with the first two's failure modes asserted as such rather than tuned away. The proof system is not implemented; the registry verifies a simulated attestation with the same interface a verifier would expose, and the tests say so. The implementation witnesses the propositions on finite cases in the sense of [R2, §9.2]; it proves nothing about distributed execution, its fixtures are constructed, and it contacts no network.
 
 ### B.0 Test run
 
@@ -293,12 +303,17 @@ ok 6 - S1/L3: a rejected initiation is the identity on ledger state
 ok 7 - S3: weight attributed to any settled object is at most its value regardless of identity count
 ok 8 - S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not
 ok 9 - S3: overclaiming value, stale roots, and unsettled objects are rejected
-ok 10 - L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
-ok 11 - S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
-ok 12 - S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
-ok 13 - §3.3 direction: Ark favored on many-bursty-long, channel favored on few-steady-recycling
-# tests 13
-# pass 13
+ok 10 - S3 churn: without the epoch rule one object re-claims under every fresh id; with it, one unit of capital counts once per epoch
+ok 11 - S3 refresh: an attested successor (Ark refresh, same key) keeps a claim; a transfer to another key does not
+ok 12 - L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
+ok 13 - S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
+ok 14 - S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
+ok 15 - §3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell
+ok 16 - §3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady
+ok 17 - §3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner
+# tests 17
+# pass 17
+# fail 0
 ```
 
 ### B.1 `model/ledger.ts`
@@ -517,21 +532,39 @@ test("S1/L3: a rejected initiation is the identity on ledger state", () => {
 
 ```ts
 // Server-mediated object (Ark-style VTXO) liquidity model and the directional channel comparison.
-// Witnesses Proposition S2 and computes the liquidity-duration ratio of §3.3 on two demand corners.
+// Witnesses Proposition S2 and computes the liquidity-duration ratio of §3.3 on a demand grid.
 //
 // Lock rule (from the implementer's published description of the three liquidity operations and
 // forfeit sweeping): whenever a VTXO is forfeited (spent over Lightning, refreshed, or offboarded), the
 // server fronts equivalent value now and recovers it only when that output's absolute expiry passes.
-// Boarding and receiving are treated as liquidity-neutral for the server in this aggregate model.
+// Whether a server-held HTLC output from a Lightning spend is recyclable as a round input before its
+// expiry is not settled by the cited documentation; the lock rule assumes it is not, which is the
+// longer lock and therefore the assumption less favorable to the VTXO. It is a parameter of the ratio,
+// not a fact about Ark.
+//
+// Boarding and receiving draw no forfeit lock, but a Lightning receipt into the Ark consumes inbound
+// capacity on the server's own channels, which the server must have provisioned in advance. That is
+// the directional term §3.4 says moves to the server tier; the ratio charges it (serverTierTerm) as the
+// channel model applied to the server's aggregate flow, so that pooling is what it is — the peak of a
+// sum against a sum of peaks — and not an omission.
+//
 // Parameters default to published values (28 d ≈ 4032 blocks, hourly rounds ≈ 6 blocks) and are inputs.
 
 export interface ServerParams {
   lifetimeBlocks: number;
   roundInterval: number;
   refreshLead: number;
+  /**
+   * When the server recovers value it fronted for a Lightning spend: "expiry" — the forfeited input is
+   * swept at its absolute expiry (the reading under which L̄ is the mean residual lifetime, ~half of 28 d);
+   * "round" — the server-held HTLC output is presented as an input to the next round and its value is
+   * reusable one round interval later. Refreshes and offboards are swept at expiry under either setting.
+   * Which reading matches the implementation is open (see header) and sets the scale of 𝒟_V.
+   */
+  spendLock: "expiry" | "round";
 }
 
-export const DEFAULT_SERVER: ServerParams = { lifetimeBlocks: 4032, roundInterval: 6, refreshLead: 288 };
+export const DEFAULT_SERVER: ServerParams = { lifetimeBlocks: 4032, roundInterval: 6, refreshLead: 288, spendLock: "expiry" };
 
 interface Vtxo {
   id: string;
@@ -541,19 +574,30 @@ interface Vtxo {
   forfeited: boolean;
 }
 
+export type VolumeBasis = "out" | "both";
+
 export class ArkServer {
   readonly params: ServerParams;
   readonly capital: number;    // B_S
   committed = 0;               // W_S: forfeited-but-unswept value the server has fronted
   height = 0;
-  volumeDelivered = 0;
+  volumeDelivered = 0;         // outward Lightning spends the server fronted
+  volumeReceived = 0;          // receipts issued as VTXOs
   private lockedIntegral = 0;  // ∫ W_S dt (value·blocks)
   private lastHeight = 0;
   private nextId = 0;
-  private readonly vtxos = new Map<string, Vtxo>();
+  /** Live (unforfeited) outputs, insertion-ordered; expiry is monotone in insertion order. */
+  private readonly live = new Map<string, Vtxo>();
+  /** Forfeited outputs bucketed by the height at which the server may sweep them. */
+  private readonly sweepAt = new Map<number, Vtxo[]>();
+  private readonly byHolder = new Map<string, Set<string>>();
   readonly outward = new Map<string, number>();
   readonly inward = new Map<string, number>();
   readonly allocated = new Map<string, number>();
+  /** Aggregate Lightning flow through the server per advance() call: what the server's channels carry. */
+  readonly aggregateSteps: Array<{ in: number; out: number }> = [];
+  private stepIn = 0;
+  private stepOut = 0;
 
   constructor(capital: number, params: ServerParams = DEFAULT_SERVER) {
     this.capital = capital;
@@ -576,44 +620,64 @@ export class ArkServer {
   advance(blocks: number): void {
     // W_S is piecewise constant between events; integrate over the interval before applying sweeps.
     this.lockedIntegral += this.committed * blocks;
+    const from = this.height;
     this.height += blocks;
     this.lastHeight = this.height;
-    for (const [id, v] of this.vtxos) {
-      if (v.forfeited && this.height >= v.expiresAt) {
-        this.committed -= v.value; // sweep: fronted value recovered
-        this.vtxos.delete(id);
-      }
+    this.aggregateSteps.push({ in: this.stepIn, out: this.stepOut });
+    this.stepIn = 0; this.stepOut = 0;
+    for (let h = from + 1; h <= this.height; h++) {
+      const due = this.sweepAt.get(h);
+      if (!due) continue;
+      for (const v of due) this.committed -= v.value; // sweep: fronted value recovered
+      this.sweepAt.delete(h);
     }
     // Holders refresh outputs approaching expiry; a refresh is a forfeit plus a server-funded reissue.
-    for (const v of [...this.vtxos.values()]) {
-      if (!v.forfeited && v.expiresAt - this.height <= this.params.refreshLead) this.refresh(v.id);
+    // Live outputs are expiry-ordered, so the scan stops at the first output outside the lead window.
+    const toRefresh: string[] = [];
+    for (const v of this.live.values()) {
+      if (v.expiresAt - this.height > this.params.refreshLead) break;
+      toRefresh.push(v.id);
     }
+    for (const id of toRefresh) this.refresh(id);
   }
 
   private newVtxo(holder: string, value: number): Vtxo {
     const v: Vtxo = { id: `v${this.nextId++}`, holder, value, expiresAt: this.height + this.params.lifetimeBlocks, forfeited: false };
-    this.vtxos.set(v.id, v);
+    this.live.set(v.id, v);
+    if (!this.byHolder.has(holder)) this.byHolder.set(holder, new Set());
+    this.byHolder.get(holder)!.add(v.id);
     return v;
   }
 
-  /** Forfeit an output: the server fronts its value now and sweeps it at the output's expiry. */
-  private forfeit(v: Vtxo): boolean {
+  /** Forfeit an output: the server fronts its value now and sweeps it at sweepHeight (default: the output's expiry). */
+  private forfeit(v: Vtxo, sweepHeight: number = v.expiresAt): boolean {
     if (v.value > this.uncommitted) return false;
     v.forfeited = true;
     this.committed += v.value;
+    this.live.delete(v.id);
+    this.byHolder.get(v.holder)?.delete(v.id);
+    const at = Math.min(sweepHeight, v.expiresAt);
+    if (at <= this.height) { this.committed -= v.value; return true; } // already sweepable
+    if (!this.sweepAt.has(at)) this.sweepAt.set(at, []);
+    this.sweepAt.get(at)!.push(v);
     return true;
   }
 
-  /** Board or receive: a holder gains an output without drawing on server liquidity in this aggregate model. */
+  /**
+   * Receive over Lightning (or board): a holder gains an output. No forfeit lock is drawn, but the
+   * receipt crosses the server's channels inbound and is recorded in aggregateSteps for the server-tier term.
+   */
   receive(holder: string, value: number): string {
     const v = this.newVtxo(holder, value);
     ArkServer.bump(this.inward, holder, value);
     ArkServer.bump(this.allocated, holder, value);
+    this.volumeReceived += value;
+    this.stepIn += value;
     return v.id;
   }
 
   refresh(id: string): boolean {
-    const old = this.vtxos.get(id);
+    const old = this.live.get(id);
     if (!old || old.forfeited) return false;
     if (!this.forfeit(old)) return false;
     this.newVtxo(old.holder, old.value);
@@ -622,7 +686,7 @@ export class ArkServer {
 
   holderValue(holder: string): number {
     let s = 0;
-    for (const v of this.vtxos.values()) if (v.holder === holder && !v.forfeited) s += v.value;
+    for (const id of this.byHolder.get(holder) ?? []) s += this.live.get(id)!.value;
     return s;
   }
 
@@ -632,24 +696,38 @@ export class ArkServer {
     if (this.holderValue(holder) < amount) return false;
     const inputs: Vtxo[] = [];
     let total = 0;
-    for (const v of this.vtxos.values()) {
+    for (const id of this.byHolder.get(holder) ?? []) {
       if (total >= amount) break;
-      if (v.holder === holder && !v.forfeited) { inputs.push(v); total += v.value; }
+      const v = this.live.get(id)!;
+      inputs.push(v); total += v.value;
     }
     if (total > this.uncommitted) return false; // all-or-nothing check before any mutation
-    for (const v of inputs) this.forfeit(v);
+    const sweep = this.params.spendLock === "round" ? this.height + this.params.roundInterval : Number.POSITIVE_INFINITY;
+    for (const v of inputs) this.forfeit(v, sweep);
     const change = total - amount;
     if (change > 0) this.newVtxo(holder, change); // reissued from the fronted value
     ArkServer.bump(this.outward, holder, amount);
     ArkServer.bump(this.allocated, holder, amount); // K^S_A: the server allocated at spend time
     this.volumeDelivered += amount;
+    this.stepOut += amount;
     return true;
   }
 
-  /** 𝒟_V = ∫ W_S dt / volume delivered, in blocks. */
-  liquidityDuration(): number {
+  /** ∫ W_S dt in value·blocks: the forfeit-lock component of the server's locked capital-time. */
+  lockedIntegralBlocks(): number {
     this.accrue();
-    return this.volumeDelivered === 0 ? Infinity : this.lockedIntegral / this.volumeDelivered;
+    return this.lockedIntegral;
+  }
+
+  /** Delivered volume on the chosen basis. The channel replay counts both directions; "both" matches it. */
+  volume(basis: VolumeBasis = "both"): number {
+    return basis === "out" ? this.volumeDelivered : this.volumeDelivered + this.volumeReceived;
+  }
+
+  /** 𝒟_V from forfeit locks only = ∫ W_S dt / volume, in blocks. */
+  liquidityDuration(basis: VolumeBasis = "both"): number {
+    const vol = this.volume(basis);
+    return vol === 0 ? Infinity : this.lockedIntegralBlocks() / vol;
   }
 
   /** S2, first inequality, per holder: O − I ≤ V(0) + K with V(0)=0. */
@@ -664,33 +742,144 @@ export class ArkServer {
 }
 
 /**
- * Directional channel model for the same demand. An operator (LSP) pre-funds inbound capacity toward
- * each agent to a forecast f̂_a = (1 + margin) × the agent's realized peak held balance (running maximum
- * of receipts minus spends), holds that capital for the whole horizon, and the replay fails a receipt
- * that would exceed remaining inbound capacity or a spend that exceeds the agent's balance. Returns
- * 𝒟_C in blocks, the failure count, and the locked capital.
+ * How an operator sets inbound capacity toward an agent.
+ *  - oracle: the realized running peak over the whole horizon, times (1 + margin), held for the horizon.
+ *    Forecast error is zero by construction; this charges the channel only for idle capital.
+ *  - trailing: the horizon is cut into re-provisioning intervals; capacity for interval i is (1 + margin)
+ *    times the peak observed during interval i − 1 (interval 0 uses its own peak as a bootstrap), never
+ *    below the balance carried in, and is held for that interval. Receipts that exceed remaining inbound
+ *    capacity fail. This charges the channel for forecast error and for idle capital.
+ */
+export type ForecastRule = { kind: "oracle" } | { kind: "trailing"; intervalBlocks: number; roundBlocks: number };
+
+/**
+ * Directional channel model for the same demand. Returns 𝒟_C in blocks (locked capital-time over
+ * delivered volume, both directions counted), the failure count, and the horizon-average locked capital.
  */
 export function channelLiquidityDuration(
   perAgent: Map<string, Array<{ out: number; in: number }>>,
   horizonBlocks: number,
   margin: number,
+  rule: ForecastRule = { kind: "oracle" },
 ): { duration: number; failures: number; locked: number } {
-  let locked = 0;
+  let lockedIntegral = 0;
   let volume = 0;
   let failures = 0;
   for (const steps of perAgent.values()) {
-    let running = 0;
-    let peak = 0;
-    for (const s of steps) { running = Math.max(0, running + s.in - s.out); peak = Math.max(peak, running); }
-    const forecast = Math.ceil(peak * (1 + margin));
-    locked += forecast;
+    const peakOf = (from: number, to: number, start: number): number => {
+      let running = start, peak = start;
+      for (let i = from; i < to; i++) { running = Math.max(0, running + steps[i]!.in - steps[i]!.out); peak = Math.max(peak, running); }
+      return peak;
+    };
     let balance = 0;
-    for (const s of steps) {
-      if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; } }
-      if (s.out) { if (s.out > balance) failures += 1; else { balance -= s.out; volume += s.out; } }
+    if (rule.kind === "oracle") {
+      const forecast = Math.ceil(peakOf(0, steps.length, 0) * (1 + margin));
+      lockedIntegral += forecast * horizonBlocks;
+      for (const s of steps) {
+        if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; } }
+        if (s.out) { if (s.out > balance) failures += 1; else { balance -= s.out; volume += s.out; } }
+      }
+    } else {
+      const stepsPerInterval = Math.max(1, Math.round(rule.intervalBlocks / rule.roundBlocks));
+      let prevPeak = -1;
+      for (let from = 0; from < steps.length; from += stepsPerInterval) {
+        const to = Math.min(steps.length, from + stepsPerInterval);
+        if (prevPeak < 0) prevPeak = peakOf(from, to, 0); // bootstrap: interval 0 is observed, not forecast
+        const forecast = Math.max(balance, Math.ceil(prevPeak * (1 + margin)));
+        lockedIntegral += forecast * (to - from) * rule.roundBlocks;
+        let running = balance, peak = balance;
+        for (let i = from; i < to; i++) {
+          const s = steps[i]!;
+          if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; } }
+          if (s.out) { if (s.out > balance) failures += 1; else { balance -= s.out; volume += s.out; } }
+          running = balance; peak = Math.max(peak, running);
+        }
+        prevPeak = peak;
+      }
     }
   }
-  return { duration: volume === 0 ? Infinity : (locked * horizonBlocks) / volume, failures, locked };
+  return { duration: volume === 0 ? Infinity : lockedIntegral / volume, failures, locked: lockedIntegral / horizonBlocks };
+}
+
+/**
+ * The server-tier directional term: the channel model applied to the server's aggregate Lightning flow.
+ * Its inbound requirement is the peak of the summed net receipts, forecast by the same rule an LSP would
+ * use; pooling is the gap between this peak-of-sum and the channel model's sum-of-peaks.
+ */
+export function serverTierTerm(S: ArkServer, horizonBlocks: number, margin: number, rule: ForecastRule): { lockedIntegral: number; failures: number } {
+  const one = new Map([["server", S.aggregateSteps.map((s) => ({ in: s.in, out: s.out }))]]);
+  const r = channelLiquidityDuration(one, horizonBlocks, margin, rule);
+  return { lockedIntegral: r.locked * horizonBlocks, failures: r.failures };
+}
+
+/** Demand-grid cell for §7 item 2. burstiness = per-agent envelope-to-volume ratio, set through burst sizes and rates. */
+export interface CornerParams {
+  agents: number;
+  /** blocks of horizon as a multiple of the VTXO lifetime */
+  horizonLifetimes: number;
+  /** expected net inflow per agent per round, in sat; 0 is balanced demand, > 0 accumulates, < 0 drains */
+  driftPerRound: number;
+  /** burst sizes and the inflow rate; the outflow rate is set so that E[out] = E[in] − drift */
+  burst: { vIn: number; vOut: number; pIn: number };
+  /** steady bidirectional flow instead of bursts (few-steady corner) */
+  steady?: { base: number; jitter: number };
+  margin: number;
+  forecast: ForecastRule;
+  volume: VolumeBasis;
+  /** charge the server for inbound on its own channels (§3.4) */
+  serverTier: boolean;
+  seed: number;
+  lifetime?: number;
+  roundBlocks?: number;
+  /** lock rule for Lightning spends; see ServerParams.spendLock */
+  spendLock?: "expiry" | "round";
+}
+
+export interface CornerResult {
+  dC: number; dV: number; dVForfeitOnly: number; ratio: number;
+  chFailures: number; arkFailures: number; serverFailures: number;
+  chLocked: number; serverLocked: number; finalHolderBalance: number;
+}
+
+export function runCorner(p: CornerParams): CornerResult {
+  const r = rng(p.seed);
+  const lifetime = p.lifetime ?? 4032;
+  const roundBlocks = p.roundBlocks ?? 6;
+  const horizon = p.horizonLifetimes * lifetime;
+  const steps = Math.floor(horizon / roundBlocks);
+  const perAgent = new Map<string, Array<{ out: number; in: number }>>();
+  for (let a = 0; a < p.agents; a++) perAgent.set(`a${a}`, []);
+  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288, spendLock: p.spendLock ?? "expiry" });
+  const pOut = p.steady ? 1 : Math.max(0, Math.min(1, (p.burst.pIn * p.burst.vIn - p.driftPerRound) / p.burst.vOut));
+  let arkFailures = 0;
+  for (let t = 0; t < steps; t++) {
+    for (const [name, arr] of perAgent) {
+      let out = 0, inn = 0;
+      if (p.steady) {
+        const d = p.driftPerRound;
+        out = p.steady.base + Math.floor(r() * p.steady.jitter); inn = p.steady.base + d + Math.floor(r() * p.steady.jitter);
+      } else {
+        if (r() < p.burst.pIn) inn = p.burst.vIn;
+        if (r() < pOut) out = p.burst.vOut;
+      }
+      arr.push({ out, in: inn });
+      if (inn) S.receive(name, inn);
+      if (out) { if (S.holderValue(name) >= out) S.spendLightning(name, out); else arkFailures += 1; }
+    }
+    S.advance(roundBlocks);
+  }
+  const ch = channelLiquidityDuration(perAgent, horizon, p.margin, p.forecast);
+  const vol = S.volume(p.volume);
+  const forfeitIntegral = S.lockedIntegralBlocks();
+  const st = p.serverTier ? serverTierTerm(S, horizon, p.margin, p.forecast) : { lockedIntegral: 0, failures: 0 };
+  const dV = vol === 0 ? Infinity : (forfeitIntegral + st.lockedIntegral) / vol;
+  let finalHolderBalance = 0;
+  for (const name of perAgent.keys()) finalHolderBalance += S.holderValue(name);
+  return {
+    dC: ch.duration, dV, dVForfeitOnly: vol === 0 ? Infinity : forfeitIntegral / vol, ratio: ch.duration / dV,
+    chFailures: ch.failures, arkFailures, serverFailures: st.failures,
+    chLocked: ch.locked, serverLocked: st.lockedIntegral / horizon, finalHolderBalance,
+  };
 }
 
 /** Deterministic LCG. */
@@ -705,7 +894,7 @@ export function rng(seed: number): () => number {
 ```ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ArkServer, DEFAULT_SERVER, channelLiquidityDuration, rng } from "./server.ts";
+import { ArkServer, DEFAULT_SERVER, runCorner, type CornerParams } from "./server.ts";
 
 test("S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating", () => {
   const S = new ArkServer(1_300_000, { ...DEFAULT_SERVER, refreshLead: Number.NEGATIVE_INFINITY }); // holders never refresh: isolate the sweep clock
@@ -737,60 +926,88 @@ test("S2 witness: forfeit locks the fronted value for the residual lifetime; ref
   S.advance(1);
   assert.equal(S.committed, 0);
   // liquidity duration = 1000 × 50 blocks / 1000 delivered = 50 blocks (residual lifetime at forfeit)
-  assert.equal(S.liquidityDuration(), 50);
+  assert.equal(S.liquidityDuration("out"), 50);
+  // Under the round-recycle reading the same spend locks the fronted value for one round only.
+  const R = new ArkServer(10_000, { lifetimeBlocks: 100, roundInterval: 1, refreshLead: 10, spendLock: "round" });
+  R.receive("h", 1_000);
+  R.advance(50);
+  assert.ok(R.spendLightning("h", 1_000));
+  R.advance(1);
+  assert.equal(R.committed, 0);
+  assert.equal(R.liquidityDuration("out"), 1);
 });
 
 /**
- * §3.3 corner test. Same demand fed to both objects. This is a qualitative witness of the ratio's
- * direction on two constructed corners, not a reproduction of any published figure.
+ * §3.3 grid (item 2 of §7). Same demand fed to both objects; the channel model uses the stated forecast
+ * rule and the VTXO side is charged the server-tier inbound term of §3.4. Two constructed corners plus
+ * drift and horizon variation. This is a qualitative witness of the ratio's direction, not a reproduction
+ * of any published figure, and the direction it finds is conditional on the spend lock rule.
  */
-function corner(kind: "many-bursty" | "few-steady", seed: number) {
-  const r = rng(seed);
-  const lifetime = 4032;
-  const horizon = 8 * lifetime;         // long against the VTXO lifetime
-  const roundBlocks = 6;
-  const steps = horizon / roundBlocks;
-  const agents = kind === "many-bursty" ? 200 : 3;
-  const perAgent = new Map<string, Array<{ out: number; in: number }>>();
-  for (let a = 0; a < agents; a++) perAgent.set(`a${a}`, []);
-  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288 });
-  for (let t = 0; t < steps; t++) {
-    for (const [name, arr] of perAgent) {
-      let out = 0, inn = 0;
-      if (kind === "many-bursty") {
-        // Rare, large, idiosyncratic outflows funded by earlier inflows; per-agent envelope ≫ per-agent volume per step.
-        if (r() < 0.02) inn = 5_000;
-        if (r() < 0.01) out = 4_000;
-      } else {
-        // Steady bidirectional flow with fixed counterparties, recycling within the day.
-        out = 100 + Math.floor(r() * 10); inn = 100 + Math.floor(r() * 10);
-      }
-      arr.push({ out, in: inn });
-      if (inn) S.receive(name, inn);
-      if (out && S.holderValue(name) >= out) S.spendLightning(name, out);
-    }
-    S.advance(roundBlocks);
-  }
-  const ch = channelLiquidityDuration(perAgent, horizon, 0.25);
-  return { dV: S.liquidityDuration(), dC: ch.duration, failures: ch.failures };
-}
+const trailing = { kind: "trailing", intervalBlocks: 4032, roundBlocks: 6 } as const;
+const many = (over: Partial<CornerParams>): CornerParams => ({
+  agents: 200, horizonLifetimes: 8, driftPerRound: 0, burst: { vIn: 5000, vOut: 4000, pIn: 0.02 },
+  margin: 0.25, forecast: trailing, volume: "both", serverTier: true, seed: 1, ...over,
+});
+const few = (over: Partial<CornerParams>): CornerParams => ({
+  agents: 3, horizonLifetimes: 8, driftPerRound: 0, burst: { vIn: 0, vOut: 1, pIn: 0 }, steady: { base: 100, jitter: 10 },
+  margin: 0.25, forecast: trailing, volume: "both", serverTier: true, seed: 2, ...over,
+});
 
-test("§3.3 direction: Ark favored on many-bursty-long, channel favored on few-steady-recycling", () => {
-  const mb = corner("many-bursty", 1);
-  const fs = corner("few-steady", 2);
-  assert.ok(Number.isFinite(mb.dV) && Number.isFinite(mb.dC) && Number.isFinite(fs.dV) && Number.isFinite(fs.dC));
-  assert.ok(mb.dC / mb.dV > 1, `expected ratio > 1 on many-bursty, got ${mb.dC / mb.dV}`);
-  assert.ok(fs.dC / fs.dV < 1, `expected ratio < 1 on few-steady, got ${fs.dC / fs.dV}`);
+test("§3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell", () => {
+  const cells = [
+    many({ driftPerRound: 60, forecast: { kind: "oracle" } }), // the earlier draft's corner, corrected
+    many({ driftPerRound: 60 }),
+    many({}),
+    many({ horizonLifetimes: 1 }),
+    many({ driftPerRound: -30 }),
+    few({}),
+  ];
+  for (const c of cells) {
+    const x = runCorner(c);
+    assert.ok(Number.isFinite(x.ratio));
+    assert.ok(x.ratio < 1.1, `expiry lock, drift ${c.driftPerRound}, H ${c.horizonLifetimes}: ratio ${x.ratio.toFixed(2)}`);
+  }
+});
+
+test("§3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady", () => {
+  const r = (c: CornerParams) => runCorner({ ...c, spendLock: "round" }).ratio;
+  assert.ok(r(many({})) > 1, `zero drift: ${r(many({}))}`);
+  assert.ok(r(many({ horizonLifetimes: 1 })) > 1);
+  assert.ok(r(many({ driftPerRound: -30 })) > 1);
+  const corr = r(many({ driftPerRound: 60 }));
+  assert.ok(corr > 0.9 && corr < 1.2, `correlated drift: pooling has nothing to pool, got ${corr}`); // ≈ 1
+  assert.ok(r(few({})) < 1, `few-steady: ${r(few({}))}`);
+  assert.ok(r(few({ forecast: { kind: "oracle" } })) < 1);
+});
+
+test("§3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner", () => {
+  const base = many({ driftPerRound: 60, forecast: { kind: "oracle" } });
+  const full = runCorner(base).ratio;
+  const noServer = runCorner({ ...base, serverTier: false }).ratio;
+  const outOnly = runCorner({ ...base, serverTier: false, volume: "out" }).ratio;
+  assert.ok(full < 1.1 && noServer > 20 && outOnly > 5, `${full} ${noServer} ${outOnly}`);
 });
 ```
 
 ### B.5 `model/registry.ts`
 
 ```ts
-// Proof-carrying registry with claim-once nullifiers keyed by the object's authority key.
-// Witnesses Proposition S3 on finite cases. The proof system is NOT implemented: `verify` checks a
-// simulated attestation with the interface a verifier would expose (statement + witness → boolean),
-// and the tests say so. Substituting a real SNARK changes nothing in the registry logic.
+// Proof-carrying registry with claim-once nullifiers keyed by the object's authority key, under an
+// epoch rule. Witnesses Proposition S3 on finite cases.
+//
+// The nullifier stops a second claim on the same object id. It does not stop a claim on a successor id:
+// spend ρ to a fresh ρ′ under a key you control (a self-transfer, or under Ark every refresh) and the
+// nullifier is fresh. Zcash's nullifier argument prevents double-spend; spending is what it permits. So
+// claims are epoched: a claim is accepted only against the settled set as frozen at epoch start, and at
+// epoch close a claim whose object is no longer settled — spent, without an attested successor — is
+// revoked. One unit of capital therefore counts once per epoch whatever its id history. A refresh, which
+// under Ark is a spend the server co-signs and can vouch for, is recorded as a successor link by the set
+// maintainer so that an honest holder's refresh mid-epoch does not revoke its claim; a transfer to another
+// key is not a successor and does revoke.
+//
+// The proof system is NOT implemented: `verify` checks a simulated attestation with the interface a
+// verifier would expose (statement + witness → boolean), and the tests say so. Substituting a real SNARK
+// changes nothing in the registry logic.
 
 import { createHmac, createHash } from "node:crypto";
 
@@ -805,9 +1022,43 @@ export const prf = (k: string, id: string): string => createHmac("sha256", k).up
 
 export class SettledSet {
   private readonly objs = new Map<string, SettledObject>();
+  /** successor links the set maintainer attests: old id → new id (a refresh, same holder key). */
+  private readonly successor = new Map<string, string>();
   add(o: SettledObject): void { this.objs.set(o.id, o); }
+  remove(id: string): void { this.objs.delete(id); }
   has(id: string): boolean { return this.objs.has(id); }
   get(id: string): SettledObject | undefined { return this.objs.get(id); }
+  /** Spend `id` into a fresh object under the same authority and record the link (a refresh). */
+  refresh(id: string, newId: string): SettledObject {
+    const o = this.objs.get(id);
+    if (!o) throw new Error("not settled");
+    this.objs.delete(id);
+    const n: SettledObject = { id: newId, value: o.value, authorityKey: o.authorityKey };
+    this.objs.set(newId, n);
+    this.successor.set(id, newId);
+    return n;
+  }
+  /** Spend `id` into a fresh object under a different authority: a transfer, no link. */
+  transfer(id: string, newId: string, newKey: string): SettledObject {
+    const o = this.objs.get(id);
+    if (!o) throw new Error("not settled");
+    this.objs.delete(id);
+    const n: SettledObject = { id: newId, value: o.value, authorityKey: newKey };
+    this.objs.set(newId, n);
+    return n;
+  }
+  /** Follow attested successor links from `id`; returns the live descendant or undefined if spent without one. */
+  descendant(id: string): SettledObject | undefined {
+    let cur = id;
+    const seen = new Set<string>();
+    while (!this.objs.has(cur)) {
+      const nxt = this.successor.get(cur);
+      if (!nxt || seen.has(nxt)) return undefined;
+      seen.add(nxt);
+      cur = nxt;
+    }
+    return this.objs.get(cur);
+  }
   /** Deterministic commitment to the set contents; stands in for a Merkle root. */
   root(): string {
     const h = createHash("sha256");
@@ -817,13 +1068,18 @@ export class SettledSet {
     }
     return h.digest("hex");
   }
+  snapshot(): SettledSet {
+    const c = new SettledSet();
+    for (const o of this.objs.values()) c.add({ ...o });
+    return c;
+  }
 }
 
-/** Simulated verifier for R_cap: membership, authority, value bound, nullifier derivation. */
-export function verifyCapClaim(set: SettledSet, st: Statement, w: Witness): boolean {
-  if (st.root !== set.root()) return false;
-  if (!set.has(w.obj.id)) return false;
-  const live = set.get(w.obj.id)!;
+/** Simulated verifier for R_cap against a fixed root: membership, authority, value bound, nullifier derivation. */
+export function verifyCapClaim(frozen: SettledSet, st: Statement, w: Witness): boolean {
+  if (st.root !== frozen.root()) return false;
+  if (!frozen.has(w.obj.id)) return false;
+  const live = frozen.get(w.obj.id)!;
   if (live.value !== w.obj.value || live.authorityKey !== w.obj.authorityKey) return false;
   if (w.k !== live.authorityKey) return false;          // k_ρ satisfies A_ρ (single-signer model)
   if (live.value < st.v) return false;
@@ -831,32 +1087,66 @@ export function verifyCapClaim(set: SettledSet, st: Statement, w: Witness): bool
   return prf(w.k, live.id) === st.nf;                     // nf keyed by the object's authority, not the claimant
 }
 
+interface Claim extends Statement { objId: string; revoked: boolean; }
+
 export class Registry {
   private readonly nullifiers = new Set<string>();
-  readonly claims: Statement[] = [];
+  private readonly claims: Claim[] = [];
+  private frozen: SettledSet;
+  epoch = 0;
 
-  submit(set: SettledSet, st: Statement, w: Witness): "accepted" | "invalid" | "duplicate" {
-    if (!verifyCapClaim(set, st, w)) return "invalid";
+  /** The registry opens on a frozen view of the settled set; claims in this epoch are against that root. */
+  constructor(setAtEpochStart: SettledSet) {
+    this.frozen = setAtEpochStart.snapshot();
+  }
+
+  get root(): string { return this.frozen.root(); }
+
+  submit(st: Statement, w: Witness): "accepted" | "invalid" | "duplicate" {
+    if (!verifyCapClaim(this.frozen, st, w)) return "invalid";
     if (this.nullifiers.has(st.nf)) return "duplicate";
     this.nullifiers.add(st.nf);
-    this.claims.push({ ...st });
+    this.claims.push({ ...st, objId: w.obj.id, revoked: false });
     return "accepted";
+  }
+
+  /**
+   * Close the epoch against the live set: a claim survives iff its object, or an attested successor of it
+   * under the same key, is still settled. Then re-freeze on the live set and clear nullifiers, so next
+   * epoch's claims are against the new ids. Returns the surviving claims' weight.
+   */
+  closeEpoch(liveSet: SettledSet): number {
+    for (const c of this.claims) {
+      if (c.revoked) continue;
+      const d = liveSet.descendant(c.objId);
+      const original = this.frozen.get(c.objId)!;
+      if (!d || d.authorityKey !== original.authorityKey || d.value < c.v) c.revoked = true;
+    }
+    const w = this.totalWeight();
+    this.frozen = liveSet.snapshot();
+    this.nullifiers.clear();
+    this.claims.length = 0;
+    this.epoch += 1;
+    return w;
   }
 
   /** Total weight the registry attributes to a given nullifier (i.e. to the object behind it). */
   weightFor(nf: string): number {
-    return this.claims.filter((c) => c.nf === nf).reduce((a, c) => a + c.v, 0);
+    return this.claims.filter((c) => c.nf === nf && !c.revoked).reduce((a, c) => a + c.v, 0);
   }
 
   totalWeight(): number {
-    return this.claims.reduce((a, c) => a + c.v, 0);
+    return this.claims.filter((c) => !c.revoked).reduce((a, c) => a + c.v, 0);
   }
 
-  /** Fixed-pool reward allocation, integer, remainder to no one (L4 without the rounding defect). */
+  /** Fixed-pool reward allocation over surviving claims, integer, remainder to no one (L4 without the rounding defect). */
   allocate(pool: number): Map<string, number> {
     const total = this.totalWeight();
     const out = new Map<string, number>();
-    for (const c of this.claims) out.set(c.cm, (out.get(c.cm) ?? 0) + Math.floor((pool * c.v) / total));
+    for (const c of this.claims) {
+      if (c.revoked) continue;
+      out.set(c.cm, (out.get(c.cm) ?? 0) + Math.floor((pool * c.v) / total));
+    }
     return out;
   }
 }
@@ -872,10 +1162,10 @@ import { Registry, SettledSet, commit, prf, type Statement, type Witness } from 
 // NOTE: the proof system is simulated (see registry.ts). These tests witness the registry logic
 // under the assumption that a real knowledge-sound proof would accept exactly what verifyCapClaim accepts.
 
-function claim(set: SettledSet, objId: string, identity: string, v: number, k?: string): [Statement, Witness] {
+function claim(R: Registry, set: SettledSet, objId: string, identity: string, v: number, k?: string): [Statement, Witness] {
   const obj = set.get(objId)!;
   const key = k ?? obj.authorityKey;
-  const st: Statement = { cm: commit(identity), v, nf: prf(key, obj.id), root: set.root() };
+  const st: Statement = { cm: commit(identity), v, nf: prf(key, obj.id), root: R.root };
   return [st, { s: identity, k: key, obj: { ...obj } }];
 }
 
@@ -883,43 +1173,86 @@ test("S3: weight attributed to any settled object is at most its value regardles
   const set = new SettledSet();
   set.add({ id: "utxo:1", value: 50_000, authorityKey: "k1" });
   set.add({ id: "vtxo:7", value: 20_000, authorityKey: "k7" });
-  const R = new Registry();
+  const R = new Registry(set);
   // One controller, 32 identities, one object: only the first claim lands.
-  const outcomes = Array.from({ length: 32 }, (_, i) => R.submit(set, ...claim(set, "utxo:1", `id-${i}`, 50_000)));
+  const outcomes = Array.from({ length: 32 }, (_, i) => R.submit(...claim(R, set, "utxo:1", `id-${i}`, 50_000)));
   assert.equal(outcomes[0], "accepted");
   assert.ok(outcomes.slice(1).every((o) => o === "duplicate"));
   assert.equal(R.weightFor(prf("k1", "utxo:1")), 50_000);
   // A second, distinct object is independent.
-  assert.equal(R.submit(set, ...claim(set, "vtxo:7", "id-99", 20_000)), "accepted");
+  assert.equal(R.submit(...claim(R, set, "vtxo:7", "id-99", 20_000)), "accepted");
   assert.equal(R.totalWeight(), 70_000);
 });
 
 test("S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not", () => {
   const set = new SettledSet();
   set.add({ id: "utxo:2", value: 10_000, authorityKey: "k2" });
-  const R = new Registry();
-  const [st1, w1] = claim(set, "utxo:2", "alpha", 10_000);
-  const [st2, w2] = claim(set, "utxo:2", "beta", 10_000);
+  const R = new Registry(set);
+  const [st1, w1] = claim(R, set, "utxo:2", "alpha", 10_000);
+  const [st2, w2] = claim(R, set, "utxo:2", "beta", 10_000);
   assert.equal(st1.nf, st2.nf); // same object ⇒ same nullifier, whoever claims
-  assert.equal(R.submit(set, st1, w1), "accepted");
-  assert.equal(R.submit(set, st2, w2), "duplicate");
+  assert.equal(R.submit(st1, w1), "accepted");
+  assert.equal(R.submit(st2, w2), "duplicate");
   // Forging a different nullifier requires a key that does not satisfy the authority: rejected as invalid.
-  const [st3, w3] = claim(set, "utxo:2", "gamma", 10_000, "not-k2");
-  assert.equal(R.submit(set, st3, w3), "invalid");
+  const [st3, w3] = claim(R, set, "utxo:2", "gamma", 10_000, "not-k2");
+  assert.equal(R.submit(st3, w3), "invalid");
 });
 
 test("S3: overclaiming value, stale roots, and unsettled objects are rejected", () => {
   const set = new SettledSet();
   set.add({ id: "chan:3", value: 1_000, authorityKey: "k3" });
-  const R = new Registry();
-  const [over, wo] = claim(set, "chan:3", "x", 1_001);
-  assert.equal(R.submit(set, over, wo), "invalid");
-  const [st, w] = claim(set, "chan:3", "x", 1_000);
-  set.add({ id: "chan:4", value: 5, authorityKey: "k4" }); // root moves
-  assert.equal(R.submit(set, st, w), "invalid");
+  const R = new Registry(set);
+  const [over, wo] = claim(R, set, "chan:3", "x", 1_001);
+  assert.equal(R.submit(over, wo), "invalid");
+  // An object added after the epoch froze is not in the root the registry accepts claims against.
+  set.add({ id: "chan:4", value: 5, authorityKey: "k4" });
+  const st4: Statement = { cm: commit("y"), v: 5, nf: prf("k4", "chan:4"), root: set.root() };
+  assert.equal(R.submit(st4, { s: "y", k: "k4", obj: set.get("chan:4")! }), "invalid");
   const fresh = new SettledSet();
   const ghost: Witness = { s: "y", k: "k9", obj: { id: "ghost", value: 10, authorityKey: "k9" } };
-  assert.equal(R.submit(fresh, { cm: commit("y"), v: 10, nf: prf("k9", "ghost"), root: fresh.root() }, ghost), "invalid");
+  assert.equal(R.submit({ cm: commit("y"), v: 10, nf: prf("k9", "ghost"), root: fresh.root() }, ghost), "invalid");
+});
+
+test("S3 churn: without the epoch rule one object re-claims under every fresh id; with it, one unit of capital counts once per epoch", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:0", value: 100, authorityKey: "ka" });
+  // Same controller, same key, one identity: spend to a fresh id and claim again, 8 times.
+  // Without epochs (a registry re-frozen on every spend) each claim is fresh: the nullifier is a function of id.
+  let naive = 0;
+  for (let i = 0; i < 8; i++) {
+    const Ri = new Registry(set); // stands in for a registry that accepts claims against any current root
+    naive += Ri.submit(...claim(Ri, set, `u:${i}`, "ident", 100)) === "accepted" ? 100 : 0;
+    set.transfer(`u:${i}`, `u:${i + 1}`, "ka"); // self-transfer: new id, same key, no attested successor link
+  }
+  assert.equal(naive, 800); // the hole
+  // With the epoch rule: claims accepted only against the epoch-start root; the churned objects are not in it,
+  // and the one that was is revoked at close because it was spent without an attested successor.
+  const set2 = new SettledSet();
+  set2.add({ id: "w:0", value: 100, authorityKey: "kb" });
+  const R = new Registry(set2);
+  assert.equal(R.submit(...claim(R, set2, "w:0", "ident", 100)), "accepted");
+  for (let i = 0; i < 8; i++) {
+    set2.transfer(`w:${i}`, `w:${i + 1}`, "kb");
+    const st: Statement = { cm: commit("ident"), v: 100, nf: prf("kb", `w:${i + 1}`), root: set2.root() };
+    assert.equal(R.submit(st, { s: "ident", k: "kb", obj: set2.get(`w:${i + 1}`)! }), "invalid"); // not in the frozen root
+  }
+  assert.equal(R.closeEpoch(set2), 0); // w:0 is spent with no successor link: revoked
+  // Next epoch, the live object w:8 claims once.
+  assert.equal(R.submit(...claim(R, set2, "w:8", "ident", 100)), "accepted");
+  assert.equal(R.closeEpoch(set2), 100);
+});
+
+test("S3 refresh: an attested successor (Ark refresh, same key) keeps a claim; a transfer to another key does not", () => {
+  const set = new SettledSet();
+  set.add({ id: "v:1", value: 500, authorityKey: "kh" });
+  set.add({ id: "v:2", value: 500, authorityKey: "kh" });
+  const R = new Registry(set);
+  assert.equal(R.submit(...claim(R, set, "v:1", "h", 500)), "accepted");
+  assert.equal(R.submit(...claim(R, set, "v:2", "h", 500)), "accepted");
+  set.refresh("v:1", "v:1b");            // server-attested refresh: id rotates, key does not
+  set.refresh("v:1b", "v:1c");           // and again
+  set.transfer("v:2", "v:2b", "kOther"); // a transfer, even to a key the same controller might hold
+  assert.equal(R.closeEpoch(set), 500);  // v:1's claim survives through two refreshes; v:2's is revoked
 });
 
 test("L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor", () => {
@@ -927,9 +1260,9 @@ test("L4 with S3: identity splitting leaves coalition payout invariant and integ
   set.add({ id: "u:a", value: 100, authorityKey: "ka" });
   set.add({ id: "u:b", value: 100, authorityKey: "kb" });
   for (const m of [1, 2, 8, 32]) {
-    const R = new Registry();
-    for (let i = 0; i < m; i++) R.submit(set, ...claim(set, "u:a", `a-${i}`, 100)); // one accepted, m−1 duplicates
-    R.submit(set, ...claim(set, "u:b", "b", 100));
+    const R = new Registry(set);
+    for (let i = 0; i < m; i++) R.submit(...claim(R, set, "u:a", `a-${i}`, 100)); // one accepted, m−1 duplicates
+    R.submit(...claim(R, set, "u:b", "b", 100));
     const alloc = R.allocate(120);
     const coalitionA = [...alloc.entries()].filter(([cm]) => cm !== commit("b")).reduce((s, [, v]) => s + v, 0);
     assert.equal(coalitionA, 60);
