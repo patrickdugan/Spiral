@@ -262,7 +262,7 @@ The warden model's contribution is an ordering. Whatever a covert coalition of a
 
 \pagebreak
 
-# Appendix A. Notation
+# Exhibit A. Notation
 
 | Symbol | Meaning |
 |---|---|
@@ -277,9 +277,980 @@ The warden model's contribution is an ordering. Whatever a covert coalition of a
 | E(B, κ, Δ) | Escrow with bond B for connector κ and challenge period Δ |
 | O_chain, O_gossip, O_peer, O_server | Warden rows |
 
-# Appendix B. Reference implementation
+# Exhibit B. Reference implementation
 
 A small executable model accompanies this draft under `model/`, in TypeScript with no dependencies, runnable with `node --experimental-strip-types --test "model/*.test.ts"`. It implements the extended ledger with per-class holdings and clocked settlement events (S1); a server liquidity ledger with the forfeit-to-sweep lock rule, VTXO lifetimes, holder refresh, and the aggregate constraint, together with the peak-balance channel model, and a direction test of the §3.3 ratio on the two constructed corners of §7.1 (S2); a registry with claim-once nullifiers keyed by the object's authority over a simulated settled set (S3); the escrow state machine with the published BitVM3 size parameters (S4); and, for S5, three warden statistics on a coalition fixture: the naive network churn ratio, direct-attester netting, and repeated-cycle share, with the first two's failure modes asserted as such rather than tuned away. The proof system is not implemented; the registry verifies a simulated attestation with the same interface a verifier would expose, and the tests say so. The implementation witnesses the propositions on finite cases in the sense of [R2, §9.2]; it proves nothing about distributed execution, its fixtures are constructed, and it contacts no network.
+
+### B.0 Test run
+
+```text
+ok 1 - S4: a false assertion is slashed by one honest challenger at a cost independent of the bond
+ok 2 - S4: a true assertion cannot be disproved and releases only after Δ; operator pays Assert and capital lockup
+ok 3 - S4: the audit's negative-slash and over-release defects cannot arise; the bond is an object with fixed transitions
+ok 4 - S5 statistics on fixtures: naive churn has no stable direction; direct-attester netting saturates on dense benign trade and misses a 4-relay; repeated-cycle share separates
+ok 5 - S1: cross-class conservation holds at every settled state and with holds during pending intervals
+ok 6 - S1/L3: a rejected initiation is the identity on ledger state
+ok 7 - S3: weight attributed to any settled object is at most its value regardless of identity count
+ok 8 - S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not
+ok 9 - S3: overclaiming value, stale roots, and unsettled objects are rejected
+ok 10 - L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
+ok 11 - S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
+ok 12 - S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
+ok 13 - §3.3 direction: Ark favored on many-bursty-long, channel favored on few-steady-recycling
+# tests 13
+# pass 13
+```
+
+### B.1 `model/ledger.ts`
+
+```ts
+// Extended settlement ledger: per-class holdings and clocked settlement events.
+// Witnesses Proposition S1 of paper/where_the_capital_bound_moves.md on finite cases.
+// Centralized reference semantics. Not a Lightning, Ark, or Bitcoin implementation.
+
+export type ObjectClass = "U" | "C" | "V" | "E";
+
+export type ClockCondition =
+  | { kind: "confirmations"; required: number }
+  | { kind: "htlc"; }                // settled when preimage revealed (explicit fire)
+  | { kind: "csv"; blocks: number }  // relative timelock from initiation height
+  | { kind: "round"; roundId: string }
+  | { kind: "challenge"; delta: number; disproved?: boolean };
+
+export interface SettlementEvent {
+  id: string;
+  from: { cls: ObjectClass; holder: string };
+  to: { cls: ObjectClass; holder: string };
+  amount: number;
+  fee: number;            // paid to relay/miner, leaves the holder sum
+  clock: ClockCondition;
+  initiatedAt: number;    // block height
+  state: "pending" | "settled" | "aborted";
+}
+
+export interface LedgerSnapshot {
+  holdings: number;       // sum over classes and holders of settled holdings
+  held: number;           // sum of pending holds (h)
+  feesPaid: number;
+  slashed: number;
+  external: number;       // external funding in minus out
+}
+
+const key = (cls: ObjectClass, holder: string): string => `${cls}:${holder}`;
+
+export class SettlementLedger {
+  private readonly l = new Map<string, number>();
+  private readonly h = new Map<string, number>();
+  private readonly journal = new Map<string, SettlementEvent>();
+  private readonly confirmedRounds = new Set<string>();
+  private readonly settledHtlcs = new Set<string>();
+  height = 0;
+  feesPaid = 0;
+  slashed = 0;
+  external = 0;
+
+  fund(cls: ObjectClass, holder: string, amount: number): void {
+    if (!Number.isInteger(amount) || amount <= 0) throw new Error("amount must be a positive integer");
+    const k = key(cls, holder);
+    this.l.set(k, (this.l.get(k) ?? 0) + amount);
+    this.external += amount;
+  }
+
+  balance(cls: ObjectClass, holder: string): number {
+    return this.l.get(key(cls, holder)) ?? 0;
+  }
+
+  held(cls: ObjectClass, holder: string): number {
+    return this.h.get(key(cls, holder)) ?? 0;
+  }
+
+  available(cls: ObjectClass, holder: string): number {
+    return this.balance(cls, holder) - this.held(cls, holder);
+  }
+
+  /** Prepare a cross-class event: reserve amount+fee on the source, journal it, move nothing. */
+  initiate(ev: Omit<SettlementEvent, "state" | "initiatedAt">): SettlementEvent {
+    if (this.journal.has(ev.id)) throw new Error(`duplicate event id ${ev.id}`);
+    if (!Number.isInteger(ev.amount) || ev.amount <= 0) throw new Error("amount must be a positive integer");
+    if (!Number.isInteger(ev.fee) || ev.fee < 0) throw new Error("fee must be a nonnegative integer");
+    const src = key(ev.from.cls, ev.from.holder);
+    const need = ev.amount + ev.fee;
+    if (this.available(ev.from.cls, ev.from.holder) < need) {
+      throw new Error("insufficient available balance");
+    }
+    // All checks precede any mutation (L3 / S1 rejection identity).
+    this.h.set(src, (this.h.get(src) ?? 0) + need);
+    const rec: SettlementEvent = { ...ev, initiatedAt: this.height, state: "pending" };
+    this.journal.set(ev.id, rec);
+    return rec;
+  }
+
+  advance(blocks: number): void {
+    this.height += blocks;
+  }
+
+  confirmRound(roundId: string): void {
+    this.confirmedRounds.add(roundId);
+  }
+
+  settleHtlc(eventId: string): void {
+    this.settledHtlcs.add(eventId);
+  }
+
+  /** Whether an event's clock condition has fired at the current height. */
+  clockFired(ev: SettlementEvent): boolean {
+    const c = ev.clock;
+    switch (c.kind) {
+      case "confirmations": return this.height - ev.initiatedAt >= c.required;
+      case "csv": return this.height - ev.initiatedAt >= c.blocks;
+      case "round": return this.confirmedRounds.has(c.roundId);
+      case "htlc": return this.settledHtlcs.has(ev.id);
+      case "challenge": return this.height - ev.initiatedAt >= c.delta;
+    }
+  }
+
+  /** Settle: release the hold, debit the source, credit the destination, pay the fee. */
+  settle(eventId: string): void {
+    const ev = this.journal.get(eventId);
+    if (!ev || ev.state !== "pending") throw new Error("not pending");
+    if (!this.clockFired(ev)) throw new Error("clock has not fired");
+    const src = key(ev.from.cls, ev.from.holder);
+    const dst = key(ev.to.cls, ev.to.holder);
+    const need = ev.amount + ev.fee;
+    this.h.set(src, (this.h.get(src) ?? 0) - need);
+    this.l.set(src, (this.l.get(src) ?? 0) - need);
+    if (ev.clock.kind === "challenge" && ev.clock.disproved) {
+      // An escrow release that was disproved settles as a slash: the amount leaves the holder sum.
+      this.slashed += ev.amount;
+    } else {
+      this.l.set(dst, (this.l.get(dst) ?? 0) + ev.amount);
+    }
+    this.feesPaid += ev.fee;
+    ev.state = "settled";
+  }
+
+  /** Abort: release the hold, move nothing. */
+  abort(eventId: string): void {
+    const ev = this.journal.get(eventId);
+    if (!ev || ev.state !== "pending") throw new Error("not pending");
+    const src = key(ev.from.cls, ev.from.holder);
+    this.h.set(src, (this.h.get(src) ?? 0) - (ev.amount + ev.fee));
+    ev.state = "aborted";
+  }
+
+  snapshot(): LedgerSnapshot {
+    let holdings = 0;
+    for (const v of this.l.values()) holdings += v;
+    let held = 0;
+    for (const v of this.h.values()) held += v;
+    return { holdings, held, feesPaid: this.feesPaid, slashed: this.slashed, external: this.external };
+  }
+
+  pending(): SettlementEvent[] {
+    return [...this.journal.values()].filter((e) => e.state === "pending");
+  }
+}
+
+/** S1 identity at settled states: holdings + fees + slashed == external. */
+export function conservationGap(s: LedgerSnapshot): number {
+  return s.holdings + s.feesPaid + s.slashed - s.external;
+}
+```
+
+### B.2 `model/ledger.test.ts`
+
+```ts
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { SettlementLedger, conservationGap } from "./ledger.ts";
+
+test("S1: cross-class conservation holds at every settled state and with holds during pending intervals", () => {
+  const L = new SettlementLedger();
+  L.fund("U", "alice", 1_000_000);
+  L.fund("U", "server", 5_000_000);
+
+  // U→C funding (k confirmations), U→V board (round), C→E escrow deposit (confirmations), V→C HTLC spend.
+  L.initiate({ id: "fund", from: { cls: "U", holder: "alice" }, to: { cls: "C", holder: "alice" }, amount: 400_000, fee: 300, clock: { kind: "confirmations", required: 3 } });
+  L.initiate({ id: "board", from: { cls: "U", holder: "alice" }, to: { cls: "V", holder: "alice" }, amount: 200_000, fee: 200, clock: { kind: "round", roundId: "r1" } });
+  assert.equal(L.available("U", "alice"), 1_000_000 - 400_300 - 200_200);
+  assert.equal(conservationGap(L.snapshot()), 0);
+
+  L.advance(3);
+  L.settle("fund");
+  assert.equal(L.balance("C", "alice"), 400_000);
+  assert.equal(conservationGap(L.snapshot()), 0);
+
+  assert.throws(() => L.settle("board"), /clock/); // round not confirmed
+  L.confirmRound("r1");
+  L.settle("board");
+  assert.equal(L.balance("V", "alice"), 200_000);
+
+  L.initiate({ id: "htlc", from: { cls: "V", holder: "alice" }, to: { cls: "C", holder: "server" }, amount: 50_000, fee: 50, clock: { kind: "htlc" } });
+  L.abort("htlc"); // timed out: hold released, nothing moved
+  assert.equal(L.balance("V", "alice"), 200_000);
+  assert.equal(L.held("V", "alice"), 0);
+
+  L.initiate({ id: "dep", from: { cls: "C", holder: "alice" }, to: { cls: "E", holder: "alice" }, amount: 100_000, fee: 100, clock: { kind: "confirmations", required: 1 } });
+  L.advance(1);
+  L.settle("dep");
+  // Escrow release disproved: slashed leaves the holder sum but stays in the identity.
+  L.initiate({ id: "rel", from: { cls: "E", holder: "alice" }, to: { cls: "U", holder: "alice" }, amount: 100_000, fee: 0, clock: { kind: "challenge", delta: 10, disproved: true } });
+  L.advance(10);
+  L.settle("rel");
+  const s = L.snapshot();
+  assert.equal(s.slashed, 100_000);
+  assert.equal(conservationGap(s), 0);
+  assert.equal(L.pending().length, 0);
+});
+
+test("S1/L3: a rejected initiation is the identity on ledger state", () => {
+  const L = new SettlementLedger();
+  L.fund("C", "bob", 1_000);
+  const before = JSON.stringify(L.snapshot());
+  assert.throws(() => L.initiate({ id: "x", from: { cls: "C", holder: "bob" }, to: { cls: "V", holder: "bob" }, amount: 2_000, fee: 0, clock: { kind: "htlc" } }), /insufficient/);
+  assert.equal(JSON.stringify(L.snapshot()), before);
+  assert.equal(L.held("C", "bob"), 0);
+});
+```
+
+### B.3 `model/server.ts`
+
+```ts
+// Server-mediated object (Ark-style VTXO) liquidity model and the directional channel comparison.
+// Witnesses Proposition S2 and computes the liquidity-duration ratio of §3.3 on two demand corners.
+//
+// Lock rule (from the implementer's published description of the three liquidity operations and
+// forfeit sweeping): whenever a VTXO is forfeited (spent over Lightning, refreshed, or offboarded), the
+// server fronts equivalent value now and recovers it only when that output's absolute expiry passes.
+// Boarding and receiving are treated as liquidity-neutral for the server in this aggregate model.
+// Parameters default to published values (28 d ≈ 4032 blocks, hourly rounds ≈ 6 blocks) and are inputs.
+
+export interface ServerParams {
+  lifetimeBlocks: number;
+  roundInterval: number;
+  refreshLead: number;
+}
+
+export const DEFAULT_SERVER: ServerParams = { lifetimeBlocks: 4032, roundInterval: 6, refreshLead: 288 };
+
+interface Vtxo {
+  id: string;
+  holder: string;
+  value: number;
+  expiresAt: number;
+  forfeited: boolean;
+}
+
+export class ArkServer {
+  readonly params: ServerParams;
+  readonly capital: number;    // B_S
+  committed = 0;               // W_S: forfeited-but-unswept value the server has fronted
+  height = 0;
+  volumeDelivered = 0;
+  private lockedIntegral = 0;  // ∫ W_S dt (value·blocks)
+  private lastHeight = 0;
+  private nextId = 0;
+  private readonly vtxos = new Map<string, Vtxo>();
+  readonly outward = new Map<string, number>();
+  readonly inward = new Map<string, number>();
+  readonly allocated = new Map<string, number>();
+
+  constructor(capital: number, params: ServerParams = DEFAULT_SERVER) {
+    this.capital = capital;
+    this.params = params;
+  }
+
+  get uncommitted(): number {
+    return this.capital - this.committed;
+  }
+
+  private static bump(m: Map<string, number>, k: string, v: number): void {
+    m.set(k, (m.get(k) ?? 0) + v);
+  }
+
+  private accrue(): void {
+    this.lockedIntegral += this.committed * (this.height - this.lastHeight);
+    this.lastHeight = this.height;
+  }
+
+  advance(blocks: number): void {
+    // W_S is piecewise constant between events; integrate over the interval before applying sweeps.
+    this.lockedIntegral += this.committed * blocks;
+    this.height += blocks;
+    this.lastHeight = this.height;
+    for (const [id, v] of this.vtxos) {
+      if (v.forfeited && this.height >= v.expiresAt) {
+        this.committed -= v.value; // sweep: fronted value recovered
+        this.vtxos.delete(id);
+      }
+    }
+    // Holders refresh outputs approaching expiry; a refresh is a forfeit plus a server-funded reissue.
+    for (const v of [...this.vtxos.values()]) {
+      if (!v.forfeited && v.expiresAt - this.height <= this.params.refreshLead) this.refresh(v.id);
+    }
+  }
+
+  private newVtxo(holder: string, value: number): Vtxo {
+    const v: Vtxo = { id: `v${this.nextId++}`, holder, value, expiresAt: this.height + this.params.lifetimeBlocks, forfeited: false };
+    this.vtxos.set(v.id, v);
+    return v;
+  }
+
+  /** Forfeit an output: the server fronts its value now and sweeps it at the output's expiry. */
+  private forfeit(v: Vtxo): boolean {
+    if (v.value > this.uncommitted) return false;
+    v.forfeited = true;
+    this.committed += v.value;
+    return true;
+  }
+
+  /** Board or receive: a holder gains an output without drawing on server liquidity in this aggregate model. */
+  receive(holder: string, value: number): string {
+    const v = this.newVtxo(holder, value);
+    ArkServer.bump(this.inward, holder, value);
+    ArkServer.bump(this.allocated, holder, value);
+    return v.id;
+  }
+
+  refresh(id: string): boolean {
+    const old = this.vtxos.get(id);
+    if (!old || old.forfeited) return false;
+    if (!this.forfeit(old)) return false;
+    this.newVtxo(old.holder, old.value);
+    return true;
+  }
+
+  holderValue(holder: string): number {
+    let s = 0;
+    for (const v of this.vtxos.values()) if (v.holder === holder && !v.forfeited) s += v.value;
+    return s;
+  }
+
+  /** Spend outward over Lightning. The server fronts the HTLC from uncommitted capital (S2 aggregate constraint). */
+  spendLightning(holder: string, amount: number): boolean {
+    if (!Number.isInteger(amount) || amount <= 0) throw new Error("amount must be a positive integer");
+    if (this.holderValue(holder) < amount) return false;
+    const inputs: Vtxo[] = [];
+    let total = 0;
+    for (const v of this.vtxos.values()) {
+      if (total >= amount) break;
+      if (v.holder === holder && !v.forfeited) { inputs.push(v); total += v.value; }
+    }
+    if (total > this.uncommitted) return false; // all-or-nothing check before any mutation
+    for (const v of inputs) this.forfeit(v);
+    const change = total - amount;
+    if (change > 0) this.newVtxo(holder, change); // reissued from the fronted value
+    ArkServer.bump(this.outward, holder, amount);
+    ArkServer.bump(this.allocated, holder, amount); // K^S_A: the server allocated at spend time
+    this.volumeDelivered += amount;
+    return true;
+  }
+
+  /** 𝒟_V = ∫ W_S dt / volume delivered, in blocks. */
+  liquidityDuration(): number {
+    this.accrue();
+    return this.volumeDelivered === 0 ? Infinity : this.lockedIntegral / this.volumeDelivered;
+  }
+
+  /** S2, first inequality, per holder: O − I ≤ V(0) + K with V(0)=0. */
+  holderBoundHolds(holder: string): boolean {
+    return (this.outward.get(holder) ?? 0) - (this.inward.get(holder) ?? 0) <= (this.allocated.get(holder) ?? 0);
+  }
+
+  /** S2, second inequality: what the server has allocated in fronting never exceeds capital. */
+  aggregateBoundHolds(): boolean {
+    return this.committed <= this.capital;
+  }
+}
+
+/**
+ * Directional channel model for the same demand. An operator (LSP) pre-funds inbound capacity toward
+ * each agent to a forecast f̂_a = (1 + margin) × the agent's realized peak held balance (running maximum
+ * of receipts minus spends), holds that capital for the whole horizon, and the replay fails a receipt
+ * that would exceed remaining inbound capacity or a spend that exceeds the agent's balance. Returns
+ * 𝒟_C in blocks, the failure count, and the locked capital.
+ */
+export function channelLiquidityDuration(
+  perAgent: Map<string, Array<{ out: number; in: number }>>,
+  horizonBlocks: number,
+  margin: number,
+): { duration: number; failures: number; locked: number } {
+  let locked = 0;
+  let volume = 0;
+  let failures = 0;
+  for (const steps of perAgent.values()) {
+    let running = 0;
+    let peak = 0;
+    for (const s of steps) { running = Math.max(0, running + s.in - s.out); peak = Math.max(peak, running); }
+    const forecast = Math.ceil(peak * (1 + margin));
+    locked += forecast;
+    let balance = 0;
+    for (const s of steps) {
+      if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; } }
+      if (s.out) { if (s.out > balance) failures += 1; else { balance -= s.out; volume += s.out; } }
+    }
+  }
+  return { duration: volume === 0 ? Infinity : (locked * horizonBlocks) / volume, failures, locked };
+}
+
+/** Deterministic LCG. */
+export function rng(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
+}
+```
+
+### B.4 `model/server.test.ts`
+
+```ts
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { ArkServer, DEFAULT_SERVER, channelLiquidityDuration, rng } from "./server.ts";
+
+test("S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating", () => {
+  const S = new ArkServer(1_300_000, { ...DEFAULT_SERVER, refreshLead: Number.NEGATIVE_INFINITY }); // holders never refresh: isolate the sweep clock
+  const holders = ["a", "b", "c", "d"];
+  for (const h of holders) S.receive(h, 400_000);
+  // Each holder can spend at most what it holds, and the server can front at most its uncommitted capital.
+  let fronted = 0;
+  const results = holders.map((h) => { const ok = S.spendLightning(h, 300_000); if (ok) fronted += 300_000; return ok; });
+  assert.deepEqual(results, [true, true, true, false]); // fourth spend exceeds B_S − W_S
+  assert.equal(S.committed, 3 * 400_000); // full inputs forfeited (300k spent + 100k change reissued from the front)
+  assert.ok(S.aggregateBoundHolds());
+  for (const h of holders) assert.ok(S.holderBoundHolds(h));
+  // Liquidity returns only at expiry: nothing is recoverable before the lifetime passes.
+  S.advance(DEFAULT_SERVER.lifetimeBlocks - 1);
+  assert.equal(S.committed, 3 * 400_000);
+  S.advance(1);
+  assert.equal(S.committed, 0);
+  assert.ok(S.spendLightning("d", 300_000));
+});
+
+test("S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock", () => {
+  const S = new ArkServer(10_000, { lifetimeBlocks: 100, roundInterval: 1, refreshLead: 10 });
+  S.receive("h", 1_000);
+  S.advance(50);
+  assert.ok(S.spendLightning("h", 1_000));
+  assert.equal(S.committed, 1_000);
+  S.advance(49);
+  assert.equal(S.committed, 1_000);
+  S.advance(1);
+  assert.equal(S.committed, 0);
+  // liquidity duration = 1000 × 50 blocks / 1000 delivered = 50 blocks (residual lifetime at forfeit)
+  assert.equal(S.liquidityDuration(), 50);
+});
+
+/**
+ * §3.3 corner test. Same demand fed to both objects. This is a qualitative witness of the ratio's
+ * direction on two constructed corners, not a reproduction of any published figure.
+ */
+function corner(kind: "many-bursty" | "few-steady", seed: number) {
+  const r = rng(seed);
+  const lifetime = 4032;
+  const horizon = 8 * lifetime;         // long against the VTXO lifetime
+  const roundBlocks = 6;
+  const steps = horizon / roundBlocks;
+  const agents = kind === "many-bursty" ? 200 : 3;
+  const perAgent = new Map<string, Array<{ out: number; in: number }>>();
+  for (let a = 0; a < agents; a++) perAgent.set(`a${a}`, []);
+  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288 });
+  for (let t = 0; t < steps; t++) {
+    for (const [name, arr] of perAgent) {
+      let out = 0, inn = 0;
+      if (kind === "many-bursty") {
+        // Rare, large, idiosyncratic outflows funded by earlier inflows; per-agent envelope ≫ per-agent volume per step.
+        if (r() < 0.02) inn = 5_000;
+        if (r() < 0.01) out = 4_000;
+      } else {
+        // Steady bidirectional flow with fixed counterparties, recycling within the day.
+        out = 100 + Math.floor(r() * 10); inn = 100 + Math.floor(r() * 10);
+      }
+      arr.push({ out, in: inn });
+      if (inn) S.receive(name, inn);
+      if (out && S.holderValue(name) >= out) S.spendLightning(name, out);
+    }
+    S.advance(roundBlocks);
+  }
+  const ch = channelLiquidityDuration(perAgent, horizon, 0.25);
+  return { dV: S.liquidityDuration(), dC: ch.duration, failures: ch.failures };
+}
+
+test("§3.3 direction: Ark favored on many-bursty-long, channel favored on few-steady-recycling", () => {
+  const mb = corner("many-bursty", 1);
+  const fs = corner("few-steady", 2);
+  assert.ok(Number.isFinite(mb.dV) && Number.isFinite(mb.dC) && Number.isFinite(fs.dV) && Number.isFinite(fs.dC));
+  assert.ok(mb.dC / mb.dV > 1, `expected ratio > 1 on many-bursty, got ${mb.dC / mb.dV}`);
+  assert.ok(fs.dC / fs.dV < 1, `expected ratio < 1 on few-steady, got ${fs.dC / fs.dV}`);
+});
+```
+
+### B.5 `model/registry.ts`
+
+```ts
+// Proof-carrying registry with claim-once nullifiers keyed by the object's authority key.
+// Witnesses Proposition S3 on finite cases. The proof system is NOT implemented: `verify` checks a
+// simulated attestation with the interface a verifier would expose (statement + witness → boolean),
+// and the tests say so. Substituting a real SNARK changes nothing in the registry logic.
+
+import { createHmac, createHash } from "node:crypto";
+
+export interface SettledObject { id: string; value: number; authorityKey: string; }
+
+export interface Statement { cm: string; v: number; nf: string; root: string; }
+
+export interface Witness { s: string; k: string; obj: SettledObject; }
+
+export const commit = (s: string): string => createHash("sha256").update(`cm|${s}`).digest("hex");
+export const prf = (k: string, id: string): string => createHmac("sha256", k).update(id).digest("hex");
+
+export class SettledSet {
+  private readonly objs = new Map<string, SettledObject>();
+  add(o: SettledObject): void { this.objs.set(o.id, o); }
+  has(id: string): boolean { return this.objs.has(id); }
+  get(id: string): SettledObject | undefined { return this.objs.get(id); }
+  /** Deterministic commitment to the set contents; stands in for a Merkle root. */
+  root(): string {
+    const h = createHash("sha256");
+    for (const id of [...this.objs.keys()].sort()) {
+      const o = this.objs.get(id)!;
+      h.update(`${id}|${o.value}|${o.authorityKey}\n`);
+    }
+    return h.digest("hex");
+  }
+}
+
+/** Simulated verifier for R_cap: membership, authority, value bound, nullifier derivation. */
+export function verifyCapClaim(set: SettledSet, st: Statement, w: Witness): boolean {
+  if (st.root !== set.root()) return false;
+  if (!set.has(w.obj.id)) return false;
+  const live = set.get(w.obj.id)!;
+  if (live.value !== w.obj.value || live.authorityKey !== w.obj.authorityKey) return false;
+  if (w.k !== live.authorityKey) return false;          // k_ρ satisfies A_ρ (single-signer model)
+  if (live.value < st.v) return false;
+  if (commit(w.s) !== st.cm) return false;
+  return prf(w.k, live.id) === st.nf;                     // nf keyed by the object's authority, not the claimant
+}
+
+export class Registry {
+  private readonly nullifiers = new Set<string>();
+  readonly claims: Statement[] = [];
+
+  submit(set: SettledSet, st: Statement, w: Witness): "accepted" | "invalid" | "duplicate" {
+    if (!verifyCapClaim(set, st, w)) return "invalid";
+    if (this.nullifiers.has(st.nf)) return "duplicate";
+    this.nullifiers.add(st.nf);
+    this.claims.push({ ...st });
+    return "accepted";
+  }
+
+  /** Total weight the registry attributes to a given nullifier (i.e. to the object behind it). */
+  weightFor(nf: string): number {
+    return this.claims.filter((c) => c.nf === nf).reduce((a, c) => a + c.v, 0);
+  }
+
+  totalWeight(): number {
+    return this.claims.reduce((a, c) => a + c.v, 0);
+  }
+
+  /** Fixed-pool reward allocation, integer, remainder to no one (L4 without the rounding defect). */
+  allocate(pool: number): Map<string, number> {
+    const total = this.totalWeight();
+    const out = new Map<string, number>();
+    for (const c of this.claims) out.set(c.cm, (out.get(c.cm) ?? 0) + Math.floor((pool * c.v) / total));
+    return out;
+  }
+}
+```
+
+### B.6 `model/registry.test.ts`
+
+```ts
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Registry, SettledSet, commit, prf, type Statement, type Witness } from "./registry.ts";
+
+// NOTE: the proof system is simulated (see registry.ts). These tests witness the registry logic
+// under the assumption that a real knowledge-sound proof would accept exactly what verifyCapClaim accepts.
+
+function claim(set: SettledSet, objId: string, identity: string, v: number, k?: string): [Statement, Witness] {
+  const obj = set.get(objId)!;
+  const key = k ?? obj.authorityKey;
+  const st: Statement = { cm: commit(identity), v, nf: prf(key, obj.id), root: set.root() };
+  return [st, { s: identity, k: key, obj: { ...obj } }];
+}
+
+test("S3: weight attributed to any settled object is at most its value regardless of identity count", () => {
+  const set = new SettledSet();
+  set.add({ id: "utxo:1", value: 50_000, authorityKey: "k1" });
+  set.add({ id: "vtxo:7", value: 20_000, authorityKey: "k7" });
+  const R = new Registry();
+  // One controller, 32 identities, one object: only the first claim lands.
+  const outcomes = Array.from({ length: 32 }, (_, i) => R.submit(set, ...claim(set, "utxo:1", `id-${i}`, 50_000)));
+  assert.equal(outcomes[0], "accepted");
+  assert.ok(outcomes.slice(1).every((o) => o === "duplicate"));
+  assert.equal(R.weightFor(prf("k1", "utxo:1")), 50_000);
+  // A second, distinct object is independent.
+  assert.equal(R.submit(set, ...claim(set, "vtxo:7", "id-99", 20_000)), "accepted");
+  assert.equal(R.totalWeight(), 70_000);
+});
+
+test("S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not", () => {
+  const set = new SettledSet();
+  set.add({ id: "utxo:2", value: 10_000, authorityKey: "k2" });
+  const R = new Registry();
+  const [st1, w1] = claim(set, "utxo:2", "alpha", 10_000);
+  const [st2, w2] = claim(set, "utxo:2", "beta", 10_000);
+  assert.equal(st1.nf, st2.nf); // same object ⇒ same nullifier, whoever claims
+  assert.equal(R.submit(set, st1, w1), "accepted");
+  assert.equal(R.submit(set, st2, w2), "duplicate");
+  // Forging a different nullifier requires a key that does not satisfy the authority: rejected as invalid.
+  const [st3, w3] = claim(set, "utxo:2", "gamma", 10_000, "not-k2");
+  assert.equal(R.submit(set, st3, w3), "invalid");
+});
+
+test("S3: overclaiming value, stale roots, and unsettled objects are rejected", () => {
+  const set = new SettledSet();
+  set.add({ id: "chan:3", value: 1_000, authorityKey: "k3" });
+  const R = new Registry();
+  const [over, wo] = claim(set, "chan:3", "x", 1_001);
+  assert.equal(R.submit(set, over, wo), "invalid");
+  const [st, w] = claim(set, "chan:3", "x", 1_000);
+  set.add({ id: "chan:4", value: 5, authorityKey: "k4" }); // root moves
+  assert.equal(R.submit(set, st, w), "invalid");
+  const fresh = new SettledSet();
+  const ghost: Witness = { s: "y", k: "k9", obj: { id: "ghost", value: 10, authorityKey: "k9" } };
+  assert.equal(R.submit(fresh, { cm: commit("y"), v: 10, nf: prf("k9", "ghost"), root: fresh.root() }, ghost), "invalid");
+});
+
+test("L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:a", value: 100, authorityKey: "ka" });
+  set.add({ id: "u:b", value: 100, authorityKey: "kb" });
+  for (const m of [1, 2, 8, 32]) {
+    const R = new Registry();
+    for (let i = 0; i < m; i++) R.submit(set, ...claim(set, "u:a", `a-${i}`, 100)); // one accepted, m−1 duplicates
+    R.submit(set, ...claim(set, "u:b", "b", 100));
+    const alloc = R.allocate(120);
+    const coalitionA = [...alloc.entries()].filter(([cm]) => cm !== commit("b")).reduce((s, [, v]) => s + v, 0);
+    assert.equal(coalitionA, 60);
+    assert.equal(alloc.get(commit("b")), 60);
+  }
+});
+```
+
+### B.7 `model/escrow.ts`
+
+```ts
+// Optimistic escrow state machine in the BitVM3 Assert/Disprove/Withdraw pattern.
+// Witnesses Proposition S4 on finite cases. Cost parameters are those published in ePrint 2026/933
+// (Assert ≈ 2.4 kvB, Disprove ≈ 93 vB) and are inputs, not measurements. The "proof" is a boolean
+// oracle standing in for garbled-circuit evaluation of a SNARK verifier; substituting the real
+// evaluation changes nothing in the state machine.
+
+export interface EscrowParams {
+  delta: number;        // challenge period in blocks
+  assertVb: number;     // Assert transaction size, vB
+  disproveVb: number;   // Disprove transaction size, vB
+  feeRate: number;      // sat/vB
+}
+
+export const BITVM3_PUBLISHED: Omit<EscrowParams, "delta" | "feeRate"> = { assertVb: 2400, disproveVb: 93 };
+
+export type EscrowState = "locked" | "claimed" | "released" | "slashed";
+
+export interface Costs { operatorFees: number; challengerFees: number; capitalBlocks: number; }
+
+export class Escrow {
+  readonly bond: number;
+  readonly params: EscrowParams;
+  state: EscrowState = "locked";
+  private claimedAt = -1;
+  private asserted: boolean | null = null;
+  readonly costs: Costs = { operatorFees: 0, challengerFees: 0, capitalBlocks: 0 };
+  private lockedSince = 0;
+
+  constructor(bond: number, params: EscrowParams, lockedAt = 0) {
+    if (!Number.isInteger(bond) || bond <= 0) throw new Error("bond must be a positive integer");
+    this.bond = bond;
+    this.params = params;
+    this.lockedSince = lockedAt;
+  }
+
+  /** Operator asserts the release statement. `statementHolds` is what an honest evaluator would find. */
+  assert(height: number, statementHolds: boolean): void {
+    if (this.state !== "locked") throw new Error("not locked");
+    this.state = "claimed";
+    this.claimedAt = height;
+    this.asserted = statementHolds;
+    this.costs.operatorFees += this.params.assertVb * this.params.feeRate;
+  }
+
+  /** Any challenger may disprove during the period; succeeds iff the asserted statement is false. */
+  disprove(height: number): boolean {
+    if (this.state !== "claimed") return false;
+    if (height - this.claimedAt >= this.params.delta) return false; // period over
+    this.costs.challengerFees += this.params.disproveVb * this.params.feeRate;
+    if (this.asserted === false) {
+      this.state = "slashed";
+      this.costs.capitalBlocks += this.bond * (height - this.lockedSince);
+      return true;
+    }
+    return false; // a true assertion has no false-output label to reveal
+  }
+
+  /** Operator withdraws after the period if no disprove consumed the connector output. */
+  withdraw(height: number): boolean {
+    if (this.state !== "claimed") return false;
+    if (height - this.claimedAt < this.params.delta) return false;
+    this.state = "released";
+    this.costs.capitalBlocks += this.bond * (height - this.lockedSince);
+    return true;
+  }
+}
+
+/** Honest-challenger requirement: with n challengers of which h are honest, the game is safe iff h ≥ 1. */
+export const safeUnderChallengers = (honest: number): boolean => honest >= 1;
+```
+
+### B.8 `model/warden.ts`
+
+```ts
+// Warden statistics of §6.3–6.4 on synthetic fixtures.
+// The naive network-wide gross-to-net ratio is computed alongside the internal-volume ratio over a
+// claim's attesting set, so that the failure mode the earlier hive baseline reported (naive churn does
+// not discriminate) is reproduced rather than assumed away. These are fixtures, not measurements.
+
+import { rng } from "./server.ts";
+
+export interface Flow { payer: string; payee: string; amount: number; }
+
+/** Naive statistic: gross volume over the sum of absolute net positions. Undefined (Infinity) when everything nets. */
+export function naiveGrossToNet(trace: Flow[]): number {
+  const net = new Map<string, number>();
+  let gross = 0;
+  for (const f of trace) {
+    gross += f.amount;
+    net.set(f.payer, (net.get(f.payer) ?? 0) - f.amount);
+    net.set(f.payee, (net.get(f.payee) ?? 0) + f.amount);
+  }
+  let sumAbs = 0;
+  for (const v of net.values()) sumAbs += Math.abs(v);
+  return sumAbs === 0 ? Infinity : gross / sumAbs;
+}
+
+/**
+ * Restricted statistic over the claim's set S = attesters ∪ {claimant}: the share of all volume touching S
+ * whose both endpoints lie inside S. Manufactured demand circulates inside S; a merchant's customers mostly
+ * transact outside it. Computable by any warden that sees the flows touching S.
+ */
+export function internalVolumeRatio(trace: Flow[], claimant: string, attesters: Set<string>): number {
+  const inside = new Set(attesters); inside.add(claimant);
+  let touching = 0;
+  let internal = 0;
+  for (const f of trace) {
+    const a = inside.has(f.payer);
+    const b = inside.has(f.payee);
+    if (!a && !b) continue;
+    touching += f.amount;
+    if (a && b) internal += f.amount;
+  }
+  return touching === 0 ? 0 : internal / touching;
+}
+
+/** Counterparties who paid the claimant in the trace: the attesting set a service claim would carry. */
+export function attestersOf(trace: Flow[], claimant: string): Set<string> {
+  const s = new Set<string>();
+  for (const f of trace) if (f.payee === claimant) s.add(f.payer);
+  return s;
+}
+
+/** Benign multilateral trade: every agent pays random others; nets out strongly by construction. */
+export function benignTrace(agents: string[], steps: number, seed = 7): Flow[] {
+  const r = rng(seed);
+  const out: Flow[] = [];
+  for (let i = 0; i < steps; i++) {
+    const a = agents[Math.floor(r() * agents.length)]!;
+    let b = agents[Math.floor(r() * agents.length)]!;
+    while (b === a) b = agents[Math.floor(r() * agents.length)]!;
+    out.push({ payer: a, payee: b, amount: 100 });
+  }
+  return out;
+}
+
+/** Coalition fixture: a cyclic relay of k members, embedded in benign background traffic. */
+export function coalitionTrace(agents: string[], coalition: string[], steps: number, seed = 11): Flow[] {
+  const bg = benignTrace(agents.filter((a) => !coalition.includes(a)), steps, seed);
+  const cyc: Flow[] = [];
+  for (let i = 0; i < steps; i++) {
+    const a = coalition[i % coalition.length]!;
+    const b = coalition[(i + 1) % coalition.length]!;
+    cyc.push({ payer: a, payee: b, amount: 100 });
+  }
+  return [...bg, ...cyc];
+}
+
+/** Partial observer: keeps each flow with probability p (O_peer-style coverage). */
+export function sample(trace: Flow[], p: number, seed = 3): Flow[] {
+  const r = rng(seed);
+  return trace.filter(() => r() < p);
+}
+
+/**
+ * Repeated-cycle share: the fraction of the claimant's flows lying on a directed cycle through the
+ * claimant of length ≤ maxLen whose every edge recurs at least minMultiplicity times. This is the
+ * feature family the earlier hive detector used; it sees a relay of any bounded length, where the
+ * direct-attester statistic sees only reciprocal pairs.
+ */
+export function repeatedCycleShare(trace: Flow[], claimant: string, maxLen = 4, minMultiplicity = 10): number {
+  const m = new Map<string, number>();
+  const succ = new Map<string, Set<string>>();
+  const ek = (u: string, v: string) => `${u}>${v}`;
+  for (const f of trace) {
+    m.set(ek(f.payer, f.payee), (m.get(ek(f.payer, f.payee)) ?? 0) + 1);
+    if (!succ.has(f.payer)) succ.set(f.payer, new Set());
+    succ.get(f.payer)!.add(f.payee);
+  }
+  const heavy = (u: string, v: string) => (m.get(ek(u, v)) ?? 0) >= minMultiplicity;
+  // Edges (u→v) that lie on some heavy cycle through the claimant of length ≤ maxLen.
+  const onCycle = new Set<string>();
+  const walk = (path: string[]) => {
+    const last = path[path.length - 1]!;
+    for (const nxt of succ.get(last) ?? []) {
+      if (!heavy(last, nxt)) continue;
+      if (nxt === claimant) {
+        if (path.length >= 2) for (let i = 0; i < path.length; i++) onCycle.add(ek(path[i]!, path[i + 1] ?? claimant));
+        continue;
+      }
+      if (path.length < maxLen && !path.includes(nxt)) walk([...path, nxt]);
+    }
+  };
+  walk([claimant]);
+  let total = 0;
+  let hit = 0;
+  for (const f of trace) {
+    if (f.payer !== claimant && f.payee !== claimant) continue;
+    total += f.amount;
+    if (onCycle.has(ek(f.payer, f.payee))) hit += f.amount;
+  }
+  return total === 0 ? 0 : hit / total;
+}
+```
+
+### B.9 `model/escrow_warden.test.ts`
+
+```ts
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Escrow, BITVM3_PUBLISHED, safeUnderChallengers, type EscrowParams } from "./escrow.ts";
+import { naiveGrossToNet, internalVolumeRatio, attestersOf, benignTrace, coalitionTrace, sample, repeatedCycleShare } from "./warden.ts";
+
+const P: EscrowParams = { ...BITVM3_PUBLISHED, delta: 144, feeRate: 2 };
+
+test("S4: a false assertion is slashed by one honest challenger at a cost independent of the bond", () => {
+  const small = new Escrow(10_000, P);
+  const large = new Escrow(10_000_000_000, P);
+  for (const e of [small, large]) {
+    e.assert(100, false);
+    assert.ok(e.disprove(120));
+    assert.equal(e.state, "slashed");
+    assert.equal(e.costs.challengerFees, BITVM3_PUBLISHED.disproveVb * P.feeRate);
+  }
+  assert.equal(small.costs.challengerFees, large.costs.challengerFees);
+  assert.ok(safeUnderChallengers(1) && !safeUnderChallengers(0));
+});
+
+test("S4: a true assertion cannot be disproved and releases only after Δ; operator pays Assert and capital lockup", () => {
+  const e = new Escrow(500_000, P, 0);
+  e.assert(10, true);
+  assert.equal(e.disprove(50), false);
+  assert.equal(e.state, "claimed");
+  assert.equal(e.withdraw(10 + P.delta - 1), false);
+  assert.ok(e.withdraw(10 + P.delta));
+  assert.equal(e.state, "released");
+  assert.equal(e.costs.operatorFees, BITVM3_PUBLISHED.assertVb * P.feeRate);
+  assert.equal(e.costs.capitalBlocks, 500_000 * (10 + P.delta));
+});
+
+test("S4: the audit's negative-slash and over-release defects cannot arise; the bond is an object with fixed transitions", () => {
+  const e = new Escrow(25_000, P);
+  assert.throws(() => new Escrow(-1_249, P));
+  e.assert(0, true);
+  assert.throws(() => e.assert(1, true)); // no double claim
+  assert.ok(e.withdraw(P.delta));
+  assert.equal(e.withdraw(P.delta + 1), false); // no second release
+  assert.equal(e.disprove(P.delta + 1), false); // nothing left to disprove
+});
+
+test("S5 statistics on fixtures: naive churn has no stable direction; direct-attester netting saturates on dense benign trade and misses a 4-relay; repeated-cycle share separates", () => {
+  const agents = Array.from({ length: 40 }, (_, i) => `n${i}`);
+  const benign = benignTrace(agents, 4_000);
+  const relay4 = coalitionTrace(agents, ["n0", "n1", "n2", "n3"], 4_000);
+  const relay2 = coalitionTrace(agents, ["n0", "n1"], 4_000);
+  const claimant = "n0";
+
+  // Naive statistic: large in every world. (Here the relays score higher; in the hive baseline benign scored higher.
+  // Either way the direction is fixture-dependent, which is the point.)
+  for (const t of [benign, relay4, relay2]) assert.ok(naiveGrossToNet(t) > 5);
+
+  // Direct-attester netting: catches the reciprocal pair; misses the four-member relay (as the hive baseline did);
+  // and on dense benign trade the attesting set is almost everyone, so the ratio saturates instead of staying low.
+  const ivr = (t: typeof benign) => internalVolumeRatio(t, claimant, attestersOf(t, claimant));
+  assert.ok(ivr(relay2) >= 0.99, `2-relay ${ivr(relay2)}`);
+  assert.ok(ivr(relay4) < 0.5, `4-relay ${ivr(relay4)}`);
+  assert.ok(ivr(benign) > 0.5, `benign saturation ${ivr(benign)}`); // documented failure mode, not a pass condition
+
+  // Repeated-cycle share through the claimant separates both relays from benign at this density.
+  assert.ok(repeatedCycleShare(relay4, claimant) >= 0.99);
+  assert.ok(repeatedCycleShare(relay2, claimant) >= 0.99);
+  assert.ok(repeatedCycleShare(benign, claimant) < 0.2);
+
+  // Partial observation (~12% coverage, O_peer-style) preserves the cycle-share separation on these fixtures
+  // because the relays are high-volume; the multiplicity threshold must scale with coverage × volume in general.
+  const thin = (t: typeof benign) => sample(t, 0.12);
+  assert.ok(repeatedCycleShare(thin(relay4), claimant) >= 0.99);
+  assert.ok(repeatedCycleShare(thin(benign), claimant) < 0.2);
+});
+```
+
+\pagebreak
+
+# Exhibit C. Errata to the frozen manuscript
+
+Reproduced from paper/manuscript_errata.md; the manuscript itself is left byte-identical for the reasons stated there.
+
+**Applies to:** paper/manuscript.md at baseline a0a3140 (author line corrected per audit/ATTRIBUTION_CORRECTION.md)
+
+**Why a separate file:** audit/validate_bundle.py and audit/inference/receipt.json bind manuscript.md by hash and reject any edit beyond the single author-line correction. The corrections below are therefore recorded here rather than applied in place. A future preregistered campaign that re-freezes the baseline should apply them at that point and re-bind.
+
+## E1. Patent citation (References)
+
+Replace:
+
+> Rubio, Lihki, Dugan, and Pizarro. 2020. *Graph Re-write Using Ghost Nodes for Target Value Rebalancing*. U.S. Patent Application 16/920,416.
+
+with:
+
+> Dugan, Patrick B., Daniel P. Pizarro, and Lihki J. Rubio. *Graph Re-write Using Ghost Nodes for Target Value Rebalancing*. U.S. Patent Application Publication US 2021/0004796 A1, published January 7, 2021; application 16/920,416, filed July 2, 2020; claims priority to provisional 62/869,730, filed July 2, 2019.
+
+Inventor order, publication number, publication date, and provisional data are from the USPTO Patent Public Search record. The 2020 date in the frozen entry is the filing year; the publication year is 2021.
+
+## E2. In-text attribution (§1, §2.4, §7.7 and elsewhere)
+
+Every occurrence of "[Rubio, Dugan, and Pizarro 2020]" should read "[Dugan, Pizarro, and Rubio 2021]".
+
+## E3. Lineage statement (§2.4, first paragraph)
+
+The frozen text reads:
+
+> The earlier ghost-node work proposes graph rewrites for target-value rebalancing [Rubio, Dugan, and Pizarro 2020]. The recovered project did not retain the application text, so this paper does not reproduce or extend its claims. It adopts only the high-level construction: augment a graph with a nonphysical node or edge, solve a balancing problem in that augmented space, then map the result back to permissible operations.
+
+Two corrections. The published application text is public, so the "did not retain" hedge no longer justifies the scope restriction; the restriction stands on its own terms and should be stated as a choice. And the application's subject is decentralized derivatives clearing, where ghost nodes connect and net subgraphs toward a target settlement value; it is not a rebalancing method for payment channels. Suggested replacement, keeping the paragraph's structure:
+
+> The earlier ghost-node work, filed in a clearing setting, uses graph rewrites to connect and net derivative subgraphs toward a target settlement value [Dugan, Pizarro, and Rubio 2021]. This paper adopts only the high-level construction, augmenting a graph with a nonphysical node or edge, solving a balancing problem in that augmented space, and mapping the result back to permissible operations; the transplant from settlement netting to directional channel liquidity is made here and is not a claim of the application.
+
+## E4. Environment paths
+
+The frozen manuscript contains no drive-letter paths. The companion documents (liquidity_on_trial.md, connector_calculus_critique.md) have been corrected in place; audit/README.md and the historical receipts retain their original staging paths as provenance and are not edited.
 
 \pagebreak
 
