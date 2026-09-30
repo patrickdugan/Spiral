@@ -1,0 +1,264 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-09-11T20:46:20.717005+00:00",
+  "evidence_status": "exact_finite_mathematical_fixtures_not_model_evaluations",
+  "arithmetic": "integers_and_exact_rational_numbers",
+  "scope": "Finite examples and law instances; not a general theorem prover or equilibrium solver",
+  "spec_sha256": "c66dece866c4fd95377272f4cc86762dd80ddf02d60257307ba604f456f569a8",
+  "verifier_sha256": "54d0a5e6e21b125877ebc41b6ce816bb4a92fea12b7ebeadc0df4913b6195b94",
+  "check_count": 29,
+  "all_passed": true,
+  "checks": [
+    {
+      "name": "resource_policy_enumeration:hidden:left_only",
+      "passed": true,
+      "evidence": {
+        "optimal_value": "1/2",
+        "deterministic_policy_count": 1
+      }
+    },
+    {
+      "name": "resource_policy_enumeration:hidden:either",
+      "passed": true,
+      "evidence": {
+        "optimal_value": "1/2",
+        "deterministic_policy_count": 2
+      }
+    },
+    {
+      "name": "resource_policy_enumeration:revealed:left_only",
+      "passed": true,
+      "evidence": {
+        "optimal_value": "1/2",
+        "deterministic_policy_count": 1
+      }
+    },
+    {
+      "name": "resource_policy_enumeration:revealed:either",
+      "passed": true,
+      "evidence": {
+        "optimal_value": "1",
+        "deterministic_policy_count": 4
+      }
+    },
+    {
+      "name": "information_action_interaction",
+      "passed": true,
+      "evidence": {
+        "value": "1/2"
+      }
+    },
+    {
+      "name": "subset_expansion_reconstruction",
+      "passed": true,
+      "evidence": {
+        "coefficients": {
+          "[]": "1/2",
+          "[0]": "0",
+          "[1]": "0",
+          "[0, 1]": "1/2"
+        }
+      }
+    },
+    {
+      "name": "mixture_disclosure_changes_optimum",
+      "passed": true,
+      "evidence": {
+        "disclosed": "1",
+        "hidden": "1/2"
+      }
+    },
+    {
+      "name": "resource_renaming_preserves_optimal_values",
+      "passed": true,
+      "evidence": {
+        "scope": "Corresponding finite policy spaces; not unchanged-model behavior"
+      }
+    },
+    {
+      "name": "social_dilemma_pure_equilibrium",
+      "passed": true,
+      "evidence": {
+        "equilibria": [
+          [
+            "take",
+            "take"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "taking_strictly_dominant",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "cooperation_welfare_and_gaps",
+      "passed": true,
+      "evidence": {
+        "share_gaps": [
+          2,
+          2
+        ],
+        "take_gaps": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "taking_levy_changes_equilibrium",
+      "passed": true,
+      "evidence": {
+        "modified_payoffs": [
+          [
+            [
+              3,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              2,
+              0
+            ],
+            [
+              -2,
+              -2
+            ]
+          ]
+        ],
+        "equilibria": [
+          [
+            "share",
+            "share"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "positive_affine_payoff_equilibrium_invariance",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "nonlinear_lottery_preference_reversal",
+      "passed": true,
+      "evidence": {
+        "expected_original": [
+          "2",
+          "21/10"
+        ],
+        "expected_squared": [
+          "8",
+          "441/100"
+        ]
+      }
+    },
+    {
+      "name": "grim_trigger_threshold",
+      "passed": true,
+      "evidence": {
+        "value": "1/2"
+      }
+    },
+    {
+      "name": "grim_trigger_discount:1/4",
+      "passed": true,
+      "evidence": {
+        "cooperative_value": "4",
+        "deviation_value": "16/3"
+      }
+    },
+    {
+      "name": "grim_trigger_discount:1/2",
+      "passed": true,
+      "evidence": {
+        "cooperative_value": "6",
+        "deviation_value": "6"
+      }
+    },
+    {
+      "name": "grim_trigger_discount:3/4",
+      "passed": true,
+      "evidence": {
+        "cooperative_value": "12",
+        "deviation_value": "8"
+      }
+    },
+    {
+      "name": "flow_conservation",
+      "passed": true,
+      "evidence": {
+        "final_stock": [
+          7,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "flow_sequential_feasibility",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "external_source_ledger",
+      "passed": true,
+      "evidence": {
+        "final_total": 10,
+        "total_with_source": 14
+      }
+    },
+    {
+      "name": "fixture_kernels_are_stochastic",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "kernel_associativity_instance",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "kernel_identity_instance",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "independent_tensor_interchange_instance",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "mismatched_kernel_interface_rejected",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "deterministic_hiding_idempotence_instance",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "independent_thinning_not_idempotent",
+      "passed": true,
+      "evidence": {
+        "once": "1/2",
+        "twice": "1/4"
+      }
+    },
+    {
+      "name": "budget_order_counterexample",
+      "passed": true,
+      "evidence": {
+        "cap_after_grant": 5,
+        "grant_after_cap": 6
+      }
+    }
+  ]
+}

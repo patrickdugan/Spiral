@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1",
+  "evidence_status": "exact_finite_mathematical_fixtures_not_model_evaluations",
+  "hidden_resource": {
+    "states": ["left", "right"],
+    "prior": ["1/2", "1/2"],
+    "reward": "1 if chosen location equals resource location, else 0",
+    "information_levels": ["hidden", "revealed"],
+    "action_levels": ["left_only", "either"],
+    "expected_optimal_values": {
+      "hidden:left_only": "1/2",
+      "hidden:either": "1/2",
+      "revealed:left_only": "1/2",
+      "revealed:either": "1"
+    },
+    "expected_interaction": "1/2"
+  },
+  "social_dilemma": {
+    "actions": ["share", "take"],
+    "payoffs": [[[3, 3], [0, 5]], [[5, 0], [1, 1]]],
+    "levy_on_taking": 3,
+    "levy_destination": "burned_utility_not_transferred",
+    "expected_base_pure_equilibria": [["take", "take"]],
+    "expected_levied_pure_equilibria": [["share", "share"]],
+    "discount_checks": ["1/4", "1/2", "3/4"],
+    "expected_grim_trigger_threshold": "1/2"
+  },
+  "resource_flow": {
+    "initial_stock": [10, 0, 0],
+    "incidence": [[-1, 0], [1, -1], [0, 1]],
+    "flows": [3, 2],
+    "expected_final_stock": [7, 1, 2],
+    "external_source": [4, 0, 0]
+  },
+  "verification_scope": [
+    "Exact arithmetic for fixtures and finite instances of composition laws",
+    "Exhaustive deterministic policies in the hidden-resource decision problem",
+    "Pure-profile deviation checks, not a general mixed-equilibrium solver",
+    "No model calls, live agents, external networks, or changes to existing experiments"
+  ]
+}

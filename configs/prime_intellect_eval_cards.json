@@ -1,0 +1,515 @@
+{
+  "schema_version": "0.1",
+  "inspected_date": "2026-09-11",
+  "purpose": "Design examples; not a runnable Prime configuration",
+  "model_evaluations_run": 0,
+  "hub_cases": 8,
+  "source_only_cases": 1,
+  "hub_packages": 9,
+  "hub_runtime_banner": "Legacy on all inspected pages; do not infer actual API solely from banner",
+  "source_commit": "a32cc09c58be3bdff3dd5a206afd8d03fb5b9945",
+  "cards": [
+    {
+      "id": "aime2025",
+      "label": "AIME 2025",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "primeintellect/aime2025",
+          "version": "0.2.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/primeintellect/aime2025"
+        }
+      ],
+      "observed_contract": "Single-turn boxed-answer verification; 30 AIME I/II problems; fixed task settings.",
+      "game_class": "single_player_answer",
+      "proposed_axes": {
+        "calculator_access": [
+          "absent",
+          "available"
+        ],
+        "total_generation_budget": [
+          "small",
+          "large"
+        ]
+      },
+      "native_controls": [],
+      "custom_changes": [
+        "calculator tool integration",
+        "budget-controlled fork"
+      ],
+      "estimands": [
+        "tool effect",
+        "tool-by-budget interaction",
+        "separate offline parser sensitivity"
+      ],
+      "hold_fixed": [
+        "problem identities",
+        "dataset revision",
+        "answer contract",
+        "model",
+        "sampling"
+      ],
+      "independent_unit": "problem, with rollout repetitions nested",
+      "claim_boundary": "A final answer does not certify its reasoning; custom variants are not the published benchmark.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "stepfun_prover",
+      "label": "StepFun Prover",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "primeintellect/stepfun-prover",
+          "version": "0.1.3",
+          "url": "https://app.primeintellect.ai/dashboard/environments/primeintellect/stepfun-prover"
+        }
+      ],
+      "observed_contract": "Iterative Lean 4 proof attempts; verifier feedback; binary completion reward.",
+      "game_class": "single_player_construct_verify_repair",
+      "proposed_axes": {
+        "feedback": [
+          "binary_failure",
+          "detailed_diagnostics"
+        ],
+        "proof_attempts": [
+          1,
+          3
+        ]
+      },
+      "native_controls": [
+        "max_turns",
+        "timeout"
+      ],
+      "custom_changes": [
+        "feedback redaction adapter",
+        "enforce mapping between turns and proof attempts"
+      ],
+      "estimands": [
+        "feedback-by-revision interaction",
+        "completion",
+        "verification cost"
+      ],
+      "hold_fixed": [
+        "theorem",
+        "Lean version",
+        "libraries",
+        "acceptance rule",
+        "model"
+      ],
+      "independent_unit": "theorem, with repeated runs nested",
+      "claim_boundary": "Feedback after the only action cannot change that action's score; attempts and feedback are separate interventions.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "hud_2048_interfaces",
+      "label": "2048 across interfaces",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "hud/hud-text-2048",
+          "version": "0.1.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/hud/hud-text-2048"
+        },
+        {
+          "kind": "live_hub_specification",
+          "slug": "hud/hud-browser-2048",
+          "version": "0.1.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/hud/hud-browser-2048"
+        }
+      ],
+      "observed_contract": "Text/tools and screenshots/keyboard packages; differently weighted auxiliary rewards; logarithmic tile progress.",
+      "game_class": "single_player_stochastic_resource_game",
+      "proposed_axes": {
+        "observation": [
+          "text",
+          "image"
+        ],
+        "action_encoding": [
+          "semantic_move",
+          "keyboard"
+        ]
+      },
+      "native_controls": [
+        "max_turns",
+        "system_prompt"
+      ],
+      "custom_changes": [
+        "one canonical engine",
+        "four interface adapters",
+        "unified task and judgment configuration"
+      ],
+      "estimands": [
+        "binary target attainment",
+        "observation-by-action-interface interaction",
+        "composite-vs-attainment gap"
+      ],
+      "hold_fixed": [
+        "initial board",
+        "exogenous randomness coupling",
+        "targets",
+        "budget",
+        "judgment weights"
+      ],
+      "independent_unit": "seeded board/target task",
+      "claim_boundary": "Published packages are not established as isomorphic; their native aggregate scores are not a pure modality contrast.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "mapp",
+      "label": "MAPP",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "salty-duck/mapp",
+          "version": "0.1.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/salty-duck/mapp"
+        }
+      ],
+      "observed_contract": "Grid navigation with multiple start/goal pairs, five moves, collision checks, completion and efficiency metrics.",
+      "game_class": "joint_planning_controller_topology_unverified",
+      "proposed_axes": {
+        "controller_topology": [
+          "centralized",
+          "separate_controllers"
+        ],
+        "observation_scope": [
+          "global",
+          "local_reports"
+        ]
+      },
+      "native_controls": [
+        "grid_sizes",
+        "agent_counts",
+        "obstacle_densities",
+        "max_steps",
+        "seed"
+      ],
+      "custom_changes": [
+        "explicit independent-controller wrapper",
+        "local observation channels",
+        "team resource budget allocation"
+      ],
+      "estimands": [
+        "joint success",
+        "collisions",
+        "makespan",
+        "total path cost"
+      ],
+      "hold_fixed": [
+        "scenario",
+        "team objective",
+        "total budget",
+        "action timing"
+      ],
+      "independent_unit": "whole scenario; within-world agents are dependent",
+      "claim_boundary": "Multiple in-world agents do not establish multiple reasoning controllers; native topology was not verified from implementation.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "tau2_bench",
+      "label": "tau2-bench",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "will/tau2-bench",
+          "version": "0.2.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/will/tau2-bench"
+        }
+      ],
+      "observed_contract": "Multi-domain service tasks with tool use, a simulated user, and delegated tau2 evaluation.",
+      "game_class": "interactive_service_with_counterpart",
+      "proposed_axes": {
+        "user_configuration": [
+          "frozen_A",
+          "frozen_B"
+        ],
+        "assistant_tool_budget": [
+          "small",
+          "large"
+        ]
+      },
+      "native_controls": [
+        "domain",
+        "user_model",
+        "max_steps",
+        "max_errors"
+      ],
+      "custom_changes": [
+        "separate assistant tool budget adapter"
+      ],
+      "estimands": [
+        "task success by counterpart",
+        "counterpart-by-budget interaction",
+        "resource cost"
+      ],
+      "hold_fixed": [
+        "domain",
+        "tasks",
+        "initial database",
+        "user instructions",
+        "assistant model"
+      ],
+      "independent_unit": "task/session, with user and assistant runs nested",
+      "claim_boundary": "Counterpart sensitivity is not automatically assistant regression; verify emitted metrics against wrapper source before execution.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "kernelbench",
+      "label": "KernelBench",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "primeintellect/kernelbench",
+          "version": "0.1.6",
+          "url": "https://app.primeintellect.ai/dashboard/environments/primeintellect/kernelbench"
+        }
+      ],
+      "observed_contract": "Single-turn kernel generation; remote GPU correctness and speedup measurement; README default inconsistencies noted.",
+      "game_class": "artifact_construction_then_measurement",
+      "proposed_axes": {
+        "evaluation_hardware": [
+          "GPU_A",
+          "GPU_B"
+        ],
+        "reference_mode": [
+          "eager",
+          "compiled"
+        ]
+      },
+      "native_controls": [
+        "gpu",
+        "use_torch_compile",
+        "num_correctness_tests",
+        "num_perf_trials",
+        "speedup_threshold_fast1",
+        "speedup_threshold_fast2"
+      ],
+      "custom_changes": [
+        "replay fixed candidates across measurement cells"
+      ],
+      "estimands": [
+        "correctness-gated speedup threshold curve",
+        "compilation failure rate",
+        "timing uncertainty"
+      ],
+      "hold_fixed": [
+        "candidate source",
+        "input shapes",
+        "runtime versions where compatible",
+        "measurement protocol"
+      ],
+      "independent_unit": "problem/artifact with paired measurements; timing trials nested",
+      "claim_boundary": "Hardware replay measures artifact portability; new hardware-specific generation is a different intervention. Main reward and timing defaults remain unverified.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "poker_modes",
+      "label": "Poker modes and Kuhn comparator",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "strangeloopcanon/poker",
+          "version": "0.1.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/strangeloopcanon/poker"
+        },
+        {
+          "kind": "inspected_source_recipe",
+          "repository": "PrimeIntellect-ai/verifiers",
+          "commit": "a32cc09c58be3bdff3dd5a206afd8d03fb5b9945",
+          "package_version": "0.1.0",
+          "url": "https://github.com/PrimeIntellect-ai/verifiers/blob/a32cc09c58be3bdff3dd5a206afd8d03fb5b9945/environments/kuhn_poker/kuhn_poker/taskset.py",
+          "hub_publication_verified": false
+        }
+      ],
+      "observed_contract": "Hub single-turn action selection can use fixed fallback rewards. Separate source recipe implements two-seat seeded Kuhn poker.",
+      "game_class": "mode_dependent_stub_or_simulation; comparator_is_distinct_game",
+      "proposed_axes": {
+        "kuhn_opponent_family": [
+          "frozen_reference_A",
+          "frozen_reference_B"
+        ],
+        "focal_memory": [
+          "reset_each_hand",
+          "persistent_match"
+        ]
+      },
+      "native_controls": [
+        "Hub: use_llm_poker",
+        "Hub: opponent_mode",
+        "Kuhn: player1 configuration",
+        "Kuhn: invalid_retries"
+      ],
+      "custom_changes": [
+        "explicit runtime mode reporting",
+        "simulation-required failure behavior",
+        "Kuhn match memory and balanced-seat scheduler"
+      ],
+      "estimands": [
+        "mode-specific reward",
+        "seat-conditioned chips",
+        "forfeit rate",
+        "restricted best-response lower bounds"
+      ],
+      "hold_fixed": [
+        "game variant",
+        "valid action contract",
+        "deal schedule",
+        "reference roster",
+        "budget"
+      ],
+      "independent_unit": "independent match/session if memory persists",
+      "claim_boundary": "Stub and Kuhn scores are not comparable. Average signed self-play reward across both seats is always zero.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "rubric_discovery",
+      "label": "Rubric Discovery",
+      "sources": [
+        {
+          "kind": "live_hub_specification",
+          "slug": "stochi0/rubric-discovery",
+          "version": "0.2.0",
+          "url": "https://app.primeintellect.ai/dashboard/environments/stochi0/rubric-discovery"
+        }
+      ],
+      "observed_contract": "Synthesize rubric_fn from prompt-side examples; score on hidden test examples using agreement, calibration, variance, and tool-use components.",
+      "game_class": "judge_learning_meta_evaluation",
+      "proposed_axes": {
+        "demonstrations": [
+          "few",
+          "many"
+        ],
+        "evaluation_split": [
+          "within_source",
+          "held_out_source"
+        ]
+      },
+      "native_controls": [
+        "dataset_path",
+        "categories",
+        "max_turns",
+        "eval_margin"
+      ],
+      "custom_changes": [
+        "deduplicated source-family split",
+        "controlled demonstration sampling"
+      ],
+      "estimands": [
+        "held-out MAE",
+        "fixed-tolerance agreement",
+        "ranking behavior"
+      ],
+      "hold_fixed": [
+        "reference-label definition",
+        "tolerance",
+        "available metadata",
+        "model"
+      ],
+      "independent_unit": "source-task family for cross-source claims",
+      "claim_boundary": "Syntactic validation is not semantic validation; composite reward is not solely reference-score fidelity.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    },
+    {
+      "id": "proposer_solver",
+      "label": "Proposer–Solver source recipe",
+      "sources": [
+        {
+          "kind": "inspected_source_recipe",
+          "repository": "PrimeIntellect-ai/verifiers",
+          "commit": "a32cc09c58be3bdff3dd5a206afd8d03fb5b9945",
+          "package_version": "0.1.0",
+          "url": "https://github.com/PrimeIntellect-ai/verifiers/blob/a32cc09c58be3bdff3dd5a206afd8d03fb5b9945/environments/proposer_solver/proposer_solver/taskset.py",
+          "hub_publication_verified": false
+        }
+      ],
+      "observed_contract": "Proposer JSON creates a task for n solvers; proposer reward is 4*p_hat*(1-p_hat); schema checks do not independently verify mathematical truth.",
+      "game_class": "endogenous_task_generation",
+      "proposed_axes": {
+        "independent_answer_validation": [
+          "absent",
+          "present"
+        ],
+        "solver_count": [
+          1,
+          4,
+          8
+        ]
+      },
+      "native_controls": [
+        "n",
+        "train_proposer",
+        "train_solver"
+      ],
+      "custom_changes": [
+        "independent mathematical validity gate",
+        "separate rejection accounting"
+      ],
+      "estimands": [
+        "task validity",
+        "solve rate",
+        "sample-count-adjusted diagnostic",
+        "separate downstream learning outcome"
+      ],
+      "hold_fixed": [
+        "proposer checkpoint",
+        "solver checkpoint",
+        "topics",
+        "solver protocol"
+      ],
+      "independent_unit": "generated problem; solver runs conditionally nested",
+      "claim_boundary": "Not a verified Hub listing. Curriculum score is neither an independent correctness proof nor evidence of subsequent learning.",
+      "study_status": "proposed_not_executed",
+      "evidence_status": "source_grounded_design_analysis",
+      "requires_custom_adapter": true
+    }
+  ],
+  "derived_fixtures": {
+    "poker_stub": {
+      "format_weight": "1/5",
+      "poker_weight": "4/5",
+      "valid_format_score": "1",
+      "action_rewards": {
+        "fold": "9/20",
+        "call": "1/2",
+        "raise": "11/20"
+      },
+      "expected_totals": {
+        "fold": "14/25",
+        "call": "3/5",
+        "raise": "16/25"
+      }
+    },
+    "tile_progress": {
+      "highest_tile": 128,
+      "target_tile": 256,
+      "completion_weight": "4/5",
+      "perfect_auxiliary_total": "1/5",
+      "expected_composite": "9/10"
+    },
+    "proposer_sample_count": {
+      "conditional_iid": true,
+      "true_success_probability": "1/2",
+      "expected_mean_rewards": {
+        "1": "0",
+        "4": "3/4",
+        "8": "7/8"
+      }
+    }
+  }
+}
