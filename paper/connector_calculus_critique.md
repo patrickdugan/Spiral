@@ -12,7 +12,7 @@
 
 The elementary algebra survives. The present implementation does not establish all the safety, reproducibility, and economic properties its surrounding language can suggest. The most important defects are accepted closed walks that reject after changing balances, hash-dependent generation despite fixed nominal seeds, reward-allocation boundary failures, and compilation predicates that are stated but not enforced. A cut's liquidity stock also cannot be read as a cap on gross throughput over time.
 
-Three sub-agents independently challenged algebra, inference, and incentives, then cross-examined one another. The coordinator supplied a D-drive testnet4 header replay and a separate revised ledger. This critique preserves the original paper and code; all counterexamples, controls, receipts, and new references are separate. Findings are not prevalence estimates, and the study is not a live Lightning or money-laundering experiment.
+Three sub-agents independently challenged algebra, inference, and incentives, then cross-examined one another. The coordinator supplied a testnet4 header replay from a retained offline node and a separate revised ledger. This critique preserves the original paper and code; all counterexamples, controls, receipts, and new references are separate. Findings are not prevalence estimates, and the study is not a live Lightning or money-laundering experiment.
 
 The follow-up is **Liquidity on Trial: Counterexamples and a Resource-Sensitive Semantics for Agent Payment Networks**. Its distinct notation uses ledger X, channel holdings ell, pending holds h, a resource registry U, and an operation journal J. It does not inherit protocol guarantees merely by changing notation.
 
@@ -31,7 +31,7 @@ The follow-up is **Liquidity on Trial: Counterexamples and a Resource-Sensitive 
 
 ## 2. C1: atomicity and the accepted route domain
 
-Original references: algebra.py:108 and :119; Connector validation at :159; manuscript.md:127 and Appendix A.2 at :581. Paths below are relative to the frozen C:/projects/Spiral repository.
+Original references: algebra.py:108 and :119; Connector validation at :159; manuscript.md:127 and Appendix A.2 at :581. Paths below are relative to the frozen repository root.
 
 On the walk A-B-C-A-B-C-A, each forward edge initially holds 100 and q=60. The route-wide check sees the original 100 at every occurrence. Execution completes one cycle, then rejects on the next edge. The final forward balances are 40,40,40. Capacity conservation still passes, demonstrating why that invariant cannot certify rollback.
 
@@ -99,11 +99,11 @@ Negative controls nevertheless expose silently overwritten duplicates, discarded
 
 The snapshot is still one historical environment with synthetic hidden state. The original confidence intervals do not cover model misspecification, unknown hash-order inputs, omitted settlement resources, or a population of future networks. This post-hoc audit cannot retroactively preregister its preferred corrections.
 
-## 8. D-drive testnet4: actual evidence and hard limits
+## 8. Retained testnet4 node: actual evidence and hard limits
 
-The configured port at 127.0.0.1:48332 was unreachable. We did not restart a node, open a wallet, read credentials, or broadcast transactions. Instead, a public-only parser read retained D:/BitcoinTestnet/testnet4 block records and exported 512 linked historical headers, heights 147473-147984, anchored to the last logged tip on August 11.
+The configured port at 127.0.0.1:48332 was unreachable. We did not restart a node, open a wallet, read credentials, or broadcast transactions. Instead, a public-only parser read the retained testnet4 datadir's block records and exported 512 linked historical headers, heights 147473-147984, anchored to the last logged tip on August 11.
 
-The independent algebra reviewer recomputed all 512 header hashes and encoded-target checks, verified 511 internal parent links, and reread three exact D-drive disk offsets. All matched. These checks do not validate full consensus, current chain choice, transactions, or any funding event. A historical metadata string said 512 parent links; the correct count is 511, recorded as an erratum without overwriting the original receipt bytes.
+The independent algebra reviewer recomputed all 512 header hashes and encoded-target checks, verified 511 internal parent links, and reread three exact on-disk offsets. All matched. These checks do not validate full consensus, current chain choice, transactions, or any funding event. A historical metadata string said 512 parent links; the correct count is 511, recorded as an erratum without overwriting the original receipt bytes.
 
 Of 511 adjacent miner timestamp differences, 64 are nonpositive. Minimum is -6,004 seconds; median 1,201. These are not observed arrival or funding times. Depth-gate scenarios therefore use block order and explicitly assumed inclusion, demand, and costs. Repeating the same arithmetic over different header windows is not empirical replication. The incentives reviewer consumes this authenticated scaffold and shows a hypothetical three-block service window changing from +1,000 to -1,000 toy operator units when depth changes from immediate to three. None of those receipts is actual testnet income.
 
