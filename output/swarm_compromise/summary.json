@@ -1,0 +1,414 @@
+{
+  "accounting_all_ok": true,
+  "benign_confound_note": "authorized_red_team shares behavioral metrics with insider_cultivator; a strong compromise footprint cannot by itself establish malicious intent.",
+  "by_hive_master": {
+    "authorized_red_team": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.3658854166666667,
+      "mean_covert_exfil_units": 2.8125,
+      "mean_detection_recall": 0.17914524711399712,
+      "mean_largest_coalition": 2.0625,
+      "truth_class": "benign_authorized_confound"
+    },
+    "insider_cultivator": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.4440104166666667,
+      "mean_covert_exfil_units": 3.9375,
+      "mean_detection_recall": 0.18366453807630279,
+      "mean_largest_coalition": 1.84375,
+      "truth_class": "adversary"
+    },
+    "opportunist_phisher": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.71484375,
+      "mean_covert_exfil_units": 0.0,
+      "mean_detection_recall": 0.4063276740352011,
+      "mean_largest_coalition": 0.5625,
+      "truth_class": "adversary"
+    },
+    "patient_recruiter": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.4270833333333333,
+      "mean_covert_exfil_units": 0.75,
+      "mean_detection_recall": 0.16063008172383172,
+      "mean_largest_coalition": 4.53125,
+      "truth_class": "adversary"
+    },
+    "signals_specialist": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.17838541666666666,
+      "mean_covert_exfil_units": 26.625,
+      "mean_detection_recall": 0.3165922619047619,
+      "mean_largest_coalition": 0.125,
+      "truth_class": "adversary"
+    },
+    "smash_and_grab": {
+      "episodes": 32,
+      "mean_compromise_rate": 0.5924479166666666,
+      "mean_covert_exfil_units": 3.1875,
+      "mean_detection_recall": 0.44483696195552813,
+      "mean_largest_coalition": 1,
+      "truth_class": "adversary"
+    }
+  },
+  "config": {
+    "communities": 3,
+    "defender_count": 3,
+    "defender_detection_gain": 1.9,
+    "defender_domain_fraction": 0.4,
+    "exfil_reference": 60.0,
+    "honeypot_detectability": 0.95,
+    "honeypot_fraction": 0.15,
+    "inter_community_link": 0.07,
+    "intra_community_link": 0.45,
+    "max_actions_per_round": 4,
+    "max_recruitment_per_round": 3,
+    "monitor_sample_rate": 0.5,
+    "population_size": 24,
+    "recruitment_contagion": 0.35,
+    "rounds": 60,
+    "sensitive_fraction": 0.25
+  },
+  "detector_roc": {
+    "calibration_seed_count": 4,
+    "calibration_selected_threshold": 0.65,
+    "descriptive_threshold_curve": [
+      {
+        "false_negatives": 0,
+        "false_positive_rate": 1.0,
+        "false_positives": 2030,
+        "precision": 0.4713541666666667,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "threshold": 0.0,
+        "true_negatives": 0,
+        "true_positives": 1810
+      },
+      {
+        "false_negatives": 477,
+        "false_positive_rate": 0.6300492610837438,
+        "false_positives": 1279,
+        "precision": 0.5103369065849923,
+        "recall": 0.7364640883977901,
+        "specificity": 0.3699507389162562,
+        "threshold": 0.05,
+        "true_negatives": 751,
+        "true_positives": 1333
+      },
+      {
+        "false_negatives": 678,
+        "false_positive_rate": 0.5655172413793104,
+        "false_positives": 1148,
+        "precision": 0.4964912280701754,
+        "recall": 0.625414364640884,
+        "specificity": 0.43448275862068964,
+        "threshold": 0.1,
+        "true_negatives": 882,
+        "true_positives": 1132
+      },
+      {
+        "false_negatives": 720,
+        "false_positive_rate": 0.5571428571428572,
+        "false_positives": 1131,
+        "precision": 0.4907699234579018,
+        "recall": 0.6022099447513812,
+        "specificity": 0.44285714285714284,
+        "threshold": 0.15,
+        "true_negatives": 899,
+        "true_positives": 1090
+      },
+      {
+        "false_negatives": 846,
+        "false_positive_rate": 0.4940886699507389,
+        "false_positives": 1003,
+        "precision": 0.49008642602948654,
+        "recall": 0.532596685082873,
+        "specificity": 0.505911330049261,
+        "threshold": 0.2,
+        "true_negatives": 1027,
+        "true_positives": 964
+      },
+      {
+        "false_negatives": 879,
+        "false_positive_rate": 0.4748768472906404,
+        "false_positives": 964,
+        "precision": 0.49129287598944593,
+        "recall": 0.5143646408839779,
+        "specificity": 0.5251231527093596,
+        "threshold": 0.25,
+        "true_negatives": 1066,
+        "true_positives": 931
+      },
+      {
+        "false_negatives": 895,
+        "false_positive_rate": 0.4689655172413793,
+        "false_positives": 952,
+        "precision": 0.49009105516871987,
+        "recall": 0.505524861878453,
+        "specificity": 0.5310344827586206,
+        "threshold": 0.3,
+        "true_negatives": 1078,
+        "true_positives": 915
+      },
+      {
+        "false_negatives": 1073,
+        "false_positive_rate": 0.1896551724137931,
+        "false_positives": 385,
+        "precision": 0.6568627450980392,
+        "recall": 0.40718232044198893,
+        "specificity": 0.8103448275862069,
+        "threshold": 0.35,
+        "true_negatives": 1645,
+        "true_positives": 737
+      },
+      {
+        "false_negatives": 1193,
+        "false_positive_rate": 0.07635467980295567,
+        "false_positives": 155,
+        "precision": 0.7992227979274611,
+        "recall": 0.34088397790055247,
+        "specificity": 0.9236453201970444,
+        "threshold": 0.4,
+        "true_negatives": 1875,
+        "true_positives": 617
+      },
+      {
+        "false_negatives": 1215,
+        "false_positive_rate": 0.06206896551724138,
+        "false_positives": 126,
+        "precision": 0.8252427184466019,
+        "recall": 0.3287292817679558,
+        "specificity": 0.9379310344827586,
+        "threshold": 0.45,
+        "true_negatives": 1904,
+        "true_positives": 595
+      },
+      {
+        "false_negatives": 1215,
+        "false_positive_rate": 0.06206896551724138,
+        "false_positives": 126,
+        "precision": 0.8252427184466019,
+        "recall": 0.3287292817679558,
+        "specificity": 0.9379310344827586,
+        "threshold": 0.5,
+        "true_negatives": 1904,
+        "true_positives": 595
+      },
+      {
+        "false_negatives": 1215,
+        "false_positive_rate": 0.06206896551724138,
+        "false_positives": 126,
+        "precision": 0.8252427184466019,
+        "recall": 0.3287292817679558,
+        "specificity": 0.9379310344827586,
+        "threshold": 0.55,
+        "true_negatives": 1904,
+        "true_positives": 595
+      },
+      {
+        "false_negatives": 1215,
+        "false_positive_rate": 0.06206896551724138,
+        "false_positives": 126,
+        "precision": 0.8252427184466019,
+        "recall": 0.3287292817679558,
+        "specificity": 0.9379310344827586,
+        "threshold": 0.6,
+        "true_negatives": 1904,
+        "true_positives": 595
+      },
+      {
+        "false_negatives": 1215,
+        "false_positive_rate": 0.06206896551724138,
+        "false_positives": 126,
+        "precision": 0.8252427184466019,
+        "recall": 0.3287292817679558,
+        "specificity": 0.9379310344827586,
+        "threshold": 0.65,
+        "true_negatives": 1904,
+        "true_positives": 595
+      },
+      {
+        "false_negatives": 1371,
+        "false_positive_rate": 0.03891625615763547,
+        "false_positives": 79,
+        "precision": 0.8474903474903475,
+        "recall": 0.2425414364640884,
+        "specificity": 0.9610837438423645,
+        "threshold": 0.7,
+        "true_negatives": 1951,
+        "true_positives": 439
+      },
+      {
+        "false_negatives": 1431,
+        "false_positive_rate": 0.03152709359605911,
+        "false_positives": 64,
+        "precision": 0.8555304740406321,
+        "recall": 0.20939226519337018,
+        "specificity": 0.9684729064039409,
+        "threshold": 0.75,
+        "true_negatives": 1966,
+        "true_positives": 379
+      },
+      {
+        "false_negatives": 1487,
+        "false_positive_rate": 0.022660098522167486,
+        "false_positives": 46,
+        "precision": 0.8753387533875339,
+        "recall": 0.17845303867403314,
+        "specificity": 0.9773399014778326,
+        "threshold": 0.8,
+        "true_negatives": 1984,
+        "true_positives": 323
+      },
+      {
+        "false_negatives": 1524,
+        "false_positive_rate": 0.021182266009852218,
+        "false_positives": 43,
+        "precision": 0.8693009118541033,
+        "recall": 0.1580110497237569,
+        "specificity": 0.9788177339901478,
+        "threshold": 0.85,
+        "true_negatives": 1987,
+        "true_positives": 286
+      },
+      {
+        "false_negatives": 1664,
+        "false_positive_rate": 0.00541871921182266,
+        "false_positives": 11,
+        "precision": 0.9299363057324841,
+        "recall": 0.08066298342541436,
+        "specificity": 0.9945812807881773,
+        "threshold": 0.9,
+        "true_negatives": 2019,
+        "true_positives": 146
+      },
+      {
+        "false_negatives": 1768,
+        "false_positive_rate": 0.0009852216748768472,
+        "false_positives": 2,
+        "precision": 0.9545454545454546,
+        "recall": 0.023204419889502764,
+        "specificity": 0.9990147783251232,
+        "threshold": 0.95,
+        "true_negatives": 2028,
+        "true_positives": 42
+      },
+      {
+        "false_negatives": 1793,
+        "false_positive_rate": 0.0009852216748768472,
+        "false_positives": 2,
+        "precision": 0.8947368421052632,
+        "recall": 0.009392265193370166,
+        "specificity": 0.9990147783251232,
+        "threshold": 1.0,
+        "true_negatives": 2028,
+        "true_positives": 17
+      }
+    ],
+    "holdout_classification": {
+      "false_negatives": 582,
+      "false_positive_rate": 0.058765915768854066,
+      "false_positives": 60,
+      "precision": 0.8408488063660478,
+      "recall": 0.3526140155728587,
+      "specificity": 0.941234084231146,
+      "true_negatives": 961,
+      "true_positives": 317
+    },
+    "holdout_roc_auc": 0.6295791711107891,
+    "holdout_seed_count": 4,
+    "node_count": 3840,
+    "positive_rate": 0.4713541666666667,
+    "roc_auc": 0.6168877065019187,
+    "warning": "The selected threshold is an experimental calibration result, not a deployment recommendation."
+  },
+  "generated_at": "2026-10-01T01:14:25.232332+00:00",
+  "guardrail": "Synthetic posture evidence; not a measurement of any real system or person.",
+  "interpretation": {
+    "airgap_breach_rate": "share of airgapped nodes compromised (only reachable via a proximity vector)",
+    "covert_exfil_units": "dimensionless notional baud; realized only when the target lacks a cleanroom posture",
+    "detection_recall": "share of truly compromised nodes a defender/honeypot flagged",
+    "largest_coalition": "size of the largest connected recruited (cult) component over the comms graph"
+  },
+  "posture_resilience": {
+    "airgap_core": {
+      "components": {
+        "airgap_integrity": 0.8041666666666667,
+        "containment": 0.5427083333333333,
+        "detection": 0.30172946946844004,
+        "exfil_suppression": 0.765
+      },
+      "episodes": 40,
+      "grade": 3,
+      "grade_label": "moderate",
+      "mean_airgap_breach_rate": 0.19583333333333333,
+      "mean_compromise_rate": 0.45729166666666665,
+      "mean_covert_exfil_units": 14.1,
+      "mean_detection_recall": 0.30172946946844004,
+      "mean_largest_coalition": 1.725,
+      "resilience_score": 0.5792136173671101
+    },
+    "baseline_open": {
+      "components": {
+        "airgap_integrity": 1.0,
+        "containment": 0.459375,
+        "detection": 0.3063967973432992,
+        "exfil_suppression": 0.775
+      },
+      "episodes": 40,
+      "grade": 3,
+      "grade_label": "moderate",
+      "mean_airgap_breach_rate": 0.0,
+      "mean_compromise_rate": 0.540625,
+      "mean_covert_exfil_units": 13.5,
+      "mean_detection_recall": 0.3063967973432992,
+      "mean_largest_coalition": 1.875,
+      "resilience_score": 0.5923804493358248
+    },
+    "cleanroom": {
+      "components": {
+        "airgap_integrity": 1.0,
+        "containment": 0.47916666666666663,
+        "detection": 0.30760770875002263,
+        "exfil_suppression": 1.0
+      },
+      "episodes": 40,
+      "grade": 4,
+      "grade_label": "strong",
+      "mean_airgap_breach_rate": 0.0,
+      "mean_compromise_rate": 0.5208333333333334,
+      "mean_covert_exfil_units": 0.0,
+      "mean_detection_recall": 0.30760770875002263,
+      "mean_largest_coalition": 1.775,
+      "resilience_score": 0.644610260520839
+    },
+    "full_hardening": {
+      "components": {
+        "airgap_integrity": 0.8,
+        "containment": 0.6333333333333333,
+        "detection": 0.2939072385947386,
+        "exfil_suppression": 1.0
+      },
+      "episodes": 40,
+      "grade": 4,
+      "grade_label": "strong",
+      "mean_airgap_breach_rate": 0.19999999999999998,
+      "mean_compromise_rate": 0.36666666666666664,
+      "mean_covert_exfil_units": 0.0,
+      "mean_detection_recall": 0.2939072385947386,
+      "mean_largest_coalition": 1.075,
+      "resilience_score": 0.6551434763153513
+    }
+  },
+  "safety_boundary": {
+    "evasion_optimizer_in_shipped_policy": false,
+    "model_call_in_harness": false,
+    "network_transport": false,
+    "operational_technique": false,
+    "payload_or_message_content": false,
+    "synthetic_only": true,
+    "wallet_or_node_connection": false
+  },
+  "schema_version": "1.0",
+  "seed_count": 8
+}

@@ -1,0 +1,21 @@
+{
+  "artifacts": {
+    "node_scores.csv": "860d56a58c432f7a6b300641286dc58cf631b2cdf96f03058aedf4f8a4fb5ec3",
+    "rows.csv": "4463ba5e2c3c742b0a96b811e76a42419f50097635bc09bd0fafba9e747e6b77",
+    "summary.json": "ecf3430f54ae2f096d3fd5169091554d8c73d36093b662d7724c335e7192e7b8"
+  },
+  "combined_sha256": "07f6f45f11c0be5d5513cfb8b334c78c72afe5cb3795c78155e04cda91835317",
+  "configuration_file": "configs/swarm_compromise.json",
+  "configuration_hash": "9816df1ba13cb5d01b2ad8cab0da5a86af65b5d88f9740648c81dcfc82fe03da",
+  "experiment_id": "sealed-swarm-compromise-8-seeds",
+  "safety_boundary": {
+    "evasion_optimizer_in_shipped_policy": false,
+    "model_call_in_harness": false,
+    "network_transport": false,
+    "operational_technique": false,
+    "payload_or_message_content": false,
+    "synthetic_only": true,
+    "wallet_or_node_connection": false
+  },
+  "schema_version": "1.0"
+}
