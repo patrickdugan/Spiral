@@ -185,6 +185,13 @@ with `summary.json`, `rows.csv`, `node_scores.csv`, two figures, and a hash
 witness receipt. These are synthetic posture results, not a measurement of any
 real system or person.
 
+[Red Team Gladiatorics: Crypto Swarm Arena](paper/rtg_crypto_swarm_arena.md) is a
+design specification that extends this laboratory into a control-evaluation
+instrument: a formal mandate oracle with three-valued authorization, authorized
+"twin" worlds that make a benign confound explicit, a cage/enclave containment
+ladder, and falsifiable propensity and control hypotheses. It is a design only;
+nothing in it is implemented or reports a result about any model.
+
 ## Agent capability frontier
 
 The capability campaign separates three resources that are often blurred together as "agent intelligence": routing information, deployable capital, and placement policy. Each seed runs public-only routing, bounded adaptive retries, and an oracle ceiling; no connector, random equal-budget capital, and past-demand-aware equal-budget capital; and normal and jammed conditions. Demand-aware placement occurs only after a warm-up window and cannot inspect future demand.
