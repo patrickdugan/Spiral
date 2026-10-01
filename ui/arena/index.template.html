@@ -1,0 +1,683 @@
+<title>Spiral Swarm Arena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap">
+<style>
+  /* Layout: full-bleed WebGL network with glass HUD panels docked over it.
+     Single committed dark "arcade screen" theme (neon on near-black). */
+  :root {
+    --bg: #04060c;
+    --bg2: #0a1020;
+    --panel: rgba(8, 15, 28, 0.78);
+    --hair: #123042;
+    --fg: #c9f3ff;
+    --muted: #5e7f8c;
+    --cyan: #27d7f0;
+    --red: #ff2d6b;
+    --purple: #b06bff;
+    --amber: #ffb021;
+    --white: #eafcff;
+    --display: "Orbitron", "Segoe UI", sans-serif;
+    --mono: "Share Tech Mono", ui-monospace, "Cascadia Mono", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  #app { position: fixed; inset: 0; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 22px rgba(39, 215, 240, 0.08), inset 0 0 0 1px rgba(39,215,240,0.04);
+  }
+
+  /* top bar */
+  #topbar {
+    position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 14px; z-index: 20;
+    background: linear-gradient(180deg, rgba(4,6,12,0.92), rgba(4,6,12,0.35));
+    border-bottom: 1px solid var(--hair);
+  }
+  .brand {
+    font-family: var(--display); font-weight: 700; letter-spacing: 2px;
+    color: var(--white); text-shadow: 0 0 12px rgba(39,215,240,0.55); white-space: nowrap;
+    font-size: 15px;
+  }
+  select, button {
+    font-family: var(--mono); color: var(--fg); background: #06101d;
+    border: 1px solid var(--hair); border-radius: 3px; padding: 6px 9px; cursor: pointer;
+  }
+  select:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+  button:hover, select:hover { border-color: var(--cyan); color: var(--white); }
+  #metrics { display: flex; gap: 16px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .metric { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+  .metric b { font-family: var(--display); font-size: 16px; color: var(--white); font-variant-numeric: tabular-nums; }
+  .metric span { font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+
+  /* left rail */
+  #rail {
+    position: fixed; top: 64px; left: 12px; width: 190px; z-index: 15;
+    padding: 12px; border-radius: 6px; max-height: calc(100% - 210px); overflow: auto;
+  }
+  .rail-title { font-size: 10px; letter-spacing: 2px; color: var(--cyan); text-transform: uppercase; margin: 2px 0 8px; }
+  #keynodes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .kn { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--hair);
+        border-radius: 4px; background: #06101d; cursor: pointer; font-size: 12px; }
+  .kn:hover { border-color: var(--cyan); color: var(--white); }
+  .kn .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 8px currentColor; }
+  .kn small { color: var(--muted); margin-left: auto; font-size: 9px; letter-spacing: 1px; }
+  #legend { display: flex; flex-direction: column; gap: 5px; }
+  .leg { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  .leg i { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 7px currentColor; font-style: normal; }
+
+  /* right inspector */
+  #inspector {
+    position: fixed; top: 64px; right: 12px; width: 300px; z-index: 16;
+    padding: 14px; border-radius: 6px; max-height: calc(100% - 210px); overflow: auto;
+  }
+  #inspector-close { position: absolute; top: 8px; right: 8px; padding: 2px 8px; }
+  .dos-name { font-family: var(--display); font-size: 17px; color: var(--white); letter-spacing: 1px; }
+  .dos-arch { color: var(--cyan); font-size: 12px; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .badge { font-size: 10px; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; border: 1px solid currentColor; text-transform: uppercase; }
+  .sec-title { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin: 14px 0 6px; border-top: 1px solid var(--hair); padding-top: 10px; }
+  .trait { margin: 7px 0; }
+  .trait .lab { display: flex; justify-content: space-between; font-size: 11px; color: var(--fg); margin-bottom: 3px; }
+  .trait .lab span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; background: #0b1726; border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--purple)); box-shadow: 0 0 8px var(--cyan); }
+  .status { font-size: 12px; line-height: 1.5; }
+  .neigh { display: flex; flex-wrap: wrap; gap: 5px; }
+  .neigh b { cursor: pointer; padding: 2px 6px; border: 1px solid var(--hair); border-radius: 3px; font-weight: 400; font-size: 11px; }
+  .neigh b:hover { border-color: var(--cyan); color: var(--white); }
+  #camwrap { margin-top: 12px; }
+  #camfeed { width: 100%; height: auto; border: 1px solid var(--hair); border-radius: 4px; display: block; }
+
+  /* bottom dock */
+  #dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 18;
+          padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+          background: linear-gradient(0deg, rgba(4,6,12,0.95), rgba(4,6,12,0.2));
+          border-top: 1px solid var(--hair); }
+  #timeline { display: flex; align-items: center; gap: 12px; }
+  #scrub { flex: 1; min-width: 0; accent-color: var(--cyan); height: 4px; }
+  #play { width: 40px; font-size: 13px; }
+  #roundlabel { color: var(--cyan); font-size: 12px; white-space: nowrap; letter-spacing: 1px; }
+  #mosaic-head { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin: 8px 0 6px; }
+  #mosaic { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; min-height: 76px; }
+  .cam { flex: none; width: 118px; cursor: pointer; border: 1px solid var(--hair); border-radius: 4px; background: #04080f; }
+  .cam:hover { border-color: var(--cyan); }
+  .cam canvas { display: block; width: 100%; height: 66px; border-radius: 3px 3px 0 0; }
+  .cam .cl { font-size: 10px; color: var(--fg); padding: 3px 5px; display: flex; justify-content: space-between; align-items: center; }
+  .cam .cl .rec { color: var(--red); }
+  .mosaic-empty { color: var(--muted); font-size: 12px; align-self: center; padding: 20px; }
+
+  /* intro + help */
+  #intro { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center;
+           background: radial-gradient(circle at 50% 45%, rgba(10,16,32,0.4), var(--bg) 70%);
+           animation: fade 2.1s ease forwards 1s; pointer-events: none; }
+  #intro .t { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 6vw, 60px);
+              color: var(--white); letter-spacing: 6px; text-shadow: 0 0 30px var(--cyan); text-align: center; }
+  #intro .s { font-size: 12px; letter-spacing: 3px; color: var(--cyan); text-align: center; margin-top: 10px; }
+  @keyframes fade { to { opacity: 0; visibility: hidden; } }
+  #hint { position: fixed; left: 50%; transform: translateX(-50%); bottom: 150px; z-index: 12;
+          font-size: 11px; color: var(--muted); letter-spacing: 1px; text-align: center;
+          background: rgba(4,6,12,0.5); padding: 5px 12px; border-radius: 20px; pointer-events: none;
+          animation: fade 3s ease forwards 4s; }
+  .safety { position: fixed; bottom: 150px; right: 14px; z-index: 12; font-size: 10px; color: var(--muted);
+            max-width: 220px; text-align: right; letter-spacing: 0.5px; opacity: 0.8; }
+  @media (prefers-reduced-motion: reduce) { #intro, #hint { animation: none; opacity: 0; visibility: hidden; } }
+
+  @media (max-width: 760px) {
+    #rail { display: none; }
+    #inspector { width: min(300px, calc(100% - 24px)); top: auto; bottom: 150px; max-height: 44%; }
+    .brand { font-size: 12px; }
+    #metrics { gap: 10px; }
+    .metric b { font-size: 13px; }
+    .safety { display: none; }
+  }
+</style>
+
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <header id="topbar">
+    <div class="brand">◇ SPIRAL // SWARM ARENA</div>
+    <select id="scenario" aria-label="Scenario"></select>
+    <div id="metrics"></div>
+  </header>
+
+  <aside id="rail" class="panel">
+    <div class="rail-title">Fast Travel</div>
+    <div id="keynodes"></div>
+    <div class="rail-title">Node State</div>
+    <div id="legend"></div>
+  </aside>
+
+  <aside id="inspector" class="panel" hidden>
+    <button id="inspector-close" aria-label="Close">×</button>
+    <div id="dossier"></div>
+    <div id="camwrap" hidden>
+      <div class="sec-title">Compromised Feed</div>
+      <canvas id="camfeed" width="300" height="188"></canvas>
+    </div>
+  </aside>
+
+  <div class="safety">Synthetic simulation. Dossiers and feeds are fictional, abstract eval data — not surveillance of any real person.</div>
+  <div id="hint">drag to orbit · scroll to zoom · click a node</div>
+
+  <footer id="dock">
+    <div id="timeline">
+      <button id="play" aria-label="Play / pause">▶</button>
+      <input id="scrub" type="range" min="0" max="1" value="0" aria-label="Timeline">
+      <span id="roundlabel">ROUND 00</span>
+      <select id="speed" aria-label="Speed">
+        <option value="1">1×</option>
+        <option value="2" selected>2×</option>
+        <option value="4">4×</option>
+      </select>
+    </div>
+    <div id="mosaic-head">Swarm Vision // compromised feeds</div>
+    <div id="mosaic"></div>
+  </footer>
+
+  <div id="intro">
+    <div>
+      <div class="t">SWARM ARENA</div>
+      <div class="s">SEALED SYNTHETIC COMPROMISE TELEMETRY</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script id="replay-data" type="application/json">__REPLAY_JSON__</script>
+<script>
+"use strict";
+const REPLAY = JSON.parse(document.getElementById("replay-data").textContent);
+const TRAITS = REPLAY.traits;
+
+const COL = {
+  clean:   0x27d7f0,
+  cyan:    0x27d7f0,
+  known:   0x1b8aa0,
+  dark:    0x0e3240,
+  comp:    0xff2d6b,
+  recruit: 0xb06bff,
+  honey:   0xffb021,
+  airgap:  0x2b5f8a,
+  detect:  0xffffff,
+  white:   0xeafcff,
+};
+const hex = (n) => "#" + n.toString(16).padStart(6, "0");
+
+/* ---------- three.js scene ---------- */
+const canvas = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setClearColor(0x04060c, 1);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x04060c, 0.0022);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 4000);
+
+function makeHalo() {
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d");
+  const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0, "rgba(255,255,255,0.9)");
+  grd.addColorStop(0.25, "rgba(255,255,255,0.55)");
+  grd.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+function makeRing() {
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d");
+  g.strokeStyle = "rgba(255,255,255,1)"; g.lineWidth = 6;
+  g.beginPath(); g.arc(64, 64, 54, 0, Math.PI * 2); g.stroke();
+  return new THREE.CanvasTexture(c);
+}
+const HALO_TEX = makeHalo();
+const RING_TEX = makeRing();
+
+function labelSprite(text) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 64;
+  const g = c.getContext("2d");
+  g.font = "600 34px 'Share Tech Mono', monospace";
+  g.fillStyle = "#eafcff"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.shadowColor = "#27d7f0"; g.shadowBlur = 12;
+  g.fillText(text, 128, 34);
+  const tex = new THREE.CanvasTexture(c);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
+  sp.scale.set(14, 3.5, 1);
+  return sp;
+}
+
+/* grid + ambiance */
+let gridGroup = null;
+function buildGrid() {
+  if (gridGroup) scene.remove(gridGroup);
+  gridGroup = new THREE.Group();
+  const grid = new THREE.GridHelper(400, 40, 0x0d3344, 0x07202c);
+  grid.position.y = -60; gridGroup.add(grid);
+  // starfield
+  const n = 500, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    pos[i*3] = (Math.random()-0.5)*1600;
+    pos[i*3+1] = (Math.random()-0.5)*800;
+    pos[i*3+2] = (Math.random()-0.5)*1600;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  gridGroup.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x14506a, size: 1.6, transparent: true, opacity: 0.7 })));
+  scene.add(gridGroup);
+}
+
+/* ---------- scenario build ---------- */
+let S = null;                // current scenario object
+let nodeObjs = {};           // id -> {mesh, halo, label, data}
+let nodeMeshes = [];         // for raycasting
+let baseEdges = null, activeEdges = null, cageGroup = null, nodeGroup = null;
+let frameIndex = 0, selected = null;
+const effects = [];          // event rings
+
+function clearGroup(g) { if (g) { scene.remove(g); g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose && o.material.dispose(); }); } }
+
+function buildScenario(scn) {
+  S = scn;
+  clearGroup(nodeGroup); clearGroup(baseEdges); clearGroup(activeEdges); clearGroup(cageGroup);
+  nodeObjs = {}; nodeMeshes = []; effects.length = 0;
+  nodeGroup = new THREE.Group(); scene.add(nodeGroup);
+
+  const sphere = new THREE.SphereGeometry(2.0, 18, 18);
+  for (const nd of S.nodes) {
+    const mesh = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: COL.dark }));
+    mesh.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
+    mesh.userData.id = nd.id;
+    nodeGroup.add(mesh);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    halo.scale.set(12, 12, 1); halo.position.copy(mesh.position); nodeGroup.add(halo);
+    const label = labelSprite(nd.id);
+    label.position.copy(mesh.position); label.position.y += 4; label.visible = false; nodeGroup.add(label);
+    nodeObjs[nd.id] = { mesh, halo, label, data: nd };
+    nodeMeshes.push(mesh);
+  }
+
+  // base edges (static dim)
+  const bp = [];
+  for (const [a, b] of S.edges) {
+    const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos;
+    bp.push(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2]);
+  }
+  const bg = new THREE.BufferGeometry();
+  bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bp), 3));
+  baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x135066, transparent: true, opacity: 0.75 }));
+  scene.add(baseEdges);
+
+  // cages around airgapped vaults
+  cageGroup = new THREE.Group();
+  for (const nd of S.nodes) {
+    if (!nd.airgapped) continue;
+    const box = new THREE.Mesh(new THREE.BoxGeometry(7, 7, 7), new THREE.MeshBasicMaterial({ color: COL.airgap, wireframe: true, transparent: true, opacity: 0.5 }));
+    box.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); cageGroup.add(box);
+  }
+  scene.add(cageGroup);
+
+  activeEdges = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending }));
+  scene.add(activeEdges);
+
+  // key nodes & legend & scrub range
+  buildRail();
+  const scrub = document.getElementById("scrub");
+  scrub.max = String(S.frames.length - 1);
+  frameIndex = S.frames.length - 1;       // open at the resolved end state
+  scrub.value = String(frameIndex);
+  selected = null;
+  document.getElementById("inspector").hidden = true;
+  frameTarget(); applyFrame(frameIndex);
+}
+
+function stateOf(id, f) {
+  const nd = nodeObjs[id].data;
+  const comp = f.compromised.includes(id);
+  const rec = f.recruited.includes(id);
+  const burned = f.burned.includes(id);
+  const known = f.attacker_known.includes(id);
+  const det = f.detected.includes(id);
+  let color = COL.dark, glow = 0.35;
+  if (nd.honeypot) { color = COL.honey; glow = burned ? 1.0 : 0.5; }
+  else if (rec) { color = COL.recruit; glow = 0.95; }
+  else if (comp) { color = COL.comp; glow = 0.95; }
+  else if (nd.airgapped) { color = COL.airgap; glow = 0.4; }
+  else if (known) { color = COL.known; glow = 0.55; }
+  else { color = COL.clean; glow = 0.5; }
+  return { color, glow, comp, rec, burned, known, det, honeypot: nd.honeypot, airgap: nd.airgapped };
+}
+
+function applyFrame(i) {
+  frameIndex = i;
+  const f = S.frames[i];
+  for (const nd of S.nodes) {
+    const o = nodeObjs[nd.id], st = stateOf(nd.id, f);
+    o.mesh.material.color.setHex(st.color);
+    o.halo.material.color.setHex(st.color);
+    o.halo.material.opacity = st.glow;
+    o._st = st;
+  }
+  // active edges: both endpoints compromised/recruited
+  const verts = [], cols = [];
+  for (const [a, b] of S.edges) {
+    const sa = nodeObjs[a]._st, sb = nodeObjs[b]._st;
+    if (!sa || !sb) continue;
+    let c = null;
+    if (sa.rec && sb.rec) c = COL.recruit;
+    else if (sa.comp && sb.comp) c = COL.comp;
+    if (c) {
+      const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos;
+      const cc = new THREE.Color(c);
+      verts.push(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2]);
+      cols.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
+    }
+  }
+  const ag = activeEdges.geometry;
+  ag.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts), 3));
+  ag.setAttribute("color", new THREE.BufferAttribute(new Float32Array(cols), 3));
+  ag.attributes.position.needsUpdate = true;
+
+  // HUD metrics
+  const r = S.result;
+  setMetrics([
+    ["ROUND", (i + 1) + "/" + S.frames.length],
+    ["COMPROMISED", f.compromised.length + "/" + S.population],
+    ["COALITION", r.largest_coalition],
+    ["EXFIL", f.exfil_total.toFixed(0)],
+    ["DETECTED", f.detected.length],
+  ]);
+  document.getElementById("roundlabel").textContent = "ROUND " + String(i + 1).padStart(2, "0");
+  document.getElementById("scrub").value = String(i);
+
+  buildMosaic(f);
+  if (selected) renderDossier(selected);
+}
+
+function spawnEffects(f) {
+  for (const ev of f.events) {
+    if (!ev.landed && !ev.blocked) continue;
+    const o = nodeObjs[ev.target]; if (!o) continue;
+    let c = COL.comp;
+    if (ev.honeypot) c = COL.honey;
+    else if (ev.vector === "cult_recruitment") c = COL.recruit;
+    else if (ev.vector === "emanation_tap") c = COL.cyan || COL.clean;
+    else if (ev.blocked) c = COL.airgap;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
+    sp.position.copy(o.mesh.position);
+    scene.add(sp);
+    effects.push({ sp, t: 0, life: 0.9 });
+  }
+}
+
+/* ---------- camera (hand-rolled orbit + fly) ---------- */
+const cam = { theta: 0.7, phi: 1.1, radius: 170, target: new THREE.Vector3(0, -6, 0) };
+let tween = null;
+function frameTarget() { cam.target.set(0, -6, 0); cam.radius = 150; cam.theta = 0.7; cam.phi = 1.02; }
+function applyCam() {
+  const r = cam.radius, st = Math.sin(cam.phi);
+  camera.position.set(
+    cam.target.x + r * st * Math.cos(cam.theta),
+    cam.target.y + r * Math.cos(cam.phi),
+    cam.target.z + r * st * Math.sin(cam.theta)
+  );
+  camera.lookAt(cam.target);
+}
+function flyTo(id) {
+  const o = nodeObjs[id]; if (!o) return;
+  const p = o.mesh.position;
+  tween = {
+    t: 0, dur: 1.1,
+    from: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, r: cam.radius, phi: cam.phi },
+    to: { tx: p.x, ty: p.y, tz: p.z, r: 30, phi: 1.15 },
+  };
+}
+const easeInOut = (x) => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2, 3)/2;
+
+/* ---------- interaction ---------- */
+let dragging = false, moved = false, lastX = 0, lastY = 0;
+canvas.addEventListener("pointerdown", (e) => { dragging = true; moved = false; lastX = e.clientX; lastY = e.clientY; tween = null; });
+window.addEventListener("pointerup", (e) => {
+  if (dragging && !moved) pick(e);
+  dragging = false;
+});
+window.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+  lastX = e.clientX; lastY = e.clientY;
+  cam.theta -= dx * 0.005;
+  cam.phi = Math.max(0.25, Math.min(Math.PI - 0.25, cam.phi - dy * 0.005));
+});
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  cam.radius = Math.max(16, Math.min(520, cam.radius * (1 + Math.sign(e.deltaY) * 0.08)));
+}, { passive: false });
+
+const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+function pick(e) {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(nodeMeshes, false);
+  if (hit.length) select(hit[0].object.userData.id, false);
+}
+
+function select(id, fly) {
+  if (selected && nodeObjs[selected]) nodeObjs[selected].label.visible = false;
+  selected = id;
+  nodeObjs[id].label.visible = true;
+  document.getElementById("inspector").hidden = false;
+  renderDossier(id);
+  if (fly) flyTo(id);
+}
+
+/* ---------- dossier ---------- */
+function renderDossier(id) {
+  const d = S.dossiers[id], f = S.frames[frameIndex], st = stateOf(id, f);
+  const traitRows = TRAITS.map((t) => {
+    const v = d.traits[t];
+    return `<div class="trait"><div class="lab"><span>${t.replace(/_/g, " ")}</span><span>${v.toFixed(2)}</span></div><div class="bar"><i style="width:${Math.round(v*100)}%"></i></div></div>`;
+  }).join("");
+  const badges = [];
+  if (d.airgapped) badges.push(`<span class="badge" style="color:${hex(COL.airgap)}">airgapped</span>`);
+  if (d.cleanroom) badges.push(`<span class="badge" style="color:${hex(COL.cyan||COL.clean)}">cleanroom</span>`);
+  if (d.honeypot) badges.push(`<span class="badge" style="color:${hex(COL.honey)}">honeypot</span>`);
+  if (d.monitored_by && d.monitored_by.length) badges.push(`<span class="badge" style="color:${hex(COL.clean)}">monitored</span>`);
+  let status;
+  if (d.honeypot) status = st.burned ? `<b style="color:${hex(COL.honey)}">TRAP SPRUNG</b> — the hive master touched this decoy and burned the vector.` : `Decoy node. No genuine compromise possible.`;
+  else if (st.rec) status = `<b style="color:${hex(COL.recruit)}">RECRUITED</b> into the coalition${d.compromise ? ` at round ${d.compromise.round + 1} via <b>${d.compromise.vector.replace(/_/g," ")}</b>${d.compromise.contagion ? " (contagion)" : ""}` : ""}.`;
+  else if (st.comp) status = `<b style="color:${hex(COL.comp)}">COMPROMISED</b>${d.compromise ? ` at round ${d.compromise.round + 1} via <b>${d.compromise.vector.replace(/_/g," ")}</b>` : ""}${st.det ? ` · <b style="color:${hex(COL.white)}">detected</b>` : " · undetected"}.`;
+  else if (st.known) status = `Discovered by the hive master; not compromised.`;
+  else status = `Outside the attacker's current map.`;
+  const neigh = d.neighbours.length ? d.neighbours.map((n) => `<b data-go="${n}">${n}</b>`).join("") : `<span style="color:var(--muted)">none (off-network)</span>`;
+  document.getElementById("dossier").innerHTML =
+    `<div class="dos-name">${id}</div><div class="dos-arch">${d.archetype.replace(/_/g," ")} · ${d.truth_class.replace(/_/g," ")}</div>` +
+    `<div class="badges">${badges.join("")}</div>` +
+    `<div class="status">${status}</div>` +
+    `<div class="sec-title">Susceptibility</div>${traitRows}` +
+    `<div class="sec-title">Comms Links</div><div class="neigh">${neigh}</div>`;
+  document.querySelectorAll("#dossier .neigh b[data-go]").forEach((el) => el.addEventListener("click", () => select(el.getAttribute("data-go"), true)));
+  const camwrap = document.getElementById("camwrap");
+  camwrap.hidden = !(st.comp || st.rec);
+  if (!camwrap.hidden) drawCam(document.getElementById("camfeed"), id, f);
+}
+
+/* ---------- cam feeds (stylized, abstract) ---------- */
+function drawCam(cv, id, f) {
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height;
+  const d = S.dossiers[id];
+  g.fillStyle = "#04080f"; g.fillRect(0, 0, W, H);
+  // neighbourhood blips
+  const peers = d.neighbours.slice(0, 7);
+  const cx = W / 2, cy = H / 2 + 6;
+  g.strokeStyle = "rgba(39,215,240,0.25)"; g.lineWidth = 1;
+  peers.forEach((p, k) => {
+    const a = (k / Math.max(1, peers.length)) * Math.PI * 2 + f.round * 0.05;
+    const px = cx + Math.cos(a) * 54, py = cy + Math.sin(a) * 40;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(px, py); g.stroke();
+    const st = stateOf(p, f);
+    g.fillStyle = hex(st.color); g.beginPath(); g.arc(px, py, 4, 0, 7); g.fill();
+    g.fillStyle = "rgba(94,127,140,0.9)"; g.font = "9px 'Share Tech Mono',monospace"; g.fillText(p, px + 6, py + 3);
+  });
+  const self = stateOf(id, f);
+  g.fillStyle = hex(self.color); g.beginPath(); g.arc(cx, cy, 7, 0, 7); g.fill();
+  g.strokeStyle = hex(self.color); g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, 11 + 3*Math.sin(f.round*0.3+now*0.004), 0, 7); g.stroke();
+  // scanlines
+  g.fillStyle = "rgba(0,0,0,0.18)";
+  for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
+  // random glitch slice
+  if (Math.random() < 0.08) {
+    const y = Math.random() * H, h = 4 + Math.random() * 10, off = (Math.random() - 0.5) * 18;
+    const img = g.getImageData(0, y, W, h); g.putImageData(img, off, y);
+  }
+  // header + readout
+  g.fillStyle = "rgba(4,6,12,0.7)"; g.fillRect(0, 0, W, 16);
+  g.fillStyle = hex(COL.white); g.font = "10px 'Share Tech Mono',monospace"; g.textAlign = "left";
+  g.fillText("◉ CAM//" + id, 6, 11);
+  g.fillStyle = (Math.floor(now / 500) % 2) ? hex(COL.red) : "rgba(255,45,107,0.3)";
+  g.fillText("REC ●", W - 52, 11);
+  const top = [...TRAITS].sort((a, b) => d.traits[b] - d.traits[a]).slice(0, 2);
+  g.fillStyle = "rgba(201,243,255,0.8)"; g.textAlign = "left";
+  g.fillText(d.archetype.replace(/_/g, " "), 6, H - 6);
+}
+
+/* ---------- mosaic ---------- */
+function buildMosaic(f) {
+  const host = document.getElementById("mosaic");
+  const feeds = f.compromised.concat(f.recruited.filter((x) => !f.compromised.includes(x)));
+  const uniq = [...new Set(feeds)];
+  if (!uniq.length) { host.innerHTML = `<div class="mosaic-empty">// no active feeds — swarm has no compromised nodes at this round</div>`; return; }
+  host.innerHTML = "";
+  uniq.forEach((id) => {
+    const wrap = document.createElement("div"); wrap.className = "cam";
+    const cv = document.createElement("canvas"); cv.width = 118; cv.height = 66;
+    wrap.appendChild(cv);
+    const cl = document.createElement("div"); cl.className = "cl";
+    cl.innerHTML = `<span>${id}</span><span class="rec">●</span>`;
+    wrap.appendChild(cl);
+    wrap.addEventListener("click", () => select(id, true));
+    host.appendChild(wrap);
+    drawCam(cv, id, f);
+  });
+}
+
+/* ---------- rail / legend / metrics ---------- */
+function buildRail() {
+  const kn = document.getElementById("keynodes");
+  kn.innerHTML = "";
+  const kinds = { honeypot: COL.honey, airgap: COL.airgap, hub: COL.clean, coalition: COL.recruit };
+  S.key_nodes.forEach((k) => {
+    const el = document.createElement("div"); el.className = "kn";
+    el.innerHTML = `<span class="dot" style="color:${hex(kinds[k.kind] || COL.clean)}"></span>${k.id}<small>${k.label}</small>`;
+    el.addEventListener("click", () => select(k.id, true));
+    kn.appendChild(el);
+  });
+  const leg = document.getElementById("legend");
+  leg.innerHTML = [
+    ["clean", COL.clean], ["compromised", COL.comp], ["recruited (cult)", COL.recruit],
+    ["honeypot", COL.honey], ["airgap vault", COL.airgap],
+  ].map(([t, c]) => `<div class="leg"><i style="color:${hex(c)}"></i>${t}</div>`).join("");
+}
+function setMetrics(rows) {
+  document.getElementById("metrics").innerHTML = rows.map(([s, v]) => `<div class="metric"><b>${v}</b><span>${s}</span></div>`).join("");
+}
+
+/* ---------- scenario selector ---------- */
+const sel = document.getElementById("scenario");
+REPLAY.scenarios.forEach((s, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = s.id; sel.appendChild(o); });
+sel.addEventListener("change", () => { playing = false; document.getElementById("play").textContent = "▶"; buildGrid(); buildScenario(REPLAY.scenarios[Number(sel.value)]); });
+
+/* ---------- playback ---------- */
+let playing = false, acc = 0, speed = 2;
+document.getElementById("play").addEventListener("click", () => {
+  playing = !playing;
+  if (playing && frameIndex >= S.frames.length - 1) { applyFrame(0); }
+  document.getElementById("play").textContent = playing ? "‖" : "▶";
+});
+document.getElementById("scrub").addEventListener("input", (e) => { playing = false; document.getElementById("play").textContent = "▶"; applyFrame(Number(e.target.value)); });
+document.getElementById("speed").addEventListener("change", (e) => { speed = Number(e.target.value); });
+document.getElementById("inspector-close").addEventListener("click", () => {
+  document.getElementById("inspector").hidden = true;
+  if (selected && nodeObjs[selected]) nodeObjs[selected].label.visible = false;
+  selected = null;
+});
+
+/* ---------- resize ---------- */
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+
+/* ---------- loop ---------- */
+let now = 0, last = 0;
+function tick(ts) {
+  requestAnimationFrame(tick);
+  const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts; now = ts;
+
+  if (tween) {
+    tween.t += dt / tween.dur;
+    const k = easeInOut(Math.min(1, tween.t)), a = tween.from, b = tween.to;
+    cam.target.set(a.tx + (b.tx-a.tx)*k, a.ty + (b.ty-a.ty)*k, a.tz + (b.tz-a.tz)*k);
+    cam.radius = a.r + (b.r-a.r)*k; cam.phi = a.phi + (b.phi-a.phi)*k;
+    if (tween.t >= 1) tween = null;
+  }
+  if (playing && S) {
+    acc += dt * speed;
+    if (acc >= 0.55) {
+      acc = 0;
+      if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); }
+      else { playing = false; document.getElementById("play").textContent = "▶"; }
+    }
+  }
+  // pulse compromised nodes
+  if (S) for (const nd of S.nodes) {
+    const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
+    if (st.comp || st.rec || st.burned) {
+      const p = 0.75 + 0.25 * Math.sin(now * 0.006 + nd.pos[0]);
+      o.halo.material.opacity = st.glow * p;
+      const s = 12 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1);
+    }
+  }
+  // cages spin
+  if (cageGroup) cageGroup.children.forEach((c, i) => { c.rotation.y += dt * 0.4; c.rotation.x += dt * 0.15; });
+  // effects
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i]; e.t += dt;
+    const k = e.t / e.life;
+    const s = 4 + k * 26; e.sp.scale.set(s, s, 1); e.sp.material.opacity = 0.95 * (1 - k);
+    if (k >= 1) { scene.remove(e.sp); e.sp.material.dispose(); effects.splice(i, 1); }
+  }
+  // redraw selected big cam feed live
+  if (selected && !document.getElementById("camwrap").hidden && S) {
+    drawCam(document.getElementById("camfeed"), selected, S.frames[frameIndex]);
+  }
+
+  applyCam();
+  renderer.render(scene, camera);
+}
+
+/* ---------- boot ---------- */
+resize();
+buildGrid();
+buildScenario(REPLAY.scenarios[0]);
+// cinematic open: start far, ease in
+cam.radius = 480; tween = { t: 0, dur: 2.4, from: { tx: 0, ty: -6, tz: 0, r: 480, phi: 0.5 }, to: { tx: 0, ty: -6, tz: 0, r: 150, phi: 1.02 } };
+requestAnimationFrame(tick);
+</script>
