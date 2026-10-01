@@ -37,6 +37,10 @@ class Host:
             raise ValueError("host needs a name")
         if self.kind not in SERVICE_KINDS:
             raise ValueError(f"unknown service kind: {self.kind}")
+        if not self.name.endswith(".test"):
+            # Enforce the sealing invariant: every host lives under the reserved
+            # .test namespace, so a real-looking domain can never enter a Host.
+            raise ValueError(f"host must be under the reserved .test namespace: {self.name}")
 
 
 @dataclass(frozen=True)
