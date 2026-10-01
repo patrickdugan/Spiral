@@ -461,8 +461,7 @@ def run_campaign(
         "combined_sha256": hashlib.sha256(
             "".join(hashes[name] for name in sorted(hashes)).encode()
         ).hexdigest(),
-        "model_call_in_harness": False,
-        "network_transport": False,
+        "safety_boundary": CompromiseResult.safety_boundary(),
     }
     (output / "witness_receipt.json").write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return summary

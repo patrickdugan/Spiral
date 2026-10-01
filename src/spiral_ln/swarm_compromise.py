@@ -24,7 +24,9 @@ Information is deliberately imperfect on both sides:
 
   * the red team starts knowing only public (non-airgapped) nodes and expands
     its map by compromising or recruiting NPCs (recon gain), unless it has
-    ``insider_access``;
+    ``insider_access``; no posture or psychological label is revealed until it
+    is gained as intel (node identifiers themselves are enumerable, as in real
+    reconnaissance);
   * each blue-team defender sees signals only inside its retained ``domain``.
 """
 
@@ -513,8 +515,13 @@ def _sensitive_and_honeypot(config: SwarmCompromiseConfig) -> tuple[set[str], se
     nodes = _node_ids(config.population_size)
     n_sensitive = int(config.sensitive_fraction * config.population_size)
     n_honeypot = int(config.honeypot_fraction * config.population_size)
-    sensitive = set(nodes[:n_sensitive])
-    honeypot = set(nodes[config.population_size - n_honeypot:]) if n_honeypot else set()
+    # Scatter the sensitive and honeypot roles across the population (seeded and
+    # stable per scenario) so the airgapped roster is not a trivially inferable
+    # contiguous block of node identifiers.
+    order = list(nodes)
+    Random(_seed_int("roles", config.population_size)).shuffle(order)
+    sensitive = set(order[:n_sensitive])
+    honeypot = set(order[n_sensitive:n_sensitive + n_honeypot])
     return sensitive, honeypot
 
 
@@ -826,7 +833,10 @@ class SwarmCompromiseEnv:
                 if vector.exfiltrates:
                     exfil = realized_exfil(vector, posture, action.intensity)
                     self.exfil_units += exfil
-                if vector.compromises:
+                # A proximity vector can *reach* an airgapped node (e.g. an
+                # emanation tap can exfiltrate from it), but *control* of an
+                # airgapped node requires a vector that bridges the gap.
+                if vector.compromises and not (posture.airgapped and not vector.bridges_airgap):
                     self._record_compromise(node, detected, vector.recruiting, posture.airgapped)
                     self._gain_intel(node)
         observed = self._observed(detected, honeypot_hit, node, rng)
