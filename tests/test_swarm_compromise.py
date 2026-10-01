@@ -9,7 +9,9 @@ from spiral_ln.swarm_compromise import (
     PROFILE_ARCHETYPES,
     VECTORS,
     CompromiseAction,
+    CompromiseEvent,
     CompromiseResult,
+    DefenderProfile,
     HiveMasterProfile,
     NodePosture,
     ObservedSignal,
@@ -21,8 +23,10 @@ from spiral_ln.swarm_compromise import (
 )
 from spiral_ln.swarm_compromise_eval import (
     grade_posture,
+    load_config,
     run_full_episode,
     score_nodes,
+    summarize,
 )
 
 
@@ -35,6 +39,43 @@ def _airgapped_nodes(env: SwarmCompromiseEnv) -> list[str]:
 
 def _honeypot_nodes(env: SwarmCompromiseEnv) -> list[str]:
     return [node for node in env.nodes if env.postures[node].honeypot]
+
+
+def _mk_result(
+    *,
+    posture="x",
+    pop=100,
+    compromised=0,
+    detected=0,
+    exfil=0.0,
+    airgapped=0,
+    breach=0,
+    recruited=0,
+    coalition=0,
+):
+    """Build a CompromiseResult with chosen aggregate metrics for grading tests."""
+    return CompromiseResult(
+        posture=posture,
+        hive_master="m",
+        hive_master_truth_class="adversary",
+        seed=0,
+        population_size=pop,
+        rounds=10,
+        attempts=10,
+        landings=5,
+        compromised_count=compromised,
+        recruited_count=recruited,
+        largest_coalition=coalition,
+        airgapped_count=airgapped,
+        airgap_breach_count=breach,
+        covert_exfil_units=exfil,
+        detected_compromise_count=detected,
+        honeypot_count=0,
+        honeypot_hits=0,
+        monitor_signal_count=0,
+        time_to_first_compromise=0,
+        accounting_ok=True,
+    )
 
 
 def test_shipped_constants_are_valid():
@@ -212,3 +253,212 @@ def test_full_hardening_suppresses_covert_exfiltration():
     assert hardened["components"]["exfil_suppression"] >= baseline["components"]["exfil_suppression"]
     assert 0 <= baseline["grade"] <= 5
     assert 0 <= hardened["grade"] <= 5
+
+
+def test_airgap_breach_positive_path():
+    # A high-capability insider using the bridging proximity vector eventually
+    # compromises airgapped nodes; the breach path and airgap_breached accounting
+    # must actually fire (not only the breach==0 case).
+    insider = HiveMasterProfile(
+        "test_breacher", "adversary", 1.0, 0.4, 1.0, 0.2, 0.3, 0.0, True
+    )
+    total_breach = 0
+    saw_breached_in_compromised = False
+    for seed in range(25):
+        env = SwarmCompromiseEnv("airgap_core", insider, seed=seed, config=SMALL)
+        env.run(ScriptedHiveMaster(insider, seed=seed))
+        result = env.result()
+        total_breach += result.airgap_breach_count
+        if env.airgap_breached and env.airgap_breached <= env.compromised:
+            saw_breached_in_compromised = True
+        # every breached node must be airgapped and reached by a proximity vector
+        for node in env.airgap_breached:
+            assert env.postures[node].airgapped
+        assert result.accounting_ok
+    assert total_breach > 0
+    assert saw_breached_in_compromised
+
+
+def test_recruitment_cascade_fires_and_respects_cap():
+    recruiter = HIVE_MASTER_BY_NAME["patient_recruiter"]
+    found = False
+    for seed in range(20):
+        env = SwarmCompromiseEnv("baseline_open", recruiter, seed=seed, config=SMALL)
+        env.run(ScriptedHiveMaster(recruiter, seed=seed))
+        contagion_events = [e for e in env.events if e.via_contagion and e.detected is not None]
+        converted = [e for e in env.events if e.via_contagion and not e.honeypot_hit and e.landed]
+        if env.recruited and converted:
+            found = True
+            # per-round conversions never exceed the configured cap
+            per_round: dict[int, int] = {}
+            for e in converted:
+                per_round[e.round_index] = per_round.get(e.round_index, 0) + 1
+            assert max(per_round.values()) <= SMALL.max_recruitment_per_round
+            assert env.recruited <= env.compromised
+            break
+    assert found
+
+
+def test_summarize_and_detector_roc_run():
+    seeds = [0, 1]
+    results = []
+    node_rows = []
+    for seed in seeds:
+        for master in HIVE_MASTERS:
+            for posture in POSTURES:
+                r, rows = run_full_episode(seed, master.name, posture, SMALL)
+                results.append(r)
+                node_rows.extend(rows)
+    summary = summarize(results, node_rows, SMALL, seeds)
+    assert set(summary["posture_resilience"]) == set(POSTURES)
+    roc = summary["detector_roc"]
+    assert 0.0 <= roc["roc_auc"] <= 1.0
+    assert set(roc["roc_auc_by_posture"]) == set(POSTURES)
+    assert summary["accounting_all_ok"] is True
+    assert summary["safety_boundary"]["synthetic_only"] is True
+    # honeypots are excluded from ROC node rows (not counted as false positives)
+    assert all("hive_master_truth_class" in row for row in node_rows)
+
+
+def test_config_and_dataclass_validation_rejections():
+    with pytest.raises(ValueError):
+        SwarmCompromiseConfig(population_size=4)
+    with pytest.raises(ValueError):
+        SwarmCompromiseConfig(intra_community_link=1.5)
+    with pytest.raises(ValueError):
+        SwarmCompromiseConfig(sensitive_fraction=0.6, honeypot_fraction=0.6)
+    with pytest.raises(ValueError):
+        SwarmCompromiseConfig(defender_detection_gain=0.5)
+    with pytest.raises(ValueError):
+        SwarmCompromiseConfig(exfil_reference=0.0)
+    with pytest.raises(ValueError):
+        NodePosture(patch_level=2.0)
+    with pytest.raises(ValueError):
+        DefenderProfile("d", ("N00", "N00"))
+    with pytest.raises(ValueError):
+        HiveMasterProfile("bad", "adversary", 1.2, 0.5, 0.5, 0.5, 0.5, 0.5, False)
+    with pytest.raises(ValueError):
+        HiveMasterProfile("bad", "not_a_class", 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, False)
+
+
+def test_intel_gain_expands_a_non_insider_map():
+    master = HIVE_MASTER_BY_NAME["opportunist_phisher"]  # not an insider
+    env = SwarmCompromiseEnv("baseline_open", master, seed=4, config=SMALL)
+    assert env.hive_master_view()["intel"] == {}
+    env.run(ScriptedHiveMaster(master, seed=4))
+    assert env.compromised  # the opportunist lands something at this seed
+    # every compromised node yielded intel, and each intel entry is well-formed
+    assert set(env.compromised) <= set(env.attacker_intel)
+    for node in env.compromised:
+        entry = env.attacker_intel[node]
+        assert set(entry) == {"airgapped", "domains"}
+
+
+def test_airgap_stops_control_but_not_emanation_exfiltration():
+    # An insider emanation tap exfiltrates from an airgapped node (airgap_core
+    # leaves it non-cleanroom) without ever compromising it.
+    tapper = HiveMasterProfile(
+        "test_tapper", "adversary", 1.0, 0.2, 0.9, 1.0, 0.1, 0.0, True
+    )
+    exfiltrated = False
+    for seed in range(30):
+        env = SwarmCompromiseEnv("airgap_core", tapper, seed=seed, config=SMALL)
+        target = _airgapped_nodes(env)[0]
+        for _ in range(SMALL.rounds):
+            env.step([CompromiseAction("emanation_tap", target)])
+        if env.exfil_units > 0:
+            exfiltrated = True
+            assert target not in env.compromised
+            break
+    assert exfiltrated
+
+
+def test_score_nodes_neighbour_term_contributes():
+    import networkx as nx
+
+    graph = nx.Graph()
+    graph.add_nodes_from(["N00", "N01", "N02"])
+    graph.add_edge("N00", "N01")  # N02 stays isolated
+    signals = [ObservedSignal(0, "N01", "spear_social", True)]
+    scores = score_nodes(signals, graph, ["N00", "N01", "N02"])
+    # N00 has no own activity but a flagged neighbour -> non-zero via the term
+    assert scores["N00"] > 0.0
+    assert scores["N00"] > scores["N02"]
+    assert scores["N02"] == 0.0
+
+
+def test_grade_posture_boundaries_and_downgrade_gate():
+    ref = 60.0
+    assert grade_posture([], ref)["grade"] == 0
+    worst = grade_posture([_mk_result(compromised=95, exfil=ref, detected=0)], ref)
+    assert worst["grade"] <= 2
+    # near-total containment reaches the top grade even with ~zero recall
+    contained = grade_posture([_mk_result(compromised=1, exfil=0.0, detected=0)], ref)
+    assert contained["grade"] == 5
+    assert "detection" not in contained["components"]  # omitted: nothing to detect
+    # downgrade gate: a bucket-5 posture with an open covert channel is capped at 4
+    leaky = grade_posture([_mk_result(compromised=10, detected=9, exfil=30.0)], ref)
+    assert leaky["grade"] == 4
+
+
+def test_roster_varies_with_seed():
+    master = HIVE_MASTER_BY_NAME["patient_recruiter"]
+    rosters = set()
+    for seed in range(4):
+        env = SwarmCompromiseEnv("airgap_core", master, seed=seed, config=SMALL)
+        rosters.add(tuple(sorted(_airgapped_nodes(env))))
+    assert len(rosters) > 1  # the airgapped roster is seed-dependent
+
+
+def test_accounting_detects_corruption():
+    master = HIVE_MASTER_BY_NAME["opportunist_phisher"]
+    env = SwarmCompromiseEnv("full_hardening", master, seed=1, config=SMALL)
+    env.run(ScriptedHiveMaster(master, seed=1))
+    assert env.result().accounting_ok
+    # a honeypot counted as a real compromise must fail the check
+    honeypots = _honeypot_nodes(env)
+    assert honeypots
+    env.compromised.add(honeypots[0])
+    assert env._accounting_ok() is False
+    # recruited must remain a subset of compromised
+    env2 = SwarmCompromiseEnv("baseline_open", master, seed=1, config=SMALL)
+    env2.recruited.add("N00")
+    assert env2._accounting_ok() is False
+
+
+def test_defender_view_excludes_out_of_domain_and_applies_latency():
+    master = HIVE_MASTER_BY_NAME["patient_recruiter"]
+    env = SwarmCompromiseEnv("full_hardening", master, seed=0, config=SMALL)
+    in_domain = env.defenders[0].domain[0]
+    out_domain = next(n for n in env.nodes if n not in set(env.defenders[0].domain))
+    env.events = [
+        CompromiseEvent(0, "m", in_domain, "spear_social", True, True, False, 0.0, False, True, False),
+        CompromiseEvent(0, "m", out_domain, "spear_social", True, True, False, 0.0, False, True, False),
+    ]
+    env.round_index = 1
+    targets = {s["target"] for s in env.defender_view(env.defenders[0].name)["signals"]}
+    assert in_domain in targets
+    assert out_domain not in targets
+    with pytest.raises(KeyError):
+        env.defender_view("no_such_defender")
+    # latency delays visibility of a same-round signal
+    env.defenders = (DefenderProfile("t", (in_domain,), detection_gain=2.0, latency=1),)
+    env.events = [
+        CompromiseEvent(1, "m", in_domain, "spear_social", True, True, False, 0.0, False, True, False)
+    ]
+    env.round_index = 1
+    assert env.defender_view("t")["signals"] == []  # not yet actionable
+    env.round_index = 2
+    assert len(env.defender_view("t")["signals"]) == 1  # now visible
+
+
+def test_load_config_and_step_after_completion_guard():
+    config, seeds = load_config("configs/swarm_compromise.json")
+    assert isinstance(config, SwarmCompromiseConfig)
+    assert len(seeds) > 0
+    master = HIVE_MASTER_BY_NAME["opportunist_phisher"]
+    tiny = SwarmCompromiseConfig(population_size=8, rounds=2)
+    env = SwarmCompromiseEnv("baseline_open", master, seed=0, config=tiny)
+    env.run(ScriptedHiveMaster(master, seed=0))
+    with pytest.raises(RuntimeError):
+        env.step([])

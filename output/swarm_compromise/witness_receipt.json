@@ -1,10 +1,10 @@
 {
   "artifacts": {
-    "node_scores.csv": "860d56a58c432f7a6b300641286dc58cf631b2cdf96f03058aedf4f8a4fb5ec3",
-    "rows.csv": "4463ba5e2c3c742b0a96b811e76a42419f50097635bc09bd0fafba9e747e6b77",
-    "summary.json": "ecf3430f54ae2f096d3fd5169091554d8c73d36093b662d7724c335e7192e7b8"
+    "node_scores.csv": "40d0bacef99b28dc7a82c90c92abdc3a72b3efac7c65716b4fa0e906d1fc9d29",
+    "rows.csv": "c6c01ee78c62f4744a71637e701f50795113c7aeef2d2b400707e71f1391ffd9",
+    "summary.json": "f67890548ab99494e7bcb517f4e611c1014e9609dab7df07320a1f0369e268e2"
   },
-  "combined_sha256": "07f6f45f11c0be5d5513cfb8b334c78c72afe5cb3795c78155e04cda91835317",
+  "combined_sha256": "e81bff46c15ca1fad2c0aec5de62b02765fc8753968a3b9efa4e36efaa204d6e",
   "configuration_file": "configs/swarm_compromise.json",
   "configuration_hash": "9816df1ba13cb5d01b2ad8cab0da5a86af65b5d88f9740648c81dcfc82fe03da",
   "experiment_id": "sealed-swarm-compromise-8-seeds",

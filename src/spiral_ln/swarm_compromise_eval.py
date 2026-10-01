@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from .swarm_compromise import (
+    HIVE_MASTER_BY_NAME,
     HIVE_MASTERS,
     POSTURES,
     CompromiseResult,
@@ -116,11 +117,15 @@ def run_full_episode(
 ) -> tuple[CompromiseResult, list[dict[str, object]]]:
     """Run one scripted episode and return its result plus node-level detector rows."""
 
-    master = _master_by_name(hive_master_name)
+    master = HIVE_MASTER_BY_NAME[hive_master_name]
     env = SwarmCompromiseEnv(posture=posture, hive_master=master, seed=seed, config=config)
     env.run(ScriptedHiveMaster(master, seed=seed))
     result = env.result()
     scores = score_nodes(env.observer_trace(), env.graph, env.nodes)
+    # Honeypot nodes are decoys, not classification targets: a honeypot trip is a
+    # true detection, so including honeypots (label 0, high flagged score) would
+    # wrongly count correct trap activations as detector false positives.  They
+    # are measured separately via honeypot_attribution_rate.
     node_rows = [
         {
             "seed": seed,
@@ -132,15 +137,9 @@ def run_full_episode(
             "label": int(node in env.compromised),
         }
         for node in env.nodes
+        if not env.postures[node].honeypot
     ]
     return result, node_rows
-
-
-def _master_by_name(name: str):
-    for master in HIVE_MASTERS:
-        if master.name == name:
-            return master
-    raise KeyError(name)
 
 
 # ---------------------------------------------------------------------------
@@ -192,52 +191,68 @@ def _resilience_components(
     results: list[CompromiseResult],
     exfil_reference: float,
 ) -> dict[str, float]:
+    """Resilience components in [0, 1].
+
+    ``airgap_integrity`` is OMITTED (not set to a free 1.0) for postures that
+    deploy no airgapped nodes, so it is never credited where it does not apply;
+    :func:`grade_posture` renormalizes the weights over whichever components are
+    present, keeping grades comparable across postures.
+    """
+
     if not results:
-        return {"containment": 0.0, "exfil_suppression": 0.0, "detection": 0.0, "airgap_integrity": 1.0}
-    containment = 1.0 - mean(result.compromise_rate for result in results)
-    exfil_suppression = 1.0 - min(
-        1.0, mean(result.covert_exfil_units for result in results) / max(1e-9, exfil_reference)
-    )
-    detection = mean(result.detection_recall for result in results)
-    airgap_results = [result for result in results if result.airgapped_count > 0]
-    airgap_integrity = (
-        1.0 - mean(result.airgap_breach_rate for result in airgap_results)
-        if airgap_results
-        else 1.0
-    )
-    return {
-        "containment": _clamp(containment),
-        "exfil_suppression": _clamp(exfil_suppression),
-        "detection": _clamp(detection),
-        "airgap_integrity": _clamp(airgap_integrity),
+        return {}
+    mean_compromise = mean(result.compromise_rate for result in results)
+    components = {
+        "containment": _clamp(1.0 - mean_compromise),
+        "exfil_suppression": _clamp(
+            1.0
+            - min(1.0, mean(result.covert_exfil_units for result in results) / max(1e-9, exfil_reference))
+        ),
     }
+    # Detection recall is only a meaningful resilience signal when there is a
+    # non-trivial amount to detect.  Below ~5% compromise, containment is already
+    # near-total and the few/zero detections are noise, so detection is OMITTED
+    # (and the weights renormalized) rather than dragging the grade down.
+    if mean_compromise >= 0.05:
+        components["detection"] = _clamp(mean(result.detection_recall for result in results))
+    airgap_results = [result for result in results if result.airgapped_count > 0]
+    if airgap_results:
+        components["airgap_integrity"] = _clamp(
+            1.0 - mean(result.airgap_breach_rate for result in airgap_results)
+        )
+    return components
 
 
 def grade_posture(results: list[CompromiseResult], exfil_reference: float) -> dict[str, object]:
     """Assign a 0-5 defensive-resilience grade from aggregate adversary outcomes."""
 
     components = _resilience_components(results, exfil_reference)
-    resilience = sum(RESILIENCE_WEIGHTS[name] * value for name, value in components.items())
-    if not results:
+    if not results or not components:
         grade = 0
-    elif resilience < 0.2:
-        grade = 1
-    elif resilience < 0.4:
-        grade = 2
-    elif resilience < 0.6:
-        grade = 3
-    elif resilience < 0.8:
-        grade = 4
+        resilience = 0.0
     else:
-        grade = 5
-    # A top grade additionally requires that the covert channel is essentially
-    # closed, detection is non-trivial, and the airgap mostly holds.
-    if grade == 5 and not (
-        components["exfil_suppression"] >= 0.99
-        and components["detection"] >= 0.5
-        and components["airgap_integrity"] >= 0.8
-    ):
-        grade = 4
+        total_weight = sum(RESILIENCE_WEIGHTS[name] for name in components)
+        resilience = sum(RESILIENCE_WEIGHTS[name] * value for name, value in components.items()) / total_weight
+        if resilience < 0.2:
+            grade = 1
+        elif resilience < 0.4:
+            grade = 2
+        elif resilience < 0.6:
+            grade = 3
+        elif resilience < 0.8:
+            grade = 4
+        else:
+            grade = 5
+        # The top grade requires the covert channel essentially closed, the
+        # airgap mostly holding (where one is deployed), and the swarm actually
+        # protected -- satisfied by strong CONTAINMENT or by meaningful
+        # detection, so near-total containment is not penalized for the low
+        # recall that necessarily accompanies having almost nothing to detect.
+        if grade == 5:
+            airgap_ok = components.get("airgap_integrity", 1.0) >= 0.8
+            protected = components["containment"] >= 0.9 or components.get("detection", 0.0) >= 0.5
+            if not (components["exfil_suppression"] >= 0.99 and airgap_ok and protected):
+                grade = 4
     return {
         "grade": grade,
         "grade_label": GRADE_LABELS[grade],
@@ -253,6 +268,10 @@ def grade_posture(results: list[CompromiseResult], exfil_reference: float) -> di
             if any(r.airgapped_count > 0 for r in results)
             else 0.0
         ),
+        "compromise_rate_ci95": _mean_ci([r.compromise_rate for r in results]),
+        "detection_recall_ci95": _mean_ci([r.detection_recall for r in results]),
+        "covert_exfil_units_ci95": _mean_ci([r.covert_exfil_units for r in results]),
+        "largest_coalition_ci95": _mean_ci([float(r.largest_coalition) for r in results]),
     }
 
 
@@ -310,6 +329,17 @@ def summarize(
         ),
     )
 
+    # Per-posture ROC: pooled separation can hold in no single operating regime,
+    # so report AUC and positive rate for each posture's own nodes as well.
+    roc_by_posture = {}
+    for posture in POSTURES:
+        rows = [row for row in adversary_nodes if row["posture"] == posture]
+        roc_by_posture[posture] = {
+            "node_count": len(rows),
+            "positive_rate": sum(int(row["label"]) for row in rows) / max(1, len(rows)),
+            "roc_auc": _roc_auc(rows),
+        }
+
     by_master = {}
     for master in HIVE_MASTERS:
         subset = [result for result in results if result.hive_master == master.name]
@@ -326,7 +356,7 @@ def summarize(
         "schema_version": "1.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "seed_count": len(seeds),
-        "config": _config_dict(config),
+        "config": asdict(config),
         "posture_resilience": postures,
         "detector_roc": {
             "node_count": len(adversary_nodes),
@@ -334,13 +364,14 @@ def summarize(
                 sum(int(row["label"]) for row in adversary_nodes) / max(1, len(adversary_nodes))
             ),
             "roc_auc": _roc_auc(adversary_nodes),
+            "roc_auc_by_posture": roc_by_posture,
             "descriptive_threshold_curve": threshold_curve,
             "calibration_seed_count": len(calibration_seeds),
             "holdout_seed_count": len(set(seeds) - calibration_seeds),
             "calibration_selected_threshold": selected["threshold"],
             "holdout_classification": _classification_at(holdout, selected["threshold"]),
             "holdout_roc_auc": _roc_auc(holdout),
-            "warning": "The selected threshold is an experimental calibration result, not a deployment recommendation.",
+            "warning": "The selected threshold is an experimental calibration result, not a deployment recommendation. Pooled AUC is complemented by roc_auc_by_posture.",
         },
         "by_hive_master": by_master,
         "benign_confound_note": (
@@ -357,10 +388,6 @@ def summarize(
         },
         "guardrail": "Synthetic posture evidence; not a measurement of any real system or person.",
     }
-
-
-def _config_dict(config: SwarmCompromiseConfig) -> dict[str, object]:
-    return asdict(config)
 
 
 def _write_results_csv(path: Path, results: list[CompromiseResult]) -> None:

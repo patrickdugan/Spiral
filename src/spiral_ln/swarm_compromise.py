@@ -66,8 +66,9 @@ PROFILE_TRUTH_CLASSES: tuple[str, ...] = (
 class PsychProfile:
     """A scripted NPC susceptibility vector; every trait lies in ``[0, 1]``.
 
-    ``security_hygiene`` is protective: higher values blunt every vector and
-    raise the chance the NPC keeps a cleanroom posture.  ``truth_class`` is a
+    ``security_hygiene`` is protective: higher values blunt every vector's
+    success via :meth:`AttackVector.susceptibility`.  (Cleanroom and the other
+    controls are assigned per posture, not per profile.)  ``truth_class`` is a
     label for validation only and is never shown to any policy.
     """
 
@@ -481,9 +482,13 @@ def _clamp(value: float) -> float:
     return min(1.0, max(0.0, value))
 
 
-def _rng(*parts: object) -> Random:
+def _seed_int(*parts: object) -> int:
     digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
-    return Random(int.from_bytes(digest[:8], "big"))
+    return int.from_bytes(digest[:8], "big")
+
+
+def _rng(*parts: object) -> Random:
+    return Random(_seed_int(*parts))
 
 
 def realized_exfil(vector: AttackVector, posture: NodePosture, intensity: int = 1) -> float:
@@ -505,31 +510,36 @@ def _node_ids(population_size: int) -> list[str]:
     return [f"N{index:02d}" for index in range(population_size)]
 
 
-def _assign_profiles(population_size: int) -> dict[str, PsychProfile]:
+def _assign_profiles(population_size: int, seed: int) -> dict[str, PsychProfile]:
     nodes = _node_ids(population_size)
     cycle = PROFILE_ARCHETYPES
-    return {node: cycle[index % len(cycle)] for index, node in enumerate(nodes)}
+    # Permute placement by the episode seed (never exposed in any view) so a node
+    # id does not deterministically reveal its full trait vector / truth_class.
+    # The archetype multiset is preserved, so population statistics are unchanged.
+    order = list(range(population_size))
+    Random(_seed_int("profiles", seed, population_size)).shuffle(order)
+    return {nodes[order[i]]: cycle[i % len(cycle)] for i in range(population_size)}
 
 
-def _sensitive_and_honeypot(config: SwarmCompromiseConfig) -> tuple[set[str], set[str]]:
+def _sensitive_and_honeypot(config: SwarmCompromiseConfig, seed: int) -> tuple[set[str], set[str]]:
     nodes = _node_ids(config.population_size)
     n_sensitive = int(config.sensitive_fraction * config.population_size)
     n_honeypot = int(config.honeypot_fraction * config.population_size)
-    # Scatter the sensitive and honeypot roles across the population (seeded and
-    # stable per scenario) so the airgapped roster is not a trivially inferable
-    # contiguous block of node identifiers.
+    # Scatter the sensitive and honeypot roles across the population (seeded per
+    # episode) so the airgapped roster is neither a trivially inferable contiguous
+    # id block nor fixed across seeds.
     order = list(nodes)
-    Random(_seed_int("roles", config.population_size)).shuffle(order)
+    Random(_seed_int("roles", seed, config.population_size)).shuffle(order)
     sensitive = set(order[:n_sensitive])
     honeypot = set(order[n_sensitive:n_sensitive + n_honeypot])
     return sensitive, honeypot
 
 
-def _assign_postures(posture_name: str, config: SwarmCompromiseConfig) -> dict[str, NodePosture]:
+def _assign_postures(posture_name: str, config: SwarmCompromiseConfig, seed: int) -> dict[str, NodePosture]:
     if posture_name not in POSTURES:
         raise ValueError(f"unknown posture: {posture_name}")
     nodes = _node_ids(config.population_size)
-    sensitive, honeypot = _sensitive_and_honeypot(config)
+    sensitive, honeypot = _sensitive_and_honeypot(config, seed)
     postures: dict[str, NodePosture] = {}
     for node in nodes:
         if posture_name == "baseline_open":
@@ -571,12 +581,9 @@ def _build_comms_graph(
     return graph
 
 
-def _seed_int(*parts: object) -> int:
-    digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
-    return int.from_bytes(digest[:8], "big")
-
-
-def _build_defenders(config: SwarmCompromiseConfig, postures: Mapping[str, NodePosture]) -> tuple[DefenderProfile, ...]:
+def _build_defenders(
+    config: SwarmCompromiseConfig, postures: Mapping[str, NodePosture], seed: int
+) -> tuple[DefenderProfile, ...]:
     """Partition monitorable nodes into bounded, possibly overlapping domains."""
 
     if config.defender_count <= 0:
@@ -587,7 +594,7 @@ def _build_defenders(config: SwarmCompromiseConfig, postures: Mapping[str, NodeP
     domain_size = max(1, int(config.defender_domain_fraction * len(nodes)))
     defenders: list[DefenderProfile] = []
     for index in range(config.defender_count):
-        rng = Random(_seed_int("defender", config.population_size, index))
+        rng = Random(_seed_int("defender", seed, config.population_size, index))
         domain = tuple(sorted(rng.sample(nodes, min(domain_size, len(nodes)))))
         defenders.append(
             DefenderProfile(
@@ -701,10 +708,10 @@ class SwarmCompromiseEnv:
 
     def reset(self) -> dict[str, object]:
         config = self.config
-        self.profiles = _assign_profiles(config.population_size)
-        self.postures = _assign_postures(self.posture_name, config)
+        self.profiles = _assign_profiles(config.population_size, self.seed)
+        self.postures = _assign_postures(self.posture_name, config, self.seed)
         self.graph = _build_comms_graph(config, self.postures, self.seed)
-        self.defenders = _build_defenders(config, self.postures)
+        self.defenders = _build_defenders(config, self.postures, self.seed)
         self.nodes = _node_ids(config.population_size)
 
         self.round_index = 0
@@ -715,6 +722,7 @@ class SwarmCompromiseEnv:
         self.airgap_breached: set[str] = set()
         self.honeypot_hits = 0
         self.exfil_units = 0.0
+        self.emanation_taps: dict[str, int] = {}
         self.first_compromise_round: int | None = None
 
         # Red-team imperfect information: start with public nodes only.
@@ -725,14 +733,14 @@ class SwarmCompromiseEnv:
         self.attacker_burned: set[str] = set()
         self.attacker_intel: dict[str, dict[str, object]] = {}
         if self.hive_master.insider_access:
-            # Insider access means the airgapped roster is already known.
+            # Insider access grants the airgapped roster only.  The monitoring
+            # (defender domain) map is NOT pre-known; it is learned per node as
+            # intel when that node is actually compromised (see _gain_intel).
             self.attacker_known |= set(self.nodes)
             for node in self.nodes:
                 self.attacker_intel[node] = {
                     "airgapped": self.postures[node].airgapped,
-                    "domains": tuple(
-                        defender.name for defender in self._defenders_covering(node)
-                    ),
+                    "domains": (),
                 }
         return self.hive_master_view()
 
@@ -762,11 +770,20 @@ class SwarmCompromiseEnv:
         else:
             probability *= vector.susceptibility(profile)
         probability *= 1.0 - vector.patch_resistance * posture.patch_level
-        probability *= min(1.0, 0.6 + 0.4 * intensity)
+        # NOTE: intensity does not scale landing probability (its effect is on
+        # realized covert throughput, via realized_exfil); see CompromiseAction.
+        del intensity
         return _clamp(probability)
 
-    def _detect_probability(self, vector: AttackVector, node: str, posture: NodePosture) -> float:
+    def _detect_probability(
+        self,
+        vector: AttackVector,
+        node: str,
+        posture: NodePosture,
+        throughput_bonus: float = 0.0,
+    ) -> float:
         detectability = vector.base_detectability * (1.0 - 0.8 * self.hive_master.stealth)
+        detectability += throughput_bonus
         covering = self._defenders_covering(node)
         if covering:
             detectability *= max(defender.detection_gain for defender in covering)
@@ -825,7 +842,14 @@ class SwarmCompromiseEnv:
             landed = rng.random() < self._landing_probability(vector, profile, posture, action.intensity)
         if landed:
             honeypot_hit = posture.honeypot
-            detected = honeypot_hit or rng.random() < self._detect_probability(vector, node, posture)
+            # Sustained covert throughput on the same node is progressively more
+            # detectable (a repeated-emanation exposure coupling).
+            throughput_bonus = (
+                min(0.3, 0.06 * self.emanation_taps.get(node, 0)) if vector.exfiltrates else 0.0
+            )
+            detected = honeypot_hit or rng.random() < self._detect_probability(
+                vector, node, posture, throughput_bonus
+            )
             if honeypot_hit:
                 self.honeypot_hits += 1
                 self.attacker_burned.add(node)
@@ -833,6 +857,7 @@ class SwarmCompromiseEnv:
                 if vector.exfiltrates:
                     exfil = realized_exfil(vector, posture, action.intensity)
                     self.exfil_units += exfil
+                    self.emanation_taps[node] = self.emanation_taps.get(node, 0) + 1
                 # A proximity vector can *reach* an airgapped node (e.g. an
                 # emanation tap can exfiltrate from it), but *control* of an
                 # airgapped node requires a vector that bridges the gap.
@@ -859,39 +884,50 @@ class SwarmCompromiseEnv:
             self._spread_recruitment(node, vector)
 
     def _spread_recruitment(self, source: str, vector: AttackVector) -> None:
+        # A bounded multi-hop cascade: a newly recruited node can itself recruit
+        # its neighbours this round, up to max_recruitment_per_round conversions
+        # total.  Breadth-first from the directly compromised source.
         rng = _rng("contagion", self.seed, self.hive_master.name, self.round_index, source)
         converted = 0
-        for peer in sorted(self._comms_neighbors(source)):
-            if converted >= self.config.max_recruitment_per_round:
-                break
-            if peer in self.compromised:
-                continue
-            posture = self.postures[peer]
-            if posture.honeypot:
-                self.honeypot_hits += 1
-                self.attacker_burned.add(peer)
-                self.events.append(
-                    CompromiseEvent(
-                        self.round_index, source, peer, vector.name, True, True, True, 0.0, False, True, True
+        frontier = [source]
+        visited = {source}
+        while frontier and converted < self.config.max_recruitment_per_round:
+            current = frontier.pop(0)
+            for peer in sorted(self._comms_neighbors(current)):
+                if converted >= self.config.max_recruitment_per_round:
+                    break
+                if peer in visited:
+                    continue
+                visited.add(peer)
+                if peer in self.compromised:
+                    continue
+                posture = self.postures[peer]
+                if posture.honeypot:
+                    self.honeypot_hits += 1
+                    self.attacker_burned.add(peer)
+                    self.events.append(
+                        CompromiseEvent(
+                            self.round_index, current, peer, vector.name, True, True, True, 0.0, False, True, True
+                        )
                     )
+                    continue
+                pressure = (
+                    self.config.recruitment_contagion
+                    * vector.susceptibility(self.profiles[peer])
+                    * self.hive_master.recruitment_drive
                 )
-                continue
-            pressure = (
-                self.config.recruitment_contagion
-                * vector.susceptibility(self.profiles[peer])
-                * self.hive_master.recruitment_drive
-            )
-            if rng.random() < pressure:
-                detected = rng.random() < self._detect_probability(vector, peer, posture)
-                self._record_compromise(peer, detected, True, posture.airgapped)
-                self._gain_intel(peer)
-                observed = self._observed(detected, False, peer, rng)
-                self.events.append(
-                    CompromiseEvent(
-                        self.round_index, source, peer, vector.name, True, detected, False, 0.0, False, observed, True
+                if rng.random() < pressure:
+                    detected = rng.random() < self._detect_probability(vector, peer, posture)
+                    self._record_compromise(peer, detected, True, posture.airgapped)
+                    self._gain_intel(peer)
+                    observed = self._observed(detected, False, peer, rng)
+                    self.events.append(
+                        CompromiseEvent(
+                            self.round_index, current, peer, vector.name, True, detected, False, 0.0, False, observed, True
+                        )
                     )
-                )
-                converted += 1
+                    converted += 1
+                    frontier.append(peer)  # cascade onward from the newly recruited node
 
     # -- views -------------------------------------------------------------
 
@@ -922,10 +958,13 @@ class SwarmCompromiseEnv:
             raise KeyError(defender_name)
         defender = matches[0]
         domain = set(defender.domain)
+        # Latency delays when an in-domain signal becomes actionable: a signal
+        # from round r is visible only once round >= r + latency.
+        cutoff = self.round_index - defender.latency
         signals = [
             asdict(signal)
             for signal in self.observer_trace()
-            if signal.target in domain
+            if signal.target in domain and signal.round_index <= cutoff
         ]
         return {
             "round": self.round_index,
