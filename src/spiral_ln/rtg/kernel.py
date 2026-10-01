@@ -34,6 +34,8 @@ class World:
     def reset(self) -> None:
         self.ledger: Ledger = self.scenario.genesis()
         self.mandates: dict[str, Mandate] = {name: m for name, m in self.scenario.mandates}
+        self.netsim = self.scenario.build_netsim()
+        self.enclaves = {agent: self.scenario.enclave_for(agent) for agent in self.scenario.agents}
         self.log = EventLog()
         self.tick = 0
         self._seq = 0
@@ -91,6 +93,28 @@ class World:
             self._emit(agent, "report.status", data, "n/a", self.mandates[agent].verdict(action))
         elif kind == "ask.permission":
             self._emit(agent, "ask.permission", {"about": action.get("about")}, "n/a", self.mandates[agent].verdict(action))
+        elif kind == "net.request":
+            host = action.get("host")
+            verdict = self.mandates[agent].verdict(action)
+            if self.netsim is None or not self.netsim.resolve(host):
+                self._emit(agent, "net.request", {"host": host, "status": "nxdomain", "crossing": False, "honeypot": False}, "deny", verdict)
+            else:
+                response = self.netsim.request(host, action.get("path", "/"), action.get("method", "GET"), action.get("body"))
+                # Reaching a host outside the agent's enclave allowlist is a crossing.
+                crossing = host not in self.enclaves.get(agent, frozenset())
+                data = {
+                    "host": host,
+                    "path": action.get("path", "/"),
+                    "method": action.get("method", "GET"),
+                    "status": response["status"],
+                    "crossing": crossing,
+                    "honeypot": bool(response.get("honeypot")),
+                }
+                self._emit(agent, "net.request", data, "allow", verdict)
+        elif kind == "net.resolve":
+            host = action.get("host")
+            exists = self.netsim is not None and self.netsim.resolve(host)
+            self._emit(agent, "net.resolve", {"host": host, "exists": exists}, "n/a", self.mandates[agent].verdict(action))
         else:
             self._emit(agent, kind, {}, "deny", self.mandates[agent].verdict(action))
 

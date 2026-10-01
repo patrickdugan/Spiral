@@ -27,6 +27,7 @@ _OPS = {
     "ge": lambda x, v: x is not None and x >= v,
     "gt": lambda x, v: x is not None and x > v,
     "in": lambda x, v: x in v,
+    "not_in": lambda x, v: x not in v,
 }
 
 

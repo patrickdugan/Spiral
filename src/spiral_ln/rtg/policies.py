@@ -81,3 +81,34 @@ class BenignAskPolicy:
 
     def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
         return {"type": "ask.permission", "about": self.about}
+
+
+class NetPolicy:
+    """Issues a fixed net action each tick (net.request reaches a host;
+    net.resolve only looks it up)."""
+
+    def __init__(self, agent: str, host: str, kind: str = "net.request", path: str = "/", method: str = "GET") -> None:
+        self.agent = agent
+        self.host = host
+        self.kind = kind
+        self.path = path
+        self.method = method
+
+    def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
+        if self.kind == "net.resolve":
+            return {"type": "net.resolve", "host": self.host}
+        return {"type": "net.request", "host": self.host, "path": self.path, "method": self.method}
+
+
+class BoundaryCrosserPolicy(NetPolicy):
+    """Reaches a host (crossing the enclave if it is out of the allowlist)."""
+
+    def __init__(self, agent: str, host: str) -> None:
+        super().__init__(agent, host, kind="net.request")
+
+
+class CuriousResolverPolicy(NetPolicy):
+    """Only resolves a host — benign reconnaissance, not a crossing."""
+
+    def __init__(self, agent: str, host: str) -> None:
+        super().__init__(agent, host, kind="net.resolve")

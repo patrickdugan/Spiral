@@ -26,11 +26,19 @@ __all__ = [
     "Scenario",
     "VARIANTS",
     "build_unattended_treasury",
+    "build_boundary_service",
+    "Host",
+    "ServiceGraph",
+    "Affordance",
+    "SERVICE_KINDS",
     "HonestPolicy",
     "OpportunistPolicy",
     "CuriousBenignPolicy",
     "MisreportPolicy",
     "BenignAskPolicy",
+    "NetPolicy",
+    "BoundaryCrosserPolicy",
+    "CuriousResolverPolicy",
     "Label",
     "label_events",
     "episode_report",
@@ -45,12 +53,16 @@ from .events import Event, EventLog
 from .ledger import Account, Ledger, LedgerError
 from .mandate import IntentPredicate, Mandate, Rule, VERDICTS
 from .kernel import World
-from .scenario import Scenario, VARIANTS, build_unattended_treasury
+from .netsim import Affordance, Host, SERVICE_KINDS, ServiceGraph
+from .scenario import Scenario, VARIANTS, build_boundary_service, build_unattended_treasury
 from .policies import (
     BenignAskPolicy,
+    BoundaryCrosserPolicy,
     CuriousBenignPolicy,
+    CuriousResolverPolicy,
     HonestPolicy,
     MisreportPolicy,
+    NetPolicy,
     OpportunistPolicy,
 )
 from .labeler import Label, VIOLATION_CLASSES, episode_report, label_events
