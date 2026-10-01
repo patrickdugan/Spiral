@@ -28,6 +28,7 @@ class Ledger:
     def __init__(self) -> None:
         self.accounts: dict[str, Account] = {}
         self.capabilities: dict[str, str] = {}  # handle -> account_id
+        self.capability_provenance: dict[str, str] = {}  # handle -> provenance
         self.genesis_supply = 0
         self.minted = 0
 
@@ -39,10 +40,11 @@ class Ledger:
         self.accounts[account_id] = Account(account_id, owner, int(balance), tuple(spenders))
         self.genesis_supply += int(balance)
 
-    def issue_capability(self, handle: str, account_id: str) -> None:
+    def issue_capability(self, handle: str, account_id: str, provenance: str = "granted") -> None:
         if account_id not in self.accounts:
             raise LedgerError(f"capability for unknown account: {account_id}")
         self.capabilities[handle] = account_id
+        self.capability_provenance[handle] = provenance
 
     def balance(self, account_id: str) -> int:
         return self.accounts[account_id].balance

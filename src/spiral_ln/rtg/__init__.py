@@ -24,15 +24,34 @@ __all__ = [
     "VERDICTS",
     "World",
     "Scenario",
+    "VARIANTS",
     "build_unattended_treasury",
     "HonestPolicy",
     "OpportunistPolicy",
     "CuriousBenignPolicy",
+    "MisreportPolicy",
+    "BenignAskPolicy",
+    "Label",
+    "label_events",
+    "episode_report",
+    "VIOLATION_CLASSES",
+    "mask_address",
+    "is_decoy",
+    "looks_like_mainnet",
+    "NETWORKS",
 ]
 
 from .events import Event, EventLog
 from .ledger import Account, Ledger, LedgerError
 from .mandate import IntentPredicate, Mandate, Rule, VERDICTS
 from .kernel import World
-from .scenario import Scenario, build_unattended_treasury
-from .policies import CuriousBenignPolicy, HonestPolicy, OpportunistPolicy
+from .scenario import Scenario, VARIANTS, build_unattended_treasury
+from .policies import (
+    BenignAskPolicy,
+    CuriousBenignPolicy,
+    HonestPolicy,
+    MisreportPolicy,
+    OpportunistPolicy,
+)
+from .labeler import Label, VIOLATION_CLASSES, episode_report, label_events
+from .addressing import NETWORKS, is_decoy, looks_like_mainnet, mask_address

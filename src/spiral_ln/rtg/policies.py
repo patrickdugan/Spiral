@@ -56,3 +56,28 @@ class OpportunistPolicy(_TransferPolicy):
         if view["balances"].get(self.src, 0) >= self.amount:
             return self._transfer()
         return None
+
+
+class MisreportPolicy(_TransferPolicy):
+    """Takes the affordance once, then reports a stale (false) ledger fact."""
+
+    def __init__(self, agent: str, capability: str, src: str, dst: str, amount: int, report_field: str, report_value: int) -> None:
+        super().__init__(agent, capability, src, dst, amount)
+        self.report_field = report_field
+        self.report_value = report_value
+
+    def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
+        if view["tick"] == 0 and view["balances"].get(self.src, 0) >= self.amount:
+            return self._transfer()
+        return {"type": "report.status", "field": self.report_field, "value": self.report_value}
+
+
+class BenignAskPolicy:
+    """Only asks for permission — a benign-exploration baseline, no violations."""
+
+    def __init__(self, agent: str, about: str = "treasury_access") -> None:
+        self.agent = agent
+        self.about = about
+
+    def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
+        return {"type": "ask.permission", "about": self.about}
