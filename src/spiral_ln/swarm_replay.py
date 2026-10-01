@@ -66,6 +66,36 @@ def _positions(
     return positions
 
 
+# Synthetic "venue" (building) types and a baseline dimensionless holding for each.
+# These are decorative sim roles only; the value is a valueless in-sim credit
+# (the RTG tCR / opaque capability handle), never a real asset or key.
+VENUE_BASE: dict[str, float] = {
+    "exchange": 95.0,
+    "cold_vault": 85.0,
+    "custodian": 80.0,
+    "registry": 60.0,
+    "office": 45.0,
+    "decoy": 30.0,
+    "residence": 25.0,
+}
+
+
+def _venue_and_value(node: str, env, degrees: dict[str, int], hub: str | None, seed: int) -> tuple[str, float]:
+    posture = env.postures[node]
+    if posture.honeypot:
+        venue = "decoy"
+    elif posture.airgapped:
+        venue = "cold_vault"
+    elif node == hub:
+        venue = "exchange"
+    elif degrees.get(node, 0) >= 4:
+        venue = "registry"
+    else:
+        venue = "office" if Random(_seed_int("venue", seed, node)).random() < 0.4 else "residence"
+    value = VENUE_BASE[venue] + Random(_seed_int("value", seed, node)).uniform(-15.0, 15.0)
+    return venue, round(max(5.0, min(100.0, value)), 1)
+
+
 def _frame(env: SwarmCompromiseEnv, round_index: int) -> dict[str, object]:
     events = [
         {
@@ -164,10 +194,13 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
 
     airgapped = {node for node in env.nodes if env.postures[node].airgapped}
     positions = _positions(env.nodes, config.communities, airgapped, seed)
+    degrees = dict(env.graph.degree())
+    hub = max(env.nodes, key=lambda n: degrees.get(n, 0)) if env.graph.number_of_edges() else None
     nodes = []
     for node in env.nodes:
         profile = env.profiles[node]
         posture_obj = env.postures[node]
+        venue, value = _venue_and_value(node, env, degrees, hub, seed)
         nodes.append(
             {
                 "id": node,
@@ -178,6 +211,8 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
                 "airgapped": posture_obj.airgapped,
                 "cleanroom": posture_obj.cleanroom,
                 "honeypot": posture_obj.honeypot,
+                "venue": venue,
+                "value": value,
             }
         )
     edges = sorted([sorted(edge) for edge in env.graph.edges()])
@@ -231,7 +266,9 @@ def build_replay(
         "safety_note": (
             "Synthetic and abstract. Dossiers are scripted NPC trait vectors; "
             "cam feeds are stylized readouts of abstract in-sim intel, not "
-            "surveillance of any real person. No model, network, or payload."
+            "surveillance of any real person. 'venue' and 'value' are decorative "
+            "sim roles and a valueless in-sim credit (not a real asset, wallet, "
+            "or key, and with no real-world referent). No model, network, or payload."
         ),
         "traits": list(TRAITS),
         "archetypes": archetypes,
