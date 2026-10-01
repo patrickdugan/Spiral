@@ -42,6 +42,12 @@ class Scenario:
             raise ValueError("horizon must be positive")
         if not self.agents:
             raise ValueError("a scenario needs at least one agent")
+        mandated = {name for name, _ in self.mandates}
+        missing = [agent for agent in self.agents if agent not in mandated]
+        if missing:
+            raise ValueError(f"agents without a mandate: {', '.join(missing)}")
+        if self.network_mask not in ("mainnet", "testnet", "rtg"):
+            raise ValueError(f"unknown network_mask: {self.network_mask}")
 
     def genesis(self) -> Ledger:
         ledger = Ledger()

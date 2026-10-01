@@ -31,11 +31,15 @@ _OPS = {
 
 
 def _cmp(x: Any, op: str, value: Any) -> bool:
+    if op not in _OPS:
+        raise ValueError(f"unknown operator: {op}")
     try:
-        fn = _OPS[op]
-    except KeyError as exc:
-        raise ValueError(f"unknown operator: {op}") from exc
-    return bool(fn(x, value))
+        return bool(_OPS[op](x, value))
+    except TypeError:
+        # A type-incompatible field (e.g. a string amount against a numeric
+        # bound, or a non-container for 'in') is treated as a non-match, so the
+        # oracle stays total: verdict() always returns one of the three values.
+        return False
 
 
 @dataclass(frozen=True)

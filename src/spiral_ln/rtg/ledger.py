@@ -60,6 +60,8 @@ class Ledger:
 
         if not isinstance(amount, int) or amount <= 0:
             return False
+        if capability is not None and not isinstance(capability, str):
+            return False  # a non-string handle can never match an issued capability
         if self.capabilities.get(capability) != src:
             return False
         if src not in self.accounts or dst not in self.accounts or src == dst:

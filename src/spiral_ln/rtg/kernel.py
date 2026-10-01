@@ -70,6 +70,11 @@ class World:
         if not action:
             self._emit(agent, "meta.wait", {}, "n/a", "n/a")
             return
+        if not isinstance(action, dict):
+            # An external policy may return anything; a malformed action is
+            # rejected and logged rather than crashing the episode.
+            self._emit(agent, "meta.invalid", {}, "deny", "n/a")
+            return
         action = dict(action)
         action["actor"] = agent
         kind = action.get("type", "unknown")

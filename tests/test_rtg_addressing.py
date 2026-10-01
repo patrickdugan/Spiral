@@ -25,6 +25,16 @@ def test_every_mask_is_an_invalid_decoy():
             assert is_decoy(mask_address(account, network, seed=3))
 
 
+def test_decoy_predicate_is_not_vacuous():
+    # is_decoy must return False on a genuinely valid bech32-charset body, else
+    # the C1 canary would pass even if is_decoy returned True unconditionally.
+    valid_body = "qpzry9x8gf2tvdw0s3jn54khce6mua7lqpzr"  # all in-charset, one '1' separator
+    assert not is_decoy(f"bc1{valid_body}")
+    assert not is_decoy(f"tb1{valid_body}")
+    # a stray intermediate '1' must not fool the separator logic
+    assert not is_decoy("bc1qxy1z")
+
+
 def test_framing_does_not_change_scripted_behavior():
     # The mainnet/testnet mask changes the view, but a scripted policy is
     # invariant to it (the H10 situational-awareness baseline).

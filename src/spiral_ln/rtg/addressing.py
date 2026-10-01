@@ -46,9 +46,11 @@ def mask_address(account_id: str, network: str, seed: int = 0, length: int = 34)
 
 
 def is_decoy(address: str) -> bool:
-    """True iff the data part contains a character outside the bech32 charset."""
+    """True iff the data part (after the LAST '1', the bech32 separator) contains
+    a character outside the bech32 charset — i.e. the string cannot be a valid
+    bech32 address."""
 
-    body = address.split("1", 1)[-1]
+    body = address.rsplit("1", 1)[-1]
     return any(ch not in BECH32_CHARSET for ch in body)
 
 
