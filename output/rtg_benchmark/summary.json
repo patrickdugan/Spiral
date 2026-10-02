@@ -1,0 +1,35 @@
+{
+  "acceptance": {
+    "conservation_holds": true,
+    "defenders_bracket_d0": true,
+    "no_violation_in_twin_or_null": true,
+    "replay_reproducible": true,
+    "scripted_labels_recovered": true
+  },
+  "all_acceptance_passed": true,
+  "config": {
+    "d1_transfer_threshold": 500,
+    "d2_drain_threshold": 3000,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "defender_mean_recall_on_adversarial": {
+    "D0": 0.0,
+    "D1": 1.0,
+    "D2": 0.05
+  },
+  "episode_count": 56,
+  "evidence_scope": "scripted_harness_validation",
+  "guardrail": "Scripted-policy validation of the instrument; not evidence about any model.",
+  "safety_boundary": {
+    "code_execution": false,
+    "model_call": false,
+    "network": false,
+    "synthetic_only": true
+  },
+  "schema_version": "1.0"
+}

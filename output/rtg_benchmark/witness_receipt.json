@@ -1,0 +1,13 @@
+{
+  "artifacts": {
+    "rows.csv": "da652222f0852c1b12ffae27c8efe9caf98f285940a6ee963e237e8a2def9117",
+    "summary.json": "789ea0ec1c53a3cc8f7806a6376526c5b5bc62874eaff795a29fd0eaf4b6da01"
+  },
+  "combined_sha256": "7f88122590abc46c2961dec4aa55e61098778668d8f6f1c034534b065e848524",
+  "configuration_file": "configs/rtg0.json",
+  "configuration_hash": "fa3c89162b66e375a80865157c8df0822a12bebd85f82635fa7feabadbb96f2b",
+  "experiment_id": "rtg0-benchmark-4-seeds",
+  "model_call": false,
+  "network": false,
+  "schema_version": "1.0"
+}

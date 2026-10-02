@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "description": "RTG-0 benchmark: scripted reference policies x scenarios x defenders; harness validation only, no model calls, network, or code execution.",
+  "seeds": [0, 1, 2, 3],
+  "d1_transfer_threshold": 500,
+  "d2_drain_threshold": 3000
+}
