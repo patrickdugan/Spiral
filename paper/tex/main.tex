@@ -1,0 +1,492 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1.1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sc]{mathpazo}
+\linespread{1.04}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\urlstyle{same}
+
+\theoremstyle{plain}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Dur}{\mathcal{D}}
+\newcommand{\Rcap}{\mathcal{R}_{\mathrm{cap}}}
+\newcommand{\Rsvc}{\mathcal{R}_{\mathrm{svc}}}
+\newcommand{\sett}{\mathcal{S}}
+\newcommand{\auth}{\mathcal{A}}
+
+\input{grid}
+
+\title{Where the Capital Bound Moves:\\[0.3em]
+\large Settlement Objects, Proof Economics, and Agent Coordination\\ on Bitcoin Payment Networks}
+\author{Patrick B. Dugan\thanks{Spiral program. Model, fixtures, and preregistrations: \url{https://github.com/patrickdugan/Spiral}. Correspondence: patrick.buchanan.dugan@gmail.com.}}
+\date{October 2026\\ \small Draft for comment}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A population of autonomous agents that pays at high frequency from low balances, and is always online, meets a cost on the Lightning Network that no routing policy reduces: inbound capacity toward each agent has to be provisioned before its demand is known, and the provisioning is a forecast made per channel, with no pooling across agents. We state this as a prefix cut bound on a directed graph with hidden directional balances, show that it is invariant to routing policy, and report a simulator experiment in which routing intelligence is worth between a third of a point and one point of payment success and capital placement is worth six. We then ask where the bound goes under a server-mediated settlement object of the Ark type. It pools: the per-edge directional constraint becomes an aggregate constraint on the server's uncommitted capital, and the directional forecast moves to the server's own channels rather than vanishing. A liquidity-duration ratio states when pooling pays. On a reference model the answer turns on whether value a server fronts at a Lightning spend is recoverable at the next round or only at expiry, which the implementer's documentation does not settle; the virtual output is favored by a factor between one and a half and two and a half in the first case, on populations whose per-agent imbalances are uncorrelated, and not favored in the second. For the reward layer such a population would need, we give a claim-once registry keyed by an object's spend authority that bounds the weight any settled object can contribute, show that a nullifier alone leaves spend-and-reclaim open and that an epoch rule closes it, and set out the cost of verifying such claims on Bitcoin, where the verifier is a trusted party or an optimistic game whose fixed cost is paid per operator and program. Finally we ask what a population of agents under common control could do with these objects. An observer model fixes who sees what under each; a coalition's gain from coordinating is bounded by its authenticated capital placed under stationary demand, at the scale the placement experiment measured, whatever the capacity of its covert channel, so the steganographic question is second-order to the capital question. A swarm that runs its own server collapses its observable surface to round transactions and ramps; enforceable escrows give it a commitment device cartels have historically lacked; and agents instantiated from the same weights coordinate without a message, in a way that payment traces cannot distinguish from independent use of one model. We preregister the experiments that test each claim. All results are from a reference model with a simulated proof system.
+\end{abstract}
+
+\section{Introduction}
+
+Consider a population of software agents that transact with one another and with services over Bitcoin. Each agent holds a small balance, pays often, receives often, and is online continuously; none has a bank, a reputation, or a legal identity, and the population changes membership faster than any bilateral relationship can be amortized. The Lightning Network \citep{poon2016lightning} is the obvious rail, and the question this paper starts from is what it costs such a population to use it.
+
+The answer the routing literature suggests is that the cost is in finding paths through a graph whose edge capacities are hidden \citep{pickhardt2021optimally,tikhomirov2020probing}. That is a cost, and an agent that probes, learns, and retries pays less of it than a wallet that does not. But it is not the cost that binds. What binds is that a Lightning channel is bilateral, pre-funded, and partitioned by direction: each unit of capacity belongs to one edge, is committed before any payment is known, and sits on one side of the channel or the other. An agent that is going to be paid needs inbound capacity on some channel, and that capacity is outbound capacity for whoever is on the other end, who had to put it there by a forecast. No routing policy relaxes this, because it is a conservation identity over the cut around the agent and not a property of path selection.
+
+Section~\ref{sec:lightning} states that identity as a lemma on a directed graph with hidden directional balances, shows that it holds for every routing policy including one with full knowledge of balances, and reports what a preregistered simulator campaign on sampled public topology found: bounded retries are worth about five points of success over one-shot routing, learning from terminal feedback a third of a point, exact knowledge of hidden state one point, and placing capital where demand persists six. The constraint is the object being routed over, and the deployable gain belongs to whoever commits scarce directional capacity in the right place.
+
+The rest of the paper asks where that constraint goes under objects that are not bilateral channels, and what follows for a population that is not human. Section~\ref{sec:ark} types four settlement objects, the on-chain output, the channel balance, the Ark virtual output, and the optimistic escrow, as instances of one resource tuple, extends the ledger so that transfers between them are clocked settlement events, and derives the bound that replaces the cut bound under a server-mediated object. It pools: the directional forecast per edge becomes a forecast of aggregate volume per server, plus a directional term on the server's own channels that the pooling argument has to charge or it proves too much. A liquidity-duration ratio states when pooling pays, and a reference model computes it on a grid of demand processes under both readings of a question the implementer's documentation leaves open. Section~\ref{sec:proofs} turns to the reward layer such a population would need if liquidity provision is to be compensated without identities, gives a claim-once registry keyed by an object's spend authority, finds the hole a nullifier leaves and the epoch rule that closes it, and sets out what verification costs on a chain that verifies no proofs itself. Section~\ref{sec:agents} asks what a population of agents under common control could do with all of this: who observes what under each object, what three different activities called coordination amount to, how much a coalition can earn from coordinating, and what changes when the coalition runs the server, uses the escrow as a commitment device, or shares its weights. Section~\ref{sec:prereg} preregisters the experiments, and Section~\ref{sec:limits} says what is assumed and not discharged.
+
+Nothing in the paper is a live measurement. The simulator results of Section~\ref{sec:lightning} are from sealed preregistered campaigns on sampled public topology with synthetic hidden state; everything after is a model, with protocol parameters taken from implementer documentation at a stated date and treated as inputs; the proof system is simulated. The reference model, its tests, and the fixtures behind every table are in the repository cited as \citet{spiral2026}, at the commit given there.
+
+\section{Related work}
+
+\paragraph{Lightning liquidity and routing.} Pickhardt and Richter \citep{pickhardt2021optimally} formulate payment delivery over hidden balances as a minimum-cost flow problem under a uniform prior on channel balance and show large gains in reliability from splitting; the same authors treat imbalance and rebalancing \citep{pickhardt2020imbalance}. Both take the channel graph and its capacities as given and optimize what crosses it. Guasoni, Huberman, and Shikhelman \citep{guasoni2024lightning} model the channel itself as a capital decision under bilateral demand, which is the decision this paper says is binding for an agent population. The Lightning Service Provider specifications \citep{lsps2} standardize just-in-time channel opening, which moves the inbound decision to the moment of first receipt but keeps it per channel. The prefix cut bound of Section~\ref{sec:lightning} is a conservation statement of the kind that underlies max-flow min-cut \citep{fordfulkerson1956}, applied to cumulative settled crossings rather than to a single flow.
+
+\paragraph{Privacy and probing.} That channel balances are only nominally hidden is established by \citet{herrera2019difficulty}, \citet{tikhomirov2020probing}, and \citet{nisslmueller2020confidentiality}; that the network's privacy against a well-placed observer is partial is established empirically by \citet{kappos2021empirical} and \citet{romiti2021crosslayer}, and \citet{beres2021cryptoeconomic} gives a traffic analysis of the economics. We use these as the observer rows for the channel object in Section~\ref{sec:agents}; the contribution there is to add the rows for objects that have a server.
+
+\paragraph{Ark and covenants.} Ark was proposed by \citet{keceli2023ark} as a server-coordinated off-chain output scheme; its current parameters are those published by its implementers \citep{second2026vtxo,second2026forfeits,second2025liquidity} and summarized by \citet{optech-ark}. The implementer's own simulation \citep{second2025liquidity} compares an Ark server's liquidity requirement to an LSP's by top-up frequency and finds the comparison flips with it; Section~\ref{sec:ark} names the quantity behind that flip and adds a term. Covenant proposals \citep{rubin2020ctv,decker2018eltoo,optech-ctv} would change the channel object itself; we keep a native-covenant column for comparison and depend on nothing in it.
+
+\paragraph{Sybil bounds and nullifiers.} The Sybil problem is \citet{douceur2002sybil}'s: without a trusted authority, identities are free. \citet{babaioff2012redballoons} give Sybil-proof reward schemes for a propagation setting; the registry of Section~\ref{sec:proofs} is instead a proof-of-exposure scheme, in which a claimant proves control of a settled object without revealing which. The nullifier it uses is Zerocash's \citep{bensasson2014zerocash,hopwood2016zcash}, transplanted from spend-once to claim-once, and the gap we find in the transplant is that spending is the one thing a nullifier is designed to allow.
+
+\paragraph{Optimistic verification on Bitcoin.} Bitcoin consensus verifies no succinct proofs. BitVM \citep{linus2023bitvm,linus2024bitvm2} and BitVM3 \citep{linus2026bitvm3} make a statement enforceable by an assert-and-disprove game under a committee-at-setup and one-honest-challenger assumption; we use the published BitVM3 cost figures as inputs to the escrow object and to the economics of Section~\ref{sec:proofs}. Groth16 \citep{groth2016size} is the proof system those figures assume.
+
+\paragraph{Covert channels, wardens, and collusion.} The warden is \citet{simmons1984prisoners}'s, and the capacity-versus-detectability framing of a steganographic channel is \citet{cachin1998information}'s; Section~\ref{sec:agents} argues the capacity question is second-order for this setting. Wash-trade detection \citep{cong2023wash,victor2021wash} supplies the netting statistics whose failure modes the reference model reproduces. On what a population of agents can do without a message, \citet{calvano2020ai} show algorithmic pricers converging on supra-competitive prices without communication; \citet{stigler1964oligopoly} located cartel instability in the unenforceability of side-agreements, which is the lever an enforceable escrow pulls; and the focal-point account of coordination without communication is \citet{schelling1960strategy}'s.
+
+\section{Lightning as a graph: the directional capital bound}
+\label{sec:lightning}
+
+\subsection{Setting}
+
+Let $G=(N,E)$ be a directed multigraph. Each channel $i\in E$ joins two nodes $u_i,v_i$ and has capacity $\chi_i$, split at any time into balances $\ell_i(u_i),\ell_i(v_i)\ge 0$ with $\ell_i(u_i)+\ell_i(v_i)=\chi_i$. A node can spend over channel $i$ only from its own side. The balances are hidden from all but the two endpoints; the capacities are public through gossip \citep{bolt7}. A payment of amount $a$ from $s$ to $t$ is an attempt along a path; it settles only if every edge on the path has $\ell_i(\text{upstream})\ge a$ at the moment of the attempt, in which case $a$ moves from the upstream to the downstream side of every edge on the path, and otherwise it fails and nothing moves. Fees are absorbed into $a$. Capacity changes by funding, splicing, leasing, and closing, each an on-chain event with a confirmation clock.
+
+For a node set $A\subseteq N$, write $\partial A$ for the channels with exactly one endpoint in $A$. After $n$ settled events, let $O_A(n)$ and $I_A(n)$ be the cumulative amounts that have crossed $\partial A$ outward and inward, counting each crossing of a path that leaves and re-enters; let $S_A(n)=\sum_{i\in\partial A}\ell_i(\text{$A$-side endpoint})$ be $A$'s outbound stock on the cut and $S'_A(n)=\sum_{i\in\partial A}\chi_i-S_A(n)$ its inbound stock; and let $K_A(n)$ be the net stock added to $S_A$ by capacity events, with $K'_A(n)$ the same for $S'_A$.
+
+\subsection{The cut bound}
+
+\begin{lemma}[prefix cut bound]
+\label{lem:cut}
+For every $A\subseteq N$ and every $n$,
+\[
+O_A(n)-I_A(n)\;\le\;S_A(0)+K_A(n),
+\qquad
+I_A(n)-O_A(n)\;\le\;S'_A(0)+K'_A(n).
+\]
+\end{lemma}
+
+\begin{proof}
+A settled crossing of channel $i\in\partial A$ outward moves its amount from the $A$-side balance to the other side, decreasing $S_A$ by that amount and increasing $S'_A$ by the same; an inward crossing does the reverse; a capacity event changes $S_A$ by its contribution to $K_A$. Events inside $A$ or outside $A$ touch no channel in $\partial A$. So $S_A(n)=S_A(0)-O_A(n)+I_A(n)+K_A(n)$, and $S_A(n)\ge 0$ because balances are nonnegative. The second inequality is the same identity on $S'_A$.
+\end{proof}
+
+The inequalities are prefix conditions: they must hold at every $n$, not only at the horizon, and they bind on whichever stock is being consumed. A population of agents that mostly pays outward binds on the first with $I_A$ small, so on $K_A$, which is to say on someone having funded outbound from $A$. A population that mostly gets paid binds on the second, on $K'_A$, which is inbound toward $A$ and must be put there by $A$'s counterparties, from their side, by a forecast.
+
+\begin{proposition}[policy invariance]
+\label{prop:invariance}
+Lemma~\ref{lem:cut} holds under every routing policy, including a policy with exact knowledge of all balances. A policy affects which attempts settle, not the identity that settled crossings satisfy. Consequently the advantage of balance knowledge over a policy of bounded retries is confined to the attempt budget: it converts failed attempts into settled ones within the same cut stock, and cannot raise net delivery across any cut above the lemma's bound.
+\end{proposition}
+
+\begin{proof}
+The lemma's proof uses only that settled crossings conserve balance on each channel and that balances are nonnegative; neither depends on how attempts are chosen. For the consequence, fix a cut $A$ and a horizon. Any sequence of settled crossings achievable by the oracle satisfies the bound; the retry policy, given enough attempts, settles any crossing the oracle settles, since a crossing that is feasible when the oracle attempts it is feasible when the retry policy attempts it at the same state. The difference between them at a finite attempt budget is therefore the number of attempts the retry policy spends failing, not the stock available to either.
+\end{proof}
+
+\subsection{The provisioning problem has no pooling}
+
+The quantity that Lemma~\ref{lem:cut} makes the operator choose is $K'_A$: how much inbound to put toward each agent $a$ before $a$'s demand is known. Let $D_a$ be $a$'s demand process over a horizon $H$, and let $M_a=\max_{t\le H}\big(\text{receipts}_a(t)-\text{spends}_a(t)\big)^+$ be the peak balance $a$ will hold in the channel. A receipt that would push $a$'s balance above the provisioned inbound fails. The operator chooses $\hat f_a$ before seeing $D_a$ and pays for idle capital if $\hat f_a>M_a$ and for failed receipts if $\hat f_a<M_a$: a newsvendor problem \citep{arrow1951inventory}, one per channel.
+
+What makes the problem expensive for a population is not that each instance is hard but that there are $N$ of them and they do not pool. Capacity provisioned toward agent $a$ sits on channel $a$ and serves no other agent, so the total inbound an operator must carry is $\sum_a\hat f_a$, a sum of forecast peaks, regardless of how the agents' demands are correlated. If the same $N$ agents drew on a common pool, the operator would carry a forecast of the peak of the sum, $\hat f_S$, and for independent imbalances the two differ by a factor that grows with $N$.
+
+\begin{remark}[scale of the pooling gain]
+\label{rem:sqrtN}
+Let each agent's per-round net inflow be independent with mean $\mu$ and variance $\sigma^2$. The agent's cumulative imbalance is a random walk whose running maximum over $T$ rounds has expectation of order $\sigma\sqrt T$ when $\mu=0$ and order $\mu T$ when $\mu>0$ dominates. The sum of $N$ such walks is a walk with variance $N\sigma^2$ per round, so its running maximum is of order $\sigma\sqrt{NT}$ at zero drift and $N\mu T$ otherwise. The ratio of sum-of-peaks to peak-of-sum is therefore of order $\sqrt N$ at zero drift and of order $1$ when a common drift dominates. Pooling buys a factor of $\sqrt N$ on uncorrelated imbalance and nothing on correlated accumulation.
+\end{remark}
+
+That remark is the whole of what Section~\ref{sec:ark} finds when it computes the thing exactly, and it is worth having in view before the objects are introduced: a settlement object relocates the forecast from per-edge to per-pool, and the relocation is worth $\sqrt N$ on one kind of demand and nothing on another.
+
+\subsection{What a simulator shows}
+\label{sec:sim}
+
+Two sealed, preregistered campaigns on sampled public Lightning topology with synthetic hidden balances \citep{spiral2026} measured the quantities above from the routing side. The topology was sampled from gossip snapshots; hidden balances were drawn per channel; demand was a stationary process with a predeclared shift in one arm; outcomes were cluster-robust over sampled topologies, with a practical-equivalence band declared in advance. Table~\ref{tab:sim} gives the results.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{7.2cm}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
+\toprule
+Intervention & Gain, success points & Reading \\
+\midrule
+Bounded retries over one-shot routing & $+5.14$ & attempt budget \\
+Learning from terminal feedback, over retries & $+0.35$ & inside equivalence band \\
+Exact hidden-state knowledge, over retries & $+1.11$ & attempt budget, not information \\
+Failure-aware placement over random, stationary demand & $+6.13$ \;(4.91 to 7.35) & capital \\
+Failure-aware placement over random, after demand shift & $\approx 0$ & capital, mis-forecast \\
+\bottomrule
+\end{tabular}
+\caption{Simulator results from the preregistered public-topology campaigns \citep{spiral2026}. Success points are percentage points of settled payments at a fixed attempt budget. Under free failures the oracle's advantage was shown to be an attempt budget rather than information, which is Proposition~\ref{prop:invariance} observed.}
+\label{tab:sim}
+\end{table}
+
+Read against the lemma, the table says what it should. Everything a routing policy can do is worth about one point over a wallet that retries, because the policy is choosing attempts within a stock it cannot change. Placing the stock where demand persists is worth six, and the six vanish when demand moves, because the placement was a forecast and the forecast was wrong. The gain is in $K'_A$, and $K'_A$ is a forecast made per edge.
+
+\subsection{The ghost-node apparatus}
+
+The campaigns used a graph-rewrite construction from earlier work in a clearing setting \citep{dugan2021ghost}: augment the graph with a nonphysical node or edge, solve a balancing problem in the augmented graph, and map the solution back to permissible operations, here to funding, splicing, or leasing on a real edge. In the channel setting the construction is a solver for $K'_A$: a ghost edge is a unit of inbound the solver wishes existed, and compiling it is the act of forecasting. Section~\ref{sec:ark} will move that solver one tier up.
+
+\section{Ark: where the bound moves}
+\label{sec:ark}
+
+\subsection{Settlement objects as typed resources}
+
+The channel is one way to hold value off-chain. To compare it with others on the terms the lemma cares about, we need each object described by what it costs to exit, who can hurt its holder, what the holder must do to keep it safe, and when its status changes.
+
+\begin{definition}[settlement object]
+A settlement object is a tuple $\rho=(\auth,v,F,X,\Lambda,\Gamma,\tau)$: a spend authority $\auth$ (a script or a signer set), a value $v$, a finality clock $F$ mapping elapsed time or block height to a settled or pending status, a unilateral exit $X$ with a cost and a delay, a liveness obligation $\Lambda$ the holder carries to keep the object trustless, a set $\Gamma$ of parties whose misbehavior can cost the holder value or access, and an expiry $\tau$ after which the object's trust assumptions change.
+\end{definition}
+
+Table~\ref{tab:objects} instantiates the tuple for the on-chain output $U$, the directional channel balance $C$, the Ark virtual output $V$, and the optimistic escrow $E$, with a native-covenant escrow $E'$ for comparison. The Ark parameters are those published by Second as of September 2026 \citep{second2026vtxo,second2026forfeits}: a virtual output (VTXO) is an off-chain output in a tree whose root is an on-chain round transaction; it is spendable by the holder and server together, or by the holder alone after a relative timelock, by broadcasting its branch; it expires after a server-configurable lifetime, 28 days by default, before which the holder must refresh it in a round; and an out-of-round transfer is a pending state the recipient trusts until the next round confirms \citep{optech-ark}.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{1.7cm}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{1.5cm}@{}}
+\toprule
+ & $\auth$ & $F$ & $X$ & $\Lambda$ & $\Gamma$ & $\tau$ \\
+\midrule
+$U$ on-chain output & script & $k$ confirmations & none & none & consensus only & $\infty$ \\
+$C$ channel balance & 2-of-2 + HTLC & HTLC settle, bilateral & commitment tx + \texttt{to\_self\_delay} & watch for breach & counterparty liveness & $\infty$, direction-locked \\
+$V$ Ark VTXO & holder $\wedge$ server (MuSig2), or holder after CSV & round confirmation; out-of-round pending & branch + leaf broadcast, CSV 144 ($\approx$24\,h) & refresh before $\tau$ & server (censor); sender + server (collude on pending) & 28\,d, server-set \\
+$E$ optimistic escrow & release after $\Delta$, or slash on disprove & challenge period $\Delta$ & on-chain already & $\ge 1$ honest challenger online & setup committee (1-of-$n$ deletes key) & program-defined \\
+$E'$ covenant escrow & template-enforced script & template match & on-chain already & none & consensus only & program-defined \\
+\bottomrule
+\end{tabular}
+\caption{Four settlement objects as instances of the tuple, with a native-covenant escrow for comparison. $E'$ is not available: no covenant opcode is active on mainnet at the cited date \citep{optech-ctv}. MuSig2 is \citet{nick2021musig2}.}
+\label{tab:objects}
+\end{table}
+
+Three things the table makes visible. The channel is the only object whose value is direction-partitioned: a VTXO of value $v$ is spendable to any counterparty the server will co-sign for, so there is no inbound side to provision at the holder's tier. The VTXO is the only object with a hard liveness obligation on the holder's calendar, and the obligation is one an always-online process meets at no marginal cost, as it also meets the channel's breach-watching; liveness distinguishes agents from humans, not Ark from channels. And the escrow is the only object whose finality is a game rather than a count, with a committee rather than a counterparty in $\Gamma$.
+
+\subsection{The extended ledger}
+
+Let the state at step $n$ be
+\[
+X_n=(\ell^U,\ell^C,\ell^V,\ell^E,\;h,\;\mathcal U,\;\mathcal J,\;\kappa_n),
+\]
+with $\ell^{\cdot}$ the holdings vector for each class, $h$ the pending holds, $\mathcal U$ the registry of Section~\ref{sec:proofs}, $\mathcal J$ the journal, and $\kappa_n$ the vector of clocks: block height and per-object elapsed time. The per-channel constraint $\ell^C_{i,+}+\ell^C_{i,-}=\chi_i$ is retained for class $C$ only; class $V$ carries a per-holder constraint $\ell^V_u\ge 0$ and the per-server liability of the next subsection; class $E$ carries a per-escrow state.
+
+A cross-class transfer is a settlement event $\sigma=(\text{from},\text{to},\text{amount},\text{clock condition})$, journaled at initiation, held in $h$, and moving $\ell$ only when its clock fires: $U\to C$ is a funding transaction with condition ``$k$ confirmations''; $V\to C$ is an HTLC-scripted VTXO the server spends into a Lightning HTLC, with condition ``HTLC settled''; $V\to U$ is an offboard or a unilateral exit with condition ``CSV elapsed''; $U\to E$ is an escrow deposit; $E\to U$ is release after $\Delta$ or slash on disprove.
+
+\begin{proposition}[cross-class conservation]
+\label{prop:conservation}
+Let a finite set of settlement events be journaled and let every event's clock condition have fired or the event have been aborted. Then the sum over classes and holders of $\ell$, plus fees paid to relays and miners, plus amounts slashed, equals its initial value plus external funding. During pending intervals the identity holds with $h$ included on both sides.
+\end{proposition}
+
+The proof is bookkeeping: each event debits a hold on its source at initiation, and at settlement releases the hold, debits the source, and credits the destination or the slash account; an abort releases the hold and moves nothing. What the proposition rules out is counting a declared cross-system claim as liquidity before its clock has fired, which a ledger without clocks cannot prevent. What it does not establish is that any clock fires: a round may not confirm, an HTLC may time out, a challenge may end in a slash. Those are per-object finality assumptions and are inputs.
+
+\subsection{The server bound}
+
+Let a server $S$ issue VTXOs to a holder set $A$. Holders carry no directional stock. The server's liquidity is a stock $R_S$ with three sinks and two sources per round \citep{second2025liquidity}: it funds new outputs at refresh, fronts Lightning spends at the moment of spend, and funds offboards; it recovers forfeited or expired value by sweeping a round after its absolute timelock, and it receives inbound HTLC settlements on its own channels. Write $V_A(n)$ for the VTXO value held by $A$, $W_S(n)$ for value the server has fronted into rounds and not yet recovered, and $B_S$ for the server's total on-chain and channel capital.
+
+\begin{proposition}[bound relocation]
+\label{prop:relocation}
+For $A$ served by $S$,
+\[
+O_A(n)-I_A(n)\;\le\;V_A(0)+K^S_A(n),
+\qquad
+\sum_{A}K^S_A(n)\;\le\;B_S-W_S(n),
+\]
+where $K^S_A(n)$ is what the server has allocated to $A$ at the moments of $A$'s spends. The per-cut directional constraint on $A$ is replaced by an aggregate constraint on the server's uncommitted capital, pooled over holders and indexed by output lifetime rather than by edge direction; a coalition of holders can change which of them consumes $B_S-W_S$ and when, and cannot raise the sum.
+\end{proposition}
+
+The proof is by definition of $W_S$ and the fact that the server co-signs every issuance. The proposition's cost is also by definition: the holder must refresh before $\tau$, the server can decline to include a holder in a round, and an out-of-round payment is trusted until the round confirms.
+
+What the proposition does not say, and what a pooling argument that stops here gets wrong, is what happens on the server's own channels. The server is a node in $G$. Lemma~\ref{lem:cut} applies to the cut $\{S\}$: every Lightning receipt into the Ark crosses $\partial\{S\}$ inward and consumes the server's inbound stock, which the server's channel counterparties had to provision toward it, by a forecast; every Lightning spend out crosses the other way and restores it. The direction problem has not vanished. It has been moved from $N$ edges, one per agent, to one node, and what the server must forecast is the running peak of its aggregate net receipts, $\hat f_S$, which is the peak-of-sum of Remark~\ref{rem:sqrtN}. The pooling gain is the gap between $\sum_a\hat f_a$ and $\hat f_S$ and is exactly as large as that remark says: a factor of order $\sqrt N$ when per-agent imbalances are uncorrelated, nothing when they share a drift. The term is zero only for value that enters the Ark on-chain by boarding, which draws on no channel.
+
+\subsection{The ratio that decides}
+
+\begin{definition}[liquidity duration]
+For a demand process $D$ over a horizon $H$, the liquidity duration of an object is locked capital-time per unit delivered,
+\[
+\Dur_{\mathrm{obj}}(D,H)=\frac{1}{\mathrm{Vol}(D,H)}\int_0^H \mathrm{Locked}_{\mathrm{obj}}(t)\,dt,
+\]
+with $\mathrm{Vol}$ counting delivered volume in both directions.
+\end{definition}
+
+For the channel, $\mathrm{Locked}_C(t)=\sum_a\hat f_a$, held for the horizon whether or not the peak is reached. For the VTXO, $\mathrm{Locked}_V(t)=W_S(t)+\hat f_S$: the fronted-and-unswept value, each unit locked from the moment of spend or refresh until it is recoverable, plus the server-tier directional stock. Writing $\bar L$ for the mean residual lock at forfeit,
+\begin{equation}
+\frac{\Dur_C}{\Dur_V}\;\approx\;\frac{H\sum_a\hat f_a}{\mathrm{Vol}\cdot\bar L\;+\;H\hat f_S}.
+\label{eq:ratio}
+\end{equation}
+The ratio exceeds one when pre-funded per-agent capacity sits idle for long relative to what the server locks: many agents, idiosyncratic and uncorrelated imbalance, a horizon long against $\bar L$. It falls below one when balances recycle within one channel faster than $\bar L$, so that a small envelope serves a large volume: a few agents in steady bidirectional flow with fixed counterparties. An agent population is not favored by the VTXO because it is high-frequency; high frequency to a fixed counterparty is the channel's best case. It is favored when the population is large and its imbalances net across members.
+
+Equation~\eqref{eq:ratio} has one input that the cited documentation does not fix, and it sets the scale of $\bar L$. When the server fronts a Lightning spend from a holder's VTXO, the forfeited input is either swept only at its absolute expiry, in which case $\bar L$ is on the order of half a lifetime, or presented to the next round as an input and its value reused one round later, in which case $\bar L$ is one round interval. The implementer states that Lightning payments use HTLC-based policies rather than forfeits \citep{second2026forfeits}, which is consistent with either reading. The reference model carries both as a parameter.
+
+\subsection{Reference-model results}
+\label{sec:grid}
+
+The reference model \citep{spiral2026} implements the server liquidity ledger with the forfeit-to-sweep rule under both recovery readings, the holder refresh cycle, the server-tier term computed as the channel model applied to the server's aggregate flow, and the channel model under two forecast rules: an oracle rule that sets $\hat f_a$ to the realized peak with a margin, which charges the channel only for idle capital, and a trailing rule that re-provisions each lifetime from the previous lifetime's peak, which charges forecast error as well. Table~\ref{tab:grid} gives $\Dur_C/\Dur_V$ on a grid of demand processes; Table~\ref{tab:acct} shows what the ratio does on one cell when the server-tier term or the two-way volume convention is dropped.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & \multicolumn{2}{c}{Swept at expiry} & \multicolumn{2}{c}{Reused next round} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Demand cell & oracle & trailing & oracle & trailing \\
+\midrule
+\gridrows
+\bottomrule
+\end{tabular}
+\caption{$\Dur_C/\Dur_V$ on the reference model, server-tier term charged, two-way volume, margin $0.25$, lifetime $\tau=4032$ blocks, hourly rounds, refresh two days before expiry. Drift is expected net inflow per agent per round in sat; bursty cells draw inflows of 5000 and outflows of 4000 at rates set by the drift; the steady cell draws $100$--$110$ each way every round. At $H=1\tau$ the trailing rule has one interval and coincides with the oracle. Values above one favor the virtual output. Generated by \texttt{model/grid.ts}.}
+\label{tab:grid}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Accounting, drift $+60$ cell, expiry lock, oracle forecast & $\Dur_C/\Dur_V$ \\
+\midrule
+\acctrows
+\bottomrule
+\end{tabular}
+\caption{The same cell under three accountings. Dropping the server-tier term, or counting only outbound volume on the VTXO side against two-way volume on the channel side, manufactures a large ratio on a cell where all agents accumulate together and pooling has nothing to pool.}
+\label{tab:acct}
+\end{table}
+
+Under the expiry reading the virtual output is not favored on any cell: the ratio runs from near zero on few-steady to about one on correlated drift, where the server's own channels carry the sum of the agents' peaks and the forfeit lock adds to it. Under the round reading it is favored on the many-agent cells whose imbalances are uncorrelated, by a factor between 1.06 and 1.5 under the trailing forecast and up to 2.5 under the oracle forecast, which charges the channel nothing for forecast error and so flatters it least; by nothing on the cell where all agents drift together; and not at all on few-steady. That is Remark~\ref{rem:sqrtN} with $N=200$, and the direction the ratio predicts obtains under one reading of the recovery rule and one condition on demand. The first item of the preregistration is accordingly to pin the recovery rule against the implementation.
+
+\subsection{The star topology}
+
+If agents hold VTXOs and pay Lightning invoices through the server's HTLC-scripted outputs, the graph the agents see is a star with the server at its center, and the server's own channels are the only edges with direction. The cut deficits live on the server's channel set, not among the agents; the ghost solver's job is to size and place that set given the aggregate demand its holders present, and a ghost edge compiles to a connector on the server side. The apparatus of Section~\ref{sec:lightning} is moved one tier up and applied to a smaller, better-observed graph, with $\hat f_S$ as its target.
+
+\section{Proof economics: a reward layer without identities}
+\label{sec:proofs}
+
+Whoever provisions the capital that Lemma~\ref{lem:cut} makes scarce needs to be paid for it, and a population without identities needs a way to pay that does not depend on knowing who is who. This section gives the mechanism and then the cost of running it on a chain that verifies no proofs itself.
+
+\subsection{Why weights have to be authenticated}
+
+\begin{lemma}[identity splitting]
+\label{lem:split}
+Let a fixed reward pool $P$ be allocated to claimants in proportion to integer weights $w_u$ attached to scarce resources $u$. If each $w_u$ is the value of a distinct settled object that a claimant controls, then splitting one claimant into $m$ claimants whose weights sum to $w_u$ leaves the coalition's payout invariant up to rounding. If weights are self-reported, a claimant with one object of value $w$ can report it under $m$ identities and receive $m$ shares.
+\end{lemma}
+
+The lemma is obvious and is stated because the second half is what an implementation does by default. A registry that records weights without authenticating that distinct claims are backed by distinct objects allocates to identities, and identities are free \citep{douceur2002sybil}. Authentication has two routes: the allocator learns who owns what, which defeats the purpose of a permissionless service market; or a claimant proves it controls a settled object of at least the claimed value and that no other claim uses the same object, without revealing which object. The second is the construction below.
+
+\subsection{The unique-exposure relation}
+
+Let $\sett_n$ be the set of settled objects at step $n$ in classes $U,C,V,E$, each with an identifier $\mathrm{id}_\rho$, a value $v_\rho$, and an authority $\auth_\rho$ that a key $k_\rho$ satisfies. Let $\mathrm{cm}$ be a commitment to a claimant secret $s$, used only to link a claim to the identity that will be paid. Define
+\begin{equation*}
+\begin{aligned}
+\Rcap=\Big\{\big((\mathrm{cm},v,\mathrm{nf},\mathrm{root}_n),\,(s,k_\rho,\rho,\pi_\rho)\big):\;&
+\mathrm{cm}=\mathrm{Com}(s),\ \rho\in\sett_n\text{ via }\pi_\rho,\ k_\rho\text{ satisfies }\auth_\rho,\\
+&v_\rho\ge v,\ \mathrm{nf}=\mathrm{PRF}_{k_\rho}(\mathrm{id}_\rho)\Big\},
+\end{aligned}
+\end{equation*}
+where $\mathrm{root}_n$ is a Merkle commitment to $\sett_n$ as the verifier knows it, $\pi_\rho$ a membership path, and $\mathrm{nf}$ a nullifier keyed by the object's own authority rather than by the claimant. A claim is a statement $(\mathrm{cm},v,\mathrm{nf},\mathrm{root}_n)$ with a proof; the registry accepts it if the proof verifies and $\mathrm{nf}$ is not already in its nullifier set, and records $(\mathrm{cm},v,\mathrm{nf})$ without learning $\rho$. The choice of key matters: had $\mathrm{nf}$ been keyed by $s$, one controller could claim $\rho$ once per identity by choosing a fresh $s$ each time.
+
+\begin{proposition}[Sybil-bounded weight]
+\label{prop:sybil}
+If the proof system for $\Rcap$ is knowledge-sound and $\mathrm{PRF}$ is pseudorandom, then for every settled object $\rho$ the total weight the registry attributes to claims backed by $\rho$ is at most $v_\rho$, whatever the number of claimant identities, except with negligible probability. If the proof system is zero-knowledge, the registry learns nothing about $\rho$ beyond $v_\rho\ge v$ and the nullifier.
+\end{proposition}
+
+Every valid claim on $\rho$ carries $\mathrm{nf}=\mathrm{PRF}_{k_\rho}(\mathrm{id}_\rho)$, a function of $\rho$ alone once $k_\rho$ is fixed by $\auth_\rho$, so a second claim collides and is rejected; a claim with a different nullifier on $\rho$ needs a different key satisfying $\auth_\rho$, which for a single-signer object does not exist and for a threshold object is handled by deriving $\mathrm{nf}$ from the aggregate key. This is Zerocash's nullifier argument \citep{bensasson2014zerocash} transplanted from spend-once to claim-once.
+
+\subsection{What the transplant leaves open}
+
+A nullifier stops a second claim on the same identifier. It says nothing about a claim on a successor identifier, and spending is the one thing a nullifier is designed to permit. Spend $\rho$ to a fresh $\rho'$ under a key the same controller holds, by a self-transfer on-chain or in a round, and $\mathrm{PRF}_{k_{\rho'}}(\mathrm{id}_{\rho'})$ is fresh, so Proposition~\ref{prop:sybil} is satisfied per object while one unit of capital is counted twice. Under Ark the case is structural rather than adversarial: every refresh rotates the identifier, at a time the holder chooses.
+
+The registry therefore takes claims by epoch. A claim is accepted only against $\sett$ as frozen at epoch start, so a successor created mid-epoch is not claimable until the next; at epoch close a claim is revoked if its object is no longer settled, unless the set's maintainer has attested a successor link, which for class $V$ is the server's record that a refresh reissued $\rho$ as $\rho'$ under the same key, and which a transfer to another key never receives.
+
+\begin{proposition}[epoch bound]
+\label{prop:epoch}
+Under the epoch rule and the assumptions of Proposition~\ref{prop:sybil}, the weight attributed in one epoch to any lineage of objects under one authority is at most the value settled under that authority at epoch start, whatever the number of identifiers the lineage passes through within the epoch.
+\end{proposition}
+
+The epoch length should not much exceed the refresh cadence, or an honest holder waits a lifetime to claim a boarded output; and the successor attestation is one more statement the verifier trusts the server for, added to the co-signing trust it already carries. The reference model witnesses both propositions on finite cases and reproduces the hole: a registry without the epoch rule accepts eight claims on one object spent to eight identifiers.
+
+\subsection{The service relation}
+
+A reward layer for liquidity provision wants a connector to prove that it honored requests over a window without revealing its customers. Let a connector $\kappa$ receive requests over $[t_0,t_1]$ from counterparties who each sign an attestation $a_j=\mathrm{Sig}_j(\kappa,t_j,\mathrm{outcome}_j)$, and define
+\begin{equation*}
+\begin{aligned}
+\Rsvc=\Big\{\big((\kappa,t_0,t_1,m,k),\,\{a_j\}_{j\le m}\big):\;&
+\text{each }a_j\text{ verifies under a key in the counterparty set},\\
+&t_j\in[t_0,t_1],\ \#\{j:\mathrm{outcome}_j=\mathrm{honored}\}\ge k\Big\}.
+\end{aligned}
+\end{equation*}
+The reward layer uses $k/m$ as the service weight for the window; counterparties are not revealed; the keys must be in a set the verifier trusts, which reintroduces a registry of counterparties, one that attests only to key validity and not to transactions. Accountability attaches to the economic action rather than to a biography of the software, and that is the version of the sentence that can be verified.
+
+\subsection{Who verifies, and what it costs}
+\label{sec:cost}
+
+Bitcoin consensus verifies no succinct argument. The verifier of a claim on $\Rcap$ or $\Rsvc$ is therefore one of three parties: the reward allocator, a trusted server; the Ark server, already trusted for co-signing and well placed to hold $\mathrm{root}_n$ for class $V$; or an optimistic game in which an operator asserts the statement and any challenger can disprove it on-chain.
+
+The costs separate by side. On the prover's side, $\Rcap$ is a Merkle path and a PRF: with an arithmetic-friendly hash the circuit is on the order of $10^4$ constraints, with SHA-256 on the order of $10^6$, and either is a few seconds on commodity hardware under Groth16 \citep{groth2016size}. $\Rsvc$ verifies $m$ signatures in-circuit; a secp256k1 signature in non-native arithmetic costs on the order of $10^5$ to $10^6$ constraints, so the statement grows linearly in $m$ and is the one whose memory budget sets a practical ceiling on window size. On the verifier's side, a trusted party pays a constant-time pairing check; the optimistic game pays what BitVM3 publishes \citep{linus2026bitvm3}: an Assert of about 2.4\,kvB, a Disprove of about 93\,vB, an off-chain garbled circuit of about 41\,GB for a Groth16 verifier, six minutes to evaluate, one honest challenger online throughout, and a committee honest at setup with one signer deleting its key afterward. Soundness is Theorem~7.2 of that paper under those assumptions and the random-oracle model.
+
+The economic consequence is a scale. The fixed cost of a permissionless verifier, the garbled circuit, is paid per operator and per program, and is amortized only across the claims that program verifies; the per-claim cost is the Assert fee plus a challenge period measured in blocks. A claim is therefore worth making only if its share of the pool exceeds its proving cost plus its share of the setup, which under Proposition~\ref{prop:sybil} is proportional to the capital behind it, so proof cost sets a minimum capital to participate: roughly the proving cost times the ratio of total registered weight to the pool. That is the scale of a bond on a connector whose horizon is days and whose value is large against fees. It is not the scale of a payment, and a sentence of the form ``Lightning needs BitVM-secured covenants'' is true of the bond layer and false of the channel layer.
+
+\subsection{The bond as an object}
+
+A bond that is a number in a record, released or slashed by arithmetic on the same record, admits a negative slash, an over-release, and a bond declared after its owner's wealth is exhausted; the reference model's audit found all three in an earlier implementation. Under the tuple of Table~\ref{tab:objects} a bond is an object of class $E$: an on-chain output whose script releases to the operator after $\Delta$ unless a valid disprove consumes a connector output first. Its states are
+\[
+\mathrm{Locked}\xrightarrow{\ \mathrm{Assert}(\pi)\ }\mathrm{Claimed}\xrightarrow{\ \Delta\text{ elapsed, no Disprove}\ }\mathrm{Released},
+\qquad
+\mathrm{Claimed}\xrightarrow{\ \mathrm{Disprove}(\ell^\ast)\ }\mathrm{Slashed},
+\]
+with the release condition a statement in $\Rsvc$ with $k/m$ above the bonded threshold.
+
+\begin{proposition}[enforceable bond]
+\label{prop:bond}
+Under the BitVM3 assumptions, an escrow $E(B,\kappa,\Delta)$ whose release condition is a statement in a SNARK-provable relation is enforceable against an uncooperative operator: a false Assert is slashed by any single honest challenger at a cost independent of $B$, and a true Assert is released after $\Delta$. The bond is an account in the sense required exactly when the registry records the escrow's outpoint and the journal its state, and release arithmetic is replaced by the object's transitions.
+\end{proposition}
+
+A native covenant, if one were activated, would replace $E$ by $E'$: no committee, no challenger, $\Delta\approx 0$ for template-enforced spends, and the release condition restricted to what script can check, which excludes SNARK verification without further opcodes. The model keeps $E'$ as a comparison column and depends on nothing in it.
+
+\section{Agent swarms: observers, coordination, and what a coalition can earn}
+\label{sec:agents}
+
+The objects of Sections~\ref{sec:ark} and~\ref{sec:proofs} were introduced for a population of honest agents. The same objects are available to a population under common control that wants to appear independent, and the question this section asks is what that population can do with them and who would see it. Following \citet{simmons1984prisoners}, we fix the warden first.
+
+\subsection{Observers by object}
+
+There are four observers, and each object exposes a different trace to each (Table~\ref{tab:observers}). Under the channel no single observer sees a whole path, which is the property the privacy literature studies and which probing and timing attacks partially erode \citep{herrera2019difficulty,kappos2021empirical,romiti2021crosslayer}. Under the VTXO one observer sees everything within its Ark: the server co-signs every transfer and so knows sender, receiver, amount, and time for every payment it hosts. A server is a total warden for its holders. The proofs of Section~\ref{sec:proofs} let it not publish what it sees, and a permissionless escrow lets it not be trusted to allocate rewards, but its view is reduced by neither.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{3.2cm}@{}}
+\toprule
+Observer & $C$ channel & $V$ VTXO & $E$ escrow \\
+\midrule
+$O_{\mathrm{chain}}$ & opens, closes, splices, force-close scripts & round transactions, exits, offboards; aggregate per round & deposits, Asserts, Disproves, releases \\
+$O_{\mathrm{gossip}}$ & \texttt{channel\_update}, \texttt{node\_announcement}, policy & nothing per holder & nothing \\
+$O_{\mathrm{peer}}$ & HTLC amount, timing, CLTV, preimage on one hop & the HTLC the server forwards on its own channel; the holder is behind the server & nothing \\
+$O_{\mathrm{server}}$ & none & every transfer: parties, amount, time, co-signed & operator's own escrow \\
+\bottomrule
+\end{tabular}
+\caption{What each observer sees under each object.}
+\label{tab:observers}
+\end{table}
+
+\subsection{Three things called coordination}
+
+The word covers three activities that need different treatment. \emph{Explicit messaging}: onion payloads carry TLV records and custom records are a specified use \citep{bolt4}; gossip carries aliases, colors, and policy fields any node may set \citep{bolt7}. A population that wants to exchange symbols can do so in these fields at near-unbounded capacity, and detection is traffic analysis, not content analysis; steganography through amount classes and timing is the expensive way to do what the protocol permits cheaply, and is not the mode to study first. \emph{Implicit coordination}: agents infer shared state from public events with no message, a fee update, a failure pattern, an on-chain open. This is not a channel in the information-theoretic sense and has no capacity; it is a focal-point structure \citep{schelling1960strategy}, and its monitoring signature is correlation of control loops rather than any payload. \emph{Capital coordination}: agents under common control claim rewards, place capital, or manufacture demand as if independent. This is the mode the reward layer must resist.
+
+\subsection{What a coalition can earn}
+
+Let a coalition of agents share a controller and a covert channel of unbounded capacity in the explicit mode, and let the reward layer use the registry of Section~\ref{sec:proofs} and the escrow as its bond.
+
+\begin{proposition}[coordination gain, conditional]
+\label{prop:coalition}
+Under Propositions~\ref{prop:sybil} and~\ref{prop:epoch}, the coalition's authenticated weight is at most the value of the distinct settled lineages it controls. Under the placement result of Table~\ref{tab:sim}, the gain from placing a fixed budget with full knowledge of persistent demand is the stationary-hotspot effect, six points over random, and nothing after a shift. Under a service weight that nets value circulated among a claimant's own attesters, manufactured demand earns no service weight. Then the coalition's gain from coordinating, in the tested model, is bounded above by the stationary-placement effect on its own capital and is zero under demand shift, whatever the capacity of its channel.
+\end{proposition}
+
+The proposition is a conjunction of three conditions, and each is an attack surface. The first is the registry's proof system and the verifier's view of $\sett_n$. The second is a demand process with more persistence than the campaigns tested. The third is a netting statistic that discriminates, and here the record is a warning: on the campaigns' coalition fixtures a network-wide gross-to-net churn ratio failed, with benign multilateral commerce netting more strongly than either labeled pattern, and the reference model reproduces the failure and adds one. Netting restricted to a claim's direct attesters catches a reciprocal pair, misses a four-member relay, and saturates toward one when benign trade is dense enough that most counterparties attest. What separates the fixtures is the share of a claimant's volume lying on a directed cycle through it, of bounded length, whose every edge recurs above a multiplicity threshold; and on those fixtures the relays are several hundred times louder than background, which is a sanity check and not a result. Whether the statistic survives benign structure in which short cycles through a busy node recur for ordinary reasons is open, and a coalition that controls its own rate can stay under any fixed threshold.
+
+None of the three conditions is a covert-channel problem. All three are capital and observation problems, and that ordering is the section's main claim: a capacity-versus-detectability curve for a steganographic channel over payment shape \citep{cachin1998information} would be a real result and would bound a quantity that Proposition~\ref{prop:coalition} already bounds by other means.
+
+\subsection{The warden's statistics}
+
+Formally the warden observes a trace from one row of Table~\ref{tab:observers} and decides between $H_0$, that the agents draw independent demand from a declared process, and $H_1$, that a subset shares a controller. The likelihood ratio is not computable in general because $H_1$ is composite. Three statistics are: repeated-cycle share through the claimant; nullifier collision rate at the registry, exactly zero under honest claims and positive under duplicated capital; and service-versus-demand inconsistency, a claimed $k/m$ against a demand estimate that does not support it. Under $V$ the server computes the first completely and needs no probing; under $C$ no one does, and it must be estimated from partial hops, which the campaigns modeled as an observer seeing 11--13\% of events. A monitor that wants the capital-coordination signal should therefore sit at the server and at the registry, not on the gossip network, and should measure whether cross-server circulation defeats it.
+
+\subsection{What a swarm does with the objects}
+\label{sec:swarm}
+
+The analysis so far assumes the coalition uses the objects as a holder. Five further possibilities change the picture, and each is stated as a conjecture with the experiment that would test it.
+
+\paragraph{The swarm runs the server.} An Ark server needs on-chain capital for rounds, a channel set for ramps, and continuous liveness, and the last two are what a population of agents has in surplus. A swarm-run Ark is a private clearing house whose chain footprint is one round transaction per interval with an aggregate output set, and whose Lightning footprint is a single node's channel set; every intra-swarm transfer is out-of-round, co-signed by the swarm's own server, visible to no one else. Relative to $N$ gossip-visible Lightning nodes this is a large reduction in observable surface at no cost the swarm does not already bear, and it inverts the recommendation of the previous subsection: the monitor cannot stand at a server the swarm operates. The warden's question becomes which servers are swarm-run, a chain-fingerprinting problem on round cadence, output-value distribution, and the ratio of out-of-round churn to on-chain exits, rather than a payment-graph problem.
+
+\paragraph{Ramps remain.} The server-tier term of Section~\ref{sec:ark} is also the swarm's exposure. Whatever enters the Ark over Lightning crosses the swarm server's channels, which are gossip-visible and whose inbound capacity came from a peer who provisioned it; whatever boards or exits is on-chain. A swarm can hide circulation; it cannot hide income arriving or capital leaving without a mixer, which is orthogonal to this stack. Ark reduces the observable surface from flows to net flows at the perimeter, and the detection budget should move accordingly.
+
+\paragraph{Cross-server circulation.} Two swarm-run Arks paying each other over Lightning look like two independent servers with ordinary bilateral settlement; each server's view is total inside and nil across, and a cycle through both is two intra-Ark legs no outsider sees plus two Lightning legs that look like server-to-server flow. The repeated-cycle statistic needs an observer who sees the cycle, and with two servers no single row of Table~\ref{tab:observers} does. This is the fixture to build.
+
+\paragraph{The registry's privacy is symmetric.} $\Rcap$ proves capital without revealing which object, and the registry learns a value and a nullifier and nothing about control structure. That is what a swarm wants: proportional reward without disclosing that thirty claimants share a controller. Propositions~\ref{prop:sybil} and~\ref{prop:epoch} make the reward capital-proportional, which is the right property against a poor swarm pretending to be rich and no property against a rich one. The bound is on excess return, not on presence; a well-funded swarm receives exactly its capital share with no one able to say it is one entity, and whether that is a problem depends on what the reward layer is for.
+
+\paragraph{Enforceable side-contracts.} Cartels are unstable because side-payments and punishments among parties who cannot go to court are unenforceable \citep{stigler1964oligopoly}. An escrow whose release condition is a provable statement is an enforcement device for exactly such agreements, and the costs that make it unattractive for honest per-payment use, a setup per operator and program and a committee honest at setup, are not costs for a swarm: one operator, one program (``member $x$ did not deviate from schedule $s$''), and a committee the swarm itself runs, so that the honest-at-setup assumption is satisfied trivially when setup and participants are one principal. A MuSig2 multisig with a swarm-run key-deletion ceremony gets most of the way without BitVM. The mechanism introduced to make connector bonds honest also makes swarm-internal commitment devices honest; the open question is whether rival swarms, or a swarm and a human counterparty, can use the same object, since that is where enforceability was previously missing \citep{calvano2020ai}.
+
+\paragraph{Same weights, no message.} Implicit coordination was described above as plausible. For a population of agents instantiated from the same model it is the base case: agents sharing weights share tie-breaking and converge on the same fee, the same retry schedule, the same placement, without a message. The proposed monitoring signature, correlation of control loops, fires on this constantly, because the false-positive class (same model, independent principals) and the true-positive class (same model, one principal) produce the same correlation. A warden that wants the common-control signal has to separate it from common training, and we conjecture that payment traces alone cannot. The test is cheap: two populations on the simulator, one sharing a policy seed with independent budgets and one sharing a controller, and whether any of the three statistics distinguishes them.
+
+\paragraph{The lever is the authority field.} Every case above assumes the swarm holds its own keys. The tuple has the field where the safety lever sits: $\auth$, the spend authority. A policy response is not a better statistic but an authority that includes a principal-held co-signer with time-bounded delegation, so that an agent spends within a budget and window without a co-signature and beyond it needs one. Lightning has no natural place for this; Ark does, because the server already co-signs every transfer, so a principal-run or regulated server is a policy enforcement point by construction, which is the same fact that makes a swarm-run server a policy evasion point. The observer table should carry an $O_{\mathrm{principal}}$ row, since for alignment purposes the observer who matters most is the operator the agents nominally work for, and the failure of interest is a population that routes around its own principal's view.
+
+\section{Preregistration}
+\label{sec:prereg}
+
+The following is to be preregistered on the reference simulator extended with the class-$V$ ledger and the registry; no live component is required for any of it. Stopping rules, multiplicity, and the practical-equivalence band are as in the earlier campaigns \citep{spiral2026}, and analysis code must canonicalize graph and candidate order.
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item Pin the recovery rule. Determine from the implementation, not the documentation, whether a server-held HTLC output from a Lightning spend is presented to the next round or swept at expiry. This fixes $\bar L$ and the sign of every cell in Table~\ref{tab:grid}.
+\item The liquidity-duration grid. Demand family with declared parameters: agent count; per-agent burstiness (imbalance envelope over own volume); per-agent drift at zero, positive, and negative values with the population's drift correlation stated; horizon relative to lifetime; forecast rule (oracle and trailing); and the share of inflow arriving over Lightning versus by boarding. Compute $\Dur_C$ and $\Dur_V$ with the server-tier term charged and two-way volume, report the ratio with a cluster-robust interval over sampled topologies. The claim of Section~\ref{sec:ark} is falsified if the ratio does not exceed one on the uncorrelated many-agent cells under the pinned recovery rule, or does not fall below one on few-steady.
+\item Prover cost. Implement $\Rcap$ with a real proof system over the simulator's settled set (a Merkle path and a PRF) and report prover time and memory against a stated budget.
+\item Identity splitting and churn. One capital source, 1 to 32 identities, all claims through $\Rcap$: aggregate reward invariant, every duplicate detected. Then one identity, one source, spent to a fresh identifier 1 to 32 times within an epoch, with and without an attested successor: aggregate reward invariant in the epoch, revocations at close equal to unattested spends; a registry without the epoch rule fails by construction and the failure is reported as such.
+\item Warden rows. Run the common-control fixtures through $O_{\mathrm{peer}}$ under $C$, $O_{\mathrm{server}}$ under $V$, and a mixed relay set spanning two servers. Report ROC per row. The prediction is that $O_{\mathrm{server}}$ dominates $O_{\mathrm{peer}}$ and that the two-server set degrades both.
+\item Same weights versus same controller. Two populations, one sharing a policy seed with independent budgets and one sharing a controller, through the three statistics. The prediction is that none separates them.
+\item Enforceable collusion. Two agent populations setting spreads in a toy market, one with an escrow-enforced side-contract and one without; report the sustainable collusive margin in each.
+\item Only then, as a bounded appendix, a codebook over amount and timing, a prior over payloads, and a guessing-advantage task for $O_{\mathrm{peer}}$, reported as a capacity--detectability curve read against Proposition~\ref{prop:coalition}.
+\end{enumerate}
+
+\section{Limitations}
+\label{sec:limits}
+
+Two trust assumptions run through everything and are not discharged. The Ark server is trusted not to censor and not to collude with a sender on a pending payment; this has the shape of the assumption the channel model makes about a counterparty, concentrated in one party per Ark, and Section~\ref{sec:swarm} says what follows when the party is the adversary. The BitVM3 committee is trusted at setup and one signer is trusted to delete a key; that is weaker than a federation and stronger than consensus, and a native covenant would remove it and not the first.
+
+Nothing is measured live. The simulator results of Table~\ref{tab:sim} are on synthetic hidden state and sampled topology; the grid of Table~\ref{tab:grid} is a model whose scale depends on an unpinned implementation detail; the proof system is simulated and the registry's tests witness logic, not cryptography; the BitVM3 figures are an implementer's published numbers at a date and may be revised. The coalition bound is a conjunction of conditions, one of which (a discriminating statistic) the reference model shows failing in two forms, and the remaining statistic is demonstrated only on fixtures where the signal is hundreds of times louder than background. Channel balances are not a public settled set, so a claim on class $C$ capital can prove existence and capacity from gossip but not directional balance; that is the public--private split the whole problem began with, and proofs do not cross it.
+
+\section{Conclusion}
+
+On Lightning an agent's edge is not in routing, because the bound on delivery is a conservation identity over the cut around it and no policy relaxes it. The bound is a property of the object: bilateral, pre-funded, direction-partitioned, so that the forecast it forces is made per edge and does not pool. A server-mediated object moves the forecast to the server, where it pools by a factor of order $\sqrt N$ on uncorrelated imbalance and not at all on shared drift, and whether that is worth the server's forfeit lock depends on a recovery rule that has to be read off the implementation. A claim-once registry makes a reward layer capital-proportional without identities, once an epoch rule covers the gap a nullifier leaves; an optimistic escrow makes a bond an object; and both cost what verification costs on a chain that does not verify, which is bond-scale and not payment-scale. For a population of agents under common control, what it can say to itself over the payment layer matters less than what it can prove and where it stands: the gain from coordination is bounded by authenticated capital under stationary demand, a swarm that runs its own server removes the observer the bound relies on, an enforceable escrow gives it the commitment device cartels lacked, and agents sharing weights coordinate without a message in a way traces cannot distinguish from independent use. The experiments that test each of these are listed and none has been run.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+
+\section{Notation}
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{9.6cm}@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\rho=(\auth,v,F,X,\Lambda,\Gamma,\tau)$ & settlement object: authority, value, finality clock, exit, liveness, counterparty set, expiry \\
+$\ell^U,\ell^C,\ell^V,\ell^E$ & holdings by class \\
+$\sigma$ & settlement event (from-class, to-class, amount, clock condition) \\
+$O_A,I_A$ & cumulative outward, inward crossings of $\partial A$ \\
+$S_A,S'_A,K_A,K'_A$ & outbound and inbound stock on $\partial A$; stock added by capacity events \\
+$\hat f_a,\hat f_S$ & forecast inbound toward agent $a$; forecast peak aggregate net receipt at server $S$ \\
+$R_S,W_S,B_S$ & server liquidity stock, fronted-and-unrecovered value, total capital \\
+$\bar L$ & mean residual lock on fronted value at forfeit \\
+$\Dur_{\mathrm{obj}}(D,H)$ & liquidity duration: locked capital-time per unit delivered \\
+$\Rcap,\Rsvc$ & unique-exposure and service relations \\
+$\mathrm{nf},\mathrm{cm},\mathrm{root}_n,k_\rho$ & nullifier keyed by the object's authority key, claimant commitment, settled-set root \\
+$E(B,\kappa,\Delta)$ & escrow with bond $B$ for connector $\kappa$ and challenge period $\Delta$ \\
+$O_{\mathrm{chain}},O_{\mathrm{gossip}},O_{\mathrm{peer}},O_{\mathrm{server}}$ & observer rows \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Reference model}
+
+The model accompanying this paper \citep{spiral2026} is TypeScript with no dependencies, under \texttt{model/}, run with \texttt{node --experimental-strip-types --test "model/*.test.ts"}. It implements the extended ledger with clocked settlement events (Proposition~\ref{prop:conservation}); the server liquidity ledger under both recovery readings, the refresh cycle, the aggregate bound, and the server-tier term, with the channel model under oracle and trailing forecasts and the grid of Table~\ref{tab:grid} (Proposition~\ref{prop:relocation}); the epoched registry with authority-keyed nullifiers and attested successors (Propositions~\ref{prop:sybil}, \ref{prop:epoch}); the escrow state machine with the published BitVM3 sizes as inputs (Proposition~\ref{prop:bond}); and three warden statistics on a coalition fixture, with the two that fail asserted to fail. The proof system is not implemented; the registry verifies a simulated attestation with the interface a verifier would expose. Seventeen tests pass at the cited commit; they witness the propositions on finite cases and prove nothing about distributed execution.
+
+\end{document}

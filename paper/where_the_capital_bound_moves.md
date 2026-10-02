@@ -1,3 +1,5 @@
+> **Superseded.** The standalone paper is `paper/tex/main.tex`, compiled to `paper/tex/main.pdf`. This file is retained as the working draft it was.
+
 # Where the Capital Bound Moves
 
 ## Settlement Objects, Proof-Carrying Registries, and a Warden Model for Agent Payment Networks
