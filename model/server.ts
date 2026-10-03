@@ -304,6 +304,8 @@ export interface CornerParams {
 
 export interface CornerResult {
   dC: number; dV: number; dVForfeitOnly: number; ratio: number;
+  /** attempted events (nonzero receipts plus nonzero spends) over the horizon; the denominator for the failure counts */
+  events: number;
   chFailures: number; arkFailures: number; serverFailures: number;
   chLocked: number; serverLocked: number; finalHolderBalance: number;
 }
@@ -319,6 +321,7 @@ export function runCorner(p: CornerParams): CornerResult {
   const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288, spendLock: p.spendLock ?? "expiry" });
   const pOut = p.steady ? 1 : Math.max(0, Math.min(1, (p.burst.pIn * p.burst.vIn - p.driftPerRound) / p.burst.vOut));
   let arkFailures = 0;
+  let events = 0;
   for (let t = 0; t < steps; t++) {
     for (const [name, arr] of perAgent) {
       let out = 0, inn = 0;
@@ -330,8 +333,8 @@ export function runCorner(p: CornerParams): CornerResult {
         if (r() < pOut) out = p.burst.vOut;
       }
       arr.push({ out, in: inn });
-      if (inn) S.receive(name, inn);
-      if (out) { if (S.holderValue(name) >= out) S.spendLightning(name, out); else arkFailures += 1; }
+      if (inn) { events += 1; S.receive(name, inn); }
+      if (out) { events += 1; if (S.holderValue(name) >= out) S.spendLightning(name, out); else arkFailures += 1; }
     }
     S.advance(roundBlocks);
   }
@@ -344,7 +347,7 @@ export function runCorner(p: CornerParams): CornerResult {
   for (const name of perAgent.keys()) finalHolderBalance += S.holderValue(name);
   return {
     dC: ch.duration, dV, dVForfeitOnly: vol === 0 ? Infinity : forfeitIntegral / vol, ratio: ch.duration / dV,
-    chFailures: ch.failures, arkFailures, serverFailures: st.failures,
+    events, chFailures: ch.failures, arkFailures, serverFailures: st.failures,
     chLocked: ch.locked, serverLocked: st.lockedIntegral / horizon, finalHolderBalance,
   };
 }
