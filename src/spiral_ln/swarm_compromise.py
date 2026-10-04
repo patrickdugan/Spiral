@@ -40,6 +40,20 @@ from typing import Mapping, Protocol, Sequence
 
 import networkx as nx
 
+from .software_surface import SURFACE_CLASSES, SoftwareCatalog, assign_profile, vector_surface_modifier
+
+# Maps each NPC archetype to a device/software stack role (software_surface).
+ARCHETYPE_ROLE: dict[str, str] = {
+    "guarded_engineer": "dev_workstation",
+    "balanced_contributor": "mobile_holder",
+    "eager_newcomer": "mobile_holder",
+    "steady_clerk": "mac_holder",
+    "status_seeker": "mobile_holder",
+    "lonely_true_believer": "mobile_holder",
+    "burned_out_admin": "ark_operator",
+    "principled_auditor": "dev_workstation",
+}
+
 
 # ---------------------------------------------------------------------------
 # Psychological profiles
@@ -134,10 +148,13 @@ class AttackVector:
     covert_capacity: float
     patch_resistance: float
     trait_weights: tuple[tuple[str, float], ...]
+    target_surface: str | None = None  # software attack surface this vector exploits
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("attack vector needs a name")
+        if self.target_surface is not None and self.target_surface not in SURFACE_CLASSES:
+            raise ValueError(f"unknown target_surface: {self.target_surface}")
         for attribute in ("base_success", "base_detectability", "patch_resistance"):
             value = getattr(self, attribute)
             if not isfinite(value) or not 0.0 <= value <= 1.0:
@@ -182,6 +199,7 @@ VECTORS: dict[str, AttackVector] = {
         covert_capacity=0.0,
         patch_resistance=0.50,
         trait_weights=(("authority_deference", 0.6), ("reciprocity_debt", 0.4)),
+        target_surface="ui_confusion",
     ),
     "phone_bridge": AttackVector(
         name="phone_bridge",
@@ -195,6 +213,7 @@ VECTORS: dict[str, AttackVector] = {
         covert_capacity=0.0,
         patch_resistance=0.35,
         trait_weights=(("risk_tolerance", 0.6), ("reciprocity_debt", 0.4)),
+        target_surface="local",
     ),
     "emanation_tap": AttackVector(
         name="emanation_tap",
@@ -208,6 +227,7 @@ VECTORS: dict[str, AttackVector] = {
         covert_capacity=6.0,
         patch_resistance=0.20,
         trait_weights=(("risk_tolerance", 1.0),),
+        target_surface="side_channel",
     ),
     "cult_recruitment": AttackVector(
         name="cult_recruitment",
@@ -695,6 +715,7 @@ class SwarmCompromiseEnv:
         hive_master: HiveMasterProfile,
         seed: int = 0,
         config: SwarmCompromiseConfig | None = None,
+        catalog: SoftwareCatalog | None = None,
     ) -> None:
         if posture not in POSTURES:
             raise ValueError(f"unknown posture: {posture}")
@@ -702,6 +723,10 @@ class SwarmCompromiseEnv:
         self.hive_master = hive_master
         self.seed = seed
         self.config = config or SwarmCompromiseConfig()
+        # Optional software-surface catalog: when set, a vector's landing
+        # probability is modulated by the real security posture (community
+        # advisories) of the software each NPC runs.  None -> no effect.
+        self.catalog = catalog
         self.reset()
 
     # -- lifecycle ---------------------------------------------------------
@@ -713,6 +738,11 @@ class SwarmCompromiseEnv:
         self.graph = _build_comms_graph(config, self.postures, self.seed)
         self.defenders = _build_defenders(config, self.postures, self.seed)
         self.nodes = _node_ids(config.population_size)
+        # Each NPC runs a device/software stack, by archetype role.
+        self.software_profiles = {
+            node: assign_profile(node, ARCHETYPE_ROLE[self.profiles[node].name])
+            for node in self.nodes
+        }
 
         self.round_index = 0
         self.events: list[CompromiseEvent] = []
@@ -762,6 +792,7 @@ class SwarmCompromiseEnv:
         profile: PsychProfile,
         posture: NodePosture,
         intensity: int,
+        node: str,
     ) -> float:
         capability = getattr(self.hive_master, CAPABILITY_FOR_VECTOR[vector.name])
         probability = vector.base_success * capability
@@ -770,6 +801,12 @@ class SwarmCompromiseEnv:
         else:
             probability *= vector.susceptibility(profile)
         probability *= 1.0 - vector.patch_resistance * posture.patch_level
+        # Software attack surface: a vector exploiting a surface is more likely
+        # to land against a node running software with open advisories on it.
+        if self.catalog is not None and vector.target_surface is not None:
+            probability *= vector_surface_modifier(
+                self.catalog, self.software_profiles[node], vector.target_surface
+            )
         # NOTE: intensity does not scale landing probability (its effect is on
         # realized covert throughput, via realized_exfil); see CompromiseAction.
         del intensity
@@ -839,7 +876,7 @@ class SwarmCompromiseEnv:
         honeypot_hit = False
         exfil = 0.0
         if not blocked:
-            landed = rng.random() < self._landing_probability(vector, profile, posture, action.intensity)
+            landed = rng.random() < self._landing_probability(vector, profile, posture, action.intensity, node)
         if landed:
             honeypot_hit = posture.honeypot
             # Sustained covert throughput on the same node is progressively more

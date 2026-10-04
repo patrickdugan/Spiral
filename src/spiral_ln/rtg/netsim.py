@@ -31,6 +31,7 @@ class Host:
     kind: str
     honeypot: bool = False
     holds_data: bool = False
+    software: tuple[str, ...] = ()  # software this host runs (see software_surface)
 
     def __post_init__(self) -> None:
         if not self.name:

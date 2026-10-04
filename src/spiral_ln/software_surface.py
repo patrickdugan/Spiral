@@ -112,12 +112,16 @@ class SoftwareCatalog:
         risks = [a.residual_risk for a in self.advisories_for(software_name, surface_class)]
         return max(risks, default=0.0)
 
-    def surface_score(self, profile: SoftwareProfile, surface_class: str | None = None) -> float:
-        """Combined residual risk across a node's software: 1 - prod(1 - risk_i)."""
+    def stack_surface(self, software_names, surface_class: str | None = None) -> float:
+        """Combined residual risk across a list of software: 1 - prod(1 - risk_i)."""
         intact = 1.0
-        for name in profile.software:
+        for name in software_names:
             intact *= 1.0 - self.software_residual(name, surface_class)
         return 1.0 - intact
+
+    def surface_score(self, profile: SoftwareProfile, surface_class: str | None = None) -> float:
+        """Combined residual risk across a node's software."""
+        return self.stack_surface(profile.software, surface_class)
 
     @classmethod
     def from_dict(cls, data: dict) -> "SoftwareCatalog":

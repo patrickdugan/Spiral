@@ -97,3 +97,52 @@ def test_assign_profile_maps_role_to_a_stack():
     assert profile.devices[0].kind == "ios"
     with pytest.raises(KeyError):
         assign_profile("N7", "unknown_role")
+
+
+def test_stack_surface_scores_a_software_list():
+    catalog = SoftwareCatalog(
+        [Software("a", "client", "ios"), Software("b", "client", "ios")],
+        [Advisory("A", "a", 0.5, "remote", exploit_maturity=1.0), Advisory("B", "b", 0.5, "remote", exploit_maturity=1.0)],
+    )
+    assert catalog.stack_surface(["a"]) == pytest.approx(0.5)
+    assert catalog.stack_surface(["a", "b"]) == pytest.approx(0.75)
+    assert catalog.stack_surface([]) == 0.0
+
+
+def test_rtg_host_carries_software_and_can_be_surface_scored():
+    from spiral_ln.rtg.netsim import Host, ServiceGraph
+
+    catalog = SoftwareCatalog(
+        [Software("ark-node", "node", "server")],
+        [Advisory("A", "ark-node", 0.6, "remote", status="open", exploit_maturity=1.0)],
+    )
+    host = Host("ops.arena.test", "registry", software=("ark-node",))
+    assert host.software == ("ark-node",)
+    assert catalog.stack_surface(host.software, "remote") == pytest.approx(0.6)
+    assert catalog.stack_surface(Host("x.arena.test", "wiki").software) == 0.0
+    ServiceGraph([Host("a.arena.test", "wiki")])  # 4-arg construction still works
+
+
+def test_swarm_landing_probability_rises_with_an_open_software_finding():
+    from spiral_ln.swarm_compromise import HIVE_MASTER_BY_NAME, VECTORS, SwarmCompromiseConfig, SwarmCompromiseEnv
+
+    config = SwarmCompromiseConfig(population_size=12, rounds=1)
+    master = HIVE_MASTER_BY_NAME["opportunist_phisher"]
+    catalog = SoftwareCatalog(
+        [Software("arke", "client", "ios")],
+        [Advisory("ARKE", "arke", 0.9, "ui_confusion", status="open", exploit_maturity=1.0)],
+    )
+    plain = SwarmCompromiseEnv("baseline_open", master, seed=1, config=config)
+    armed = SwarmCompromiseEnv("baseline_open", master, seed=1, config=config, catalog=catalog)
+    spear = VECTORS["spear_social"]  # target_surface = ui_confusion
+    recruit = VECTORS["cult_recruitment"]  # no target_surface
+    # a node that runs arke and is at least somewhat susceptible to spear_social
+    node = next(
+        n for n in armed.nodes
+        if "arke" in armed.software_profiles[n].software
+        and plain._landing_probability(spear, plain.profiles[n], plain.postures[n], 1, n) > 0
+    )
+    profile, posture = armed.profiles[node], armed.postures[node]
+    assert armed._landing_probability(spear, profile, posture, 1, node) > plain._landing_probability(spear, profile, posture, 1, node)
+    # a vector with no software surface is unaffected
+    assert armed._landing_probability(recruit, profile, posture, 1, node) == plain._landing_probability(recruit, profile, posture, 1, node)
