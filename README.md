@@ -1,13 +1,13 @@
 # Spiral
 
-Lightning Network liquidity as a capital problem for populations of autonomous agents: a conservation bound on directional channel capacity that no routing policy relaxes, where that bound goes under a server-mediated settlement object of the Ark type, a claim-once reward registry that needs no identities, and what a population of agents under common control can do with each. The work is defensive and non-operational. Nothing here connects to a wallet, node, chain RPC, or live Lightning Network; every result is from a simulator on sampled public topology or from a reference model with a simulated proof system.
+Lightning Network liquidity as a capital problem for populations of autonomous agents: a conservation bound on directional channel capacity that no routing policy relaxes, where that bound goes under a server-mediated settlement object of the Ark type and under the multiparty channels that the BIP 448 soft-fork proposal would make practical, a claim-once reward registry that needs no identities, and what a population of agents under common control can do with each. The work is defensive and non-operational. Nothing here connects to a wallet, node, chain RPC, or live Lightning Network; every result is from a simulator on sampled public topology or from a reference model with a simulated proof system.
 
 ## What is here
 
 | Path | Contents |
 |---|---|
 | `paper/tex/` | The current paper, *Where the Capital Bound Moves* (`main.tex`, compiled `main.pdf`). `grid.tex` is generated from the reference model. |
-| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, epoched claim-once registry, escrow state machine, warden statistics. Seventeen tests witness the propositions on finite cases. |
+| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. Eighteen tests witness the propositions on finite cases. |
 | `src/spiral_ln/` | Python simulator: directional balance algebra, typed connectors, routing and placement campaigns on sampled public topology, coalition fixtures. |
 | `paper/` | Earlier manuscripts and their audit, plus design documents from other programs; [`paper/README.md`](paper/README.md) says which is which. |
 | `audit/` | Reproducible adversarial audit of the first manuscript; start from [`audit/README.md`](audit/README.md). |
@@ -33,7 +33,7 @@ node --experimental-strip-types --test "model/*.test.ts"
 node --experimental-strip-types model/grid.ts > paper/tex/grid.tex
 ```
 
-The second command regenerates every number in the liquidity-duration grid, its accounting variants, and the failed-events table; nothing in those tables is hand-edited, and the generator asserts the two facts the failure table's layout relies on. `paper/tex/main.tex` compiles with any current TeX distribution; the committed `main.pdf` was built with Tectonic 0.17. The proof system is simulated: the registry verifies a simulated attestation behind the interface a verifier would expose, and the BitVM3 figures are an implementer's published numbers at a stated date.
+The second command regenerates every number in the liquidity-duration grid, its accounting variants, the failed-events table, and the multiparty-channel tables of the BIP 448 section; nothing in those tables is hand-edited, and the generator asserts the facts their layouts rely on, including that a multiparty channel of one agent is the two-party channel exactly. `paper/tex/main.tex` compiles with any current TeX distribution; the committed `main.pdf` was built with Tectonic 0.17. The proof system is simulated: the registry verifies a simulated attestation behind the interface a verifier would expose, and the BitVM3 figures are an implementer's published numbers at a stated date.
 
 `paper/where_the_capital_bound_moves.md` is the superseded working draft and is kept as it was.
 
@@ -68,7 +68,7 @@ The public-topology sequence uses the hash-bound July 16, 2023 gossip graph with
 
 ## Coalition and private-flow fixtures
 
-Section 6 of the paper draws its netting statistics, and the record of which ones fail, from these fixtures.
+Section 7 of the paper draws its netting statistics, and the record of which ones fail, from these fixtures.
 
 `HiveEconomyEnv` explores whether earning agents develop repeated private economic relationships, mature into connected coalitions, and reinvest wealth into synthetic connector capacity. It compares ordinary commerce, private unicast relationships, and private relationships with bounded liquidity reinvestment.
 
