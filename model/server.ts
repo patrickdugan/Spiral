@@ -269,6 +269,75 @@ export function channelLiquidityDuration(
 }
 
 /**
+ * Multiparty channel (hyperedge) model for the same demand: the object that rebindable signatures
+ * (BIP 448, LN-Symmetry) make practical. Agents are grouped `groupSize` to a channel with one hub member.
+ * A channel's state is a balance per member summing to its capacity, so a receipt toward any agent draws
+ * on the hub's balance in that channel, which is one stock for the group rather than one per agent; an
+ * agent still spends only its own balance. The stock is forecast by the same rule as a two-party
+ * channel's inbound, applied to the running total the group holds. A channel factory that reallocates
+ * among two-party subchannels every round has the same bound. At groupSize = 1 this is
+ * channelLiquidityDuration, operation for operation.
+ */
+export function hyperedgeLiquidityDuration(
+  perAgent: Map<string, Array<{ out: number; in: number }>>,
+  groupSize: number,
+  horizonBlocks: number,
+  margin: number,
+  rule: ForecastRule = { kind: "oracle" },
+): { duration: number; failures: number; locked: number } {
+  if (!Number.isInteger(groupSize) || groupSize < 1) throw new Error("groupSize must be a positive integer");
+  const agents = [...perAgent.values()];
+  let lockedIntegral = 0;
+  let volume = 0;
+  let failures = 0;
+  for (let g = 0; g < agents.length; g += groupSize) {
+    const members = agents.slice(g, g + groupSize);
+    const nSteps = members[0]!.length;
+    // Peak of the total the members hold, each member's balance clamped at zero as in the channel model.
+    const peakOf = (from: number, to: number): number => {
+      const running = new Array<number>(members.length).fill(0);
+      let total = 0, peak = 0;
+      for (let i = from; i < to; i++) {
+        for (let m = 0; m < members.length; m++) {
+          const s = members[m]![i]!;
+          const next = Math.max(0, running[m]! + s.in - s.out);
+          total += next - running[m]!; running[m] = next;
+        }
+        peak = Math.max(peak, total);
+      }
+      return peak;
+    };
+    const balance = new Array<number>(members.length).fill(0);
+    let held = 0;
+    const play = (i: number, forecast: number): void => {
+      for (let m = 0; m < members.length; m++) {
+        const s = members[m]![i]!;
+        if (s.in) { if (s.in > forecast - held) failures += 1; else { balance[m] = balance[m]! + s.in; held += s.in; volume += s.in; } }
+        if (s.out) { if (s.out > balance[m]!) failures += 1; else { balance[m] = balance[m]! - s.out; held -= s.out; volume += s.out; } }
+      }
+    };
+    if (rule.kind === "oracle") {
+      const forecast = Math.ceil(peakOf(0, nSteps) * (1 + margin));
+      lockedIntegral += forecast * horizonBlocks;
+      for (let i = 0; i < nSteps; i++) play(i, forecast);
+    } else {
+      const stepsPerInterval = Math.max(1, Math.round(rule.intervalBlocks / rule.roundBlocks));
+      let prevPeak = -1;
+      for (let from = 0; from < nSteps; from += stepsPerInterval) {
+        const to = Math.min(nSteps, from + stepsPerInterval);
+        if (prevPeak < 0) prevPeak = peakOf(from, to); // bootstrap: interval 0 is observed, not forecast
+        const forecast = Math.max(held, Math.ceil(prevPeak * (1 + margin)));
+        lockedIntegral += forecast * (to - from) * rule.roundBlocks;
+        let peak = held;
+        for (let i = from; i < to; i++) { play(i, forecast); peak = Math.max(peak, held); }
+        prevPeak = peak;
+      }
+    }
+  }
+  return { duration: volume === 0 ? Infinity : lockedIntegral / volume, failures, locked: lockedIntegral / horizonBlocks };
+}
+
+/**
  * The server-tier directional term: the channel model applied to the server's aggregate Lightning flow.
  * Its inbound requirement is the peak of the summed net receipts, forecast by the same rule an LSP would
  * use; pooling is the gap between this peak-of-sum and the channel model's sum-of-peaks.
@@ -300,6 +369,8 @@ export interface CornerParams {
   roundBlocks?: number;
   /** lock rule for Lightning spends; see ServerParams.spendLock */
   spendLock?: "expiry" | "round";
+  /** multiparty-channel sizes to evaluate on the same demand: agents per hyperedge, hub not counted */
+  hyperedgeSizes?: number[];
 }
 
 export interface CornerResult {
@@ -308,6 +379,8 @@ export interface CornerResult {
   events: number;
   chFailures: number; arkFailures: number; serverFailures: number;
   chLocked: number; serverLocked: number; finalHolderBalance: number;
+  /** one entry per requested hyperedge size: 𝒟_H in blocks, failed events, horizon-average locked capital */
+  hyperedge: Array<{ k: number; dH: number; failures: number; locked: number }>;
 }
 
 export function runCorner(p: CornerParams): CornerResult {
@@ -339,6 +412,10 @@ export function runCorner(p: CornerParams): CornerResult {
     S.advance(roundBlocks);
   }
   const ch = channelLiquidityDuration(perAgent, horizon, p.margin, p.forecast);
+  const hyperedge = (p.hyperedgeSizes ?? []).map((k) => {
+    const h = hyperedgeLiquidityDuration(perAgent, k, horizon, p.margin, p.forecast);
+    return { k, dH: h.duration, failures: h.failures, locked: h.locked };
+  });
   const vol = S.volume(p.volume);
   const forfeitIntegral = S.lockedIntegralBlocks();
   const st = p.serverTier ? serverTierTerm(S, horizon, p.margin, p.forecast) : { lockedIntegral: 0, failures: 0 };
@@ -348,7 +425,7 @@ export function runCorner(p: CornerParams): CornerResult {
   return {
     dC: ch.duration, dV, dVForfeitOnly: vol === 0 ? Infinity : forfeitIntegral / vol, ratio: ch.duration / dV,
     events, chFailures: ch.failures, arkFailures, serverFailures: st.failures,
-    chLocked: ch.locked, serverLocked: st.lockedIntegral / horizon, finalHolderBalance,
+    chLocked: ch.locked, serverLocked: st.lockedIntegral / horizon, finalHolderBalance, hyperedge,
   };
 }
 

@@ -93,3 +93,28 @@ test("§3.3 accounting: dropping the server-tier term or counting only outbound 
   const outOnly = runCorner({ ...base, serverTier: false, volume: "out" }).ratio;
   assert.ok(full < 1.1 && noServer > 20 && outOnly > 5, `${full} ${noServer} ${outOnly}`);
 });
+
+test("hyperedge (BIP 448 multiparty channel): k = 1 is the channel; the gain grows with group size, saturates near π/2 at zero drift, vanishes under shared drift, and carries no forfeit lock", () => {
+  const oracle = { kind: "oracle" } as const;
+  const ks = [1, 5, 20, 200];
+  const o = runCorner(many({ forecast: oracle, hyperedgeSizes: ks }));
+  assert.equal(o.hyperedge[0]!.dH, o.dC); // the same object, operation for operation
+  assert.equal(o.hyperedge[0]!.failures, o.chFailures);
+  const gain = o.hyperedge.map((h) => o.dC / h.dH);
+  assert.ok(gain[1]! > 1.2 && gain[2]! > gain[1]! && gain[3]! > gain[2]!, `gain grows with k: ${gain}`);
+  // Agents start from nothing, so balances are reflected at zero and do not net: the limit is π/2, not √N ≈ 14.
+  assert.ok(gain[3]! < Math.PI / 2 + 0.05, `gain saturates: ${gain[3]}`);
+  const drift = runCorner(many({ driftPerRound: 60, forecast: oracle, hyperedgeSizes: [200] }));
+  const g = drift.dC / drift.hyperedge[0]!.dH;
+  assert.ok(g > 0.95 && g < 1.1, `shared drift: nothing to pool, got ${g}`);
+  // Under the trailing rule the capital is about the same and the gain is in receipts delivered.
+  const t = runCorner(many({ hyperedgeSizes: ks }));
+  const tGain = t.dC / t.hyperedge[3]!.dH;
+  assert.ok(tGain > 0.9 && tGain < 1.1, `trailing capital ratio is about one, got ${tGain}`);
+  const fails = t.hyperedge.map((h) => h.failures);
+  assert.ok(fails[0]! > fails[1]! && fails[1]! > fails[2]! && fails[2]! > fails[3]! && fails[3]! >= t.arkFailures, `failures fall toward the VTXO's floor: ${fails} vs ${t.arkFailures}`);
+  // At k = N the hyperedge pools what the server pools and locks nothing at forfeit.
+  const round = runCorner(many({ forecast: oracle, spendLock: "round", hyperedgeSizes: [200] }));
+  assert.ok(o.hyperedge[3]!.dH < 0.7 * o.dV, `expiry reading: ${o.hyperedge[3]!.dH} vs ${o.dV}`);
+  assert.ok(Math.abs(round.hyperedge[0]!.dH / round.dV - 1) < 0.1, `round reading: ${round.hyperedge[0]!.dH / round.dV}`);
+});
