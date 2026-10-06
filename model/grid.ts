@@ -1,6 +1,6 @@
 // Emits the liquidity-duration grid of the paper (paper/tex, tab:grid), its accounting variants (tab:acct),
-// the failed events behind each grid row (tab:fail), and the multiparty-channel comparison on the same
-// demand (tab:hyper, tab:hyperfail) as LaTeX rows.
+// the failed events behind each grid row (tab:fail), the multiparty-channel comparison on the same
+// demand (tab:hyper, tab:hyperfail), and the curves of the figure beside it (fig:gain) as LaTeX rows.
 // Run: node --experimental-strip-types model/grid.ts > paper/tex/grid.tex
 // Every number in those tables comes from here; nothing is hand-edited.
 
@@ -77,3 +77,17 @@ process.stdout.write("\\newcommand{\\acctrows}{%\n" + acct.map(([l, v]) => `${l}
 process.stdout.write("\\newcommand{\\gridfailrows}{%\n" + failLines.join("\n") + "}\n");
 process.stdout.write("\\newcommand{\\hyperrows}{%\n" + hyperLines.join("\n") + "}\n");
 process.stdout.write("\\newcommand{\\hyperfailrows}{%\n" + hyperFailLines.join("\n") + "}\n");
+
+// Curves for the figure beside the hyperedge tables (fig:gain): 𝒟_C/𝒟_k against k on the zero-drift and
+// draining cells under the oracle forecast, and failed events against k on the zero-drift cell under the
+// trailing forecast. Emitted as a pgfplots table; the floor is the spends from an empty balance.
+const curveKs = [1, 2, 4, 5, 8, 10, 20, 25, 40, 50, 100, 200];
+const zero = runCorner({ ...many({}), forecast: oracle, hyperedgeSizes: curveKs });
+const drain = runCorner({ ...many({ driftPerRound: -30 }), forecast: oracle, hyperedgeSizes: curveKs });
+const trail = runCorner({ ...many({}), hyperedgeSizes: curveKs });
+if (trail.arkFailures !== zero.arkFailures) throw new Error("the floor of spends from an empty balance should not depend on the forecast rule");
+const curveRows = curveKs.map((k, i) =>
+  `${k} ${(zero.dC / zero.hyperedge[i]!.dH).toFixed(4)} ${(drain.dC / drain.hyperedge[i]!.dH).toFixed(4)} ${trail.hyperedge[i]!.failures} \\\\`,
+);
+process.stdout.write("\\pgfplotstableread[row sep=\\\\]{k zero drain fails \\\\\n" + curveRows.join("\n") + "\n}\\hypercurve\n");
+process.stdout.write(`\\newcommand{\\hyperfloor}{${trail.arkFailures}}\n`);
