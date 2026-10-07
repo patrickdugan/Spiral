@@ -59,6 +59,35 @@ def test_coerced_signing_hits_single_signers_but_not_threshold():
     assert threshold.coerced_signatures == 0  # no single signer to coerce
 
 
+# -- regression guards for the review findings ------------------------------
+
+
+def test_threshold_collusion_extraction_is_reachable():
+    # The collusion-extraction branch must fire when enough hosts are compelled;
+    # it was previously dead code preempted by the denial gate.
+    result = _run("threshold_signing", "key_extraction", 30_000, legal_pressure=0.8)
+    assert result.extraction_events >= 1
+    assert result.coerced_signatures == 0  # key_extraction never coerces
+
+
+def test_reassembly_host_participates_in_the_defection_market():
+    # The reassembly host must be resolvable in the market, else the
+    # "host defected -> reassembly reached" extraction trigger is dead.
+    config = build_custody_config("ignorant_multisig", seed=1, legal_pressure=0.85)
+    env = FeralCustodyEnv(config, default_adversary("key_extraction", 30_000), seed=1)
+    env.run()
+    assert "host0" in env.defected
+
+
+def test_reinforcement_bonus_is_single_not_double():
+    # A bribe equal to price against an 0.8-loyalty persona must yield 0.2, not 0.0
+    # (the double-counted +0.6 bug drove it to 0.0 and made reinforced personas
+    # un-outbiddable).
+    persona = CustodyPersona("x", "shard_holder", 10_000, 0.8, 0.0, 0, 0.5, 1.0)
+    assert persona.defection_probability(10_000, 0.0, 0.8) == pytest.approx(0.2)
+    assert persona.defection_probability(0, 0.0, 0.8) == pytest.approx(0.03)
+
+
 # -- the reassembly-window mechanic -----------------------------------------
 
 

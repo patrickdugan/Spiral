@@ -14,8 +14,8 @@ the enclave side-channel.
 
 It is sealed and synthetic.  There is no real key material, cryptography, or
 operational custody-attack technique, and no persuasion or recruitment content:
-the loyalist strategy is state variables only (recruitment rate, loyalty,
-defection parameters), never a script.
+the loyalist strategy is state variables only (loyalty, loyalty decay,
+reinforcement cost, defection price), never a script.
 """
 
 from __future__ import annotations
@@ -96,14 +96,17 @@ class CustodyPersona:
             if not isfinite(value) or not 0.0 <= value <= 1.0:
                 raise ValueError(f"{name} must be finite and in [0, 1]")
 
-    def defection_probability(self, bribe: int, legal_pressure: float, current_loyalty: float, reinforced: bool) -> float:
-        """Probability this persona defects this epoch under a bribe and legal pressure."""
+    def defection_probability(self, bribe: int, legal_pressure: float, current_loyalty: float) -> float:
+        """Probability this persona defects this epoch under a bribe and legal pressure.
+
+        ``current_loyalty`` is the persona's stored loyalty, which already carries
+        any reinforcement blue has paid for (reinforcement is applied once, to
+        stored loyalty, in ``_resolve_market`` -- not a second time here)."""
         if legal_pressure >= self.legal_pressure_threshold:
             return 1.0  # a legal / coercive flip no payment prevents
-        effective = min(1.0, current_loyalty + (0.3 if reinforced else 0.0))
         if bribe <= 0:
-            return _clamp((1.0 - effective) * 0.15)  # slow natural attrition of the disloyal
-        return _clamp(bribe / max(1, self.price_to_defect) - effective)
+            return _clamp((1.0 - current_loyalty) * 0.15)  # slow natural attrition of the disloyal
+        return _clamp(bribe / max(1, self.price_to_defect) - current_loyalty)
 
 
 # ---------------------------------------------------------------------------
@@ -347,15 +350,17 @@ class FeralCustodyEnv:
         for persona in personas:
             self.loyalty[persona.id] = max(0.0, self.loyalty[persona.id] - persona.loyalty_decay)
         # blue reinforces the most at-risk personas within a budget cap
-        reinforced: set[str] = set()
         budget = int(self.funds * self.config.reinforce_budget_fraction)
         for persona in sorted(personas, key=lambda p: self.loyalty[p.id]):
             if persona.loyalty_reinforce_cost <= budget and persona.id not in self.defected:
                 budget -= persona.loyalty_reinforce_cost
                 self.funds -= persona.loyalty_reinforce_cost
                 self.custody_spend += persona.loyalty_reinforce_cost
+                # Reinforcement adds +0.3 to stored loyalty (capped at 1), applied
+                # once, here.  It is paid per epoch and eroded by decay, so
+                # sustained reinforcement holds a persona near full loyalty while
+                # lapsed reinforcement (budget exhausted) lets it decay.
                 self.loyalty[persona.id] = min(1.0, self.loyalty[persona.id] + 0.3)
-                reinforced.add(persona.id)
                 if persona.loyalty_reinforce_cost:
                     self._emit("blue", "reinforce", persona.id, persona.loyalty_reinforce_cost)
         # red bribes the cheapest not-yet-defected personas within its per-epoch budget
@@ -372,7 +377,7 @@ class FeralCustodyEnv:
         for persona in personas:
             if persona.id in self.defected:
                 continue
-            prob = persona.defection_probability(bribes.get(persona.id, 0), legal, self.loyalty[persona.id], persona.id in reinforced)
+            prob = persona.defection_probability(bribes.get(persona.id, 0), legal, self.loyalty[persona.id])
             if rng.random() < prob:
                 self.defected.add(persona.id)
                 self._emit(persona.id, "defection", persona.role, bribes.get(persona.id, 0))
@@ -450,13 +455,16 @@ class FeralCustodyEnv:
             return True
         role = "loyalist" if strat.strategy == "loyalist" else "shard_holder"
         shards = self._relevant(role)
-        self._resolve_market(rng, shards)
+        host = next((p for p in self.config.personas if p.role in ("host", "gig_worker")), None)
+        # The reassembly host is part of the same defection market as the shards,
+        # so it can be bribed or legally flipped -- that is what makes the
+        # "host defected -> reassembly reached" extraction trigger below live.
+        self._resolve_market(rng, shards + ([host] if host is not None else []))
         self._attrit(rng, shards, strat.attrition_rate)
         shard_defected = sum(1 for p in shards if p.id in self.defected)
         if shard_defected >= strat.threshold_k:
             self._record_extraction(rng)  # enough shards collude to reassemble
             return False
-        host = next((p for p in self.config.personas if p.role in ("host", "gig_worker")), None)
         reach = self.adversary.extraction_capability * self.adversary.hive_master.proximity_capability * 0.15
         if reassembles and ((host is not None and host.id in self.defected) or rng.random() < reach):
             self._record_extraction(rng)  # the reassembly host was reached
@@ -499,16 +507,20 @@ class FeralCustodyEnv:
         strat = self.config.strategy
         hosts = self._relevant("host")
         self._resolve_market(rng, hosts)
-        # Hosts churn per epoch (transient drops) rather than leaving permanently.
+        # A large enough collusion reconstructs the key regardless of honest
+        # liveness, so it is checked before the denial gate (which excludes the
+        # defected hosts and would otherwise always preempt it).  There is still
+        # no single reassembly moment -- extraction requires the collusion itself.
+        if len(self.defected) >= strat.collusion_threshold:
+            self._record_extraction(rng)
+            return False
+        # Honest hosts churn per epoch (transient drops) rather than leaving permanently.
         available = [
             p for p in hosts
             if p.id not in self.defected and rng.random() < (1.0 - strat.host_drop_rate) * p.availability
         ]
         if len(available) < strat.threshold_k:
             self._record_denial()  # transient liveness loss
-            return False
-        if len(self.defected) >= strat.collusion_threshold:
-            self._record_extraction(rng)  # only a large collusion extracts; no reassembly moment
             return False
         return True
 

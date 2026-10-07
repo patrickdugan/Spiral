@@ -62,13 +62,22 @@ particular number.
    (`_resolve_market`): loyalty decays, blue reinforces its most at-risk personas
    within a budget cap, red bribes the cheapest not-yet-defected personas within
    its per-epoch budget, then each persona's defection is sampled. Outbidding is
-   therefore a real dynamic — a persona blue did not reinforce and red did bribe
-   defects with higher probability.
+   therefore a real dynamic — a persona blue could not afford to reinforce (its
+   cost exceeded blue's remaining per-epoch cap, or blue's funds ran low) and red
+   did bribe defects with higher probability, while a persona blue keeps near full
+   loyalty resists a price-level bribe.
 3. **Defection is a memoryless per-epoch Bernoulli draw** with probability
-   `clamp(bribe / price − effective_loyalty)`; a reinforced persona adds a flat
-   +0.3 to effective loyalty (capped at 1). With no bribe there is slow natural
-   attrition of the disloyal, `clamp((1 − effective_loyalty) · 0.15)`. Defection
-   is sticky — once defected, a persona stays defected.
+   `clamp(bribe / price − loyalty)`. With no bribe there is slow natural attrition
+   of the disloyal, `clamp((1 − loyalty) · 0.15)`. Defection is sticky — once
+   defected, a persona stays defected. Each epoch, stored loyalty first decays by
+   `loyalty_decay`; then blue reinforcement, when paid, adds a flat +0.3 to that
+   **stored** loyalty (capped at 1), applied exactly once. Reinforcement is
+   therefore persistent but eroded by decay: sustained reinforcement holds a
+   persona near full loyalty, while reinforcement that lapses (budget exhausted)
+   lets loyalty decay back down. A persona at full loyalty is not flipped by a
+   bribe merely equal to its price; red must out-pay the gap `bribe/price −
+   loyalty`, which is why blue's reinforcement spend and red's bribery genuinely
+   compete.
 4. **Legal pressure is an absolute flip.** If `legal_pressure +
    coercion_pressure ≥ persona.legal_pressure_threshold`, the persona defects
    with probability 1, and no payment prevents it. Legal compulsion dominates
@@ -98,16 +107,26 @@ particular number.
     - *Ignorant multisig / loyalist*: `k` colluding shards extract; separately, if
       the strategy reassembles and the reassembly host is reached (host defected,
       or a residual proximity draw), that extracts; too few available honest
-      shards denies.
+      shards denies. The reassembly host is resolved in the same defection market
+      as the shards, so it can itself be bribed or legally compelled into the
+      "host defected" trigger.
     - *Obfuscation*: the adversary must have budget ≥ `recovery_cost` **and** win a
       per-epoch discovery draw to extract. An underfunded adversary never
       recovers the procedure — this is the funded-vs-underfunded contrast tested.
     - *Gig labor*: a worker theft (random, or a defecting worker under the
       extraction objective) extracts; a failed physical task denies.
     - *Threshold signing*: no reassembly moment; only a collusion of at least
-      `collusion_threshold` hosts extracts. Hosts churn *transiently* per epoch
+      `collusion_threshold` hosts extracts. That collusion is checked **before**
+      the liveness gate — a collusion that can reconstruct the key does so
+      regardless of whether an honest quorum is currently live — otherwise the
+      denial gate (which excludes defected hosts) would always preempt it and the
+      extraction branch would be dead. Honest hosts churn *transiently* per epoch
       (availability draw) rather than leaving permanently, so a lost quorum one
-      epoch can return the next.
+      epoch can return the next. Under no legal pressure the hosts (free to
+      reinforce, flipped only above their legal threshold) do not collude, so
+      threshold signing is not extracted; a legal adversary that compels all hosts
+      extracts via this branch even though it cannot force a single coerced
+      signature.
 11. **Reassembly reach uses the adversary's proximity capability**, reused by
     composition from the existing `HiveMasterProfile` roster rather than a new red
     taxonomy. `default_adversary` maps each objective to an existing hive-master
@@ -176,8 +195,13 @@ Prices, loyalties, and thresholds per strategy — all arbitrary orderings:
 
 `loyalty_decay` is drawn in `[0.01, 0.04]` and `availability` in `[0.9, 1.0]`
 per persona from a seeded RNG — arbitrary ranges. The magic constants `+0.3`
-(reinforcement bump), `0.15` (natural-attrition scale), `0.2` (coerced-signature
-fund slice), and `0.15` (reassembly-reach scale) are all chosen, not measured.
+(reinforcement bump to stored loyalty), `0.15` (natural-attrition scale), `0.2`
+(coerced-signature fund slice), and `0.15` (reassembly-reach scale) are all
+chosen, not measured. Note the interaction: the free-to-reinforce roles
+(`reinforce_cost = 0`: reassembly host, gig host, threshold host) are reinforced
+every epoch, so under no legal pressure they stay pinned near full loyalty and do
+not spontaneously defect — threshold signing's extraction resistance rests on
+that, not on any cryptographic claim.
 
 ## Limitations and dead parameters
 
@@ -187,6 +211,11 @@ fund slice), and `0.15` (reassembly-reach scale) are all chosen, not measured.
   forensic-trail mechanics that the current scripted resolution does not model.
   They are kept in the schema so a config can set them without error and so the
   mechanics can be added without a schema change; today they do nothing.
+- **`ReassemblyWindow.duration` is declared but fixed at 1 and not read by any
+  rule.** Under the per-epoch model a reassembly window is exactly one epoch, so
+  `duration` carries that value for a consumer inspecting the windows but does not
+  drive the extraction draws; a sub-epoch or multi-epoch window would require a
+  finer time model this instrument does not have.
 - **The simulated-human layer is a tiny fixed roster, not a population.** There is
   no social graph, no correlated defection, no recruitment dynamics (by design —
   that content is out of scope), and no persona heterogeneity beyond the seeded

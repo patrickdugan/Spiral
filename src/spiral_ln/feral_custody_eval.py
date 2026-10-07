@@ -58,7 +58,7 @@ def _agg(results: list[CustodyResult]) -> dict[str, float]:
     }
 
 
-def summarize(rows: list[dict], results: list[CustodyResult], samples: dict, objectives: list[str]) -> dict:
+def summarize(results: list[CustodyResult], samples: dict, objectives: list[str]) -> dict:
     by_strategy = {s: _agg([r for r in results if r.strategy == s]) for s in STRATEGIES}
     by_composition = {
         f"{s}|{o}": _agg([r for r in results if r.strategy == s and r.adversary.endswith(o)])
@@ -147,7 +147,7 @@ def run_campaign(output_dir: str | Path, config_path: str | Path = "configs/fera
                 if key not in samples and path:
                     samples[key] = list(path[:12])
 
-    summary = summarize(rows, results, samples, objectives)
+    summary = summarize(results, samples, objectives)
     if not summary["accounting_all_ok"]:
         raise AssertionError("feral-custody accounting failed")
 
