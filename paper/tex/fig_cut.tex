@@ -1,0 +1,45 @@
+% Figure: the prefix cut bound on a graph (Lemma lem:cut) and on a hypergraph (Lemma lem:hypercut).
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  vtx/.style={circle, draw, fill=white, minimum size=5.6mm, inner sep=0pt, font=\footnotesize},
+  stockA/.style={line width=2.6pt, black!80},
+  stockB/.style={line width=2.6pt, black!30},
+  plain/.style={line width=1.1pt, black!35},
+  flow/.style={-{Stealth[length=2.2mm]}, thin},
+  lab/.style={font=\footnotesize},
+]
+% (a) channels as edges
+\begin{scope}
+  \fill[black!7, rounded corners=7pt] (-0.65,-1.5) rectangle (2.05,1.5);
+  \node[lab, black!60] at (0.7,1.78) {$A$};
+  \coordinate (a1) at (0,0.9); \coordinate (a2) at (0,-0.9); \coordinate (a3) at (1.35,0);
+  \coordinate (u) at (3.7,0.9); \coordinate (v) at (3.7,-0.9);
+  \draw[plain] (a1) -- (a2); \draw[plain] (a1) -- (a3); \draw[plain] (u) -- (v);
+  \draw[stockA] (a1) -- ($(a1)!0.35!(u)$); \draw[stockB] ($(a1)!0.35!(u)$) -- (u);
+  \draw[stockA] (a3) -- ($(a3)!0.65!(u)$); \draw[stockB] ($(a3)!0.65!(u)$) -- (u);
+  \draw[stockA] (a3) -- ($(a3)!0.2!(v)$);  \draw[stockB] ($(a3)!0.2!(v)$) -- (v);
+  \draw[stockA] (a2) -- ($(a2)!0.5!(v)$);  \draw[stockB] ($(a2)!0.5!(v)$) -- (v);
+  \draw[flow] ($(a1)!0.2!(u)+(0,0.3)$) -- ($(a1)!0.8!(u)+(0,0.3)$) node[lab, midway, above] {$O_A$};
+  \draw[flow] ($(a2)!0.8!(v)+(0,-0.3)$) -- ($(a2)!0.2!(v)+(0,-0.3)$) node[lab, midway, below] {$I_A$};
+  \foreach \n/\t in {a1/$a_1$, a2/$a_2$, a3/$a_3$, u/$u$, v/$v$} \node[vtx] at (\n) {\t};
+  \node[lab, align=center, text width=6cm] at (1.55,-3.05) {(a) channels on $\partial A$. Dark: the $A$-side balance; light: the far side. $S_A$ sums the dark parts, $S'_A$ the light.};
+\end{scope}
+% (b) a hyperedge on the same cut
+\begin{scope}[xshift=7.6cm]
+  \fill[black!7, rounded corners=7pt] (-0.65,-1.5) rectangle (1.3,1.5);
+  \node[lab, black!60] at (0.33,1.78) {$A$};
+  \draw[plain] (1.6,0) ellipse (2.45 and 1.3);
+  \node[lab, black!60] at (2.95,1.02) {hyperedge $i$};
+  \coordinate (b1) at (0.25,0.65); \coordinate (b2) at (0.25,-0.65); \coordinate (h) at (3.15,0);
+  \draw[flow] (b1) to[bend right=40] node[lab, left] {same side} (b2);
+  \draw[flow] (h) -- node[lab, above, sloped, pos=0.55] {crosses $\partial A$} (b1);
+  \foreach \n/\t in {b1/$a_1$, b2/$a_2$, h/$h$} \node[vtx] at (\n) {\t};
+  \draw[stockA] (-0.6,-1.8) -- (0.5,-1.8); \draw[stockA] (0.58,-1.8) -- (1.68,-1.8); \draw[stockB] (1.76,-1.8) -- (3.8,-1.8);
+  \node[lab, below] at (-0.05,-1.86) {$\ell_i(a_1)$}; \node[lab, below] at (1.13,-1.86) {$\ell_i(a_2)$}; \node[lab, below right, inner xsep=0pt] at (1.8,-1.86) {$\ell_i(h)$: inbound stock};
+  \node[lab, align=center, text width=6cm] at (1.6,-3.05) {(b) the same cut through a hyperedge. $\chi_i$ is divided among the members; a transfer within one side moves nothing across $\partial A$.};
+\end{scope}
+\end{tikzpicture}
+\caption{The prefix cut bound. (a) On a graph, each channel crossing $\partial A$ is one capacity split between its two endpoints. The $A$-side balances sum to the outbound stock $S_A$ and the far-side balances to the inbound stock $S'_A$; a settled crossing moves value from one sum to the other, so $S_A(n)=S_A(0)-O_A(n)+I_A(n)+K_A(n)\ge 0$ under any routing policy (Lemma~\ref{lem:cut}). (b) On a hypergraph a channel's capacity is divided among all its members. A crossing changes the two sums as before, and a transfer between two members on the same side changes neither, so the bound is unchanged (Lemma~\ref{lem:hypercut}); for the agents inside $A$ the inbound stock on channel $i$ is the hub's part alone, one number for the group.}
+\label{fig:cut}
+\end{figure}

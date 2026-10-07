@@ -1,0 +1,56 @@
+% Figure: where the forecast lives under per-agent channels, an Ark, and a multiparty channel.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  vtx/.style={circle, draw, fill=white, minimum size=5.6mm, inner sep=0pt, font=\footnotesize},
+  vout/.style={draw, fill=white, minimum size=4.2mm, inner sep=0pt},
+  net/.style={draw, black!45, rounded corners=3pt, font=\footnotesize, inner sep=2.5pt, text=black!70},
+  stockA/.style={line width=2.6pt, black!80},
+  stockB/.style={line width=2.6pt, black!30},
+  plain/.style={line width=1.1pt, black!35},
+  lab/.style={font=\footnotesize},
+]
+% (a) per-agent channels
+\begin{scope}
+  \coordinate (h) at (1.5,2.1);
+  \foreach \x in {0,1,2,3} \coordinate (a\x) at (\x,0);
+  \draw[plain] (h) -- (1.5,3.2);
+  \foreach \x/\f in {0/0.72,1/0.8,2/0.66,3/0.76} { \draw[stockB] (h) -- ($(h)!\f!(a\x)$); \draw[stockA] ($(h)!\f!(a\x)$) -- (a\x); }
+  \node[net] at (1.5,3.45) {rest of network};
+  \foreach \x in {0,1,2,3} \node[vtx] at (a\x) {$a_\x$};
+  \node[vtx] at (h) {$h$};
+  \node[lab, align=center] at (1.5,-0.95) {(a) channels $C$\\ $k$ stocks, one per edge: $\sum_a\hat f_a$};
+\end{scope}
+% (b) an Ark
+\begin{scope}[xshift=5.1cm]
+  \coordinate (S) at (1.5,2.1);
+  \draw[plain] (S) -- (1.5,3.2);
+  \node[net] at (1.5,3.45) {rest of network};
+  \fill[black!7, rounded corners=5pt] (-0.55,-0.45) rectangle (3.55,1.4);
+  \foreach \x in {0,1,2,3} \draw[black!35, densely dotted] (S) -- (\x,0.1);
+  \foreach \x in {0,1,2,3} { \node[vout] at (\x,0.1) {}; \node[lab] at (\x,-0.25) {$a_\x$}; }
+  \draw[stockB] (-0.35,1.18) -- (3.35,1.18);
+  \node[lab, below, fill=black!7, inner sep=1.5pt] at (1.5,1.08) {$\hat f_S$: one stock for every holder};
+  \node[draw, black!60, rounded corners=2pt, fill=white, lab, align=center, inner sep=2pt] at (-0.55,2.1) {$W_S$ fronted,\\ unswept};
+  \node[vtx] at (S) {$S$};
+  \node[lab, align=center] at (1.5,-0.95) {(b) virtual outputs $V$\\ one stock, $\hat f_S$, plus $W_S$};
+\end{scope}
+% (c) a multiparty channel
+\begin{scope}[xshift=10.1cm]
+  \coordinate (h) at (1.5,2.1);
+  \foreach \x in {0,1,2,3} \coordinate (a\x) at (\x,0);
+  \draw[plain] (h) -- (1.5,3.2);
+  \node[net] at (1.5,3.45) {rest of network};
+  \draw[plain] (1.5,1.05) ellipse (2.2 and 1.6);
+  \draw[stockB] (-0.2,1.05) -- (2.2,1.05);
+  \foreach \x in {0,1,2,3} \draw[stockA] ({2.27+\x*0.25},1.05) -- ({2.45+\x*0.25},1.05);
+  \node[lab, below] at (1.0,0.93) {$\ell_i(h)=\hat f_{A_i}$: one stock};
+  \node[lab, below] at (2.75,0.93) {own};
+  \foreach \x in {0,1,2,3} \node[vtx] at (a\x) {$a_\x$};
+  \node[vtx] at (h) {$h$};
+  \node[lab, align=center] at (1.5,-0.95) {(c) multiparty channel $C_k$\\ one stock, $\hat f_{A_i}$, nothing fronted};
+\end{scope}
+\end{tikzpicture}
+\caption{Where the forecast lives, for the same $k$ agents and a hub. Light segments are stock placed by forecast before demand is known; dark segments are the agents' own balances. (a) Per-agent channels: the hub holds a separate stock on every edge, and the total is a sum of $k$ forecast peaks. (b) An Ark: outputs have no direction at the holder tier, the server co-signs every transfer, its stock is forecast once for all holders, and value fronted at spends and refreshes waits unswept as $W_S$ (Proposition~\ref{prop:relocation}). (c) A multiparty channel: one shared output whose hub part is the single stock for the group, forecast once, with nothing fronted and every update signed by all $k+1$ members (Proposition~\ref{prop:hyperpool}). The channel from $h$ or $S$ to the rest of the network carries a tier common to the three objects and is drawn without a stock.}
+\label{fig:objects}
+\end{figure}
