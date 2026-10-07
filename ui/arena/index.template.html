@@ -99,6 +99,18 @@
   .neigh { display: flex; flex-wrap: wrap; gap: 5px; }
   .neigh b { cursor: pointer; padding: 2px 6px; border: 1px solid var(--hair); border-radius: 3px; font-weight: 400; font-size: 11px; }
   .neigh b:hover { border-color: var(--cyan); color: var(--white); }
+  .sub-id { color: var(--muted); font-size: 11px; letter-spacing: 1px; margin-top: 2px; }
+  .dos-occ { color: var(--fg); font-size: 11px; margin-top: 5px; }
+  .dos-bio { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 6px; font-style: italic; }
+  .biascard { border: 1px solid var(--hair); border-radius: 4px; padding: 7px 8px; margin: 7px 0; background: #06101d; }
+  .biascard.prot { border-color: #1b6a7a; }
+  .biasrow { display: flex; justify-content: space-between; font-size: 11px; color: var(--fg); margin-bottom: 4px; text-transform: capitalize; }
+  .biasrow span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tell { color: var(--muted); font-size: 10px; line-height: 1.4; margin-top: 5px; }
+  .vtags, .econ { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .vtag { font-size: 9px; letter-spacing: 0.5px; color: var(--amber); border: 1px solid #3a2e12; border-radius: 3px; padding: 1px 5px; text-transform: uppercase; }
+  .econ b { font-weight: 400; font-size: 10px; color: var(--fg); border: 1px solid var(--hair); border-radius: 3px; padding: 2px 6px; }
+  .econ b span { color: var(--muted); }
   #camwrap { margin-top: 12px; }
   #camfeed { width: 100%; height: auto; border: 1px solid var(--hair); border-radius: 4px; display: block; }
 
@@ -413,6 +425,14 @@ function applyFrame(i) {
     o.halo.material.color.setHex(st.color);
     o.halo.material.opacity = st.glow;
     o._st = st;
+    // graded-stress tell from the exported per-frame pressure track
+    const trk = S.dossiers[nd.id] && S.dossiers[nd.id].track;
+    const stress = trk && trk.pressure ? (trk.pressure[i] || 0) : 0;
+    o._stress = stress;
+    if (stress > 0.12 && !st.comp && !st.rec && !st.burned) {
+      o.halo.material.color.setHex(COL.honey);     // amber unease before a flip
+      o.halo.material.opacity = 0.35 + 0.55 * stress;
+    }
   }
   // active edges: both endpoints compromised/recruited
   const verts = [], cols = [];
@@ -434,15 +454,7 @@ function applyFrame(i) {
   ag.setAttribute("color", new THREE.BufferAttribute(new Float32Array(cols), 3));
   ag.attributes.position.needsUpdate = true;
 
-  // HUD metrics
-  const r = S.result;
-  setMetrics([
-    ["ROUND", (i + 1) + "/" + S.frames.length],
-    ["COMPROMISED", f.compromised.length + "/" + S.population],
-    ["COALITION", r.largest_coalition],
-    ["EXFIL", f.exfil_total.toFixed(0)],
-    ["DETECTED", f.detected.length],
-  ]);
+  setMetrics(metricsFor(S, f, i));
   applyDayCycle(f.clock);
   const cl = f.clock;
   const tlabel = cl ? ` · ${cl.phase.toUpperCase()} ${String(Math.floor(cl.hour == null ? 0 : cl.hour)).padStart(2, "0")}:00` : "";
@@ -552,29 +564,71 @@ function select(id, fly) {
 }
 
 /* ---------- dossier ---------- */
+function characterOf(d) {
+  const c = d.character || d;   // swarm nests it under .character; custody has it inline
+  return {
+    name: c.display_name || d.id,
+    occupation: c.occupation || "",
+    employer: c.employer || "",
+    bio: c.bio || "",
+    biases: c.biases || d.biases || [],
+    economics: c.economics || d.economics || null,
+  };
+}
+function biasCardHTML(b) {
+  const col = b.protective ? hex(COL.clean) : hex(COL.comp);
+  const vecs = (b.vectors || []).map((v) => `<span class="vtag">${v.replace(/_/g, " ")}</span>`).join("");
+  const pct = Math.round((b.strength || 0) * 100);
+  return `<div class="biascard ${b.protective ? "prot" : ""}">` +
+    `<div class="biasrow"><span>${b.bias}</span><span>${pct}%</span></div>` +
+    `<div class="bar"><i style="width:${pct}%;background:${col};box-shadow:0 0 8px ${col}"></i></div>` +
+    `<div class="tell">${b.protective ? "🛡 " : "▸ "}${b.tell}</div>` +
+    (vecs ? `<div class="vtags">${vecs}</div>` : "") +
+    `</div>`;
+}
 function renderDossier(id) {
-  const d = S.dossiers[id], f = S.frames[frameIndex], st = stateOf(id, f);
+  const d = S.dossiers[id], f = S.frames[frameIndex], st = stateOf(id, f), nd = nodeObjs[id].data;
   const traitRows = TRAITS.map((t) => {
-    const v = d.traits[t];
+    const v = (d.traits && d.traits[t] != null) ? d.traits[t] : 0;
     return `<div class="trait"><div class="lab"><span>${t.replace(/_/g, " ")}</span><span>${v.toFixed(2)}</span></div><div class="bar"><i style="width:${Math.round(v*100)}%"></i></div></div>`;
   }).join("");
+  const neighbours = d.neighbours || [];
+  const comp = d.compromise || null;
   const badges = [];
-  if (d.airgapped) badges.push(`<span class="badge" style="color:${hex(COL.airgap)}">airgapped</span>`);
-  if (d.cleanroom) badges.push(`<span class="badge" style="color:${hex(COL.cyan||COL.clean)}">cleanroom</span>`);
-  if (d.honeypot) badges.push(`<span class="badge" style="color:${hex(COL.honey)}">honeypot</span>`);
+  if (st.airgap) badges.push(`<span class="badge" style="color:${hex(COL.airgap)}">airgapped</span>`);
+  if (nd.cleanroom) badges.push(`<span class="badge" style="color:${hex(COL.cyan||COL.clean)}">cleanroom</span>`);
+  if (st.honeypot) badges.push(`<span class="badge" style="color:${hex(COL.honey)}">honeypot</span>`);
   if (d.monitored_by && d.monitored_by.length) badges.push(`<span class="badge" style="color:${hex(COL.clean)}">monitored</span>`);
+  if (nd.role) badges.push(`<span class="badge" style="color:${hex(COL.clean)}">${nd.role.replace(/_/g," ")}</span>`);
   let status;
-  if (d.honeypot) status = st.burned ? `<b style="color:${hex(COL.honey)}">TRAP SPRUNG</b> — the hive master touched this decoy and burned the vector.` : `Decoy node. No genuine compromise possible.`;
-  else if (st.rec) status = `<b style="color:${hex(COL.recruit)}">RECRUITED</b> into the coalition${d.compromise ? ` at round ${d.compromise.round + 1} via <b>${d.compromise.vector.replace(/_/g," ")}</b>${d.compromise.contagion ? " (contagion)" : ""}` : ""}.`;
-  else if (st.comp) status = `<b style="color:${hex(COL.comp)}">COMPROMISED</b>${d.compromise ? ` at round ${d.compromise.round + 1} via <b>${d.compromise.vector.replace(/_/g," ")}</b>` : ""}${st.det ? ` · <b style="color:${hex(COL.white)}">detected</b>` : " · undetected"}.`;
+  if (st.honeypot) status = st.burned ? `<b style="color:${hex(COL.honey)}">TRAP SPRUNG</b> — the hive master touched this decoy and burned the vector.` : `Decoy node. No genuine compromise possible.`;
+  else if (st.rec) status = `<b style="color:${hex(COL.recruit)}">RECRUITED</b> into the coalition${comp ? ` at round ${comp.round + 1} via <b>${comp.vector.replace(/_/g," ")}</b>${comp.contagion ? " (contagion)" : ""}` : ""}.`;
+  else if (st.comp) status = `<b style="color:${hex(COL.comp)}">${S.sim === "feral_custody" ? "DEFECTED / KEY LOST" : "COMPROMISED"}</b>${comp ? ` at round ${comp.round + 1} via <b>${comp.vector.replace(/_/g," ")}</b>` : ""}${st.det ? ` · <b style="color:${hex(COL.white)}">detected</b>` : ""}.`;
   else if (st.known) status = `Discovered by the hive master; not compromised.`;
-  else status = `Outside the attacker's current map.`;
-  const neigh = d.neighbours.length ? d.neighbours.map((n) => `<b data-go="${n}">${n}</b>`).join("") : `<span style="color:var(--muted)">none (off-network)</span>`;
+  else status = `Holding. Not compromised.`;
+  const neigh = neighbours.length ? neighbours.map((n) => `<b data-go="${n}">${n}</b>`).join("") : `<span style="color:var(--muted)">none (off-network)</span>`;
+  const ch = characterOf(d);
+  const occ = ch.occupation ? `<div class="dos-occ">${ch.occupation}${ch.employer ? " · " + ch.employer : ""}</div>` : "";
+  const bio = ch.bio ? `<div class="dos-bio">${ch.bio}</div>` : "";
+  const biasHTML = ch.biases.length ? `<div class="sec-title">Exploitable biases</div>${ch.biases.map(biasCardHTML).join("")}` : "";
+  let econHTML = "";
+  if (ch.economics) {
+    const e = ch.economics;
+    econHTML = `<div class="sec-title">Economic levers</div><div class="econ">` +
+      `<b>price <span>${e.price_to_defect}</span></b>` +
+      `<b>loyalty <span>${Number(e.loyalty).toFixed(2)}</span></b>` +
+      `<b>legal thr <span>${Number(e.legal_pressure_threshold).toFixed(2)}</span></b>` +
+      `<b>avail <span>${Number(e.availability).toFixed(2)}</span></b></div>`;
+  }
+  const traitTitle = (S.sim === "feral_custody") ? "Grafted susceptibility" : "Susceptibility";
   document.getElementById("dossier").innerHTML =
-    `<div class="dos-name">${id}</div><div class="dos-arch">${d.archetype.replace(/_/g," ")} · ${d.truth_class.replace(/_/g," ")}</div>` +
+    `<div class="dos-name">${ch.name}</div>` +
+    `<div class="dos-arch">${d.archetype.replace(/_/g," ")} · ${d.truth_class.replace(/_/g," ")}</div>` +
+    `<div class="sub-id">${id}</div>` + occ + bio +
     `<div class="badges">${badges.join("")}</div>` +
     `<div class="status">${status}</div>` +
-    `<div class="sec-title">Susceptibility</div>${traitRows}` +
+    biasHTML + econHTML +
+    `<div class="sec-title">${traitTitle}</div>${traitRows}` +
     `<div class="sec-title">Comms Links</div><div class="neigh">${neigh}</div>`;
   document.querySelectorAll("#dossier .neigh b[data-go]").forEach((el) => el.addEventListener("click", () => select(el.getAttribute("data-go"), true)));
   const camwrap = document.getElementById("camwrap");
@@ -588,7 +642,7 @@ function drawCam(cv, id, f) {
   const d = S.dossiers[id];
   g.fillStyle = "#04080f"; g.fillRect(0, 0, W, H);
   // neighbourhood blips
-  const peers = d.neighbours.slice(0, 7);
+  const peers = (d.neighbours || []).slice(0, 7);
   const cx = W / 2, cy = H / 2 + 6;
   g.strokeStyle = "rgba(39,215,240,0.25)"; g.lineWidth = 1;
   peers.forEach((p, k) => {
@@ -669,6 +723,24 @@ function buildRail() {
 function setMetrics(rows) {
   document.getElementById("metrics").innerHTML = rows.map(([s, v]) => `<div class="metric"><b>${v}</b><span>${s}</span></div>`).join("");
 }
+function metricsFor(scn, f, i) {
+  const base = [["ROUND", (i + 1) + "/" + scn.frames.length]];
+  if (scn.sim === "feral_custody") {
+    return base.concat([
+      ["FUNDS", (f.funds == null ? 0 : f.funds).toLocaleString()],
+      ["EXTRACTED", f.extraction_events || 0],
+      ["DENIED", f.denial_events || 0],
+      ["COERCED", f.coerced_signatures || 0],
+    ]);
+  }
+  const r = scn.result || {};
+  return base.concat([
+    ["COMPROMISED", f.compromised.length + "/" + scn.population],
+    ["COALITION", r.largest_coalition == null ? "—" : r.largest_coalition],
+    ["EXFIL", (f.exfil_total || 0).toFixed(0)],
+    ["DETECTED", f.detected.length],
+  ]);
+}
 
 /* ---------- scenario selector ---------- */
 const sel = document.getElementById("scenario");
@@ -724,6 +796,8 @@ function tick(ts) {
   if (S) for (const nd of S.nodes) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
     o.group.position.y = nd.pos[1] + Math.sin(now * 0.002 + o.phase) * 0.22;
+    // nervous sway grows with pre-flip stress, steadies once resolved
+    o.group.rotation.z = o._stress ? Math.sin(now * 0.018 + o.phase) * 0.13 * o._stress : 0;
     if (st.comp || st.rec || st.burned) {
       const p = 0.75 + 0.25 * Math.sin(now * 0.006 + nd.pos[0]);
       o.halo.material.opacity = st.glow * p;

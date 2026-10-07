@@ -159,7 +159,8 @@ def _derive_identity(node_id: str, archetype: str, role: str | None, traits: dic
     name = f"{rng.choice(_GIVEN)} {rng.choice(_SURNAME)}"
     employer = rng.choice(_INSTITUTIONS)
     occupation = _ROLE_OCCUPATION.get(role or "", "") or _ARCHETYPE_OCCUPATION.get(archetype, "staff member")
-    bio = f"{name} is a {occupation} at {employer}; {_temperament(traits)}."
+    article = "an" if occupation[:1].lower() in "aeiou" else "a"
+    bio = f"{name} is {article} {occupation} at {employer}; {_temperament(traits)}."
     return {"display_name": name, "occupation": occupation, "employer": employer, "bio": bio}
 
 

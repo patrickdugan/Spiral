@@ -100,7 +100,20 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   added to the round label. Fixed a pre-existing bug surfaced during testing: `drawCam`
   referenced an undefined `COL.red` on the REC blink and threw intermittently; `COL.red` is
   now defined.
-- **Next:** the bias/exploitation visual language (graded-stress posture tells from each
-  dossier's `track`, attempt staging from frame `events`); biography/bias panels in the
-  inspector; and reading per-sim `result` fields so the custody/rtg `COALITION` stat is no
-  longer `undefined`.
+- **Increment 3 (done):** the biography/bias inspector and the graded-stress tell.
+  - The inspector now reads the unified character: derived name, occupation · employer, bio,
+    and an **Exploitable biases** panel — one card per bias (named bias, strength bar, the
+    animatable tell, and the attack-vector tags that exploit it), plus an **Economic levers**
+    panel for custody personas. `characterOf(d)` normalizes the two dossier layouts (swarm
+    nests the character under `.character`; custody stores it inline); `renderDossier`/`drawCam`
+    are now defensive about sim-specific fields so any sim's dossier renders.
+  - Figures carry a graded-stress tell driven by the exported per-frame pressure `track`: an
+    amber halo and a growing nervous sway before a flip, steadying once resolved.
+  - HUD metrics are per-sim (`metricsFor`): custody shows FUNDS/EXTRACTED/DENIED/COERCED;
+    swarm/rtg show COMPROMISED/COALITION/EXFIL/DETECTED, with a `—` fallback so the stat is
+    never `undefined`.
+  - Verified across all three replays (swarm, feral-custody, rtg) with every frame and node
+    exercised: no errors; bias cards read correctly (e.g. a lonely-true-believer loyalist shows
+    Seeks Connection / Rallies To A Shared Cause via cult_recruitment).
+- **Next (polish):** attacker-side staging of each attempt (approach + targeted-bias flare from
+  frame `events`), richer per-archetype figure silhouettes, and venue set-dressing / interiors.
