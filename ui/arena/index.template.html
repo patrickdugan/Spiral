@@ -261,6 +261,28 @@ function labelSprite(text) {
   return sp;
 }
 
+/* procedural low-poly humanoid NPC (self-authored geometry, one tintable
+   unlit material per figure; no external model assets). */
+function makeHumanoid() {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color: COL.clean });
+  const picks = [];
+  const part = (geo, y, x, rotZ) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x || 0, y, 0);
+    if (rotZ) m.rotation.z = rotZ;
+    group.add(m); picks.push(m);
+    return m;
+  };
+  part(new THREE.SphereGeometry(0.85, 8, 6), 2.25);                       // head
+  part(new THREE.CylinderGeometry(0.75, 1.0, 2.4, 6), 0.5);              // torso
+  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, 0.42);     // leg R
+  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, -0.42);    // leg L
+  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, 1.0, -0.35); // arm R
+  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, -1.0, 0.35); // arm L
+  return { group, mat, picks };
+}
+
 /* grid + ambiance */
 let gridGroup = null;
 function buildGrid() {
@@ -297,18 +319,17 @@ function buildScenario(scn) {
   nodeObjs = {}; nodeMeshes = []; effects.length = 0;
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
 
-  const sphere = new THREE.SphereGeometry(2.0, 18, 18);
   for (const nd of S.nodes) {
-    const mesh = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: COL.dark }));
-    mesh.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
-    mesh.userData.id = nd.id;
-    nodeGroup.add(mesh);
+    const h = makeHumanoid();
+    h.group.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
+    h.group.rotation.y = nd.pos[0] * 0.17 + nd.pos[2] * 0.11;   // face a varied direction
+    for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
+    nodeGroup.add(h.group);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    halo.scale.set(12, 12, 1); halo.position.copy(mesh.position); nodeGroup.add(halo);
+    halo.scale.set(10, 10, 1); halo.position.set(nd.pos[0], nd.pos[1] + 0.8, nd.pos[2]); nodeGroup.add(halo);
     const label = labelSprite(nd.id);
-    label.position.copy(mesh.position); label.position.y += 4; label.visible = false; nodeGroup.add(label);
-    nodeObjs[nd.id] = { mesh, halo, label, data: nd };
-    nodeMeshes.push(mesh);
+    label.position.set(nd.pos[0], nd.pos[1] + 5, nd.pos[2]); label.visible = false; nodeGroup.add(label);
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, halo, label, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
   }
 
   // base edges (static dim)
@@ -367,7 +388,7 @@ function applyFrame(i) {
   const f = S.frames[i];
   for (const nd of S.nodes) {
     const o = nodeObjs[nd.id], st = stateOf(nd.id, f);
-    o.mesh.material.color.setHex(st.color);
+    o.mat.color.setHex(st.color);
     o.halo.material.color.setHex(st.color);
     o.halo.material.opacity = st.glow;
     o._st = st;
@@ -418,7 +439,7 @@ function spawnEffects(f) {
     else if (ev.vector === "emanation_tap") c = COL.cyan || COL.clean;
     else if (ev.blocked) c = COL.airgap;
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
-    sp.position.copy(o.mesh.position);
+    sp.position.set(o.group.position.x, o.group.position.y + 1, o.group.position.z);
     scene.add(sp);
     effects.push({ sp, t: 0, life: 0.9 });
   }
@@ -437,14 +458,33 @@ function applyCam() {
   );
   camera.lookAt(cam.target);
 }
-function flyTo(id) {
-  const o = nodeObjs[id]; if (!o) return;
-  const p = o.mesh.position;
+function flyToPoint(x, y, z, radius) {
   tween = {
     t: 0, dur: 1.1,
     from: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, r: cam.radius, phi: cam.phi },
-    to: { tx: p.x, ty: p.y, tz: p.z, r: 30, phi: 1.15 },
+    to: { tx: x, ty: y, tz: z, r: radius, phi: 1.12 },
   };
+}
+function flyTo(id) {
+  const o = nodeObjs[id]; if (!o) return;
+  const p = o.group.position;
+  flyToPoint(p.x, p.y + 1, p.z, 26);
+}
+function venueGroups() {
+  const m = {};
+  for (const nd of S.nodes) {
+    const key = nd.venue || ("community " + (nd.community == null ? 0 : nd.community));
+    (m[key] = m[key] || []).push(nd);
+  }
+  return m;
+}
+function flyToVenue(nodes) {
+  let x = 0, y = 0, z = 0;
+  nodes.forEach((n) => { x += n.pos[0]; y += n.pos[1]; z += n.pos[2]; });
+  const k = Math.max(1, nodes.length); x /= k; y /= k; z /= k;
+  let rad = 36;
+  nodes.forEach((n) => { rad = Math.max(rad, Math.hypot(n.pos[0] - x, n.pos[2] - z) + 24); });
+  flyToPoint(x, y + 1, z, Math.min(rad, 150));
 }
 const easeInOut = (x) => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2, 3)/2;
 
@@ -581,7 +621,15 @@ function buildMosaic(f) {
 function buildRail() {
   const kn = document.getElementById("keynodes");
   kn.innerHTML = "";
-  const kinds = { honeypot: COL.honey, airgap: COL.airgap, hub: COL.clean, coalition: COL.recruit };
+  // Location hops: fly between the scenario's venues / communities.
+  const vg = venueGroups();
+  Object.keys(vg).sort().forEach((key) => {
+    const el = document.createElement("div"); el.className = "kn";
+    el.innerHTML = `<span class="dot" style="color:${hex(COL.cyan)}"></span>${key.replace(/_/g, " ")}<small>LOCATION</small>`;
+    el.addEventListener("click", () => flyToVenue(vg[key]));
+    kn.appendChild(el);
+  });
+  const kinds = { honeypot: COL.honey, airgap: COL.airgap, hub: COL.clean, coalition: COL.recruit, enclave: COL.airgap, reassembly: COL.recruit };
   S.key_nodes.forEach((k) => {
     const el = document.createElement("div"); el.className = "kn";
     el.innerHTML = `<span class="dot" style="color:${hex(kinds[k.kind] || COL.clean)}"></span>${k.id}<small>${k.label}</small>`;
@@ -648,13 +696,14 @@ function tick(ts) {
       else { playing = false; document.getElementById("play").textContent = "▶"; }
     }
   }
-  // pulse compromised nodes
+  // idle bob for every NPC, pulse the compromised ones
   if (S) for (const nd of S.nodes) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
+    o.group.position.y = nd.pos[1] + Math.sin(now * 0.002 + o.phase) * 0.22;
     if (st.comp || st.rec || st.burned) {
       const p = 0.75 + 0.25 * Math.sin(now * 0.006 + nd.pos[0]);
       o.halo.material.opacity = st.glow * p;
-      const s = 12 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1);
+      const s = 10 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1);
     }
   }
   // cages spin

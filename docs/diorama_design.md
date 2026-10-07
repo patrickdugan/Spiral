@@ -84,5 +84,16 @@ lives only in the researcher `dossiers`, never in an attacker-facing `node`.
 - The swarm replay's researcher `dossiers`/`nodes` still carry `truth_class` (pre-existing),
   so the diorama viewer's **attacker perspective** must render from the character's
   `attacker_view()` projection, never from `node.truth_class`.
-- NPCs still render as spheres; humanoid models, day/night lighting, bias/exploitation visual
-  language, and biography panels are the viewer overhaul, not this foundation.
+## Viewer overhaul (in progress)
+
+The three.js viewer is being rebuilt incrementally on top of the unified schema.
+
+- **Increment 1 (done):** procedural low-poly humanoid NPCs replace the spheres —
+  self-authored geometry (`makeHumanoid`), one tintable unlit material per figure, no external
+  model assets; tinted by sim state, idle-bob animated. Location-hop: a "Locations" fast-travel
+  list flies the camera between each scenario's venues (feral-custody/rtg `venue`) or swarm
+  communities. Verified against swarm and feral-custody replays with no console errors.
+- **Next:** day/night lighting driven by the exported per-frame `clock`; the bias/exploitation
+  visual language (graded-stress posture tells from each dossier's `track`, attempt staging
+  from frame `events`); biography/bias panels in the inspector; and reading per-sim `result`
+  fields so the custody/rtg `COALITION` stat is no longer `undefined`.
