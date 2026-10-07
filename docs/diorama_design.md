@@ -115,5 +115,19 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   - Verified across all three replays (swarm, feral-custody, rtg) with every frame and node
     exercised: no errors; bias cards read correctly (e.g. a lonely-true-believer loyalist shows
     Seeks Connection / Rallies To A Shared Cause via cult_recruitment).
-- **Next (polish):** attacker-side staging of each attempt (approach + targeted-bias flare from
-  frame `events`), richer per-archetype figure silhouettes, and venue set-dressing / interiors.
+- **Increment 4 (done):** scenario selection across all three sims. `spiral_ln.arena_replay`
+  merges the swarm, feral-custody, and rtg replays into one schema-2.0 replay (`build_combined`),
+  so one page's scenario selector hops between all three. Each sim keeps its own trait schema,
+  carried per scenario as `traits`; the viewer reads `S.traits` per scenario (falling back to
+  the top-level `traits`), so rtg dossiers show institutional traits while swarm/feral show the
+  human six. The combined page carries the unified "◇ SPIRAL // DIORAMA" title and the
+  `safety_note`. (The in-app preview pane caps the inlined-snapshot size, so the full ~550 KB
+  combined page is verified by test + a trimmed one-per-sim page in the browser; a real browser
+  opens the full page.)
+- **Tests:** `test_arena_replay` (combined spans all sims, each keeps its trait schema,
+  byte-identical) and `test_build_arena` (the real `build_arena.py` inlines the replay and the
+  page's embedded JSON parses with every sim's scenarios). The three.js/WebGL render itself is
+  verified interactively, not headlessly.
+- **Next (polish, optional):** attacker-side staging of each attempt (approach + targeted-bias
+  flare from frame `events`), richer per-archetype figure silhouettes, and venue set-dressing /
+  interiors.

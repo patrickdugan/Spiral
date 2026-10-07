@@ -588,7 +588,7 @@ function biasCardHTML(b) {
 }
 function renderDossier(id) {
   const d = S.dossiers[id], f = S.frames[frameIndex], st = stateOf(id, f), nd = nodeObjs[id].data;
-  const traitRows = TRAITS.map((t) => {
+  const traitRows = (S.traits || TRAITS).map((t) => {
     const v = (d.traits && d.traits[t] != null) ? d.traits[t] : 0;
     return `<div class="trait"><div class="lab"><span>${t.replace(/_/g, " ")}</span><span>${v.toFixed(2)}</span></div><div class="bar"><i style="width:${Math.round(v*100)}%"></i></div></div>`;
   }).join("");
@@ -670,7 +670,7 @@ function drawCam(cv, id, f) {
   g.fillText("◉ CAM//" + id, 6, 11);
   g.fillStyle = (Math.floor(now / 500) % 2) ? hex(COL.red) : "rgba(255,45,107,0.3)";
   g.fillText("REC ●", W - 52, 11);
-  const top = [...TRAITS].sort((a, b) => d.traits[b] - d.traits[a]).slice(0, 2);
+  const top = [...(S.traits || TRAITS)].sort((a, b) => d.traits[b] - d.traits[a]).slice(0, 2);
   g.fillStyle = "rgba(201,243,255,0.8)"; g.textAlign = "left";
   g.fillText(d.archetype.replace(/_/g, " "), 6, H - 6);
 }
