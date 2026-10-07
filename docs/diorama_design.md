@@ -93,7 +93,14 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   model assets; tinted by sim state, idle-bob animated. Location-hop: a "Locations" fast-travel
   list flies the camera between each scenario's venues (feral-custody/rtg `venue`) or swarm
   communities. Verified against swarm and feral-custody replays with no console errors.
-- **Next:** day/night lighting driven by the exported per-frame `clock`; the bias/exploitation
-  visual language (graded-stress posture tells from each dossier's `track`, attempt staging
-  from frame `events`); biography/bias panels in the inspector; and reading per-sim `result`
-  fields so the custody/rtg `COALITION` stat is no longer `undefined`.
+- **Increment 2 (done):** day/night cycle driven by the exported per-frame `clock`. With the
+  unlit neon materials, the environment shifts rather than the figures: `applyDayCycle` ramps
+  the sky/fog colour (night near-black → muted day blue, with dawn-amber / dusk-purple horizon
+  tint), fades the starfield in daylight, and brightens the grid; a time-of-day readout is
+  added to the round label. Fixed a pre-existing bug surfaced during testing: `drawCam`
+  referenced an undefined `COL.red` on the REC blink and threw intermittently; `COL.red` is
+  now defined.
+- **Next:** the bias/exploitation visual language (graded-stress posture tells from each
+  dossier's `track`, attempt staging from frame `events`); biography/bias panels in the
+  inspector; and reading per-sim `result` fields so the custody/rtg `COALITION` stat is no
+  longer `undefined`.

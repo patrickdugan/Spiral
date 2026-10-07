@@ -212,6 +212,7 @@ const COL = {
   known:   0x1b8aa0,
   dark:    0x0e3240,
   comp:    0xff2d6b,
+  red:     0xff2d6b,
   recruit: 0xb06bff,
   honey:   0xffb021,
   airgap:  0x2b5f8a,
@@ -284,12 +285,12 @@ function makeHumanoid() {
 }
 
 /* grid + ambiance */
-let gridGroup = null;
+let gridGroup = null, gridLines = null, starField = null;
 function buildGrid() {
   if (gridGroup) scene.remove(gridGroup);
   gridGroup = new THREE.Group();
   const grid = new THREE.GridHelper(400, 40, 0x0d3344, 0x07202c);
-  grid.position.y = -60; gridGroup.add(grid);
+  grid.position.y = -60; grid.material.transparent = true; gridGroup.add(grid); gridLines = grid;
   // starfield
   const n = 500, pos = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
@@ -299,8 +300,28 @@ function buildGrid() {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  gridGroup.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x14506a, size: 1.6, transparent: true, opacity: 0.7 })));
+  starField = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x14506a, size: 1.6, transparent: true, opacity: 0.7 }));
+  gridGroup.add(starField);
   scene.add(gridGroup);
+}
+
+/* day/night: drive sky / fog / stars / grid from the exported per-frame clock.
+   Figures stay neon (self-lit) and readable; only the environment shifts. */
+const lerp = (a, b, t) => a + (b - a) * t;
+function applyDayCycle(clock) {
+  if (!clock) return;
+  const t = clock.time_of_day == null ? 0 : clock.time_of_day;
+  const elev = Math.sin((t - 0.25) * Math.PI * 2);   // -1 midnight .. +1 noon
+  const daylight = Math.max(0, elev);                 // 0 at night, 1 at noon
+  const horizon = Math.max(0, 1 - Math.abs(elev) * 2.2);  // dawn / dusk glow band
+  let r = lerp(0x04, 0x12, daylight), g = lerp(0x06, 0x20, daylight), b = lerp(0x0c, 0x38, daylight);
+  if (t < 0.5) { r += horizon * 0x2e; g += horizon * 0x18; b += horizon * 0x06; }   // dawn amber
+  else { r += horizon * 0x22; g += horizon * 0x08; b += horizon * 0x30; }            // dusk purple
+  const sky = (Math.min(255, r) | 0) * 65536 + (Math.min(255, g) | 0) * 256 + (Math.min(255, b) | 0);
+  renderer.setClearColor(sky, 1);
+  if (scene.fog) scene.fog.color.setHex(sky);
+  if (starField) starField.material.opacity = lerp(0.75, 0.05, daylight);
+  if (gridLines) gridLines.material.opacity = lerp(0.5, 0.95, daylight);
 }
 
 /* ---------- scenario build ---------- */
@@ -422,7 +443,10 @@ function applyFrame(i) {
     ["EXFIL", f.exfil_total.toFixed(0)],
     ["DETECTED", f.detected.length],
   ]);
-  document.getElementById("roundlabel").textContent = "ROUND " + String(i + 1).padStart(2, "0");
+  applyDayCycle(f.clock);
+  const cl = f.clock;
+  const tlabel = cl ? ` · ${cl.phase.toUpperCase()} ${String(Math.floor(cl.hour == null ? 0 : cl.hour)).padStart(2, "0")}:00` : "";
+  document.getElementById("roundlabel").textContent = "ROUND " + String(i + 1).padStart(2, "0") + tlabel;
   document.getElementById("scrub").value = String(i);
 
   buildMosaic(f);
