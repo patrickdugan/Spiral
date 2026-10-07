@@ -18,6 +18,7 @@ from dataclasses import asdict
 from pathlib import Path
 from random import Random
 
+from .diorama import SCHEMA_VERSION, DioramaCharacter, day_phase, from_swarm_profile, pressure_series
 from .swarm_compromise import (
     CAPABILITY_FOR_VECTOR,
     HIVE_MASTER_BY_NAME,
@@ -181,6 +182,24 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
             }
         )
     edges = sorted([sorted(edge) for edge in env.graph.edges()])
+
+    # Diorama enrichment (additive): a unified character + graded stress track per
+    # node, and the exported day-cycle clock per frame.  The current viewer ignores
+    # these fields; the diorama viewer animates them.
+    for frame in frames:
+        frame["clock"] = day_phase(frame["round"], config.rounds)
+    dossiers = _dossiers(env)
+    for node in env.nodes:
+        posture_obj = env.postures[node]
+        community = env.nodes.index(node) % max(1, config.communities)
+        venue = "vault" if posture_obj.airgapped else ("decoy" if posture_obj.honeypot else f"community_{community}")
+        character = from_swarm_profile(env.profiles[node], node, venue, node, seed)
+        attempts = {event.round_index for event in env.events if event.target == node}
+        compromise = dossiers[node].get("compromise")
+        flip = compromise["round"] if compromise else None
+        dossiers[node]["character"] = character.to_dict()
+        dossiers[node]["track"] = {"pressure": pressure_series(config.rounds, attempts, flip), "flip_round": flip}
+
     return {
         "id": f"{posture} · {hive_master_name} · seed {seed}",
         "posture": posture,
@@ -197,7 +216,7 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
         "edges": edges,
         "defenders": [{"name": d.name, "domain": list(d.domain)} for d in env.defenders],
         "frames": frames,
-        "dossiers": _dossiers(env),
+        "dossiers": dossiers,
         "key_nodes": _key_nodes(env),
         "result": {
             "compromise_rate": round(result.compromise_rate, 3),
@@ -226,13 +245,15 @@ def build_replay(
         for profile in PROFILE_ARCHETYPES
     }
     return {
-        "schema_version": "1.0",
+        "schema_version": SCHEMA_VERSION,
         "generator": "spiral_ln.swarm_replay",
         "safety_note": (
             "Synthetic and abstract. Dossiers are scripted NPC trait vectors; "
             "cam feeds are stylized readouts of abstract in-sim intel, not "
             "surveillance of any real person. No model, network, or payload."
         ),
+        "sims": ["swarm_compromise"],
+        "safety_boundary": DioramaCharacter.safety_boundary(),
         "traits": list(TRAITS),
         "archetypes": archetypes,
         "scenarios": [export_scenario(p, h, s, config) for (p, h, s) in scenarios],

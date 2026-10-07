@@ -71,7 +71,11 @@ lives only in the researcher `dossiers`, never in an attacker-facing `node`.
 - The current three.js viewer reads swarm-only `result` fields (e.g. `largest_coalition`), so a
   feral-custody replay shows `undefined` for the coalition stat. The viewer overhaul will read
   per-sim result fields.
-- `swarm_replay` and `rtg_arena_export` do not yet emit `DioramaCharacter`; unifying them (and
-  reconciling the two trait schemas rtg uses) is the next step, gated on approval.
+- `swarm_replay` now emits `DioramaCharacter` + a graded stress `track` per dossier and a
+  per-frame `clock` (additive; `schema_version` 2.0). `rtg_arena_export` does not yet (its
+  separate trait schema must be reconciled) — that is the next additive step.
+- The swarm replay's researcher `dossiers`/`nodes` still carry `truth_class` (pre-existing),
+  so the diorama viewer's **attacker perspective** must render from the character's
+  `attacker_view()` projection, never from `node.truth_class`.
 - NPCs still render as spheres; humanoid models, day/night lighting, bias/exploitation visual
   language, and biography panels are the viewer overhaul, not this foundation.
