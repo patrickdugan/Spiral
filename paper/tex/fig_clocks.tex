@@ -1,0 +1,21 @@
+% Figure: the two clocks on capacity inside a factory.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  lab/.style={font=\footnotesize, align=center},
+  box/.style={draw, rounded corners=2pt, font=\footnotesize, align=center, inner sep=3pt, fill=white},
+  flow/.style={-{Stealth[length=2mm]}},
+]
+  \node[box, fill=black!7] (fund) at (0,0) {shared output\\ on chain};
+  \node[box] (alloc) at (4.4,0) {allocation state\\ signed by all members};
+  \foreach \i/\y in {1/1.2, 2/0, 3/-1.2} { \node[box] (s\i) at (8.9,\y) {subchannel $h$--$a_\i$}; }
+  \draw[flow] (fund) -- (alloc);
+  \foreach \i in {1,2,3} \draw[flow] (alloc) -- (s\i);
+  \draw[flow, dashed] (s1.east) to[bend left=60] (s3.east);
+  \node[lab] at (8.9,-2.3) {$R_a$: move capacity between subchannels;\\ one signing round, no transaction; $\sum_a R_a=0$};
+  \draw[flow, black!60] (alloc.south) to[bend left=28] (fund.south);
+  \node[lab, black!60] at (2.2,-1.75) {$K'_a$: change the total;\\ a transaction and its confirmations};
+\end{tikzpicture}
+\caption{A factory's two clocks. The shared output is a chain object; the allocation that divides it among the subchannels is an off-chain state that every member signs. Moving capacity between subchannels, $R_a$ in Equation~\eqref{eq:realloc}, takes one signing round and conserves the total; changing the total, $K'_a$, takes a transaction on chain and its confirmations. Inside the factory a forecast made per agent can be corrected from another agent's idle capacity at the speed of a signature, and only the factory's total remains a chain-clocked forecast.}
+\label{fig:clocks}
+\end{figure}

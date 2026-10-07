@@ -1,10 +1,11 @@
 // Emits the liquidity-duration grid of the paper (paper/tex, tab:grid), its accounting variants (tab:acct),
 // the failed events behind each grid row (tab:fail), the multiparty-channel comparison on the same
-// demand (tab:hyper, tab:hyperfail), and the curves of the figure beside it (fig:gain) as LaTeX rows.
+// demand (tab:hyper, tab:hyperfail), the curves of the figure beside it (fig:gain), and the sample paths of
+// the figure beside Remark 1 (fig:walks) as LaTeX rows.
 // Run: node --experimental-strip-types model/grid.ts > paper/tex/grid.tex
 // Every number in those tables comes from here; nothing is hand-edited.
 
-import { runCorner, type CornerParams } from "./server.ts";
+import { rng, runCorner, type CornerParams } from "./server.ts";
 
 const trailing = { kind: "trailing", intervalBlocks: 4032, roundBlocks: 6 } as const;
 const oracle = { kind: "oracle" } as const;
@@ -91,3 +92,33 @@ const curveRows = curveKs.map((k, i) =>
 );
 process.stdout.write("\\pgfplotstableread[row sep=\\\\]{k zero drain fails \\\\\n" + curveRows.join("\n") + "\n}\\hypercurve\n");
 process.stdout.write(`\\newcommand{\\hyperfloor}{${trail.arkFailures}}\n`);
+
+// Sample paths for the figure beside Remark 1 (fig:walks): four agents of the zero-drift cell, balances
+// kept as in the channel replay (a spend from an empty balance fails), over walkT rounds, with their sum;
+// and the two stocks the remark compares, the sum of the four peaks and the peak of the sum.
+const walkT = 400;
+const walkAgents = 4;
+const walk = rng(11);
+const walkBal = new Array<number>(walkAgents).fill(0);
+const walkPeak = new Array<number>(walkAgents).fill(0);
+let walkSumPeak = 0;
+const walkRows: string[] = [];
+const pOutWalk = (0.02 * 5000) / 4000; // zero drift: E[out] = E[in]
+for (let t = 0; t <= walkT; t++) {
+  if (t > 0) {
+    for (let a = 0; a < walkAgents; a++) {
+      const inn = walk() < 0.02 ? 5000 : 0;
+      const out = walk() < pOutWalk ? 4000 : 0;
+      walkBal[a] = walkBal[a]! + inn;
+      if (out <= walkBal[a]!) walkBal[a] = walkBal[a]! - out;
+      walkPeak[a] = Math.max(walkPeak[a]!, walkBal[a]!);
+    }
+  }
+  const total = walkBal.reduce((s, x) => s + x, 0);
+  walkSumPeak = Math.max(walkSumPeak, total);
+  walkRows.push(`${t} ${walkBal.join(" ")} ${total} \\\\`);
+}
+process.stdout.write("\\pgfplotstableread[row sep=\\\\]{t a1 a2 a3 a4 sum \\\\\n" + walkRows.join("\n") + "\n}\\walkpaths\n");
+process.stdout.write(`\\newcommand{\\walkT}{${walkT}}\n`);
+process.stdout.write(`\\newcommand{\\walkpeaksum}{${walkPeak.reduce((s, x) => s + x, 0)}}\n`);
+process.stdout.write(`\\newcommand{\\walksumpeak}{${walkSumPeak}}\n`);

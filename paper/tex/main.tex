@@ -122,7 +122,9 @@ What makes the problem expensive for a population is not that each instance is h
 Let each agent's per-round net inflow be independent with mean $\mu$ and variance $\sigma^2$. The agent's cumulative imbalance is a random walk whose running maximum over $T$ rounds has expectation of order $\sigma\sqrt T$ when $\mu=0$ and order $\mu T$ when $\mu>0$ dominates. The sum of $N$ such walks is a walk with variance $N\sigma^2$ per round, so its running maximum is of order $\sigma\sqrt{NT}$ at zero drift and $N\mu T$ otherwise. The ratio of sum-of-peaks to peak-of-sum is therefore of order $\sqrt N$ at zero drift and of order $1$ when a common drift dominates, since each agent's peak and the sum's peak are then both set by accumulated drift and both sides come to $N\mu T$. That is the scale for imbalances that can take either sign, which requires agents holding balances they can spend down. An agent that starts from nothing cannot spend what it has not received, and its balance is the walk reflected at zero. Reflected walks do not net. The sum of $N$ of them is $N$ times the expectation of one, up to fluctuations of order $\sqrt N$, and since that expectation grows with time the peak of the sum is at least $N\sigma\sqrt{2T/\pi}$, against a sum of peaks of $N\sigma\sqrt{\pi T/2}$ in the diffusion limit. At zero drift the ratio therefore rises from $1$ toward $\pi/2$ as $N$ grows and does not pass it. Under a draining drift each balance is stationary and the ratio is that of its peak to its mean, a larger constant that grows slowly with $T$; under an accumulating drift it is $1$ as before. Pooling buys a factor of $\sqrt N$ on signed imbalance, a constant near $\pi/2$ on the imbalance of agents with nothing to spend down, and nothing on correlated accumulation.
 \end{remark}
 
-That remark is the whole of what Section~\ref{sec:ark} finds when it computes the thing exactly, and it is worth having in view before the objects are introduced: a settlement object relocates the forecast from per-edge to per-pool, and the relocation is worth $\sqrt N$ on one kind of demand, a constant on the kind this paper's population presents, and nothing on a third.
+That remark is the whole of what Section~\ref{sec:ark} finds when it computes the thing exactly, and it is worth having in view before the objects are introduced: a settlement object relocates the forecast from per-edge to per-pool, and the relocation is worth $\sqrt N$ on one kind of demand, a constant on the kind this paper's population presents, and nothing on a third. Figure~\ref{fig:walks} draws the comparison on four of the model's agents.
+
+\input{fig_walks}
 
 \subsection{What a simulator shows}
 \label{sec:sim}
@@ -241,7 +243,9 @@ For the channel, $\mathrm{Locked}_C(t)=\sum_a\hat f_a$, held for the horizon whe
 \end{equation}
 The ratio exceeds one when pre-funded per-agent capacity sits idle for long relative to what the server locks: many agents, idiosyncratic and uncorrelated imbalance, a horizon long against $\bar L$. It falls below one when balances recycle within one channel faster than $\bar L$, so that a small envelope serves a large volume: a few agents in steady bidirectional flow with fixed counterparties. An agent population is not favored by the VTXO because it is high-frequency; high frequency to a fixed counterparty is the channel's best case. It is favored when the population is large and its imbalances net across members.
 
-Equation~\eqref{eq:ratio} has one input that the cited documentation does not fix, and it sets the scale of $\bar L$. When the server fronts a Lightning spend from a holder's VTXO, the forfeited input is either swept only at its absolute expiry, in which case $\bar L$ is on the order of half a lifetime, or presented to the next round as an input and its value reused one round later, in which case $\bar L$ is one round interval. The implementer states that Lightning payments use HTLC-based policies rather than forfeits \citep{second2026forfeits}, which is consistent with either reading. The reference model carries both as a parameter.
+Equation~\eqref{eq:ratio} has one input that the cited documentation does not fix, and it sets the scale of $\bar L$. When the server fronts a Lightning spend from a holder's VTXO, the forfeited input is either swept only at its absolute expiry, in which case $\bar L$ is on the order of half a lifetime, or presented to the next round as an input and its value reused one round later, in which case $\bar L$ is one round interval. The implementer states that Lightning payments use HTLC-based policies rather than forfeits \citep{second2026forfeits}, which is consistent with either reading. The reference model carries both as a parameter. Figure~\ref{fig:locks} draws the two readings beside the channel's lock.
+
+\input{fig_locks}
 
 \subsection{Reference-model results}
 \label{sec:grid}
@@ -342,7 +346,9 @@ Section~\ref{sec:lightning} gave every capacity event a confirmation clock, and 
 I_a(n)-O_a(n)\;\le\;S'_a(0)+K'_a(n)+R_a(n),\qquad \sum_{a\in\mathcal M}R_a(n)=0,
 \label{eq:realloc}
 \end{equation}
-where $K'_a$ still carries a confirmation clock and $R_a$ carries the latency of a signing round among $\mathcal M$. A per-agent forecast that turns out wrong is corrected from another agent's idle capacity in the time it takes $|\mathcal M|$ parties to sign, and only the factory's total remains a forecast with a chain clock. A factory that reallocates every round has the bound of the single multiparty channel of Proposition~\ref{prop:hyperpool}, and one that never reallocates has the bound of $k$ separate channels. The demand-shift row of Table~\ref{tab:sim}, where a placement that had been right became worthless, describes capital that could not be moved; inside a factory it can be, among the members and no further.
+where $K'_a$ still carries a confirmation clock and $R_a$ carries the latency of a signing round among $\mathcal M$. A per-agent forecast that turns out wrong is corrected from another agent's idle capacity in the time it takes $|\mathcal M|$ parties to sign, and only the factory's total remains a forecast with a chain clock. A factory that reallocates every round has the bound of the single multiparty channel of Proposition~\ref{prop:hyperpool}, and one that never reallocates has the bound of $k$ separate channels. The demand-shift row of Table~\ref{tab:sim}, where a placement that had been right became worthless, describes capital that could not be moved; inside a factory it can be, among the members and no further. Figure~\ref{fig:clocks} draws the two clocks.
+
+\input{fig_clocks}
 
 \subsection{What the pooling costs}
 
@@ -451,7 +457,9 @@ The registry therefore takes claims by epoch. A claim is accepted only against $
 Under the epoch rule and the assumptions of Proposition~\ref{prop:sybil}, the weight attributed in one epoch to any lineage of objects under one authority is at most the value settled under that authority at epoch start, whatever the number of identifiers the lineage passes through within the epoch.
 \end{proposition}
 
-The epoch length should not much exceed the refresh cadence, or an honest holder waits a lifetime to claim a boarded output; and the successor attestation is one more statement the verifier trusts the server for, added to the co-signing trust it already carries. The reference model witnesses both propositions on finite cases and reproduces the hole: a registry without the epoch rule accepts eight claims on one object spent to eight identifiers.
+The epoch length should not much exceed the refresh cadence, or an honest holder waits a lifetime to claim a boarded output; and the successor attestation is one more statement the verifier trusts the server for, added to the co-signing trust it already carries. The reference model witnesses both propositions on finite cases and reproduces the hole: a registry without the epoch rule accepts eight claims on one object spent to eight identifiers. Figure~\ref{fig:epoch} draws the rule and the hole it closes.
+
+\input{fig_epoch}
 
 \subsection{The service relation}
 
@@ -477,13 +485,9 @@ The economic consequence is a scale. The fixed cost of a permissionless verifier
 \subsection{The bond as an object}
 \label{sec:bond}
 
-A bond that is a number in a record, released or slashed by arithmetic on the same record, admits a negative slash, an over-release, and a bond declared after its owner's wealth is exhausted; the reference model's audit found all three in an earlier implementation. Under the tuple of Table~\ref{tab:objects} a bond is an object of class $E$: an on-chain output whose script releases to the operator after $\Delta$ unless a valid disprove consumes a connector output first. Its states are
-\[
-\mathrm{Locked}\xrightarrow{\ \mathrm{Assert}(\pi)\ }\mathrm{Claimed}\xrightarrow{\ \Delta\text{ elapsed, no Disprove}\ }\mathrm{Released},
-\qquad
-\mathrm{Claimed}\xrightarrow{\ \mathrm{Disprove}(\ell^\ast)\ }\mathrm{Slashed},
-\]
-with the release condition a statement in $\Rsvc$ with $k/m$ above the bonded threshold.
+A bond that is a number in a record, released or slashed by arithmetic on the same record, admits a negative slash, an over-release, and a bond declared after its owner's wealth is exhausted; the reference model's audit found all three in an earlier implementation. Under the tuple of Table~\ref{tab:objects} a bond is an object of class $E$: an on-chain output whose script releases to the operator after $\Delta$ unless a valid disprove consumes a connector output first. Its states are those of Figure~\ref{fig:escrow}: Locked, Claimed on a valid Assert, then Released after $\Delta$ with no Disprove or Slashed on one, with the release condition a statement in $\Rsvc$ with $k/m$ above the bonded threshold.
+
+\input{fig_escrow}
 
 \begin{proposition}[enforceable bond]
 \label{prop:bond}
@@ -633,7 +637,7 @@ $O_{\mathrm{chain}},O_{\mathrm{gossip}},O_{\mathrm{peer}},O_{\mathrm{server}}$ &
 \section{Reference model}
 \label{app:model}
 
-The model accompanying this paper \citep{spiral2026} is TypeScript with no dependencies, under \texttt{model/}, run with \texttt{node --experimental-strip-types --test "model/*.test.ts"}. It implements the extended ledger with clocked settlement events (Proposition~\ref{prop:conservation}); the server liquidity ledger under both recovery readings, the refresh cycle, the aggregate bound, and the server-tier term, with the channel model under oracle and trailing forecasts and the grid of Table~\ref{tab:grid} (Proposition~\ref{prop:relocation}); the multiparty channel on the same demand, checked to coincide with the channel model at $k=1$, and the tables of Section~\ref{sec:bip448} and the curves of Figure~\ref{fig:gain} (Proposition~\ref{prop:hyperpool}); the epoched registry with authority-keyed nullifiers and attested successors (Propositions~\ref{prop:sybil}, \ref{prop:epoch}); the escrow state machine with the published BitVM3 sizes as inputs (Proposition~\ref{prop:bond}); and three warden statistics on a coalition fixture, with the two that fail asserted to fail. It also holds the witness of Appendix~\ref{app:topology}: three cubic bipartite polyhedral graphs, a Hamiltonian cycle avoiding each edge in turn found by exhaustive search, and the unit circulation round it. The proof system is not implemented; the registry verifies a simulated attestation with the interface a verifier would expose. Nineteen tests pass at the cited commit; they witness the propositions on finite cases and prove nothing about distributed execution.
+The model accompanying this paper \citep{spiral2026} is TypeScript with no dependencies, under \texttt{model/}, run with \texttt{node --experimental-strip-types --test "model/*.test.ts"}. It implements the extended ledger with clocked settlement events (Proposition~\ref{prop:conservation}); the server liquidity ledger under both recovery readings, the refresh cycle, the aggregate bound, and the server-tier term, with the channel model under oracle and trailing forecasts and the grid of Table~\ref{tab:grid} (Proposition~\ref{prop:relocation}); the multiparty channel on the same demand, checked to coincide with the channel model at $k=1$, and the tables of Section~\ref{sec:bip448} the curves of Figure~\ref{fig:gain}, and the sample paths of Figure~\ref{fig:walks} (Proposition~\ref{prop:hyperpool}); the epoched registry with authority-keyed nullifiers and attested successors (Propositions~\ref{prop:sybil}, \ref{prop:epoch}); the escrow state machine with the published BitVM3 sizes as inputs (Proposition~\ref{prop:bond}); and three warden statistics on a coalition fixture, with the two that fail asserted to fail. It also holds the witness of Appendix~\ref{app:topology}: three cubic bipartite polyhedral graphs, a Hamiltonian cycle avoiding each edge in turn found by exhaustive search, and the unit circulation round it. The proof system is not implemented; the registry verifies a simulated attestation with the interface a verifier would expose. Nineteen tests pass at the cited commit; they witness the propositions on finite cases and prove nothing about distributed execution.
 
 \section{A remark on designed topologies}
 \label{app:topology}

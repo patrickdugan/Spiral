@@ -1,0 +1,20 @@
+% Figure: the escrow as a state machine, with BitVM3's published sizes.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  state/.style={draw, rounded corners=3pt, font=\footnotesize, align=center, inner sep=4pt, minimum height=7mm, fill=white},
+  lab/.style={font=\footnotesize, align=center},
+  flow/.style={-{Stealth[length=2mm]}},
+]
+  \node[state, fill=black!7] (L) at (0,0) {Locked\\ bond $B$};
+  \node[state] (C) at (6.2,0) {Claimed};
+  \node[state] (R) at (12.0,0) {Released\\ to the operator};
+  \node[state] (S) at (6.2,-2.3) {Slashed};
+  \draw[flow] (L) -- node[lab, below, pos=0.56, yshift=-3pt, text width=4.4cm] {Assert($\pi$), about 2.4\,kvB: adaptor signatures reveal the proof's circuit labels} (C);
+  \draw[flow] (C) -- node[lab, above, yshift=2pt] {$\Delta$ elapsed, no Disprove} (R);
+  \draw[flow] (C) -- node[lab, right, xshift=3pt] {Disprove($\ell^\ast$), about 93\,vB:\\ one hash preimage} (S);
+  \node[lab, black!60, text width=13.4cm] at (6.0,-3.75) {Setup: an $n$-of-$n$ committee presigns this graph and one member deletes its key; the operator garbles the proof verifier, about 41\,GB, seven circuits under cut-and-choose. Challenge: any one honest challenger evaluates the circuit off chain in about six minutes and, if the proof is false, learns $\ell^\ast$.};
+\end{tikzpicture}
+\caption{The bond as an object of class $E$ (Proposition~\ref{prop:bond}), with the figures BitVM3 publishes \citep{linus2026bitvm3}. A true Assert is released after the challenge period; a false one is slashed by any single challenger at a cost that does not depend on the bond. The committee at setup and the per-assertion garbled circuit are the costs Section~\ref{sec:cost} calls bond-scale.}
+\label{fig:escrow}
+\end{figure}

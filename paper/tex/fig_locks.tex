@@ -1,0 +1,30 @@
+% Figure: locked capital-time under the channel and under the VTXO's two recovery readings.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=0.9cm, y=1cm, lab/.style={font=\footnotesize}]
+  % time axis, horizon H = 10 units, spends at three times
+  \draw[-{Stealth[length=2mm]}] (0,0) -- (10.5,0) node[lab, right] {time};
+  \draw (0,0.08) -- (0,-0.08) node[lab, below] {$0$};
+  \draw (10,0.08) -- (10,-0.08) node[lab, below] {$H$};
+  \foreach \x in {1.8, 4.4, 7.1} { \draw[black!60] (\x,0.08) -- (\x,-0.08); \node[lab, below, black!60] at (\x,-0.05) {spend}; }
+  % rows
+  \node[lab, left, align=right] at (-0.2,4.3) {channel $C$:\\ $\hat f_a$ toward one agent};
+  \fill[black!25] (0,4.0) rectangle (10,4.6);
+  \node[lab] at (5,4.3) {held for the whole horizon, used or not};
+  \node[lab, left, align=right] at (-0.2,3.1) {VTXO $V$, either reading:\\ $\hat f_S$ for all holders};
+  \fill[black!25] (0,2.8) rectangle (10,3.4);
+  \node[lab] at (5,3.1) {held for the whole horizon, forecast once for the pool};
+  \node[lab, left, align=right] at (-0.2,1.9) {$W_S$, round reading};
+  \foreach \x in {1.8, 4.4, 7.1} { \fill[black!60] (\x,1.6) rectangle (\x+0.25,2.2); }
+  \node[lab, right] at (7.55,1.9) {reusable next round: $\bar L$ a round};
+  \node[lab, left, align=right] at (-0.2,0.8) {$W_S$, expiry reading};
+  \fill[black!45] (1.8,0.5) rectangle (4.3,1.1);
+  \fill[black!45] (4.4,0.5) rectangle (8.0,1.1);
+  \fill[black!45] (7.1,0.5) rectangle (10,1.1);
+  \node[lab, white] at (3.05,0.8) {to expiry};
+  \node[lab, white] at (6.2,0.8) {to expiry};
+  \node[lab, white] at (9.0,0.8) {to expiry};
+\end{tikzpicture}
+\caption{Locked capital-time, the quantity the liquidity duration (Definition~2) divides by delivered volume, drawn as bars whose area is capital times time. A channel's stock toward an agent is held for the horizon whether or not the agent's peak arrives. Under either reading the server's pooled stock $\hat f_S$ is held likewise, forecast once for all holders. What differs between the readings is the forfeit lock $W_S$: value the server fronts at a spend is reusable one round later under the round reading, or only when the spent output would have expired under the expiry reading, so the mean residual lock $\bar L$ is a round in one case and about half a lifetime in the other; the third bar runs past the horizon. The implementer's documentation does not settle which reading holds; Table~\ref{tab:grid} carries both, and the first preregistered item is to pin it.}
+\label{fig:locks}
+\end{figure}

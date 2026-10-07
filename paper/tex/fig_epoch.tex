@@ -1,0 +1,27 @@
+% Figure: the epoch rule of the registry and the spend-and-reclaim hole it closes.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  lab/.style={font=\footnotesize, align=center},
+  obj/.style={draw, rounded corners=2pt, font=\footnotesize, align=center, inner sep=3pt, fill=white},
+  flow/.style={-{Stealth[length=2mm]}},
+]
+  % the epoch
+  \draw[-{Stealth[length=2mm]}] (0,0) -- (13.6,0);
+  \draw (0.8,0.1) -- (0.8,-0.1); \node[lab, below, text width=3.4cm] at (1.4,-0.12) {epoch start: $\sett$ frozen as $\mathrm{root}_n$};
+  \draw (11.8,0.1) -- (11.8,-0.1); \node[lab, below, text width=4.4cm] at (11.6,-0.12) {epoch close: revoke unless still settled or attested};
+  \node[lab, black!60] at (6.6,-0.4) {one epoch, about one refresh cadence};
+  % objects and claims
+  \node[obj, fill=black!7] (rho) at (2.0,1.3) {$\rho$ under key $k_\rho$,\\ settled at start};
+  \node[lab, text width=3.9cm] at (2.0,2.75) {claim once: $\mathrm{nf}=\mathrm{PRF}_{k_\rho}(\mathrm{id}_\rho)$, weight at most $v_\rho$ (Proposition~\ref{prop:sybil})};
+  \node[obj] (rhop) at (7.0,1.3) {$\rho'$, a fresh identifier,\\ same controller};
+  \draw[flow] (rho) -- node[lab, above] {spent} (rhop);
+  \node[lab, text width=4.6cm] at (7.0,2.95) {fresh nullifier, so the nullifier alone would count the capital twice; but $\rho'\notin\sett$ at start, so not claimable this epoch};
+  \node[obj, fill=black!7] (keep) at (11.8,2.15) {refresh under the same key,\\ attested by the server:\\ the claim stands};
+  \node[obj] (rev) at (11.8,0.75) {transfer to another key:\\ revoked at close};
+  \draw[flow] (rhop.east) -- (keep.west);
+  \draw[flow] (rhop.east) -- (rev.west);
+\end{tikzpicture}
+\caption{The epoch rule (Proposition~\ref{prop:epoch}). A nullifier keyed by the object's authority stops a second claim on the same identifier, but spending is what a nullifier permits, and a spend to a fresh identifier under the same controller carries a fresh nullifier. Claims are therefore accepted only against the settled set frozen at epoch start, so a successor made mid-epoch waits for the next; and at epoch close a claim whose object is no longer settled is revoked unless the set's maintainer attests a same-key successor, which an Ark refresh receives and a transfer to another key does not. Without the rule the reference model accepts eight claims on one object spent to eight identifiers.}
+\label{fig:epoch}
+\end{figure}
