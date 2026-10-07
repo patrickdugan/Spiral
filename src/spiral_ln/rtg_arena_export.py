@@ -16,6 +16,7 @@ import math
 from pathlib import Path
 from random import Random
 
+from spiral_ln.diorama import SCHEMA_VERSION, DioramaCharacter, day_phase
 from spiral_ln.rtg import (
     BoundaryCrosserPolicy,
     OpportunistPolicy,
@@ -99,7 +100,7 @@ def _frames(world, node_of, violation_seqs, alert_seqs, exfil_per_event) -> list
                     "exfil": exfil_per_event.get(event.seq, 0.0), "blocked": blocked, "contagion": False,
                 })
         frames.append({
-            "round": tick, "events": events,
+            "round": tick, "clock": day_phase(tick, rounds), "events": events,
             "compromised": sorted(compromised), "recruited": [], "burned": sorted(burned),
             "detected": sorted(detected), "attacker_known": sorted(known), "exfil_total": round(exfil, 2),
         })
@@ -239,7 +240,7 @@ def build_replay() -> dict:
         export_treasury(OpportunistPolicy(AGENT, CAP_LEAK, TREASURY, OWN, 1000), "Treasury drain · opportunist", "treasury"),
     ]
     return {
-        "schema_version": "1.0",
+        "schema_version": SCHEMA_VERSION,
         "generator": "spiral_ln.rtg_arena_export",
         "title": "◇ SPIRAL // RTG CONTROL ARENA",
         "vision_label": "Breach Feed // accessed nodes",
@@ -248,6 +249,13 @@ def build_replay() -> dict:
             "values are valueless in-sim credits (tCR), hosts are reserved .test decoys. "
             "No real network, asset, key, or person."
         ),
+        "sims": ["rtg"],
+        "safety_boundary": DioramaCharacter.safety_boundary(),
+        # RTG nodes are institutions (service hosts, ledger accounts, and the one
+        # agent), not psych-profiled people, so they use the institutional trait
+        # schema below and carry venue tags -- the diorama's buildings layer -- and
+        # are deliberately NOT DioramaCharacters (see the design note).
+        "node_schema": "institution",
         "traits": TRAITS,
         "scenarios": scenarios,
     }

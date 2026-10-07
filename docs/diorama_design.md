@@ -71,9 +71,16 @@ lives only in the researcher `dossiers`, never in an attacker-facing `node`.
 - The current three.js viewer reads swarm-only `result` fields (e.g. `largest_coalition`), so a
   feral-custody replay shows `undefined` for the coalition stat. The viewer overhaul will read
   per-sim result fields.
-- `swarm_replay` now emits `DioramaCharacter` + a graded stress `track` per dossier and a
-  per-frame `clock` (additive; `schema_version` 2.0). `rtg_arena_export` does not yet (its
-  separate trait schema must be reconciled) — that is the next additive step.
+- `swarm_replay` emits `DioramaCharacter` + a graded stress `track` per dossier and a
+  per-frame `clock` (additive; `schema_version` 2.0).
+- `rtg_arena_export` is **schema-aligned** (version 2.0, per-frame `clock`, `sims`,
+  `safety_boundary`) but deliberately does **not** emit `DioramaCharacter`: rtg nodes are
+  institutions — service hosts, ledger accounts, and the one agent — with the institutional
+  trait schema (`value`/`data_sensitivity`/`exposure`/`privilege`/`monitored`/`reachability`)
+  and `truth_class` values `agent`/`host`/`account`, which are not people. It is tagged
+  `node_schema: "institution"` so the viewer renders it as the buildings layer, not as a
+  population of biased humans. This is how the "two trait schemas" are reconciled: they are
+  kept distinct (people vs institutions), not conflated.
 - The swarm replay's researcher `dossiers`/`nodes` still carry `truth_class` (pre-existing),
   so the diorama viewer's **attacker perspective** must render from the character's
   `attacker_view()` projection, never from `node.truth_class`.
