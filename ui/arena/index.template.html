@@ -557,7 +557,8 @@ OUTLINE_MAT.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replac
 function withOutline(mesh) { const h = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); h.raycast = () => {}; mesh.add(h); return mesh; }
 /* merge part geometries into one indexed buffer. Each part has its own transform (m), an optional
    tint (RGB, or RGBA with opts.alpha) and an optional UV transform (uvm, a Matrix3, with opts.uv);
-   opts.color === false drops the colour attribute, opts.unit tags vertices with p.unit */
+   opts.color === false drops the colour attribute, opts.unit tags vertices with p.unit, and
+   opts.glow adds an aGlow attribute (p.glow, a hex colour, else black) */
 function mergeParts(parts, opts) {
   opts = opts || {};
   const cs = opts.alpha ? 4 : 3, wantCol = opts.color !== false;
@@ -565,6 +566,7 @@ function mergeParts(parts, opts) {
   for (const p of parts) { nv += p.geo.attributes.position.count; ni += p.geo.index ? p.geo.index.count : p.geo.attributes.position.count; }
   const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint32Array(ni);
   const col = wantCol ? new Float32Array(nv * cs) : null, uvs = opts.uv ? new Float32Array(nv * 2) : null, unitArr = opts.unit ? new Float32Array(nv) : null;
+  const glowArr = opts.glow ? new Float32Array(nv * 3) : null;
   const v = new THREE.Vector3(), t2 = new THREE.Vector2(), nm = new THREE.Matrix3(); let vo = 0, io = 0;
   for (const p of parts) {
     const g = p.geo, P = g.attributes.position, Nn = g.attributes.normal, U = g.attributes.uv, tint = p.tint || [1, 1, 1, 1];
@@ -577,6 +579,7 @@ function mergeParts(parts, opts) {
       if (uvs && U) { t2.fromBufferAttribute(U, i); if (p.uvm) t2.applyMatrix3(p.uvm); uvs[k * 2] = t2.x; uvs[k * 2 + 1] = t2.y; }
     }
     if (unitArr) unitArr.fill(p.unit || 0, vo, vo + P.count);
+    if (glowArr && p.glow != null) { _c.setHex(p.glow); for (let i = 0; i < P.count; i++) { glowArr[(vo + i) * 3] = _c.r; glowArr[(vo + i) * 3 + 1] = _c.g; glowArr[(vo + i) * 3 + 2] = _c.b; } }
     if (g.index) for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.getX(i) + vo;
     else for (let i = 0; i < P.count; i++) idx[io + i] = vo + i;
     vo += P.count; io += g.index ? g.index.count : P.count; g.dispose();
@@ -586,6 +589,7 @@ function mergeParts(parts, opts) {
   if (col) out.setAttribute(opts.colorName || "color", new THREE.BufferAttribute(col, cs));
   if (uvs) out.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
   if (unitArr) out.setAttribute("aUnit", new THREE.BufferAttribute(unitArr, 1));
+  if (glowArr) out.setAttribute("aGlow", new THREE.BufferAttribute(glowArr, 3));
   out.setIndex(new THREE.BufferAttribute(idx, 1)); out.computeBoundingSphere();
   return out;
 }
@@ -1073,21 +1077,116 @@ function onShift(r, cl) {
   return ((cl.hour - start + 24) % 24) < len;
 }
 /* institutional node (rtg): a server-rack / terminal pylon instead of a person */
-function makePylon(v) {
-  const group = new THREE.Group();
-  const mat = rimMaterial(0x3b4654, { vertexColors: true, metalness: 0.55, roughness: 0.35 });
-  const picks = [];
-  const h = 5.2 + v * 2;
-  const m = withOutline(new THREE.Mesh(mergeParts([
-    { geo: new THREE.BoxGeometry(3.2, h, 2.4), m: XF(0, 0.4 + v, 0) },
-    { geo: new THREE.BoxGeometry(3.6, 0.3, 2.8), m: XF(0, 3.2 + v * 2, 0), tint: TRIM },
-  ]), mat));
-  group.add(m); picks.push(m);
-  for (let k = 0; k < 6; k++) {   // rack LEDs down the face
-    const led = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 0.05), new THREE.MeshBasicMaterial({ color: k % 3 ? COL.ice : COL.amber }));
-    led.position.set(0, 0.4 + v - h / 2 + 0.9 + k * (h - 1.6) / 6, 1.23); group.add(led);
-  }
-  return { group, mat, picks };
+/* ---------- institutions (legacy rtg layout): batched pylons ----------
+   Service hosts and accounts stand as rack pylons. All of them are one merged mesh baked at
+   rest pose (so picking and culling see real geometry) plus one merged outline hull; each
+   pylon's bob / shake is a small rigid delta from a uniform array, and its base, emissive and
+   rim colours come from uniform arrays too. Rack LEDs ride in the same mesh as constant
+   emissive. Rim rings are one instanced mesh, halos and heat rings two point clouds, and the
+   base plates (pylons and pinned legacy persons) one merged mesh: six draws for the lot. The
+   legacy ground is translucent and some venues sit below it, so the transparent pieces come
+   in an above-ground set and a below-ground set; the latter draws first (renderOrder -1) and
+   the ground dims it, as it always did for per-object sprites. */
+const _v3 = new THREE.Vector3();
+let PYL = null;
+function pylonMaterials(n, xf) {
+  const u = { uXf: { value: xf }, uBase: { value: Array.from({ length: n }, () => new THREE.Color(0x3b4654)) },
+    uEm: { value: Array.from({ length: n }, () => new THREE.Vector4()) }, uRim: { value: Array.from({ length: n }, () => new THREE.Vector4()) } };
+  const head = `#define NP ${n}\nuniform mat4 uXf[NP];\nattribute float aUnit;\n`;
+  const body = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: 0.55, roughness: 0.35 });
+  body.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\n" + head + "uniform vec3 uBase[NP]; uniform vec4 uEm[NP]; uniform vec4 uRim[NP];\nattribute vec3 aGlow;\nvarying vec3 vBase; varying vec3 vEmis; varying vec4 vRimC;")
+      .replace("#include <beginnormal_vertex>", "#include <beginnormal_vertex>\n  int pu = int( aUnit + 0.5 ); mat4 pxf = uXf[ pu ]; objectNormal = mat3( pxf ) * objectNormal;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed = ( pxf * vec4( transformed, 1.0 ) ).xyz; vBase = uBase[ pu ]; vEmis = uEm[ pu ].rgb * uEm[ pu ].a + aGlow; vRimC = uRim[ pu ];");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vBase; varying vec3 vEmis; varying vec4 vRimC;")
+      .replace("vec4 diffuseColor = vec4( diffuse, opacity );", "vec4 diffuseColor = vec4( diffuse * vBase, opacity );")
+      .replace("vec3 totalEmissiveRadiance = emissive;", "vec3 totalEmissiveRadiance = vEmis;")
+      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance += vRimC.rgb * vRimC.a * pow( 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 ), 2.4 );");
+  };
+  const hull = new THREE.MeshBasicMaterial({ color: 0x03050a, side: THREE.BackSide });
+  hull.onBeforeCompile = (sh) => {
+    sh.uniforms.uXf = u.uXf;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\n" + head)
+      .replace("#include <begin_vertex>", "vec3 transformed = ( uXf[ int( aUnit + 0.5 ) ] * vec4( position + normalize( normal ) * 0.09, 1.0 ) ).xyz;");
+  };
+  body.customProgramCacheKey = () => "pylon-body:" + n;   // the uniform arrays are sized per scenario
+  hull.customProgramCacheKey = () => "pylon-hull:" + n;
+  return { body, hull, u };
+}
+function buildPylons(list, plateAt) {
+  const plates = plateAt.map((p) => ({ geo: new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), m: new THREE.Matrix4().makeTranslation(p.x, p.y - 3.1, p.z) }));
+  if (plates.length) { const pm = new THREE.Mesh(mergeParts(plates, { color: false }), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); pm.raycast = () => {}; nodeGroup.add(pm); }
+  const N = list.length;
+  if (!N) { PYL = null; return; }
+  const units = list.map((nd) => nodeObjs[nd.id]), xf = units.map(() => new THREE.Matrix4());
+  const parts = [], hullParts = [];
+  units.forEach((o, k) => {
+    o.pyl = k;
+    const v = o.v, h = 5.2 + v * 2, rest = new THREE.Matrix4().makeRotationY(o.baseRot).setPosition(o.rig.position);
+    const at = (x, y, z) => new THREE.Matrix4().multiplyMatrices(rest, XF(x, y, z));
+    parts.push({ geo: new THREE.BoxGeometry(3.2, h, 2.4), m: at(0, 0.4 + v, 0), unit: k }, { geo: new THREE.BoxGeometry(3.6, 0.3, 2.8), m: at(0, 3.2 + v * 2, 0), tint: TRIM, unit: k });
+    hullParts.push({ geo: new THREE.BoxGeometry(3.2, h, 2.4), m: at(0, 0.4 + v, 0), unit: k }, { geo: new THREE.BoxGeometry(3.6, 0.3, 2.8), m: at(0, 3.2 + v * 2, 0), unit: k });
+    for (let j = 0; j < 6; j++) parts.push({ geo: new THREE.BoxGeometry(2.2, 0.12, 0.05), m: at(0, 0.4 + v - h / 2 + 0.9 + j * (h - 1.6) / 6, 1.23), tint: [0, 0, 0], glow: j % 3 ? COL.ice : COL.amber, unit: k });   // rack LEDs
+  });
+  const mats = pylonMaterials(N, xf);
+  const geo = mergeParts(parts, { unit: true, glow: true });
+  const mesh = new THREE.Mesh(geo, mats.body); nodeGroup.add(mesh);
+  const hull = new THREE.Mesh(mergeParts(hullParts, { unit: true, color: false }), mats.hull); hull.raycast = () => {}; nodeGroup.add(hull);
+  const aUnit = geo.attributes.aUnit;
+  mesh.userData.idOf = (iid, hit) => list[Math.round(aUnit.getX(hit.face.a))].id;   // picking: the face's pylon
+  nodeMeshes.push(mesh);
+  // rim rings (additive, colour premultiplied by opacity), halos and heat rings: one set per side
+  // of the ground, each centred on its members (renderers sort transparent objects by origin)
+  const groundY = groundMesh ? groundMesh.position.y : -Infinity, sides = [[], []], slot = new Array(N), sets = [];
+  units.forEach((o, k) => sides[o.rig.position.y - 2.85 < groundY ? 1 : 0].push(k));
+  const rq = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, Math.PI / 2)), m4 = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1);
+  sides.forEach((ks, below) => {
+    if (!ks.length) return;
+    const n = ks.length, c = new THREE.Vector3(); ks.forEach((k) => c.add(units[k].rig.position)); c.divideScalar(n);
+    const ring = new THREE.InstancedMesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), n);
+    ring.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); ring.frustumCulled = false; ring.raycast = () => {};
+    const halos = pointCloud(HALO_TEX, n), heats = pointCloud(RING_TEX, n);
+    ks.forEach((k, i) => {
+      const p = units[k].rig.position;
+      _v3.set(p.x - c.x, p.y - 2.85 - c.y, p.z - c.z); ring.setMatrixAt(i, m4.compose(_v3, rq, one));
+      halos.geometry.attributes.position.setXYZ(i, p.x - c.x, p.y + 0.8 - c.y, p.z - c.z); heats.geometry.attributes.position.setXYZ(i, p.x - c.x, p.y - 2.5 - c.y, p.z - c.z);
+      halos.geometry.attributes.aSize.setX(i, 8); heats.geometry.attributes.aSize.setX(i, 7);
+      slot[k] = { ring, halos, heats, i };
+    });
+    for (const obj of [ring, halos, heats]) { obj.position.copy(c); if (below) obj.renderOrder = -1; nodeGroup.add(obj); }
+    sets.push({ ring, halos, heats });
+  });
+  PYL = { N, units, xf, u: mats.u, slot, sets };
+  pylonTick(0, 0.5);
+}
+/* one pylon's colours this frame (flashOn: the white flare of a landed strike) */
+function paintPylon(k, L, flashOn) {
+  const P = PYL; if (!P) return;
+  P.u.uBase.value[k].setHex(L.base);
+  _c.setHex(flashOn ? COL.white : L.em); P.u.uEm.value[k].set(_c.r, _c.g, _c.b, flashOn ? 1.4 : L.emI);
+  _c.setHex(L.rim); P.u.uRim.value[k].set(_c.r, _c.g, _c.b, L.rimS);
+  const s = P.slot[k];
+  _c.setHex(L.ring).multiplyScalar(L.ringA); s.ring.setColorAt(s.i, _c); s.ring.instanceColor.needsUpdate = true;
+  setRGBA(s.halos.geometry.attributes.aColor.array, s.i, L.halo, L.haloA); s.halos.geometry.attributes.aColor.needsUpdate = true;
+  setRGBA(s.heats.geometry.attributes.aColor.array, s.i, COL.hunger, L.heatA); s.heats.geometry.attributes.aColor.needsUpdate = true;
+}
+/* per tick: bob, the strike shake, the flash decay, halo and heat pulses */
+function pylonTick(dt, pulse) {
+  const P = PYL; if (!P) return;
+  P.units.forEach((o, k) => {
+    const bob = Math.sin(now * 0.0016 + o.phase) * 0.18;
+    let dyaw = 0; if (o._shake > 0) { o._shake -= dt; dyaw = Math.sin(now * 0.045) * 0.09; }
+    const D = P.xf[k], r = o.rig.position;   // rest -> now: turn about the pylon's own axis, then lift
+    D.makeRotationY(dyaw); _v3.copy(r).applyMatrix4(D); D.setPosition(r.x - _v3.x, r.y - _v3.y + bob, r.z - _v3.z);
+    const st = o._st, L = o._look; if (!st || !L) return;
+    if (o._flash > 0) { o._flash -= dt * 2.2; paintPylon(k, L, o._flash > 0); }
+    const s = P.slot[k], hp = s.halos.geometry.attributes, tp = s.heats.geometry.attributes;
+    let hs = 8;
+    if (st.comp || st.rec || st.burned || st.keyLost) { const pp = 0.7 + 0.3 * pulse; hp.aColor.setW(s.i, st.glow * 0.55 * pp); hs = 8 * (0.9 + 0.2 * pp); }
+    hp.aSize.setX(s.i, hs); tp.aSize.setX(s.i, (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse));
+  });
+  for (const s of P.sets) { const hp = s.halos.geometry.attributes; hp.aColor.needsUpdate = hp.aSize.needsUpdate = s.heats.geometry.attributes.aSize.needsUpdate = true; }
 }
 
 /* ---------- static batching ----------
@@ -1470,7 +1569,7 @@ function buildScenario(scn) {
   nodeObjs = {}; nodeMeshes = []; effects.length = 0; hovered = null;
   buildEnvironment(S.id, S.layout || null);
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
-  const L = S.layout || null, persons = [];
+  const L = S.layout || null, persons = [], pylons = [], plateAt = [];
   for (const nd of S.nodes) {
     const v = hashUnit(String(nd.archetype) + nd.id), person = isPerson(nd);
     const a = L && L.anchors ? L.anchors[nd.id] : null, b = ARCH_BUILD[nd.archetype] || {};
@@ -1487,21 +1586,8 @@ function buildScenario(scn) {
       goal: rig.position.clone(), goalYaw: baseRot, where: "desk", baseColor: person ? COL.slate : 0x3b4654,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
     o.appetite = person ? appetiteOf(S.dossiers[nd.id]) : null;
-    if (person) {
-      persons.push(nd);
-      if (!a) { const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; plate.raycast = () => {}; rig.add(plate); }   // legacy diorama base
-    } else {   // institutions (rtg service hosts / accounts): a handful of per-object pylons
-      const h = makePylon(v); h.group.rotation.y = baseRot; rig.add(h.group);
-      for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
-      const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; rig.add(plate);
-      const rim = new THREE.Mesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-      rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.y = -2.85; rig.add(rim);
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-      halo.scale.set(8, 8, 1); halo.position.y = 0.8; rig.add(halo);
-      const heat = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: COL.hunger, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
-      heat.scale.set(7, 7, 1); heat.position.y = -2.5; rig.add(heat);
-      Object.assign(o, { group: h.group, mat: h.mat, halo, rim, heat, plate });
-    }
+    if (person) { persons.push(nd); if (!a) plateAt.push(rig.position.clone()); }   // a pinned legacy person stands on a base plate
+    else { pylons.push(nd); plateAt.push(rig.position.clone()); }   // institutions (rtg service hosts / accounts): batched pylons
     // infrared: the device/vector tag and the cash tag ride on the rig
     const tagText = hiveTagText(nd, ch);
     o.tag = tagText ? textSprite(tagText, { size: 30, color: hex(COL.ice), tick: hex(COL.hunger), scale: 0.95, fixed: true }) : null;
@@ -1509,6 +1595,7 @@ function buildScenario(scn) {
     o.cash = null; o.cashText = null; const cashText = cashTagText(nd, ch); if (cashText) setCash(o, cashText);
   }
   buildUnits(persons);
+  buildPylons(pylons, plateAt);
   // base edges
   const bp = [];
   for (const [a, b] of S.edges) { if (!nodeObjs[a] || !nodeObjs[b]) continue; const na = nodeObjs[a].data, nb = nodeObjs[b].data; bp.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]); }
@@ -1780,13 +1867,7 @@ function applyFrame(i) {
       inp[I + EIN.NO_TYPE] = (st.comp || st.rec) ? 1 : 0; inp[I + EIN.TURNED] = (st.comp && !st.honeypot) ? 1 : 0;
       inp[I + EIN.LEGACY_TURN] = (!o.anchors && !on && !(st.comp || st.rec || st.burned)) ? 1 : 0;
       paintUnit(o.inst, look, false);
-    } else {   // an institution's per-object materials
-      o.mat.color.setHex(look.base); o.mat.emissive.setHex(look.em); o.mat.emissiveIntensity = look.emI;
-      o.mat.userData.rimColor.setHex(look.rim); o.mat.userData.rim.value = look.rimS;
-      o.halo.material.color.setHex(look.halo); o.halo.material.opacity = look.haloA;
-      o.rim.material.color.setHex(look.ring); o.rim.material.opacity = look.ringA;
-      o.heat.material.opacity = look.heatA; o._ei = look.emI;
-    }
+    } else if (o.pyl != null) paintPylon(o.pyl, look, false);   // an institution: uniform arrays and instance colours
     // infrared: custody funds live on the key node; cash only for what the hive has found
     if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
     if (o.cash) o.cash.visible = hiveVision && !st.unseen;
@@ -1952,7 +2033,7 @@ function castAt(e) {
   const hit = ray.intersectObjects(nodeMeshes, false);
   if (!hit.length) return null;
   const h0 = hit[0];
-  return h0.object.userData.idOf ? h0.object.userData.idOf(h0.instanceId) : h0.object.userData.id;
+  return h0.object.userData.idOf ? h0.object.userData.idOf(h0.instanceId, h0) : h0.object.userData.id;
 }
 function pick(e) { const id = castAt(e); if (id) select(id, false); }
 function hover(e) {
@@ -2640,17 +2721,11 @@ function tick(ts) {
     afterStep(dt, pulse);
   }
   if (AMBI && crowdOn) ambientTick(dt);   // passers-by steer around the units the engine just moved
-  if (S) for (const nd of S.nodes) {   // institutions (rtg pylons) keep the per-object path
-    const o = nodeObjs[nd.id], st = o._st; if (!st || o.inst != null) continue;
-    o.group.position.y = Math.sin(now * 0.0016 + o.phase) * 0.18;
-    if (o._shake > 0) { o._shake -= dt; o.group.rotation.y = o.baseRot + Math.sin(now * 0.045) * 0.09; }
-    if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : o.halo.material.color.getHex()); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : o._ei; }
-    if (st.comp || st.rec || st.burned || st.keyLost) { const pp = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * pp; const sz = 8 * (0.9 + 0.2 * pp); o.halo.scale.set(sz, sz, 1); }
-  }
+  pylonTick(dt, pulse);   // institutions: bob, shake, flash, halo and heat pulses
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
   if (S) {
     const near = hiveVision && cam.radius < 48, mid = hiveVision && cam.radius < 130;   // tags: everyone only at a close zoom; at mid-range only the hive's current marks
-    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; const unseen = o._st && o._st.unseen; if (o.tag) o.tag.visible = hiveVision && !unseen && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
+    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; const unseen = o._st && o._st.unseen; if (o.tag) o.tag.visible = hiveVision && !unseen && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); }
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
       if (show) { const pa = scanLines.geometry.attributes.position, v = pa.array; let n = 0;

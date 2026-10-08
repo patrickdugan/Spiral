@@ -422,6 +422,22 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   light cloud. Measured at 1280×720: the ambient step plus buffer sync is ~0.1 ms for 86
   pedestrians and 20 vehicles. A swarm frame goes from ~3.1–3.4 ms to ~3.8 ms of GPU
   throughput (draws 116 → 128). GPU memory stays flat across scenario cycles.
+- **Increment 7g: batched institution pylons.** The legacy rtg layout drew each service host
+  or account as about a dozen objects: body, outline, six rack LEDs, plate, rim ring, halo and
+  heat ring. All pylons are now one merged mesh baked at rest pose, with the LEDs as constant
+  emissive (`mergeParts` gained an `aGlow` option), plus one merged outline hull. Each pylon's
+  bob and strike shake is a rigid delta from a `uXf[N]` uniform array, and its base, emissive
+  and rim colours come from uniform arrays. The shader is sized per scenario, so the materials
+  set `customProgramCacheKey`. Picking resolves the pylon from the hit face's `aUnit`, which is
+  why the geometry is baked at rest rather than in local space. Rim rings are an instanced mesh,
+  and halos and heat rings are point clouds. They come in an above-ground and a below-ground
+  set, each centred on its members; the below-ground set draws first (`renderOrder -1`) so the
+  translucent legacy ground dims it, as it did for the per-object sprites. The base plates of
+  pylons and of pinned schema-1.0 persons are one merged mesh. Six draws cover all pylons, plus
+  one more ring, halo and heat set when venues sit below the ground. Draws per frame in the rtg
+  scenarios go 151–168 → 67–89, and the schema-1.0 swarm replay goes 153 → 107. Frames match
+  the per-object version, with under 0.1% of pixels differing by more than 24 levels (rain and
+  grain). A shake now settles back to rest; the per-object version kept a small leftover twist.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:
