@@ -505,17 +505,20 @@ function makeProps(devices, aw) {
   const g = new THREE.Group(); const seen = new Set();
   const glow = (c) => new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: c, emissiveIntensity: 0.9 });
   const dark = new THREE.MeshLambertMaterial({ color: 0x1a2230 });
+  // hive vision: a small neon halo per device so entry points read as hot spots at range (opacity set per frame)
+  const mark = (x, y, z, c) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 })); s.scale.set(2.6, 2.6, 1); s.position.set(x, y, z); s.userData.devHalo = true; g.add(s); };
   for (const dev of devices || []) {
     const d = String(dev).toLowerCase(); if (seen.has(d)) continue; seen.add(d);
-    if (/phone|iphone|android/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.95, 0.08), glow(COL.ice)); m.position.set(aw + 0.15, -0.45, 0.45); m.rotation.x = -0.5; g.add(m); }
+    if (/phone|iphone|android/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.95, 0.08), glow(COL.ice)); m.position.set(aw + 0.15, -0.45, 0.45); m.rotation.x = -0.5; g.add(m); mark(aw + 0.15, -0.45, 0.45, COL.ice); }
     else if (/mac|laptop|book/.test(d)) {
       const stand = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.6, 1.4), dark); stand.position.set(0, -2.1, 2.4); g.add(stand);
       const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.1), dark); base.position.set(0, -1.26, 2.4); g.add(base);
-      const lid = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.06), glow(COL.ice)); lid.position.set(0, -0.78, 2.95); lid.rotation.x = -0.35; g.add(lid);
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.06), glow(COL.ice)); lid.position.set(0, -0.78, 2.95); lid.rotation.x = -0.35; g.add(lid); mark(0, -0.7, 2.9, COL.ice);
     } else if (/server|rack|node/.test(d)) {
       const rack = new THREE.Mesh(new THREE.BoxGeometry(1.6, 3.6, 1.2), dark); rack.position.set(-2.6, -1.1, 0.4); g.add(rack);
       for (let k = 0; k < 5; k++) { const led = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.05), glow(k % 3 ? COL.ice : COL.amber)); led.position.set(-2.6, -2.4 + k * 0.6, 1.02); g.add(led); }
-    } else if (/wallet|ledger|hardware/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.7), glow(COL.hazard)); m.position.set(1.4, -2.6, 1.6); g.add(m); }
+      mark(-2.6, -1.2, 1.1, COL.violet);
+    } else if (/wallet|ledger|hardware/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.7), glow(COL.hazard)); m.position.set(1.4, -2.6, 1.6); g.add(m); mark(1.4, -2.5, 1.6, COL.hazard); }
   }
   return g;
 }
@@ -717,12 +720,12 @@ function buildScenario(scn) {
     const ch = characterOf(S.dossiers[nd.id] || {});
     const label = textSprite((ch.name && ch.name !== nd.id) ? `${nd.id} · ${ch.name.toUpperCase()}` : nd.id, { tick: "#f2e23a", scale: 1.0, fixed: true });
     label.position.set(nd.pos[0], nd.pos[1] + 5.6, nd.pos[2]); label.visible = false; nodeGroup.add(label);
-    let props = null; const glowMats = [];
+    let props = null; const glowMats = [], devHalos = [];
     if (isPerson(nd) && ch.devices.length) {
       props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
-      props.traverse((o) => { if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
+      props.traverse((o) => { if (o.userData.devHalo) devHalos.push(o); else if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
     }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
     // hive vision: appetite heat ring, the device/vector tag, the cash tag
     const o = nodeObjs[nd.id];
@@ -907,6 +910,7 @@ function applyFrame(i) {
     if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
     o._gi = st.unseen ? 0.05 : (hiveVision ? 1.4 : (on ? 0.9 : 0.08));   // desk glow: hive vision burns every device bright; ghosts stay dark
     for (const m of o.glowMats) m.emissiveIntensity = o._gi;
+    for (const s of o.devHalos) s.material.opacity = (hiveVision && !st.unseen) ? 0.55 : 0;   // device hot spots, hive vision only
     // hive vision: heat on the marks still standing; cash tags; custody funds live on the key node
     const turned = st.comp || st.rec || st.burned || st.keyLost;
     o.heat.material.opacity = (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
