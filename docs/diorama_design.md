@@ -364,6 +364,27 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   per-object meshes. Measured in the browser pane at 1280×720 (same harness before / after):
   a 24-unit swarm frame went from ~1,250 to ~390 draw calls, render 14–17 ms → 6.5–7 ms, full
   tick 18–21 ms → 7–8 ms; the engine step costs ~15–19 µs for 24 units.
+- **Increment 7d: static batching of the city.** After 7c the remaining draws were the city:
+  ~120 block meshes and ~75 skyline objects, each drawn again by the mirror pass. The builders
+  still lay the city out as individual meshes; `batchStatic(group, tracked, opts)` then folds
+  everything static into one merged mesh per material signature. MeshBasic trims of any colour
+  and opacity share one draw through vertex RGBA (three.js r128 supports colour alpha); lit
+  materials merge when their parameters match; facade and tower window textures that differ
+  only by repeat / offset have that transform baked into the UVs, so all facades share one
+  material; one-off canvas textures (block signs, blade signs) are shelf-packed into an atlas;
+  HALO_TEX sprites (lamp heads, kiosk glows, sign glows) become one fogged point cloud, and the
+  skyline beacons are one cloud whose alphas tick per beacon. The arrays the day cycle animates
+  (`lampHalos`, `lampCones`, `cityMats`) are remapped to the merged objects. Two sorting rules
+  keep transparency correct. Merged meshes are re-centred on their bounds because three.js
+  depth-sorts by object origin. Transparent pieces on opposite sides of the ground plane never
+  share a bucket, because the legacy ground is translucent and venues below it must draw first.
+  Point sprites now honour the mirror pass's clip plane and halve their size in the half-
+  resolution mirror target. Measured at 1280×720 with a one-pixel readback to sync the GPU,
+  median render per frame: swarm 10.0–10.2 ms → 5.0–5.3 ms (draws 352–390 → 96–116), custody
+  7.5 → 4.4 ms (213 → 90), legacy rtg 9.4 → 4.9 ms (342 → 168). Frames grabbed before and
+  after match. GPU geometry and texture counts stay flat over repeated scenario cycles. The
+  same increment restores the base network edges (faint floor traces in the city, links in
+  the legacy layout), which a stray comment in 7c had dropped from the scene.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:

@@ -517,8 +517,9 @@ const post = (() => {
     MIRROR.mirrorMatrix.value.copy(bias).multiply(vcam.projectionMatrix).multiply(vcam.matrixWorldInverse);
     clip[0].constant = -g + 0.05;
     groundMesh.visible = false; renderer.clippingPlanes = clip;
+    const ps = POINT_SCALE.value; POINT_SCALE.value = ps * mirrorRT.height / Math.max(1, main.height);
     renderer.setRenderTarget(mirrorRT); renderer.clear(); renderer.render(scene, vcam);
-    renderer.clippingPlanes = []; groundMesh.visible = true;
+    renderer.clippingPlanes = []; groundMesh.visible = true; POINT_SCALE.value = ps;
   }
   function render(t) {
     camera.layers.set(0);
@@ -553,20 +554,26 @@ function rimMaterial(baseHex, opts) {
 const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x03050a, side: THREE.BackSide });
 OUTLINE_MAT.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "vec3 transformed = vec3( position ) + normalize( normal ) * 0.09;"); };
 function withOutline(mesh) { const h = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); h.raycast = () => {}; mesh.add(h); return mesh; }
-/* merge part geometries (each with its own transform and optional tint) into one indexed buffer */
+/* merge part geometries into one indexed buffer. Each part has its own transform (m), an optional
+   tint (RGB, or RGBA with opts.alpha) and an optional UV transform (uvm, a Matrix3, with opts.uv);
+   opts.color === false drops the colour attribute, opts.unit tags vertices with p.unit */
 function mergeParts(parts, opts) {
   opts = opts || {};
+  const cs = opts.alpha ? 4 : 3, wantCol = opts.color !== false;
   let nv = 0, ni = 0;
   for (const p of parts) { nv += p.geo.attributes.position.count; ni += p.geo.index ? p.geo.index.count : p.geo.attributes.position.count; }
-  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), idx = new Uint32Array(ni), unitArr = opts.unit ? new Float32Array(nv) : null;
-  const v = new THREE.Vector3(), nm = new THREE.Matrix3(); let vo = 0, io = 0;
+  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint32Array(ni);
+  const col = wantCol ? new Float32Array(nv * cs) : null, uvs = opts.uv ? new Float32Array(nv * 2) : null, unitArr = opts.unit ? new Float32Array(nv) : null;
+  const v = new THREE.Vector3(), t2 = new THREE.Vector2(), nm = new THREE.Matrix3(); let vo = 0, io = 0;
   for (const p of parts) {
-    const g = p.geo, P = g.attributes.position, Nn = g.attributes.normal, tint = p.tint || [1, 1, 1];
+    const g = p.geo, P = g.attributes.position, Nn = g.attributes.normal, U = g.attributes.uv, tint = p.tint || [1, 1, 1, 1];
     nm.getNormalMatrix(p.m);
     for (let i = 0; i < P.count; i++) {
-      v.fromBufferAttribute(P, i).applyMatrix4(p.m); pos[(vo + i) * 3] = v.x; pos[(vo + i) * 3 + 1] = v.y; pos[(vo + i) * 3 + 2] = v.z;
-      v.fromBufferAttribute(Nn, i).applyMatrix3(nm).normalize(); nor[(vo + i) * 3] = v.x; nor[(vo + i) * 3 + 1] = v.y; nor[(vo + i) * 3 + 2] = v.z;
-      col[(vo + i) * 3] = tint[0]; col[(vo + i) * 3 + 1] = tint[1]; col[(vo + i) * 3 + 2] = tint[2];
+      const k = vo + i;
+      v.fromBufferAttribute(P, i).applyMatrix4(p.m); pos[k * 3] = v.x; pos[k * 3 + 1] = v.y; pos[k * 3 + 2] = v.z;
+      v.fromBufferAttribute(Nn, i).applyMatrix3(nm).normalize(); nor[k * 3] = v.x; nor[k * 3 + 1] = v.y; nor[k * 3 + 2] = v.z;
+      if (col) for (let c = 0; c < cs; c++) col[k * cs + c] = c < 3 ? tint[c] : (tint[3] == null ? 1 : tint[3]);
+      if (uvs && U) { t2.fromBufferAttribute(U, i); if (p.uvm) t2.applyMatrix3(p.uvm); uvs[k * 2] = t2.x; uvs[k * 2 + 1] = t2.y; }
     }
     if (unitArr) unitArr.fill(p.unit || 0, vo, vo + P.count);
     if (g.index) for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.getX(i) + vo;
@@ -574,7 +581,9 @@ function mergeParts(parts, opts) {
     vo += P.count; io += g.index ? g.index.count : P.count; g.dispose();
   }
   const out = new THREE.BufferGeometry();
-  out.setAttribute("position", new THREE.BufferAttribute(pos, 3)); out.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); out.setAttribute(opts.colorName || "color", new THREE.BufferAttribute(col, 3));
+  out.setAttribute("position", new THREE.BufferAttribute(pos, 3)); out.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
+  if (col) out.setAttribute(opts.colorName || "color", new THREE.BufferAttribute(col, cs));
+  if (uvs) out.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
   if (unitArr) out.setAttribute("aUnit", new THREE.BufferAttribute(unitArr, 1));
   out.setIndex(new THREE.BufferAttribute(idx, 1)); out.computeBoundingSphere();
   return out;
@@ -808,15 +817,34 @@ function instRimMaterial(opts) {   // per-instance emissive (iEm) and rim (iRim)
   };
   return m;
 }
-function pointSpriteMaterial(tex) {   // additive billboards with per-point colour, alpha and world size
+/* additive billboards with per-point colour, alpha and world size. They honour the mirror pass's
+   clip plane. With fog set, alpha also fades with the scene's exp2 fog and scales by the
+   material's opacity (copied in by the cloud's onBeforeRender) */
+function pointSpriteMaterial(tex, fog) {
+  const uniforms = { map: { value: tex }, scale: POINT_SCALE };
+  if (fog) Object.assign(uniforms, { opacity: { value: 1 }, fogDensity: { value: 0 } });
   return new THREE.ShaderMaterial({
-    uniforms: { map: { value: tex }, scale: POINT_SCALE },
-    vertexShader: "attribute vec4 aColor; attribute float aSize; uniform float scale; varying vec4 vColor;\n" +
-      "void main() { vColor = aColor; vec4 mv = modelViewMatrix * vec4( position, 1.0 ); gl_PointSize = aSize * scale / max( 1.0, -mv.z ); gl_Position = projectionMatrix * mv; }",
-    fragmentShader: "uniform sampler2D map; varying vec4 vColor;\n" +
-      "void main() { vec4 t = texture2D( map, gl_PointCoord ); gl_FragColor = vec4( vColor.rgb * t.rgb * t.a * vColor.a, 1.0 ); }",
+    uniforms, clipping: true,
+    vertexShader: (fog ? "#define POINT_FOG\nuniform float opacity; uniform float fogDensity;\n" : "") +
+      "attribute vec4 aColor; attribute float aSize; uniform float scale; varying vec4 vColor;\n#include <clipping_planes_pars_vertex>\n" +
+      "void main() { vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 ); float d = max( 1.0, -mvPosition.z ); vColor = aColor;\n" +
+      "#ifdef POINT_FOG\n  vColor.a *= opacity * exp( -fogDensity * fogDensity * d * d );\n#endif\n" +
+      "  gl_PointSize = aSize * scale / d; gl_Position = projectionMatrix * mvPosition;\n#include <clipping_planes_vertex>\n}",
+    fragmentShader: "uniform sampler2D map; varying vec4 vColor;\n#include <clipping_planes_pars_fragment>\n" +
+      "void main() {\n#include <clipping_planes_fragment>\n  vec4 t = texture2D( map, gl_PointCoord ); gl_FragColor = vec4( vColor.rgb * t.rgb * t.a * vColor.a, 1.0 ); }",
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
+}
+/* a fixed set of HALO_TEX glows ({x, y, z, color, a, size}) as one draw: lamp heads, kiosk
+   awnings, sign glows and beacons. material.opacity drives the whole cloud (the day cycle dims it) */
+function haloCloud(list) {
+  const n = list.length, g = new THREE.BufferGeometry(), P = new Float32Array(n * 3), C = new Float32Array(n * 4), Z = new Float32Array(n);
+  list.forEach((h, i) => { P[i * 3] = h.x; P[i * 3 + 1] = h.y; P[i * 3 + 2] = h.z; setRGBA(C, i, h.color, h.a == null ? 1 : h.a); Z[i] = h.size; });
+  g.setAttribute("position", new THREE.BufferAttribute(P, 3)); g.setAttribute("aColor", new THREE.BufferAttribute(C, 4)); g.setAttribute("aSize", new THREE.BufferAttribute(Z, 1));
+  g.computeBoundingSphere();
+  const pts = new THREE.Points(g, pointSpriteMaterial(HALO_TEX, true)); pts.raycast = () => {};
+  pts.onBeforeRender = () => { const u = pts.material.uniforms; u.opacity.value = pts.material.opacity; u.fogDensity.value = scene.fog ? scene.fog.density : 0; };
+  return pts;
 }
 function pointCloud(tex, count) {
   const g = new THREE.BufferGeometry();
@@ -1052,11 +1080,146 @@ function makePylon(v) {
   return { group, mat, picks };
 }
 
+/* ---------- static batching ----------
+   The builders lay the city out as individual meshes, which keeps them readable and easy to tune.
+   Once a group is built, batchStatic folds everything that never changes into one merged mesh per
+   material signature: MeshBasic trims of any colour and opacity share a draw (vertex RGBA); lit
+   materials merge when their parameters match; tiled textures that differ only by repeat / offset
+   have the transform baked into the UVs; one-off canvas textures (signs, blade signs) are packed
+   into an atlas; HALO_TEX sprites become one point cloud. Arrays the code keeps animating
+   (lampHalos, lampCones, cityMats) are remapped to whatever replaced their members. A merged
+   transparent mesh is depth-sorted as one object, by its origin: merged meshes and clouds sit at
+   the centre of their bounds, and transparent pieces on opposite sides of the ground plane
+   (opts.splitY; the legacy ground is translucent) never share a bucket. The mirror
+   pass draws the scene a second time, so each draw saved here is saved twice per frame. */
+const _imgIds = new WeakMap(); let _imgNext = 1;
+function imgId(img) { if (!img) return 0; let id = _imgIds.get(img); if (!id) { id = _imgNext++; _imgIds.set(img, id); } return id; }
+const texKey = (t) => t ? [imgId(t.image), t.wrapS, t.wrapT, t.minFilter, t.magFilter, t.flipY, t.encoding].join(":") : "-";
+const UV_SLOTS = ["map", "specularMap", "displacementMap", "normalMap", "bumpMap", "roughnessMap", "metalnessMap", "alphaMap", "emissiveMap"];   // r128's uvTransform comes from the first present
+function uvSource(m) { for (const k of UV_SLOTS) if (m[k]) return m[k]; return null; }
+function identityTex(t) { const c = t.clone(); c.offset.set(0, 0); c.repeat.set(1, 1); c.rotation = 0; c.center.set(0, 0); c.needsUpdate = true; return c; }
+function canAtlas(m) {
+  const t = m.map;
+  return !!(t && !SHARED_TEX.has(t) && t.image instanceof HTMLCanvasElement &&
+    t.wrapS === THREE.ClampToEdgeWrapping && t.wrapT === THREE.ClampToEdgeWrapping && t.rotation === 0);
+}
+function batchKey(o, ti) {
+  const m = o.material;
+  if (!m || Array.isArray(m) || Object.prototype.hasOwnProperty.call(m, "onBeforeCompile") || m.wireframe || m.vertexColors || m.envMap || m.aoMap || m.lightMap || m.alphaMap) return null;
+  const common = [ti, m.side, m.blending, m.transparent, m.depthWrite, m.depthTest, m.fog, m.toneMapped, m.alphaTest, m.polygonOffset, m.colorWrite].join("|");
+  if (m.isMeshBasicMaterial) return m.specularMap ? null : "basic|" + common + "|" + (m.map ? (canAtlas(m) ? "atlas" : texKey(m.map)) : "-");
+  if ((m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial) || m.isMeshLambertMaterial) {
+    if (m.normalMap || m.bumpMap || m.displacementMap || m.specularMap) return null;
+    return [m.type, common, m.color.getHex(), m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.opacity, m.flatShading,
+      texKey(m.map), texKey(m.emissiveMap), texKey(m.roughnessMap), texKey(m.metalnessMap)].join("|");
+  }
+  return null;
+}
+/* shelf-pack canvases into one atlas; returns the texture and a UV matrix per input image */
+function packAtlas(images, like) {
+  const pad = 4, W = 2048, slots = new Array(images.length);
+  const order = images.map((_, i) => i).sort((a, b) => images[b].height - images[a].height);
+  let x = 0, y = 0, shelf = 0;
+  for (const i of order) {
+    const w = images[i].width + 2 * pad, h = images[i].height + 2 * pad;
+    if (w > W) return null;
+    if (x + w > W) { x = 0; y += shelf; shelf = 0; }
+    slots[i] = { x: x + pad, y: y + pad }; x += w; shelf = Math.max(shelf, h);
+  }
+  const H = y + shelf; if (H > 4096) return null;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d"); images.forEach((im, i) => g.drawImage(im, slots[i].x, slots[i].y));
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = like.encoding; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  // canvas row 0 is v = 1 (flipY): a local (u, v) lands at ((x + u w) / W, (H - y - h + v h) / H)
+  const uvm = images.map((im, i) => new THREE.Matrix3().set(im.width / W, 0, slots[i].x / W, 0, im.height / H, (H - slots[i].y - im.height) / H, 0, 0, 1));
+  return { tex, uvm };
+}
+function uvsInUnitSquare(geo) {
+  const U = geo.attributes.uv; if (!U) return false;
+  for (let i = 0; i < U.count; i++) { const u = U.getX(i), v = U.getY(i); if (u < -1e-4 || u > 1 + 1e-4 || v < -1e-4 || v > 1 + 1e-4) return false; }
+  return true;
+}
+/* move an object's origin to the centre of its geometry's bounds (renderers sort by origin) */
+function recentre(obj) { const g = obj.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); const c = g.boundingSphere.center.clone(); g.translate(-c.x, -c.y, -c.z); obj.position.add(c); }
+function batchStatic(group, tracked, opts) {
+  tracked = tracked || []; const splitY = opts && opts.splitY != null ? opts.splitY : null;
+  group.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(group.matrixWorld).invert(), rel = new THREE.Matrix4();
+  const relOf = (o) => rel.multiplyMatrices(inv, o.matrixWorld);
+  const _c3 = new THREE.Vector3();
+  const sideOf = (o) => { if (splitY == null) return ""; if (o.isSprite) _c3.setFromMatrixPosition(o.matrixWorld); else { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); _c3.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); } return _c3.y < splitY ? "below" : "above"; };
+  const trackOf = (o) => { for (let i = 0; i < tracked.length; i++) if (tracked[i].includes(o) || tracked[i].includes(o.material)) return i; return -1; };
+  const meshB = new Map(), haloB = new Map(), push = (B, k, o) => { if (!B.has(k)) B.set(k, []); B.get(k).push(o); };
+  group.traverseVisible((o) => {
+    if (o === group || o.userData.live || o.children.length || o.renderOrder || o.layers.mask !== 1 || Object.prototype.hasOwnProperty.call(o, "onBeforeRender")) return;
+    if (o.isSprite) {
+      const m = o.material;
+      if (m.map === HALO_TEX && m.blending === THREE.AdditiveBlending && !m.depthWrite && m.rotation === 0) push(haloB, ["halo", trackOf(o), m.depthTest, sideOf(o)].join("|"), o);
+      return;
+    }
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry.attributes.normal) return;
+    let k = batchKey(o, trackOf(o)); if (k && o.material.transparent) k = sideOf(o) + "|" + k;
+    if (k && !(k.endsWith("|atlas") && !uvsInUnitSquare(o.geometry))) push(meshB, k, o);
+  });
+  const replaced = new Map(), retired = new Set(), keep = new Set();
+  for (const [key, list] of meshB) {
+    if (list.length < 2) continue;
+    const m0 = list[0].material, basic = !!m0.isMeshBasicMaterial, src0 = uvSource(m0);
+    const sameTex = list.every((o) => uvSource(o.material) === src0), sameMat = list.every((o) => o.material === m0);
+    const op0 = m0.opacity, sameOp = list.every((o) => o.material.opacity === op0);
+    let atlas = null, atlasIdx = null;
+    if (basic && key.endsWith("|atlas")) {
+      const imgs = [], at = new Map();
+      for (const o of list) { const im = o.material.map.image; if (!at.has(im)) { at.set(im, imgs.length); imgs.push(im); } }
+      atlas = packAtlas(imgs, m0.map); if (!atlas) continue;
+      atlasIdx = list.map((o) => at.get(o.material.map.image));
+    }
+    const parts = list.map((o, j) => {
+      const mm = o.material, part = { geo: o.geometry, m: relOf(o).clone() };
+      if (basic) part.tint = [mm.color.r, mm.color.g, mm.color.b, sameOp ? 1 : mm.opacity];
+      const st = uvSource(mm);
+      if (st && (atlas || !sameTex)) { st.updateMatrix(); part.uvm = atlas ? atlas.uvm[atlasIdx[j]].clone().multiply(st.matrix) : st.matrix.clone(); }
+      return part;
+    });
+    const geo = mergeParts(parts, { uv: !!src0, alpha: basic, color: basic });
+    let mat;
+    if (basic) {
+      mat = m0.clone(); mat.vertexColors = true; mat.color.setHex(0xffffff); mat.opacity = sameOp ? op0 : 1;
+      if (atlas) mat.map = atlas.tex; else if (src0 && !sameTex) mat.map = identityTex(m0.map);
+    } else if (sameMat && sameTex) mat = m0;
+    else { mat = m0.clone(); if (src0 && !sameTex) for (const k of UV_SLOTS) if (mat[k]) mat[k] = identityTex(mat[k]); }
+    keep.add(mat);
+    const mesh = new THREE.Mesh(geo, mat); mesh.raycast = () => {}; mesh.userData.batched = list.length; recentre(mesh); group.add(mesh);
+    for (const o of list) { o.parent.remove(o); replaced.set(o, mesh); replaced.set(o.material, mat); retired.add(o.material); }
+  }
+  for (const [, list] of haloB) {
+    if (list.length < 2) continue;
+    const op0 = list[0].material.opacity, sameOp = list.every((s) => s.material.opacity === op0), p = new THREE.Vector3(), sc = new THREE.Vector3();
+    const pts = haloCloud(list.map((s) => { relOf(s); p.setFromMatrixPosition(rel); sc.setFromMatrixScale(rel);
+      return { x: p.x, y: p.y, z: p.z, color: s.material.color.getHex(), a: sameOp ? 1 : s.material.opacity, size: Math.sqrt(Math.abs(sc.x * sc.y)) }; }));
+    pts.material.opacity = sameOp ? op0 : 1; pts.material.depthTest = list[0].material.depthTest; recentre(pts); group.add(pts);
+    for (const s of list) { s.parent.remove(s); replaced.set(s, pts); retired.add(s.material); }
+  }
+  // retire the originals' materials (and their own textures) unless a merged mesh still uses them
+  const live = new Set(); for (const km of keep) for (const k of UV_SLOTS) if (km[k]) live.add(km[k]);
+  for (const m of retired) {
+    if (keep.has(m)) continue;
+    for (const k of UV_SLOTS) { const t = m[k]; if (t && !SHARED_TEX.has(t) && !live.has(t)) t.dispose(); }
+    m.dispose();
+  }
+  for (const arr of tracked) {
+    const out = [];
+    for (const x of arr) { const y = replaced.get(x) || x; if (!out.includes(y)) out.push(y); }
+    arr.length = 0; arr.push(...out);
+  }
+}
+
 /* ---------- environment: ground, vault floor, city, rain ---------- */
-let envGroup = null, rainLines = null, rainPos = null, beacons = [], cityMats = [], rainOn = true, matteMat = null;
+let envGroup = null, rainLines = null, rainPos = null, beacons = [], beaconCloud = null, cityMats = [], rainOn = true, matteMat = null;
 function buildEnvironment(seedStr, L) {
   if (envGroup) { scene.remove(envGroup); envGroup.traverse(disposeObj); }
-  envGroup = new THREE.Group(); beacons = []; cityMats = [];
+  envGroup = new THREE.Group(); beacons = []; beaconCloud = null; cityMats = [];
+  const beaconList = [];
   matteMat = new THREE.MeshBasicMaterial({ map: SKYLINE_TEX, transparent: true, side: THREE.BackSide, fog: false, depthWrite: false });
   const matte = new THREE.Mesh(new THREE.CylinderGeometry(430, 430, 300, 64, 1, true), matteMat);
   matte.position.y = -30 + 150; envGroup.add(matte);
@@ -1086,10 +1249,7 @@ function buildEnvironment(seedStr, L) {
       const inward = Math.atan2(-b.position.z, -b.position.x);
       strip.position.set(b.position.x + Math.cos(inward) * (Math.max(w, d) / 2 + 0.2), gy + h * 0.5, b.position.z + Math.sin(inward) * (Math.max(w, d) / 2 + 0.2)); envGroup.add(strip);
     }
-    if (h > 120 && beacons.length < 7) {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hot, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-      s.scale.set(7, 7, 1); s.position.set(b.position.x, gy + h + 2, b.position.z); envGroup.add(s); beacons.push({ s, ph: r() * 6.28 });
-    }
+    if (h > 120 && beaconList.length < 7) beaconList.push({ x: b.position.x, y: gy + h + 2, z: b.position.z, color: COL.hot, size: 7, ph: r() * 6.28 });
   }
   // rain: short vertical segments, wrapped in a volume around the diorama
   const n = 1100; rainPos = new Float32Array(n * 6);
@@ -1100,6 +1260,11 @@ function buildEnvironment(seedStr, L) {
   const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
   rainLines = new THREE.LineSegments(rg, new THREE.LineBasicMaterial({ color: 0x7f99b4, transparent: true, opacity: 0.22 }));
   rainLines.visible = rainOn; envGroup.add(rainLines);
+  if (beaconList.length) {   // aircraft-warning beacons: one cloud, blinking per beacon (tick writes the alphas)
+    beaconCloud = haloCloud(beaconList); beaconCloud.geometry.attributes.aColor.setUsage(THREE.DynamicDrawUsage); envGroup.add(beaconCloud);
+    beacons = beaconList.map((b, i) => ({ i, ph: b.ph }));
+  }
+  batchStatic(envGroup, [cityMats], { splitY: gy });
   scene.add(envGroup);
 }
 
@@ -1163,7 +1328,7 @@ let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive
 const effects = [];
 /* dispose everything an object owns: geometry, material, and any texture that is not one of
    the shared ones (labels, tags, cash sprites and tower window clones each own a texture) */
-const SHARED_TEX = new Set([HALO_TEX, RING_TEX, RETICLE_TEX, GROUND_TEX, WINDOW_TEX, SKYLINE_TEX]);
+const SHARED_TEX = new Set([HALO_TEX, RING_TEX, RETICLE_TEX, GROUND_TEX, WINDOW_TEX, SKYLINE_TEX, CONE_TEX, TILE_TEX, SHADOW_TEX]);
 function disposeObj(o) {
   if (o.geometry) o.geometry.dispose();
   const m = o.material; if (!m || !m.dispose) return;
@@ -1232,7 +1397,8 @@ function buildScenario(scn) {
   const bp = [];
   for (const [a, b] of S.edges) { if (!nodeObjs[a] || !nodeObjs[b]) continue; const na = nodeObjs[a].data, nb = nodeObjs[b].data; bp.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]); }
   const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bp), 3));
-  baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: S.layout ? 0.28 : 0.7 }));   // in the city the links are faint floor traces scene.add(baseEdges);
+  baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: S.layout ? 0.28 : 0.7 }));   // in the city the links are faint floor traces
+  scene.add(baseEdges);
   // cages around airgapped vaults
   cageGroup = new THREE.Group(); cageByNode = {};
   for (const nd of S.nodes) {
@@ -1312,6 +1478,7 @@ function buildVenues() {
     const pl = new THREE.PointLight(c, 1.1, R * 3.2, 1.2); pl.position.set(px, y + 16, pz); venueGroup.add(pl); venueLights.push(pl);
     dressVenue(key, cx, cz, R, y, pa);
   }
+  batchStatic(venueGroup, [lampHalos], { splitY: groundMesh ? groundMesh.position.y : null });
   scene.add(venueGroup);
 }
 /* the city from the exported layout: plaza slabs with a curb of neon, a facade with a lit
@@ -1405,6 +1572,7 @@ function buildBlocks(L) {
     for (let t = 4; t < len - 4; t += 9) add(new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 4), paint), ax + ux * t, gy + 0.02, az + uz * t, ang);
     if (Math.abs(uz) > 0.5) for (let k = -3; k <= 3; k++) add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.02, 5), paint), ax + k * 1.9, gy + 0.02, az + Math.sign(az || 1) * -3.5);
   }
+  batchStatic(venueGroup, [lampHalos, lampCones, cityMats], { splitY: L.ground_y });
   scene.add(venueGroup);
 }
 /* venue typology → props (authored; see docs/diorama_design.md): lamps everywhere, then
@@ -2356,7 +2524,7 @@ function tick(ts) {
     const p = rainPos, floorY = groundMesh ? groundMesh.position.y : -66, span = S && S.layout ? 150 : 180; for (let i = 0; i < p.length; i += 6) { p[i + 1] -= dt * 95; p[i + 4] -= dt * 95; if (p[i + 1] < floorY) { p[i + 1] += span; p[i + 4] += span; } }
     rainLines.geometry.attributes.position.needsUpdate = true;
   }
-  for (const b of beacons) b.s.material.opacity = (Math.sin(now * 0.004 + b.ph) > 0.6) ? 0.9 : 0.12;
+  if (beaconCloud) { const A = beaconCloud.geometry.attributes.aColor; for (const b of beacons) A.array[b.i * 4 + 3] = (Math.sin(now * 0.004 + b.ph) > 0.6) ? 0.9 : 0.12; A.needsUpdate = true; }
   for (let i = effects.length - 1; i >= 0; i--) {
     const e = effects[i];
     if (e.delay > 0) { e.delay -= dt; continue; }
