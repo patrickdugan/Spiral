@@ -132,7 +132,9 @@
   .metric.vio b { color: var(--violet); }
   .metric.hun b { color: var(--hunger); }
   #toggles { display: flex; gap: 6px; }
-  #toggles button { padding: 5px 8px; font-size: 11px; }
+  #toggles button { padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+  #toggles button i { font-style: normal; }
+  @media (max-width: 1520px) { #toggles button span { display: none; } #toggles button { padding: 5px 7px; font-size: 13px; } #clock { min-width: 136px; } }
   #audio.nudge { animation: nudge 1.6s ease-in-out 4; }
   @keyframes nudge { 0%, 100% { border-color: var(--hair2); color: var(--fg); } 50% { border-color: var(--hazard); color: var(--hazard); } }
 
@@ -306,12 +308,12 @@
     <div id="clock"><div class="t" id="clocktext">—</div><canvas id="skyarc" width="280" height="24"></canvas></div>
     <div id="metrics"></div>
     <div id="toggles">
-      <button id="hivevis" class="on" aria-pressed="true" title="See the world as the hive mind does: devices as vectors, cash, marks">◉ Hive vision</button>
-      <button id="director" class="on" aria-pressed="true" title="Camera follows landed strikes while you are idle">◎ Director</button>
-      <button id="audio" aria-pressed="false" title="Generative ambient bed (original, synthesized in-page)">♪ Audio</button>
-      <button id="weather" class="on" aria-pressed="true" title="Rain">☂ Rain</button>
-      <button id="still" title="Save the current view as a PNG">⬇ Still</button>
-      <button id="legends" title="Save this scenario's annals as a text file">⬇ Annals</button>
+      <button id="hivevis" class="on" aria-pressed="true" title="Hive vision (H): see the world as the hive mind does — devices as vectors, cash, marks"><i>◉</i><span> Hive vision</span></button>
+      <button id="director" class="on" aria-pressed="true" title="Director (D): camera follows landed strikes while you are idle"><i>◎</i><span> Director</span></button>
+      <button id="audio" aria-pressed="false" title="Audio (M): generative ambient bed, synthesized in-page"><i>♪</i><span> Audio</span></button>
+      <button id="weather" class="on" aria-pressed="true" title="Rain (R)"><i>☂</i><span> Rain</span></button>
+      <button id="still" title="Save the current view as a PNG"><i>⬇</i><span> Still</span></button>
+      <button id="legends" title="Save this scenario's annals as a text file"><i>▤</i><span> Annals</span></button>
       <button id="aboutbtn" title="About this view">?</button>
     </div>
   </header>
