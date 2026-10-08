@@ -187,6 +187,20 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   - **Recent history.** The dossier shows the last six annals entries that name the unit, up to
     the current frame — the Dwarf-Fortress "thoughts and memories" panel, derived purely from
     the exported events.
+  - **Archetype silhouettes** (`ARCH_BUILD`). Authored build hints per swarm archetype so a
+    crowd reads at a glance: guarded_engineer hooded, status_seeker broad-shouldered,
+    eager_newcomer small, principled_auditor tall and narrow-headed, lonely_true_believer
+    arms-in, burned_out_admin slumped. Every figure also wears a visor band in its pure state
+    colour. Thematic fit only; no evidence.
+  - **Venue typology → props** (`dressVenue`). Every venue gets rim lamps (count ∝ radius,
+    halos fade by day). Then by kind: vault / enclave_datacenter / data_store → server racks;
+    decoy → a bait pedestal glowing hazard yellow; exchange / treasury → a ticker board;
+    registry / wiki → cabinets; helpdesk / gig_shopfront → a counter; admin_console / monitor /
+    operations → a console bank; loyalist_hall → benches; shard_holders / wallet → safes;
+    swarm communities → two lit kiosks. All boxes and emissive strips, authored per kind.
+  - **Director camera** (toggle, on by default). While the viewer has been idle for 5 s, the
+    first non-soft strike of each frame flies the camera to its target over 1.6 s, so the
+    autoplayed opening plays as a tracked sequence; any pointer input takes the camera back.
   - **Audio (off by default, user toggle).** An original generative bed synthesized in-page
     with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
     fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on

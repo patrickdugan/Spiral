@@ -279,6 +279,7 @@
     <div id="clock"><div class="t" id="clocktext">—</div><canvas id="skyarc" width="280" height="24"></canvas></div>
     <div id="metrics"></div>
     <div id="toggles">
+      <button id="director" class="on" aria-pressed="true" title="Camera follows landed strikes while you are idle">◎ Director</button>
       <button id="audio" aria-pressed="false" title="Generative ambient bed (original, synthesized in-page)">♪ Audio</button>
       <button id="weather" class="on" aria-pressed="true" title="Rain">☂ Rain</button>
       <button id="aboutbtn" title="About this view">?</button>
@@ -486,14 +487,29 @@ function makeProps(devices, aw) {
 
 /* procedural low-poly humanoid (self-authored geometry; lit material with an
    emissive state tint so figures read in daylight and glow at night) */
-function makeHumanoid(v) {
+/* archetype silhouettes: authored presentation hints so a crowd reads at a glance */
+const ARCH_BUILD = {
+  guarded_engineer: { sh: 1.1, hd: 0.95, hood: true },
+  balanced_contributor: { sh: 1.0, hd: 1.0 },
+  eager_newcomer: { sh: 0.85, hd: 1.05, scale: 0.92 },
+  steady_clerk: { sh: 1.0, hd: 1.0 },
+  status_seeker: { sh: 1.3, hd: 1.0 },
+  lonely_true_believer: { sh: 0.9, hd: 1.0, armsIn: true },
+  burned_out_admin: { sh: 1.0, hd: 1.0, slump: 0.16 },
+  principled_auditor: { sh: 0.95, hd: 0.9, scale: 1.08 },
+};
+function makeHumanoid(v, arch) {
   v = (v == null) ? 0.5 : v;
+  const b = ARCH_BUILD[arch] || {};
   const group = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: COL.slate, emissive: COL.dark, emissiveIntensity: 0.6 });
+  const vmat = new THREE.MeshBasicMaterial({ color: COL.dark });   // visor band: pure state colour
   const picks = [];
-  const hs = 0.74 + 0.22 * v, tw = 0.66 + 0.30 * v, aw = 0.95 + 0.18 * v;
-  const part = (geo, y, x, rotZ) => { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y, 0); if (rotZ) m.rotation.z = rotZ; group.add(m); picks.push(m); return m; };
+  const hs = (0.74 + 0.22 * v) * (b.hd || 1), tw = (0.66 + 0.30 * v) * (b.sh || 1), aw = (0.95 + 0.18 * v) * (b.armsIn ? 0.8 : 1);
+  const part = (geo, y, x, rotZ, m2) => { const m = new THREE.Mesh(geo, m2 || mat); m.position.set(x || 0, y, 0); if (rotZ) m.rotation.z = rotZ; group.add(m); picks.push(m); return m; };
   part(new THREE.SphereGeometry(hs, 8, 6), 2.25);
+  if (b.hood) { const hood = part(new THREE.SphereGeometry(hs * 1.18, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.62), 2.3); hood.position.z = -0.12; }
+  const visor = part(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), 2.3, 0, 0, vmat); visor.position.z = hs * 0.55;
   part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, 0.42);
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, -0.42);
@@ -502,8 +518,8 @@ function makeHumanoid(v) {
   const armL = part(armGeo(), 1.5, -aw, 0.35);
   // shoulder plate: a thin box across the shoulders, a subtle "uniform" cue
   part(new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), 1.6);
-  group.scale.setScalar(0.9 + 0.24 * v);
-  return { group, mat, picks, arms: [armR, armL] };
+  group.scale.setScalar((0.9 + 0.24 * v) * (b.scale || 1));
+  return { group, mat, vmat, picks, arms: [armR, armL], slump: b.slump || 0 };
 }
 /* on-shift test from the exported routine + per-frame clock (authored presentation rule) */
 function onShift(r, cl) {
@@ -577,6 +593,7 @@ function applyDayCycle(clock) {
   for (const m of cityMats) m.emissiveIntensity = lerp(0.95, 0.15, daylight);
   if (matteMat) { matteMat.color.setHex(daylight > 0 ? (0xffffff - Math.round(daylight * 0x70) * 0x010101) : 0xffffff); matteMat.opacity = lerp(1, 0.8, daylight); }
   if (rainLines) rainLines.material.opacity = lerp(0.24, 0.14, daylight);
+  for (const s of lampHalos) s.material.opacity = lerp(0.55, 0.06, daylight);
   drawSkyArc(t);
 }
 function drawSkyArc(t) {
@@ -613,7 +630,7 @@ function buildScenario(scn) {
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
   for (const nd of S.nodes) {
     const v = hashUnit(String(nd.archetype) + nd.id);
-    const h = isPerson(nd) ? makeHumanoid(v) : makePylon(v);
+    const h = isPerson(nd) ? makeHumanoid(v, nd.archetype) : makePylon(v);
     h.group.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
     h.group.rotation.y = nd.pos[0] * 0.17 + nd.pos[2] * 0.11;
     for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
@@ -633,7 +650,7 @@ function buildScenario(scn) {
       props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
       props.traverse((o) => { if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
     }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
   }
   // base edges
   const bp = [];
@@ -673,7 +690,7 @@ function buildScenario(scn) {
 
 /* venue "sets": floor disc, rim, pylon + signage per location group */
 function buildVenues() {
-  venueGroup = new THREE.Group();
+  venueGroup = new THREE.Group(); lampHalos = [];
   const vg = venueGroups();
   for (const key of Object.keys(vg)) {
     const nodes = vg[key]; let cx = 0, cz = 0, minY = Infinity;
@@ -698,8 +715,41 @@ function buildVenues() {
     pylon.position.set(px, y + 8, pz); venueGroup.add(pylon);
     const sign = textSprite(nice(key).toUpperCase(), { size: 44, color: hex(c), tick: hex(c), scale: 0.72 });
     sign.position.set(px, y + 18.5, pz); venueGroup.add(sign);
+    dressVenue(key, cx, cz, R, y, pa);
   }
   scene.add(venueGroup);
+}
+/* venue typology → props (authored; see docs/diorama_design.md): lamps everywhere, then
+   racks / bait pedestal / ticker board / cabinets / counter / console bank / benches / safes */
+let lampHalos = [];
+function dressVenue(key, cx, cz, R, y, pa) {
+  const dark = new THREE.MeshLambertMaterial({ color: 0x151c26 });
+  const glow = (c, i) => new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: c, emissiveIntensity: i == null ? 0.9 : i });
+  const at = (ang, rad, obj, h) => { obj.position.set(cx + Math.cos(ang) * rad, y + (h || 0), cz + Math.sin(ang) * rad); obj.rotation.y = -ang; venueGroup.add(obj); return obj; };
+  const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m || dark);
+  const nl = Math.max(2, Math.min(6, Math.round(R / 8)));
+  for (let i = 0; i < nl; i++) {
+    const a = pa + Math.PI * 2 * (i + 0.5) / nl;
+    at(a, R - 1.5, box(0.3, 9, 0.3), 4.5);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.ice, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 })); s.scale.set(6, 6, 1);
+    at(a, R - 1.5, s, 9.3); lampHalos.push(s);
+  }
+  const kind = /^community/.test(key) ? "community" : key;
+  const row = (n, rad, mk) => { for (let i = 0; i < n; i++) mk(pa + Math.PI + Math.PI * 2 * (i - (n - 1) / 2) / Math.max(6, n * 2.2), rad, i); };
+  const rack = (a, rad) => { at(a, rad, box(1.6, 3.6, 1.2), 2.4); for (let k = 0; k < 4; k++) at(a, rad - 0.62, box(0.9, 0.12, 0.05, glow(k % 3 ? COL.ice : COL.amber)), 1.2 + k * 0.6); };
+  const safe = (a, rad) => { at(a, rad, box(1.1, 1.3, 1.1), 1.25); at(a, rad - 0.56, box(0.3, 0.08, 0.04, glow(COL.amber)), 1.6); };
+  switch (kind) {
+    case "vault": case "enclave_datacenter": case "data_store": row(4, R * 0.62, rack); break;
+    case "decoy": at(pa + Math.PI, R * 0.5, box(2.4, 1.2, 2.4), 1.2); at(pa + Math.PI, R * 0.5, box(1.4, 0.9, 1.0, glow(COL.hazard, 0.8)), 2.3); break;
+    case "exchange": case "treasury": at(pa + Math.PI, R * 0.6, box(0.5, 7, 0.5), 4.1); at(pa + Math.PI, R * 0.6, box(7, 1.6, 0.25, glow(COL.amber, 0.7)), 7.4); break;
+    case "registry": case "wiki": row(3, R * 0.6, (a, rad) => { at(a, rad, box(1.2, 2.4, 1.2), 1.8); at(a, rad - 0.62, box(0.5, 0.08, 0.04, glow(COL.ice)), 2.6); }); break;
+    case "helpdesk": case "gig_shopfront": at(pa + Math.PI, R * 0.55, box(6, 1.2, 1.4), 1.2); at(pa + Math.PI, R * 0.55 - 0.72, box(6, 0.12, 0.06, glow(COL.ice)), 1.6); break;
+    case "admin_console": case "monitor": case "operations": at(pa + Math.PI, R * 0.55, box(5, 0.9, 1.6), 1.05); at(pa + Math.PI, R * 0.55 + 0.6, box(4.2, 0.9, 0.08, glow(COL.ice, 0.8)), 2.0); break;
+    case "loyalist_hall": row(2, R * 0.45, (a, rad) => at(a, rad, box(4, 0.5, 1), 0.85)); row(2, R * 0.7, (a, rad) => at(a, rad, box(4, 0.5, 1), 0.85)); break;
+    case "shard_holders": case "wallet": row(3, R * 0.55, safe); break;
+    case "community": row(2, R * 0.7, (a, rad) => at(a, rad, box(1.2, 2.2, 1.2, glow(COL.ice, 0.3)), 1.7)); break;
+    default: break;
+  }
 }
 
 function stateOf(id, f) {
@@ -742,7 +792,7 @@ function applyFrame(i) {
     if (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
     o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * lerp(1.0, 0.55, daylightNow);
     o.halo.material.color.setHex(c); o.halo.material.opacity = glow * 0.55;
-    o.rim.material.color.setHex(c);
+    o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
     // routine: off-shift figures dim and their desk goes dark (flipped states keep their glow)
     const on = onShift(o.routine, f.clock); o._off = !on;
     if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
@@ -790,11 +840,13 @@ function vectorColor(ev) {
   }
 }
 function spawnEffects(f) {
+  let flew = false;
   for (const ev of f.events) {
     const k = ev.vector || ev.kind; if (k === "signed") continue;
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
     const landed = evLanded(ev); if (!landed && !ev.blocked && k !== "reinforce") { audio.ping(false); continue; }
     const o = nodeObjs[id], c = vectorColor(ev), p = o.group.position, soft = k === "reinforce";
+    if (!soft && director && !flew && now - idleSince > 5000) { flyToPoint(p.x, p.y - 1.5, p.z, 46, 1.15, 1.6); flew = true; }   // director: ride along to the strike
     // staging: the reticle locks on first; the beam, ring and flash land a beat later
     const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
     ring.position.set(p.x, p.y - 2.6, p.z); ring.visible = soft; scene.add(ring); effects.push({ obj: ring, t: 0, life: 1.0, kind: "ring", delay: soft ? 0 : 0.34 });
@@ -824,8 +876,8 @@ function applyCam() {
   camera.position.set(cam.target.x + r * st * Math.cos(cam.theta), cam.target.y + r * Math.cos(cam.phi), cam.target.z + r * st * Math.sin(cam.theta));
   camera.lookAt(cam.target);
 }
-function flyToPoint(x, y, z, radius, phi) {
-  tween = { t: 0, dur: 1.3, from: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, r: cam.radius, phi: cam.phi }, to: { tx: x, ty: y, tz: z, r: radius, phi: phi == null ? 1.12 : phi } };
+function flyToPoint(x, y, z, radius, phi, dur) {
+  tween = { t: 0, dur: dur || 1.3, from: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, r: cam.radius, phi: cam.phi }, to: { tx: x, ty: y, tz: z, r: radius, phi: phi == null ? 1.12 : phi } };
 }
 function flyTo(id) { const o = nodeObjs[id]; if (!o) return; const p = o.group.position; flyToPoint(p.x, p.y - 1.5, p.z, 30, 1.2); }
 function flyToVenue(nodes) {
@@ -1012,7 +1064,12 @@ function renderRoster() {
     return `<div class="unit ${selected === nd.id ? "sel" : ""} ${off ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${off ? "⌂" : glyphOf(nd, st)}</span><span class="id">${esc(nd.id)}</span>` +
       `<span class="nm">${nm}<div class="sbar"><i style="width:${Math.round(stress * 100)}%"></i></div></span><span class="mood" style="color:${hex(m[1])}">${m[0]}</span></div>`;
   }).join("");
-  host.querySelectorAll(".unit").forEach((el) => el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
+  host.querySelectorAll(".unit").forEach((el) => {
+    const id = el.getAttribute("data-id");
+    el.addEventListener("click", () => select(id, true));
+    el.addEventListener("mouseenter", () => { if (nodeObjs[id]) nodeObjs[id].label.visible = true; });
+    el.addEventListener("mouseleave", () => { if (nodeObjs[id] && id !== selected) nodeObjs[id].label.visible = false; });
+  });
 }
 function setMapZ(z) { mapZ = z; document.querySelectorAll(".ztabs button").forEach((b) => b.classList.toggle("on", Number(b.getAttribute("data-z")) === z)); document.getElementById("maplvl").textContent = "Z " + z; drawGlyphMap(); }
 document.querySelectorAll(".ztabs button").forEach((b) => b.addEventListener("click", () => setMapZ(Number(b.getAttribute("data-z")))));
@@ -1225,6 +1282,8 @@ const audio = (() => {
   return { toggle, ping, swell, setTension };
 })();
 document.getElementById("audio").addEventListener("click", audio.toggle);
+let director = true;
+document.getElementById("director").addEventListener("click", (e) => { director = !director; e.currentTarget.classList.toggle("on", director); e.currentTarget.setAttribute("aria-pressed", String(director)); });
 document.getElementById("weather").addEventListener("click", (e) => { rainOn = !rainOn; if (rainLines) rainLines.visible = rainOn; e.currentTarget.classList.toggle("on", rainOn); e.currentTarget.setAttribute("aria-pressed", String(rainOn)); });
 
 /* ---------- scenario selector ---------- */
@@ -1268,7 +1327,7 @@ function tick(ts) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
     o.group.position.y = nd.pos[1] + Math.sin(now * 0.0016 + o.phase) * 0.18;
     o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress : 0;
-    o.group.rotation.x = st.comp && !st.honeypot ? 0.14 : 0;    // the turned slump forward
+    o.group.rotation.x = (o.slump || 0) + (st.comp && !st.honeypot ? 0.14 : 0);    // archetype posture + the turned slump forward
     let ry = o.baseRot;
     if (o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                 // off-shift: turned away from the desk
     else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.group.position.x, hive.position.z - o.group.position.z);   // pressed: eyes on the adversary
