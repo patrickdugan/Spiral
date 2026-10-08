@@ -232,6 +232,14 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
     fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on
     attempts, a filtered-noise swell on a break. No samples, no external assets, no
-    copyrighted material.
+    copyrighted material. The graph builds against any `BaseAudioContext`, so
+    `audio.renderOffline(seconds)` renders the same bed into an `OfflineAudioContext` for a
+    loudness check: at the shipped master level (0.8) a 4 s render with the arp at full
+    density, a landed ping, a held ping and a swell peaks near 0.29 with RMS near 0.06 — never
+    clipping, deliberately a bed under a UI.
+  - **Cinema cues.** A director flight slides letterbox bars in (cleared by any pointer input,
+    by stopping playback, or by switching the director off); the current frame's annals entries
+    slide in; a metric tile pulses when its value changes. In a simulated 1× autoplay of the
+    opening swarm scenario (60 frames, 33 s) the director takes 6 flights.
 - **Remaining (optional):** richer per-archetype outfits / idle gestures; interior props per
   venue kind beyond the desk stack.
