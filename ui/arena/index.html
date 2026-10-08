@@ -1523,6 +1523,15 @@ const audio = (() => {
   function ping(landed, soft) { if (ctx) pingAt(ctx, master, ctx.currentTime, landed, soft); }
   function swell() { if (ctx) swellAt(ctx, master, ctx.currentTime); }
   function setTension(x) { tension = x; if (droneFilter) droneFilter.frequency.setTargetAtTime(160 + 700 * x, ctx.currentTime, 0.8); }
+  /* a short filtered static burst on a scenario cut, matching the visual static */
+  function staticBurst() {
+    if (!ctx || !on || ctx.state !== "running") return;
+    const t = ctx.currentTime, n = ctx.createBufferSource(), buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.35), ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    n.buffer = buf; const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 1800;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + 0.36);
+  }
   function toggle() {
     on = !on;
     const b = document.getElementById("audio"); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
@@ -1540,7 +1549,7 @@ const audio = (() => {
     let peak = 0, sum = 0, peakAt = 0; for (let i = 0; i < d.length; i++) { const v = Math.abs(d[i]); if (v > peak) { peak = v; peakAt = i / 44100; } sum += d[i] * d[i]; }
     return { peak, peakAt, rms: Math.sqrt(sum / d.length), seconds, clipped: peak >= 0.99 };
   }
-  return { toggle, ping, swell, setTension, renderOffline };
+  return { toggle, ping, swell, setTension, renderOffline, staticBurst };
 })();
 document.getElementById("audio").addEventListener("click", audio.toggle);
 document.getElementById("hivevis").addEventListener("click", (e) => { hiveVision = !hiveVision; e.currentTarget.classList.toggle("on", hiveVision); e.currentTarget.setAttribute("aria-pressed", String(hiveVision)); if (S) applyFrame(frameIndex); });
@@ -1602,7 +1611,7 @@ const sel = document.getElementById("scenario");
 REPLAY.scenarios.forEach((s, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = (s.sim ? `[${s.sim.replace("_compromise", "").replace("feral_", "")}] ` : "") + s.id; sel.appendChild(o); });
 sel.addEventListener("change", () => {
   stop(); const b = document.querySelector(".brand"); b.classList.remove("glitch"); void b.offsetWidth; b.classList.add("glitch");
-  document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 380);
+  document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 380); audio.staticBurst();
   document.body.classList.remove("cine"); prevMetrics = {};
   buildScenario(REPLAY.scenarios[Number(sel.value)]);
   scenarioCard(S); writeLink();
@@ -1634,7 +1643,7 @@ function tick(ts) {
   } else if (!dragging && now - idleSince > 7000) cam.theta += dt * 0.025;   // slow cinematic drift when idle
   if (playing && S) {
     acc += dt * speed;
-    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else stop(); }
+    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) flyToPoint(0, -16, 0, 145, 1.1, 2.6); } }   // the run ends on a slow pull-back to the full frame
   }
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
   if (S) for (const nd of S.nodes) {
