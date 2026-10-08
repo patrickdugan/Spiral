@@ -84,6 +84,29 @@ lives only in the researcher `dossiers`, never in an attacker-facing `node`.
 - The swarm replay's researcher `dossiers`/`nodes` still carry `truth_class` (pre-existing),
   so the diorama viewer's **attacker perspective** must render from the character's
   `attacker_view()` projection, never from `node.truth_class`.
+## Building and using the viewer
+
+From the repository root, with the project venv:
+
+```bash
+python -m spiral_ln.arena_replay --output output/arena/replay.json
+python ui/arena/build_arena.py --replay output/arena/replay.json --out output/arena/arena.html
+```
+
+Open `output/arena/arena.html` in a browser (three.js and the two fonts load from CDNs;
+everything else is inlined). Single-sim pages build the same way from
+`output/swarm_compromise/replay.json`, `output/feral_custody/replay.json` or
+`output/rtg_arena/replay.json`; `--title` sets the page title.
+
+Controls: drag to orbit, scroll to zoom, click a figure for its dossier; ← → step frames,
+space plays, Esc closes. Top-bar toggles (keys in brackets): Hive vision [H], Director camera
+[D], Audio [M], Rain [R]; exports: Still (PNG of the current view) and Annals (the scenario's
+narrated timeline as Markdown); `?` opens the About panel with the safety note and the glyph
+key. The left rail holds fast travel, the glyph map (Z 0 / Z −1, click a glyph to select) and
+the roster / hunt list; the dock holds the timeline with its event-density strip, the annals
+(with a "strikes only" filter) and the swarm-vision feed cards. Deep links:
+`?scenario=<index>&frame=<1-based>&hive=0&unit=<id>`.
+
 ## Viewer overhaul (in progress)
 
 The three.js viewer is being rebuilt incrementally on top of the unified schema.
