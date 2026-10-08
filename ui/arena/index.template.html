@@ -434,7 +434,7 @@ function rng(seedStr) {
 
 /* ---------- three.js scene ---------- */
 const canvas = document.getElementById("scene");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });   // the scene is multisampled in its own target (see post)
 renderer.setClearColor(0x07090e, 1);
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x07090e, 0.002);
@@ -2457,8 +2457,42 @@ document.getElementById("speed").addEventListener("change", (e) => { speed = Num
 document.getElementById("inspector-close").addEventListener("click", closeInspector);
 
 /* ---------- resize ---------- */
+/* adaptive render scale. Every pass (mirror, scene, bloom chain, composite) costs in proportion
+   to the pixels drawn, so the governor trades resolution for frame rate: about a second of long
+   frames steps the scale down, and several seconds of comfortable frames step it back up toward
+   the device ratio (capped at 2). A step up that is soon followed by a step down doubles the wait
+   before the next try, so the scale settles instead of oscillating. A step down that does not
+   make frames at least 8% faster is undone and becomes the floor: the page is throttled or bound
+   elsewhere, and a blurrier picture would buy nothing. ?scale=<n> pins the scale. */
+const quality = (() => {
+  const cap = Math.min(window.devicePixelRatio || 1, 2);
+  const steps = [cap, ...[1.75, 1.5, 1.25, 1, 0.85, 0.7, 0.6].filter((s) => s < cap - 1e-3)];
+  const pinned = parseFloat(new URLSearchParams(location.search).get("scale"));
+  const SLOW = 22, OK = 18, DOWN_FRAMES = 45, LIMIT = 60000;
+  let idx = 0, floor = steps.length - 1, ema = 16.7, slow = 0, okMs = 0, wait = 4000, lastUp = -Infinity;
+  let sum = 0, n = 0, prevAvg = 0;   // mean frame time since the last change, and before the last step down
+  const changed = () => { slow = 0; okMs = 0; ema = 16.7; sum = 0; n = 0; return true; };
+  function update(ms, t) {   // returns true when the scale changed
+    if (pinned > 0 || !(ms > 0) || ms > 250) return false;   // stalls and tab switches say nothing about the GPU
+    ema += (ms - ema) * 0.1; sum += ms; n++;
+    if (ema > SLOW) { slow++; okMs = 0; } else { slow = 0; okMs = ema < OK ? okMs + ms : 0; }
+    if (slow >= DOWN_FRAMES) {
+      const avg = sum / n;
+      if (prevAvg && avg > prevAvg * 0.92) { idx = Math.max(0, idx - 1); floor = idx; prevAvg = 0; return changed(); }   // resolution is not the limit
+      if (idx < floor) {
+        if (t - lastUp < 6000) wait = Math.min(LIMIT, wait * 2);   // the last step up was too much (detection takes ~1.5-3 s)
+        prevAvg = avg; idx++; return changed();
+      }
+      slow = 0; return false;
+    }
+    if (okMs >= wait && idx > 0) { idx--; lastUp = t; prevAvg = 0; return changed(); }
+    return false;
+  }
+  return { update, scale: () => (pinned > 0 ? Math.min(pinned, 3) : steps[idx]),
+    state: () => ({ scale: pinned > 0 ? pinned : steps[idx], steps, floor: steps[floor], ema: +ema.toFixed(2), wait, pinned: pinned > 0 }) };
+})();
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(quality.scale()); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
   const s = renderer.getDrawingBufferSize(new THREE.Vector2()); post.setSize(s.x, s.y);
   POINT_SCALE.value = s.y / (2 * Math.tan(camera.fov * Math.PI / 360));
 }
@@ -2468,6 +2502,7 @@ window.addEventListener("resize", resize);
 let now = 0, last = 0, lastCamDraw = 0;
 function tick(ts) {
   requestAnimationFrame(tick);
+  if (last && quality.update(ts - last, ts)) resize();
   const dt = Math.max(0, Math.min(0.05, (ts - last) / 1000 || 0)); last = ts; now = ts;
   if (tween) {
     tween.t += dt / tween.dur; const k = easeInOut(Math.min(1, tween.t)), a = tween.from, b = tween.to;

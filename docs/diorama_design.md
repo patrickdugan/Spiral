@@ -385,6 +385,20 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   after match. GPU geometry and texture counts stay flat over repeated scenario cycles. The
   same increment restores the base network edges (faint floor traces in the city, links in
   the legacy layout), which a stray comment in 7c had dropped from the scene.
+- **Increment 7e: adaptive render scale.** After 7c and 7d the CPU side of a frame is ~0.1 ms
+  and the GPU frame is ~3 ms of throughput at 1280×720 (post chain ~1.4 ms, mirror ~1.1 ms,
+  scene ~1.1 ms). Every one of those passes scales with pixels, so a high-DPI laptop pays up
+  to four times as much. The `quality` governor in the loop trades resolution for frame rate.
+  About a second of frames over 22 ms steps the render scale down (from the device ratio,
+  capped at 2, through 1.75 … 0.6), and a few seconds under 18 ms steps it back up. A step up
+  that fails within 6 s doubles the wait before the next try, up to a minute. A step down that
+  does not make frames at least 8% faster is undone and becomes the floor, because the page is
+  then throttled (battery saver) or bound elsewhere and blur would buy nothing. `?scale=<n>`
+  pins the scale. Stalls over 250 ms are ignored. Driven with synthetic frame times, a
+  GPU-bound load settles at 0.7 and retries at 4, 8, 16 s; a 30 fps throttle tries one step and
+  returns to full resolution for good. The canvas is no longer multisampled: the scene has its
+  own 4× target and the canvas only receives the composite quad and HUD sprites (HUD frames
+  match within grain noise; ~0.2–0.5 ms saved per frame).
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:
