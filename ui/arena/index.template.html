@@ -115,6 +115,8 @@
   .metric.vio b { color: var(--violet); }
   #toggles { display: flex; gap: 6px; }
   #toggles button { padding: 5px 8px; font-size: 11px; }
+  #audio.nudge { animation: nudge 1.6s ease-in-out 4; }
+  @keyframes nudge { 0%, 100% { border-color: var(--hair2); color: var(--fg); } 50% { border-color: var(--hazard); color: var(--hazard); } }
 
   /* ---------------- left rail ---------------- */
   #rail { position: fixed; top: 70px; left: 12px; width: 236px; z-index: 15; padding: 14px 12px 12px;
@@ -589,7 +591,9 @@ function applyDayCycle(clock) {
   if (t < 0.5) { r += horizon * 0x26; g += horizon * 0x14; b += horizon * 0x04; } else { r += horizon * 0x1e; g += horizon * 0x06; b += horizon * 0x22; }
   const sky = (Math.min(255, r) | 0) * 65536 + (Math.min(255, g) | 0) * 256 + (Math.min(255, b) | 0);
   renderer.setClearColor(sky, 1); scene.fog.color.setHex(sky);
-  hemi.intensity = lerp(0.62, 1.05, daylight); sun.intensity = lerp(0.15, 0.75, daylight); fill.intensity = lerp(0.3, 0.15, daylight);
+  hemi.intensity = lerp(0.62, 1.05, daylight); sun.intensity = lerp(0.15, 0.85, daylight); fill.intensity = lerp(0.3, 0.15, daylight);
+  sun.color.setRGB(lerp(0.56, 0.94, daylight), lerp(0.69, 0.86, daylight), lerp(0.82, 0.74, daylight));   // cold moon → warm overcast sun
+  hemi.color.setRGB(lerp(0.37, 0.55, daylight), lerp(0.50, 0.60, daylight), lerp(0.64, 0.68, daylight));
   for (const m of cityMats) m.emissiveIntensity = lerp(0.95, 0.15, daylight);
   if (matteMat) { matteMat.color.setHex(daylight > 0 ? (0xffffff - Math.round(daylight * 0x70) * 0x010101) : 0xffffff); matteMat.opacity = lerp(1, 0.8, daylight); }
   if (rainLines) rainLines.material.opacity = lerp(0.24, 0.14, daylight);
@@ -1214,7 +1218,10 @@ function buildAbout() {
   document.getElementById("legend").innerHTML = [
     [GLYPH.clean, "clean", COL.ice], [GLYPH.comp, "turned", COL.hot], [GLYPH.rec, "sworn", COL.violet], [GLYPH.honey, "decoy", COL.hazard],
     [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654],
-  ].map(([g, t, c]) => `<span><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("");
+  ].map(([g, t, c]) => `<span><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("") +
+  `<span style="flex-basis:100%;height:0"></span>` + [
+    ["▮", "phish / emanation", COL.ice], ["▮", "proximity / attrition", COL.amber], ["▮", "recruit / coerce", COL.violet], ["▮", "bribe / breach", COL.hot], ["▮", "decoy", COL.hazard], ["▮", "air gap", COL.steel],
+  ].map(([g, t, c]) => `<span title="strike beam colour"><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("");
 }
 document.getElementById("aboutbtn").addEventListener("click", () => { document.getElementById("about").hidden = false; });
 document.getElementById("about-close").addEventListener("click", () => { document.getElementById("about").hidden = true; });
@@ -1245,7 +1252,7 @@ const audio = (() => {
     arpTimer = setInterval(tickArp, 134);   // ~112 BPM sixteenths
   }
   function tickArp() {
-    if (!ctx) return;
+    if (!ctx || !on || ctx.state !== "running") return;   // never queue notes into a suspended context
     const t = ctx.currentTime, f = NOTES[step % NOTES.length] * (step % 32 >= 24 ? 1.5 : 1);
     step++;
     if ((step % 8) === 3 && Math.random() < 0.35) return;   // rests keep it sparse
@@ -1364,7 +1371,7 @@ buildScenario(REPLAY.scenarios[0]);
 cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 160, phi: 1.1 } };
 idleSince = 0;
 // after the title card, run the first scenario from its opening frame so the compromise unfolds
-setTimeout(() => { if (!playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } }, 2800);
+setTimeout(() => { if (!playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } document.getElementById("audio").classList.add("nudge"); }, 2800);
 requestAnimationFrame(tick);
 </script>
 </body>
