@@ -979,7 +979,7 @@ function flashAlert() { const el = document.getElementById("fx-alert"); el.class
 /* ---------- camera ---------- */
 const cam = { theta: 0.7, phi: 1.1, radius: 170, target: new THREE.Vector3(0, -16, 0) };
 let tween = null, idleSince = 0;
-function frameTarget() { cam.target.set(0, -16, 0); cam.radius = 160; cam.theta = 0.7; cam.phi = 1.1; }
+function frameTarget() { cam.target.set(0, -16, 0); cam.radius = 145; cam.theta = 0.7; cam.phi = 1.1; }
 function applyCam() {
   const r = cam.radius, st = Math.sin(cam.phi);
   camera.position.set(cam.target.x + r * st * Math.cos(cam.theta), cam.target.y + r * Math.cos(cam.phi), cam.target.z + r * st * Math.sin(cam.theta));
@@ -1660,7 +1660,7 @@ function tick(ts) {
 /* ---------- boot ---------- */
 resize(); buildAbout();
 buildScenario(REPLAY.scenarios[0]);
-cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 160, phi: 1.1 } };
+cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 145, phi: 1.1 } };
 idleSince = 0;
 // after the title card, run the first scenario from its opening frame so the compromise unfolds
 setTimeout(() => { if (S) scenarioCard(S); }, 1900);
