@@ -230,7 +230,8 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     violet (the first amber pass read as mud at 06:00).
   - **Audio (off by default, user toggle).** An original generative bed synthesized in-page
     with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
-    fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on
+    fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a cold three-note
+    sine-piano figure (E4 C4 A3, long decay) once every sixteen beats, a muted ping on
     attempts, a filtered-noise swell on a break. No samples, no external assets, no
     copyrighted material. The graph builds against any `BaseAudioContext`, so
     `audio.renderOffline(seconds)` renders the same bed into an `OfflineAudioContext` for a

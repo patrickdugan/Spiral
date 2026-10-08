@@ -1484,6 +1484,17 @@ const audio = (() => {
       o.connect(g); g.connect(bus); o.start(t); o.stop(t + 1.7);
     });
   }
+  /* the cold piano figure: three descending notes, long decay, every sixteen beats */
+  function motifAt(c, bus, t) {
+    [[329.63, 0], [261.63, 0.55], [220, 1.1]].forEach(([f, dtq]) => {
+      [1, 2, 3].forEach((h, i) => {
+        const o = c.createOscillator(); o.type = "sine"; o.frequency.value = f * h;
+        const g = c.createGain(); const a = 0.11 / (i * i + 1);
+        g.gain.setValueAtTime(0, t + dtq); g.gain.linearRampToValueAtTime(a, t + dtq + 0.008); g.gain.exponentialRampToValueAtTime(0.0004, t + dtq + 2.6);
+        o.connect(g); g.connect(bus); o.start(t + dtq); o.stop(t + dtq + 2.7);
+      });
+    });
+  }
   function swellAt(c, bus, t) {
     const n = c.createBufferSource(), buf = c.createBuffer(1, Math.ceil(c.sampleRate * 1.2), c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.6;
@@ -1502,6 +1513,7 @@ const audio = (() => {
     if (!ctx || !on || ctx.state !== "running") return;   // never queue notes into a suspended context
     const t = ctx.currentTime, f = NOTES[step % NOTES.length] * (step % 32 >= 24 ? 1.5 : 1);
     step++;
+    if (step % 64 === 1) motifAt(ctx, master, t);           // the piano figure, once per sixteen beats
     if ((step % 8) === 3 && Math.random() < 0.35) return;   // rests keep it sparse
     noteAt(ctx, arpGain, t, f, playing ? 1 : 0.55);
   }
@@ -1520,7 +1532,7 @@ const audio = (() => {
     const c = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
     const g = buildGraph(c); g.master.gain.setValueAtTime(MASTER, 0); g.droneFilter.frequency.setValueAtTime(160 + 700 * 0.5, 0);
     let s = 0; for (let t = 0; t < seconds; t += 0.134) { const f = NOTES[s % NOTES.length] * (s % 32 >= 24 ? 1.5 : 1); s++; if ((s % 8) === 3) continue; noteAt(c, g.arpGain, t, f, 1); }
-    pingAt(c, g.master, 1.0, true, false); pingAt(c, g.master, 2.0, false, false); swellAt(c, g.master, 3.0);
+    pingAt(c, g.master, 1.0, true, false); pingAt(c, g.master, 2.0, false, false); swellAt(c, g.master, 3.0); motifAt(c, g.master, 0.2);
     const buf = await c.startRendering(), d = buf.getChannelData(0);
     let peak = 0, sum = 0, peakAt = 0; for (let i = 0; i < d.length; i++) { const v = Math.abs(d[i]); if (v > peak) { peak = v; peakAt = i / 44100; } sum += d[i] * d[i]; }
     return { peak, peakAt, rms: Math.sqrt(sum / d.length), seconds, clipped: peak >= 0.99 };
