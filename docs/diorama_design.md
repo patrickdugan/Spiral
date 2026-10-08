@@ -213,6 +213,11 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     target, and the flash lands on arrival; only the hive master's strikes arrive from above. A
     declined probe shows a dim steel reticle that fails to lock. The selected unit's comms links
     lift in white, and glyphs on the map are clickable.
+  - **Defence, decoys, air gaps.** A `detected` event adds a white alert ring at the target
+    0.45 s after the strike lands (the defender's latency, authored). A honeypot hit makes the
+    adversary marker flare hazard-yellow, spin and stagger for 1.4 s (the decoy burning the
+    vector). A `blocked` attempt flashes and swells the target's airgap cage in cold cyan (the
+    air gap holding). All three are cues over exported event flags, not new logic.
   - **Director camera** (toggle, on by default). While the viewer has been idle for 5 s, the
     first non-soft strike of each frame flies the camera to its target over 1.6 s, so the
     autoplayed opening plays as a tracked sequence; any pointer input takes the camera back.

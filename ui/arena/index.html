@@ -625,7 +625,7 @@ function drawSkyArc(t) {
 }
 
 /* ---------- scenario build ---------- */
-let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, nodeGroup = null, venueGroup = null;
+let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null;
 let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive = null;
 const effects = [];
 function clearGroup(g) { if (g) { scene.remove(g); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); }); } }
@@ -677,11 +677,11 @@ function buildScenario(scn) {
   const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bp), 3));
   baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: 0.7 })); scene.add(baseEdges);
   // cages around airgapped vaults
-  cageGroup = new THREE.Group();
+  cageGroup = new THREE.Group(); cageByNode = {};
   for (const nd of S.nodes) {
     if (!nd.airgapped) continue;
     const box = new THREE.Mesh(new THREE.BoxGeometry(7.5, 7.5, 7.5), new THREE.MeshBasicMaterial({ color: COL.steel, wireframe: true, transparent: true, opacity: 0.45 }));
-    box.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); cageGroup.add(box);
+    box.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); cageGroup.add(box); cageByNode[nd.id] = box;
   }
   scene.add(cageGroup);
   activeEdges = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
@@ -863,7 +863,7 @@ function spawnEffects(f) {
   for (const ev of f.events) {
     const k = ev.vector || ev.kind; if (k === "signed") continue;
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
-    const landed = evLanded(ev), o = nodeObjs[id], soft = k === "reinforce", p = o.group.position, c = vectorColor(ev);
+    const landed = evLanded(ev) || !!ev.honeypot, o = nodeObjs[id], soft = k === "reinforce", p = o.group.position, c = vectorColor(ev);
     const lateral = (nodeObjs[ev.actor] && ev.actor !== id) ? ev.actor : null;   // a node acting on a node: contagion / the agent's reach
     if (!soft) o._pose = { kind: k, landed, blocked: !!ev.blocked, t: 1.8 };
     if (!landed && !ev.blocked && !soft) {                    // a probe that was declined: the unit checks, waves it off; a reticle that fails to lock
@@ -882,6 +882,12 @@ function spawnEffects(f) {
     if (soft) continue;                                      // blue's loyalty spend: a soft ring only
     const ret = new THREE.Sprite(new THREE.SpriteMaterial({ map: RETICLE_TEX, color: ev.blocked ? COL.steel : COL.hazard, transparent: true, depthWrite: false, depthTest: false, opacity: 0.95 }));
     ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.7, kind: "reticle", delay: 0 });
+    if (ev.detected) {                                       // the defender reacts after its latency: a white alert ring
+      const alert = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: COL.white, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
+      alert.position.set(p.x, p.y + 1.5, p.z); alert.visible = false; scene.add(alert); effects.push({ obj: alert, t: 0, life: 1.3, kind: "ring", delay: beat + 0.45 });
+    }
+    if (ev.honeypot && hive) hive.userData.burn = 1.4;       // the decoy burns the adversary: its marker flares and staggers
+    if (ev.blocked && cageByNode[id]) effects.push({ obj: null, cage: cageByNode[id], t: 0, life: 0.9, kind: "cage", delay: 0.1 });   // the air gap holds: the cage flashes
     if (lateral) {                                           // the attempt travels along the link from the acting node
       const a = nodeObjs[lateral].group.position;
       const pulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
@@ -1426,7 +1432,13 @@ function tick(ts) {
     if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
   }
   if (cageGroup) cageGroup.children.forEach((c) => { c.rotation.y += dt * 0.3; c.rotation.x += dt * 0.11; });
-  if (hive && hive.visible) { hive.position.lerp(hive.userData.target, Math.min(1, dt * 1.6)); hive.rotation.y += dt * 0.9; hive.position.y += Math.sin(now * 0.002) * 0.02; hive.children[1].material.opacity = 0.45 + 0.35 * pulse; }
+  if (hive && hive.visible) {
+    hive.position.lerp(hive.userData.target, Math.min(1, dt * 1.6)); hive.rotation.y += dt * 0.9; hive.position.y += Math.sin(now * 0.002) * 0.02; hive.children[1].material.opacity = 0.45 + 0.35 * pulse;
+    if (hive.userData.burn > 0) {   // burned by a decoy: flare hazard-yellow and stagger
+      hive.userData.burn -= dt; hive.position.x += (Math.random() - 0.5) * 0.9; hive.position.z += (Math.random() - 0.5) * 0.9; hive.rotation.y += dt * 6;
+      hive.children[1].material.color.setHex(COL.hazard); hive.children[3].material.color.setHex(COL.hazard); hive.children[3].material.opacity = 0.9;
+    } else { hive.children[1].material.color.setHex(COL.hot); hive.children[3].material.color.setHex(COL.hot); hive.children[3].material.opacity = 0.45; }
+  }
   if (rainLines && rainOn) {
     const p = rainPos; for (let i = 0; i < p.length; i += 6) { p[i + 1] -= dt * 95; p[i + 4] -= dt * 95; if (p[i + 1] < -66) { p[i + 1] += 180; p[i + 4] += 180; } }
     rainLines.geometry.attributes.position.needsUpdate = true;
@@ -1435,13 +1447,18 @@ function tick(ts) {
   for (let i = effects.length - 1; i >= 0; i--) {
     const e = effects[i];
     if (e.delay > 0) { e.delay -= dt; continue; }
-    if (!e.obj.visible) { e.obj.visible = true; if (e.onShow) e.onShow(); }
+    if (e.obj && !e.obj.visible) { e.obj.visible = true; if (e.onShow) e.onShow(); }
     e.t += dt; const k = e.t / e.life;
     if (e.kind === "beam") { e.obj.material.opacity = 0.8 * (1 - k); e.obj.scale.y = 1 - 0.5 * k; }
     else if (e.kind === "pulse") { e.obj.position.lerpVectors(e.from, e.to, easeInOut(Math.min(1, k))); e.obj.material.opacity = 0.95 * (1 - 0.3 * k); }
     else if (e.kind === "reticle") { const s = 16 - 9 * easeInOut(Math.min(1, k * 1.4)); e.obj.scale.set(s, s, 1); e.obj.material.opacity = k > 0.75 ? (1 - k) * 4 : 0.95; }
+    else if (e.kind === "cage") { e.cage.material.opacity = 0.45 + 0.55 * (1 - k); e.cage.material.color.setHex(k < 0.5 ? COL.ice : COL.steel); e.cage.scale.setScalar(1 + 0.08 * Math.sin(k * Math.PI)); }
     else { const s = 5 + k * 22; e.obj.scale.set(s, s, 1); e.obj.material.opacity = 0.9 * (1 - k); }
-    if (k >= 1) { scene.remove(e.obj); if (e.obj.material) e.obj.material.dispose(); if (e.obj.geometry) e.obj.geometry.dispose(); effects.splice(i, 1); }
+    if (k >= 1) {
+      if (e.obj) { scene.remove(e.obj); if (e.obj.material) e.obj.material.dispose(); if (e.obj.geometry) e.obj.geometry.dispose(); }
+      else if (e.cage) { e.cage.material.opacity = 0.45; e.cage.material.color.setHex(COL.steel); e.cage.scale.setScalar(1); }
+      effects.splice(i, 1);
+    }
   }
   if (selected && !document.getElementById("camwrap").hidden && S) drawCam(document.getElementById("camfeed"), selected, S.frames[frameIndex]);
   if (S && (Math.floor(now / 400) !== Math.floor((now - dt * 1000) / 400))) drawGlyphMap();
