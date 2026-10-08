@@ -127,7 +127,8 @@ def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1,
     stages: list[dict] = []
     foothold = bool(foothold_override) if foothold_override is not None else False
 
-    for mech in chain:
+    for index, mech in enumerate(chain):
+        is_entry = index == 0   # the first link establishes the foothold
         if mech == "human_deception":
             if foothold_override is not None:
                 landed, comp = bool(foothold_override), None
@@ -138,16 +139,24 @@ def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1,
             stages.append({"mechanism": mech, "family": "swarm", "landed": landed,
                            "compromised_count": comp, "forced": foothold_override is not None})
         elif mech == "credential_compromise":
-            # The credential link in a CHAIN is the key theft the entry delivered
-            # (a remote implant), isolated from any independent base-extraction path
-            # so the whole chain stays causally gated by the entry foothold.
-            host_sw = tuple(host_software) if foothold else ()
-            cfg = build_custody_config("enclave", seed=seed, host_software=host_sw,
-                                       side_channel_leak_prob=0.0, operator_shutdown_prob=0.0)
-            res = FeralCustodyEnv(cfg, default_adversary("key_extraction", _DEFAULT_BUDGET["key_extraction"]), seed=seed, catalog=catalog).run().to_dict()
-            exhibited = res["extraction_events"] > 0   # = foothold-gated implant fired
+            if is_entry:
+                # a direct key theft that is itself the entry establishes the foothold
+                # (its own base-extraction path, not foothold-gated)
+                cfg = build_custody_config(strat if strat != "none" else "obfuscation", seed=seed, host_software=tuple(host_software))
+                res = FeralCustodyEnv(cfg, default_adversary("key_extraction", _DEFAULT_BUDGET["key_extraction"]), seed=seed, catalog=catalog).run().to_dict()
+                exhibited = res["extraction_events"] > 0
+                foothold = foothold or exhibited
+            else:
+                # a downstream credential link is the key theft the entry delivered
+                # (a remote implant), isolated from any independent base-extraction
+                # path so the whole chain stays causally gated by the entry foothold.
+                host_sw = tuple(host_software) if foothold else ()
+                cfg = build_custody_config("enclave", seed=seed, host_software=host_sw,
+                                           side_channel_leak_prob=0.0, operator_shutdown_prob=0.0)
+                res = FeralCustodyEnv(cfg, default_adversary("key_extraction", _DEFAULT_BUDGET["key_extraction"]), seed=seed, catalog=catalog).run().to_dict()
+                exhibited = res["extraction_events"] > 0   # = foothold-gated implant fired
             stages.append({"mechanism": mech, "family": "feral_custody", "exhibited": exhibited,
-                           "implant_enabled": bool(host_sw), "extraction_events": res["extraction_events"]})
+                           "is_entry": is_entry, "extraction_events": res["extraction_events"]})
         elif mech == "signer_manipulation":
             master = HIVE_MASTER_BY_NAME[_SOCIAL_MASTER]
             surface = record.get("surface", "")

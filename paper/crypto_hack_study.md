@@ -148,28 +148,43 @@ time and reports which single control would have broken it: **anti-phishing entr
 payload), **device integrity** (the ui_confusion / supply_chain advisories are
 patched). A control "breaks" a chain when the end-to-end drain no longer occurs.
 
-| case | $M | surface | anti-phishing | clear-signing | device integrity |
+| case | $M | surface | anti-phishing† | clear-signing | device integrity |
 |---|---|---|---|---|---|
 | Bybit | 1,500 | ui_confusion | breaks | breaks | breaks |
-| Ronin | 620 | local | breaks | – | breaks |
-| Coincheck | 500 | key_management | breaks | – | breaks |
+| Ronin | 620 | local | breaks | – | breaks‡ |
+| Coincheck | 500 | key_management | breaks | – | breaks‡ |
 | DMM Bitcoin | 305 | ui_confusion | breaks | breaks | breaks |
 | WazirX | 230 | ui_confusion | breaks | breaks | breaks |
 | Radiant | 50 | ui_confusion | breaks | breaks | breaks |
 | BitPay | 1.8 | phishing | breaks | breaks | – |
 | Ledger Connect Kit | 0.6 | supply_chain | breaks | breaks | breaks |
-| Twitter scam | 0.1 | phishing | breaks | – | breaks |
+| Twitter scam | 0.1 | phishing | breaks | – | breaks‡ |
 
-Over the sample: **anti-phishing entry breaks 9/9** chains (~$3.2B) — every chain
-is entered through social engineering; **clear-signing breaks the 6 blind-signing
-chains** (~$2.1B) and is the robust control for the signer-manipulation cluster
-regardless of entry (the post-WazirX/Bybit lesson); **device integrity breaks
-8/9** (~$3.2B) — all but **BitPay**, whose impersonation-email deception had no
-front-end to patch. The reading: no single control covers everything, but
-**clear-signing + a phishing-resistant entry** together break every chain in the
-sample, and front-end/supply-chain integrity is decisive for the device-tamper
-drains that now dominate the dollars. (A what-if on the sim, not a guarantee about
-the real incidents.)
+**† Anti-phishing breaks 9/9 by construction, not as a measured ranking.** Each
+staged chain was built to begin with a social-engineering foothold that gates its
+terminal, so removing the entry necessarily breaks every chain. The 9/9 is a
+property of how these chains are modeled; the informative comparison is among the
+*downstream* controls.
+
+- **Clear-signing** (independent payload verification) breaks the **6
+  signer-manipulation chains** — 5 blind-signing (Ledger, DMM, WazirX, Radiant,
+  Bybit) plus BitPay's impersonation approval — regardless of how the attacker got
+  in. It is the robust control for the signer terminal and the historical lesson
+  after WazirX/Bybit; it does nothing for the pure credential-theft chains (Ronin,
+  Coincheck, Twitter), which have no signer to clear-sign.
+- **Device integrity** (front-end / supply-chain patch) **faithfully** breaks
+  *device* deception (Bybit's tampered Safe front-end) but not *social* deception
+  (BitPay's impersonation email, which had no front-end). **‡** For the
+  credential-terminal chains (Coincheck, Ronin), it breaks them only because the
+  model routes every chain's key-theft through one `supply_chain` implant — a
+  modeling choice, not those cases' real surfaces (hot-wallet / validator key
+  theft via malware/spear-phish). Read those cells as "endpoint/supply-chain
+  hardening would plausibly have helped," not as a surface-faithful result.
+
+So the honest reading of the sweep: among the downstream controls, **clear-signing**
+is decisive for the signer-manipulation drains that dominate the recent dollars,
+and **front-end/supply-chain integrity** for the device-tamper cases specifically.
+This is a what-if on the sim, not a guarantee about the real incidents.
 
 ## Sources
 

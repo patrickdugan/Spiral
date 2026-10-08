@@ -97,15 +97,20 @@ def render_report(rows: list[dict], summary: dict) -> str:
         e = summary["control_effect"][c]
         L.append(f"| {_LABEL[c]} | {e['chains_broken']}/{summary['chains']} | {e['usd_millions_broken']:.1f} |")
     L += ["", "## Reading it", "",
-          "- **Clear-signing** (independent payload verification) breaks every blind-signing chain "
-          "in the sample regardless of how the attacker got in — the robust control for the "
-          "signer-manipulation cluster (Ledger, DMM, WazirX, Radiant, Bybit) and the historical "
-          "lesson after WazirX/Bybit.",
-          "- **Anti-phishing entry** breaks chains that depend on a social-engineering foothold, "
-          "but not key thefts that have a non-social path.",
-          "- **Device integrity** (front-end / supply-chain patch) breaks *device* deception "
-          "(Bybit's tampered Safe front-end) but not *social* deception (BitPay's impersonation "
-          "email), which no front-end patch would have stopped."]
+          "- **Anti-phishing entry** breaks all of these chains **by construction**: every staged "
+          "chain is entered through a social foothold that gates its terminal, so removing the "
+          "entry necessarily breaks it. The 9/9 is a property of how these chains are modeled, "
+          "not a measured ranking — the informative comparison is among the *downstream* controls.",
+          "- **Clear-signing** (independent payload verification) breaks the signer-manipulation "
+          "chains (5 blind-signing — Ledger, DMM, WazirX, Radiant, Bybit — plus BitPay's "
+          "impersonation approval) regardless of how the attacker got in: the robust control for "
+          "the signer terminal, and the historical lesson after WazirX/Bybit.",
+          "- **Device integrity** (front-end / supply-chain patch) faithfully breaks *device* "
+          "deception (Bybit's tampered Safe front-end) but not *social* deception (BitPay's "
+          "impersonation email). For the credential-terminal chains (Coincheck, Ronin) it breaks "
+          "them only because the model routes every chain's key-theft through one supply_chain "
+          "implant — a modeling choice, not those cases' real surfaces (hot-wallet / validator "
+          "key theft)."]
     if summary["sole_control"]:
         L += ["", "Chains where exactly one control would have worked:"]
         for c, ids in sorted(summary["sole_control"].items()):

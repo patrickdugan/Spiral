@@ -95,3 +95,19 @@ def test_terminal_blind_sign_is_causally_gated_by_the_foothold():
     # no upstream compromise -> spoof_capability 0 -> no blind-sign -> chain fails
     assert _signer(off)["deceived_signatures"] == 0 and off["chain_success"] is False
     assert _signer(off)["spoof_capability"] == 0.0
+
+
+def test_a_chain_without_a_human_entry_establishes_its_own_foothold():
+    # guard: a direct-key-theft entry (no human_deception first) must not be a false
+    # no-drain negative -- the credential entry establishes the foothold itself.
+    record = {
+        "id": "synthetic", "name": "synthetic", "primary_mechanism": "signer_manipulation",
+        "surface": "ui_confusion", "usd_millions": 1.0,
+        "mechanism_chain": ["credential_compromise", "signer_manipulation"],
+        "stage": {"family": "feral_custody", "strategy": "ignorant_multisig",
+                  "objective": "deceived_signing", "host_software": ["example-wallet"]},
+    }
+    result = staged_hacks.stage_chain(record, _catalog(), seed=1)
+    credential = next(s for s in result["stages"] if s["mechanism"] == "credential_compromise")
+    assert credential["is_entry"] is True
+    assert credential["exhibited"] is True and result["foothold"] is True
