@@ -227,9 +227,9 @@
   .ann .x b { font-weight: 600; cursor: pointer; }
   .ann .x b:hover { text-decoration: underline; }
   #mosaic { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0; align-items: flex-start; }
-  .cam { flex: none; width: 112px; cursor: pointer; border: 1px solid var(--hair); background: #05070a; }
+  .cam { flex: none; width: 156px; cursor: pointer; border: 1px solid var(--hair); background: #05070a; }
   .cam:hover { border-color: var(--hazard); }
-  .cam canvas { display: block; width: 100%; height: 64px; }
+  .cam canvas { display: block; width: 100%; height: 84px; }
   .cam .cl { font-size: 9px; color: var(--fg); padding: 2px 5px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
   .cam .cl .rec { color: var(--hot); }
   .mosaic-empty { color: var(--dim); font-size: 11px; align-self: center; padding: 14px; }
@@ -1042,26 +1042,38 @@ function renderDossier(id) {
 }
 
 /* ---------- cam feeds (stylized, abstract) ---------- */
+/* what the swarm reads off a compromised unit: its glyph, the exploitable surface
+   (top biases as bars; institutional traits for rtg), and its mood — abstract, no content */
 function drawCam(cv, id, f) {
-  const g = cv.getContext("2d"), W = cv.width, H = cv.height, d = S.dossiers[id] || {};
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height, d = S.dossiers[id] || {}, nd = nodeObjs[id].data;
+  const st = stateOf(id, f), stress = stressOf(id, frameIndex), mood = moodOf(st, stress), ch = characterOf(d), big = W > 200;
   g.fillStyle = "#05070a"; g.fillRect(0, 0, W, H);
-  const peers = (d.neighbours || []).filter((p) => nodeObjs[p]).slice(0, 7), cx = W / 2, cy = H / 2 + 6;
-  g.strokeStyle = "rgba(143,211,232,0.22)"; g.lineWidth = 1;
-  peers.forEach((p, k) => {
-    const a = (k / Math.max(1, peers.length)) * Math.PI * 2 + f.round * 0.05, px = cx + Math.cos(a) * 54, py = cy + Math.sin(a) * 40;
-    g.beginPath(); g.moveTo(cx, cy); g.lineTo(px, py); g.stroke();
-    const st = stateOf(p, f); g.fillStyle = hex(st.color); g.fillRect(px - 3, py - 3, 6, 6);
-    g.fillStyle = "rgba(107,119,134,0.9)"; g.font = "9px 'Share Tech Mono',monospace"; g.fillText(p, px + 6, py + 3);
+  g.strokeStyle = "rgba(42,52,66,0.45)"; g.lineWidth = 1; const step = big ? 20 : 12;
+  for (let x = step; x < W; x += step) { g.beginPath(); g.moveTo(x + 0.5, 0); g.lineTo(x + 0.5, H); g.stroke(); }
+  for (let y = step; y < H; y += step) { g.beginPath(); g.moveTo(0, y + 0.5); g.lineTo(W, y + 0.5); g.stroke(); }
+  const c = hex(st.color), gx = big ? 48 : 24, gy = H / 2 + (big ? 6 : 3);
+  g.fillStyle = c; g.font = `${big ? 56 : 26}px 'Share Tech Mono', monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(glyphOf(nd, st), gx, gy);
+  const br = (big ? 36 : 17) + 2 * Math.sin(now * 0.004 + f.round);
+  g.strokeStyle = c; g.strokeRect(gx - br, gy - br, br * 2, br * 2);
+  let rows = (ch.biases || []).filter((b) => !b.protective).sort((a, b) => (b.strength || 0) - (a.strength || 0)).slice(0, big ? 4 : 3).map((b) => [b.bias, b.strength || 0, COL.hot]);
+  if (!rows.length && d.traits) rows = Object.keys(d.traits).sort((a, b) => d.traits[b] - d.traits[a]).slice(0, big ? 4 : 3).map((t) => [nice(t), d.traits[t], COL.ice]);
+  const bx = big ? 100 : 50, bw = W - bx - (big ? 10 : 5), rowH = big ? 26 : 14, by0 = big ? 44 : 24;
+  g.textAlign = "left"; g.textBaseline = "alphabetic"; g.font = `${big ? 10 : 8}px 'Share Tech Mono', monospace`;
+  rows.forEach(([label, v, col], i) => {
+    const y = by0 + i * rowH;
+    g.fillStyle = "rgba(214,221,230,0.85)"; g.fillText(String(label).slice(0, big ? 34 : 17), bx, y);
+    g.fillStyle = "#121820"; g.fillRect(bx, y + 4, bw, big ? 5 : 3);
+    g.fillStyle = hex(col); g.fillRect(bx, y + 4, bw * Math.max(0, Math.min(1, v)), big ? 5 : 3);
   });
-  const self = stateOf(id, f);
-  g.fillStyle = hex(self.color); g.fillRect(cx - 5, cy - 5, 10, 10);
-  g.strokeStyle = hex(self.color); g.lineWidth = 1; g.strokeRect(cx - 11 - 2 * Math.sin(f.round * 0.3 + now * 0.004), cy - 11 - 2 * Math.sin(f.round * 0.3 + now * 0.004), 22 + 4 * Math.sin(f.round * 0.3 + now * 0.004), 22 + 4 * Math.sin(f.round * 0.3 + now * 0.004));
   g.fillStyle = "rgba(0,0,0,0.22)"; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
   if (Math.random() < 0.07) { const y = Math.random() * H, h = 3 + Math.random() * 9, off = (Math.random() - 0.5) * 16; const img = g.getImageData(0, y, W, h); g.putImageData(img, off, y); }
-  g.fillStyle = "rgba(7,9,14,0.75)"; g.fillRect(0, 0, W, 15);
-  g.fillStyle = hex(COL.white); g.font = "10px 'Share Tech Mono',monospace"; g.textAlign = "left"; g.fillText("◉ CAM//" + id, 6, 11);
-  g.fillStyle = (Math.floor(now / 500) % 2) ? hex(COL.hot) : "rgba(255,46,77,0.3)"; g.fillText("REC ●", W - 50, 11);
-  g.fillStyle = "rgba(214,221,230,0.75)"; g.fillText(nice(d.archetype || ""), 6, H - 6);
+  const hh = big ? 16 : 13;
+  g.fillStyle = "rgba(7,9,14,0.8)"; g.fillRect(0, 0, W, hh);
+  g.fillStyle = hex(COL.white); g.font = `${big ? 10 : 9}px 'Share Tech Mono', monospace`; g.fillText("◉ CAM//" + id, 6, hh - 4);
+  g.fillStyle = (Math.floor(now / 500) % 2) ? hex(COL.hot) : "rgba(255,46,77,0.3)"; g.fillText("REC ●", W - (big ? 50 : 42), hh - 4);
+  g.fillStyle = hex(mood[1]); g.fillText(mood[0].toUpperCase(), 6, H - 5);
+  g.fillStyle = "rgba(107,119,134,0.9)"; g.textAlign = "right"; g.fillText(nice(d.archetype || "").slice(0, big ? 30 : 14), W - 6, H - 5);
 }
 function buildMosaic(f) {
   const host = document.getElementById("mosaic");
@@ -1070,7 +1082,7 @@ function buildMosaic(f) {
   host.innerHTML = "";
   uniq.forEach((id) => {
     const wrap = document.createElement("div"); wrap.className = "cam";
-    const cv = document.createElement("canvas"); cv.width = 112; cv.height = 64; wrap.appendChild(cv);
+    const cv = document.createElement("canvas"); cv.width = 156; cv.height = 84; wrap.appendChild(cv);
     const cl = document.createElement("div"); cl.className = "cl"; cl.innerHTML = `<span>${esc(id)}</span><span class="rec">●</span>`; wrap.appendChild(cl);
     wrap.addEventListener("click", () => select(id, true)); host.appendChild(wrap); drawCam(cv, id, f);
   });
