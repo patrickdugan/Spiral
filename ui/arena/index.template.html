@@ -236,6 +236,7 @@
   .dockhead { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; display: flex; gap: 8px; }
   .dockhead::before { content: "▮"; color: var(--hazard); font-size: 9px; }
   .dockhead small { font-family: var(--mono); font-weight: 400; font-size: 9px; color: var(--dim); margin-left: auto; letter-spacing: 1px; }
+  button.mini { font-size: 9px; padding: 1px 6px; letter-spacing: 1px; margin-left: 10px; }
   #annals { flex: 1; min-height: 0; overflow: auto; font-size: 11px; line-height: 1.45; padding-right: 6px; }
   .ann { display: grid; grid-template-columns: 16px 86px 1fr; gap: 8px; padding: 1px 4px; color: var(--muted); border-left: 2px solid transparent; cursor: default; }
   .ann.now { color: var(--fg); background: rgba(255,255,255,0.03); border-left-color: var(--hazard); }
@@ -349,7 +350,7 @@
       <select id="speed" aria-label="Speed"><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
     </div>
     <div id="dockgrid">
-      <div class="dockpane"><div class="dockhead">Annals <small id="annalscount"></small></div><div id="annals"></div></div>
+      <div class="dockpane"><div class="dockhead">Annals <button id="annalsfilter" class="mini" aria-pressed="false" title="Hide held probes and routine lines">strikes only</button><small id="annalscount"></small></div><div id="annals"></div></div>
       <div class="dockpane" id="mosaicpane"><div class="dockhead" id="mosaic-head">Swarm vision // compromised feeds</div><div id="mosaic"></div></div>
     </div>
   </footer>
@@ -1283,7 +1284,7 @@ function drawGlyphMap() {
     if (!onLevel(nd)) { g.fillStyle = "#1c232e"; g.fillText(mapZ === 0 ? "▽" : "△", x, y); continue; }
     mapHits.push({ id: nd.id, x, y });
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
-    g.fillStyle = hex(c); g.fillText(glyphOf(nd, st), x, y);
+    g.fillStyle = st.unseen ? "#2a3442" : hex(c); g.fillText(st.unseen ? "?" : glyphOf(nd, st), x, y);
     if (nd.id === selected && Math.floor(now / 400) % 2 === 0) { g.strokeStyle = "#f2e23a"; g.lineWidth = 1.5; g.strokeRect(x - 10, y - 10, 20, 20); }
   }
   // camera heading
@@ -1344,10 +1345,11 @@ function buildAnnals(scn) {
   });
   return out;
 }
-let annalsLastFrame = -1;
+let annalsLastFrame = -1, annalsStrikesOnly = false;
+document.getElementById("annalsfilter").addEventListener("click", (e) => { annalsStrikesOnly = !annalsStrikesOnly; e.currentTarget.classList.toggle("on", annalsStrikesOnly); e.currentTarget.setAttribute("aria-pressed", String(annalsStrikesOnly)); annalsLastFrame = -1; renderAnnals(); });
 function renderAnnals() {
   const host = document.getElementById("annals");
-  const vis = annals.filter((e) => e.frame <= frameIndex).slice(-90);
+  const vis = annals.filter((e) => e.frame <= frameIndex && !(annalsStrikesOnly && e.minor)).slice(-90);
   document.getElementById("annalscount").textContent = `${annals.filter((e) => e.frame <= frameIndex).length} entries`;
   host.innerHTML = vis.length ? vis.map((e) => `<div class="ann ${e.frame === frameIndex ? "now" : ""} ${e.minor ? "minor" : ""}"><span class="g" style="color:${hex(e.color)}">${e.g}</span><span class="w">${esc(e.when)}</span><span class="x">${e.text}</span></div>`).join("")
     : `<div class="ann minor"><span class="g">·</span><span class="w"></span><span class="x">nothing recorded yet.</span></div>`;
