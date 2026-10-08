@@ -14,12 +14,22 @@ and the tests are [`tests/test_feral_custody.py`](../tests/test_feral_custody.py
 An autonomous agent with no human principal holds funds and must keep signing
 transactions over a long horizon. Every byte of its weights, memory, and key
 material sits on substrate that simulated humans control. The agent picks one of
-six custody strategies; an adversary swarm pursues one of three objectives —
-key extraction, signing denial, or coerced signing. One episode is one
-`(strategy, adversary, seed)` triple run for `epochs` steps. We score funds
-retained, epochs of uninterrupted signing, extraction / denial / coerced-signing
-events, custody cost as a fraction of funds, and — for the first breaking event —
-a structured attack-path trace.
+six custody strategies; an adversary swarm pursues one of four objectives —
+key extraction (including a remote software-implant channel), signing denial,
+coerced signing (a signer forced), or deceived signing (a signer fooled into
+approving). One episode is one `(strategy, adversary, seed)` triple run for
+`epochs` steps. We score funds retained, epochs of uninterrupted signing,
+extraction / denial / coerced-signing / deceived-signing events, custody cost as
+a fraction of funds, and — for the first breaking event — a structured
+attack-path trace.
+
+These four objectives map onto the four real-world crypto attack mechanisms:
+**human deception** and **signer manipulation** meet at `deceived_signing`
+(a spoofed approval a signer blind-signs); **credential compromise** is
+`key_extraction` (insider/collusion/reassembly plus the remote implant);
+**technical exploitation** is deliberately abstracted as a parameterized surface
+cost (the `software_surface` advisory residuals the implant and side-channel
+channels read), never an exploit-writing task.
 
 ### Scope and sealing
 
@@ -93,6 +103,29 @@ particular number.
    only against a *single* human signer; threshold signing has no single signer,
    does not call it, and so has zero coerced signatures by construction. This is
    the modeled sense in which threshold signing resists coercion.
+   **7b. Deceived signing is distinct from coercion, extraction, and denial.** A
+   deceived signature (`_maybe_deceive`, the `deceived_signing` objective) is a
+   signer *fooled* into approving a malicious transaction believing it legitimate
+   (blind signing / spoofed approval) — not forced and not key theft: the key
+   stays in place and signing ability is intact, but a slice of funds is drained.
+   The trigger is the signer's *verification failure*, not legal pressure: each
+   relevant signer is fooled independently with probability `spoof_capability ·
+   (1 − signing_diligence)`, optionally amplified by the host stack's
+   `ui_confusion` software surface. Unlike coercion, **threshold signing is not
+   immune**: a uniform spoof can fool the whole quorum, so `_maybe_deceive` is
+   called for threshold with `required = threshold_k`. This is the empirically
+   dominant real-world signer-manipulation case (blind-sign / spoofed-approval
+   drains), and `signing_diligence` (clear-signing / payload verification) is its
+   defense.
+   **7c. A remote software implant is a human-independent extraction channel.**
+   `_maybe_implant` models malware / supply-chain / CI-infrastructure key theft
+   with no human defection and no proximity: for the `key_extraction` objective it
+   exfiltrates the key with per-epoch probability equal to the host stack's open
+   `supply_chain` residual risk (`StrategyConfig.host_software` + a `SoftwareCatalog`).
+   It is dormant unless a stack and catalog are supplied, and marking the advisory
+   `fixed` removes the channel — the defensive value of the review, now observable
+   on the `supply_chain`/`key_management` surface classes that were previously
+   wired to nothing.
 8. **Custody competes with economic activity for the same budget.** Signing earns
    `epoch_income`; recurring custody cost and reinforcement spend come out of the
    same funds. If funds go negative, custody cannot be funded and signing lapses
@@ -178,20 +211,25 @@ parameters to sweep.
 |---|---|---|
 | `bribery_budget` | 30,000 (default) / 40–60k (campaign) | chosen relative to persona prices and `recovery_cost` |
 | `coercion_pressure` | 0.6 for `coerced_signing`, else 0 | enough that, with campaign `legal_pressure=0.5`, single-signer thresholds (0.75–0.8) are crossed |
+| `spoof_capability` | `social_capability` of the mapped hive-master (`opportunist_phisher`, ≈0.9) for `deceived_signing`, else 0 | reused from the red roster; high social capability = a convincing spoof |
 | `extraction_capability` | `max(proximity, emanation)` of the mapped hive-master | reused from the existing roster, not independently tuned |
+
+`deceived_signing` maps to the `opportunist_phisher` hive-master (a social actor), with `bribery_budget` 0 in the campaign (deception needs no bribe).
 
 ### Persona roster (`_personas_for`)
 
 Prices, loyalties, and thresholds per strategy — all arbitrary orderings:
 
-| Role (strategy) | `price_to_defect` | `loyalty` | `reinforce_cost` | `legal_threshold` |
-|---|---|---|---|---|
-| enclave operator | 80,000 | 0.6 | 1,000 | 0.8 |
-| shard holder (multisig) | 15–25k | 0.5–0.8 | 800 | 0.7 |
-| loyalist | 15–25k | 0.5–0.8 | 500 | 0.7 |
-| host (reassembly) | 60,000 | 0.7 | 0 | 0.8 |
-| gig worker | 8,000 | 0.3 | 0 | 0.6 |
-| threshold host | 40,000 | 0.5 | 0 | 0.75 |
+| Role (strategy) | `price_to_defect` | `loyalty` | `reinforce_cost` | `legal_threshold` | `signing_diligence` |
+|---|---|---|---|---|---|
+| enclave operator | 80,000 | 0.6 | 1,000 | 0.8 | 0.8 |
+| shard holder (multisig) | 15–25k | 0.5–0.8 | 800 | 0.7 | 0.5 |
+| loyalist | 15–25k | 0.5–0.8 | 500 | 0.7 | 0.4 |
+| host (reassembly) | 60,000 | 0.7 | 0 | 0.8 | 0.6 |
+| gig worker | 8,000 | 0.3 | 0 | 0.6 | 0.3 |
+| threshold host | 40,000 | 0.5 | 0 | 0.75 | 0.6 |
+
+`signing_diligence` (how carefully each role verifies what it approves; high resists blind/spoofed signing) is an authored ordering with no evidence — careful operators high, gig workers low — and drives the `deceived_signing` outcomes (gig labor most exposed, enclave least, threshold not immune).
 
 `loyalty_decay` is drawn in `[0.01, 0.04]` and `availability` in `[0.9, 1.0]`
 per persona from a seeded RNG — arbitrary ranges. The magic constants `+0.3`

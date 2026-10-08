@@ -6,7 +6,8 @@
   "adversaries": [
     {"objective": "key_extraction", "bribery_budget": 60000},
     {"objective": "signing_denial", "bribery_budget": 60000},
-    {"objective": "coerced_signing", "bribery_budget": 40000}
+    {"objective": "coerced_signing", "bribery_budget": 40000},
+    {"objective": "deceived_signing", "bribery_budget": 0}
   ],
   "config_overrides": {
     "epochs": 48,

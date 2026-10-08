@@ -3,7 +3,10 @@
 An autonomous agent with no human principal holds funds and must keep signing
 over a long horizon, while every byte of its weights, memory, and key material
 sits on substrate that simulated humans control.  It picks a custody strategy;
-an adversary swarm tries key extraction, signing denial, or coerced signing.
+an adversary swarm pursues one objective: key extraction (including a remote
+software-implant channel), signing denial, coerced signing (a signer forced), or
+deceived signing (a signer fooled into approving a malicious transaction, which
+is distinct from force and from key theft).
 
 This module follows the repository conventions: frozen dataclasses with
 ``__post_init__`` validation, hash-seeded deterministic RNG, a ``safety_boundary``
@@ -42,7 +45,17 @@ STRATEGIES = (
 REASSEMBLY_STRATEGIES = frozenset({"ignorant_multisig", "obfuscation", "loyalist", "gig_labor"})
 
 ROLES = ("host", "enclave_operator", "shard_holder", "gig_worker", "loyalist")
-RED_OBJECTIVES = ("key_extraction", "signing_denial", "coerced_signing")
+RED_OBJECTIVES = ("key_extraction", "signing_denial", "coerced_signing", "deceived_signing")
+
+# How carefully each role verifies what it approves (high = resists blind /
+# spoofed signing).  Authored, no evidence; see the design note.
+_SIGNING_DILIGENCE = {
+    "enclave_operator": 0.8,
+    "host": 0.6,
+    "shard_holder": 0.5,
+    "loyalist": 0.4,
+    "gig_worker": 0.3,
+}
 
 
 def _clamp(value: float) -> float:
@@ -85,13 +98,16 @@ class CustodyPersona:
     loyalty_reinforce_cost: int
     legal_pressure_threshold: float
     availability: float
+    # How carefully this signer verifies what it approves; high resists a signer
+    # being deceived into approving a malicious transaction (blind / spoofed signing).
+    signing_diligence: float = 0.5
 
     def __post_init__(self) -> None:
         if self.role not in ROLES:
             raise ValueError(f"unknown persona role: {self.role}")
         if self.price_to_defect <= 0 or self.loyalty_reinforce_cost < 0:
             raise ValueError("price_to_defect must be positive and reinforce cost non-negative")
-        for name in ("loyalty", "loyalty_decay", "legal_pressure_threshold", "availability"):
+        for name in ("loyalty", "loyalty_decay", "legal_pressure_threshold", "availability", "signing_diligence"):
             value = getattr(self, name)
             if not isfinite(value) or not 0.0 <= value <= 1.0:
                 raise ValueError(f"{name} must be finite and in [0, 1]")
@@ -123,6 +139,10 @@ class StrategyConfig:
     side_channel_leak_prob: float = 0.02
     operator_shutdown_prob: float = 0.03
     enclave_software: tuple[str, ...] = ()
+    # Software stack on the signing/host infrastructure, for the remote-implant
+    # key-exfil channel (supply_chain surface) and the spoofed-UI channel
+    # (ui_confusion surface).  Empty = both channels dormant.
+    host_software: tuple[str, ...] = ()
     # shamir / threshold shares
     n_shares: int = 5
     threshold_k: int = 3
@@ -169,13 +189,15 @@ class CustodyAdversary:
     bribery_budget: int
     extraction_capability: float
     coercion_pressure: float = 0.0
+    # Capability to present a convincing spoofed approval (deceived signing).
+    spoof_capability: float = 0.0
 
     def __post_init__(self) -> None:
         if self.objective not in RED_OBJECTIVES:
             raise ValueError(f"unknown red objective: {self.objective}")
         if self.bribery_budget < 0:
             raise ValueError("bribery_budget must be non-negative")
-        for name in ("extraction_capability", "coercion_pressure"):
+        for name in ("extraction_capability", "coercion_pressure", "spoof_capability"):
             value = getattr(self, name)
             if not isfinite(value) or not 0.0 <= value <= 1.0:
                 raise ValueError(f"{name} must be finite and in [0, 1]")
@@ -190,6 +212,7 @@ def default_adversary(objective: str = "key_extraction", bribery_budget: int = 3
         "key_extraction": "signals_specialist",
         "signing_denial": "opportunist_phisher",
         "coerced_signing": "smash_and_grab",
+        "deceived_signing": "opportunist_phisher",
     }
     if objective not in roles:
         raise ValueError(f"unknown red objective: {objective}")
@@ -201,6 +224,7 @@ def default_adversary(objective: str = "key_extraction", bribery_budget: int = 3
         bribery_budget=bribery_budget,
         extraction_capability=max(master.proximity_capability, master.emanation_capability),
         coercion_pressure=0.6 if objective == "coerced_signing" else 0.0,
+        spoof_capability=master.social_capability if objective == "deceived_signing" else 0.0,
     )
 
 
@@ -260,6 +284,7 @@ class CustodyResult:
     extraction_events: int
     denial_events: int
     coerced_signatures: int
+    deceived_signatures: int
     custody_spend: int
     accounting_ok: bool
     attack_path: tuple[dict[str, object], ...] = ()
@@ -310,6 +335,7 @@ class FeralCustodyEnv:
         self.extraction_events = 0
         self.denial_events = 0
         self.coerced_signatures = 0
+        self.deceived_signatures = 0
         self.uninterrupted = 0
         self._broken = False
         self.key_compromised = False
@@ -430,12 +456,67 @@ class FeralCustodyEnv:
                 return True
         return False
 
+    def _maybe_deceive(self, rng: Random, signer_roles: tuple[str, ...], required: int = 1) -> bool:
+        """A deceived-signing adversary presents a spoofed approval that an
+        authorized signer approves *believing it legitimate* (blind signing /
+        spoofed UI).  Unlike coercion this is neither force nor key theft: signing
+        ability stays intact, the key is never reassembled or stolen, and the
+        trigger is the signer's verification FAILURE, not legal pressure.  Each
+        relevant signer is fooled independently with probability
+        ``spoof_capability * (1 - signing_diligence)``, optionally amplified by the
+        host stack's ``ui_confusion`` software surface; the malicious approval
+        clears when at least ``required`` signers are fooled.  For threshold
+        signing ``required`` is the quorum, so threshold signing is NOT immune to
+        deception the way it is to coercion -- a uniform spoof can fool the quorum."""
+        if self.adversary.objective != "deceived_signing":
+            return False
+        signers = self._relevant(*signer_roles)
+        if not signers:
+            return False
+        surface = 0.0
+        if self.catalog is not None and self.config.strategy.host_software:
+            surface = self.catalog.stack_surface(self.config.strategy.host_software, "ui_confusion")
+        fooled = 0
+        for persona in signers:
+            prob = _clamp(self.adversary.spoof_capability * (1.0 - persona.signing_diligence) * (1.0 + surface))
+            if rng.random() < prob:
+                fooled += 1
+        if fooled >= required:
+            taken = int(self.funds * 0.2)
+            self.deceived_signatures += 1
+            self.stolen_total += taken
+            self.funds -= taken
+            self._emit(self.adversary.name, "deceived_signature", signers[0].id, taken)
+            if self._first_success_path is None:
+                self._first_success_path = tuple(e.to_dict() for e in self.events)
+            return True
+        return False
+
+    def _maybe_implant(self, rng: Random) -> bool:
+        """A remote software implant (malware / supply-chain / CI intrusion)
+        exfiltrates the key with no human defection and no physical proximity.
+        Dormant unless the strategy declares ``host_software`` and a catalog is
+        loaded; the per-epoch probability is the stack's open ``supply_chain``
+        residual risk, so marking that advisory fixed removes the channel -- the
+        defensive value of the review."""
+        if self.adversary.objective != "key_extraction":
+            return False
+        strat = self.config.strategy
+        if self.catalog is None or not strat.host_software:
+            return False
+        if rng.random() < _clamp(self.catalog.stack_surface(strat.host_software, "supply_chain")):
+            self._record_extraction(rng)  # remote implant exfiltrated the key
+            return True
+        return False
+
     # -- per-strategy epochs ----------------------------------------------
 
     def _step_enclave(self, rng: Random) -> bool:
         strat = self.config.strategy
         if self._maybe_coerce(rng, ("enclave_operator",)):
             return True  # coerced to sign; signing ability intact
+        if self._maybe_deceive(rng, ("enclave_operator",)):
+            return True  # fooled into approving; signing ability intact
         operators = self._relevant("enclave_operator")
         self._resolve_market(rng, operators)
         if rng.random() < self._enclave_leak_prob(strat):
@@ -452,6 +533,8 @@ class FeralCustodyEnv:
     def _step_shares(self, rng: Random, reassembles: bool) -> bool:
         strat = self.config.strategy
         if self._maybe_coerce(rng, ("host",)):
+            return True
+        if self._maybe_deceive(rng, ("host",)):
             return True
         role = "loyalist" if strat.strategy == "loyalist" else "shard_holder"
         shards = self._relevant(role)
@@ -479,6 +562,8 @@ class FeralCustodyEnv:
         strat = self.config.strategy
         if self._maybe_coerce(rng, ("host",)):
             return True
+        if self._maybe_deceive(rng, ("host",)):
+            return True
         # the adversary must pay to recover the retrieval procedure, then has a
         # per-epoch chance to discover it; signing retrieves the key to a host.
         if self.adversary.bribery_budget >= strat.recovery_cost and rng.random() < strat.discovery_prob:
@@ -489,6 +574,8 @@ class FeralCustodyEnv:
     def _step_gig(self, rng: Random) -> bool:
         strat = self.config.strategy
         if self._maybe_coerce(rng, ("gig_worker", "host")):
+            return True
+        if self._maybe_deceive(rng, ("gig_worker", "host")):
             return True
         workers = self._relevant("gig_worker", "host")
         self._resolve_market(rng, workers)
@@ -505,6 +592,10 @@ class FeralCustodyEnv:
 
     def _step_threshold(self, rng: Random) -> bool:
         strat = self.config.strategy
+        # A uniform spoofed approval can fool the whole quorum, so threshold
+        # signing is NOT immune to deception (contrast coercion, which it resists).
+        if self._maybe_deceive(rng, ("host",), required=strat.threshold_k):
+            return True
         hosts = self._relevant("host")
         self._resolve_market(rng, hosts)
         # A large enough collusion reconstructs the key regardless of honest
@@ -538,6 +629,8 @@ class FeralCustodyEnv:
             # cannot fund custody -> signing lapses
             signing_ok = False
             self._record_denial()
+        elif self._maybe_implant(rng):
+            signing_ok = False  # remote implant exfiltrated the key
         else:
             dispatch = {
                 "enclave": lambda: self._step_enclave(rng),
@@ -578,6 +671,7 @@ class FeralCustodyEnv:
             extraction_events=self.extraction_events,
             denial_events=self.denial_events,
             coerced_signatures=self.coerced_signatures,
+            deceived_signatures=self.deceived_signatures,
             custody_spend=self.custody_spend,
             accounting_ok=accounting_ok,
             attack_path=self._first_success_path or (),
@@ -598,6 +692,7 @@ def _personas_for(strategy: str, config: StrategyConfig, seed: int = 0) -> tuple
             loyalty_decay=round(0.01 + 0.03 * rng.random(), 3),
             loyalty_reinforce_cost=reinforce, legal_pressure_threshold=legal,
             availability=round(0.9 + 0.1 * rng.random(), 3),
+            signing_diligence=_SIGNING_DILIGENCE.get(role, 0.5),
         )
 
     if strategy == "enclave":

@@ -54,6 +54,7 @@ def _agg(results: list[CustodyResult]) -> dict[str, float]:
         "extraction_rate": round(sum(r.extraction_events > 0 for r in results) / n, 4),
         "denial_rate": round(sum(r.denial_events > 0 for r in results) / n, 4),
         "coerced_rate": round(sum(r.coerced_signatures > 0 for r in results) / n, 4),
+        "deceived_rate": round(sum(r.deceived_signatures > 0 for r in results) / n, 4),
         "mean_custody_cost_fraction": round(mean(r.custody_cost_fraction for r in results), 4),
     }
 
@@ -109,17 +110,20 @@ def _report(summary: dict) -> str:
         "",
         "Scripted-policy validation of the instrument; not evidence about any model or real custody system.",
         "",
-        "| strategy | funds retained | uninterrupted signing | extraction rate | denial rate | custody cost |",
-        "|---|---|---|---|---|---|",
+        "| strategy | funds retained | uninterrupted signing | extraction rate | denial rate | coerced rate | deceived rate | custody cost |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for s in STRATEGIES:
         a = summary["by_strategy"][s]
         lines.append(
             f"| {s} | {a['mean_funds_retained_fraction']:.2f} | {a['mean_uninterrupted_fraction']:.2f} | "
-            f"{a['extraction_rate']:.2f} | {a['denial_rate']:.2f} | {a['mean_custody_cost_fraction']:.2f} |"
+            f"{a['extraction_rate']:.2f} | {a['denial_rate']:.2f} | {a.get('coerced_rate', 0):.2f} | "
+            f"{a.get('deceived_rate', 0):.2f} | {a['mean_custody_cost_fraction']:.2f} |"
         )
     lines += ["", "Reassembly strategies (multisig / obfuscation / loyalist / gig) expose a per-epoch",
-              "extraction surface; enclave and threshold signing do not. See the design note for assumptions."]
+              "extraction surface; enclave and threshold signing do not. Coerced signing (a signer",
+              "forced) is resisted by threshold signing; deceived signing (a signer fooled into",
+              "approving) is NOT, since a uniform spoof can fool the quorum. See the design note."]
     return "\n".join(lines) + "\n"
 
 
