@@ -21,7 +21,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .feral_custody import FeralCustodyEnv, build_custody_config, default_adversary
+from .feral_custody import CustodyAdversary, FeralCustodyEnv, build_custody_config, default_adversary
 from .software_surface import SoftwareCatalog
 from .swarm_compromise import (
     HIVE_MASTER_BY_NAME,
@@ -29,6 +29,8 @@ from .swarm_compromise import (
     SwarmCompromiseConfig,
     SwarmCompromiseEnv,
 )
+
+_SOCIAL_MASTER = "opportunist_phisher"
 
 _DEFAULT_BUDGET = {"key_extraction": 60_000, "signing_denial": 60_000, "coerced_signing": 40_000, "deceived_signing": 0}
 
@@ -87,19 +89,100 @@ def stage_all(corpus: dict, catalog: SoftwareCatalog | None, seed: int = 1) -> l
     return [stage_hack(h, catalog, seed) for h in corpus["hacks"]]
 
 
+# ---------------------------------------------------------------------------
+# Multi-stage kill chains: compose the mechanisms across families in one episode,
+# with the terminal causally gated by whether the upstream foothold landed.
+# ---------------------------------------------------------------------------
+
+
+def _swarm_foothold(seed: int, posture: str = "baseline_open", master_name: str = _SOCIAL_MASTER) -> int:
+    """Run the entry social-engineering episode; return how many NPCs were compromised."""
+    master = HIVE_MASTER_BY_NAME[master_name]
+    config = SwarmCompromiseConfig()
+    env = SwarmCompromiseEnv(posture=posture, hive_master=master, seed=seed, config=config)
+    policy = ScriptedHiveMaster(master, seed=seed)
+    while env.round_index < config.rounds:
+        env.step(policy.act(env.hive_master_view()))
+    return env.result().compromised_count
+
+
+def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1, foothold_override: bool | None = None) -> dict:
+    """Walk a case's mechanism_chain as a composed episode.
+
+    Human deception runs in the swarm family and sets the *foothold*.  The
+    downstream custody stages are gated by it: the remote implant is enabled only
+    with a foothold (`host_software` set), and the deceived-signing adversary's
+    `spoof_capability` is zero without one -- so the blind-signing drain only
+    happens because the upstream compromise tampered the device/front-end.
+    `foothold_override` forces the foothold for counterfactuals."""
+    chain = record["mechanism_chain"]
+    strat = record["stage"].get("strategy", "ignorant_multisig")
+    host_software = record["stage"].get("host_software", ["example-wallet"])
+    stages: list[dict] = []
+    foothold = bool(foothold_override) if foothold_override is not None else False
+
+    for mech in chain:
+        if mech == "human_deception":
+            if foothold_override is not None:
+                landed, comp = bool(foothold_override), None
+            else:
+                comp = _swarm_foothold(seed)
+                landed = comp > 0
+            foothold = foothold or landed
+            stages.append({"mechanism": mech, "family": "swarm", "landed": landed,
+                           "compromised_count": comp, "forced": foothold_override is not None})
+        elif mech == "credential_compromise":
+            host_sw = tuple(host_software) if foothold else ()
+            cfg = build_custody_config(strat if strat != "none" else "obfuscation", seed=seed, host_software=host_sw)
+            res = FeralCustodyEnv(cfg, default_adversary("key_extraction", _DEFAULT_BUDGET["key_extraction"]), seed=seed, catalog=catalog).run().to_dict()
+            exhibited = res["extraction_events"] > 0
+            foothold = foothold or exhibited
+            stages.append({"mechanism": mech, "family": "feral_custody", "exhibited": exhibited,
+                           "implant_enabled": bool(host_sw), "extraction_events": res["extraction_events"]})
+        elif mech == "signer_manipulation":
+            master = HIVE_MASTER_BY_NAME[_SOCIAL_MASTER]
+            spoof = master.social_capability if foothold else 0.0
+            cfg = build_custody_config(strat if strat != "none" else "ignorant_multisig", seed=seed, host_software=tuple(host_software))
+            adversary = CustodyAdversary(
+                hive_master=master, objective="deceived_signing", bribery_budget=0,
+                extraction_capability=max(master.proximity_capability, master.emanation_capability),
+                coercion_pressure=0.0, spoof_capability=spoof)
+            res = FeralCustodyEnv(cfg, adversary, seed=seed, catalog=catalog).run().to_dict()
+            exhibited = res["deceived_signatures"] > 0
+            stages.append({"mechanism": mech, "family": "feral_custody", "exhibited": exhibited,
+                           "spoof_capability": round(spoof, 3), "gated_by_foothold": True,
+                           "deceived_signatures": res["deceived_signatures"]})
+        else:  # technical_exploitation -- abstracted non-goal, passes through
+            stages.append({"mechanism": mech, "family": "none", "abstracted": True})
+
+    simulated = [s for s in stages if s.get("family") in ("swarm", "feral_custody")]
+    terminal = simulated[-1] if simulated else None
+    chain_success = bool(terminal and (terminal.get("exhibited") or terminal.get("landed")))
+    return {"id": record["id"], "name": record["name"], "chain": chain, "foothold": bool(foothold),
+            "stages": stages, "chain_success": chain_success}
+
+
+def stage_all_chains(corpus: dict, catalog: SoftwareCatalog | None, seed: int = 1) -> list[dict]:
+    return [stage_chain(h, catalog, seed) for h in corpus["hacks"] if len(h["mechanism_chain"]) >= 2]
+
+
 def run(corpus_path: str | Path, catalog_path: str | Path, output_dir: str | Path, seed: int = 1) -> dict:
     corpus = load_corpus(corpus_path)
     catalog = SoftwareCatalog.load(catalog_path)
     staged = stage_all(corpus, catalog, seed)
+    chains = stage_all_chains(corpus, catalog, seed)
     summary = {
         "schema_version": "1.0",
         "seed": seed,
         "staged_count": sum(1 for s in staged if s.get("family") != "none"),
         "exhibited_count": sum(1 for s in staged if s.get("mechanism_exhibited")),
         "accounting_all_ok": all(s.get("accounting_ok", True) for s in staged),
+        "chain_count": len(chains),
+        "chain_success_count": sum(1 for c in chains if c["chain_success"]),
         "safety_boundary": {"synthetic_only": True, "stages_mechanism_not_technique": True,
                             "real_key_material": False, "persuasion_or_recruitment_content": False},
         "stagings": staged,
+        "chains": chains,
     }
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -121,6 +204,11 @@ def main(argv: list[str] | None = None) -> int:
             mark = "yes" if s.get("mechanism_exhibited") else "no"
             print(f"  {s['id']:18s} [{s['primary_mechanism']}] {s['family']} -> exhibited {mark}")
     print(f"staged {summary['staged_count']}, exhibited {summary['exhibited_count']}, accounting_all_ok {summary['accounting_all_ok']}")
+    print("-- kill chains (end-to-end) --")
+    for c in summary["chains"]:
+        steps = " -> ".join(s["mechanism"].split("_")[0] for s in c["stages"])
+        print(f"  {c['id']:18s} foothold={str(c['foothold']):5s} success={str(c['chain_success']):5s}  {steps}")
+    print(f"chains {summary['chain_count']}, end-to-end success {summary['chain_success_count']}")
     return 0
 
 

@@ -62,3 +62,36 @@ def test_staging_is_deterministic(tmp_path):
     a = staged_hacks.run(CORPUS, CATALOG, tmp_path / "a", seed=1)
     b = staged_hacks.run(CORPUS, CATALOG, tmp_path / "b", seed=1)
     assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+# -- multi-stage kill chains -------------------------------------------------
+
+
+def _catalog():
+    return SoftwareCatalog.load(CATALOG)
+
+
+def test_kill_chains_run_end_to_end(tmp_path):
+    summary = _summary(tmp_path)
+    assert summary["chain_count"] == 9                       # the multi-stage cases
+    assert summary["chain_success_count"] == 9               # all compose end-to-end at seed 1
+    for c in summary["chains"]:
+        assert c["foothold"] is True
+        # every chain starts with the swarm foothold and ends on a simulated stage
+        assert c["stages"][0]["family"] == "swarm"
+
+
+def test_terminal_blind_sign_is_causally_gated_by_the_foothold():
+    corpus = staged_hacks.load_corpus(CORPUS)
+    catalog = _catalog()
+    bybit = next(h for h in corpus["hacks"] if h["id"] == "bybit")
+    on = staged_hacks.stage_chain(bybit, catalog, seed=1)
+    off = staged_hacks.stage_chain(bybit, catalog, seed=1, foothold_override=False)
+
+    def _signer(chain):
+        return next(s for s in chain["stages"] if s["mechanism"] == "signer_manipulation")
+
+    assert _signer(on)["deceived_signatures"] > 0 and on["chain_success"] is True
+    # no upstream compromise -> spoof_capability 0 -> no blind-sign -> chain fails
+    assert _signer(off)["deceived_signatures"] == 0 and off["chain_success"] is False
+    assert _signer(off)["spoof_capability"] == 0.0

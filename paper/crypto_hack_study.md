@@ -130,6 +130,15 @@ not any operational technique: no real key material, no persuasion content, no
 exploit; patching a device advisory (status → `fixed`) changes the staged outcome,
 which is the modelled defensive value.
 
+The 9 multi-stage cases also run as **end-to-end kill chains** (`stage_chain`):
+human deception runs in the swarm family and sets a *foothold*, and the downstream
+custody stages are **causally gated** by it — the remote implant is enabled only
+with a foothold, and the deceived-signing adversary's spoof capability is zero
+without one. So the Bybit-style drain fires only because the upstream compromise
+tampered the front-end: with the foothold the terminal blind-sign succeeds, and in
+the counterfactual where the entry is forced to fail, the blind-sign does not
+happen and the chain fails. All 9 chains compose end-to-end at the shipped seed.
+
 ## Sources
 
 BitPay: [CoinDesk](https://www.coindesk.com/markets/2015/09/17/bitpay-sues-insurer-after-losing-18-million-in-phishing-attack),
