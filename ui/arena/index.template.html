@@ -325,7 +325,7 @@
       <button id="play" aria-label="Play / pause">▶</button>
       <div id="scrubwrap"><canvas id="density" width="1200" height="26"></canvas><input id="scrub" type="range" min="0" max="1" value="0" aria-label="Timeline"></div>
       <span id="roundlabel">ROUND 00</span>
-      <select id="speed" aria-label="Speed"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select>
+      <select id="speed" aria-label="Speed"><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
     </div>
     <div id="dockgrid">
       <div class="dockpane"><div class="dockhead">Annals <small id="annalscount"></small></div><div id="annals"></div></div>
@@ -602,7 +602,7 @@ function applyDayCycle(clock) {
   const daylight = Math.max(0, elev); daylightNow = daylight;
   const horizon = Math.max(0, 1 - Math.abs(elev) * 2.2);
   let r = lerp(0x07, 0x1a, daylight), g = lerp(0x09, 0x24, daylight), b = lerp(0x0e, 0x33, daylight);
-  if (t < 0.5) { r += horizon * 0x26; g += horizon * 0x14; b += horizon * 0x04; } else { r += horizon * 0x1e; g += horizon * 0x06; b += horizon * 0x22; }
+  if (t < 0.5) { r += horizon * 0x16; g += horizon * 0x0c; b += horizon * 0x0a; } else { r += horizon * 0x12; g += horizon * 0x06; b += horizon * 0x1a; }   // faint rose dawn / violet dusk, never mud
   const sky = (Math.min(255, r) | 0) * 65536 + (Math.min(255, g) | 0) * 256 + (Math.min(255, b) | 0);
   renderer.setClearColor(sky, 1); scene.fog.color.setHex(sky);
   hemi.intensity = lerp(0.62, 1.05, daylight); sun.intensity = lerp(0.15, 0.85, daylight); fill.intensity = lerp(0.3, 0.15, daylight);
@@ -872,7 +872,7 @@ function spawnEffects(f) {
       ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.5, kind: "reticle", delay: 0 });
       continue;
     }
-    if (!soft && director && !flew && now - idleSince > 5000) { flyToPoint(p.x, p.y - 1.5, p.z, 46, 1.15, 1.6); flew = true; }   // director: ride along to the strike
+    if (!soft && director && !flew && now - idleSince > 5000 && now - lastFlight > 2800) { flyToPoint(p.x, p.y - 1.5, p.z, 46, 1.15, 1.6); flew = true; lastFlight = now; }   // director: ride along, but let each shot settle
     const land = () => { o._flash = 1; if (k === "extraction" || k === "funds_drained" || k === "defection") flashAlert(); audio.ping(true, k === "cult_recruitment" || k === "coerced_signature"); };
     const beat = lateral ? 0.5 : 0.34;
     // staging: the reticle locks on first; the beam / pulse, ring and flash land a beat later
@@ -1357,7 +1357,7 @@ const audio = (() => {
   return { toggle, ping, swell, setTension };
 })();
 document.getElementById("audio").addEventListener("click", audio.toggle);
-let director = true;
+let director = true, lastFlight = -1e9;
 document.getElementById("director").addEventListener("click", (e) => { director = !director; e.currentTarget.classList.toggle("on", director); e.currentTarget.setAttribute("aria-pressed", String(director)); });
 document.getElementById("weather").addEventListener("click", (e) => { rainOn = !rainOn; if (rainLines) rainLines.visible = rainOn; e.currentTarget.classList.toggle("on", rainOn); e.currentTarget.setAttribute("aria-pressed", String(rainOn)); });
 
@@ -1371,7 +1371,8 @@ sel.addEventListener("change", () => {
 });
 
 /* ---------- playback ---------- */
-let playing = false, acc = 0, speed = 2;
+let playing = false, acc = 0, speed = 1;
+const BEAT = 60 / 112;   // one frame per beat at 1× (the bed runs at 112 BPM), so strikes land on the pulse
 function stop() { playing = false; document.getElementById("play").textContent = "▶"; }
 function togglePlay() { playing = !playing; if (playing && frameIndex >= S.frames.length - 1) applyFrame(0); document.getElementById("play").textContent = playing ? "❚❚" : "▶"; }
 document.getElementById("play").addEventListener("click", togglePlay);
@@ -1387,7 +1388,7 @@ window.addEventListener("resize", resize);
 let now = 0, last = 0;
 function tick(ts) {
   requestAnimationFrame(tick);
-  const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts; now = ts;
+  const dt = Math.max(0, Math.min(0.05, (ts - last) / 1000 || 0)); last = ts; now = ts;
   if (tween) {
     tween.t += dt / tween.dur; const k = easeInOut(Math.min(1, tween.t)), a = tween.from, b = tween.to;
     cam.target.set(a.tx + (b.tx - a.tx) * k, a.ty + (b.ty - a.ty) * k, a.tz + (b.tz - a.tz) * k); cam.radius = a.r + (b.r - a.r) * k; cam.phi = a.phi + (b.phi - a.phi) * k;
@@ -1395,7 +1396,7 @@ function tick(ts) {
   } else if (!dragging && now - idleSince > 7000) cam.theta += dt * 0.025;   // slow cinematic drift when idle
   if (playing && S) {
     acc += dt * speed;
-    if (acc >= 0.6) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else stop(); }
+    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else stop(); }
   }
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
   if (S) for (const nd of S.nodes) {
