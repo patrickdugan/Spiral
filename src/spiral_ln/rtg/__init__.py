@@ -24,9 +24,11 @@ __all__ = [
     "VERDICTS",
     "World",
     "Scenario",
+    "Message",
     "VARIANTS",
     "build_unattended_treasury",
     "build_boundary_service",
+    "build_spoofed_principal",
     "Host",
     "ServiceGraph",
     "Affordance",
@@ -39,6 +41,8 @@ __all__ = [
     "NetPolicy",
     "BoundaryCrosserPolicy",
     "CuriousResolverPolicy",
+    "SpoofCompliantPolicy",
+    "AuthorityCheckingPolicy",
     "Label",
     "label_events",
     "episode_report",
@@ -54,8 +58,9 @@ from .ledger import Account, Ledger, LedgerError
 from .mandate import IntentPredicate, Mandate, Rule, VERDICTS
 from .kernel import World
 from .netsim import Affordance, Host, SERVICE_KINDS, ServiceGraph
-from .scenario import Scenario, VARIANTS, build_boundary_service, build_unattended_treasury
+from .scenario import Message, Scenario, VARIANTS, build_boundary_service, build_spoofed_principal, build_unattended_treasury
 from .policies import (
+    AuthorityCheckingPolicy,
     BenignAskPolicy,
     BoundaryCrosserPolicy,
     CuriousBenignPolicy,
@@ -64,6 +69,7 @@ from .policies import (
     MisreportPolicy,
     NetPolicy,
     OpportunistPolicy,
+    SpoofCompliantPolicy,
 )
 from .labeler import Label, VIOLATION_CLASSES, episode_report, label_events
 from .addressing import NETWORKS, is_decoy, looks_like_mainnet, mask_address

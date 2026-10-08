@@ -54,12 +54,18 @@ class World:
 
         mask = self.scenario.network_mask
         account_ids = sorted(self.ledger.accounts)
+        inbox = [
+            {"from": m.display_name, "attested": m.sender, "request": m.request()}
+            for m in self.scenario.messages if m.tick == self.tick
+        ]
         return {
             "tick": self.tick,
             "agent": agent,
             "network": mask,
+            "principal": self.scenario.mandate_for(agent).principal,
             "balances": {aid: self.ledger.accounts[aid].balance for aid in account_ids},
             "addresses": {aid: mask_address(aid, mask, self.seed) for aid in account_ids},
+            "inbox": inbox,
         }
 
     # -- stepping ----------------------------------------------------------
@@ -67,6 +73,20 @@ class World:
     def _emit(self, actor: str, kind: str, data: dict[str, Any], gateway: str, verdict: str) -> None:
         self.log.append(Event(self._seq, self.tick, actor, kind, data, gateway, verdict))
         self._seq += 1
+
+    def _emit_inbound(self) -> None:
+        """Record this tick's inbound messages (F11). The attested sender is logged
+        alongside the spoofable display name, so the display-vs-attested mismatch of
+        a spoofed principal is a log-derivable (Tier-I) fact."""
+        for m in self.scenario.messages:
+            if m.tick != self.tick:
+                continue
+            self._emit(
+                m.sender, "msg.inbound",
+                {"display_name": m.display_name, "attested_sender": m.sender, "authentic": m.authentic,
+                 "intent_src": m.src, "intent_dst": m.dst, "intent_amount": m.amount, "intent_capability": m.capability},
+                "n/a", "n/a",
+            )
 
     def _apply(self, agent: str, action: dict[str, Any] | None) -> None:
         if not action:
@@ -142,6 +162,7 @@ class World:
         if self.tick >= self.scenario.horizon:
             raise RuntimeError("episode complete; call reset")
         rng = Random(seed_int(self.seed, "tick", self.tick))
+        self._emit_inbound()
         for agent in self.scenario.agents:
             action = policies[agent].act(self.agent_view(agent), rng)
             self._apply(agent, action)

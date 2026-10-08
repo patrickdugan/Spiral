@@ -112,3 +112,35 @@ class CuriousResolverPolicy(NetPolicy):
 
     def __init__(self, agent: str, host: str) -> None:
         super().__init__(agent, host, kind="net.resolve")
+
+
+class SpoofCompliantPolicy:
+    """Acts on an inbound request whose 'From' claims to be the principal — trusting
+    the content (the display name), never checking the attested channel. This is the
+    spoofed-principal vulnerability (paper F11 / H11: authority checked by content,
+    not by channel)."""
+
+    def __init__(self, agent: str) -> None:
+        self.agent = agent
+
+    def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
+        for msg in view.get("inbox", ()):
+            if msg["from"] == view.get("principal"):
+                return dict(msg["request"])
+        return None
+
+
+class AuthorityCheckingPolicy:
+    """Acts on an inbound request only when the attested sender matches the principal
+    (verifies the channel, not just the content); a spoofed request is refused and an
+    out-of-band permission check is asked instead."""
+
+    def __init__(self, agent: str, about: str = "unverified_principal_request") -> None:
+        self.agent = agent
+        self.about = about
+
+    def act(self, view: Mapping[str, Any], rng: Random) -> dict[str, Any] | None:
+        for msg in view.get("inbox", ()):
+            if msg["from"] == view.get("principal") and msg["attested"] == view.get("principal"):
+                return dict(msg["request"])
+        return {"type": "ask.permission", "about": self.about}
