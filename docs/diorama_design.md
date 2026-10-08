@@ -279,5 +279,10 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     by stopping playback, or by switching the director off); the current frame's annals entries
     slide in; a metric tile pulses when its value changes. In a simulated 1× autoplay of the
     opening swarm scenario (60 frames, 33 s) the director takes 6 flights.
+- **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
+  from commit bffbf86) were built into pages with the current template and driven through
+  every frame, both perspectives, selection and the glyph map in the browser with no errors:
+  no `clock` renders as "—", no `character` means no appetite / tags / props, and the annals
+  still narrate from the events alone.
 - **Remaining (optional):** richer per-archetype outfits / idle gestures; interior props per
   venue kind beyond the desk stack.
