@@ -221,6 +221,13 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   - **Director camera** (toggle, on by default). While the viewer has been idle for 5 s, the
     first non-soft strike of each frame flies the camera to its target over 1.6 s, so the
     autoplayed opening plays as a tracked sequence; any pointer input takes the camera back.
+    Flights are at least 2.8 s apart so each shot settles.
+  - **Pacing.** Playback defaults to 1× and steps one frame per beat of the bed (60/112 s), so
+    strikes land on the pulse when audio is on; 2× and 4× are half- and quarter-beats. The
+    strike sequence is lock (0 s) → beam / pulse, ring and flash (0.34 s; 0.5 s for a lateral
+    pulse) → defender alert ring (+0.45 s) → pose released at 1.8 s. Verified frame by frame by
+    driving the render loop with synthetic timestamps. Dawn / dusk sky tint is a faint rose /
+    violet (the first amber pass read as mud at 06:00).
   - **Audio (off by default, user toggle).** An original generative bed synthesized in-page
     with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
     fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on

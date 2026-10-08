@@ -895,7 +895,7 @@ function spawnEffects(f) {
       effects.push({ obj: pulse, t: 0, life: 0.5, kind: "pulse", delay: 0, from: new THREE.Vector3(a.x, a.y + 0.8, a.z), to: new THREE.Vector3(p.x, p.y + 0.8, p.z) });
       if (ev.blocked) audio.ping(false);
     } else if (!ev.blocked) {                                // the hive master's strike arrives from above
-      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.04, 44, 6), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.08, 44, 6), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
       beam.position.set(p.x, p.y + 23, p.z); beam.visible = false; scene.add(beam);
       effects.push({ obj: beam, t: 0, life: 0.6, kind: "beam", delay: beat, onShow: land });
     } else audio.ping(false);
