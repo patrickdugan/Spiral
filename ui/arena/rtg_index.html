@@ -310,6 +310,7 @@
       <button id="director" class="on" aria-pressed="true" title="Camera follows landed strikes while you are idle">◎ Director</button>
       <button id="audio" aria-pressed="false" title="Generative ambient bed (original, synthesized in-page)">♪ Audio</button>
       <button id="weather" class="on" aria-pressed="true" title="Rain">☂ Rain</button>
+      <button id="still" title="Save the current view as a PNG">⬇ Still</button>
       <button id="aboutbtn" title="About this view">?</button>
     </div>
   </header>
@@ -1545,6 +1546,28 @@ function scenarioCard(scn) {
   showCard(`${sim} · ${scn.population || scn.nodes.length} units · ${scn.frames.length} ${scn.sim === "feral_custody" ? "epochs" : "rounds"}`, scn.id, who ? "vs " + nice(who) : "");
 }
 
+/* ---------- stills + deep links ---------- */
+function captureStill() {
+  if (!canvas.width || !canvas.height) resize();                  // a hidden or zero-size window leaves the canvas empty
+  applyCam(); renderer.render(scene, camera);                      // render synchronously so the buffer is fresh
+  const name = `hive-swarm_${String(S.id).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}_f${String(frameIndex + 1).padStart(2, "0")}.png`;
+  const a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  return name;
+}
+document.getElementById("still").addEventListener("click", captureStill);
+function writeLink() {
+  const q = new URLSearchParams(); q.set("scenario", String(sel.value)); q.set("frame", String(frameIndex + 1)); if (!hiveVision) q.set("hive", "0"); if (selected) q.set("unit", selected);
+  try { history.replaceState(null, "", "?" + q.toString()); } catch (e) { /* file:// or sandboxed: links are a convenience only */ }
+}
+function readLink() {
+  const q = new URLSearchParams(location.search), out = {};
+  if (q.has("scenario")) { const i = Number(q.get("scenario")); if (Number.isInteger(i) && i >= 0 && i < REPLAY.scenarios.length) out.scenario = i; }
+  if (q.has("frame")) { const f = Number(q.get("frame")); if (Number.isInteger(f) && f >= 1) out.frame = f - 1; }
+  if (q.get("hive") === "0") out.hive = false;
+  if (q.has("unit")) out.unit = q.get("unit");
+  return out;
+}
+
 /* ---------- scenario selector ---------- */
 const sel = document.getElementById("scenario");
 REPLAY.scenarios.forEach((s, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = (s.sim ? `[${s.sim.replace("_compromise", "").replace("feral_", "")}] ` : "") + s.id; sel.appendChild(o); });
@@ -1553,13 +1576,13 @@ sel.addEventListener("change", () => {
   document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 380);
   document.body.classList.remove("cine"); prevMetrics = {};
   buildScenario(REPLAY.scenarios[Number(sel.value)]);
-  scenarioCard(S);
+  scenarioCard(S); writeLink();
 });
 
 /* ---------- playback ---------- */
 let playing = false, acc = 0, speed = 1;
 const BEAT = 60 / 112;   // one frame per beat at 1× (the bed runs at 112 BPM), so strikes land on the pulse
-function stop() { playing = false; document.getElementById("play").textContent = "▶"; document.body.classList.remove("cine"); }
+function stop() { playing = false; document.getElementById("play").textContent = "▶"; document.body.classList.remove("cine"); if (S) writeLink(); }
 function togglePlay() { playing = !playing; if (playing && frameIndex >= S.frames.length - 1) applyFrame(0); document.getElementById("play").textContent = playing ? "❚❚" : "▶"; }
 document.getElementById("play").addEventListener("click", togglePlay);
 document.getElementById("scrub").addEventListener("input", (e) => { stop(); applyFrame(Number(e.target.value)); });
@@ -1666,12 +1689,17 @@ function tick(ts) {
 
 /* ---------- boot ---------- */
 resize(); buildAbout();
-buildScenario(REPLAY.scenarios[0]);
+const link = readLink();
+if (link.hive === false) { hiveVision = false; const b = document.getElementById("hivevis"); b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); }
+if (link.scenario != null) { sel.value = String(link.scenario); buildScenario(REPLAY.scenarios[link.scenario]); }
+else buildScenario(REPLAY.scenarios[0]);
+if (link.frame != null) applyFrame(Math.min(S.frames.length - 1, link.frame));
+if (link.unit && nodeObjs[link.unit]) select(link.unit, false);
 cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 145, phi: 1.1 } };
 idleSince = 0;
-// after the title card, run the first scenario from its opening frame so the compromise unfolds
+// after the title card, run the first scenario from its opening frame so the compromise unfolds (not when a deep link asked for a frame)
 setTimeout(() => { if (S) scenarioCard(S); }, 1900);
-setTimeout(() => { if (!playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } document.getElementById("audio").classList.add("nudge"); }, 2800);
+setTimeout(() => { if (link.frame == null && !playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } document.getElementById("audio").classList.add("nudge"); }, 2800);
 requestAnimationFrame(tick);
 </script>
 </body>
