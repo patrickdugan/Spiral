@@ -344,7 +344,7 @@
   </aside>
 
   <div class="safety" id="safety">Synthetic simulation. Dossiers and feeds are fictional, abstract eval data — not surveillance of any real person.</div>
-  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play · H hive vision · D director · M audio · R rain</div>
+  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play · H hive vision · D director · M audio · R rain · T tour</div>
 
   <footer id="dock">
     <div id="timeline">
@@ -1048,6 +1048,7 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "d" || e.key === "D") document.getElementById("director").click();
   else if (e.key === "m" || e.key === "M") document.getElementById("audio").click();
   else if (e.key === "r" || e.key === "R") document.getElementById("weather").click();
+  else if (e.key === "t" || e.key === "T") setTour(!tour);
 });
 const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
 function castAt(e) {
@@ -1625,6 +1626,7 @@ function readLink() {
   if (q.has("frame")) { const f = Number(q.get("frame")); if (Number.isInteger(f) && f >= 1) out.frame = f - 1; }
   if (q.get("hive") === "0") out.hive = false;
   if (q.has("unit")) out.unit = q.get("unit");
+  if (q.get("tour") === "1") out.tour = true;
   return out;
 }
 
@@ -1641,6 +1643,17 @@ sel.addEventListener("change", () => {
 
 /* ---------- playback ---------- */
 let playing = false, acc = 0, speed = 1;
+/* tour: when a run ends, cut to the next scenario and play it — a demo loop over all scenarios (T, or ?tour=1) */
+let tour = false, tourTimer = null;
+function scheduleTourCut() {
+  clearTimeout(tourTimer);
+  tourTimer = setTimeout(() => {
+    if (!tour || playing) return;
+    sel.value = String((Number(sel.value) + 1) % REPLAY.scenarios.length); sel.dispatchEvent(new Event("change"));
+    setTimeout(() => { if (tour && !playing) { applyFrame(0); togglePlay(); } }, 2600);   // let the scene card and pull-in land first
+  }, 4200);
+}
+function setTour(on) { tour = on; clearTimeout(tourTimer); if (tour) { showCard("tour", "all scenarios", "runs each scenario in turn · T to stop", 2600); if (!playing && S) { applyFrame(0); togglePlay(); } } }
 const BEAT = 60 / 112;   // one frame per beat at 1× (the bed runs at 112 BPM), so strikes land on the pulse
 function stop() { playing = false; document.getElementById("play").textContent = "▶"; document.body.classList.remove("cine"); if (S) writeLink(); }
 function togglePlay() { playing = !playing; if (playing && frameIndex >= S.frames.length - 1) applyFrame(0); document.getElementById("play").textContent = playing ? "❚❚" : "▶"; }
@@ -1665,7 +1678,7 @@ function tick(ts) {
   } else if (!dragging && now - idleSince > 7000) cam.theta += dt * 0.025;   // slow cinematic drift when idle
   if (playing && S) {
     acc += dt * speed;
-    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) flyToPoint(0, -16, 0, 145, 1.1, 2.6); } }   // the run ends on a slow pull-back to the full frame
+    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) flyToPoint(0, -16, 0, 145, 1.1, 2.6); if (tour) scheduleTourCut(); } }   // the run ends on a slow pull-back to the full frame
   }
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
   if (S) for (const nd of S.nodes) {
@@ -1760,7 +1773,7 @@ cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520
 idleSince = 0;
 // after the title card, run the first scenario from its opening frame so the compromise unfolds (not when a deep link asked for a frame)
 setTimeout(() => { if (S) scenarioCard(S); }, 1900);
-setTimeout(() => { if (link.frame == null && !playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } document.getElementById("audio").classList.add("nudge"); }, 2800);
+setTimeout(() => { if (link.frame == null && !playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } if (link.tour) tour = true; document.getElementById("audio").classList.add("nudge"); }, 2800);
 requestAnimationFrame(tick);
 </script>
 </body>

@@ -102,7 +102,8 @@ Controls: drag to orbit, scroll to zoom, click a figure for its dossier; ← →
 space plays, Esc closes. Top-bar toggles (keys in brackets): Hive vision [H], Director camera
 [D], Audio [M], Rain [R]; exports: Still (PNG of the current view) and Annals (the scenario's
 narrated timeline as Markdown); `?` opens the About panel with the safety note and the glyph
-key. The left rail holds fast travel, the glyph map (Z 0 / Z −1, click a glyph to select) and
+key. Tour [T] (or `?tour=1`) runs every scenario in turn as a demo loop: when a run ends it
+cuts to the next scenario after the pull-back and plays it from its opening frame. The left rail holds fast travel, the glyph map (Z 0 / Z −1, click a glyph to select) and
 the roster / hunt list; the dock holds the timeline with its event-density strip, the annals
 (with a "strikes only" filter) and the swarm-vision feed cards. Deep links:
 `?scenario=<index>&frame=<1-based>&hive=0&unit=<id>`.
