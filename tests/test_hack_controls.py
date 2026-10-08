@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from spiral_ln import hack_controls
+from spiral_ln.software_surface import SoftwareCatalog
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / "configs" / "crypto_hack_corpus.json"
@@ -49,3 +50,17 @@ def test_sweep_is_deterministic_and_reported(tmp_path):
     assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
     report = (tmp_path / "a" / "report.md").read_text(encoding="utf-8")
     assert "defensive ROI" in report and "clear-signing" in report
+
+
+def test_roi_table_is_structural_across_seeds():
+    corpus = hack_controls.load_corpus(CORPUS)
+    catalog = SoftwareCatalog.load(CATALOG)
+    patched = hack_controls.patched_catalog(CATALOG)
+    rob = hack_controls.robustness(corpus, catalog, patched, range(4))
+    # every control-break result is 0 or 1 across seeds (no seed-luck), and every
+    # chain drains at baseline on every seed
+    assert rob["all_structural"] is True and rob["unstable"] == []
+    for r in rob["per_chain"]:
+        assert r["baseline_success_rate"] == 1.0
+        for c in hack_controls.CONTROLS:
+            assert r["control_break_rate"][c] in (0.0, 1.0)

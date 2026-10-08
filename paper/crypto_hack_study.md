@@ -186,6 +186,14 @@ is decisive for the signer-manipulation drains that dominate the recent dollars,
 and **front-end/supply-chain integrity** for the device-tamper cases specifically.
 This is a what-if on the sim, not a guarantee about the real incidents.
 
+**Seed robustness.** Run across seeds 0–7 (`--seeds 8`), every control-break result
+is **structural** — 0% or 100% across seeds, with every chain draining at baseline
+on every seed — so the table is not a single-seed artifact. That robustness is,
+however, entailed by the model's gating (clear-signing sets diligence to 1 so the
+spoofed signature is zero *deterministically*, a patched surface zeroes the
+tamperability, a blocked entry zeroes the foothold), not an empirical distribution;
+the sweep confirms reproducibility, not statistical spread.
+
 ## Sources
 
 BitPay: [CoinDesk](https://www.coindesk.com/markets/2015/09/17/bitpay-sues-insurer-after-losing-18-million-in-phishing-attack),

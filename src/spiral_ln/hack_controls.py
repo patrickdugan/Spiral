@@ -118,7 +118,62 @@ def render_report(rows: list[dict], summary: dict) -> str:
     return "\n".join(L) + "\n"
 
 
-def run(corpus_path: str | Path, catalog_path: str | Path, output_dir: str | Path, seed: int = 1) -> dict:
+def robustness(corpus: dict, catalog: SoftwareCatalog, patched: SoftwareCatalog, seeds) -> dict:
+    """Run the sweep across several seeds and report, per chain, the fraction of
+    seeds on which the chain drains at baseline and on which each control breaks it.
+    A control-break rate of exactly 0 or 1 means the result is structural (seed-
+    independent); anything in between is seed-dependent and is flagged."""
+    seeds = list(seeds)
+    agg: dict[str, dict] = {}
+    for seed in seeds:
+        for r in sweep_all(corpus, catalog, patched, seed):
+            d = agg.setdefault(r["id"], {"name": r["name"], "usd_millions": r["usd_millions"],
+                                         "baseline_live": 0, "break": {c: 0 for c in CONTROLS}})
+            if r["baseline_success"]:
+                d["baseline_live"] += 1
+                for c in CONTROLS:
+                    if r["broke_chain"][c]:
+                        d["break"][c] += 1
+    n = len(seeds)
+    per_chain = []
+    unstable = []
+    for cid in sorted(agg):
+        d = agg[cid]
+        live = d["baseline_live"]
+        rates = {c: (round(d["break"][c] / live, 3) if live else None) for c in CONTROLS}
+        per_chain.append({"id": cid, "name": d["name"], "usd_millions": d["usd_millions"],
+                          "baseline_success_rate": round(live / n, 3), "control_break_rate": rates})
+        if live < n:
+            unstable.append({"id": cid, "issue": "baseline not always live", "rate": round(live / n, 3)})
+        for c in CONTROLS:
+            if rates[c] is not None and 0.0 < rates[c] < 1.0:
+                unstable.append({"id": cid, "control": c, "break_rate": rates[c]})
+    return {"seeds": seeds, "per_chain": per_chain, "unstable": unstable,
+            "all_structural": not unstable}
+
+
+def render_robustness(rob: dict) -> str:
+    L = ["# Crypto hacks — control-ROI seed robustness", "",
+         f"The single-control sweep run across seeds {rob['seeds']}, reporting per chain the "
+         "fraction of seeds on which it drains at baseline and on which each control breaks it. "
+         "A rate of 0 or 1 is structural (seed-independent); anything between is seed-dependent.", "",
+         "| case | baseline live | " + " | ".join(_LABEL[c] for c in CONTROLS) + " |",
+         "|---|---|" + "---|" * len(CONTROLS)]
+    for r in sorted(rob["per_chain"], key=lambda r: -r["usd_millions"]):
+        cells = " | ".join("—" if r["control_break_rate"][c] is None else f"{r['control_break_rate'][c]:.0%}" for c in CONTROLS)
+        L.append(f"| {r['name']} | {r['baseline_success_rate']:.0%} | {cells} |")
+    L += ["", ("**All control-break results are structural (0% or 100% across seeds)** and every "
+               "chain drains at baseline on every seed, so the ROI table is not an artifact of a "
+               "single seed — it is entailed by the model's gating."
+               if rob["all_structural"] else
+               "**Seed-dependent results flagged** (not all structural):")]
+    if not rob["all_structural"]:
+        for u in rob["unstable"]:
+            L.append(f"- {u}")
+    return "\n".join(L) + "\n"
+
+
+def run(corpus_path: str | Path, catalog_path: str | Path, output_dir: str | Path, seed: int = 1, seeds=None) -> dict:
     corpus = load_corpus(corpus_path)
     catalog = SoftwareCatalog.load(catalog_path)
     patched = patched_catalog(catalog_path)
@@ -130,6 +185,11 @@ def run(corpus_path: str | Path, catalog_path: str | Path, output_dir: str | Pat
     out.mkdir(parents=True, exist_ok=True)
     (out / "controls.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (out / "report.md").write_text(render_report(rows, summary), encoding="utf-8")
+    if seeds is not None:
+        rob = robustness(corpus, catalog, patched, seeds)
+        payload["robustness"] = rob
+        (out / "robustness.json").write_text(json.dumps(rob, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        (out / "robustness.md").write_text(render_robustness(rob), encoding="utf-8")
     return payload
 
 
@@ -138,11 +198,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--corpus", default="configs/crypto_hack_corpus.json")
     parser.add_argument("--catalog", default="configs/software_catalog.json")
     parser.add_argument("--output", default="output/hack_controls")
+    parser.add_argument("--seeds", type=int, default=8, help="number of seeds (0..N-1) for the robustness sweep")
     args = parser.parse_args(argv)
-    payload = run(args.corpus, args.catalog, args.output)
+    payload = run(args.corpus, args.catalog, args.output, seeds=range(args.seeds))
     for c in CONTROLS:
         e = payload["summary"]["control_effect"][c]
         print(f"  {_LABEL[c]:20s} breaks {e['chains_broken']}/{payload['summary']['chains']} chains, ${e['usd_millions_broken']:.0f}M")
+    rob = payload.get("robustness", {})
+    print(f"robustness over {len(rob.get('seeds', []))} seeds: all_structural={rob.get('all_structural')}, unstable={len(rob.get('unstable', []))}")
     return 0
 
 
