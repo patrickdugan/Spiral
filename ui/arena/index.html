@@ -392,7 +392,7 @@ const COL = {
   honey: 0xf2e23a, hazard: 0xf2e23a, amber: 0xffa63a,
   airgap: 0x4b6a85, steel: 0x4b6a85,
   detect: 0xffffff, white: 0xf3f6f9, slate: 0x5e6b7a,
-  hunger: 0xff4fd8,   // the hive's appetite: marks, scan lines, vectors
+  hunger: 0xff2bdc,   // the hive's appetite: marks, scan lines, vectors (saturated magenta, apart from compromise red)
 };
 const hex = (n) => "#" + n.toString(16).padStart(6, "0");
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -584,7 +584,7 @@ function buildEnvironment(seedStr) {
   const matte = new THREE.Mesh(new THREE.CylinderGeometry(430, 430, 300, 64, 1, true), matteMat);
   matte.position.y = -30 + 150; envGroup.add(matte);
   // surface deck (translucent so the vault level reads through) + vault floor
-  const deck = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, transparent: true, opacity: 0.78, depthWrite: false }));
+  const deck = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, transparent: true, opacity: 0.6, depthWrite: false }));
   deck.rotation.x = -Math.PI / 2; deck.position.y = -12.5; envGroup.add(deck);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, color: 0x6b7f94 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -64; envGroup.add(floor);
@@ -599,6 +599,12 @@ function buildEnvironment(seedStr) {
     mat.emissiveMap.offset.set(r(), r());
     const b = new THREE.Mesh(box, mat); b.scale.set(w, h, d);
     b.position.set(Math.cos(ang) * rad, -12.5 + h / 2, Math.sin(ang) * rad); envGroup.add(b); cityMats.push(mat);
+    if (h > 60 && r() < 0.5) {   // neon strip up the face that looks toward the diorama
+      const nc = [COL.hunger, COL.ice, COL.hazard, COL.violet][Math.floor(r() * 4)];
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.9, h * (0.35 + r() * 0.4), 0.3), new THREE.MeshBasicMaterial({ color: nc, transparent: true, opacity: 0.85 }));
+      const inward = Math.atan2(-b.position.z, -b.position.x);
+      strip.position.set(b.position.x + Math.cos(inward) * (Math.max(w, d) / 2 + 0.2), -12.5 + h * 0.5, b.position.z + Math.sin(inward) * (Math.max(w, d) / 2 + 0.2)); envGroup.add(strip);
+    }
     if (h > 120 && beacons.length < 7) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hot, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
       s.scale.set(7, 7, 1); s.position.set(b.position.x, -12.5 + h + 2, b.position.z); envGroup.add(s); beacons.push({ s, ph: r() * 6.28 });
@@ -632,7 +638,7 @@ function applyDayCycle(clock) {
   hemi.color.setRGB(lerp(0.37, 0.55, daylight), lerp(0.50, 0.60, daylight), lerp(0.64, 0.68, daylight));
   for (const m of cityMats) m.emissiveIntensity = lerp(0.95, 0.15, daylight);
   if (matteMat) { matteMat.color.setHex(daylight > 0 ? (0xffffff - Math.round(daylight * 0x70) * 0x010101) : 0xffffff); matteMat.opacity = lerp(1, 0.8, daylight); }
-  if (rainLines) rainLines.material.opacity = lerp(0.24, 0.14, daylight);
+  if (rainLines) rainLines.material.opacity = lerp(0.17, 0.11, daylight);
   for (const s of lampHalos) s.material.opacity = lerp(0.55, 0.06, daylight);
   drawSkyArc(t);
 }
@@ -754,8 +760,11 @@ function buildVenues() {
     const c = venueColor(key), y = minY - 4.2;
     const disc = new THREE.Mesh(new THREE.CylinderGeometry(R, R + 1.2, 1.2, 48), new THREE.MeshLambertMaterial({ color: 0x0f141c }));
     disc.position.set(cx, y, cz); venueGroup.add(disc);
-    const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 64 }, (_, i) => { const a = i / 64 * Math.PI * 2; return new THREE.Vector3(cx + Math.cos(a) * (R + 0.6), y + 0.65, cz + Math.sin(a) * (R + 0.6)); })), new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.45 }));
-    venueGroup.add(ring);
+    // neon floor ring: a flat emissive band around the disc, not a hairline
+    const ring = new THREE.Mesh(new THREE.RingGeometry(R + 0.2, R + 1.2, 64), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(cx, y + 0.7, cz); venueGroup.add(ring);
+    const ringHalo = new THREE.Mesh(new THREE.RingGeometry(R - 0.6, R + 2.4, 64), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    ringHalo.rotation.x = -Math.PI / 2; ringHalo.position.set(cx, y + 0.68, cz); venueGroup.add(ringHalo);
     // hazard-striped kerb segments at four points of the compass
     for (let k = 0; k < 4; k++) {
       const a = k * Math.PI / 2 + 0.4;
@@ -1565,8 +1574,8 @@ function tick(ts) {
   }
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
   if (S) {
-    const lod = hiveVision && cam.radius < 95;
-    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; if (o.tag) o.tag.visible = hiveVision && (lod || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
+    const near = hiveVision && cam.radius < 60, mid = hiveVision && cam.radius < 130;   // tags: everyone up close; at mid-range only the hive's current marks
+    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; if (o.tag) o.tag.visible = hiveVision && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
       if (show) { const v = []; for (const id of scanTargets) { const p = nodeObjs[id].group.position; v.push(hive.position.x, hive.position.y - 3.5, hive.position.z, p.x, p.y + 1, p.z); }
