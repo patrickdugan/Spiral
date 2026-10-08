@@ -198,6 +198,21 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     registry / wiki → cabinets; helpdesk / gig_shopfront → a counter; admin_console / monitor /
     operations → a console bank; loyalist_hall → benches; shard_holders / wallet → safes;
     swarm communities → two lit kiosks. All boxes and emissive strips, authored per kind.
+  - **Body language by event** (`_pose`, in the render loop). Figures carry a neck, belt, feet,
+    hands, and archetype accessories (auditor's clipboard, newcomer's lanyard badge, status
+    seeker's pin). Arms idle-swing (wider with stress) or type at the desk when on-shift with a
+    laptop / server. An attempt on the unit sets a 1.8 s pose keyed by its exported vector /
+    kind: a *declined* probe → hand up, palm out, and a head shake (the hygiene tell);
+    spear_social → phone to the face; phone_bridge → reaches down, leans in (plugs the device
+    in); cult_recruitment / coerced_signature → both arms forward (leans into the circle /
+    signs); bribe / defection → arm out (takes the envelope); emanation_tap → nothing on the
+    body, the desk's screens flicker. These are the goal brief's trait tells re-keyed to the
+    vector that exploits the trait, so the animation follows the exported event, not a guess.
+  - **Lateral attempts.** When the acting party is itself a node (coalition contagion in the
+    swarm, the agent's reach in rtg) the attempt travels as a pulse along the link from actor to
+    target, and the flash lands on arrival; only the hive master's strikes arrive from above. A
+    declined probe shows a dim steel reticle that fails to lock. The selected unit's comms links
+    lift in white, and glyphs on the map are clickable.
   - **Director camera** (toggle, on by default). While the viewer has been idle for 5 s, the
     first non-soft strike of each frame flies the camera to its target over 1.6 s, so the
     autoplayed opening plays as a tracked sequence; any pointer input takes the camera back.

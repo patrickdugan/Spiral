@@ -134,7 +134,7 @@
   .chip:hover { opacity: 1; background: rgba(255,255,255,0.05); }
   .chip small { color: var(--dim); margin-left: 4px; }
   #mapwrap { margin-bottom: 14px; }
-  #glyphmap { display: block; width: 100%; height: auto; border: 1px solid var(--hair); background: #05070a; image-rendering: pixelated; }
+  #glyphmap { display: block; width: 100%; height: auto; border: 1px solid var(--hair); background: #05070a; image-rendering: pixelated; cursor: pointer; }
   .ztabs { display: flex; gap: 4px; margin-top: 6px; }
   .ztabs button { padding: 2px 8px; font-size: 10px; flex: 1; }
   #roster { display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow: auto; }
@@ -516,14 +516,24 @@ function makeHumanoid(v, arch) {
   part(new THREE.SphereGeometry(hs, 8, 6), 2.25);
   if (b.hood) { const hood = part(new THREE.SphereGeometry(hs * 1.18, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.62), 2.3); hood.position.z = -0.12; }
   const visor = part(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), 2.3, 0, 0, vmat); visor.position.z = hs * 0.55;
-  part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);
+  const trim = new THREE.MeshLambertMaterial({ color: 0x1a2230 });
+  part(new THREE.CylinderGeometry(0.22, 0.26, 0.5, 5), 1.72);                        // neck
+  part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);                      // torso
+  part(new THREE.BoxGeometry(tw * 2.2, 0.18, tw * 1.7), -0.6, 0, 0, trim);           // belt
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, 0.42);
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, -0.42);
+  part(new THREE.BoxGeometry(0.5, 0.24, 0.85), -2.88, 0.42, 0, trim).position.z = 0.15;    // feet
+  part(new THREE.BoxGeometry(0.5, 0.24, 0.85), -2.88, -0.42, 0, trim).position.z = 0.15;
   const armGeo = () => { const g = new THREE.CylinderGeometry(0.2, 0.22, 2.0, 5); g.translate(0, -1.0, 0); return g; };   // pivot at the shoulder
   const armR = part(armGeo(), 1.5, aw, -0.35);
   const armL = part(armGeo(), 1.5, -aw, 0.35);
+  for (const a of [armR, armL]) { const hand = new THREE.Mesh(new THREE.SphereGeometry(0.27, 6, 5), mat); hand.position.y = -2.05; a.add(hand); }
   // shoulder plate: a thin box across the shoulders, a subtle "uniform" cue
   part(new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), 1.6);
+  // archetype accessories: authored reading cues, nothing more
+  if (arch === "principled_auditor") { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.06), trim); pad.position.set(0.15, -1.9, 0.35); armL.add(pad); }
+  if (arch === "eager_newcomer") part(new THREE.BoxGeometry(0.32, 0.42, 0.05), 1.05, 0.25, 0, new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: COL.ice, emissiveIntensity: 0.8 })).position.z = tw + 0.12;
+  if (arch === "status_seeker") part(new THREE.BoxGeometry(0.3, 0.3, 0.05), 1.2, -0.3, 0.78, new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: COL.amber, emissiveIntensity: 0.9 })).position.z = tw + 0.12;
   group.scale.setScalar((0.9 + 0.24 * v) * (b.scale || 1));
   return { group, mat, vmat, picks, arms: [armR, armL], slump: b.slump || 0 };
 }
@@ -658,7 +668,8 @@ function buildScenario(scn) {
       props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
       props.traverse((o) => { if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
     }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
+      hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
   }
   // base edges
   const bp = [];
@@ -690,7 +701,7 @@ function buildScenario(scn) {
   const scrub = document.getElementById("scrub");
   scrub.max = String(S.frames.length - 1);
   frameIndex = S.frames.length - 1; scrub.value = String(frameIndex);
-  selected = null; document.getElementById("inspector").hidden = true;
+  selected = null; document.getElementById("inspector").hidden = true; updateSelEdges();
   annals = buildAnnals(S);
   buildRail();
   drawDensity(); frameTarget(); applyFrame(frameIndex);
@@ -852,23 +863,35 @@ function spawnEffects(f) {
   for (const ev of f.events) {
     const k = ev.vector || ev.kind; if (k === "signed") continue;
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
-    const landed = evLanded(ev); if (!landed && !ev.blocked && k !== "reinforce") { audio.ping(false); continue; }
-    const o = nodeObjs[id], c = vectorColor(ev), p = o.group.position, soft = k === "reinforce";
+    const landed = evLanded(ev), o = nodeObjs[id], soft = k === "reinforce", p = o.group.position, c = vectorColor(ev);
+    const lateral = (nodeObjs[ev.actor] && ev.actor !== id) ? ev.actor : null;   // a node acting on a node: contagion / the agent's reach
+    if (!soft) o._pose = { kind: k, landed, blocked: !!ev.blocked, t: 1.8 };
+    if (!landed && !ev.blocked && !soft) {                    // a probe that was declined: the unit checks, waves it off; a reticle that fails to lock
+      audio.ping(false); o._shake = 0.7;
+      const ret = new THREE.Sprite(new THREE.SpriteMaterial({ map: RETICLE_TEX, color: COL.steel, transparent: true, depthWrite: false, depthTest: false, opacity: 0.4 }));
+      ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.5, kind: "reticle", delay: 0 });
+      continue;
+    }
     if (!soft && director && !flew && now - idleSince > 5000) { flyToPoint(p.x, p.y - 1.5, p.z, 46, 1.15, 1.6); flew = true; }   // director: ride along to the strike
-    // staging: the reticle locks on first; the beam, ring and flash land a beat later
+    const land = () => { o._flash = 1; if (k === "extraction" || k === "funds_drained" || k === "defection") flashAlert(); audio.ping(true, k === "cult_recruitment" || k === "coerced_signature"); };
+    const beat = lateral ? 0.5 : 0.34;
+    // staging: the reticle locks on first; the beam / pulse, ring and flash land a beat later
     const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
-    ring.position.set(p.x, p.y - 2.6, p.z); ring.visible = soft; scene.add(ring); effects.push({ obj: ring, t: 0, life: 1.0, kind: "ring", delay: soft ? 0 : 0.34 });
+    ring.position.set(p.x, p.y - 2.6, p.z); ring.visible = soft; scene.add(ring);
+    effects.push({ obj: ring, t: 0, life: 1.0, kind: "ring", delay: soft ? 0 : beat, onShow: (!soft && lateral && !ev.blocked) ? land : null });
     if (soft) continue;                                      // blue's loyalty spend: a soft ring only
     const ret = new THREE.Sprite(new THREE.SpriteMaterial({ map: RETICLE_TEX, color: ev.blocked ? COL.steel : COL.hazard, transparent: true, depthWrite: false, depthTest: false, opacity: 0.95 }));
     ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.7, kind: "reticle", delay: 0 });
-    if (!ev.blocked) {
+    if (lateral) {                                           // the attempt travels along the link from the acting node
+      const a = nodeObjs[lateral].group.position;
+      const pulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
+      pulse.scale.set(4.5, 4.5, 1); pulse.position.copy(a); scene.add(pulse);
+      effects.push({ obj: pulse, t: 0, life: 0.5, kind: "pulse", delay: 0, from: new THREE.Vector3(a.x, a.y + 0.8, a.z), to: new THREE.Vector3(p.x, p.y + 0.8, p.z) });
+      if (ev.blocked) audio.ping(false);
+    } else if (!ev.blocked) {                                // the hive master's strike arrives from above
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.04, 44, 6), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
       beam.position.set(p.x, p.y + 23, p.z); beam.visible = false; scene.add(beam);
-      effects.push({ obj: beam, t: 0, life: 0.6, kind: "beam", delay: 0.34, onShow: () => {
-        o._flash = 1;
-        if (k === "extraction" || k === "funds_drained" || k === "defection") flashAlert();
-        audio.ping(true, k === "cult_recruitment" || k === "coerced_signature");
-      } });
+      effects.push({ obj: beam, t: 0, life: 0.6, kind: "beam", delay: beat, onShow: land });
     } else audio.ping(false);
   }
 }
@@ -934,10 +957,31 @@ function select(id, fly) {
   if (selected && nodeObjs[selected]) nodeObjs[selected].label.visible = false;
   selected = id; nodeObjs[id].label.visible = true;
   document.getElementById("inspector").hidden = false;
-  renderDossier(id); renderRoster(); drawGlyphMap();
+  renderDossier(id); renderRoster(); drawGlyphMap(); updateSelEdges();
   if (fly) flyTo(id);
 }
-function closeInspector() { document.getElementById("inspector").hidden = true; if (selected && nodeObjs[selected]) nodeObjs[selected].label.visible = false; selected = null; renderRoster(); drawGlyphMap(); }
+function closeInspector() { document.getElementById("inspector").hidden = true; if (selected && nodeObjs[selected]) nodeObjs[selected].label.visible = false; selected = null; renderRoster(); drawGlyphMap(); updateSelEdges(); }
+/* the selected unit's comms links, lifted in white */
+let selEdges = null;
+function updateSelEdges() {
+  if (selEdges) { scene.remove(selEdges); selEdges.geometry.dispose(); selEdges.material.dispose(); selEdges = null; }
+  if (!selected || !S) return;
+  const v = [];
+  for (const [a, b] of S.edges) {
+    if ((a !== selected && b !== selected) || !nodeObjs[a] || !nodeObjs[b]) continue;
+    const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos; v.push(pa[0], pa[1] - 2.9, pa[2], pb[0], pb[1] - 2.9, pb[2]);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(v), 3));
+  selEdges = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: COL.white, transparent: true, opacity: 0.85 })); scene.add(selEdges);
+}
+/* click a glyph on the map to select it */
+let mapHits = [];
+document.getElementById("glyphmap").addEventListener("click", (e) => {
+  const cv = e.currentTarget, r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * cv.width / r.width, y = (e.clientY - r.top) * cv.height / r.height;
+  let best = null, bd = 16 * 16;
+  for (const h of mapHits) { const d = (h.x - x) * (h.x - x) + (h.y - y) * (h.y - y); if (d < bd) { bd = d; best = h.id; } }
+  if (best) select(best, true);
+});
 
 /* ---------- dossier ---------- */
 function characterOf(d) {
@@ -1095,9 +1139,11 @@ function drawGlyphMap() {
   for (const [a, b] of S.edges) { const na = nodeObjs[a] && nodeObjs[a].data, nb = nodeObjs[b] && nodeObjs[b].data; if (!na || !nb || !onLevel(na) || !onLevel(nb)) continue; g.beginPath(); g.moveTo(px(na), pz(na)); g.lineTo(px(nb), pz(nb)); g.stroke(); }
   g.setLineDash([]);
   g.font = "16px 'Share Tech Mono', monospace"; g.textAlign = "center"; g.textBaseline = "middle";
+  mapHits = [];
   for (const nd of S.nodes) {
     const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), x = px(nd), y = pz(nd);
     if (!onLevel(nd)) { g.fillStyle = "#1c232e"; g.fillText(mapZ === 0 ? "▽" : "△", x, y); continue; }
+    mapHits.push({ id: nd.id, x, y });
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     g.fillStyle = hex(c); g.fillText(glyphOf(nd, st), x, y);
     if (nd.id === selected && Math.floor(now / 400) % 2 === 0) { g.strokeStyle = "#f2e23a"; g.lineWidth = 1.5; g.strokeRect(x - 10, y - 10, 20, 20); }
@@ -1338,12 +1384,32 @@ function tick(ts) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
     o.group.position.y = nd.pos[1] + Math.sin(now * 0.0016 + o.phase) * 0.18;
     o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress : 0;
-    o.group.rotation.x = (o.slump || 0) + (st.comp && !st.honeypot ? 0.14 : 0);    // archetype posture + the turned slump forward
     let ry = o.baseRot;
     if (o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                 // off-shift: turned away from the desk
     else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.group.position.x, hive.position.z - o.group.position.z);   // pressed: eyes on the adversary
     o.group.rotation.y += (ry - o.group.rotation.y) * Math.min(1, dt * 3);
-    if (o.arms) { const sw = Math.sin(now * 0.0018 + o.phase) * (0.07 + 0.3 * (o._stress || 0)); o.arms[0].rotation.x = sw; o.arms[1].rotation.x = -sw; }
+    if (o._shake > 0) { o._shake -= dt; o.group.rotation.y += Math.sin(now * 0.045) * 0.09; }   // checks, then shakes it off
+    // body language (authored tells, see design note): idle swing → working at the desk → the event pose
+    let lean = 0;
+    if (o.arms) {
+      const sw = Math.sin(now * 0.0018 + o.phase) * (0.07 + 0.3 * (o._stress || 0));
+      let rx = [sw, -sw], rz = [-0.35, 0.35];
+      if (!o._off && o.hasDesk && !(st.comp || st.rec)) { const j = Math.sin(now * 0.02 + o.phase) * 0.05; rx = [-0.8 + j, -0.8 - j]; rz = [-0.15, 0.15]; }   // typing
+      if (o._pose) {
+        o._pose.t -= dt;
+        if (o._pose.t <= 0) { o._pose = null; for (const m of o.glowMats) m.emissiveIntensity = o._off ? 0.08 : 0.9; }
+        else { const pk = o._pose.kind;
+          if (!o._pose.landed && !o._pose.blocked) { rx[0] = -1.5; rz[0] = -0.1; }                                 // declines: hand up, palm out
+          else if (pk === "spear_social") { rx[0] = -2.3; rz[0] = -0.55; }                                           // takes the message: phone to the face
+          else if (pk === "phone_bridge") { rx[0] = -1.05; rz[0] = -0.1; lean = 0.12; }                              // plugs in the unknown device
+          else if (pk === "cult_recruitment" || pk === "coerced_signature") { rx = [-0.9, -0.9]; rz = [-0.2, 0.2]; }  // leans into the circle / signs
+          else if (pk === "bribe" || pk === "defection") { rx[0] = -0.6; rz[0] = -1.1; }                             // takes the envelope
+          else if (pk === "emanation_tap") { for (const m of o.glowMats) m.emissiveIntensity = 0.3 + Math.random() * 0.7; }   // the desk flickers; nothing shows on the body
+        }
+      }
+      for (let a = 0; a < 2; a++) { o.arms[a].rotation.x += (rx[a] - o.arms[a].rotation.x) * Math.min(1, dt * 7); o.arms[a].rotation.z += (rz[a] - o.arms[a].rotation.z) * Math.min(1, dt * 7); }
+    }
+    o.group.rotation.x = (o.slump || 0) + (st.comp && !st.honeypot ? 0.14 : 0) + lean;    // archetype posture + the turned slump forward + the pose lean
     if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : st.glow; }
     if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
   }
@@ -1360,6 +1426,7 @@ function tick(ts) {
     if (!e.obj.visible) { e.obj.visible = true; if (e.onShow) e.onShow(); }
     e.t += dt; const k = e.t / e.life;
     if (e.kind === "beam") { e.obj.material.opacity = 0.8 * (1 - k); e.obj.scale.y = 1 - 0.5 * k; }
+    else if (e.kind === "pulse") { e.obj.position.lerpVectors(e.from, e.to, easeInOut(Math.min(1, k))); e.obj.material.opacity = 0.95 * (1 - 0.3 * k); }
     else if (e.kind === "reticle") { const s = 16 - 9 * easeInOut(Math.min(1, k * 1.4)); e.obj.scale.set(s, s, 1); e.obj.material.opacity = k > 0.75 ? (1 - k) * 4 : 0.95; }
     else { const s = 5 + k * 22; e.obj.scale.set(s, s, 1); e.obj.material.opacity = 0.9 * (1 - k); }
     if (k >= 1) { scene.remove(e.obj); if (e.obj.material) e.obj.material.dispose(); if (e.obj.geometry) e.obj.geometry.dispose(); effects.splice(i, 1); }
