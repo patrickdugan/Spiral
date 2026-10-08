@@ -708,7 +708,7 @@ function buildScenario(scn) {
     heat.scale.set(7, 7, 1); heat.position.set(nd.pos[0], nd.pos[1] - 2.5, nd.pos[2]); nodeGroup.add(heat); o.heat = heat;
     const tagText = hiveTagText(nd, ch);
     o.tag = tagText ? textSprite(tagText, { size: 30, color: hex(COL.ice), tick: hex(COL.hunger), scale: 0.95, fixed: true }) : null;
-    if (o.tag) { o.tag.position.set(nd.pos[0], nd.pos[1] + 8.6, nd.pos[2]); o.tag.visible = false; nodeGroup.add(o.tag); }
+    if (o.tag) { o.tag.position.set(nd.pos[0], nd.pos[1] + 8.0 + 2.6 * hashUnit("tag" + nd.id), nd.pos[2]); o.tag.visible = false; nodeGroup.add(o.tag); }   // staggered so neighbours' tags don't stack
     o.cash = null; o.cashText = null; const cashText = cashTagText(nd, ch); if (cashText) setCash(o, cashText);
   }
   // base edges
