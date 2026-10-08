@@ -399,6 +399,29 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   returns to full resolution for good. The canvas is no longer multisampled: the scene has its
   own 4× target and the canvas only receives the composite quad and HUD sprites (HUD frames
   match within grain noise; ~0.2–0.5 ms saved per frame).
+- **Increment 7f: ambient city life on the Rust core.** Passers-by in long coats walk looping
+  circuits along the street edges (about one per 7 units of loop; 86–89 in the swarm city,
+  39–42 in the custody layouts), half of them under clear umbrellas while it rains, and 20 air
+  vehicles stream in equal-speed lanes down the street corridor and across the cross streets.
+  It is decoration only. It is seeded per scenario from the exported layout, is never part of
+  a replay and is never a target. The plazas stay the units' stage. Umbrellas, underglow and
+  tail lights avoid the state palette because neon is reserved for state, and in infrared the
+  crowd goes cold. The Crowd button (C) hides it. The rain toggle folds the umbrellas.
+  The engine gains `amb_*` exports over fixed-capacity statics (192 pedestrians, 48
+  vehicles, 16 slabs), so initialising the layer never grows linear memory and never
+  invalidates the units' zero-copy views. Each pedestrian follows a rounded-rectangle loop, so
+  its lateral offset never jumps at a corner. It steers around units (read from `units_pos`)
+  and other pedestrians with ramped weights and no hard thresholds. That keeps float32 and
+  float64 runs together, and the push is strong enough to step aside and overtake rather
+  than queue. Feet ramp onto the 0.3-unit slabs over their outer 0.4 units. Vehicles are a
+  pure function of the clock in float64, so both engines place them identically; lights fade
+  out before a lane wraps. `engine_ref.js` ports the layer line for line, and
+  `parity.test.mjs` now also drives 40 pedestrians on overlapping loops over two slabs and 8
+  vehicles on both axes (worst relative error ~3e-5). In the viewer the layer is six instanced
+  draws per pass: coat, hooded head on the same matrices, legs, umbrellas, car hulls, and one
+  light cloud. Measured at 1280×720: the ambient step plus buffer sync is ~0.1 ms for 86
+  pedestrians and 20 vehicles. A swarm frame goes from ~3.1–3.4 ms to ~3.8 ms of GPU
+  throughput (draws 116 → 128). GPU memory stays flat across scenario cycles.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:

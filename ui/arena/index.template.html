@@ -322,6 +322,7 @@
       <button id="director" class="on" aria-pressed="true" title="Director (D): camera follows landed strikes while you are idle"><i>◎</i><span> Director</span></button>
       <button id="audio" aria-pressed="false" title="Audio (M): generative ambient bed, synthesized in-page"><i>♪</i><span> Audio</span></button>
       <button id="weather" class="on" aria-pressed="true" title="Rain (R)"><i>☂</i><span> Rain</span></button>
+      <button id="crowd" class="on" aria-pressed="true" title="City life (C): passers-by and air traffic. Decoration, not part of the simulation"><i>⁂</i><span> Crowd</span></button>
       <button id="still" title="Save the current view as a PNG"><i>⬇</i><span> Still</span></button>
       <button id="legends" title="Save this scenario's annals as a text file"><i>▤</i><span> Annals</span></button>
       <button id="aboutbtn" title="About this view">?</button>
@@ -774,7 +775,7 @@ const TRIM = [0.32, 0.36, 0.42], SKIN = [1.12, 1.08, 1.04];
    facing) and writes instance matrices straight into three.js buffers; the viewer only
    writes goals and per-frame flags. engine_ref.js is the line-for-line fallback. */
 const ENGINE_WASM_B64 = "__ENGINE_WASM_B64__";
-const EIN = DioramaEngineRef.INPUT, EIN_N = DioramaEngineRef.IN;
+const EIN = DioramaEngineRef.INPUT, EIN_N = DioramaEngineRef.IN, AMB = DioramaEngineRef.AMB;
 let engine = null, EV = null;
 async function loadEngine() {
   try {
@@ -782,7 +783,7 @@ async function loadEngine() {
     const bin = Uint8Array.from(atob(ENGINE_WASM_B64), (ch) => ch.charCodeAt(0));
     const { instance } = await WebAssembly.instantiate(bin, {});
     const ex = instance.exports;
-    if (ex.in_stride() !== EIN_N) throw new Error("engine ABI mismatch");
+    if (ex.in_stride() !== EIN_N || ex.amb_ped_stride() !== AMB.PIN || ex.amb_car_stride() !== AMB.CIN) throw new Error("engine ABI mismatch");
     engine = {
       kind: "wasm",
       init(n) {
@@ -792,6 +793,15 @@ async function loadEngine() {
           arm: v(ex.units_arm(), n * 32), phone: v(ex.units_phone(), n * 16), pos: v(ex.units_pos(), n * 4) };
       },
       step: (dt, t, hx, hz, hv) => ex.step(dt, t, hx, hz, hv),
+      ambInit(p, c, s) {   // fixed-capacity statics: never grows memory, so the units' views survive
+        ex.amb_init(p, c, s);
+        p = Math.min(p, AMB.MAX_PEDS); c = Math.min(c, AMB.MAX_CARS); s = Math.min(s, AMB.MAX_SLABS);
+        const b = ex.memory.buffer, v = (ptr, len) => new Float32Array(b, ptr, len);
+        return { ped: v(ex.amb_ped_in(), p * AMB.PIN), car: v(ex.amb_car_in(), c * AMB.CIN), slab: v(ex.amb_slab_in(), s * AMB.SLAB_N),
+          body: v(ex.amb_body(), p * 16), leg: v(ex.amb_leg(), p * 32), umb: v(ex.amb_umb(), p * 16), ppos: v(ex.amb_ppos(), p * 4),
+          carM: v(ex.amb_car(), c * 16), light: v(ex.amb_light(), c * AMB.LIGHTS * 3), fade: v(ex.amb_fade(), c * AMB.LIGHTS) };
+      },
+      ambStep: (dt, t) => ex.amb_step(dt, t),
     };
   } catch (err) {
     engine = DioramaEngineRef.createRefEngine();
@@ -1310,6 +1320,112 @@ function drawSkyArc(t) {
   if (elev <= 0) { g.fillStyle = "#07090e"; g.beginPath(); g.arc(x + 2, y - 1, 3, 0, 7); g.fill(); }
 }
 
+/* ---------- ambient city life ----------
+   Passers-by in long coats walk looping sidewalk circuits (under neon umbrellas while it rains)
+   and air traffic streams down the street corridor and across the blocks. Decoration only:
+   seeded per scenario from the layout, never part of a replay, never a target. The crowd keeps
+   to the street edges and the plazas stay the units' stage; umbrellas are clear and pale because
+   neon is reserved for state. The Rust core walks the pedestrians around the units and each
+   other and flies the traffic; here it is six instanced draws. In infrared the crowd goes cold
+   so the hive's marks stand out. */
+let AMBI = null, ambientGroup = null, crowdOn = true;
+const COATS = [0x3a3f46, 0x43403a, 0x343c46, 0x3b3840, 0x45423a, 0x2f3338, 0x4d453b, 0x353b38];
+const UMBRELLAS = [0xdfe8f0, 0xcfd9e2, 0xe6ddd0, 0xc8d4dc, 0xd9e2ea];   // clear vinyl: never a state colour
+function ambientPlan(L, r) {
+  const peds = [], cars = [], gy = L.ground_y;
+  const slabs = L.blocks.map((b) => [Math.min(b.x[0], b.x[1]), Math.max(b.x[0], b.x[1]), Math.min(b.z[0], b.z[1]), Math.max(b.z[0], b.z[1]), gy + SLAB]);
+  const alongX = (s) => Math.abs(s.to[0] - s.from[0]) >= Math.abs(s.to[1] - s.from[1]);
+  for (const st of L.streets) {
+    const [ax, az] = st.from, [bx, bz] = st.to, hw = st.width / 2;
+    if (alongX(st)) {   // along one street edge and back along the other, crossing at the far ends
+      const xa = Math.min(ax, bx) + 4, xb = Math.max(ax, bx) - 4, cx = (xa + xb) / 2, n = Math.round((xb - xa) * 2 / 7);
+      for (let k = 0; k < n; k++) { const X = (xb - xa) / 2 * (0.68 + 0.32 * r()), off = hw - 1.4 - 3.0 * r(); peds.push([cx - X, cx + X, az - off, az + off]); }
+    } else {   // up one edge of a cross street and back down the other
+      const za = Math.min(az, bz), zb = Math.max(az, bz), n = Math.round((zb - za) * 2 / 7);
+      for (let k = 0; k < n; k++) { const off = Math.max(1.2, hw - 1.4 - 2.4 * r()); peds.push([ax - off, ax + off, za + 2.5 + 1.5 * r(), zb - 3 - 6 * r()]); }
+    }
+  }
+  const every = Math.ceil(peds.length / AMB.MAX_PEDS), loops = peds.filter((_, i) => i % every === 0);
+  const walkers = loops.map((lp) => ({ lp, dir: r() < 0.5 ? 1 : -1, speed: 3.2 + 2.2 * r(), start: r(), scale: 0.9 + 0.18 * r(), umb: r() < 0.5 ? 1 : 0,
+    phase: r() * 6.283, coat: COATS[Math.floor(r() * COATS.length)], neon: UMBRELLAS[Math.floor(r() * UMBRELLAS.length)] }));
+  walkers.sort((a, b) => b.umb - a.umb);   // umbrella carriers first: the umbrella mesh draws a prefix
+  // traffic: lanes of equal speed never overtake through each other
+  const ext = L.extent, reach = Math.max(Math.abs(ext.x[0]), Math.abs(ext.x[1]), Math.abs(ext.z[0]), Math.abs(ext.z[1])) + 55;
+  const span = reach + 160, fade = reach + 30, glow = [0xa9c2d8, 0xb8c8d6, 0x9fb4c6];   // pale underglow: neon stays reserved for state
+  const main = L.streets.find(alongX), cross = L.streets.filter((s) => !alongX(s)), zc = main ? main.from[1] : 0;
+  const lane = (axis, at, height, speed, n) => { const o = r() * 2 * span; for (let k = 0; k < n; k++) cars.push({ q: [axis, at, height + (r() - 0.5) * 2, speed, o + k * 2 * span / n + (r() - 0.5) * 30, span, r() * 6.283, fade], glow: glow[Math.floor(r() * glow.length)] }); };
+  [[26, 26], [40, 33], [58, 40]].forEach(([h, v], lv) => { lane(0, zc + 3.5 + lv * 0.6, h, v, 2 + (lv % 2)); lane(0, zc - 3.5 - lv * 0.6, h + 3, -v, 2 + ((lv + 1) % 2)); });
+  for (const cs of (cross.length ? cross : [{ from: [-60, 0] }]).slice(0, 2)) { lane(1, cs.from[0] + 2.5, 70, 28, 3); lane(1, cs.from[0] - 2.5, 78, -24, 2); }
+  return { slabs, walkers, cars };
+}
+function buildAmbient(L) {
+  if (ambientGroup) { clearGroup(ambientGroup); ambientGroup = null; }
+  AMBI = null;
+  if (!engine.ambInit) return;
+  if (!L) { engine.ambInit(0, 0, 0); return; }
+  const plan = ambientPlan(L, rng("ambient:" + S.id)), W = plan.walkers, C = plan.cars, P = W.length;
+  const V = engine.ambInit(P, C.length, plan.slabs.length), PD = AMB.PED;
+  plan.slabs.forEach((s, k) => V.slab.set(s, k * AMB.SLAB_N));
+  W.forEach((w, i) => { const o = i * AMB.PIN, I = V.ped;
+    I[o + PD.LX0] = w.lp[0]; I[o + PD.LX1] = w.lp[1]; I[o + PD.LZ0] = w.lp[2]; I[o + PD.LZ1] = w.lp[3]; I[o + PD.DIR] = w.dir; I[o + PD.SPEED] = w.speed;
+    I[o + PD.START] = w.start; I[o + PD.PSCALE] = w.scale; I[o + PD.UMB] = w.umb; I[o + PD.PPHASE] = w.phase; I[o + PD.GROUND] = L.ground_y; });
+  C.forEach((c, k) => V.car.set(c.q, k * AMB.CIN));
+  engine.ambStep(0, now);
+  ambientGroup = new THREE.Group(); ambientGroup.visible = crowdOn; scene.add(ambientGroup);
+  const inst = (geo, mat, count, arr, colors) => {
+    const m = new THREE.InstancedMesh(geo, mat, count);
+    m.instanceMatrix = new THREE.InstancedBufferAttribute(arr, 16); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    if (colors) m.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+    m.frustumCulled = false; m.raycast = () => {}; ambientGroup.add(m); return m;
+  };
+  const tints = (list, key) => { const a = new Float32Array(list.length * 3); list.forEach((w, i) => { _c.setHex(w[key]); a[i * 3] = _c.r; a[i * 3 + 1] = _c.g; a[i * 3 + 2] = _c.b; }); return a; };
+  const rim = (base, strength, opts) => { const m = rimMaterial(base, Object.assign({ roughness: 0.6, metalness: 0.15, emissiveIntensity: 0.12 }, opts || {})); m.userData.rimColor.setHex(0x7fa6c4); m.userData.rim.value = strength; m.userData.rim0 = strength; return m; };
+  const coatMat = rim(0xffffff, 0.3), headMat = rim(0x23272e, 0.3), legMat = rim(0x16191e, 0.18), carMat = rim(0x0d1118, 0.16, { metalness: 0.55, roughness: 0.4, emissiveIntensity: 0.05 });
+  const umbMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  // a long coat with a collar; a hooded head on the same matrices; legs that pivot at the hip
+  const coat = inst(mergeParts([{ geo: new THREE.CylinderGeometry(0.62, 0.98, 3.4, 9), m: XF(0, 3.15, 0) }, { geo: new THREE.CylinderGeometry(0.78, 0.66, 0.5, 9), m: XF(0, 5.0, 0) }], { color: false }),
+    coatMat, P, V.body, tints(W, "coat"));
+  const head = inst(mergeParts([{ geo: new THREE.SphereGeometry(0.5, 10, 8), m: XF(0, 5.72, 0) }, { geo: new THREE.SphereGeometry(0.6, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), m: XF(0, 5.78, -0.06) }], { color: false }),
+    headMat, P, V.body);
+  head.instanceMatrix = coat.instanceMatrix;
+  const legs = inst(new THREE.BoxGeometry(0.34, 1.9, 0.4).translate(0, -0.95, 0), legMat, 2 * P, V.leg);
+  // the umbrella: a faint clear canopy, a soft rim and a lit shaft (additive: no sorting, no occlusion)
+  const U = W.filter((w) => w.umb).length;
+  const umb = U ? inst(mergeParts([
+    { geo: new THREE.ConeGeometry(1.35, 0.6, 14, 1, true), m: XF(0, 2.85, 0), tint: [0.16, 0.16, 0.16] },
+    { geo: new THREE.TorusGeometry(1.35, 0.03, 4, 28), m: new THREE.Matrix4().makeRotationX(Math.PI / 2).setPosition(0, 2.55, 0), tint: [0.4, 0.4, 0.4] },
+    { geo: new THREE.CylinderGeometry(0.03, 0.03, 2.8, 5), m: XF(0, 1.4, 0), tint: [0.55, 0.55, 0.55] },
+  ]), umbMat, U, V.umb.subarray(0, U * 16), tints(W.slice(0, U), "neon")) : null;
+  if (umb) umb.visible = rainOn;
+  // air traffic: a hull, a cabin and two thrust pods; head, tail and underglow lights as one cloud
+  const pod = () => new THREE.CylinderGeometry(0.42, 0.42, 2.4, 8).rotateX(Math.PI / 2);
+  const car = inst(mergeParts([{ geo: new THREE.BoxGeometry(2.5, 0.85, 6.8), m: XF(0, 0, 0) }, { geo: new THREE.BoxGeometry(1.9, 0.75, 3.0), m: XF(0, 0.75, -0.4) },
+    { geo: pod(), m: XF(1.55, -0.15, -1.9) }, { geo: pod(), m: XF(-1.55, -0.15, -1.9) }], { color: false }), carMat, C.length, V.carM);
+  const spec = [[0xeaf2ff, 0.9, 2.4], [0xeaf2ff, 0.9, 2.4], [0xb0283c, 0.8, 1.9], [0xb0283c, 0.8, 1.9], [null, 0.2, 7]];   // tail lights a deeper red than "turned"
+  const lightList = C.flatMap((c) => spec.map(([hexv, a, size]) => ({ x: 0, y: 0, z: 0, color: hexv == null ? c.glow : hexv, a, size })));
+  const lights = haloCloud(lightList); lights.frustumCulled = false;
+  lights.geometry.setAttribute("position", new THREE.BufferAttribute(V.light, 3).setUsage(THREE.DynamicDrawUsage));
+  lights.geometry.attributes.aColor.setUsage(THREE.DynamicDrawUsage); ambientGroup.add(lights);
+  AMBI = { V, coat, legs, umb, car, lights, base: lightList.map((l) => l.a), mats: [coatMat, headMat, legMat, carMat], umbMat };
+  ambientMood();
+}
+function ambientMood() {   // infrared turns the crowd cold; daylight dims the neon
+  if (!AMBI) return;
+  const ir = post.composite.uniforms.ir.value, day = daylightNow;
+  AMBI.umbMat.opacity = (1 - 0.8 * ir) * (1 - 0.6 * day);
+  AMBI.lights.material.opacity = 1 - 0.75 * ir;
+  for (const m of AMBI.mats) m.userData.rim.value = m.userData.rim0 * (1 - 0.85 * ir);
+}
+function ambientTick(dt) {
+  const A = AMBI;
+  engine.ambStep(dt, now);
+  A.coat.instanceMatrix.needsUpdate = true; A.legs.instanceMatrix.needsUpdate = true; A.car.instanceMatrix.needsUpdate = true;
+  if (A.umb) { A.umb.visible = rainOn; A.umb.instanceMatrix.needsUpdate = true; }
+  A.lights.geometry.attributes.position.needsUpdate = true;
+  const col = A.lights.geometry.attributes.aColor; for (let i = 0; i < A.base.length; i++) col.array[i * 4 + 3] = A.base[i] * A.V.fade[i]; col.needsUpdate = true;
+  ambientMood();
+}
+
 /* ---------- scenario build ---------- */
 let activePairs = [];   // compromised / recruited links; in the city they stretch between the units where they stand
 let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null, scanLines = null, scanTargets = [];
@@ -1415,6 +1531,7 @@ function buildScenario(scn) {
   activeEdges = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
   scene.add(activeEdges);
   if (S.layout) buildBlocks(S.layout); else buildVenues();
+  buildAmbient(S.layout || null);
   // adversary presence: a dark octahedron with a hot wire, hovering over its last target
   hive = new THREE.Group();
   const core = new THREE.Mesh(new THREE.OctahedronGeometry(3.4, 0), new THREE.MeshLambertMaterial({ color: 0x05070a, emissive: 0x3a0a14, emissiveIntensity: 1 }));
@@ -1824,6 +1941,7 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "d" || e.key === "D") document.getElementById("director").click();
   else if (e.key === "m" || e.key === "M") document.getElementById("audio").click();
   else if (e.key === "r" || e.key === "R") document.getElementById("weather").click();
+  else if (e.key === "c" || e.key === "C") document.getElementById("crowd").click();
   else if (e.key === "t" || e.key === "T") setTour(!tour);
 });
 const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
@@ -2373,6 +2491,7 @@ function irBeat() {
 let director = true, lastFlight = -1e9;
 document.getElementById("director").addEventListener("click", (e) => { director = !director; e.currentTarget.classList.toggle("on", director); e.currentTarget.setAttribute("aria-pressed", String(director)); if (!director) document.body.classList.remove("cine"); });
 document.getElementById("weather").addEventListener("click", (e) => { rainOn = !rainOn; if (rainLines) rainLines.visible = rainOn; e.currentTarget.classList.toggle("on", rainOn); e.currentTarget.setAttribute("aria-pressed", String(rainOn)); });
+document.getElementById("crowd").addEventListener("click", (e) => { crowdOn = !crowdOn; if (ambientGroup) ambientGroup.visible = crowdOn; e.currentTarget.classList.toggle("on", crowdOn); e.currentTarget.setAttribute("aria-pressed", String(crowdOn)); });
 
 /* ---------- scene card ---------- */
 let cardTimer = null;
@@ -2520,6 +2639,7 @@ function tick(ts) {
     engine.step(dt, now, hv ? hive.position.x : 0, hv ? hive.position.z : 0, hv ? 1 : 0);
     afterStep(dt, pulse);
   }
+  if (AMBI && crowdOn) ambientTick(dt);   // passers-by steer around the units the engine just moved
   if (S) for (const nd of S.nodes) {   // institutions (rtg pylons) keep the per-object path
     const o = nodeObjs[nd.id], st = o._st; if (!st || o.inst != null) continue;
     o.group.position.y = Math.sin(now * 0.0016 + o.phase) * 0.18;
