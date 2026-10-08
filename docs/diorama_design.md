@@ -346,6 +346,24 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   snaps, playback walks. Compromised / recruited links stretch live between the units at
   ankle height. Phones travel in the right hand; desks stay at the station. Old replays
   without a `layout` keep the previous floating-plate presentation.
+- **Increment 7c: Rust animation engine + instanced units.** `ui/arena/engine/src/lib.rs`
+  (no dependencies, C-ABI exports over linear memory, built to `wasm32-unknown-unknown` by
+  `ui/arena/engine/build_engine.py`; the ~36 KB module is committed and inlined as base64 by
+  `build_arena.py`) owns every person's per-frame motion: walking to the routine goal, gait,
+  idle / typing / event poses, head shakes, facing rules, and the column-major instance
+  matrices for torso, head, legs, arms and phone. The viewer writes goals and per-frame flags
+  and reads matrices back as zero-copy Float32Array views. `engine_ref.js` is a line-for-line
+  JavaScript reference used if WebAssembly is unavailable; `parity.test.mjs` (run by
+  `tests/test_engine.py` under Node) drives both with identical randomized inputs and requires
+  agreement (worst relative error ~3e-6 over 240 steps). A half turn always rotates the
+  positive way, so float32 and float64 agree on the tie. Persons render as shared instanced
+  meshes (torso, head, visor, legs, arms, hood, phone, accessories, each with an instanced
+  outline) with per-instance base, emissive and rim attributes; halos, heat rings and device
+  hot spots are point clouds; rings and contact shadows are instanced flat meshes; desks are
+  merged per scenario with per-unit glow from a uniform array. Institutions (rtg pylons) keep
+  per-object meshes. Measured in the browser pane at 1280×720 (same harness before / after):
+  a 24-unit swarm frame went from ~1,250 to ~390 draw calls, render 14–17 ms → 6.5–7 ms, full
+  tick 18–21 ms → 7–8 ms; the engine step costs ~15–19 µs for 24 units.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:

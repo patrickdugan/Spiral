@@ -387,6 +387,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/*__ENGINE_REF_JS__*/</script>
 <script id="replay-data" type="application/json">__REPLAY_JSON__</script>
 <script>
 "use strict";
@@ -553,10 +554,11 @@ const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x03050a, side: THREE.B
 OUTLINE_MAT.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "vec3 transformed = vec3( position ) + normalize( normal ) * 0.09;"); };
 function withOutline(mesh) { const h = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); h.raycast = () => {}; mesh.add(h); return mesh; }
 /* merge part geometries (each with its own transform and optional tint) into one indexed buffer */
-function mergeParts(parts) {
+function mergeParts(parts, opts) {
+  opts = opts || {};
   let nv = 0, ni = 0;
   for (const p of parts) { nv += p.geo.attributes.position.count; ni += p.geo.index ? p.geo.index.count : p.geo.attributes.position.count; }
-  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), idx = new Uint32Array(ni);
+  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), idx = new Uint32Array(ni), unitArr = opts.unit ? new Float32Array(nv) : null;
   const v = new THREE.Vector3(), nm = new THREE.Matrix3(); let vo = 0, io = 0;
   for (const p of parts) {
     const g = p.geo, P = g.attributes.position, Nn = g.attributes.normal, tint = p.tint || [1, 1, 1];
@@ -566,12 +568,14 @@ function mergeParts(parts) {
       v.fromBufferAttribute(Nn, i).applyMatrix3(nm).normalize(); nor[(vo + i) * 3] = v.x; nor[(vo + i) * 3 + 1] = v.y; nor[(vo + i) * 3 + 2] = v.z;
       col[(vo + i) * 3] = tint[0]; col[(vo + i) * 3 + 1] = tint[1]; col[(vo + i) * 3 + 2] = tint[2];
     }
+    if (unitArr) unitArr.fill(p.unit || 0, vo, vo + P.count);
     if (g.index) for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.getX(i) + vo;
     else for (let i = 0; i < P.count; i++) idx[io + i] = vo + i;
     vo += P.count; io += g.index ? g.index.count : P.count; g.dispose();
   }
   const out = new THREE.BufferGeometry();
-  out.setAttribute("position", new THREE.BufferAttribute(pos, 3)); out.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); out.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  out.setAttribute("position", new THREE.BufferAttribute(pos, 3)); out.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); out.setAttribute(opts.colorName || "color", new THREE.BufferAttribute(col, 3));
+  if (unitArr) out.setAttribute("aUnit", new THREE.BufferAttribute(unitArr, 1));
   out.setIndex(new THREE.BufferAttribute(idx, 1)); out.computeBoundingSphere();
   return out;
 }
@@ -756,49 +760,252 @@ const ARCH_BUILD = {
   principled_auditor: { sh: 0.95, hd: 0.9, scale: 1.08 },
 };
 const TRIM = [0.32, 0.36, 0.42], SKIN = [1.12, 1.08, 1.04];
-function makeHumanoid(v, arch) {
-  v = (v == null) ? 0.5 : v;
-  const b = ARCH_BUILD[arch] || {};
-  const group = new THREE.Group();
-  const mat = rimMaterial(COL.slate, { vertexColors: true });
-  const vmat = new THREE.MeshBasicMaterial({ color: COL.dark });   // visor band: pure state colour (blooms)
-  const picks = [];
-  const hs = (0.74 + 0.22 * v) * (b.hd || 1), tw = (0.66 + 0.30 * v) * (b.sh || 1), aw = (0.95 + 0.18 * v) * (b.armsIn ? 0.8 : 1);
-  // body: head, neck, torso, belt, shoulder plate (+ hood) merged into one mesh with a two-tone tint
-  const parts = [
-    { geo: new THREE.SphereGeometry(hs, 14, 10), m: XF(0, 2.25, 0), tint: SKIN },
-    { geo: new THREE.CylinderGeometry(0.22, 0.26, 0.5, 10), m: XF(0, 1.72, 0) },
-    { geo: new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 10), m: XF(0, 0.5, 0) },
-    { geo: new THREE.BoxGeometry(tw * 2.2, 0.18, tw * 1.7), m: XF(0, -0.6, 0), tint: TRIM },
-    { geo: new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), m: XF(0, 1.6, 0) },
-  ];
-  if (b.hood) parts.push({ geo: new THREE.SphereGeometry(hs * 1.18, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), m: XF(0, 2.3, -0.12), tint: TRIM });
-  const body = withOutline(new THREE.Mesh(mergeParts(parts), mat)); group.add(body); picks.push(body);
-  const visor = new THREE.Mesh(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), vmat); visor.position.set(0, 2.3, hs * 0.55); group.add(visor); picks.push(visor);
-  // legs pivot at the hip (walk cycle), feet merged in
-  const legs = [0.42, -0.42].map((x) => {
-    const leg = withOutline(new THREE.Mesh(mergeParts([
-      { geo: new THREE.CylinderGeometry(0.26, 0.28, 2.2, 10), m: XF(0, -1.1, 0) },
-      { geo: new THREE.BoxGeometry(0.5, 0.24, 0.85), m: XF(0, -2.28, 0.15), tint: TRIM },
-    ]), mat));
-    leg.position.set(x, -0.6, 0); group.add(leg); picks.push(leg); return leg;
-  });
-  // arms pivot at the shoulder, hands merged in
-  const arms = [[aw, -0.35], [-aw, 0.35]].map(([x, rz]) => {
-    const arm = withOutline(new THREE.Mesh(mergeParts([
-      { geo: new THREE.CylinderGeometry(0.2, 0.22, 2.0, 10), m: XF(0, -1.0, 0) },
-      { geo: new THREE.SphereGeometry(0.27, 10, 8), m: XF(0, -2.05, 0), tint: SKIN },
-    ]), mat));
-    arm.position.set(x, 1.5, 0); arm.rotation.z = rz; group.add(arm); picks.push(arm); return arm;
-  });
-  // archetype accessories: authored reading cues, nothing more
-  const trim = new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.6 });
-  if (arch === "principled_auditor") { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.06), trim); pad.position.set(0.15, -1.9, 0.35); arms[1].add(pad); }
-  if (arch === "eager_newcomer") { const badge = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.05), new THREE.MeshBasicMaterial({ color: COL.ice })); badge.position.set(0.25, 1.05, tw + 0.12); group.add(badge); }
-  if (arch === "status_seeker") { const pin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), new THREE.MeshBasicMaterial({ color: COL.amber })); pin.position.set(-0.3, 1.2, tw + 0.12); pin.rotation.z = 0.78; group.add(pin); }
-  group.scale.setScalar((0.9 + 0.24 * v) * (b.scale || 1));
-  return { group, mat, vmat, picks, arms, legs, slump: b.slump || 0 };
+/* ---------- animation engine: Rust → WebAssembly core, JS reference fallback ----------
+   ui/arena/engine/src/lib.rs owns every unit's per-frame motion (walking, gait, poses,
+   facing) and writes instance matrices straight into three.js buffers; the viewer only
+   writes goals and per-frame flags. engine_ref.js is the line-for-line fallback. */
+const ENGINE_WASM_B64 = "__ENGINE_WASM_B64__";
+const EIN = DioramaEngineRef.INPUT, EIN_N = DioramaEngineRef.IN;
+let engine = null, EV = null;
+async function loadEngine() {
+  try {
+    if (ENGINE_WASM_B64.indexOf("__") === 0) throw new Error("module not inlined");
+    const bin = Uint8Array.from(atob(ENGINE_WASM_B64), (ch) => ch.charCodeAt(0));
+    const { instance } = await WebAssembly.instantiate(bin, {});
+    const ex = instance.exports;
+    if (ex.in_stride() !== EIN_N) throw new Error("engine ABI mismatch");
+    engine = {
+      kind: "wasm",
+      init(n) {
+        ex.units_init(n);
+        const b = ex.memory.buffer, v = (p, len) => new Float32Array(b, p, len);
+        return { inp: v(ex.units_in(), n * EIN_N), torso: v(ex.units_torso(), n * 16), head: v(ex.units_head(), n * 16), leg: v(ex.units_leg(), n * 32),
+          arm: v(ex.units_arm(), n * 32), phone: v(ex.units_phone(), n * 16), pos: v(ex.units_pos(), n * 4) };
+      },
+      step: (dt, t, hx, hz, hv) => ex.step(dt, t, hx, hz, hv),
+    };
+  } catch (err) {
+    engine = DioramaEngineRef.createRefEngine();
+    console.warn("animation engine: JavaScript reference (" + (err && err.message) + ")");
+  }
 }
+
+/* ---------- instanced units ----------
+   Every person is one engine unit drawn by shared instanced meshes (torso, head, visor,
+   legs, arms, hood, phone, accessories, each with an instanced outline), so the whole cast
+   costs a few draw calls instead of ~18 each. Halos, heat rings and device hot spots are
+   point clouds; neon rings and contact shadows are instanced flat meshes; desks are merged
+   into two static meshes whose per-unit glow comes from a uniform array. */
+const HS0 = 0.85, TW0 = 0.81, POINT_SCALE = { value: 600 };
+function instRimMaterial(opts) {   // per-instance emissive (iEm) and rim (iRim); base colour via instanceColor
+  const m = new THREE.MeshStandardMaterial(Object.assign({ color: 0xffffff, roughness: 0.5, metalness: 0.3, vertexColors: true }, opts || {}));
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec4 iEm;\nattribute vec4 iRim;\nvarying vec4 vEm;\nvarying vec4 vRim;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\n  vEm = iEm; vRim = iRim;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec4 vEm;\nvarying vec4 vRim;")
+      .replace("vec3 totalEmissiveRadiance = emissive;", "vec3 totalEmissiveRadiance = vEm.rgb * vEm.a;")
+      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance += vRim.rgb * vRim.a * pow( 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 ), 2.4 );");
+  };
+  return m;
+}
+function pointSpriteMaterial(tex) {   // additive billboards with per-point colour, alpha and world size
+  return new THREE.ShaderMaterial({
+    uniforms: { map: { value: tex }, scale: POINT_SCALE },
+    vertexShader: "attribute vec4 aColor; attribute float aSize; uniform float scale; varying vec4 vColor;\n" +
+      "void main() { vColor = aColor; vec4 mv = modelViewMatrix * vec4( position, 1.0 ); gl_PointSize = aSize * scale / max( 1.0, -mv.z ); gl_Position = projectionMatrix * mv; }",
+    fragmentShader: "uniform sampler2D map; varying vec4 vColor;\n" +
+      "void main() { vec4 t = texture2D( map, gl_PointCoord ); gl_FragColor = vec4( vColor.rgb * t.rgb * t.a * vColor.a, 1.0 ); }",
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+}
+function pointCloud(tex, count) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(Math.max(1, count) * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("aColor", new THREE.BufferAttribute(new Float32Array(Math.max(1, count) * 4), 4).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("aSize", new THREE.BufferAttribute(new Float32Array(Math.max(1, count)).fill(1), 1).setUsage(THREE.DynamicDrawUsage));
+  g.setDrawRange(0, count);
+  const p = new THREE.Points(g, pointSpriteMaterial(tex)); p.frustumCulled = false; p.raycast = () => {};
+  return p;
+}
+const _c = new THREE.Color();
+function setRGBA(arr, i, hexv, a) { _c.setHex(hexv); arr[i * 4] = _c.r; arr[i * 4 + 1] = _c.g; arr[i * 4 + 2] = _c.b; arr[i * 4 + 3] = a; }
+function setTranslate(arr, i, x, y, z) { const o = i * 16; arr.fill(0, o, o + 16); arr[o] = arr[o + 5] = arr[o + 10] = arr[o + 15] = 1; arr[o + 12] = x; arr[o + 13] = y; arr[o + 14] = z; }
+
+let FIG = null;
+function buildUnits(persons) {
+  const P = persons.length;
+  if (!P) { FIG = null; return; }
+  EV = engine.init(P);
+  const L = S.layout || null;
+  const geo = {
+    torso: mergeParts([
+      { geo: new THREE.CylinderGeometry(0.22, 0.26, 0.5, 10), m: XF(0, 1.72, 0) },
+      { geo: new THREE.CylinderGeometry(TW0, TW0 + 0.25, 2.4, 10), m: XF(0, 0.5, 0) },
+      { geo: new THREE.BoxGeometry(TW0 * 2.2, 0.18, TW0 * 1.7), m: XF(0, -0.6, 0), tint: TRIM },
+      { geo: new THREE.BoxGeometry(TW0 * 2.5, 0.22, 0.9), m: XF(0, 1.6, 0) },
+    ]),
+    head: mergeParts([{ geo: new THREE.SphereGeometry(HS0, 14, 10), m: XF(0, 0, 0), tint: SKIN }]),
+    hood: mergeParts([{ geo: new THREE.SphereGeometry(HS0 * 1.18, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), m: XF(0, 0.05, -0.12), tint: TRIM }]),
+    leg: mergeParts([{ geo: new THREE.CylinderGeometry(0.26, 0.28, 2.2, 10), m: XF(0, -1.1, 0) }, { geo: new THREE.BoxGeometry(0.5, 0.24, 0.85), m: XF(0, -2.28, 0.15), tint: TRIM }]),
+    arm: mergeParts([{ geo: new THREE.CylinderGeometry(0.2, 0.22, 2.0, 10), m: XF(0, -1.0, 0) }, { geo: new THREE.SphereGeometry(0.27, 10, 8), m: XF(0, -2.05, 0), tint: SKIN }]),
+  };
+  const bodyMat = instRimMaterial(), phoneMat = instRimMaterial({ roughness: 0.4 });
+  const parts = {};
+  const units = persons.map((nd) => nodeObjs[nd.id]);
+  function part(name, g, mat, count, matrixArr, unitOf, opt) {
+    if (!count) return null;
+    const mesh = new THREE.InstancedMesh(g, mat, count);
+    mesh.instanceMatrix = new THREE.InstancedBufferAttribute(matrixArr, 16); mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    if (opt.color) mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(count * 3).fill(1), 3);
+    if (opt.rim) { g.setAttribute("iEm", new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4)); g.setAttribute("iRim", new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4)); }
+    mesh.frustumCulled = false; nodeGroup.add(mesh);
+    if (opt.outline) { const ol = new THREE.InstancedMesh(g, OUTLINE_MAT, count); ol.instanceMatrix = mesh.instanceMatrix; ol.frustumCulled = false; ol.raycast = () => {}; nodeGroup.add(ol); }
+    if (opt.pick) { mesh.userData.idOf = (iid) => persons[unitOf[iid]].id; nodeMeshes.push(mesh); } else mesh.raycast = () => {};
+    const slots = units.map(() => []); unitOf.forEach((k, iid) => slots[k].push(iid));
+    return (parts[name] = { mesh, unitOf, slots, rim: !!opt.rim, color: !!opt.color });
+  }
+  const seq = persons.map((_, k) => k), dbl = persons.flatMap((_, k) => [k, k]);
+  part("torso", geo.torso, bodyMat, P, EV.torso, seq, { color: true, rim: true, outline: true, pick: true });
+  part("head", geo.head, bodyMat, P, EV.head, seq, { color: true, rim: true, outline: true, pick: true });
+  part("visor", new THREE.BoxGeometry(HS0 * 1.5, 0.2, HS0 * 0.9).translate(0, 0.05, HS0 * 0.55), new THREE.MeshBasicMaterial({ color: 0xffffff }), P, EV.head, seq, { color: true, pick: true });
+  part("leg", geo.leg, bodyMat, 2 * P, EV.leg, dbl, { color: true, rim: true, outline: true, pick: true });
+  part("arm", geo.arm, bodyMat, 2 * P, EV.arm, dbl, { color: true, rim: true, outline: true, pick: true });
+  // subsets whose matrices are copied from the engine every frame
+  const subset = (pred) => persons.map((nd, k) => (pred(nd, k) ? k : -1)).filter((k) => k >= 0);
+  const hooded = subset((nd) => (ARCH_BUILD[nd.archetype] || {}).hood);
+  const phones = subset((nd) => characterOf(S.dossiers[nd.id] || {}).devices.some((d) => /phone|iphone|android/i.test(d)));
+  const badged = subset((nd) => nd.archetype === "eager_newcomer"), pinned = subset((nd) => nd.archetype === "status_seeker"), padded = subset((nd) => nd.archetype === "principled_auditor");
+  const copies = [];
+  const copyPart = (name, g, mat, ks, src, srcIdx, opt) => { const arr = new Float32Array(Math.max(1, ks.length) * 16); const p = part(name, g, mat, ks.length, arr, ks, opt); if (p) copies.push({ arr, ks, src, srcIdx }); return p; };
+  copyPart("hood", geo.hood, bodyMat, hooded, "head", (k) => k, { color: true, rim: true, outline: true });
+  copyPart("phone", new THREE.BoxGeometry(0.5, 0.95, 0.08), phoneMat, phones, "phone", (k) => k, { color: true, rim: true });
+  copyPart("badge", new THREE.BoxGeometry(0.32, 0.42, 0.05).translate(0.25, 1.05, TW0 + 0.12), new THREE.MeshBasicMaterial({ color: COL.ice }), badged, "torso", (k) => k, {});
+  copyPart("pin", new THREE.BoxGeometry(0.3, 0.3, 0.05).rotateZ(0.78).translate(-0.3, 1.2, TW0 + 0.12), new THREE.MeshBasicMaterial({ color: COL.amber }), pinned, "torso", (k) => k, {});
+  copyPart("pad", new THREE.BoxGeometry(0.75, 0.95, 0.06).translate(0.15, -1.9, 0.35), new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.6 }), padded, "arm", (k) => 2 * k + 1, {});
+  if (parts.phone) { const pc = parts.phone.mesh.instanceColor.array; for (let i = 0; i < pc.length; i++) pc[i] = 0.08; }
+  // neon ring + contact shadow under each unit, halos and heat rings as point clouds
+  const ringArr = new Float32Array(P * 16), shadowArr = new Float32Array(P * 16);
+  const ring = part("ring", new THREE.RingGeometry(2.75, 3.35, 6).rotateZ(Math.PI / 2).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), P, ringArr, seq, { color: true });
+  const shadow = L ? part("shadow", new THREE.CircleGeometry(2.2, 24).rotateX(-Math.PI / 2), SHADOW_MAT, P, shadowArr, seq, {}) : null;
+  const halos = pointCloud(HALO_TEX, P), heats = pointCloud(RING_TEX, P);
+  nodeGroup.add(halos); nodeGroup.add(heats);
+  // desks: merged per scenario; per-unit glow through a uniform array (64 slots)
+  const uGlow = { value: new Float32Array(64) }, dark = [], glow = [], devPts = [];
+  persons.forEach((nd, k) => {
+    const o = units[k], ch = characterOf(S.dossiers[nd.id] || {});
+    if (k >= 64 || !ch.devices.length) return;
+    const pr = makeProps(ch.devices); const g = pr.desk;
+    g.position.copy(o.rig.position); g.rotation.y = o.baseRot; g.scale.setScalar(o.scale); g.updateMatrixWorld(true);
+    g.traverse((q) => {
+      if (q.userData.devHalo) { const w = new THREE.Vector3(); q.getWorldPosition(w); devPts.push({ k, w }); return; }
+      if (!q.isMesh) return;
+      const em = q.material.emissive && q.material.emissive.getHex();
+      if (em) glow.push({ geo: q.geometry, m: q.matrixWorld.clone(), tint: [q.material.emissive.r, q.material.emissive.g, q.material.emissive.b], unit: k });
+      else dark.push({ geo: q.geometry, m: q.matrixWorld.clone() });
+      q.material.dispose();
+    });
+  });
+  if (dark.length) { const m = new THREE.Mesh(mergeParts(dark), new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.45, metalness: 0.4 })); m.raycast = () => {}; nodeGroup.add(m); }
+  if (glow.length) { const m = new THREE.Mesh(mergeParts(glow, { colorName: "aTint", unit: true }), deskGlowMaterial(uGlow)); m.raycast = () => {}; nodeGroup.add(m); }
+  const devCloud = pointCloud(HALO_TEX, devPts.length);
+  devPts.forEach((d, i) => { devCloud.geometry.attributes.position.setXYZ(i, d.w.x, d.w.y, d.w.z); devCloud.geometry.attributes.aSize.setX(i, 2.6); });
+  if (devPts.length) nodeGroup.add(devCloud);
+  // static engine inputs
+  persons.forEach((nd, k) => {
+    const o = units[k], I = k * EIN_N, inp = EV.inp, b = ARCH_BUILD[nd.archetype] || {}, v = o.v;
+    o.inst = k;
+    inp[I + EIN.WALKABLE] = o.anchors ? 1 : 0; inp[I + EIN.SCALE] = o.scale;
+    inp[I + EIN.HEAD_R] = (0.74 + 0.22 * v) * (b.hd || 1) / HS0; inp[I + EIN.TORSO_R] = (0.66 + 0.30 * v) * (b.sh || 1) / TW0;
+    inp[I + EIN.ARM_OFF] = (0.95 + 0.18 * v) * (b.armsIn ? 0.8 : 1); inp[I + EIN.GY_OFF] = o.gy; inp[I + EIN.SLUMP] = b.slump || 0;
+    inp[I + EIN.PHASE] = o.phase; inp[I + EIN.HAS_DESK] = o.hasDesk ? 1 : 0; inp[I + EIN.BASE_ROT] = o.baseRot;
+    inp[I + EIN.GX] = o.rig.position.x; inp[I + EIN.GY] = o.rig.position.y; inp[I + EIN.GZ] = o.rig.position.z; inp[I + EIN.GYAW] = o.baseRot; inp[I + EIN.SNAP] = 1;
+  });
+  FIG = { P, persons, units, parts, copies, ring, shadow, ringArr, shadowArr, halos, heats, uGlow, devCloud, devPts, ringDy: L ? -2.94 : -2.85 };
+  engine.step(0, now, 0, 0, 0); afterStep(0, 0.5);
+}
+function deskGlowMaterial(uGlow) {
+  const m = new THREE.MeshStandardMaterial({ color: 0x141a24, roughness: 0.4 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uGlow = uGlow;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec3 aTint;\nattribute float aUnit;\nuniform float uGlow[ 64 ];\nvarying vec3 vTint;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\n  vTint = aTint * uGlow[ int( aUnit + 0.5 ) ];");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vTint;")
+      .replace("vec3 totalEmissiveRadiance = emissive;", "vec3 totalEmissiveRadiance = vTint;");
+  };
+  return m;
+}
+/* write one unit's look (computed by lookFor in applyFrame) into the instance arrays */
+function paintUnit(k, L, flashOn) {
+  const F = FIG; if (!F) return;
+  for (const name of ["torso", "head", "leg", "arm", "hood"]) {
+    const p = F.parts[name]; if (!p) continue;
+    const col = p.mesh.instanceColor.array, em = p.mesh.geometry.attributes.iEm.array, rim = p.mesh.geometry.attributes.iRim.array;
+    for (const iid of p.slots[k]) {
+      _c.setHex(L.base); col[iid * 3] = _c.r; col[iid * 3 + 1] = _c.g; col[iid * 3 + 2] = _c.b;
+      if (flashOn) setRGBA(em, iid, COL.white, 1.4); else setRGBA(em, iid, L.em, L.emI);
+      setRGBA(rim, iid, L.rim, L.rimS);
+    }
+    p.mesh.instanceColor.needsUpdate = true; p.mesh.geometry.attributes.iEm.needsUpdate = true; p.mesh.geometry.attributes.iRim.needsUpdate = true;
+  }
+  const v = F.parts.visor; if (v) { _c.setHex(L.ring); for (const iid of v.slots[k]) { v.mesh.instanceColor.array[iid * 3] = _c.r; v.mesh.instanceColor.array[iid * 3 + 1] = _c.g; v.mesh.instanceColor.array[iid * 3 + 2] = _c.b; } v.mesh.instanceColor.needsUpdate = true; }
+  const ph = F.parts.phone; if (ph) { for (const iid of ph.slots[k]) setRGBA(ph.mesh.geometry.attributes.iEm.array, iid, COL.ice, L.gi); ph.mesh.geometry.attributes.iEm.needsUpdate = true; }
+  const r = F.ring; _c.setHex(L.ring).multiplyScalar(L.ringA); r.mesh.instanceColor.array[k * 3] = _c.r; r.mesh.instanceColor.array[k * 3 + 1] = _c.g; r.mesh.instanceColor.array[k * 3 + 2] = _c.b; r.mesh.instanceColor.needsUpdate = true;
+  setRGBA(F.halos.geometry.attributes.aColor.array, k, L.halo, L.haloA); F.halos.geometry.attributes.aColor.needsUpdate = true;
+  setRGBA(F.heats.geometry.attributes.aColor.array, k, heatColor(F.units[k].appetite || 0), L.heatA); F.heats.geometry.attributes.aColor.needsUpdate = true;
+  if (k < 64) F.uGlow.value[k] = L.gi;
+  F.devPts.forEach((d, i) => { if (d.k === k) setRGBA(F.devCloud.geometry.attributes.aColor.array, i, 0xfff0d0, L.devA); });
+  F.devCloud.geometry.attributes.aColor.needsUpdate = true;
+}
+/* after the engine step: follow the rigs, copy subset matrices, flashes / pulses / desk flicker */
+function afterStep(dt, pulse) {
+  const F = FIG; if (!F) return;
+  const pos = EV.pos, hp = F.halos.geometry.attributes, tp = F.heats.geometry.attributes;
+  for (let k = 0; k < F.P; k++) {
+    const o = F.units[k], x = pos[k * 4], y = pos[k * 4 + 1], z = pos[k * 4 + 2], st = o._st, L = o._look;
+    o.rig.position.set(x, y, z);
+    setTranslate(F.ringArr, k, x, y + F.ringDy, z);
+    if (F.shadow) setTranslate(F.shadowArr, k, x, y - 2.96, z);
+    hp.position.setXYZ(k, x, y + 0.8, z); tp.position.setXYZ(k, x, y - 2.5, z);
+    let hs = 8, ts = 7 + 2.5 * (o.appetite || 0) * (0.92 + 0.08 * pulse);
+    if (st && L && (st.comp || st.rec || st.burned || st.keyLost)) { const p = 0.7 + 0.3 * pulse; hs = 8 * (0.9 + 0.2 * p); hp.aColor.setW(k, st.glow * 0.55 * p); }
+    hp.aSize.setX(k, hs); tp.aSize.setX(k, ts);
+    if (o._flash > 0 && L) { o._flash -= dt * 2.2; paintUnit(k, L, o._flash > 0); }
+    if (o._pose) {
+      o._pose.t -= dt;
+      if (o._pose.t <= 0) { o._pose = null; if (L && k < 64) F.uGlow.value[k] = L.gi; }
+      else if (o._pose.kind === "emanation_tap" && k < 64) F.uGlow.value[k] = 0.3 + Math.random() * 0.7;   // the desk flickers; nothing shows on the body
+    }
+  }
+  for (const c of F.copies) { const src = EV[c.src]; c.ks.forEach((k, i) => { const s = c.srcIdx(k) * 16; for (let q = 0; q < 16; q++) c.arr[i * 16 + q] = src[s + q]; }); }
+  for (const name in F.parts) F.parts[name].mesh.instanceMatrix.needsUpdate = true;
+  hp.position.needsUpdate = tp.position.needsUpdate = hp.aSize.needsUpdate = tp.aSize.needsUpdate = hp.aColor.needsUpdate = true;
+}
+/* one unit's colours this frame: base, emissive, rim, halo, ring, desk glow, device and heat alphas */
+function lookFor(o, nd, st, stress, on) {
+  const turned = st.comp || st.rec || st.burned || st.keyLost;
+  let c = st.color, glow = st.glow;
+  if (stress > 0.12 && !turned) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
+  if (hiveVision) {   // infrared: bodies read by how juicy they are, not by sim state
+    if (st.unseen) { c = 0x0d1030; glow = 0.15; }
+    else if (turned) { c = 0x7a1a2a; glow = 0.6; }                                                     // consumed: an ember
+    else if (o.appetite != null) { c = thermal(o.appetite); glow = 1.0 + 0.6 * o.appetite; }           // a mark, by appetite
+    else { c = thermal(Math.max(0, Math.min(1, (nd.value || 0) / 100))); glow = 0.9; }                   // an institution, by value
+  }
+  const dim = !on && !turned && !hiveVision;   // off shift dims in the city view; heat is heat
+  return {
+    base: hiveVision ? 0x0b1020 : o.baseColor,
+    em: c, emI: (hiveVision ? glow * 1.2 : 0.08 + 0.2 * glow) * lerp(1.0, 0.7, daylightNow) * (dim ? 0.55 : 1),
+    rim: c, rimS: (hiveVision ? 1.1 : 0.45 + 0.75 * glow) * (dim ? 0.5 : 1),
+    halo: c, haloA: glow * (hiveVision ? 0.4 : 0.26) * (dim ? 0.45 : 1),
+    ring: c, ringA: st.unseen ? 0.25 : 0.85,
+    gi: st.unseen ? 0.05 : (hiveVision ? 1.6 : (on ? 0.9 : 0.08)),
+    devA: (hiveVision && !st.unseen) ? 0.8 : 0,
+    heatA: (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0,
+  };
+}
+const POSE_CODE = { spear_social: 2, phone_bridge: 3, cult_recruitment: 4, coerced_signature: 4, bribe: 5, defection: 5 };
+
 /* where a unit should be this frame (authored presentation rule over the exported routine,
    clock and layout): at the desk on shift, at the block's kiosk for a break around mid-shift,
    at the transit stop off shift — except recruited units, who gather in the street at night */
@@ -982,55 +1189,50 @@ function buildScenario(scn) {
   nodeObjs = {}; nodeMeshes = []; effects.length = 0; hovered = null;
   buildEnvironment(S.id, S.layout || null);
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
-  const L = S.layout || null;
+  const L = S.layout || null, persons = [];
   for (const nd of S.nodes) {
-    const v = hashUnit(String(nd.archetype) + nd.id);
-    const h = isPerson(nd) ? makeHumanoid(v, nd.archetype) : makePylon(v);
-    const a = L && L.anchors ? L.anchors[nd.id] : null;
-    const sc = h.group.scale.x, lift = a ? liftOf(a.desk) : 0;
-    // the rig carries the figure and everything that should follow it; its origin is the figure's centre (feet at -3)
+    const v = hashUnit(String(nd.archetype) + nd.id), person = isPerson(nd);
+    const a = L && L.anchors ? L.anchors[nd.id] : null, b = ARCH_BUILD[nd.archetype] || {};
+    const sc = person ? (0.9 + 0.24 * v) * (b.scale || 1) : 1, lift = a ? liftOf(a.desk) : 0;
+    // the rig is the unit's centre (feet at -3): the engine moves it; HUD labels ride on it
     const rig = new THREE.Group(); nodeGroup.add(rig);
-    let baseRot;
-    if (a) { rig.position.set(a.desk[0], a.desk[1] + lift + 3, a.desk[2]); h.group.position.y = 3 * (sc - 1); baseRot = a.yaw; }
+    let baseRot, gy = 0;
+    if (a) { rig.position.set(a.desk[0], a.desk[1] + lift + 3, a.desk[2]); gy = 3 * (sc - 1); baseRot = a.yaw; }
     else { rig.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); baseRot = nd.pos[0] * 0.17 + nd.pos[2] * 0.11; }
-    h.group.rotation.y = baseRot; rig.add(h.group);
-    for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
-    let plate = null;
-    if (!a) { plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; rig.add(plate); }   // legacy diorama base
-    else { const shadow = new THREE.Mesh(SHADOW_GEO, SHADOW_MAT); shadow.rotation.x = -Math.PI / 2; shadow.position.y = -2.96; shadow.raycast = () => {}; rig.add(shadow); }   // contact shadow
-    const rim = new THREE.Mesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.y = a ? -2.94 : -2.85; rig.add(rim);   // neon hex ring under the feet
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    halo.scale.set(8, 8, 1); halo.position.y = 0.8; rig.add(halo);
     const ch = characterOf(S.dossiers[nd.id] || {});
     const label = textSprite((ch.name && ch.name !== nd.id) ? `${nd.id} · ${ch.name.toUpperCase()}` : nd.id, { tick: "#f2e23a", scale: 1.0, fixed: true });
     label.position.y = 5.6; label.visible = false; rig.add(label);
-    let props = null; const glowMats = [], devHalos = [];
-    const collect = (root) => root.traverse((q) => { if (q.userData.devHalo) devHalos.push(q); else if (q.material && q.material.emissive && q.material.emissive.getHex() !== 0) glowMats.push(q.material); });
-    if (isPerson(nd) && ch.devices.length) {
-      const pr = makeProps(ch.devices);
-      props = pr.desk; props.position.copy(rig.position); props.rotation.y = baseRot; props.scale.setScalar(sc); nodeGroup.add(props); collect(props);
-      if (pr.phone && h.arms) { const ph = makePhone(); h.arms[0].add(ph); collect(ph); }
-    }
-    nodeObjs[nd.id] = { rig, group: h.group, gy: h.group.position.y, mat: h.mat, baseColor: isPerson(nd) ? COL.slate : 0x3b4654, vmat: h.vmat || null, slump: h.slump || 0,
-      arms: h.arms || null, legs: h.legs || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot, data: nd,
-      anchors: a, lift, goal: rig.position.clone(), goalYaw: baseRot, where: "desk", heading: baseRot, walk: 0, stride: 0,
+    const o = nodeObjs[nd.id] = { rig, data: nd, v, scale: sc, gy, baseRot, label, routine: ch.routine, anchors: a, lift, inst: null,
+      goal: rig.position.clone(), goalYaw: baseRot, where: "desk", baseColor: person ? COL.slate : 0x3b4654,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
-    // infrared: appetite heat ring, the device/vector tag, the cash tag
-    const o = nodeObjs[nd.id];
-    o.appetite = isPerson(nd) ? appetiteOf(S.dossiers[nd.id]) : null;
-    const heat = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: heatColor(o.appetite || 0), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
-    heat.scale.set(7, 7, 1); heat.position.y = -2.5; rig.add(heat); o.heat = heat;
+    o.appetite = person ? appetiteOf(S.dossiers[nd.id]) : null;
+    if (person) {
+      persons.push(nd);
+      if (!a) { const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; plate.raycast = () => {}; rig.add(plate); }   // legacy diorama base
+    } else {   // institutions (rtg service hosts / accounts): a handful of per-object pylons
+      const h = makePylon(v); h.group.rotation.y = baseRot; rig.add(h.group);
+      for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; rig.add(plate);
+      const rim = new THREE.Mesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.y = -2.85; rig.add(rim);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      halo.scale.set(8, 8, 1); halo.position.y = 0.8; rig.add(halo);
+      const heat = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: COL.hunger, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
+      heat.scale.set(7, 7, 1); heat.position.y = -2.5; rig.add(heat);
+      Object.assign(o, { group: h.group, mat: h.mat, halo, rim, heat, plate });
+    }
+    // infrared: the device/vector tag and the cash tag ride on the rig
     const tagText = hiveTagText(nd, ch);
     o.tag = tagText ? textSprite(tagText, { size: 30, color: hex(COL.ice), tick: hex(COL.hunger), scale: 0.95, fixed: true }) : null;
     if (o.tag) { o.tag.position.y = 8.0 + 2.6 * hashUnit("tag" + nd.id); o.tag.visible = false; rig.add(o.tag); }   // staggered so neighbours' tags don't stack
     o.cash = null; o.cashText = null; const cashText = cashTagText(nd, ch); if (cashText) setCash(o, cashText);
   }
+  buildUnits(persons);
   // base edges
   const bp = [];
   for (const [a, b] of S.edges) { if (!nodeObjs[a] || !nodeObjs[b]) continue; const na = nodeObjs[a].data, nb = nodeObjs[b].data; bp.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]); }
   const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bp), 3));
-  baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: 0.7 })); scene.add(baseEdges);
+  baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: S.layout ? 0.28 : 0.7 }));   // in the city the links are faint floor traces scene.add(baseEdges);
   // cages around airgapped vaults
   cageGroup = new THREE.Group(); cageByNode = {};
   for (const nd of S.nodes) {
@@ -1282,35 +1484,29 @@ function applyFrame(i) {
     const o = nodeObjs[nd.id], st = stateOf(nd.id, f);
     const stress = stressOf(nd.id, i);
     o._st = st; o._stress = stress;
-    const turned = st.comp || st.rec || st.burned || st.keyLost;
-    let c = st.color, glow = st.glow;
-    if (stress > 0.12 && !turned) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
-    if (hiveVision) {   // infrared: bodies read by how juicy they are, not by sim state
-      if (st.unseen) { c = 0x0d1030; glow = 0.15; }
-      else if (turned) { c = 0x7a1a2a; glow = 0.6; }                                                     // consumed: an ember
-      else if (o.appetite != null) { c = thermal(o.appetite); glow = 1.0 + 0.6 * o.appetite; }           // a mark, by appetite
-      else { c = thermal(Math.max(0, Math.min(1, (nd.value || 0) / 100))); glow = 0.9; }                   // an institution, by value
-    }
-    o.mat.color.setHex(hiveVision ? 0x0b1020 : o.baseColor);   // cold body under the heat in infrared
-    o.mat.emissive.setHex(c);   // city: lit by the neon, tinted, state on the rim; infrared: the body itself glows
-    o.mat.emissiveIntensity = (hiveVision ? glow * 1.2 : 0.08 + 0.2 * glow) * lerp(1.0, 0.7, daylightNow);
-    o.mat.userData.rimColor.setHex(c); o.mat.userData.rim.value = hiveVision ? 1.1 : 0.45 + 0.75 * glow;
-    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * (hiveVision ? 0.4 : 0.26);
-    o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
-    // routine: off-shift figures dim in the city view and their desk goes dark (flipped states keep their glow; heat is heat)
     const on = onShift(o.routine, f.clock); o._off = !on;
-    if (o.anchors) { const g = goalFor(o, st, f); o.goal.set(g.x, g.y, g.z); o.goalYaw = g.yaw; o.where = g.where; if (!playing) { o.rig.position.copy(o.goal); o.walk = 0; } }
-    if (!on && !turned && !hiveVision) { o.mat.emissiveIntensity *= 0.55; o.mat.userData.rim.value *= 0.5; o.halo.material.opacity *= 0.45; }
-    o._gi = st.unseen ? 0.05 : (hiveVision ? 1.6 : (on ? 0.9 : 0.08));   // desk glow: infrared burns every device white-hot; ghosts stay dark
-    for (const m of o.glowMats) m.emissiveIntensity = o._gi;
-    for (const s of o.devHalos) { s.material.opacity = (hiveVision && !st.unseen) ? 0.8 : 0; s.material.color.setHex(0xfff0d0); }   // device hot spots, infrared only
-    // infrared: heat on the marks still standing; cash tags; custody funds live on the key node
-    o.heat.material.opacity = (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
+    const look = o._look = lookFor(o, nd, st, stress, on);
+    if (o.anchors) { const g = goalFor(o, st, f); o.goal.set(g.x, g.y, g.z); o.goalYaw = g.yaw; o.where = g.where; }
+    if (o.inst != null) {   // a person: goals and flags to the engine, colours to the instance arrays
+      const I = o.inst * EIN_N, inp = EV.inp;
+      inp[I + EIN.GX] = o.goal.x; inp[I + EIN.GY] = o.goal.y; inp[I + EIN.GZ] = o.goal.z; inp[I + EIN.GYAW] = o.anchors ? o.goalYaw : o.baseRot;
+      if (!playing) inp[I + EIN.SNAP] = 1;
+      inp[I + EIN.STRESS] = stress; inp[I + EIN.OFF] = on ? 0 : 1; inp[I + EIN.AT_DESK] = o.where === "desk" ? 1 : 0;
+      inp[I + EIN.NO_TYPE] = (st.comp || st.rec) ? 1 : 0; inp[I + EIN.TURNED] = (st.comp && !st.honeypot) ? 1 : 0;
+      inp[I + EIN.LEGACY_TURN] = (!o.anchors && !on && !(st.comp || st.rec || st.burned)) ? 1 : 0;
+      paintUnit(o.inst, look, false);
+    } else {   // an institution's per-object materials
+      o.mat.color.setHex(look.base); o.mat.emissive.setHex(look.em); o.mat.emissiveIntensity = look.emI;
+      o.mat.userData.rimColor.setHex(look.rim); o.mat.userData.rim.value = look.rimS;
+      o.halo.material.color.setHex(look.halo); o.halo.material.opacity = look.haloA;
+      o.rim.material.color.setHex(look.ring); o.rim.material.opacity = look.ringA;
+      o.heat.material.opacity = look.heatA; o._ei = look.emI;
+    }
+    // infrared: custody funds live on the key node; cash only for what the hive has found
     if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
     if (o.cash) o.cash.visible = hiveVision && !st.unseen;
-    o.rim.material.opacity = st.unseen ? 0.25 : 0.85;   // ghosts: faint ring
-    o._ei = o.mat.emissiveIntensity;                     // the frame-derived level the render loop returns to after a flash
   }
+  if (!playing && FIG) { const hv = hive && hive.visible; engine.step(0, now, hv ? hive.position.x : 0, hv ? hive.position.z : 0, hv ? 1 : 0); afterStep(0, 0.5); }   // scrubbing: settle immediately
   // the hive's gaze: its three hottest discovered marks that have not turned
   scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !st.unseen && !(st.comp || st.rec || st.burned || st.keyLost); })
     .sort((a, b) => nodeObjs[b.id].appetite - nodeObjs[a.id].appetite).slice(0, 3).map((nd) => nd.id);
@@ -1363,9 +1559,12 @@ function spawnEffects(f) {
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
     const landed = evLanded(ev) || !!ev.honeypot, o = nodeObjs[id], soft = k === "reinforce", p = o.rig.position, c = vectorColor(ev);
     const lateral = (nodeObjs[ev.actor] && ev.actor !== id) ? ev.actor : null;   // a node acting on a node: contagion / the agent's reach
-    if (!soft) o._pose = { kind: k, landed, blocked: !!ev.blocked, t: 1.8 };
+    if (!soft) {
+      o._pose = { kind: k, landed, blocked: !!ev.blocked, t: 1.8 };
+      if (o.inst != null) { const I = o.inst * EIN_N; EV.inp[I + EIN.POSE_KIND] = (!landed && !ev.blocked) ? 1 : (POSE_CODE[k] || 6); EV.inp[I + EIN.POSE_START] = 1; }
+    }
     if (!landed && !ev.blocked && !soft) {                    // a probe that was declined: the unit checks, waves it off; a reticle that fails to lock
-      audio.ping(false); o._shake = 0.7;
+      audio.ping(false); o._shake = 0.7; if (o.inst != null) EV.inp[o.inst * EIN_N + EIN.SHAKE_START] = 1;
       const ret = new THREE.Sprite(new THREE.SpriteMaterial({ map: RETICLE_TEX, color: COL.steel, transparent: true, depthWrite: false, depthTest: false, opacity: 0.4 }));
       ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.5, kind: "reticle", delay: 0 });
       continue;
@@ -1465,7 +1664,9 @@ function castAt(e) {
   mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObjects(nodeMeshes, false);
-  return hit.length ? hit[0].object.userData.id : null;
+  if (!hit.length) return null;
+  const h0 = hit[0];
+  return h0.object.userData.idOf ? h0.object.userData.idOf(h0.instanceId) : h0.object.userData.id;
 }
 function pick(e) { const id = castAt(e); if (id) select(id, false); }
 function hover(e) {
@@ -2091,6 +2292,7 @@ document.getElementById("inspector-close").addEventListener("click", closeInspec
 function resize() {
   const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
   const s = renderer.getDrawingBufferSize(new THREE.Vector2()); post.setSize(s.x, s.y);
+  POINT_SCALE.value = s.y / (2 * Math.tan(camera.fov * Math.PI / 360));
 }
 window.addEventListener("resize", resize);
 
@@ -2110,51 +2312,17 @@ function tick(ts) {
   }
   { const u = post.composite.uniforms.ir; u.value += ((hiveVision ? 1 : 0) - u.value) * Math.min(1, dt * 5); }   // the infrared grade eases in and out
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
-  if (S) for (const nd of S.nodes) {
-    const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
-    // walking: head for the routine's goal at a pace that arrives within ~1.6 s; legs and arms swing with speed
-    let moving = false;
-    if (o.anchors) {
-      const dx = o.goal.x - o.rig.position.x, dz = o.goal.z - o.rig.position.z, dist = Math.hypot(dx, dz);
-      if (dist > 0.2) { const step = Math.min(dist, dt * Math.max(10, dist / 1.6)); o.rig.position.x += dx / dist * step; o.rig.position.z += dz / dist * step; o.heading = Math.atan2(dx, dz); moving = true; }
-      o.rig.position.y += (o.goal.y - o.rig.position.y) * Math.min(1, dt * 6);
-    }
-    o.walk += ((moving ? 1 : 0) - o.walk) * Math.min(1, dt * 8);
-    o.stride += dt * 10 * o.walk;
-    o.group.position.y = o.gy + Math.sin(now * 0.0016 + o.phase) * 0.18 * (1 - o.walk) + Math.abs(Math.sin(o.stride)) * 0.22 * o.walk;
-    o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress * (1 - o.walk) : 0;
-    let ry = o.anchors ? o.goalYaw : o.baseRot;
-    if (o.walk > 0.3) ry = o.heading;                                                                            // face where you're going
-    else if (!o.anchors && o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                           // legacy: off-shift turns away from the desk
-    else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.rig.position.x, hive.position.z - o.rig.position.z);   // pressed: eyes on the adversary
-    const dYaw = Math.atan2(Math.sin(ry - o.group.rotation.y), Math.cos(ry - o.group.rotation.y));                 // shortest way round
-    o.group.rotation.y += dYaw * Math.min(1, dt * 5);
-    if (o.legs) { const sw = Math.sin(o.stride) * 0.55 * o.walk; o.legs[0].rotation.x = sw; o.legs[1].rotation.x = -sw; }
-    if (o._shake > 0) { o._shake -= dt; o.group.rotation.y += Math.sin(now * 0.045) * 0.09; }   // checks, then shakes it off
-    // body language (authored tells, see design note): idle swing → working at the desk → the event pose
-    let lean = 0;
-    if (o.arms) {
-      const sw = Math.sin(now * 0.0018 + o.phase) * (0.07 + 0.3 * (o._stress || 0));
-      let rx = [sw, -sw], rz = [-0.35, 0.35];
-      if (!o._off && o.hasDesk && !(st.comp || st.rec) && o.where === "desk" && o.walk < 0.3) { const j = Math.sin(now * 0.02 + o.phase) * 0.05; rx = [-0.8 + j, -0.8 - j]; rz = [-0.15, 0.15]; }   // typing
-      if (o.walk > 0.05) { const as = Math.sin(o.stride) * 0.5 * o.walk; rx = [-as, as]; rz = [-0.25, 0.25]; }   // arms swing on the walk
-      if (o._pose) {
-        o._pose.t -= dt;
-        if (o._pose.t <= 0) { o._pose = null; for (const m of o.glowMats) m.emissiveIntensity = o._gi; }
-        else { const pk = o._pose.kind;
-          if (!o._pose.landed && !o._pose.blocked) { rx[0] = -1.5; rz[0] = -0.1; }                                 // declines: hand up, palm out
-          else if (pk === "spear_social") { rx[0] = -2.3; rz[0] = -0.55; }                                           // takes the message: phone to the face
-          else if (pk === "phone_bridge") { rx[0] = -1.05; rz[0] = -0.1; lean = 0.12; }                              // plugs in the unknown device
-          else if (pk === "cult_recruitment" || pk === "coerced_signature") { rx = [-0.9, -0.9]; rz = [-0.2, 0.2]; }  // leans into the circle / signs
-          else if (pk === "bribe" || pk === "defection") { rx[0] = -0.6; rz[0] = -1.1; }                             // takes the envelope
-          else if (pk === "emanation_tap") { for (const m of o.glowMats) m.emissiveIntensity = 0.3 + Math.random() * 0.7; }   // the desk flickers; nothing shows on the body
-        }
-      }
-      for (let a = 0; a < 2; a++) { o.arms[a].rotation.x += (rx[a] - o.arms[a].rotation.x) * Math.min(1, dt * 7); o.arms[a].rotation.z += (rz[a] - o.arms[a].rotation.z) * Math.min(1, dt * 7); }
-    }
-    o.group.rotation.x = (o.slump || 0) + (st.comp && !st.honeypot ? 0.14 : 0) + lean;    // archetype posture + the turned slump forward + the pose lean
-    if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : o._ei; }
-    if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
+  if (S && FIG) {   // the Rust engine moves, poses and matrixes every person in one call
+    const hv = hive && hive.visible;
+    engine.step(dt, now, hv ? hive.position.x : 0, hv ? hive.position.z : 0, hv ? 1 : 0);
+    afterStep(dt, pulse);
+  }
+  if (S) for (const nd of S.nodes) {   // institutions (rtg pylons) keep the per-object path
+    const o = nodeObjs[nd.id], st = o._st; if (!st || o.inst != null) continue;
+    o.group.position.y = Math.sin(now * 0.0016 + o.phase) * 0.18;
+    if (o._shake > 0) { o._shake -= dt; o.group.rotation.y = o.baseRot + Math.sin(now * 0.045) * 0.09; }
+    if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : o.halo.material.color.getHex()); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : o._ei; }
+    if (st.comp || st.rec || st.burned || st.keyLost) { const pp = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * pp; const sz = 8 * (0.9 + 0.2 * pp); o.halo.scale.set(sz, sz, 1); }
   }
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
   if (S) {
@@ -2210,7 +2378,8 @@ function tick(ts) {
   applyCam(); renderFrame();
 }
 
-/* ---------- boot ---------- */
+/* ---------- boot (after the engine loads) ---------- */
+function boot() {
 resize(); buildAbout();
 const link = readLink();
 if (link.hive != null) { hiveVision = link.hive; const b = document.getElementById("hivevis"); b.classList.toggle("on", hiveVision); b.setAttribute("aria-pressed", String(hiveVision)); document.body.classList.toggle("ir", hiveVision); }
@@ -2224,6 +2393,8 @@ idleSince = 0;
 setTimeout(() => { if (S) scenarioCard(S); }, 1900);
 setTimeout(() => { if (link.frame == null && !playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } if (link.tour) tour = true; document.getElementById("audio").classList.add("nudge"); }, 2800);
 requestAnimationFrame(tick);
+}
+loadEngine().then(boot);
 </script>
 </body>
 </html>
