@@ -449,7 +449,11 @@ const fill = new THREE.DirectionalLight(0x3a5570, 0.25); fill.position.set(-90, 
    2. scene pass: HDR (half-float where available), 4x MSAA on WebGL2
    3. bloom: bright-pass + dual-filter down/up chain over five levels
    4. composite: bloom, soft highlight shoulder, infrared grade, chromatic fringe, vignette, grain
-   5. HUD layer (labels, tags, cash) drawn straight to the screen afterwards, crisp and unbloomed */
+   5. HUD layer (labels, tags, cash) drawn straight to the screen afterwards, crisp and unbloomed
+   The reflection and the bloom are soft by design, so they are sized in screen (CSS) pixels:
+   above a render scale of 1 they stay at their scale-1 resolution while the scene sharpens, and
+   they look the same on any display. The scene drops to 2x MSAA from scale 1.75, where 4x
+   samples would be spent on edges far smaller than a screen pixel. */
 const HUD_LAYER = 1;
 let groundMesh = null;
 const MIRROR = { tMirror: { value: null }, mirrorMatrix: { value: new THREE.Matrix4() }, mirrorStrength: { value: 0.6 } };
@@ -466,9 +470,12 @@ const post = (() => {
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); quad.frustumCulled = false; quadScene.add(quad);
   const VS = "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4( position.xy, 0.0, 1.0 ); }";
   const sm = (uniforms, fs) => new THREE.ShaderMaterial({ uniforms, vertexShader: VS, fragmentShader: fs, depthTest: false, depthWrite: false });
-  const bright = sm({ tSrc: { value: null }, threshold: { value: 0.74 }, knee: { value: 0.3 } }, `
-    uniform sampler2D tSrc; uniform float threshold; uniform float knee; varying vec2 vUv;
-    void main() { vec3 c = texture2D( tSrc, vUv ).rgb; float l = max( c.r, max( c.g, c.b ) );
+  const bright = sm({ tSrc: { value: null }, tap: { value: new THREE.Vector2() }, threshold: { value: 0.74 }, knee: { value: 0.3 } }, `
+    uniform sampler2D tSrc; uniform vec2 tap; uniform float threshold; uniform float knee; varying vec2 vUv;
+    void main() {   // four bilinear taps cover the source footprint (2x2 texels at 2:1, 4x4 at 4:1); average, then threshold
+      vec3 c = 0.25 * ( texture2D( tSrc, vUv + vec2( -tap.x, -tap.y ) ).rgb + texture2D( tSrc, vUv + vec2( tap.x, -tap.y ) ).rgb
+                      + texture2D( tSrc, vUv + vec2( -tap.x, tap.y ) ).rgb + texture2D( tSrc, vUv + vec2( tap.x, tap.y ) ).rgb );
+      float l = max( c.r, max( c.g, c.b ) );
       float s = clamp( l - threshold + knee, 0.0, 2.0 * knee ); s = s * s / ( 4.0 * knee + 1e-4 );
       gl_FragColor = vec4( c * ( max( s, l - threshold ) / max( l, 1e-4 ) ), 1.0 ); }`);
   const down = sm({ tSrc: { value: null }, texel: { value: new THREE.Vector2() } }, `
@@ -504,10 +511,15 @@ const post = (() => {
   const vcam = new THREE.PerspectiveCamera(), clip = [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)];
   const bias = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
   function pass(mat, target) { quad.material = mat; renderer.setRenderTarget(target); renderer.render(quadScene, quadCam); }
-  function setSize(w, h) {
+  function setSize(w, h, scale) {   // w, h: drawing-buffer pixels; scale: device pixels per CSS pixel
     w = Math.max(1, w | 0); h = Math.max(1, h | 0);
-    main.setSize(w, h); mirrorRT.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1)); composite.uniforms.res.value.set(w, h);
-    for (let i = 0; i < N; i++) { const s = 2 << i; downs[i].setSize(Math.max(1, (w / s) | 0), Math.max(1, (h / s) | 0)); ups[i].setSize(Math.max(1, (w / s) | 0), Math.max(1, (h / s) | 0)); }
+    const soft = Math.min(1, 1 / (scale || 1)), sw = w * soft, sh = h * soft;   // the soft passes never exceed scale-1 resolution
+    const samples = (scale || 1) >= 1.75 ? 2 : 4;
+    if (gl2 && main.samples !== samples) { main.samples = samples; main.dispose(); }   // re-created at the next render with the new sample count
+    main.setSize(w, h); mirrorRT.setSize(Math.max(1, (sw / 2) | 0), Math.max(1, (sh / 2) | 0)); composite.uniforms.res.value.set(w, h);
+    for (let i = 0; i < N; i++) { const s = 2 << i; downs[i].setSize(Math.max(1, (sw / s) | 0), Math.max(1, (sh / s) | 0)); ups[i].setSize(Math.max(1, (sw / s) | 0), Math.max(1, (sh / s) | 0)); }
+    const r = w / downs[0].width;   // source texels per bright-pass pixel (2 at scale <= 1, 4 at scale 2)
+    bright.uniforms.tap.value.set(r / 4 / w, r / 4 / h);
   }
   function renderMirror() {
     if (!groundMesh || !groundMesh.visible) return;
@@ -2693,7 +2705,7 @@ const quality = (() => {
 })();
 function resize() {
   const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(quality.scale()); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-  const s = renderer.getDrawingBufferSize(new THREE.Vector2()); post.setSize(s.x, s.y);
+  const s = renderer.getDrawingBufferSize(new THREE.Vector2()); post.setSize(s.x, s.y, renderer.getPixelRatio());
   POINT_SCALE.value = s.y / (2 * Math.tan(camera.fov * Math.PI / 360));
 }
 window.addEventListener("resize", resize);

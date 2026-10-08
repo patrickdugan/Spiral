@@ -438,6 +438,19 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   scenarios go 151–168 → 67–89, and the schema-1.0 swarm replay goes 153 → 107. Frames match
   the per-object version, with under 0.1% of pixels differing by more than 24 levels (rain and
   grain). A shake now settles back to rest; the per-object version kept a small leftover twist.
+- **Increment 7h: soft passes sized in screen pixels.** The mirror and the bloom chain were
+  sized from drawing-buffer pixels, so at render scale 2 each drew four times its scale-1
+  pixels, and the bloom read tighter on dense displays. `post.setSize(w, h, scale)` now caps
+  both at their scale-1 resolution; the scene and composite still sharpen with the scale.
+  Because the first bloom downsample can now be 4:1, the bright pass averages four bilinear
+  taps spread over the source footprint before thresholding. At 2:1 that equals the old
+  single tap, and scale-1 frames are pixel-identical to before. The scene drops to 2× MSAA
+  from scale 1.75. At scale 2 the frames sit closer to the scale-1 look than before (mean
+  difference 2.8 vs 3.0 levels on the swarm). The browser pane renders on the laptop's
+  integrated Radeon 880M (ANGLE / D3D11), not the RTX 5080. Measured there with WebGL GPU
+  timer queries at scale 2, interleaved, median per frame: swarm 15.8 → 11.0 ms, legacy rtg
+  10.8 → 9.4 ms, custody 9.4 vs 9.8 ms (a tie within noise). The integrated GPU's clocks move
+  with the shared CPU/GPU power budget, so rounds vary by up to 2×.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:
