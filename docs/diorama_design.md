@@ -315,6 +315,19 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     by stopping playback, or by switching the director off); the current frame's annals entries
     slide in; a metric tile pulses when its value changes. In a simulated 1× autoplay of the
     opening swarm scenario (60 frames, 33 s) the director takes 6 flights.
+- **Increment 7a: render pipeline.** Self-authored, no external passes or new dependencies:
+  a half-resolution mirror pass of the scene clipped at the ground, an HDR scene pass
+  (half-float, 4× MSAA on WebGL2), a bright-pass plus five-level dual-filter bloom, and a
+  composite with a soft highlight shoulder (values under 0.86 untouched, so the palette keeps
+  its hand-picked colours), the infrared grade (now in the shader, eased in over ~0.2 s),
+  an edge chromatic fringe, vignette and grain. HUD sprites (labels, tags, cash, the
+  adversary name) live on their own layer and are drawn after the composite, crisp and
+  unbloomed. The street is a glossy standard surface (roughness 0.62) that pools the neon
+  point lights and samples the mirror pass with a vertical smear and a fresnel term.
+  Figures are merged into body + two legs + two arms (fewer draw calls, which pays for the
+  mirror pass), use a rim-lit standard material whose fresnel edge carries the state colour,
+  and get their outline from a normal-extruded back-face hull; legs pivot at the hip for
+  walking. All values are tuned by eye; none is measured.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:

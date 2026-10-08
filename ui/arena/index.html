@@ -49,7 +49,7 @@
   .fx { position: fixed; inset: 0; pointer-events: none; }
   #fx-scan { z-index: 5; opacity: 0.10;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.55) 2px 3px); }
-  #fx-vig { z-index: 6; background: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.62) 100%); }
+  #fx-vig { z-index: 6; background: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.3) 100%); }   /* the scene's own vignette is in the shader */
   #fx-grain { z-index: 7; opacity: 0.035; mix-blend-mode: screen;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.8  0 0 0 0 0.85  0 0 0 0 0.9  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
     animation: grain 0.9s steps(4) infinite; }
@@ -58,11 +58,9 @@
   #fx-alert.on { opacity: 1; transition: opacity 0.05s; }
   /* infrared: the hive's overlay. A false-colour wash and a contrast lift on the WebGL canvas,
      corner brackets and a readout; the scene itself goes cold in JS (applyDayCycle / applyFrame). */
-  #fx-ir { z-index: 9; opacity: 0; transition: opacity 0.45s ease; mix-blend-mode: screen;
-    background: linear-gradient(180deg, rgba(96,28,150,0.20), rgba(18,8,60,0.24)); }
+  #fx-ir { z-index: 9; opacity: 0; transition: opacity 0.45s ease; }   /* the thermal grade itself is in the composite shader */
   body.ir #fx-ir { opacity: 1; }
-  body.ir #scene { filter: contrast(1.22) saturate(1.35) brightness(0.94); }
-  body.ir #fx-grain { opacity: 0.085; } body.ir #fx-scan { opacity: 0.16; }
+  body.ir #fx-grain { opacity: 0.06; } body.ir #fx-scan { opacity: 0.14; }
   #fx-ir .irtag { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 4px; color: var(--hunger); text-transform: uppercase; opacity: 0.85; }
   #fx-ir::before, #fx-ir::after { content: ""; position: absolute; width: 36px; height: 36px; border: 2px solid rgba(255,43,220,0.45); }
   #fx-ir::before { left: 262px; top: 70px; border-right: 0; border-bottom: 0; }
@@ -440,6 +438,166 @@ const hemi = new THREE.HemisphereLight(0x5e7fa3, 0x07090e, 0.6); scene.add(hemi)
 const sun = new THREE.DirectionalLight(0xbfd4ea, 0.35); sun.position.set(70, 140, 50); scene.add(sun);
 const fill = new THREE.DirectionalLight(0x3a5570, 0.25); fill.position.set(-90, 40, -60); scene.add(fill);
 
+/* ---------- render pipeline (self-authored; no external passes) ----------
+   1. mirror pass: the scene reflected in the wet street, at half resolution, clipped at the ground
+   2. scene pass: HDR (half-float where available), 4x MSAA on WebGL2
+   3. bloom: bright-pass + dual-filter down/up chain over five levels
+   4. composite: bloom, soft highlight shoulder, infrared grade, chromatic fringe, vignette, grain
+   5. HUD layer (labels, tags, cash) drawn straight to the screen afterwards, crisp and unbloomed */
+const HUD_LAYER = 1;
+let groundMesh = null;
+const MIRROR = { tMirror: { value: null }, mirrorMatrix: { value: new THREE.Matrix4() }, mirrorStrength: { value: 0.6 } };
+const post = (() => {
+  const gl2 = renderer.capabilities.isWebGL2;
+  const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: gl2 ? THREE.HalfFloatType : THREE.UnsignedByteType, depthBuffer: false };
+  const main = gl2 ? new THREE.WebGLMultisampleRenderTarget(1, 1, Object.assign({}, opts, { depthBuffer: true })) : new THREE.WebGLRenderTarget(1, 1, Object.assign({}, opts, { depthBuffer: true }));
+  if (gl2) main.samples = 4;
+  const mirrorRT = new THREE.WebGLRenderTarget(1, 1, Object.assign({}, opts, { depthBuffer: true }));
+  MIRROR.tMirror.value = mirrorRT.texture;
+  const N = 5, downs = [], ups = [];
+  for (let i = 0; i < N; i++) { downs.push(new THREE.WebGLRenderTarget(1, 1, opts)); ups.push(new THREE.WebGLRenderTarget(1, 1, opts)); }
+  const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), quadScene = new THREE.Scene();
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); quad.frustumCulled = false; quadScene.add(quad);
+  const VS = "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4( position.xy, 0.0, 1.0 ); }";
+  const sm = (uniforms, fs) => new THREE.ShaderMaterial({ uniforms, vertexShader: VS, fragmentShader: fs, depthTest: false, depthWrite: false });
+  const bright = sm({ tSrc: { value: null }, threshold: { value: 0.74 }, knee: { value: 0.3 } }, `
+    uniform sampler2D tSrc; uniform float threshold; uniform float knee; varying vec2 vUv;
+    void main() { vec3 c = texture2D( tSrc, vUv ).rgb; float l = max( c.r, max( c.g, c.b ) );
+      float s = clamp( l - threshold + knee, 0.0, 2.0 * knee ); s = s * s / ( 4.0 * knee + 1e-4 );
+      gl_FragColor = vec4( c * ( max( s, l - threshold ) / max( l, 1e-4 ) ), 1.0 ); }`);
+  const down = sm({ tSrc: { value: null }, texel: { value: new THREE.Vector2() } }, `
+    uniform sampler2D tSrc; uniform vec2 texel; varying vec2 vUv;
+    void main() { vec3 c = texture2D( tSrc, vUv ).rgb * 4.0;
+      c += texture2D( tSrc, vUv + texel * vec2( -1.0, -1.0 ) ).rgb; c += texture2D( tSrc, vUv + texel * vec2( 1.0, -1.0 ) ).rgb;
+      c += texture2D( tSrc, vUv + texel * vec2( -1.0, 1.0 ) ).rgb;  c += texture2D( tSrc, vUv + texel * vec2( 1.0, 1.0 ) ).rgb;
+      gl_FragColor = vec4( c / 8.0, 1.0 ); }`);
+  const upm = sm({ tSrc: { value: null }, tBase: { value: null }, texel: { value: new THREE.Vector2() } }, `
+    uniform sampler2D tSrc; uniform sampler2D tBase; uniform vec2 texel; varying vec2 vUv;
+    void main() { vec3 c = vec3( 0.0 );
+      c += texture2D( tSrc, vUv + texel * vec2( -2.0, 0.0 ) ).rgb; c += texture2D( tSrc, vUv + texel * vec2( 2.0, 0.0 ) ).rgb;
+      c += texture2D( tSrc, vUv + texel * vec2( 0.0, -2.0 ) ).rgb; c += texture2D( tSrc, vUv + texel * vec2( 0.0, 2.0 ) ).rgb;
+      c += texture2D( tSrc, vUv + texel * vec2( -1.0, -1.0 ) ).rgb * 2.0; c += texture2D( tSrc, vUv + texel * vec2( 1.0, -1.0 ) ).rgb * 2.0;
+      c += texture2D( tSrc, vUv + texel * vec2( -1.0, 1.0 ) ).rgb * 2.0;  c += texture2D( tSrc, vUv + texel * vec2( 1.0, 1.0 ) ).rgb * 2.0;
+      gl_FragColor = vec4( c / 12.0 + texture2D( tBase, vUv ).rgb, 1.0 ); }`);
+  const composite = sm({ tScene: { value: null }, tBloom: { value: null }, bloom: { value: 0.85 }, ir: { value: 0 }, time: { value: 0 }, res: { value: new THREE.Vector2(1, 1) } }, `
+    uniform sampler2D tScene; uniform sampler2D tBloom; uniform float bloom; uniform float ir; uniform float time; uniform vec2 res; varying vec2 vUv;
+    float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
+    vec3 shoulder( vec3 x ) { return mix( x, 0.86 + 0.14 * ( 1.0 - exp( -( x - 0.86 ) / 0.14 ) ), step( 0.86, x ) ); }
+    void main() {
+      vec2 d = vUv - 0.5; float r2 = dot( d, d );
+      vec2 off = d * r2 * ( 0.012 + 0.012 * ir );                       // chromatic fringe grows toward the edges
+      vec3 c = vec3( texture2D( tScene, vUv + off ).r, texture2D( tScene, vUv ).g, texture2D( tScene, vUv - off ).b );
+      c += texture2D( tBloom, vUv ).rgb * ( bloom + 0.35 * ir );
+      float l = dot( c, vec3( 0.299, 0.587, 0.114 ) );                   // infrared: crush the cold end into violet-black, lift the heat
+      vec3 cold = vec3( 0.025, 0.015, 0.07 ) + vec3( 0.10, 0.05, 0.22 ) * l;
+      c = mix( c, mix( cold, c * vec3( 1.08, 0.92, 1.1 ), smoothstep( 0.08, 0.5, l ) ), ir );
+      c = shoulder( c );
+      c *= 1.0 - ( 0.42 + 0.15 * ir ) * smoothstep( 0.1, 0.62, r2 * 2.0 );
+      c += ( hash( vUv * res + fract( time ) * 61.0 ) - 0.5 ) * ( 0.03 + 0.03 * ir );
+      gl_FragColor = vec4( clamp( c, 0.0, 1.0 ), 1.0 ); }`);
+  const vcam = new THREE.PerspectiveCamera(), clip = [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)];
+  const bias = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+  function pass(mat, target) { quad.material = mat; renderer.setRenderTarget(target); renderer.render(quadScene, quadCam); }
+  function setSize(w, h) {
+    w = Math.max(1, w | 0); h = Math.max(1, h | 0);
+    main.setSize(w, h); mirrorRT.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1)); composite.uniforms.res.value.set(w, h);
+    for (let i = 0; i < N; i++) { const s = 2 << i; downs[i].setSize(Math.max(1, (w / s) | 0), Math.max(1, (h / s) | 0)); ups[i].setSize(Math.max(1, (w / s) | 0), Math.max(1, (h / s) | 0)); }
+  }
+  function renderMirror() {
+    if (!groundMesh || !groundMesh.visible) return;
+    const g = groundMesh.position.y;
+    vcam.position.set(camera.position.x, 2 * g - camera.position.y, camera.position.z);
+    vcam.up.set(0, 1, 0); vcam.lookAt(cam.target.x, 2 * g - cam.target.y, cam.target.z);
+    vcam.projectionMatrix.copy(camera.projectionMatrix); vcam.projectionMatrixInverse.copy(camera.projectionMatrixInverse); vcam.updateMatrixWorld();
+    MIRROR.mirrorMatrix.value.copy(bias).multiply(vcam.projectionMatrix).multiply(vcam.matrixWorldInverse);
+    clip[0].constant = -g + 0.05;
+    groundMesh.visible = false; renderer.clippingPlanes = clip;
+    renderer.setRenderTarget(mirrorRT); renderer.clear(); renderer.render(scene, vcam);
+    renderer.clippingPlanes = []; groundMesh.visible = true;
+  }
+  function render(t) {
+    camera.layers.set(0);
+    renderMirror();
+    renderer.setRenderTarget(main); renderer.clear(); renderer.render(scene, camera);
+    bright.uniforms.tSrc.value = main.texture; pass(bright, downs[0]);
+    for (let i = 1; i < N; i++) { down.uniforms.tSrc.value = downs[i - 1].texture; down.uniforms.texel.value.set(1 / downs[i - 1].width, 1 / downs[i - 1].height); pass(down, downs[i]); }
+    let src = downs[N - 1];
+    for (let i = N - 2; i >= 0; i--) { upm.uniforms.tSrc.value = src.texture; upm.uniforms.tBase.value = downs[i].texture; upm.uniforms.texel.value.set(1 / src.width, 1 / src.height); pass(upm, ups[i]); src = ups[i]; }
+    composite.uniforms.tScene.value = main.texture; composite.uniforms.tBloom.value = ups[0].texture; composite.uniforms.time.value = t || 0;
+    pass(composite, null);
+    renderer.autoClear = false; camera.layers.set(HUD_LAYER); renderer.render(scene, camera); camera.layers.set(0); renderer.autoClear = true;
+  }
+  return { render, setSize, composite };
+})();
+function renderFrame() { post.render(now * 0.001); }
+
+/* rim-lit standard material: a fresnel edge in the unit's state colour, so figures read as
+   neon silhouettes; per-material uniforms (rimColor / rim) are updated by applyFrame */
+function rimMaterial(baseHex, opts) {
+  const m = new THREE.MeshStandardMaterial(Object.assign({ color: baseHex, roughness: 0.5, metalness: 0.3, emissive: COL.dark, emissiveIntensity: 0.3 }, opts || {}));
+  m.userData.rimColor = new THREE.Color(COL.ice); m.userData.rim = { value: 1.0 };
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.rimColor = { value: m.userData.rimColor }; sh.uniforms.rimStrength = m.userData.rim;
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 rimColor;\nuniform float rimStrength;")
+      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance += rimColor * rimStrength * pow( 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 ), 2.4 );");
+  };
+  return m;
+}
+/* cel outline by normal extrusion on a back-faced hull (works on merged geometry) */
+const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x03050a, side: THREE.BackSide });
+OUTLINE_MAT.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "vec3 transformed = vec3( position ) + normalize( normal ) * 0.09;"); };
+function withOutline(mesh) { const h = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); h.raycast = () => {}; mesh.add(h); return mesh; }
+/* merge part geometries (each with its own transform and optional tint) into one indexed buffer */
+function mergeParts(parts) {
+  let nv = 0, ni = 0;
+  for (const p of parts) { nv += p.geo.attributes.position.count; ni += p.geo.index ? p.geo.index.count : p.geo.attributes.position.count; }
+  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), idx = new Uint32Array(ni);
+  const v = new THREE.Vector3(), nm = new THREE.Matrix3(); let vo = 0, io = 0;
+  for (const p of parts) {
+    const g = p.geo, P = g.attributes.position, Nn = g.attributes.normal, tint = p.tint || [1, 1, 1];
+    nm.getNormalMatrix(p.m);
+    for (let i = 0; i < P.count; i++) {
+      v.fromBufferAttribute(P, i).applyMatrix4(p.m); pos[(vo + i) * 3] = v.x; pos[(vo + i) * 3 + 1] = v.y; pos[(vo + i) * 3 + 2] = v.z;
+      v.fromBufferAttribute(Nn, i).applyMatrix3(nm).normalize(); nor[(vo + i) * 3] = v.x; nor[(vo + i) * 3 + 1] = v.y; nor[(vo + i) * 3 + 2] = v.z;
+      col[(vo + i) * 3] = tint[0]; col[(vo + i) * 3 + 1] = tint[1]; col[(vo + i) * 3 + 2] = tint[2];
+    }
+    if (g.index) for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.getX(i) + vo;
+    else for (let i = 0; i < P.count; i++) idx[io + i] = vo + i;
+    vo += P.count; io += g.index ? g.index.count : P.count; g.dispose();
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute("position", new THREE.BufferAttribute(pos, 3)); out.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); out.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  out.setIndex(new THREE.BufferAttribute(idx, 1)); out.computeBoundingSphere();
+  return out;
+}
+const XF = (x, y, z, rz) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, rz || 0)), new THREE.Vector3(1, 1, 1));
+/* the wet street: a glossy standard surface (neon point lights pool on it) that also samples
+   the mirror pass, smeared vertically like rain on asphalt and stronger at grazing angles */
+function makeGround(y, opacity) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x0c1018, roughness: 0.62, metalness: 0.35, emissive: 0xffffff, emissiveMap: GROUND_TEX, emissiveIntensity: 0.16,
+    transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, MIRROR);
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform mat4 mirrorMatrix;\nvarying vec4 vMirrorUv;")
+      .replace("#include <project_vertex>", "#include <project_vertex>\n  vMirrorUv = mirrorMatrix * modelMatrix * vec4( transformed, 1.0 );");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D tMirror;\nuniform float mirrorStrength;\nvarying vec4 vMirrorUv;")
+      .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+  {
+    vec2 muv = vMirrorUv.xy / vMirrorUv.w;
+    vec3 refl = texture2D( tMirror, muv ).rgb * 0.26;
+    refl += ( texture2D( tMirror, muv + vec2( 0.0, 0.007 ) ).rgb + texture2D( tMirror, muv - vec2( 0.0, 0.007 ) ).rgb ) * 0.17;
+    refl += ( texture2D( tMirror, muv + vec2( 0.0, 0.018 ) ).rgb + texture2D( tMirror, muv - vec2( 0.0, 0.018 ) ).rgb ) * 0.11;
+    refl += ( texture2D( tMirror, muv + vec2( 0.0035, 0.0 ) ).rgb + texture2D( tMirror, muv - vec2( 0.0035, 0.0 ) ).rgb ) * 0.09;
+    float fres = 0.3 + 0.7 * pow( 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 ), 3.0 );
+    totalEmissiveRadiance += refl * mirrorStrength * fres;
+  }`);
+  };
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), mat);
+  mesh.rotation.x = -Math.PI / 2; mesh.position.y = y;
+  return mesh;
+}
+
 function canvasTex(w, h, draw) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   draw(c.getContext("2d"), w, h);
@@ -508,7 +666,7 @@ function textSprite(text, opts) {
   if (o.tick) { g.fillStyle = o.tick; g.fillRect((o.w - tw) / 2, o.h / 2 - o.size * 0.72, 6, o.size * 1.44); }
   g.fillStyle = o.color; g.fillText(text, o.w / 2, o.h / 2 + 2);
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: !o.fixed }));
-  if (o.fixed) sp.scale.set(0.26 * o.scale, 0.26 * o.scale * o.h / o.w, 1);   // constant screen size (HUD label)
+  if (o.fixed) { sp.scale.set(0.26 * o.scale, 0.26 * o.scale * o.h / o.w, 1); sp.layers.set(HUD_LAYER); }   // constant screen size, drawn crisp after the bloom
   else sp.scale.set(26 * o.scale, 26 * o.scale * o.h / o.w, 1);
   return sp;
 }
@@ -548,44 +706,49 @@ const ARCH_BUILD = {
   burned_out_admin: { sh: 1.0, hd: 1.0, slump: 0.16 },
   principled_auditor: { sh: 0.95, hd: 0.9, scale: 1.08 },
 };
-const HULL_MAT = new THREE.MeshBasicMaterial({ color: 0x04060a, side: THREE.BackSide });
+const TRIM = [0.32, 0.36, 0.42], SKIN = [1.12, 1.08, 1.04];
 function makeHumanoid(v, arch) {
   v = (v == null) ? 0.5 : v;
   const b = ARCH_BUILD[arch] || {};
   const group = new THREE.Group();
-  const mat = new THREE.MeshLambertMaterial({ color: COL.slate, emissive: COL.dark, emissiveIntensity: 0.6 });
-  const vmat = new THREE.MeshBasicMaterial({ color: COL.dark });   // visor band: pure state colour
+  const mat = rimMaterial(COL.slate, { vertexColors: true });
+  const vmat = new THREE.MeshBasicMaterial({ color: COL.dark });   // visor band: pure state colour (blooms)
   const picks = [];
   const hs = (0.74 + 0.22 * v) * (b.hd || 1), tw = (0.66 + 0.30 * v) * (b.sh || 1), aw = (0.95 + 0.18 * v) * (b.armsIn ? 0.8 : 1);
-  // cel outline: an inverted dark hull behind every body part so figures separate from the neon ground
-  const part = (geo, y, x, rotZ, m2) => {
-    const m = new THREE.Mesh(geo, m2 || mat); m.position.set(x || 0, y, 0); if (rotZ) m.rotation.z = rotZ; group.add(m); picks.push(m);
-    if (!m2) { const hull = new THREE.Mesh(geo, HULL_MAT); hull.scale.setScalar(1.14); m.add(hull); }
-    return m;
-  };
-  part(new THREE.SphereGeometry(hs, 8, 6), 2.25);
-  if (b.hood) { const hood = part(new THREE.SphereGeometry(hs * 1.18, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.62), 2.3); hood.position.z = -0.12; }
-  const visor = part(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), 2.3, 0, 0, vmat); visor.position.z = hs * 0.55;
-  const trim = new THREE.MeshLambertMaterial({ color: 0x1a2230 });
-  part(new THREE.CylinderGeometry(0.22, 0.26, 0.5, 5), 1.72);                        // neck
-  part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);                      // torso
-  part(new THREE.BoxGeometry(tw * 2.2, 0.18, tw * 1.7), -0.6, 0, 0, trim);           // belt
-  part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, 0.42);
-  part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, -0.42);
-  part(new THREE.BoxGeometry(0.5, 0.24, 0.85), -2.88, 0.42, 0, trim).position.z = 0.15;    // feet
-  part(new THREE.BoxGeometry(0.5, 0.24, 0.85), -2.88, -0.42, 0, trim).position.z = 0.15;
-  const armGeo = () => { const g = new THREE.CylinderGeometry(0.2, 0.22, 2.0, 5); g.translate(0, -1.0, 0); return g; };   // pivot at the shoulder
-  const armR = part(armGeo(), 1.5, aw, -0.35);
-  const armL = part(armGeo(), 1.5, -aw, 0.35);
-  for (const a of [armR, armL]) { const hand = new THREE.Mesh(new THREE.SphereGeometry(0.27, 6, 5), mat); hand.position.y = -2.05; a.add(hand); }
-  // shoulder plate: a thin box across the shoulders, a subtle "uniform" cue
-  part(new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), 1.6);
+  // body: head, neck, torso, belt, shoulder plate (+ hood) merged into one mesh with a two-tone tint
+  const parts = [
+    { geo: new THREE.SphereGeometry(hs, 14, 10), m: XF(0, 2.25, 0), tint: SKIN },
+    { geo: new THREE.CylinderGeometry(0.22, 0.26, 0.5, 10), m: XF(0, 1.72, 0) },
+    { geo: new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 10), m: XF(0, 0.5, 0) },
+    { geo: new THREE.BoxGeometry(tw * 2.2, 0.18, tw * 1.7), m: XF(0, -0.6, 0), tint: TRIM },
+    { geo: new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), m: XF(0, 1.6, 0) },
+  ];
+  if (b.hood) parts.push({ geo: new THREE.SphereGeometry(hs * 1.18, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), m: XF(0, 2.3, -0.12), tint: TRIM });
+  const body = withOutline(new THREE.Mesh(mergeParts(parts), mat)); group.add(body); picks.push(body);
+  const visor = new THREE.Mesh(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), vmat); visor.position.set(0, 2.3, hs * 0.55); group.add(visor); picks.push(visor);
+  // legs pivot at the hip (walk cycle), feet merged in
+  const legs = [0.42, -0.42].map((x) => {
+    const leg = withOutline(new THREE.Mesh(mergeParts([
+      { geo: new THREE.CylinderGeometry(0.26, 0.28, 2.2, 10), m: XF(0, -1.1, 0) },
+      { geo: new THREE.BoxGeometry(0.5, 0.24, 0.85), m: XF(0, -2.28, 0.15), tint: TRIM },
+    ]), mat));
+    leg.position.set(x, -0.6, 0); group.add(leg); picks.push(leg); return leg;
+  });
+  // arms pivot at the shoulder, hands merged in
+  const arms = [[aw, -0.35], [-aw, 0.35]].map(([x, rz]) => {
+    const arm = withOutline(new THREE.Mesh(mergeParts([
+      { geo: new THREE.CylinderGeometry(0.2, 0.22, 2.0, 10), m: XF(0, -1.0, 0) },
+      { geo: new THREE.SphereGeometry(0.27, 10, 8), m: XF(0, -2.05, 0), tint: SKIN },
+    ]), mat));
+    arm.position.set(x, 1.5, 0); arm.rotation.z = rz; group.add(arm); picks.push(arm); return arm;
+  });
   // archetype accessories: authored reading cues, nothing more
-  if (arch === "principled_auditor") { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.06), trim); pad.position.set(0.15, -1.9, 0.35); armL.add(pad); }
-  if (arch === "eager_newcomer") part(new THREE.BoxGeometry(0.32, 0.42, 0.05), 1.05, 0.25, 0, new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: COL.ice, emissiveIntensity: 0.8 })).position.z = tw + 0.12;
-  if (arch === "status_seeker") part(new THREE.BoxGeometry(0.3, 0.3, 0.05), 1.2, -0.3, 0.78, new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: COL.amber, emissiveIntensity: 0.9 })).position.z = tw + 0.12;
+  const trim = new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.6 });
+  if (arch === "principled_auditor") { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.06), trim); pad.position.set(0.15, -1.9, 0.35); arms[1].add(pad); }
+  if (arch === "eager_newcomer") { const badge = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.05), new THREE.MeshBasicMaterial({ color: COL.ice })); badge.position.set(0.25, 1.05, tw + 0.12); group.add(badge); }
+  if (arch === "status_seeker") { const pin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), new THREE.MeshBasicMaterial({ color: COL.amber })); pin.position.set(-0.3, 1.2, tw + 0.12); pin.rotation.z = 0.78; group.add(pin); }
   group.scale.setScalar((0.9 + 0.24 * v) * (b.scale || 1));
-  return { group, mat, vmat, picks, arms: [armR, armL], slump: b.slump || 0 };
+  return { group, mat, vmat, picks, arms, legs, slump: b.slump || 0 };
 }
 /* on-shift test from the exported routine + per-frame clock (authored presentation rule) */
 function onShift(r, cl) {
@@ -596,11 +759,18 @@ function onShift(r, cl) {
 /* institutional node (rtg): a server-rack / terminal pylon instead of a person */
 function makePylon(v) {
   const group = new THREE.Group();
-  const mat = new THREE.MeshLambertMaterial({ color: 0x3b4654, emissive: COL.dark, emissiveIntensity: 0.6 });
+  const mat = rimMaterial(0x3b4654, { vertexColors: true, metalness: 0.55, roughness: 0.35 });
   const picks = [];
-  const m = new THREE.Mesh(new THREE.BoxGeometry(3.2, 5.2 + v * 2, 2.4), mat); m.position.y = 0.4 + v; group.add(m); picks.push(m);
-  const hull = new THREE.Mesh(m.geometry, HULL_MAT); hull.scale.setScalar(1.06); m.add(hull);
-  const cap = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.3, 2.8), mat); cap.position.y = 3.2 + v * 2; group.add(cap); picks.push(cap);
+  const h = 5.2 + v * 2;
+  const m = withOutline(new THREE.Mesh(mergeParts([
+    { geo: new THREE.BoxGeometry(3.2, h, 2.4), m: XF(0, 0.4 + v, 0) },
+    { geo: new THREE.BoxGeometry(3.6, 0.3, 2.8), m: XF(0, 3.2 + v * 2, 0), tint: TRIM },
+  ]), mat));
+  group.add(m); picks.push(m);
+  for (let k = 0; k < 6; k++) {   // rack LEDs down the face
+    const led = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 0.05), new THREE.MeshBasicMaterial({ color: k % 3 ? COL.ice : COL.amber }));
+    led.position.set(0, 0.4 + v - h / 2 + 0.9 + k * (h - 1.6) / 6, 1.23); group.add(led);
+  }
   return { group, mat, picks };
 }
 
@@ -612,9 +782,8 @@ function buildEnvironment(seedStr) {
   matteMat = new THREE.MeshBasicMaterial({ map: SKYLINE_TEX, transparent: true, side: THREE.BackSide, fog: false, depthWrite: false });
   const matte = new THREE.Mesh(new THREE.CylinderGeometry(430, 430, 300, 64, 1, true), matteMat);
   matte.position.y = -30 + 150; envGroup.add(matte);
-  // surface deck (translucent so the vault level reads through) + vault floor
-  const deck = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, transparent: true, opacity: 0.6, depthWrite: false }));
-  deck.rotation.x = -Math.PI / 2; deck.position.y = -12.5; envGroup.add(deck);
+  // the wet street (reflective; translucent here so the vault level still reads through) + vault floor
+  groundMesh = makeGround(-12.5, 0.82); envGroup.add(groundMesh);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, color: 0x6b7f94 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -64; envGroup.add(floor);
   // skyline: an annulus of dark towers with lit windows, deterministic per scenario
@@ -941,12 +1110,14 @@ function applyFrame(i) {
       else { c = thermal(Math.max(0, Math.min(1, (nd.value || 0) / 100))); glow = 0.9; }                   // an institution, by value
     }
     o.mat.color.setHex(hiveVision ? 0x0b1020 : o.baseColor);   // cold body under the heat in infrared
-    o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * (hiveVision ? 1.5 : 1.15) * lerp(1.0, 0.65, daylightNow);
-    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * (hiveVision ? 0.5 : 0.45);
+    o.mat.emissive.setHex(c);   // city: lit by the neon, tinted, state on the rim; infrared: the body itself glows
+    o.mat.emissiveIntensity = (hiveVision ? glow * 1.2 : 0.08 + 0.2 * glow) * lerp(1.0, 0.7, daylightNow);
+    o.mat.userData.rimColor.setHex(c); o.mat.userData.rim.value = hiveVision ? 1.1 : 0.45 + 0.75 * glow;
+    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * (hiveVision ? 0.4 : 0.26);
     o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
     // routine: off-shift figures dim in the city view and their desk goes dark (flipped states keep their glow; heat is heat)
     const on = onShift(o.routine, f.clock); o._off = !on;
-    if (!on && !turned && !hiveVision) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
+    if (!on && !turned && !hiveVision) { o.mat.emissiveIntensity *= 0.55; o.mat.userData.rim.value *= 0.5; o.halo.material.opacity *= 0.45; }
     o._gi = st.unseen ? 0.05 : (hiveVision ? 1.6 : (on ? 0.9 : 0.08));   // desk glow: infrared burns every device white-hot; ghosts stay dark
     for (const m of o.glowMats) m.emissiveIntensity = o._gi;
     for (const s of o.devHalos) { s.material.opacity = (hiveVision && !st.unseen) ? 0.8 : 0; s.material.color.setHex(0xfff0d0); }   // device hot spots, infrared only
@@ -1654,7 +1825,7 @@ function scenarioCard(scn) {
 /* ---------- stills + deep links ---------- */
 function captureStill() {
   if (!canvas.width || !canvas.height) resize();                  // a hidden or zero-size window leaves the canvas empty
-  applyCam(); renderer.render(scene, camera);                      // render synchronously so the buffer is fresh
+  applyCam(); renderFrame();                                      // render synchronously so the buffer is fresh
   const name = `hive-swarm_${String(S.id).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}_f${String(frameIndex + 1).padStart(2, "0")}.png`;
   const a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = name; document.body.appendChild(a); a.click(); a.remove();
   return name;
@@ -1721,7 +1892,10 @@ document.getElementById("speed").addEventListener("change", (e) => { speed = Num
 document.getElementById("inspector-close").addEventListener("click", closeInspector);
 
 /* ---------- resize ---------- */
-function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight; renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  const s = renderer.getDrawingBufferSize(new THREE.Vector2()); post.setSize(s.x, s.y);
+}
 window.addEventListener("resize", resize);
 
 /* ---------- loop ---------- */
@@ -1738,6 +1912,7 @@ function tick(ts) {
     acc += dt * speed;
     if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) flyToPoint(0, -16, 0, 145, 1.1, 2.6); if (tour) scheduleTourCut(); } }   // the run ends on a slow pull-back to the full frame
   }
+  { const u = post.composite.uniforms.ir; u.value += ((hiveVision ? 1 : 0) - u.value) * Math.min(1, dt * 5); }   // the infrared grade eases in and out
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
   if (S) for (const nd of S.nodes) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
@@ -1816,7 +1991,7 @@ function tick(ts) {
   }
   if (selected && !document.getElementById("camwrap").hidden && S && now - lastCamDraw > 100) { lastCamDraw = now; drawCam(document.getElementById("camfeed"), selected, S.frames[frameIndex]); }   // ~10 Hz is all the blink needs
   if (S && (Math.floor(now / 400) !== Math.floor((now - dt * 1000) / 400))) drawGlyphMap();
-  applyCam(); renderer.render(scene, camera);
+  applyCam(); renderFrame();
 }
 
 /* ---------- boot ---------- */
