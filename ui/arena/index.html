@@ -147,6 +147,16 @@
   .unit .mood { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; text-align: right; }
   .unit .sbar { height: 2px; background: var(--hair); margin-top: 2px; }
   .unit .sbar i { display: block; height: 100%; background: var(--amber); }
+  .unit.off { opacity: 0.5; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--hair);
+            font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .legend i { font-style: normal; margin-right: 4px; font-size: 11px; }
+  .hist { font-size: 10px; color: var(--muted); display: grid; grid-template-columns: 12px 68px 1fr; gap: 6px; margin: 3px 0; line-height: 1.4; }
+  .hist .w { color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hist b { color: var(--fg); font-weight: 600; }
+  #fx-grain, #fx-scan { transition: opacity 0.25s; }
+  body.static #fx-grain { opacity: 0.42; }
+  body.static #fx-scan { opacity: 0.5; }
 
   /* ---------------- right inspector ---------------- */
   #inspector { position: fixed; top: 70px; right: 12px; width: 312px; z-index: 16; padding: 16px 14px 14px;
@@ -287,6 +297,7 @@
     </div>
     <div class="sec">Roster <small id="rostercount"></small></div>
     <div id="roster"></div>
+    <div id="legend" class="legend"></div>
   </aside>
 
   <aside id="inspector" class="panel" hidden>
@@ -486,12 +497,19 @@ function makeHumanoid(v) {
   part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, 0.42);
   part(new THREE.CylinderGeometry(0.26, 0.28, 2.2, 5), -1.7, -0.42);
-  part(new THREE.CylinderGeometry(0.2, 0.22, 2.0, 5), 0.5, aw, -0.35);
-  part(new THREE.CylinderGeometry(0.2, 0.22, 2.0, 5), 0.5, -aw, 0.35);
+  const armGeo = () => { const g = new THREE.CylinderGeometry(0.2, 0.22, 2.0, 5); g.translate(0, -1.0, 0); return g; };   // pivot at the shoulder
+  const armR = part(armGeo(), 1.5, aw, -0.35);
+  const armL = part(armGeo(), 1.5, -aw, 0.35);
   // shoulder plate: a thin box across the shoulders, a subtle "uniform" cue
   part(new THREE.BoxGeometry(tw * 2.5, 0.22, 0.9), 1.6);
   group.scale.setScalar(0.9 + 0.24 * v);
-  return { group, mat, picks };
+  return { group, mat, picks, arms: [armR, armL] };
+}
+/* on-shift test from the exported routine + per-frame clock (authored presentation rule) */
+function onShift(r, cl) {
+  if (!r || !cl || cl.hour == null) return true;
+  const start = r.work_start_hour == null ? 8 : r.work_start_hour, len = r.work_hours == null ? 8 : r.work_hours;
+  return ((cl.hour - start + 24) % 24) < len;
 }
 /* institutional node (rtg): a server-rack / terminal pylon instead of a person */
 function makePylon(v) {
@@ -610,8 +628,12 @@ function buildScenario(scn) {
     const ch = characterOf(S.dossiers[nd.id] || {});
     const label = textSprite((ch.name && ch.name !== nd.id) ? `${nd.id} · ${ch.name.toUpperCase()}` : nd.id, { tick: "#f2e23a", scale: 1.0, fixed: true });
     label.position.set(nd.pos[0], nd.pos[1] + 5.6, nd.pos[2]); label.visible = false; nodeGroup.add(label);
-    if (isPerson(nd) && ch.devices.length) { const props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props); }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, halo, label, rim, plate, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
+    let props = null; const glowMats = [];
+    if (isPerson(nd) && ch.devices.length) {
+      props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
+      props.traverse((o) => { if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
+    }
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
   }
   // base edges
   const bp = [];
@@ -721,6 +743,10 @@ function applyFrame(i) {
     o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * lerp(1.0, 0.55, daylightNow);
     o.halo.material.color.setHex(c); o.halo.material.opacity = glow * 0.55;
     o.rim.material.color.setHex(c);
+    // routine: off-shift figures dim and their desk goes dark (flipped states keep their glow)
+    const on = onShift(o.routine, f.clock); o._off = !on;
+    if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
+    for (const m of o.glowMats) m.emissiveIntensity = on ? 0.9 : 0.08;
   }
   const verts = [], cols = [];
   for (const [a, b] of S.edges) {
@@ -768,18 +794,21 @@ function spawnEffects(f) {
     const k = ev.vector || ev.kind; if (k === "signed") continue;
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
     const landed = evLanded(ev); if (!landed && !ev.blocked && k !== "reinforce") { audio.ping(false); continue; }
-    const o = nodeObjs[id], c = vectorColor(ev), p = o.group.position;
+    const o = nodeObjs[id], c = vectorColor(ev), p = o.group.position, soft = k === "reinforce";
+    // staging: the reticle locks on first; the beam, ring and flash land a beat later
     const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
-    ring.position.set(p.x, p.y - 2.6, p.z); scene.add(ring); effects.push({ obj: ring, t: 0, life: 1.0, kind: "ring" });
-    if (k === "reinforce") continue;                         // blue's loyalty spend: a soft ring only
+    ring.position.set(p.x, p.y - 2.6, p.z); ring.visible = soft; scene.add(ring); effects.push({ obj: ring, t: 0, life: 1.0, kind: "ring", delay: soft ? 0 : 0.34 });
+    if (soft) continue;                                      // blue's loyalty spend: a soft ring only
     const ret = new THREE.Sprite(new THREE.SpriteMaterial({ map: RETICLE_TEX, color: ev.blocked ? COL.steel : COL.hazard, transparent: true, depthWrite: false, depthTest: false, opacity: 0.95 }));
-    ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.6, kind: "reticle" });
+    ret.position.set(p.x, p.y + 0.6, p.z); scene.add(ret); effects.push({ obj: ret, t: 0, life: 0.7, kind: "reticle", delay: 0 });
     if (!ev.blocked) {
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.04, 44, 6), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
-      beam.position.set(p.x, p.y + 23, p.z); scene.add(beam); effects.push({ obj: beam, t: 0, life: 0.6, kind: "beam" });
-      o._flash = 1;
-      if (k === "extraction" || k === "funds_drained" || k === "defection") flashAlert();
-      audio.ping(true, k === "cult_recruitment" || k === "coerced_signature");
+      beam.position.set(p.x, p.y + 23, p.z); beam.visible = false; scene.add(beam);
+      effects.push({ obj: beam, t: 0, life: 0.6, kind: "beam", delay: 0.34, onShow: () => {
+        o._flash = 1;
+        if (k === "extraction" || k === "funds_drained" || k === "defection") flashAlert();
+        audio.ping(true, k === "cult_recruitment" || k === "coerced_signature");
+      } });
     } else audio.ping(false);
   }
 }
@@ -895,11 +924,14 @@ function renderDossier(id) {
     econHTML = `<div class="sec-title">Economic levers</div><div class="econ"><b>price <span>${esc(e.price_to_defect)}</span></b><b>loyalty <span>${Number(e.loyalty).toFixed(2)}</span></b><b>legal thr <span>${Number(e.legal_pressure_threshold).toFixed(2)}</span></b><b>avail <span>${Number(e.availability).toFixed(2)}</span></b></div>`; }
   const traitTitle = S.sim === "feral_custody" ? "Grafted susceptibility" : (S.sim === "rtg" ? "Institutional profile" : "Susceptibility");
   const arch = [d.archetype, d.truth_class].filter(Boolean).map(nice).join(" · ");
+  const shift = (ch.routine && f.clock) ? (onShift(ch.routine, f.clock) ? "" : ` · <span style="color:var(--dim)">off-shift</span>`) : "";
+  const hist = annals.filter((e) => e.id === id && e.frame <= frameIndex).slice(-6);
+  const histHTML = hist.length ? `<div class="sec-title">Recent history</div>` + hist.map((e) => `<div class="hist"><span style="color:${hex(e.color)}">${e.g}</span><span class="w">${esc(e.when)}</span><span>${e.text}</span></div>`).join("") : "";
   document.getElementById("dossier").innerHTML =
-    `<div class="dos-name">${esc(ch.name)}</div><div class="dos-arch">${esc(arch)}</div><div class="sub-id">${ch.name !== id ? esc(id) + " · " : ""}<span style="color:${hex(mood[1])}">${mood[0]}</span></div>` + occ + bio +
-    `<div class="badges">${badges.join("")}</div><div class="status">${status}</div>` + biasHTML + econHTML + devs +
+    `<div class="dos-name">${esc(ch.name)}</div><div class="dos-arch">${esc(arch)}</div><div class="sub-id">${ch.name !== id ? esc(id) + " · " : ""}<span style="color:${hex(mood[1])}">${mood[0]}</span>${shift}</div>` + occ + bio +
+    `<div class="badges">${badges.join("")}</div><div class="status">${status}</div>` + histHTML + biasHTML + econHTML + devs +
     `<div class="sec-title">${traitTitle}</div>${traitRows}<div class="sec-title">Comms links</div><div class="neigh">${neigh}</div>`;
-  document.querySelectorAll("#dossier .neigh b[data-go]").forEach((el) => el.addEventListener("click", () => { if (nodeObjs[el.getAttribute("data-go")]) select(el.getAttribute("data-go"), true); }));
+  document.querySelectorAll("#dossier b[data-go]").forEach((el) => el.addEventListener("click", () => { if (nodeObjs[el.getAttribute("data-go")]) select(el.getAttribute("data-go"), true); }));
   const camwrap = document.getElementById("camwrap");
   camwrap.hidden = !(st.comp || st.rec);
   if (!camwrap.hidden) drawCam(document.getElementById("camfeed"), id, f);
@@ -976,7 +1008,8 @@ function renderRoster() {
     const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(ch.occupation)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
-    return `<div class="unit ${selected === nd.id ? "sel" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${glyphOf(nd, st)}</span><span class="id">${esc(nd.id)}</span>` +
+    const off = ch.routine && !onShift(ch.routine, f.clock) && !(st.comp || st.rec || st.burned || st.keyLost);
+    return `<div class="unit ${selected === nd.id ? "sel" : ""} ${off ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${off ? "⌂" : glyphOf(nd, st)}</span><span class="id">${esc(nd.id)}</span>` +
       `<span class="nm">${nm}<div class="sbar"><i style="width:${Math.round(stress * 100)}%"></i></div></span><span class="mood" style="color:${hex(m[1])}">${m[0]}</span></div>`;
   }).join("");
   host.querySelectorAll(".unit").forEach((el) => el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
@@ -1121,6 +1154,10 @@ function buildAbout() {
     [GLYPH.honey, "honeypot", COL.hazard], [GLYPH.burned, "trap sprung", COL.hazard], [GLYPH.airgap, "airgap vault", COL.steel],
     [GLYPH.agent, "agent", COL.ice], [GLYPH.host, "service host / account", COL.ice], ["~", "stressed (pre-flip)", COL.amber],
   ].map(([g, t, c]) => `<div><i style="color:${hex(c)}">${g}</i>${t}</div>`).join("");
+  document.getElementById("legend").innerHTML = [
+    [GLYPH.clean, "clean", COL.ice], [GLYPH.comp, "turned", COL.hot], [GLYPH.rec, "sworn", COL.violet], [GLYPH.honey, "decoy", COL.hazard],
+    [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654],
+  ].map(([g, t, c]) => `<span><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("");
 }
 document.getElementById("aboutbtn").addEventListener("click", () => { document.getElementById("about").hidden = false; });
 document.getElementById("about-close").addEventListener("click", () => { document.getElementById("about").hidden = true; });
@@ -1195,6 +1232,7 @@ const sel = document.getElementById("scenario");
 REPLAY.scenarios.forEach((s, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = (s.sim ? `[${s.sim.replace("_compromise", "").replace("feral_", "")}] ` : "") + s.id; sel.appendChild(o); });
 sel.addEventListener("change", () => {
   stop(); const b = document.querySelector(".brand"); b.classList.remove("glitch"); void b.offsetWidth; b.classList.add("glitch");
+  document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 380);
   buildScenario(REPLAY.scenarios[Number(sel.value)]);
 });
 
@@ -1231,6 +1269,11 @@ function tick(ts) {
     o.group.position.y = nd.pos[1] + Math.sin(now * 0.0016 + o.phase) * 0.18;
     o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress : 0;
     o.group.rotation.x = st.comp && !st.honeypot ? 0.14 : 0;    // the turned slump forward
+    let ry = o.baseRot;
+    if (o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                 // off-shift: turned away from the desk
+    else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.group.position.x, hive.position.z - o.group.position.z);   // pressed: eyes on the adversary
+    o.group.rotation.y += (ry - o.group.rotation.y) * Math.min(1, dt * 3);
+    if (o.arms) { const sw = Math.sin(now * 0.0018 + o.phase) * (0.07 + 0.3 * (o._stress || 0)); o.arms[0].rotation.x = sw; o.arms[1].rotation.x = -sw; }
     if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : st.glow; }
     if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
   }
@@ -1242,7 +1285,10 @@ function tick(ts) {
   }
   for (const b of beacons) b.s.material.opacity = (Math.sin(now * 0.004 + b.ph) > 0.6) ? 0.9 : 0.12;
   for (let i = effects.length - 1; i >= 0; i--) {
-    const e = effects[i]; e.t += dt; const k = e.t / e.life;
+    const e = effects[i];
+    if (e.delay > 0) { e.delay -= dt; continue; }
+    if (!e.obj.visible) { e.obj.visible = true; if (e.onShow) e.onShow(); }
+    e.t += dt; const k = e.t / e.life;
     if (e.kind === "beam") { e.obj.material.opacity = 0.8 * (1 - k); e.obj.scale.y = 1 - 0.5 * k; }
     else if (e.kind === "reticle") { const s = 16 - 9 * easeInOut(Math.min(1, k * 1.4)); e.obj.scale.set(s, s, 1); e.obj.material.opacity = k > 0.75 ? (1 - k) * 4 : 0.95; }
     else { const s = 5 + k * 22; e.obj.scale.set(s, s, 1); e.obj.material.opacity = 0.9 * (1 - k); }

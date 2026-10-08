@@ -175,7 +175,18 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   - **Motion.** Slow shared breath on compromised halos, a cinematic idle orbit after 7 s
     without input, a 3.2 s title pull-in, autoplay of the first scenario from its opening frame
     after the title card, keyboard stepping (← → space esc), hover labels (screen-constant
-    sprites).
+    sprites), idle arm swing that widens with stress, and a strike *sequence*: the reticle locks
+    on first, the beam / ring / flash land 0.34 s later. A scenario change plays a brief static
+    burst (grain + scanline spike) with the title glitch.
+  - **Routine cues.** `onShift(routine, clock)` tests the exported `work_start_hour` /
+    `work_hours` window against the frame's clock hour (wrapping at midnight). Off-shift
+    figures dim (emissive ×0.55, halo ×0.45), turn away from their desk, and their desk props go
+    dark; the roster marks them ⌂ at half opacity. Flipped states (turned / sworn / sprung /
+    breached) never dim, because the compromise persists off-hours. A pressed figure (stress >
+    0.12) turns to face the adversary marker. All authored.
+  - **Recent history.** The dossier shows the last six annals entries that name the unit, up to
+    the current frame — the Dwarf-Fortress "thoughts and memories" panel, derived purely from
+    the exported events.
   - **Audio (off by default, user toggle).** An original generative bed synthesized in-page
     with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
     fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on
