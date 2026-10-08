@@ -56,6 +56,17 @@
   @keyframes grain { 0% { background-position: 0 0; } 25% { background-position: 60px -40px; } 50% { background-position: -50px 70px; } 75% { background-position: 30px 20px; } 100% { background-position: 0 0; } }
   #fx-alert { z-index: 8; opacity: 0; background: radial-gradient(ellipse at 50% 50%, rgba(255,46,77,0.05), rgba(255,46,77,0.38)); transition: opacity 0.9s ease; }
   #fx-alert.on { opacity: 1; transition: opacity 0.05s; }
+  /* infrared: the hive's overlay. A false-colour wash and a contrast lift on the WebGL canvas,
+     corner brackets and a readout; the scene itself goes cold in JS (applyDayCycle / applyFrame). */
+  #fx-ir { z-index: 9; opacity: 0; transition: opacity 0.45s ease; mix-blend-mode: screen;
+    background: linear-gradient(180deg, rgba(96,28,150,0.20), rgba(18,8,60,0.24)); }
+  body.ir #fx-ir { opacity: 1; }
+  body.ir #scene { filter: contrast(1.22) saturate(1.35) brightness(0.94); }
+  body.ir #fx-grain { opacity: 0.085; } body.ir #fx-scan { opacity: 0.16; }
+  #fx-ir .irtag { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 4px; color: var(--hunger); text-transform: uppercase; opacity: 0.85; }
+  #fx-ir::before, #fx-ir::after { content: ""; position: absolute; width: 36px; height: 36px; border: 2px solid rgba(255,43,220,0.45); }
+  #fx-ir::before { left: 262px; top: 70px; border-right: 0; border-bottom: 0; }
+  #fx-ir::after { right: 336px; bottom: 200px; border-left: 0; border-top: 0; }
   /* letterbox during director shots */
   #fx-bars { z-index: 9; }
   #fx-bars::before, #fx-bars::after { content: ""; position: absolute; left: 0; right: 0; height: 0; background: #04060a; transition: height 0.7s ease; }
@@ -300,6 +311,7 @@
   <div id="fx-grain" class="fx"></div>
   <div id="fx-alert" class="fx"></div>
   <div id="fx-bars" class="fx"></div>
+  <div id="fx-ir" class="fx"><div class="irtag">▮ Infrared · hive vision</div></div>
   <div id="scenecard"><div class="k"></div><div class="t"></div><div class="s"></div><div class="l"></div></div>
 
   <header id="topbar">
@@ -308,7 +320,7 @@
     <div id="clock"><div class="t" id="clocktext">—</div><canvas id="skyarc" width="280" height="24"></canvas></div>
     <div id="metrics"></div>
     <div id="toggles">
-      <button id="hivevis" class="on" aria-pressed="true" title="Hive vision (H): see the world as the hive mind does — devices as vectors, cash, marks"><i>◉</i><span> Hive vision</span></button>
+      <button id="hivevis" aria-pressed="false" title="Infrared (H): the hive's view — the city goes cold and the juicy bits show hot: devices as vectors, cash, marks"><i>◉</i><span> Infrared</span></button>
       <button id="director" class="on" aria-pressed="true" title="Director (D): camera follows landed strikes while you are idle"><i>◎</i><span> Director</span></button>
       <button id="audio" aria-pressed="false" title="Audio (M): generative ambient bed, synthesized in-page"><i>♪</i><span> Audio</span></button>
       <button id="weather" class="on" aria-pressed="true" title="Rain (R)"><i>☂</i><span> Rain</span></button>
@@ -344,7 +356,7 @@
   </aside>
 
   <div class="safety" id="safety">Synthetic simulation. Dossiers and feeds are fictional, abstract eval data — not surveillance of any real person.</div>
-  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play · H hive vision · D director · M audio · R rain · T tour</div>
+  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play · H infrared · D director · M audio · R rain · T tour</div>
 
   <footer id="dock">
     <div id="timeline">
@@ -368,12 +380,12 @@
       <div class="glyphs" id="about-glyphs"></div>
       <div class="sec-title">Reading the scene</div>
       <p>Figures are scripted trait vectors placed at their venue. A figure's base and halo carry its state; an amber halo and a nervous sway are graded stress before a flip. Strike beams are coloured by the exploited vector; the dark octahedron is the adversary's presence, hovering over its last target. The annals narrate exported frame events as abstract status lines only.</p>
-      <p><b>Hive vision</b> (default) is the adversary's perspective: devices burn bright as entry points and carry their vector tags, cash is priced (funds, values, the price to turn a custodian, data stores), the hottest marks glow magenta by their exploitable surface and the hive's gaze lines reach for the three hottest. What the hive cannot know stays hidden there: a decoy reads as a data store until it burns, and no truth class is shown. Switch it off for the researcher's view.</p>
+      <p><b>Infrared</b> (H) is the hive's overlay on the city: the scene goes cold and only the juicy bits show hot. Marks glow on a thermal scale by their exploitable surface, devices burn white-hot as entry points and carry their vector tags, cash is priced (funds, values, the price to turn a custodian, data stores), the hive's gaze lines reach for the three hottest marks, turned units cool to embers and units the hive has not found stay dark. What the hive cannot know stays hidden there: a decoy reads as a data store until it burns, and no truth class is shown. The default view is the city itself, coloured by the sim's state.</p>
       <div style="text-align:right;margin-top:12px"><button id="about-close">Close</button></div>
     </div>
   </div>
 
-  <div id="intro"><div><div class="t">HIVE SWARM</div><div class="s">Diorama · vectors · cash · marks</div><div class="l"></div></div></div>
+  <div id="intro"><div><div class="t">HIVE SWARM</div><div class="s">Diorama · H for infrared</div><div class="l"></div></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -657,6 +669,16 @@ function applyDayCycle(clock) {
   if (matteMat) { matteMat.color.setHex(daylight > 0 ? (0xffffff - Math.round(daylight * 0x70) * 0x010101) : 0xffffff); matteMat.opacity = lerp(1, 0.8, daylight); }
   if (rainLines) rainLines.material.opacity = lerp(0.17, 0.11, daylight);
   for (const s of lampHalos) s.material.opacity = lerp(0.55, 0.06, daylight);
+  for (const l of venueLights) l.intensity = 1.1;
+  if (hiveVision) {   // infrared: the city goes cold; only heat shows
+    renderer.setClearColor(0x05040c, 1); scene.fog.color.setHex(0x05040c);
+    hemi.intensity = 0.22; sun.intensity = 0.04; fill.intensity = 0.1;
+    for (const m of cityMats) m.emissiveIntensity = 0.12;
+    if (matteMat) { matteMat.color.setHex(0x5a5aa0); matteMat.opacity = 0.35; }
+    if (rainLines) rainLines.material.opacity = 0.05;
+    for (const s of lampHalos) s.material.opacity = 0.04;
+    for (const l of venueLights) l.intensity = 0.25;
+  }
   drawSkyArc(t);
 }
 function drawSkyArc(t) {
@@ -671,7 +693,16 @@ function drawSkyArc(t) {
 
 /* ---------- scenario build ---------- */
 let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null, scanLines = null, scanTargets = [];
-let hiveVision = true;   // the attacker's perspective: devices as vectors, cash, marks; decoys and truth class unknown
+let hiveVision = false;   // infrared overlay (H): the attacker's perspective — devices as vectors, cash, marks; decoys and truth class unknown. Off = the city view.
+let venueLights = [];
+/* thermal palette for infrared: cold blue → violet → magenta → orange → white-hot, by appetite / value */
+const THERMAL = [[0, 0x16245e], [0.35, 0x5a2a9a], [0.6, 0xd0208a], [0.8, 0xff7a2a], [1, 0xfff2d0]];
+const _ta = new THREE.Color(), _tb = new THREE.Color();
+function thermal(a) {
+  a = Math.max(0, Math.min(1, a));
+  for (let i = 1; i < THERMAL.length; i++) if (a <= THERMAL[i][0]) { const [a0, c0] = THERMAL[i - 1], [a1, c1] = THERMAL[i]; return _ta.setHex(c0).lerp(_tb.setHex(c1), (a - a0) / (a1 - a0)).getHex(); }
+  return THERMAL[THERMAL.length - 1][1];
+}
 const scanDots = [];
 let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive = null;
 const effects = [];
@@ -725,7 +756,7 @@ function buildScenario(scn) {
       props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
       props.traverse((o) => { if (o.userData.devHalo) devHalos.push(o); else if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
     }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
+    nodeObjs[nd.id] = { group: h.group, mat: h.mat, baseColor: isPerson(nd) ? COL.slate : 0x3b4654, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
     // hive vision: appetite heat ring, the device/vector tag, the cash tag
     const o = nodeObjs[nd.id];
@@ -787,7 +818,7 @@ function buildScenario(scn) {
 
 /* venue "sets": floor disc, rim, pylon + signage per location group */
 function buildVenues() {
-  venueGroup = new THREE.Group(); lampHalos = [];
+  venueGroup = new THREE.Group(); lampHalos = []; venueLights = [];
   const vg = venueGroups();
   for (const key of Object.keys(vg)) {
     const nodes = vg[key]; let cx = 0, cz = 0, minY = Infinity;
@@ -818,7 +849,7 @@ function buildVenues() {
     // neon: a glow behind the sign and a coloured point light that actually spills onto the figures
     const sg = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.38 }));
     sg.scale.set(28, 28, 1); sg.position.set(px, y + 18.5, pz); venueGroup.add(sg);
-    const pl = new THREE.PointLight(c, 1.1, R * 3.2, 1.2); pl.position.set(px, y + 16, pz); venueGroup.add(pl);
+    const pl = new THREE.PointLight(c, 1.1, R * 3.2, 1.2); pl.position.set(px, y + 16, pz); venueGroup.add(pl); venueLights.push(pl);
     dressVenue(key, cx, cz, R, y, pa);
   }
   scene.add(venueGroup);
@@ -900,19 +931,26 @@ function applyFrame(i) {
     const o = nodeObjs[nd.id], st = stateOf(nd.id, f);
     const stress = stressOf(nd.id, i);
     o._st = st; o._stress = stress;
-    let c = st.color, glow = st.glow;
-    if (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
-    o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * 1.3 * lerp(1.0, 0.6, daylightNow);
-    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * 0.62;
-    o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
-    // routine: off-shift figures dim and their desk goes dark (flipped states keep their glow)
-    const on = onShift(o.routine, f.clock); o._off = !on;
-    if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
-    o._gi = st.unseen ? 0.05 : (hiveVision ? 1.4 : (on ? 0.9 : 0.08));   // desk glow: hive vision burns every device bright; ghosts stay dark
-    for (const m of o.glowMats) m.emissiveIntensity = o._gi;
-    for (const s of o.devHalos) s.material.opacity = (hiveVision && !st.unseen) ? 0.55 : 0;   // device hot spots, hive vision only
-    // hive vision: heat on the marks still standing; cash tags; custody funds live on the key node
     const turned = st.comp || st.rec || st.burned || st.keyLost;
+    let c = st.color, glow = st.glow;
+    if (stress > 0.12 && !turned) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
+    if (hiveVision) {   // infrared: bodies read by how juicy they are, not by sim state
+      if (st.unseen) { c = 0x0d1030; glow = 0.15; }
+      else if (turned) { c = 0x7a1a2a; glow = 0.6; }                                                     // consumed: an ember
+      else if (o.appetite != null) { c = thermal(o.appetite); glow = 1.0 + 0.6 * o.appetite; }           // a mark, by appetite
+      else { c = thermal(Math.max(0, Math.min(1, (nd.value || 0) / 100))); glow = 0.9; }                   // an institution, by value
+    }
+    o.mat.color.setHex(hiveVision ? 0x0b1020 : o.baseColor);   // cold body under the heat in infrared
+    o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * (hiveVision ? 1.5 : 1.15) * lerp(1.0, 0.65, daylightNow);
+    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * (hiveVision ? 0.5 : 0.45);
+    o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
+    // routine: off-shift figures dim in the city view and their desk goes dark (flipped states keep their glow; heat is heat)
+    const on = onShift(o.routine, f.clock); o._off = !on;
+    if (!on && !turned && !hiveVision) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
+    o._gi = st.unseen ? 0.05 : (hiveVision ? 1.6 : (on ? 0.9 : 0.08));   // desk glow: infrared burns every device white-hot; ghosts stay dark
+    for (const m of o.glowMats) m.emissiveIntensity = o._gi;
+    for (const s of o.devHalos) { s.material.opacity = (hiveVision && !st.unseen) ? 0.8 : 0; s.material.color.setHex(0xfff0d0); }   // device hot spots, infrared only
+    // infrared: heat on the marks still standing; cash tags; custody funds live on the key node
     o.heat.material.opacity = (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
     if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
     if (o.cash) o.cash.visible = hiveVision && !st.unseen;
@@ -1108,8 +1146,7 @@ function appetiteOf(d) {
   let mx = 0, prot = 0; for (const b of bs) { if (b.protective) prot = Math.max(prot, b.strength || 0); else mx = Math.max(mx, b.strength || 0); }
   return Math.max(0, Math.min(1, mx * (1 - 0.6 * prot)));
 }
-const _hc = new THREE.Color();
-function heatColor(a) { return _hc.setHex(COL.ice).lerp(new THREE.Color(COL.hunger), Math.max(0, Math.min(1, a))).getHex(); }
+function heatColor(a) { return thermal(a); }   // readouts share the infrared palette
 const V_ABBR = { spear_social: "SPEAR", phone_bridge: "PHONE", emanation_tap: "EMIT", cult_recruitment: "CULT" };
 const vAbbr = (v) => V_ABBR[v] || String(v).toUpperCase().slice(0, 6);
 function hiveTagText(nd, ch) {
@@ -1579,7 +1616,15 @@ const audio = (() => {
   return { toggle, ping, swell, setTension, renderOffline, staticBurst };
 })();
 document.getElementById("audio").addEventListener("click", audio.toggle);
-document.getElementById("hivevis").addEventListener("click", (e) => { hiveVision = !hiveVision; e.currentTarget.classList.toggle("on", hiveVision); e.currentTarget.setAttribute("aria-pressed", String(hiveVision)); if (S) applyFrame(frameIndex); });
+function setInfrared(on) {
+  hiveVision = on;
+  const b = document.getElementById("hivevis"); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
+  document.body.classList.toggle("ir", on);
+  document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 300); audio.staticBurst();
+  if (on) showCard("infrared", "hive vision", "vectors · cash · marks", 2000);
+  if (S) applyFrame(frameIndex);
+}
+document.getElementById("hivevis").addEventListener("click", () => setInfrared(!hiveVision));
 let director = true, lastFlight = -1e9;
 document.getElementById("director").addEventListener("click", (e) => { director = !director; e.currentTarget.classList.toggle("on", director); e.currentTarget.setAttribute("aria-pressed", String(director)); if (!director) document.body.classList.remove("cine"); });
 document.getElementById("weather").addEventListener("click", (e) => { rainOn = !rainOn; if (rainLines) rainLines.visible = rainOn; e.currentTarget.classList.toggle("on", rainOn); e.currentTarget.setAttribute("aria-pressed", String(rainOn)); });
@@ -1621,14 +1666,14 @@ document.getElementById("legends").addEventListener("click", () => {
   const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 });
 function writeLink() {
-  const q = new URLSearchParams(); q.set("scenario", String(sel.value)); q.set("frame", String(frameIndex + 1)); if (!hiveVision) q.set("hive", "0"); if (selected) q.set("unit", selected);
+  const q = new URLSearchParams(); q.set("scenario", String(sel.value)); q.set("frame", String(frameIndex + 1)); if (hiveVision) q.set("hive", "1"); if (selected) q.set("unit", selected);
   try { history.replaceState(null, "", "?" + q.toString()); } catch (e) { /* file:// or sandboxed: links are a convenience only */ }
 }
 function readLink() {
   const q = new URLSearchParams(location.search), out = {};
   if (q.has("scenario")) { const i = Number(q.get("scenario")); if (Number.isInteger(i) && i >= 0 && i < REPLAY.scenarios.length) out.scenario = i; }
   if (q.has("frame")) { const f = Number(q.get("frame")); if (Number.isInteger(f) && f >= 1) out.frame = f - 1; }
-  if (q.get("hive") === "0") out.hive = false;
+  if (q.get("hive") === "1") out.hive = true; else if (q.get("hive") === "0") out.hive = false;
   if (q.has("unit")) out.unit = q.get("unit");
   if (q.get("tour") === "1") out.tour = true;
   return out;
@@ -1768,7 +1813,7 @@ function tick(ts) {
 /* ---------- boot ---------- */
 resize(); buildAbout();
 const link = readLink();
-if (link.hive === false) { hiveVision = false; const b = document.getElementById("hivevis"); b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); }
+if (link.hive != null) { hiveVision = link.hive; const b = document.getElementById("hivevis"); b.classList.toggle("on", hiveVision); b.setAttribute("aria-pressed", String(hiveVision)); document.body.classList.toggle("ir", hiveVision); }
 if (link.scenario != null) { sel.value = String(link.scenario); buildScenario(REPLAY.scenarios[link.scenario]); }
 else buildScenario(REPLAY.scenarios[0]);
 if (link.frame != null) applyFrame(Math.min(S.frames.length - 1, link.frame));

@@ -262,9 +262,16 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     loudness check: at the shipped master level (0.8) a 4 s render with the arp at full
     density, a landed ping, a held ping and a swell peaks near 0.29 with RMS near 0.06 — never
     clipping, deliberately a bed under a UI.
-  - **Hive vision** (default; toggle to the researcher view). The attacker's perspective, per
-    the user's direction ("the world from a hive mind's hungry perspective, looking for
-    vectors, cash and rubes"). *Devices* burn at full emissive and carry a tag at close range
+  - **Infrared** (the hive overlay; H, off by default — the default is the human-friendly city
+    coloured by sim state, per the user's later direction "the default view is a more human
+    friendly cyberpunk city and then we go 'infrared' on the juicy bits"). When on, the scene
+    goes cold (sky/fog near-black, lights and windows down, lamps and rain off, venue lights at
+    a quarter) and a CSS false-colour wash with a contrast lift sits on the canvas; bodies
+    take a dark base and glow on a thermal scale (`thermal()`: cold blue → violet → magenta →
+    orange → white-hot) by appetite (people) or value (institutions); turned units cool to an
+    ember, unfound units stay dark; devices burn white-hot. Everything below under "hive
+    vision" is this overlay. The attacker's perspective, per the user's direction ("the world
+    from a hive mind's hungry perspective, looking for vectors, cash and rubes"). *Devices* burn at full emissive and carry a tag at close range
     (`hiveTagText`: the exported device stack plus the vectors of the unit's strongest
     exploitable bias, abbreviated SPEAR / PHONE / EMIT / CULT). *Cash* is priced by sim
     (`cashTagText`): rtg node `value`; custody funds live on the reassembly / enclave key
