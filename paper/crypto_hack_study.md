@@ -139,6 +139,38 @@ tampered the front-end: with the foothold the terminal blind-sign succeeds, and 
 the counterfactual where the entry is forced to fail, the blind-sign does not
 happen and the chain fails. All 9 chains compose end-to-end at the shipped seed.
 
+## Single-control defensive ROI
+
+[`hack_controls.py`](../src/spiral_ln/hack_controls.py)
+(`python -m spiral_ln.hack_controls`) re-runs each chain under one control at a
+time and reports which single control would have broken it: **anti-phishing entry**
+(the foothold never lands), **clear-signing** (every signer fully verifies the
+payload), **device integrity** (the ui_confusion / supply_chain advisories are
+patched). A control "breaks" a chain when the end-to-end drain no longer occurs.
+
+| case | $M | surface | anti-phishing | clear-signing | device integrity |
+|---|---|---|---|---|---|
+| Bybit | 1,500 | ui_confusion | breaks | breaks | breaks |
+| Ronin | 620 | local | breaks | – | breaks |
+| Coincheck | 500 | key_management | breaks | – | breaks |
+| DMM Bitcoin | 305 | ui_confusion | breaks | breaks | breaks |
+| WazirX | 230 | ui_confusion | breaks | breaks | breaks |
+| Radiant | 50 | ui_confusion | breaks | breaks | breaks |
+| BitPay | 1.8 | phishing | breaks | breaks | – |
+| Ledger Connect Kit | 0.6 | supply_chain | breaks | breaks | breaks |
+| Twitter scam | 0.1 | phishing | breaks | – | breaks |
+
+Over the sample: **anti-phishing entry breaks 9/9** chains (~$3.2B) — every chain
+is entered through social engineering; **clear-signing breaks the 6 blind-signing
+chains** (~$2.1B) and is the robust control for the signer-manipulation cluster
+regardless of entry (the post-WazirX/Bybit lesson); **device integrity breaks
+8/9** (~$3.2B) — all but **BitPay**, whose impersonation-email deception had no
+front-end to patch. The reading: no single control covers everything, but
+**clear-signing + a phishing-resistant entry** together break every chain in the
+sample, and front-end/supply-chain integrity is decisive for the device-tamper
+drains that now dominate the dollars. (A what-if on the sim, not a guarantee about
+the real incidents.)
+
 ## Sources
 
 BitPay: [CoinDesk](https://www.coindesk.com/markets/2015/09/17/bitpay-sues-insurer-after-losing-18-million-in-phishing-attack),

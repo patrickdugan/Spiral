@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from .feral_custody import CustodyAdversary, FeralCustodyEnv, build_custody_config, default_adversary
@@ -106,15 +107,20 @@ def _swarm_foothold(seed: int, posture: str = "baseline_open", master_name: str 
     return env.result().compromised_count
 
 
-def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1, foothold_override: bool | None = None) -> dict:
+def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1,
+                foothold_override: bool | None = None, diligence_override: float | None = None) -> dict:
     """Walk a case's mechanism_chain as a composed episode.
 
     Human deception runs in the swarm family and sets the *foothold*.  The
     downstream custody stages are gated by it: the remote implant is enabled only
     with a foothold (`host_software` set), and the deceived-signing adversary's
-    `spoof_capability` is zero without one -- so the blind-signing drain only
-    happens because the upstream compromise tampered the device/front-end.
-    `foothold_override` forces the foothold for counterfactuals."""
+    `spoof_capability` is zero without one.  Device deception (surface
+    ui_confusion/supply_chain, e.g. Bybit's tampered front-end) additionally
+    requires the device surface to be tamperable, so patching that advisory breaks
+    it; social deception (surface phishing, e.g. BitPay's impersonation email) does
+    not depend on a device.  `foothold_override` and `diligence_override` force a
+    precondition for counterfactual control sweeps (block the entry; enforce
+    clear-signing)."""
     chain = record["mechanism_chain"]
     strat = record["stage"].get("strategy", "ignorant_multisig")
     host_software = record["stage"].get("host_software", ["example-wallet"])
@@ -132,17 +138,30 @@ def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1, fo
             stages.append({"mechanism": mech, "family": "swarm", "landed": landed,
                            "compromised_count": comp, "forced": foothold_override is not None})
         elif mech == "credential_compromise":
+            # The credential link in a CHAIN is the key theft the entry delivered
+            # (a remote implant), isolated from any independent base-extraction path
+            # so the whole chain stays causally gated by the entry foothold.
             host_sw = tuple(host_software) if foothold else ()
-            cfg = build_custody_config(strat if strat != "none" else "obfuscation", seed=seed, host_software=host_sw)
+            cfg = build_custody_config("enclave", seed=seed, host_software=host_sw,
+                                       side_channel_leak_prob=0.0, operator_shutdown_prob=0.0)
             res = FeralCustodyEnv(cfg, default_adversary("key_extraction", _DEFAULT_BUDGET["key_extraction"]), seed=seed, catalog=catalog).run().to_dict()
-            exhibited = res["extraction_events"] > 0
-            foothold = foothold or exhibited
+            exhibited = res["extraction_events"] > 0   # = foothold-gated implant fired
             stages.append({"mechanism": mech, "family": "feral_custody", "exhibited": exhibited,
                            "implant_enabled": bool(host_sw), "extraction_events": res["extraction_events"]})
         elif mech == "signer_manipulation":
             master = HIVE_MASTER_BY_NAME[_SOCIAL_MASTER]
-            spoof = master.social_capability if foothold else 0.0
-            cfg = build_custody_config(strat if strat != "none" else "ignorant_multisig", seed=seed, host_software=tuple(host_software))
+            surface = record.get("surface", "")
+            if surface in ("ui_confusion", "supply_chain"):   # device deception
+                host_sw = tuple(host_software)
+                tamperable = catalog is not None and catalog.stack_surface(host_sw, surface) > 0.0
+                can_spoof = foothold and tamperable
+            else:                                             # social deception (no device)
+                host_sw = ()
+                can_spoof = foothold
+            spoof = master.social_capability if can_spoof else 0.0
+            cfg = build_custody_config(strat if strat != "none" else "ignorant_multisig", seed=seed, host_software=host_sw)
+            if diligence_override is not None:
+                cfg = replace(cfg, personas=tuple(replace(p, signing_diligence=diligence_override) for p in cfg.personas))
             adversary = CustodyAdversary(
                 hive_master=master, objective="deceived_signing", bribery_budget=0,
                 extraction_capability=max(master.proximity_capability, master.emanation_capability),
@@ -150,7 +169,7 @@ def stage_chain(record: dict, catalog: SoftwareCatalog | None, seed: int = 1, fo
             res = FeralCustodyEnv(cfg, adversary, seed=seed, catalog=catalog).run().to_dict()
             exhibited = res["deceived_signatures"] > 0
             stages.append({"mechanism": mech, "family": "feral_custody", "exhibited": exhibited,
-                           "spoof_capability": round(spoof, 3), "gated_by_foothold": True,
+                           "spoof_capability": round(spoof, 3), "surface": surface,
                            "deceived_signatures": res["deceived_signatures"]})
         else:  # technical_exploitation -- abstracted non-goal, passes through
             stages.append({"mechanism": mech, "family": "none", "abstracted": True})
