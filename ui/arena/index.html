@@ -1249,7 +1249,8 @@ function renderRoster() {
   host.innerHTML = rows.map((nd) => {
     const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
-    const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(ch.occupation)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
+    const sub = (hiveVision && !st.unseen && nodeObjs[nd.id].tag) ? hiveTagText(nd, ch) : ch.occupation;   // hive vision: the mark's device and vector, not their job
+    const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(sub)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
     const off = ch.routine && !onShift(ch.routine, f.clock) && !(st.comp || st.rec || st.burned || st.keyLost);
     const ap = nodeObjs[nd.id].appetite, hc = (hiveVision && ap != null && !st.unseen) ? ` style="color:${hex(heatColor(ap))}"` : "";
     return `<div class="unit ${selected === nd.id ? "sel" : ""} ${(off || st.unseen) ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${st.unseen ? "?" : (off ? "⌂" : glyphOf(nd, st))}</span><span class="id"${hc}>${esc(nd.id)}</span>` +
@@ -1287,6 +1288,11 @@ function drawGlyphMap() {
     g.fillStyle = st.unseen ? "#2a3442" : hex(c); g.fillText(st.unseen ? "?" : glyphOf(nd, st), x, y);
     if (nd.id === selected && Math.floor(now / 400) % 2 === 0) { g.strokeStyle = "#f2e23a"; g.lineWidth = 1.5; g.strokeRect(x - 10, y - 10, 20, 20); }
   }
+  // venue names, dim, at each group's centroid; the adversary marker as a magenta diamond
+  g.font = "10px 'Share Tech Mono', monospace"; g.textAlign = "center"; g.fillStyle = "#3b4654";
+  const vg = venueGroups();
+  for (const key of Object.keys(vg)) { const ns = vg[key].filter(onLevel); if (!ns.length) continue; let sx = 0, sy = 0; ns.forEach((n) => { sx += px(n); sy += pz(n); }); g.fillText(nice(key).toUpperCase(), sx / ns.length, sy / ns.length - 14); }
+  if (hive && hive.visible && mapZ === 0) { const hx = W / 2 + (hive.position.x - cx) / span * (W - 40), hy = H / 2 + (hive.position.z - cz) / span * (H - 40); g.fillStyle = hex(COL.hunger); g.font = "14px 'Share Tech Mono', monospace"; g.fillText("◆", hx, hy); }
   // camera heading
   g.save(); g.translate(W - 18, 18); g.rotate(-cam.theta + Math.PI / 2); g.fillStyle = "#6b7786"; g.beginPath(); g.moveTo(0, -8); g.lineTo(5, 6); g.lineTo(-5, 6); g.closePath(); g.fill(); g.restore();
   g.fillStyle = "#3b4654"; g.font = "11px 'Share Tech Mono', monospace"; g.textAlign = "left"; g.fillText("Z " + mapZ + (mapZ === 0 ? " SURFACE" : " VAULT"), 8, 12);
