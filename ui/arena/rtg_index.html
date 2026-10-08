@@ -1601,7 +1601,7 @@ function tick(ts) {
   }
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
   if (S) {
-    const near = hiveVision && cam.radius < 60, mid = hiveVision && cam.radius < 130;   // tags: everyone up close; at mid-range only the hive's current marks
+    const near = hiveVision && cam.radius < 48, mid = hiveVision && cam.radius < 130;   // tags: everyone only at a close zoom; at mid-range only the hive's current marks
     for (const nd of S.nodes) { const o = nodeObjs[nd.id]; const unseen = o._st && o._st.unseen; if (o.tag) o.tag.visible = hiveVision && !unseen && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
