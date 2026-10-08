@@ -37,7 +37,7 @@ def build_combined() -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
         "generator": "spiral_ln.arena_replay",
-        "title": "◇ SPIRAL // DIORAMA",
+        "title": "◇ HIVE SWARM // DIORAMA",
         "vision_label": "Diorama // social-engineering surface",
         "safety_note": swarm["safety_note"],
         "sims": ["swarm_compromise", "feral_custody", "rtg"],

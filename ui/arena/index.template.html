@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spiral Diorama</title>
+<title>Hive Swarm Diorama</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
 <style>
   /* Presentation layer over sealed, synthetic replay JSON.  One committed theme:
@@ -46,10 +46,10 @@
 
   /* screen fx: scanlines, vignette, grain, alert flash (all pointer-transparent) */
   .fx { position: fixed; inset: 0; pointer-events: none; }
-  #fx-scan { z-index: 5; opacity: 0.16;
+  #fx-scan { z-index: 5; opacity: 0.10;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.55) 2px 3px); }
   #fx-vig { z-index: 6; background: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.62) 100%); }
-  #fx-grain { z-index: 7; opacity: 0.055; mix-blend-mode: screen;
+  #fx-grain { z-index: 7; opacity: 0.035; mix-blend-mode: screen;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.8  0 0 0 0 0.85  0 0 0 0 0.9  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
     animation: grain 0.9s steps(4) infinite; }
   @keyframes grain { 0% { background-position: 0 0; } 25% { background-position: 60px -40px; } 50% { background-position: -50px 70px; } 75% { background-position: 30px 20px; } 100% { background-position: 0 0; } }
@@ -60,6 +60,13 @@
   #fx-bars::before, #fx-bars::after { content: ""; position: absolute; left: 0; right: 0; height: 0; background: #04060a; transition: height 0.7s ease; }
   #fx-bars::before { top: 0; } #fx-bars::after { bottom: 0; }
   body.cine #fx-bars::before { height: 108px; } body.cine #fx-bars::after { height: 240px; }
+  /* scene card: names the scenario / venue on a cut */
+  #scenecard { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 30; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.6s ease; max-width: 70vw; }
+  #scenecard.on { opacity: 1; transition: opacity 0.25s ease; }
+  #scenecard .k { font-size: 10px; letter-spacing: 5px; color: var(--hazard); text-transform: uppercase; }
+  #scenecard .t { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 3.4vw, 40px); letter-spacing: 4px; color: var(--white); text-transform: uppercase; text-shadow: 0 0 24px rgba(0,0,0,0.9); margin: 6px 0; line-height: 1.1; }
+  #scenecard .s { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  #scenecard .l { width: 160px; height: 2px; margin: 12px auto 0; background: linear-gradient(90deg, transparent, var(--hazard), transparent); }
   @keyframes annin { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
   .ann.now { animation: annin 0.35s ease-out both; }
   @keyframes bump { 0% { color: var(--white); transform: scale(1.12); } 100% { transform: none; } }
@@ -288,13 +295,15 @@
   <div id="fx-grain" class="fx"></div>
   <div id="fx-alert" class="fx"></div>
   <div id="fx-bars" class="fx"></div>
+  <div id="scenecard"><div class="k"></div><div class="t"></div><div class="s"></div><div class="l"></div></div>
 
   <header id="topbar">
-    <div class="brand"><b id="brand-main">SPIRAL</b><span id="brand-sub">Diorama · sealed synthetic telemetry</span></div>
+    <div class="brand"><b id="brand-main">HIVE SWARM</b><span id="brand-sub">Diorama · sealed synthetic telemetry</span></div>
     <select id="scenario" aria-label="Scenario"></select>
     <div id="clock"><div class="t" id="clocktext">—</div><canvas id="skyarc" width="280" height="24"></canvas></div>
     <div id="metrics"></div>
     <div id="toggles">
+      <button id="hivevis" class="on" aria-pressed="true" title="See the world as the hive mind does: devices as vectors, cash, marks">◉ Hive vision</button>
       <button id="director" class="on" aria-pressed="true" title="Camera follows landed strikes while you are idle">◎ Director</button>
       <button id="audio" aria-pressed="false" title="Generative ambient bed (original, synthesized in-page)">♪ Audio</button>
       <button id="weather" class="on" aria-pressed="true" title="Rain">☂ Rain</button>
@@ -352,11 +361,12 @@
       <div class="glyphs" id="about-glyphs"></div>
       <div class="sec-title">Reading the scene</div>
       <p>Figures are scripted trait vectors placed at their venue. A figure's base and halo carry its state; an amber halo and a nervous sway are graded stress before a flip. Strike beams are coloured by the exploited vector; the dark octahedron is the adversary's presence, hovering over its last target. The annals narrate exported frame events as abstract status lines only.</p>
+      <p><b>Hive vision</b> (default) is the adversary's perspective: devices burn bright as entry points and carry their vector tags, cash is priced (funds, values, the price to turn a custodian, data stores), the hottest marks glow magenta by their exploitable surface and the hive's gaze lines reach for the three hottest. What the hive cannot know stays hidden there: a decoy reads as a data store until it burns, and no truth class is shown. Switch it off for the researcher's view.</p>
       <div style="text-align:right;margin-top:12px"><button id="about-close">Close</button></div>
     </div>
   </div>
 
-  <div id="intro"><div><div class="t">SPIRAL</div><div class="s">Diorama · sealed synthetic telemetry</div><div class="l"></div></div></div>
+  <div id="intro"><div><div class="t">HIVE SWARM</div><div class="s">Diorama · sealed synthetic telemetry</div><div class="l"></div></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -365,10 +375,11 @@
 "use strict";
 const REPLAY = JSON.parse(document.getElementById("replay-data").textContent);
 const TRAITS = REPLAY.traits;
+/* the brand is the page's own; a replay's `title` only refines the sub-label (e.g. "RTG control arena") */
 if (REPLAY.title) {
   const parts = String(REPLAY.title).replace(/^[^A-Za-z0-9]+/, "").split("//").map((s) => s.trim());
-  document.getElementById("brand-main").textContent = parts[0] || "SPIRAL";
-  if (parts[1]) document.getElementById("brand-sub").textContent = parts[1] + " · sealed synthetic telemetry";
+  const sub = parts.length > 1 ? parts[parts.length - 1] : "";
+  if (sub) document.getElementById("brand-sub").textContent = sub + " · sealed synthetic telemetry";
 }
 if (REPLAY.vision_label) document.getElementById("mosaic-head").textContent = REPLAY.vision_label;
 if (REPLAY.safety_note) document.getElementById("safety").textContent = REPLAY.safety_note;
@@ -381,6 +392,7 @@ const COL = {
   honey: 0xf2e23a, hazard: 0xf2e23a, amber: 0xffa63a,
   airgap: 0x4b6a85, steel: 0x4b6a85,
   detect: 0xffffff, white: 0xf3f6f9, slate: 0x5e6b7a,
+  hunger: 0xff4fd8,   // the hive's appetite: marks, scan lines, vectors
 };
 const hex = (n) => "#" + n.toString(16).padStart(6, "0");
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -403,7 +415,7 @@ const canvas = document.getElementById("scene");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setClearColor(0x07090e, 1);
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x07090e, 0.0026);
+scene.fog = new THREE.FogExp2(0x07090e, 0.002);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 4000);
 const hemi = new THREE.HemisphereLight(0x5e7fa3, 0x07090e, 0.6); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xbfd4ea, 0.35); sun.position.set(70, 140, 50); scene.add(sun);
@@ -635,7 +647,8 @@ function drawSkyArc(t) {
 }
 
 /* ---------- scenario build ---------- */
-let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null;
+let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null, scanLines = null, scanTargets = [];
+let hiveVision = true;   // the attacker's perspective: devices as vectors, cash, marks; decoys and truth class unknown
 let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive = null;
 const effects = [];
 function clearGroup(g) { if (g) { scene.remove(g); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); }); } }
@@ -652,7 +665,7 @@ function isPerson(nd) { return S.node_schema !== "institution" && !(nd.traits &&
 
 function buildScenario(scn) {
   S = scn;
-  clearGroup(nodeGroup); clearGroup(baseEdges); clearGroup(activeEdges); clearGroup(cageGroup); clearGroup(venueGroup); clearGroup(hive);
+  clearGroup(nodeGroup); clearGroup(baseEdges); clearGroup(activeEdges); clearGroup(cageGroup); clearGroup(venueGroup); clearGroup(hive); clearGroup(scanLines); scanTargets = [];
   nodeObjs = {}; nodeMeshes = []; effects.length = 0; hovered = null;
   buildEnvironment(S.id);
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
@@ -680,6 +693,15 @@ function buildScenario(scn) {
     }
     nodeObjs[nd.id] = { group: h.group, mat: h.mat, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
+    // hive vision: appetite heat ring, the device/vector tag, the cash tag
+    const o = nodeObjs[nd.id];
+    o.appetite = isPerson(nd) ? appetiteOf(S.dossiers[nd.id]) : null;
+    const heat = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: heatColor(o.appetite || 0), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
+    heat.scale.set(7, 7, 1); heat.position.set(nd.pos[0], nd.pos[1] - 2.5, nd.pos[2]); nodeGroup.add(heat); o.heat = heat;
+    const tagText = hiveTagText(nd, ch);
+    o.tag = tagText ? textSprite(tagText, { size: 30, color: hex(COL.ice), tick: hex(COL.hunger), scale: 0.95, fixed: true }) : null;
+    if (o.tag) { o.tag.position.set(nd.pos[0], nd.pos[1] + 8.6, nd.pos[2]); o.tag.visible = false; nodeGroup.add(o.tag); }
+    o.cash = null; o.cashText = null; const cashText = cashTagText(nd, ch); if (cashText) setCash(o, cashText);
   }
   // base edges
   const bp = [];
@@ -706,7 +728,10 @@ function buildScenario(scn) {
   const hhalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hot, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.45 })); hhalo.scale.set(16, 16, 1);
   const advName = S.hive_master || (S.result && S.result.adversary) || "adversary";
   const hlabel = textSprite("◆ " + String(advName).toUpperCase(), { color: "#ff2e4d", tick: "#ff2e4d", scale: 1.0, fixed: true }); hlabel.position.y = 7;
-  hive.add(core, wire, drop, hhalo, hlabel); hive.visible = false; hive.userData.target = new THREE.Vector3(); scene.add(hive);
+  const hlight = new THREE.PointLight(COL.hunger, 1.3, 70, 1.4); hlight.position.y = -3;   // the adversary's own neon spill
+  hive.add(core, wire, drop, hhalo, hlabel, hlight); hive.visible = false; hive.userData.target = new THREE.Vector3(); scene.add(hive);
+  // scan lines: the hive's gaze on its three hottest marks
+  scanLines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COL.hunger, transparent: true, opacity: 0.4 })); scanLines.visible = false; scene.add(scanLines);
 
   const scrub = document.getElementById("scrub");
   scrub.max = String(S.frames.length - 1);
@@ -744,6 +769,10 @@ function buildVenues() {
     pylon.position.set(px, y + 8, pz); venueGroup.add(pylon);
     const sign = textSprite(nice(key).toUpperCase(), { size: 44, color: hex(c), tick: hex(c), scale: 0.72 });
     sign.position.set(px, y + 18.5, pz); venueGroup.add(sign);
+    // neon: a glow behind the sign and a coloured point light that actually spills onto the figures
+    const sg = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.38 }));
+    sg.scale.set(28, 28, 1); sg.position.set(px, y + 18.5, pz); venueGroup.add(sg);
+    const pl = new THREE.PointLight(c, 1.1, R * 3.2, 1.2); pl.position.set(px, y + 16, pz); venueGroup.add(pl);
     dressVenue(key, cx, cz, R, y, pa);
   }
   scene.add(venueGroup);
@@ -785,15 +814,16 @@ function stateOf(id, f) {
   const nd = nodeObjs[id].data;
   const comp = f.compromised.includes(id), rec = f.recruited.includes(id), burned = f.burned.includes(id);
   const known = f.attacker_known.includes(id), det = f.detected.includes(id);
+  const decoyKnown = nd.honeypot && (!hiveVision || burned);   // the hive doesn't know a decoy until it burns
   let color = COL.dark, glow = 0.35;
-  if (nd.honeypot) { color = COL.honey; glow = burned ? 1.0 : 0.5; }
+  if (decoyKnown) { color = COL.honey; glow = burned ? 1.0 : 0.5; }
   else if (rec) { color = COL.recruit; glow = 0.95; }
   else if (comp) { color = COL.comp; glow = 0.95; }
   else if (nd.airgapped) { color = COL.airgap; glow = 0.4; }
   else if (known) { color = COL.known; glow = 0.55; }
   else { color = COL.clean; glow = 0.5; }
   const kl = keyLost(id, f); if (kl) { color = COL.hot; glow = 1.0; }
-  return { color, glow, comp, rec, burned, known, det, honeypot: nd.honeypot, airgap: nd.airgapped, keyLost: kl };
+  return { color, glow, comp, rec, burned, known, det, honeypot: decoyKnown, airgap: nd.airgapped, keyLost: kl };
 }
 function stressOf(id, i) { const trk = S.dossiers[id] && S.dossiers[id].track; return trk && trk.pressure ? (trk.pressure[i] || 0) : 0; }
 /* custody: once the key is compromised, the reassembly host / enclave is the breach site */
@@ -819,14 +849,22 @@ function applyFrame(i) {
     o._st = st; o._stress = stress;
     let c = st.color, glow = st.glow;
     if (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) { c = COL.amber; glow = 0.35 + 0.55 * stress; }
-    o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * lerp(1.0, 0.55, daylightNow);
-    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * 0.55;
+    o.mat.emissive.setHex(c); o.mat.emissiveIntensity = glow * 1.3 * lerp(1.0, 0.6, daylightNow);
+    o.halo.material.color.setHex(c); o.halo.material.opacity = glow * 0.62;
     o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
     // routine: off-shift figures dim and their desk goes dark (flipped states keep their glow)
     const on = onShift(o.routine, f.clock); o._off = !on;
     if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
-    for (const m of o.glowMats) m.emissiveIntensity = on ? 0.9 : 0.08;
+    for (const m of o.glowMats) m.emissiveIntensity = hiveVision ? 1.4 : (on ? 0.9 : 0.08);   // hive vision: every device burns bright as an entry point
+    // hive vision: heat on the marks still standing; cash tags; custody funds live on the key node
+    const turned = st.comp || st.rec || st.burned || st.keyLost;
+    o.heat.material.opacity = (hiveVision && !turned && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
+    if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
+    if (o.cash) o.cash.visible = hiveVision;
   }
+  // the hive's gaze: its three hottest marks that have not turned
+  scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !(st.comp || st.rec || st.burned || st.keyLost); })
+    .sort((a, b) => nodeObjs[b.id].appetite - nodeObjs[a.id].appetite).slice(0, 3).map((nd) => nd.id);
   const verts = [], cols = [];
   for (const [a, b] of S.edges) {
     const sa = nodeObjs[a] && nodeObjs[a]._st, sb = nodeObjs[b] && nodeObjs[b]._st; if (!sa || !sb) continue;
@@ -999,6 +1037,42 @@ document.getElementById("glyphmap").addEventListener("click", (e) => {
   if (best) select(best, true);
 });
 
+/* ---------- hive vision helpers (presentation aggregates over exported bias strengths) ---------- */
+/* appetite: how much of a mark the hive reads — the strongest exploitable bias, discounted by
+   the protective one. An authored display aggregate that mirrors the sim's susceptibility
+   shape; the sim's own numbers stay authoritative (see docs/diorama_design.md). */
+function appetiteOf(d) {
+  const bs = characterOf(d || {}).biases || []; if (!bs.length) return null;
+  let mx = 0, prot = 0; for (const b of bs) { if (b.protective) prot = Math.max(prot, b.strength || 0); else mx = Math.max(mx, b.strength || 0); }
+  return Math.max(0, Math.min(1, mx * (1 - 0.6 * prot)));
+}
+const _hc = new THREE.Color();
+function heatColor(a) { return _hc.setHex(COL.ice).lerp(new THREE.Color(COL.hunger), Math.max(0, Math.min(1, a))).getHex(); }
+const V_ABBR = { spear_social: "SPEAR", phone_bridge: "PHONE", emanation_tap: "EMIT", cult_recruitment: "CULT" };
+const vAbbr = (v) => V_ABBR[v] || String(v).toUpperCase().slice(0, 6);
+function hiveTagText(nd, ch) {
+  if (!isPerson(nd)) return nd.archetype && nd.truth_class !== "agent" ? `${nice(nd.archetype).toUpperCase()}${nd.venue ? " · " + nice(nd.venue).toUpperCase() : ""}` : null;
+  const devs = ch.devices.map((d) => String(d).toUpperCase()).join("·");
+  const top = (ch.biases || []).filter((b) => !b.protective).sort((a, b) => (b.strength || 0) - (a.strength || 0))[0];
+  const vecs = top ? (top.vectors || []).map(vAbbr).join("/") : "";
+  const parts = []; if (devs) parts.push(devs); if (vecs) parts.push("▸ " + vecs);
+  return parts.length ? parts.join("  ") : null;
+}
+function cashTagText(nd, ch) {
+  if (S.sim === "rtg") return (nd.truth_class !== "agent" && nd.value != null) ? `$ ${nd.value}` : null;
+  if (S.sim === "feral_custody") {
+    if ((S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) return "FUNDS $ —";
+    const e = ch.economics; return (e && e.price_to_defect != null) ? `$ ${Number(e.price_to_defect).toLocaleString()} TO TURN` : null;
+  }
+  return (nd.airgapped || nd.honeypot) ? "▣ DATA STORE" : null;   // a decoy reads as a store: the hive can't tell
+}
+function setCash(o, text) {
+  if (o.cashText === text) return;
+  if (o.cash) { nodeGroup.remove(o.cash); o.cash.material.map.dispose(); o.cash.material.dispose(); }
+  o.cash = textSprite(text, { size: 34, color: hex(COL.hazard), tick: hex(COL.hazard), scale: 0.8, fixed: true });
+  o.cash.position.set(o.data.pos[0], o.data.pos[1] + 7.2, o.data.pos[2]); o.cash.visible = hiveVision; nodeGroup.add(o.cash); o.cashText = text;
+}
+
 /* ---------- dossier ---------- */
 function characterOf(d) {
   const c = d.character || d;
@@ -1043,13 +1117,16 @@ function renderDossier(id) {
   if (ch.economics) { const e = ch.economics;
     econHTML = `<div class="sec-title">Economic levers</div><div class="econ"><b>price <span>${esc(e.price_to_defect)}</span></b><b>loyalty <span>${Number(e.loyalty).toFixed(2)}</span></b><b>legal thr <span>${Number(e.legal_pressure_threshold).toFixed(2)}</span></b><b>avail <span>${Number(e.availability).toFixed(2)}</span></b></div>`; }
   const traitTitle = S.sim === "feral_custody" ? "Grafted susceptibility" : (S.sim === "rtg" ? "Institutional profile" : "Susceptibility");
-  const arch = [d.archetype, d.truth_class].filter(Boolean).map(nice).join(" · ");
+  const arch = [d.archetype, hiveVision ? null : d.truth_class].filter(Boolean).map(nice).join(" · ");   // truth class is hidden from the hive
   const shift = (ch.routine && f.clock) ? (onShift(ch.routine, f.clock) ? "" : ` · <span style="color:var(--dim)">off-shift</span>`) : "";
+  const ap = nodeObjs[id].appetite;
+  const apHTML = (hiveVision && ap != null) ? `<div class="sec-title">Hive appetite</div><div class="trait"><div class="lab"><span>mark value</span><span>${Math.round(ap * 100)}%</span></div><div class="bar"><i style="width:${Math.round(ap * 100)}%;background:${hex(heatColor(ap))}"></i></div></div>` +
+    (nodeObjs[id].tag ? `<div class="tell" style="color:${hex(COL.ice)}">${esc(hiveTagText(nd, ch))}</div>` : "") : "";
   const hist = annals.filter((e) => e.id === id && e.frame <= frameIndex).slice(-6);
   const histHTML = hist.length ? `<div class="sec-title">Recent history</div>` + hist.map((e) => `<div class="hist"><span style="color:${hex(e.color)}">${e.g}</span><span class="w">${esc(e.when)}</span><span>${e.text}</span></div>`).join("") : "";
   document.getElementById("dossier").innerHTML =
     `<div class="dos-name">${esc(ch.name)}</div><div class="dos-arch">${esc(arch)}</div><div class="sub-id">${ch.name !== id ? esc(id) + " · " : ""}<span style="color:${hex(mood[1])}">${mood[0]}</span>${shift}</div>` + occ + bio +
-    `<div class="badges">${badges.join("")}</div><div class="status">${status}</div>` + histHTML + biasHTML + econHTML + devs +
+    `<div class="badges">${badges.join("")}</div><div class="status">${status}</div>` + apHTML + histHTML + biasHTML + econHTML + devs +
     `<div class="sec-title">${traitTitle}</div>${traitRows}<div class="sec-title">Comms links</div><div class="neigh">${neigh}</div>`;
   document.querySelectorAll("#dossier b[data-go]").forEach((el) => el.addEventListener("click", () => { if (nodeObjs[el.getAttribute("data-go")]) select(el.getAttribute("data-go"), true); }));
   const camwrap = document.getElementById("camwrap");
@@ -1108,7 +1185,7 @@ function buildMosaic(f) {
 const GLYPH = { clean: "☺", comp: "☻", rec: "♣", honey: "¤", airgap: "▲", agent: "◆", host: "■", burned: "✶" };
 function glyphOf(nd, st) {
   if (st.keyLost) return GLYPH.burned;
-  if (nd.honeypot) return st.burned ? GLYPH.burned : GLYPH.honey;
+  if (st.honeypot) return st.burned ? GLYPH.burned : GLYPH.honey;
   if (st.rec) return GLYPH.rec; if (st.comp) return GLYPH.comp;
   if (!isPerson(nd)) return nd.truth_class === "agent" ? GLYPH.agent : GLYPH.host;
   if (nd.airgapped) return GLYPH.airgap; return GLYPH.clean;
@@ -1119,7 +1196,7 @@ function buildRail() {
   Object.keys(vg).sort().forEach((key) => {
     const el = document.createElement("div"); el.className = "kn";
     el.innerHTML = `<span class="dot" style="color:${hex(venueColor(key))}"></span>${esc(nice(key))}<small>${vg[key].length} ${vg[key].length === 1 ? "unit" : "units"}</small>`;
-    el.addEventListener("click", () => flyToVenue(vg[key])); loc.appendChild(el);
+    el.addEventListener("click", () => { flyToVenue(vg[key]); showCard("location", nice(key), `${vg[key].length} ${vg[key].length === 1 ? "unit" : "units"}`, 2200); }); loc.appendChild(el);
   });
   const kinds = { honeypot: COL.hazard, airgap: COL.steel, hub: COL.ice, coalition: COL.violet, enclave: COL.steel, reassembly: COL.violet };
   const chips = document.getElementById("keychips"); chips.innerHTML = "";
@@ -1141,7 +1218,8 @@ function renderRoster() {
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(ch.occupation)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
     const off = ch.routine && !onShift(ch.routine, f.clock) && !(st.comp || st.rec || st.burned || st.keyLost);
-    return `<div class="unit ${selected === nd.id ? "sel" : ""} ${off ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${off ? "⌂" : glyphOf(nd, st)}</span><span class="id">${esc(nd.id)}</span>` +
+    const ap = nodeObjs[nd.id].appetite, hc = (hiveVision && ap != null) ? ` style="color:${hex(heatColor(ap))}"` : "";
+    return `<div class="unit ${selected === nd.id ? "sel" : ""} ${off ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${off ? "⌂" : glyphOf(nd, st)}</span><span class="id"${hc}>${esc(nd.id)}</span>` +
       `<span class="nm">${nm}<div class="sbar"><i style="width:${Math.round(stress * 100)}%"></i></div></span><span class="mood" style="color:${hex(m[1])}">${m[0]}</span></div>`;
   }).join("");
   host.querySelectorAll(".unit").forEach((el) => {
@@ -1300,7 +1378,7 @@ function buildAbout() {
   ].map(([g, t, c]) => `<div><i style="color:${hex(c)}">${g}</i>${t}</div>`).join("");
   document.getElementById("legend").innerHTML = [
     [GLYPH.clean, "clean", COL.ice], [GLYPH.comp, "turned", COL.hot], [GLYPH.rec, "sworn", COL.violet], [GLYPH.honey, "decoy", COL.hazard],
-    [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654],
+    [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654], ["◎", "mark heat", COL.hunger], ["$", "cash", COL.hazard],
   ].map(([g, t, c]) => `<span><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("") +
   `<span style="flex-basis:100%;height:0"></span>` + [
     ["▮", "phish / emanation", COL.ice], ["▮", "proximity / attrition", COL.amber], ["▮", "recruit / coerce", COL.violet], ["▮", "bribe / breach", COL.hot], ["▮", "decoy", COL.hazard], ["▮", "air gap", COL.steel],
@@ -1394,9 +1472,23 @@ const audio = (() => {
   return { toggle, ping, swell, setTension, renderOffline };
 })();
 document.getElementById("audio").addEventListener("click", audio.toggle);
+document.getElementById("hivevis").addEventListener("click", (e) => { hiveVision = !hiveVision; e.currentTarget.classList.toggle("on", hiveVision); e.currentTarget.setAttribute("aria-pressed", String(hiveVision)); if (S) applyFrame(frameIndex); });
 let director = true, lastFlight = -1e9;
 document.getElementById("director").addEventListener("click", (e) => { director = !director; e.currentTarget.classList.toggle("on", director); e.currentTarget.setAttribute("aria-pressed", String(director)); if (!director) document.body.classList.remove("cine"); });
 document.getElementById("weather").addEventListener("click", (e) => { rainOn = !rainOn; if (rainLines) rainLines.visible = rainOn; e.currentTarget.classList.toggle("on", rainOn); e.currentTarget.setAttribute("aria-pressed", String(rainOn)); });
+
+/* ---------- scene card ---------- */
+let cardTimer = null;
+function showCard(kicker, title, sub, ms) {
+  const el = document.getElementById("scenecard");
+  el.querySelector(".k").textContent = kicker; el.querySelector(".t").textContent = title; el.querySelector(".s").textContent = sub;
+  el.classList.add("on"); clearTimeout(cardTimer); cardTimer = setTimeout(() => el.classList.remove("on"), ms || 3400);
+}
+function scenarioCard(scn) {
+  const sim = (scn.sim || "swarm").replace("_compromise", "").replace("feral_", "");
+  const who = scn.hive_master || (scn.result && scn.result.adversary) || "";
+  showCard(`${sim} · ${scn.population || scn.nodes.length} units · ${scn.frames.length} ${scn.sim === "feral_custody" ? "epochs" : "rounds"}`, scn.id, who ? "vs " + nice(who) : "");
+}
 
 /* ---------- scenario selector ---------- */
 const sel = document.getElementById("scenario");
@@ -1406,6 +1498,7 @@ sel.addEventListener("change", () => {
   document.body.classList.add("static"); setTimeout(() => document.body.classList.remove("static"), 380);
   document.body.classList.remove("cine"); prevMetrics = {};
   buildScenario(REPLAY.scenarios[Number(sel.value)]);
+  scenarioCard(S);
 });
 
 /* ---------- playback ---------- */
@@ -1470,6 +1563,16 @@ function tick(ts) {
     if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : st.glow; }
     if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
   }
+  // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
+  if (S) {
+    const lod = hiveVision && cam.radius < 95;
+    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; if (o.tag) o.tag.visible = hiveVision && (lod || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
+    if (scanLines && hive) {
+      const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
+      if (show) { const v = []; for (const id of scanTargets) { const p = nodeObjs[id].group.position; v.push(hive.position.x, hive.position.y - 3.5, hive.position.z, p.x, p.y + 1, p.z); }
+        scanLines.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(v), 3)); scanLines.material.opacity = 0.2 + 0.35 * pulse; }
+    }
+  }
   if (cageGroup) cageGroup.children.forEach((c) => { c.rotation.y += dt * 0.3; c.rotation.x += dt * 0.11; });
   if (hive && hive.visible) {
     hive.position.lerp(hive.userData.target, Math.min(1, dt * 1.6)); hive.rotation.y += dt * 0.9; hive.position.y += Math.sin(now * 0.002) * 0.02; hive.children[1].material.opacity = 0.45 + 0.35 * pulse;
@@ -1510,6 +1613,7 @@ buildScenario(REPLAY.scenarios[0]);
 cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 160, phi: 1.1 } };
 idleSince = 0;
 // after the title card, run the first scenario from its opening frame so the compromise unfolds
+setTimeout(() => { if (S) scenarioCard(S); }, 1900);
 setTimeout(() => { if (!playing && S && frameIndex === S.frames.length - 1) { applyFrame(0); togglePlay(); } document.getElementById("audio").classList.add("nudge"); }, 2800);
 requestAnimationFrame(tick);
 </script>

@@ -120,7 +120,7 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   so one page's scenario selector hops between all three. Each sim keeps its own trait schema,
   carried per scenario as `traits`; the viewer reads `S.traits` per scenario (falling back to
   the top-level `traits`), so rtg dossiers show institutional traits while swarm/feral show the
-  human six. The combined page carries the unified "◇ SPIRAL // DIORAMA" title and the
+  human six. The combined page carries the unified "◇ HIVE SWARM // DIORAMA" title (the page brand itself carries no Spiral name) and the
   `safety_note`. (The in-app preview pane caps the inlined-snapshot size, so the full ~550 KB
   combined page is verified by test + a trimmed one-per-sim page in the browser; a real browser
   opens the full page.)
@@ -237,6 +237,29 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     loudness check: at the shipped master level (0.8) a 4 s render with the arp at full
     density, a landed ping, a held ping and a swell peaks near 0.29 with RMS near 0.06 — never
     clipping, deliberately a bed under a UI.
+  - **Hive vision** (default; toggle to the researcher view). The attacker's perspective, per
+    the user's direction ("the world from a hive mind's hungry perspective, looking for
+    vectors, cash and rubes"). *Devices* burn at full emissive and carry a tag at close range
+    (`hiveTagText`: the exported device stack plus the vectors of the unit's strongest
+    exploitable bias, abbreviated SPEAR / PHONE / EMIT / CULT). *Cash* is priced by sim
+    (`cashTagText`): rtg node `value`; custody funds live on the reassembly / enclave key
+    node and every other custodian shows its exported `price_to_defect` "to turn"; swarm
+    vaults and decoys read as a data store. *Marks* carry a magenta heat ring sized by
+    `appetiteOf` = strongest exploitable bias strength × (1 − 0.6 × protective strength) —
+    an authored display aggregate over exported bias strengths that mirrors the shape of the
+    sim's `susceptibility()` but never replaces it (the sim's outcomes remain authoritative;
+    this only orders who looks juiciest). The dossier shows the same number as "mark value"
+    and the roster colours ids by it. *Gaze lines* run from the adversary marker to the three
+    hottest marks that have not turned. What the hive cannot know is hidden in this mode: a
+    decoy reads as a data store (clean colouring, ☺ glyph, no honeypot badge) until it burns,
+    and the dossier omits `truth_class`. Switching the toggle re-renders the frame.
+  - **Neon.** A coloured point light and a sign glow at every venue pylon, a magenta point
+    light on the adversary marker, figure emissives ×1.3; fog 0.0026 → 0.002, grain 0.055 →
+    0.035, scanlines 0.16 → 0.10 for crisper distinction.
+  - **Branding.** The page brands itself "HIVE SWARM · Diorama" (title, top bar, title card);
+    a replay's `title` only refines the sub-label after `//`. No Spiral name in page chrome.
+  - **Scene cards.** On load and on every scenario change a card names the scenario, its
+    sim / unit count / length and the adversary for 3.4 s; fast travel names the venue.
   - **Cinema cues.** A director flight slides letterbox bars in (cleared by any pointer input,
     by stopping playback, or by switching the director off); the current frame's annals entries
     slide in; a metric tile pulses when its value changes. In a simulated 1× autoplay of the

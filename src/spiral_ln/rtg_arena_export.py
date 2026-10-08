@@ -242,7 +242,7 @@ def build_replay() -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
         "generator": "spiral_ln.rtg_arena_export",
-        "title": "◇ SPIRAL // RTG CONTROL ARENA",
+        "title": "◇ HIVE SWARM // RTG CONTROL ARENA",
         "vision_label": "Breach Feed // accessed nodes",
         "safety_note": (
             "Synthetic RTG-0 control-eval telemetry. Buildings are sim services/accounts, "
