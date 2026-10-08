@@ -194,6 +194,14 @@ spoofed signature is zero *deterministically*, a patched surface zeroes the
 tamperability, a blocked entry zeroes the foothold), not an empirical distribution;
 the sweep confirms reproducibility, not statistical spread.
 
+**Minimal control sets.** Treating a set of controls as covering a chain when any
+member breaks it, exactly two minimal sets cover all 9 chains: **{anti-phishing
+entry}** alone (by construction), **or** **{clear-signing + front-end/supply-chain
+integrity}** together. The second is the defensively interesting one: even without
+a guarantee that the social-engineering entry is stopped, clear-signing plus
+device/supply-chain integrity close every chain in the sample — defense-in-depth on
+the two downstream links (neither of those two controls covers everything alone).
+
 ## Sources
 
 BitPay: [CoinDesk](https://www.coindesk.com/markets/2015/09/17/bitpay-sues-insurer-after-losing-18-million-in-phishing-attack),

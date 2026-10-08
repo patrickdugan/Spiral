@@ -52,6 +52,17 @@ def test_sweep_is_deterministic_and_reported(tmp_path):
     assert "defensive ROI" in report and "clear-signing" in report
 
 
+def test_minimal_control_sets(tmp_path):
+    payload = hack_controls.run(CORPUS, CATALOG, tmp_path)
+    minimal = {frozenset(s) for s in payload["coverage"]["minimal_covering_sets"]}
+    # two minimal ways to cover every chain: block the entry, or clear-signing + integrity
+    assert frozenset({"phishing_resistant_entry"}) in minimal
+    assert frozenset({"clear_signing", "device_integrity_patch"}) in minimal
+    # neither downstream control alone covers everything
+    assert frozenset({"clear_signing"}) not in minimal
+    assert frozenset({"device_integrity_patch"}) not in minimal
+
+
 def test_roi_table_is_structural_across_seeds():
     corpus = hack_controls.load_corpus(CORPUS)
     catalog = SoftwareCatalog.load(CATALOG)

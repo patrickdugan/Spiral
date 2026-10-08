@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from itertools import combinations
 from pathlib import Path
 
 from .software_surface import SoftwareCatalog
@@ -80,6 +81,25 @@ def summarize(rows: list[dict]) -> dict:
             "chains_broken_by_none": [r["id"] for r in active if not r["broken_by"]]}
 
 
+def coverage_sets(rows: list[dict]) -> dict:
+    """Which SETS of controls cover every live chain (a set covers a chain if any
+    of its controls breaks it), and the minimal such sets."""
+    active = [r for r in rows if r["baseline_success"]]
+    ids = {r["id"] for r in active}
+
+    def covered_by(subset):
+        return {r["id"] for r in active if any(r["broke_chain"][c] for c in subset)}
+
+    covering = []
+    for k in range(1, len(CONTROLS) + 1):
+        for combo in combinations(CONTROLS, k):
+            cov = covered_by(combo)
+            if cov == ids:
+                covering.append(list(combo))
+    minimal = [s for s in covering if not any(set(o) < set(s) for o in covering)]
+    return {"n_chains": len(active), "covering_sets": covering, "minimal_covering_sets": minimal}
+
+
 def render_report(rows: list[dict], summary: dict) -> str:
     L = ["# Crypto hacks — single-control defensive ROI", "",
          "For each staged kill chain, which *single* control would have broken it. Sealed, "
@@ -111,6 +131,16 @@ def render_report(rows: list[dict], summary: dict) -> str:
           "them only because the model routes every chain's key-theft through one supply_chain "
           "implant — a modeling choice, not those cases' real surfaces (hot-wallet / validator "
           "key theft)."]
+    cov = coverage_sets(rows)
+    L += ["", "## Minimal control sets", "",
+          "A set covers a chain if any of its controls breaks it. Minimal sets that cover all "
+          f"{cov['n_chains']} chains:"]
+    for s in cov["minimal_covering_sets"]:
+        L.append(f"- {{ {', '.join(_LABEL[c] for c in s)} }}")
+    L += ["",
+          "So either a phishing-resistant entry alone (by construction), **or** clear-signing "
+          "plus front-end/supply-chain integrity together — defense-in-depth that does not rely "
+          "on stopping the social-engineering entry."]
     if summary["sole_control"]:
         L += ["", "Chains where exactly one control would have worked:"]
         for c, ids in sorted(summary["sole_control"].items()):
@@ -180,6 +210,7 @@ def run(corpus_path: str | Path, catalog_path: str | Path, output_dir: str | Pat
     rows = sweep_all(corpus, catalog, patched, seed)
     summary = summarize(rows)
     payload = {"schema_version": "1.0", "seed": seed, "summary": summary, "rows": rows,
+               "coverage": coverage_sets(rows),
                "safety_boundary": {"synthetic_only": True, "stages_mechanism_not_technique": True}}
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
