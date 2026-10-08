@@ -258,12 +258,16 @@
   #about .glyphs i { font-style: normal; display: inline-block; width: 18px; text-align: center; }
   @media (prefers-reduced-motion: reduce) { #intro, #hint { animation: none; opacity: 0; visibility: hidden; } #fx-grain { animation: none; } }
   @media (max-width: 900px) {
-    #rail, .safety, #clock { display: none; }
-    #inspector { width: min(312px, calc(100% - 24px)); }
+    #rail, .safety, #clock, .brand span, #hint { display: none; }
+    #topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+    #scenario { flex: 1 1 100%; max-width: none; }
+    #metrics { margin-left: 0; flex-wrap: wrap; gap: 4px; }
+    .metric { min-width: 54px; padding: 4px 6px; } .metric b { font-size: 13px; }
+    #toggles { margin-left: auto; }
+    #inspector { top: auto; bottom: 192px; width: min(312px, calc(100% - 24px)); max-height: 42%; }
     #dockgrid { grid-template-columns: 1fr; }
     #mosaicpane { display: none; }
     .brand b { font-size: 18px; }
-    .metric { min-width: 60px; } .metric b { font-size: 14px; }
   }
 </style>
 </head>
