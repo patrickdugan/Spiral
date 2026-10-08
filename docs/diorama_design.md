@@ -245,7 +245,9 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   - **Director camera** (toggle, on by default). While the viewer has been idle for 5 s, the
     first non-soft strike of each frame flies the camera to its target over 1.6 s, so the
     autoplayed opening plays as a tracked sequence; any pointer input takes the camera back.
-    Flights are at least 2.8 s apart so each shot settles.
+    Flights are at least 2.8 s apart so each shot settles. In the city view, each director
+    flight also cuts to infrared for 1.5 s and back (the "infrared beat"), so the juicy bits
+    flash hot exactly when the hive feeds; a manual H during a beat overrides it.
   - **Pacing.** Playback defaults to 1× and steps one frame per beat of the bed (60/112 s), so
     strikes land on the pulse when audio is on; 2× and 4× are half- and quarter-beats. The
     strike sequence is lock (0 s) → beam / pulse, ring and flash (0.34 s; 0.5 s for a lateral
