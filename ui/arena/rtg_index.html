@@ -592,7 +592,7 @@ function makePylon(v) {
 /* ---------- environment: ground, vault floor, city, rain ---------- */
 let envGroup = null, rainLines = null, rainPos = null, beacons = [], cityMats = [], rainOn = true, matteMat = null;
 function buildEnvironment(seedStr) {
-  if (envGroup) { scene.remove(envGroup); envGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+  if (envGroup) { scene.remove(envGroup); envGroup.traverse(disposeObj); }
   envGroup = new THREE.Group(); beacons = []; cityMats = [];
   matteMat = new THREE.MeshBasicMaterial({ map: SKYLINE_TEX, transparent: true, side: THREE.BackSide, fog: false, depthWrite: false });
   const matte = new THREE.Mesh(new THREE.CylinderGeometry(430, 430, 300, 64, 1, true), matteMat);
@@ -672,7 +672,16 @@ let hiveVision = true;   // the attacker's perspective: devices as vectors, cash
 const scanDots = [];
 let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive = null;
 const effects = [];
-function clearGroup(g) { if (g) { scene.remove(g); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); }); } }
+/* dispose everything an object owns: geometry, material, and any texture that is not one of
+   the shared ones (labels, tags, cash sprites and tower window clones each own a texture) */
+const SHARED_TEX = new Set([HALO_TEX, RING_TEX, RETICLE_TEX, GROUND_TEX, WINDOW_TEX, SKYLINE_TEX]);
+function disposeObj(o) {
+  if (o.geometry) o.geometry.dispose();
+  const m = o.material; if (!m || !m.dispose) return;
+  for (const key of ["map", "emissiveMap"]) { const t = m[key]; if (t && t.dispose && !SHARED_TEX.has(t)) t.dispose(); }
+  m.dispose();
+}
+function clearGroup(g) { if (g) { scene.remove(g); g.traverse(disposeObj); } }
 
 const VENUE_COLORS = {
   operations: COL.ice, enclave_datacenter: COL.steel, shard_holders: COL.violet, gig_shopfront: COL.amber, loyalist_hall: COL.violet,
@@ -687,6 +696,7 @@ function isPerson(nd) { return S.node_schema !== "institution" && !(nd.traits &&
 function buildScenario(scn) {
   S = scn;
   clearGroup(nodeGroup); clearGroup(baseEdges); clearGroup(activeEdges); clearGroup(cageGroup); clearGroup(venueGroup); clearGroup(hive); clearGroup(scanLines); scanTargets = [];
+  for (const e of effects) { if (e.obj) { scene.remove(e.obj); disposeObj(e.obj); } else if (e.cage) { e.cage.scale.setScalar(1); } }   // effects in flight from the last scenario
   nodeObjs = {}; nodeMeshes = []; effects.length = 0; hovered = null;
   buildEnvironment(S.id);
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
@@ -737,7 +747,12 @@ function buildScenario(scn) {
     box.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); cageGroup.add(box); cageByNode[nd.id] = box;
   }
   scene.add(cageGroup);
-  activeEdges = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
+  // active edges: one fixed-size buffer per scenario, updated in place (replacing attributes every frame leaks GL buffers)
+  const eg = new THREE.BufferGeometry();
+  eg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(Math.max(1, S.edges.length) * 6), 3).setUsage(THREE.DynamicDrawUsage));
+  eg.setAttribute("color", new THREE.BufferAttribute(new Float32Array(Math.max(1, S.edges.length) * 6), 3).setUsage(THREE.DynamicDrawUsage));
+  eg.setDrawRange(0, 0);
+  activeEdges = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
   scene.add(activeEdges);
   buildVenues();
   // adversary presence: a dark octahedron with a hot wire, hovering over its last target
@@ -752,7 +767,8 @@ function buildScenario(scn) {
   const hlight = new THREE.PointLight(COL.hunger, 1.3, 70, 1.4); hlight.position.y = -3;   // the adversary's own neon spill
   hive.add(core, wire, drop, hhalo, hlabel, hlight); hive.visible = false; hive.userData.target = new THREE.Vector3(); scene.add(hive);
   // scan lines: the hive's gaze on its three hottest marks
-  scanLines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COL.hunger, transparent: true, opacity: 0.4 })); scanLines.visible = false; scene.add(scanLines);
+  const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(18), 3).setUsage(THREE.DynamicDrawUsage)); sg.setDrawRange(0, 0);
+  scanLines = new THREE.LineSegments(sg, new THREE.LineBasicMaterial({ color: COL.hunger, transparent: true, opacity: 0.4 })); scanLines.visible = false; scene.add(scanLines);
   for (const d of scanDots) { scene.remove(d); d.material.dispose(); } scanDots.length = 0;
   for (let k = 0; k < 3; k++) { const d = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hunger, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 })); d.scale.set(2.2, 2.2, 1); d.visible = false; scene.add(d); scanDots.push(d); }
 
@@ -889,13 +905,15 @@ function applyFrame(i) {
     // routine: off-shift figures dim and their desk goes dark (flipped states keep their glow)
     const on = onShift(o.routine, f.clock); o._off = !on;
     if (!on && !st.comp && !st.rec && !st.burned && !st.keyLost) { o.mat.emissiveIntensity *= 0.55; o.halo.material.opacity *= 0.45; }
-    for (const m of o.glowMats) m.emissiveIntensity = hiveVision ? 1.4 : (on ? 0.9 : 0.08);   // hive vision: every device burns bright as an entry point
+    o._gi = st.unseen ? 0.05 : (hiveVision ? 1.4 : (on ? 0.9 : 0.08));   // desk glow: hive vision burns every device bright; ghosts stay dark
+    for (const m of o.glowMats) m.emissiveIntensity = o._gi;
     // hive vision: heat on the marks still standing; cash tags; custody funds live on the key node
     const turned = st.comp || st.rec || st.burned || st.keyLost;
     o.heat.material.opacity = (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
     if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
     if (o.cash) o.cash.visible = hiveVision && !st.unseen;
-    if (st.unseen) { for (const m of o.glowMats) m.emissiveIntensity = 0.05; o.rim.material.opacity = 0.25; } else o.rim.material.opacity = 0.85;   // ghosts: dark desk, faint ring
+    o.rim.material.opacity = st.unseen ? 0.25 : 0.85;   // ghosts: faint ring
+    o._ei = o.mat.emissiveIntensity;                     // the frame-derived level the render loop returns to after a flash
   }
   // the hive's gaze: its three hottest discovered marks that have not turned
   scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !st.unseen && !(st.comp || st.rec || st.burned || st.keyLost); })
@@ -906,9 +924,9 @@ function applyFrame(i) {
     let c = null; if (sa.rec && sb.rec) c = COL.recruit; else if (sa.comp && sb.comp) c = COL.comp;
     if (c) { const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos, cc = new THREE.Color(c); verts.push(pa[0], pa[1] - 2.9, pa[2], pb[0], pb[1] - 2.9, pb[2]); cols.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b); }
   }
-  const ag = activeEdges.geometry;
-  ag.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts), 3));
-  ag.setAttribute("color", new THREE.BufferAttribute(new Float32Array(cols), 3));
+  const ag = activeEdges.geometry, pa = ag.attributes.position, ca = ag.attributes.color;
+  pa.array.set(verts.slice(0, pa.array.length)); ca.array.set(cols.slice(0, ca.array.length)); pa.needsUpdate = true; ca.needsUpdate = true;
+  ag.setDrawRange(0, Math.min(verts.length, pa.array.length) / 3);
   // adversary presence follows the most recent attempt
   let lastT = null;
   for (let k = i; k >= 0 && !lastT; k--) for (const ev of S.frames[k].events) { const t = evTarget(ev); if (t && !nodeObjs[ev.actor]) { lastT = t; break; } }
@@ -1255,10 +1273,11 @@ function renderRoster() {
   const rank = (nd) => { const o = nodeObjs[nd.id]; if (o._st && o._st.unseen) return -2; return o.appetite == null ? -1 : o.appetite; };   // unseen units sink to the bottom
   const rows = hiveVision ? [...S.nodes].sort((a, b) => rank(b) - rank(a)) : S.nodes;
   document.getElementById("rostertitle").textContent = hiveVision ? "Marks" : "Roster";
-  const seen = S.nodes.filter((nd) => !stateOf(nd.id, f).unseen).length;
+  const stOf = (nd) => nodeObjs[nd.id]._st || stateOf(nd.id, f);   // applyFrame already cached this frame's state
+  const seen = S.nodes.filter((nd) => !stOf(nd).unseen).length;
   document.getElementById("rostercount").textContent = (hiveVision && knownData) ? `${seen}/${S.nodes.length} seen` : S.nodes.length + " units";
   host.innerHTML = rows.map((nd) => {
-    const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
+    const st = stOf(nd), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     const sub = (hiveVision && !st.unseen && nodeObjs[nd.id].tag) ? hiveTagText(nd, ch) : ch.occupation;   // hive vision: the mark's device and vector, not their job
     const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(sub)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
@@ -1292,7 +1311,7 @@ function drawGlyphMap() {
   g.font = "16px 'Share Tech Mono', monospace"; g.textAlign = "center"; g.textBaseline = "middle";
   mapHits = [];
   for (const nd of S.nodes) {
-    const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), x = px(nd), y = pz(nd);
+    const st = nodeObjs[nd.id]._st || stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), x = px(nd), y = pz(nd);
     if (!onLevel(nd)) { g.fillStyle = "#1c232e"; g.fillText(mapZ === 0 ? "▽" : "△", x, y); continue; }
     mapHits.push({ id: nd.id, x, y });
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
@@ -1314,11 +1333,12 @@ function nameOf(id) { const d = S.dossiers[id]; if (!d) return id; const ch = ch
 function clockText(cl) { return cl ? `${String(Math.floor(cl.hour || 0)).padStart(2, "0")}:${String(Math.floor(((cl.hour || 0) % 1) * 60)).padStart(2, "0")} ${String(cl.phase || "").slice(0, 5)}` : ""; }
 function buildAnnals(scn) {
   const out = []; const seen = new Set();
-  const push = (fi, g, color, text, minor, id) => out.push({ frame: fi, g, color, text, minor: !!minor, id: id || null });
+  let when = "";
+  const push = (fi, g, color, text, minor, id) => out.push({ frame: fi, when, g, color, text, minor: !!minor, id: id || null });
   const unit = (scn.sim === "feral_custody") ? "E" : "R";
   const windows = new Set((scn.reassembly_windows || []).map((w) => w.epoch + ":" + w.host));
   scn.frames.forEach((f, fi) => {
-    const when = `${unit}${String(fi + 1).padStart(2, "0")} ${clockText(f.clock)}`;
+    when = `${unit}${String(fi + 1).padStart(2, "0")} ${clockText(f.clock)}`;
     for (const ev of f.events) {
       const k = ev.vector || ev.kind, tgt = evTarget(ev), T = tgt ? `<b data-go="${esc(tgt)}">${esc(nameOf(tgt))}</b>` : esc(ev.target || ""), A = esc(ev.actor), V = esc(nice(k));
       const landed = evLanded(ev);
@@ -1358,7 +1378,6 @@ function buildAnnals(scn) {
     if (scn.sim === "feral_custody" && f.key_compromised && !seen.has("key")) { seen.add("key"); push(fi, "✶", COL.hot, `the key is compromised — custody of the ${esc(scn.strategy || "")} strategy has failed.`); }
     for (const id of f.burned) if (!seen.has("b" + id)) { seen.add("b" + id); }
     for (const w of (scn.reassembly_windows || [])) if (w.epoch === fi && nodeObjs[w.host] && !windows.has((fi - 1) + ":" + w.host)) push(fi, "◇", COL.hazard, `reassembly window opens on <b data-go="${esc(w.host)}">${esc(w.host)}</b> — key material sits on one host.`, true, w.host);
-    out.forEach((e) => { if (e.frame === fi && e.when == null) e.when = when; });
   });
   return out;
 }
@@ -1402,7 +1421,7 @@ function setMetrics(rows) {
 function metricsFor(scn, f, i) {
   const base = metricsBase(scn, f, i);
   if (hiveVision) {   // marks left: units the hive still reads as juicy (appetite ≥ 0.5) that have not turned
-    const left = scn.nodes.filter((nd) => { const o = nodeObjs[nd.id]; if (!o || o.appetite == null || o.appetite < 0.5) return false; const st = stateOf(nd.id, f); return !(st.comp || st.rec || st.burned || st.keyLost); }).length;
+    const left = scn.nodes.filter((nd) => { const o = nodeObjs[nd.id]; if (!o || o.appetite == null || o.appetite < 0.5) return false; const st = o._st || stateOf(nd.id, f); return !(st.comp || st.rec || st.burned || st.keyLost); }).length;
     base.push(["marks left", left, "hun"]);
   }
   return base;
@@ -1520,8 +1539,9 @@ const audio = (() => {
     if ((step % 8) === 3 && Math.random() < 0.35) return;   // rests keep it sparse
     noteAt(ctx, arpGain, t, f, playing ? 1 : 0.55);
   }
-  function ping(landed, soft) { if (ctx) pingAt(ctx, master, ctx.currentTime, landed, soft); }
-  function swell() { if (ctx) swellAt(ctx, master, ctx.currentTime); }
+  const live = () => ctx && on && ctx.state === "running";   // never schedule into a suspended context: it would all burst on resume
+  function ping(landed, soft) { if (live()) pingAt(ctx, master, ctx.currentTime, landed, soft); }
+  function swell() { if (live()) swellAt(ctx, master, ctx.currentTime); }
   function setTension(x) { tension = x; if (droneFilter) droneFilter.frequency.setTargetAtTime(160 + 700 * x, ctx.currentTime, 0.8); }
   /* a short filtered static burst on a scenario cut, matching the visual static */
   function staticBurst() {
@@ -1532,11 +1552,13 @@ const audio = (() => {
     const g = ctx.createGain(); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
     n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + 0.36);
   }
+  let suspendTimer = null;
   function toggle() {
     on = !on;
     const b = document.getElementById("audio"); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
-    if (on) { if (!ctx) start(); else { ctx.resume(); master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + 1); } setTension(tension); }
-    else if (ctx) { master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6); setTimeout(() => ctx && ctx.suspend(), 700); }
+    clearTimeout(suspendTimer); suspendTimer = null;          // a pending suspend must not fire after a quick re-enable
+    if (on) { if (!ctx) start(); else { ctx.resume(); master.gain.cancelScheduledValues(ctx.currentTime); master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + 1); } setTension(tension); }
+    else if (ctx) { master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6); suspendTimer = setTimeout(() => { if (!on && ctx) ctx.suspend(); }, 700); }
   }
   /* render the same bed offline (arp at full density, a landed ping, a held ping, a swell,
      tension 0.5) and report peak / RMS — a loudness check, not used during playback */
@@ -1623,7 +1645,7 @@ const BEAT = 60 / 112;   // one frame per beat at 1× (the bed runs at 112 BPM),
 function stop() { playing = false; document.getElementById("play").textContent = "▶"; document.body.classList.remove("cine"); if (S) writeLink(); }
 function togglePlay() { playing = !playing; if (playing && frameIndex >= S.frames.length - 1) applyFrame(0); document.getElementById("play").textContent = playing ? "❚❚" : "▶"; }
 document.getElementById("play").addEventListener("click", togglePlay);
-document.getElementById("scrub").addEventListener("input", (e) => { stop(); applyFrame(Number(e.target.value)); });
+document.getElementById("scrub").addEventListener("input", (e) => { stop(); applyFrame(Number(e.target.value)); writeLink(); });
 document.getElementById("speed").addEventListener("change", (e) => { speed = Number(e.target.value); });
 document.getElementById("inspector-close").addEventListener("click", closeInspector);
 
@@ -1632,7 +1654,7 @@ function resize() { const w = window.innerWidth, h = window.innerHeight; rendere
 window.addEventListener("resize", resize);
 
 /* ---------- loop ---------- */
-let now = 0, last = 0;
+let now = 0, last = 0, lastCamDraw = 0;
 function tick(ts) {
   requestAnimationFrame(tick);
   const dt = Math.max(0, Math.min(0.05, (ts - last) / 1000 || 0)); last = ts; now = ts;
@@ -1663,7 +1685,7 @@ function tick(ts) {
       if (!o._off && o.hasDesk && !(st.comp || st.rec)) { const j = Math.sin(now * 0.02 + o.phase) * 0.05; rx = [-0.8 + j, -0.8 - j]; rz = [-0.15, 0.15]; }   // typing
       if (o._pose) {
         o._pose.t -= dt;
-        if (o._pose.t <= 0) { o._pose = null; for (const m of o.glowMats) m.emissiveIntensity = o._off ? 0.08 : 0.9; }
+        if (o._pose.t <= 0) { o._pose = null; for (const m of o.glowMats) m.emissiveIntensity = o._gi; }
         else { const pk = o._pose.kind;
           if (!o._pose.landed && !o._pose.blocked) { rx[0] = -1.5; rz[0] = -0.1; }                                 // declines: hand up, palm out
           else if (pk === "spear_social") { rx[0] = -2.3; rz[0] = -0.55; }                                           // takes the message: phone to the face
@@ -1676,7 +1698,7 @@ function tick(ts) {
       for (let a = 0; a < 2; a++) { o.arms[a].rotation.x += (rx[a] - o.arms[a].rotation.x) * Math.min(1, dt * 7); o.arms[a].rotation.z += (rz[a] - o.arms[a].rotation.z) * Math.min(1, dt * 7); }
     }
     o.group.rotation.x = (o.slump || 0) + (st.comp && !st.honeypot ? 0.14 : 0) + lean;    // archetype posture + the turned slump forward + the pose lean
-    if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : st.glow; }
+    if (o._flash > 0) { o._flash -= dt * 2.2; o.mat.emissive.setHex(o._flash > 0 ? COL.white : (o.halo.material.color.getHex())); o.mat.emissiveIntensity = o._flash > 0 ? 1.4 : o._ei; }
     if (st.comp || st.rec || st.burned || st.keyLost) { const p = 0.7 + 0.3 * pulse; o.halo.material.opacity = st.glow * 0.55 * p; const s = 8 * (0.9 + 0.2 * p); o.halo.scale.set(s, s, 1); }
   }
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
@@ -1685,8 +1707,9 @@ function tick(ts) {
     for (const nd of S.nodes) { const o = nodeObjs[nd.id]; const unseen = o._st && o._st.unseen; if (o.tag) o.tag.visible = hiveVision && !unseen && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
-      if (show) { const v = []; for (const id of scanTargets) { const p = nodeObjs[id].group.position; v.push(hive.position.x, hive.position.y - 3.5, hive.position.z, p.x, p.y + 1, p.z); }
-        scanLines.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(v), 3)); scanLines.material.opacity = 0.2 + 0.35 * pulse; }
+      if (show) { const pa = scanLines.geometry.attributes.position, v = pa.array; let n = 0;
+        for (const id of scanTargets.slice(0, 3)) { const p = nodeObjs[id].group.position; v[n++] = hive.position.x; v[n++] = hive.position.y - 3.5; v[n++] = hive.position.z; v[n++] = p.x; v[n++] = p.y + 1; v[n++] = p.z; }
+        pa.needsUpdate = true; scanLines.geometry.setDrawRange(0, n / 3); scanLines.material.opacity = 0.2 + 0.35 * pulse; }
       // scanning pulses ride the gaze lines out from the marker
       for (let k = 0; k < scanDots.length; k++) { const d = scanDots[k], id = scanTargets[k]; d.visible = show && !!id; if (d.visible) { const p = nodeObjs[id].group.position, t = ((now * 0.00045) + k / 3) % 1; d.position.set(lerp(hive.position.x, p.x, t), lerp(hive.position.y - 3.5, p.y + 1, t), lerp(hive.position.z, p.z, t)); } }
     }
@@ -1720,7 +1743,7 @@ function tick(ts) {
       effects.splice(i, 1);
     }
   }
-  if (selected && !document.getElementById("camwrap").hidden && S) drawCam(document.getElementById("camfeed"), selected, S.frames[frameIndex]);
+  if (selected && !document.getElementById("camwrap").hidden && S && now - lastCamDraw > 100) { lastCamDraw = now; drawCam(document.getElementById("camfeed"), selected, S.frames[frameIndex]); }   // ~10 Hz is all the blink needs
   if (S && (Math.floor(now / 400) !== Math.floor((now - dt * 1000) / 400))) drawGlyphMap();
   applyCam(); renderer.render(scene, camera);
 }
