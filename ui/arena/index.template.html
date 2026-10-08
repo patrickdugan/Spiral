@@ -1028,7 +1028,7 @@ const easeInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) /
 
 /* ---------- interaction ---------- */
 let dragging = false, moved = false, lastX = 0, lastY = 0, lastHoverCheck = 0;
-canvas.addEventListener("pointerdown", (e) => { dragging = true; moved = false; lastX = e.clientX; lastY = e.clientY; tween = null; idleSince = now; canvas.classList.add("dragging"); document.body.classList.remove("cine"); });
+canvas.addEventListener("pointerdown", (e) => { dragging = true; moved = false; lastX = e.clientX; lastY = e.clientY; tween = null; idleSince = now; canvas.classList.add("dragging"); document.body.classList.remove("cine"); if (tour) setTour(false); });   // taking the view ends a tour
 window.addEventListener("pointerup", (e) => { if (dragging && !moved && e.target === canvas) pick(e); dragging = false; canvas.classList.remove("dragging"); idleSince = now; });
 window.addEventListener("pointermove", (e) => {
   if (!dragging) { if (e.target === canvas && now - lastHoverCheck > 70) { lastHoverCheck = now; hover(e); } return; }
@@ -1653,12 +1653,12 @@ function scheduleTourCut() {
     setTimeout(() => { if (tour && !playing) { applyFrame(0); togglePlay(); } }, 2600);   // let the scene card and pull-in land first
   }, 4200);
 }
-function setTour(on) { tour = on; clearTimeout(tourTimer); if (tour) { showCard("tour", "all scenarios", "runs each scenario in turn · T to stop", 2600); if (!playing && S) { applyFrame(0); togglePlay(); } } }
+function setTour(on) { tour = on; clearTimeout(tourTimer); tourTimer = null; if (tour) { showCard("tour", "all scenarios", "runs each scenario in turn · drag, scrub or T to stop", 2600); if (!playing && S) { applyFrame(0); togglePlay(); } } }
 const BEAT = 60 / 112;   // one frame per beat at 1× (the bed runs at 112 BPM), so strikes land on the pulse
 function stop() { playing = false; document.getElementById("play").textContent = "▶"; document.body.classList.remove("cine"); if (S) writeLink(); }
 function togglePlay() { playing = !playing; if (playing && frameIndex >= S.frames.length - 1) applyFrame(0); document.getElementById("play").textContent = playing ? "❚❚" : "▶"; }
 document.getElementById("play").addEventListener("click", togglePlay);
-document.getElementById("scrub").addEventListener("input", (e) => { stop(); applyFrame(Number(e.target.value)); writeLink(); });
+document.getElementById("scrub").addEventListener("input", (e) => { if (tour) setTour(false); stop(); applyFrame(Number(e.target.value)); writeLink(); });
 document.getElementById("speed").addEventListener("change", (e) => { speed = Number(e.target.value); });
 document.getElementById("inspector-close").addEventListener("click", closeInspector);
 
