@@ -657,6 +657,7 @@ function drawSkyArc(t) {
 /* ---------- scenario build ---------- */
 let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null, scanLines = null, scanTargets = [];
 let hiveVision = true;   // the attacker's perspective: devices as vectors, cash, marks; decoys and truth class unknown
+const scanDots = [];
 let frameIndex = 0, selected = null, hovered = null, annals = [], mapZ = 0, hive = null;
 const effects = [];
 function clearGroup(g) { if (g) { scene.remove(g); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); }); } }
@@ -740,11 +741,14 @@ function buildScenario(scn) {
   hive.add(core, wire, drop, hhalo, hlabel, hlight); hive.visible = false; hive.userData.target = new THREE.Vector3(); scene.add(hive);
   // scan lines: the hive's gaze on its three hottest marks
   scanLines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COL.hunger, transparent: true, opacity: 0.4 })); scanLines.visible = false; scene.add(scanLines);
+  for (const d of scanDots) { scene.remove(d); d.material.dispose(); } scanDots.length = 0;
+  for (let k = 0; k < 3; k++) { const d = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hunger, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 })); d.scale.set(2.2, 2.2, 1); d.visible = false; scene.add(d); scanDots.push(d); }
 
   const scrub = document.getElementById("scrub");
   scrub.max = String(S.frames.length - 1);
   frameIndex = S.frames.length - 1; scrub.value = String(frameIndex);
   selected = null; document.getElementById("inspector").hidden = true; updateSelEdges();
+  knownData = S.frames.some((f) => f.attacker_known && f.attacker_known.length);
   annals = buildAnnals(S);
   buildRail();
   drawDensity(); frameTarget(); applyFrame(frameIndex);
@@ -834,12 +838,19 @@ function stateOf(id, f) {
   else if (known) { color = COL.known; glow = 0.55; }
   else { color = COL.clean; glow = 0.5; }
   const kl = keyLost(id, f); if (kl) { color = COL.hot; glow = 1.0; }
-  return { color, glow, comp, rec, burned, known, det, honeypot: decoyKnown, airgap: nd.airgapped, keyLost: kl };
+  const st = { color, glow, comp, rec, burned, known, det, honeypot: decoyKnown, airgap: nd.airgapped, keyLost: kl, unseen: false };
+  if (!seenByHive(st)) { st.unseen = true; st.color = COL.dark; st.glow = 0.12; }
+  return st;
 }
 function stressOf(id, i) { const trk = S.dossiers[id] && S.dossiers[id].track; return trk && trk.pressure ? (trk.pressure[i] || 0) : 0; }
 /* custody: once the key is compromised, the reassembly host / enclave is the breach site */
 function keyLost(id, f) { return S.sim === "feral_custody" && !!f.key_compromised && (S.key_nodes || []).some((k) => k.id === id && (k.kind === "reassembly" || k.kind === "enclave")); }
+/* hive vision: a unit the adversary has not discovered yet is unseen — the replay's
+   attacker_known set decides; scenarios that export no such set at all show everyone */
+let knownData = false;
+function seenByHive(st) { return !hiveVision || !knownData || st.known || st.comp || st.rec || st.burned || st.keyLost; }
 function moodOf(st, stress) {
+  if (st.unseen) return ["unseen", 0x3b4654];
   if (st.keyLost) return ["breached", COL.hot];
   if (st.honeypot) return st.burned ? ["sprung", COL.hazard] : ["decoy", COL.hazard];
   if (st.rec) return ["sworn", COL.violet];
@@ -869,12 +880,13 @@ function applyFrame(i) {
     for (const m of o.glowMats) m.emissiveIntensity = hiveVision ? 1.4 : (on ? 0.9 : 0.08);   // hive vision: every device burns bright as an entry point
     // hive vision: heat on the marks still standing; cash tags; custody funds live on the key node
     const turned = st.comp || st.rec || st.burned || st.keyLost;
-    o.heat.material.opacity = (hiveVision && !turned && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
+    o.heat.material.opacity = (hiveVision && !turned && !st.unseen && o.appetite != null) ? 0.15 + 0.6 * o.appetite : 0;
     if (S.sim === "feral_custody" && (S.key_nodes || []).some((k) => k.id === nd.id && (k.kind === "reassembly" || k.kind === "enclave"))) setCash(o, `FUNDS $ ${(f.funds == null ? 0 : f.funds).toLocaleString()}`);
-    if (o.cash) o.cash.visible = hiveVision;
+    if (o.cash) o.cash.visible = hiveVision && !st.unseen;
+    if (st.unseen) { for (const m of o.glowMats) m.emissiveIntensity = 0.05; o.rim.material.opacity = 0.25; } else o.rim.material.opacity = 0.85;   // ghosts: dark desk, faint ring
   }
-  // the hive's gaze: its three hottest marks that have not turned
-  scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !(st.comp || st.rec || st.burned || st.keyLost); })
+  // the hive's gaze: its three hottest discovered marks that have not turned
+  scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !st.unseen && !(st.comp || st.rec || st.burned || st.keyLost); })
     .sort((a, b) => nodeObjs[b.id].appetite - nodeObjs[a.id].appetite).slice(0, 3).map((nd) => nd.id);
   const verts = [], cols = [];
   for (const [a, b] of S.edges) {
@@ -1224,16 +1236,18 @@ function buildRail() {
 function renderRoster() {
   const host = document.getElementById("roster"), f = S.frames[frameIndex];
   // hive vision: the roster is the hive's hunt list, hungriest mark first
-  const rows = hiveVision ? [...S.nodes].sort((a, b) => ((nodeObjs[b.id].appetite == null ? -1 : nodeObjs[b.id].appetite) - (nodeObjs[a.id].appetite == null ? -1 : nodeObjs[a.id].appetite))) : S.nodes;
+  const rank = (nd) => { const o = nodeObjs[nd.id]; if (o._st && o._st.unseen) return -2; return o.appetite == null ? -1 : o.appetite; };   // unseen units sink to the bottom
+  const rows = hiveVision ? [...S.nodes].sort((a, b) => rank(b) - rank(a)) : S.nodes;
   document.getElementById("rostertitle").textContent = hiveVision ? "Marks" : "Roster";
-  document.getElementById("rostercount").textContent = S.nodes.length + " units";
+  const seen = S.nodes.filter((nd) => !stateOf(nd.id, f).unseen).length;
+  document.getElementById("rostercount").textContent = (hiveVision && knownData) ? `${seen}/${S.nodes.length} seen` : S.nodes.length + " units";
   host.innerHTML = rows.map((nd) => {
     const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(ch.occupation)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
     const off = ch.routine && !onShift(ch.routine, f.clock) && !(st.comp || st.rec || st.burned || st.keyLost);
-    const ap = nodeObjs[nd.id].appetite, hc = (hiveVision && ap != null) ? ` style="color:${hex(heatColor(ap))}"` : "";
-    return `<div class="unit ${selected === nd.id ? "sel" : ""} ${off ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${off ? "⌂" : glyphOf(nd, st)}</span><span class="id"${hc}>${esc(nd.id)}</span>` +
+    const ap = nodeObjs[nd.id].appetite, hc = (hiveVision && ap != null && !st.unseen) ? ` style="color:${hex(heatColor(ap))}"` : "";
+    return `<div class="unit ${selected === nd.id ? "sel" : ""} ${(off || st.unseen) ? "off" : ""}" data-id="${esc(nd.id)}"><span class="g" style="color:${hex(c)}">${st.unseen ? "?" : (off ? "⌂" : glyphOf(nd, st))}</span><span class="id"${hc}>${esc(nd.id)}</span>` +
       `<span class="nm">${nm}<div class="sbar"><i style="width:${Math.round(stress * 100)}%"></i></div></span><span class="mood" style="color:${hex(m[1])}">${m[0]}</span></div>`;
   }).join("");
   host.querySelectorAll(".unit").forEach((el) => {
@@ -1382,7 +1396,7 @@ function metricsBase(scn, f, i) {
   return [
     ["compromised", f.compromised.length + "/" + pop, f.compromised.length ? "hot" : ""],
     ["coalition", r.largest_coalition == null ? "—" : r.largest_coalition, (r.largest_coalition || 0) > 1 ? "vio" : ""],
-    ["exfil", (f.exfil_total || 0).toFixed(0), (f.exfil_total || 0) > 0 ? "haz" : ""],
+    [hiveVision ? "loot" : "exfil", (f.exfil_total || 0).toFixed(0), (f.exfil_total || 0) > 0 ? "haz" : ""],
     ["detected", f.detected.length, ""],
   ];
 }
@@ -1588,11 +1602,13 @@ function tick(ts) {
   // hive vision: device/vector tags at close range (or on the hovered / selected unit), heat rings breathe, the gaze follows the marker
   if (S) {
     const near = hiveVision && cam.radius < 60, mid = hiveVision && cam.radius < 130;   // tags: everyone up close; at mid-range only the hive's current marks
-    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; if (o.tag) o.tag.visible = hiveVision && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
+    for (const nd of S.nodes) { const o = nodeObjs[nd.id]; const unseen = o._st && o._st.unseen; if (o.tag) o.tag.visible = hiveVision && !unseen && (near || (mid && scanTargets.includes(nd.id)) || nd.id === selected || nd.id === hovered); if (o.heat && o.heat.material.opacity > 0) { const s = (7 + 2.5 * (o.appetite || 0)) * (0.92 + 0.08 * pulse); o.heat.scale.set(s, s, 1); } }
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
       if (show) { const v = []; for (const id of scanTargets) { const p = nodeObjs[id].group.position; v.push(hive.position.x, hive.position.y - 3.5, hive.position.z, p.x, p.y + 1, p.z); }
         scanLines.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(v), 3)); scanLines.material.opacity = 0.2 + 0.35 * pulse; }
+      // scanning pulses ride the gaze lines out from the marker
+      for (let k = 0; k < scanDots.length; k++) { const d = scanDots[k], id = scanTargets[k]; d.visible = show && !!id; if (d.visible) { const p = nodeObjs[id].group.position, t = ((now * 0.00045) + k / 3) % 1; d.position.set(lerp(hive.position.x, p.x, t), lerp(hive.position.y - 3.5, p.y + 1, t), lerp(hive.position.z, p.z, t)); } }
     }
   }
   if (cageGroup) cageGroup.children.forEach((c) => { c.rotation.y += dt * 0.3; c.rotation.x += dt * 0.11; });

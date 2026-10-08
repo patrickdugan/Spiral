@@ -260,6 +260,12 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     hairlines; neon strips on about half the towers over 60 units tall, on the face toward the
     diorama; deck grid 0.78 → 0.6 and rain 0.24 → 0.17 so figures separate from the ground;
     hunger magenta saturated (`#ff2bdc`) to sit apart from compromise red.
+  - **Unseen units.** In hive vision a unit the adversary has not discovered renders as a ghost
+    (dark emissive, faint ring, dark desk, no heat / tag / cash, "?" in the hunt list, sorted
+    last) and lights up when it enters the frame's exported `attacker_known` set (or turns), so
+    the opening reads as the hive feeling out the network. A scenario that exports no
+    `attacker_known` at all (the custody sim) shows everyone. The roster header counts
+    seen / total; "exfil" is labelled "loot"; scanning pulses ride the gaze lines.
   - **Hunt list.** In hive vision the roster is retitled "Marks" and sorted hungriest first; a
     "marks left" tile counts units with appetite ≥ 0.5 that have not turned. Tags come in
     tiers: every unit within 60 units of camera radius, only the hive's three current marks
