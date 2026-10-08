@@ -274,12 +274,24 @@ function labelSprite(text) {
   return sp;
 }
 
+/* deterministic [0,1) hash so a figure's build is stable per archetype/id */
+function hashUnit(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ((h >>> 0) % 1000) / 1000;
+}
+
 /* procedural low-poly humanoid NPC (self-authored geometry, one tintable
-   unlit material per figure; no external model assets). */
-function makeHumanoid() {
+   unlit material per figure; no external model assets). `v` in [0,1] varies the
+   build so a crowd reads as distinct people. */
+function makeHumanoid(v) {
+  v = (v == null) ? 0.5 : v;
   const group = new THREE.Group();
   const mat = new THREE.MeshBasicMaterial({ color: COL.clean });
   const picks = [];
+  const hs = 0.78 + 0.22 * v;   // head size
+  const tw = 0.70 + 0.30 * v;   // torso width
+  const aw = 0.95 + 0.18 * v;   // arm splay
   const part = (geo, y, x, rotZ) => {
     const m = new THREE.Mesh(geo, mat);
     m.position.set(x || 0, y, 0);
@@ -287,12 +299,13 @@ function makeHumanoid() {
     group.add(m); picks.push(m);
     return m;
   };
-  part(new THREE.SphereGeometry(0.85, 8, 6), 2.25);                       // head
-  part(new THREE.CylinderGeometry(0.75, 1.0, 2.4, 6), 0.5);              // torso
-  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, 0.42);     // leg R
-  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, -0.42);    // leg L
-  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, 1.0, -0.35); // arm R
-  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, -1.0, 0.35); // arm L
+  part(new THREE.SphereGeometry(hs, 8, 6), 2.25);                        // head
+  part(new THREE.CylinderGeometry(tw, tw + 0.25, 2.4, 6), 0.5);         // torso
+  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, 0.42);    // leg R
+  part(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 5), -1.7, -0.42);   // leg L
+  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, aw, -0.35); // arm R
+  part(new THREE.CylinderGeometry(0.22, 0.22, 2.0, 5), 0.5, -aw, 0.35); // arm L
+  group.scale.setScalar(0.9 + 0.24 * v);   // overall build / height
   return { group, mat, picks };
 }
 
@@ -353,7 +366,7 @@ function buildScenario(scn) {
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
 
   for (const nd of S.nodes) {
-    const h = makeHumanoid();
+    const h = makeHumanoid(hashUnit(String(nd.archetype) + nd.id));
     h.group.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
     h.group.rotation.y = nd.pos[0] * 0.17 + nd.pos[2] * 0.11;   // face a varied direction
     for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
@@ -465,19 +478,39 @@ function applyFrame(i) {
   if (selected) renderDossier(selected);
 }
 
+function vectorColor(ev) {
+  if (ev.honeypot) return COL.honey;
+  if (ev.blocked) return COL.airgap;
+  switch (ev.vector) {
+    case "cult_recruitment": return COL.recruit;
+    case "emanation_tap": return COL.cyan;
+    case "spear_social": return COL.clean;
+    case "phone_bridge": return COL.honey;
+    case "coerced_signature": return COL.recruit;
+    case "bribe": case "defection": return COL.comp;
+    default: return COL.comp;
+  }
+}
 function spawnEffects(f) {
   for (const ev of f.events) {
     if (!ev.landed && !ev.blocked) continue;
     const o = nodeObjs[ev.target]; if (!o) continue;
-    let c = COL.comp;
-    if (ev.honeypot) c = COL.honey;
-    else if (ev.vector === "cult_recruitment") c = COL.recruit;
-    else if (ev.vector === "emanation_tap") c = COL.cyan || COL.clean;
-    else if (ev.blocked) c = COL.airgap;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
-    sp.position.set(o.group.position.x, o.group.position.y + 1, o.group.position.z);
-    scene.add(sp);
-    effects.push({ sp, t: 0, life: 0.9 });
+    const c = vectorColor(ev);
+    const px = o.group.position.x, py = o.group.position.y, pz = o.group.position.z;
+    // expanding ring where the attempt strikes
+    const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
+    ring.position.set(px, py + 1, pz); scene.add(ring);
+    effects.push({ obj: ring, t: 0, life: 0.9, kind: "ring" });
+    // a descending strike beam = the attack arriving via its vector; a flash on the target
+    if (!ev.blocked) {
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.05, 46, 6),
+        new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      beam.position.set(px, py + 24, pz); scene.add(beam);
+      effects.push({ obj: beam, t: 0, life: 0.55, kind: "beam" });
+      o._flash = 1; o._flashColor = c;
+    }
   }
 }
 
@@ -798,6 +831,11 @@ function tick(ts) {
     o.group.position.y = nd.pos[1] + Math.sin(now * 0.002 + o.phase) * 0.22;
     // nervous sway grows with pre-flip stress, steadies once resolved
     o.group.rotation.z = o._stress ? Math.sin(now * 0.018 + o.phase) * 0.13 * o._stress : 0;
+    // a strike flash briefly whites out the figure, then it settles to its state colour
+    if (o._flash > 0) {
+      o._flash -= dt * 2.5;
+      o.mat.color.setHex(o._flash > 0 ? COL.white : st.color);
+    }
     if (st.comp || st.rec || st.burned) {
       const p = 0.75 + 0.25 * Math.sin(now * 0.006 + nd.pos[0]);
       o.halo.material.opacity = st.glow * p;
@@ -806,12 +844,17 @@ function tick(ts) {
   }
   // cages spin
   if (cageGroup) cageGroup.children.forEach((c, i) => { c.rotation.y += dt * 0.4; c.rotation.x += dt * 0.15; });
-  // effects
+  // effects (strike rings + descending attack beams)
   for (let i = effects.length - 1; i >= 0; i--) {
     const e = effects[i]; e.t += dt;
     const k = e.t / e.life;
-    const s = 4 + k * 26; e.sp.scale.set(s, s, 1); e.sp.material.opacity = 0.95 * (1 - k);
-    if (k >= 1) { scene.remove(e.sp); e.sp.material.dispose(); effects.splice(i, 1); }
+    if (e.kind === "beam") {
+      e.obj.material.opacity = 0.85 * (1 - k);
+      e.obj.scale.y = 1 - 0.55 * k;
+    } else {
+      const s = 4 + k * 26; e.obj.scale.set(s, s, 1); e.obj.material.opacity = 0.95 * (1 - k);
+    }
+    if (k >= 1) { scene.remove(e.obj); if (e.obj.material) e.obj.material.dispose(); if (e.obj.geometry) e.obj.geometry.dispose(); effects.splice(i, 1); }
   }
   // redraw selected big cam feed live
   if (selected && !document.getElementById("camwrap").hidden && S) {

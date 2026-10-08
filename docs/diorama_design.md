@@ -128,6 +128,12 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   byte-identical) and `test_build_arena` (the real `build_arena.py` inlines the replay and the
   page's embedded JSON parses with every sim's scenarios). The three.js/WebGL render itself is
   verified interactively, not headlessly.
-- **Next (polish, optional):** attacker-side staging of each attempt (approach + targeted-bias
-  flare from frame `events`), richer per-archetype figure silhouettes, and venue set-dressing /
-  interiors.
+- **Increment 5 (done):** attacker-side attempt staging + figure variety.
+  - Each landed attempt now stages on screen: a descending **strike beam** colored by the
+    exploited vector (`vectorColor`: spear_social cyan, phone_bridge amber, emanation_tap cyan,
+    cult_recruitment / coerced_signature purple, bribe/defection red, honeypot amber, blocked
+    dim blue) plus an expanding strike ring and a white **flash** on the struck figure.
+  - Figures vary per archetype/id via a deterministic hash (`makeHumanoid(v)`): head size,
+    torso width, arm splay, and overall build, so a crowd reads as distinct people.
+- **Remaining (optional):** venue set-dressing / interiors; attacker avatars (the hive master
+  as an embodied figure); richer per-archetype outfits.
