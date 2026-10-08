@@ -529,6 +529,7 @@ const ARCH_BUILD = {
   burned_out_admin: { sh: 1.0, hd: 1.0, slump: 0.16 },
   principled_auditor: { sh: 0.95, hd: 0.9, scale: 1.08 },
 };
+const HULL_MAT = new THREE.MeshBasicMaterial({ color: 0x04060a, side: THREE.BackSide });
 function makeHumanoid(v, arch) {
   v = (v == null) ? 0.5 : v;
   const b = ARCH_BUILD[arch] || {};
@@ -537,7 +538,12 @@ function makeHumanoid(v, arch) {
   const vmat = new THREE.MeshBasicMaterial({ color: COL.dark });   // visor band: pure state colour
   const picks = [];
   const hs = (0.74 + 0.22 * v) * (b.hd || 1), tw = (0.66 + 0.30 * v) * (b.sh || 1), aw = (0.95 + 0.18 * v) * (b.armsIn ? 0.8 : 1);
-  const part = (geo, y, x, rotZ, m2) => { const m = new THREE.Mesh(geo, m2 || mat); m.position.set(x || 0, y, 0); if (rotZ) m.rotation.z = rotZ; group.add(m); picks.push(m); return m; };
+  // cel outline: an inverted dark hull behind every body part so figures separate from the neon ground
+  const part = (geo, y, x, rotZ, m2) => {
+    const m = new THREE.Mesh(geo, m2 || mat); m.position.set(x || 0, y, 0); if (rotZ) m.rotation.z = rotZ; group.add(m); picks.push(m);
+    if (!m2) { const hull = new THREE.Mesh(geo, HULL_MAT); hull.scale.setScalar(1.14); m.add(hull); }
+    return m;
+  };
   part(new THREE.SphereGeometry(hs, 8, 6), 2.25);
   if (b.hood) { const hood = part(new THREE.SphereGeometry(hs * 1.18, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.62), 2.3); hood.position.z = -0.12; }
   const visor = part(new THREE.BoxGeometry(hs * 1.5, 0.2, hs * 0.9), 2.3, 0, 0, vmat); visor.position.z = hs * 0.55;
@@ -574,6 +580,7 @@ function makePylon(v) {
   const mat = new THREE.MeshLambertMaterial({ color: 0x3b4654, emissive: COL.dark, emissiveIntensity: 0.6 });
   const picks = [];
   const m = new THREE.Mesh(new THREE.BoxGeometry(3.2, 5.2 + v * 2, 2.4), mat); m.position.y = 0.4 + v; group.add(m); picks.push(m);
+  const hull = new THREE.Mesh(m.geometry, HULL_MAT); hull.scale.setScalar(1.06); m.add(hull);
   const cap = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.3, 2.8), mat); cap.position.y = 3.2 + v * 2; group.add(cap); picks.push(cap);
   return { group, mat, picks };
 }
