@@ -179,6 +179,7 @@ def export_scenario(strategy: str, objective: str, budget: int, seed: int, overr
         "rounds": horizon,
         "epochs": horizon,
         "population": len(personas),
+        "attacker_known_exported": False,   # the custody sim has no discovery model; attacker_known is always empty
         "reassembles": strategy_reassembles(strategy),
         "reassembly_windows": [{"epoch": w.epoch, "host": w.host} for w in env.reassembly_windows()],
         "nodes": nodes,

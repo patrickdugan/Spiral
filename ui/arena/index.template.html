@@ -776,7 +776,7 @@ function buildScenario(scn) {
   scrub.max = String(S.frames.length - 1);
   frameIndex = S.frames.length - 1; scrub.value = String(frameIndex);
   selected = null; document.getElementById("inspector").hidden = true; updateSelEdges();
-  knownData = S.frames.some((f) => f.attacker_known && f.attacker_known.length);
+  knownData = (S.attacker_known_exported != null) ? !!S.attacker_known_exported : S.frames.some((f) => f.attacker_known && f.attacker_known.length);   // explicit flag from the exporter; heuristic only for older replays
   annals = buildAnnals(S);
   buildRail();
   drawDensity(); frameTarget(); applyFrame(frameIndex);

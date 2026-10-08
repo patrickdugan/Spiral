@@ -288,10 +288,10 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     (dark emissive, faint ring, dark desk, no heat / tag / cash, "?" in the hunt list, sorted
     last) and lights up when it enters the frame's exported `attacker_known` set (or turns), so
     the opening reads as the hive feeling out the network. A scenario that exports no
-    `attacker_known` at all (the custody sim) shows everyone. *Known gap:* the viewer infers
-    "no discovery data" from every frame's set being empty, so a sim that legitimately starts
-    with nothing known and never discovers anything would be shown fully lit; the clean fix is
-    an explicit per-scenario flag from the exporter. The roster header counts
+    `attacker_known` at all (the custody sim) shows everyone. Each exporter now writes an
+    explicit per-scenario `attacker_known_exported` flag (swarm and rtg `true`, custody
+    `false`); the viewer reads it and falls back to "any frame has a non-empty set" only for
+    replays written before the flag existed. The roster header counts
     seen / total; "exfil" is labelled "loot"; scanning pulses ride the gaze lines.
   - **Hunt list.** In hive vision the roster is retitled "Marks" and sorted hungriest first; a
     "marks left" tile counts units with appetite ≥ 0.5 that have not turned. Tags come in

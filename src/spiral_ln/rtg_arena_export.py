@@ -143,7 +143,7 @@ def _assemble(title, posture, nodes, edges, world, node_of, exfil_per_event, key
         }
     return {
         "id": title, "posture": posture, "hive_master": "rtg_agent", "seed": world.seed,
-        "rounds": world.scenario.horizon, "population": len(nodes),
+        "rounds": world.scenario.horizon, "population": len(nodes), "attacker_known_exported": True,
         "nodes": nodes, "edges": sorted([sorted(e) for e in edges]),
         "defenders": [{"name": "D1", "domain": [n["id"] for n in nodes]}],
         "frames": frames, "dossiers": dossiers, "key_nodes": key_nodes,

@@ -212,6 +212,7 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
         "seed": seed,
         "rounds": config.rounds,
         "population": config.population_size,
+        "attacker_known_exported": True,   # per-frame attacker_known is the hive master's discovered set
         "nodes": nodes,
         "edges": edges,
         "defenders": [{"name": d.name, "domain": list(d.domain)} for d in env.defenders],
