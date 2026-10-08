@@ -255,7 +255,15 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     and the dossier omits `truth_class`. Switching the toggle re-renders the frame.
   - **Neon.** A coloured point light and a sign glow at every venue pylon, a magenta point
     light on the adversary marker, figure emissives ×1.3; fog 0.0026 → 0.002, grain 0.055 →
-    0.035, scanlines 0.16 → 0.10 for crisper distinction.
+    0.035, scanlines 0.16 → 0.10 for crisper distinction. Second pass: flat additive floor
+    rings (with a soft halo) at every venue and flat hex rings under every figure instead of
+    hairlines; neon strips on about half the towers over 60 units tall, on the face toward the
+    diorama; deck grid 0.78 → 0.6 and rain 0.24 → 0.17 so figures separate from the ground;
+    hunger magenta saturated (`#ff2bdc`) to sit apart from compromise red.
+  - **Hunt list.** In hive vision the roster is retitled "Marks" and sorted hungriest first; a
+    "marks left" tile counts units with appetite ≥ 0.5 that have not turned. Tags come in
+    tiers: every unit within 60 units of camera radius, only the hive's three current marks
+    within 130, plus the hovered / selected unit at any range.
   - **Branding.** The page brands itself "HIVE SWARM · Diorama" (title, top bar, title card);
     a replay's `title` only refines the sub-label after `//`. No Spiral name in page chrome.
   - **Scene cards.** On load and on every scenario change a card names the scenario, its

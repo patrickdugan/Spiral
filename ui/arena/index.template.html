@@ -26,6 +26,7 @@
     --violet: #a97bff;
     --amber: #ffa63a;
     --steel: #4b6a85;
+    --hunger: #ff2bdc;
     --white: #f3f6f9;
     --display: "Rajdhani", "Segoe UI", sans-serif;
     --mono: "Share Tech Mono", ui-monospace, "Cascadia Mono", monospace;
@@ -129,6 +130,7 @@
   .metric.hot b { color: var(--hot); }
   .metric.haz b { color: var(--hazard); }
   .metric.vio b { color: var(--violet); }
+  .metric.hun b { color: var(--hunger); }
   #toggles { display: flex; gap: 6px; }
   #toggles button { padding: 5px 8px; font-size: 11px; }
   #audio.nudge { animation: nudge 1.6s ease-in-out 4; }
@@ -321,7 +323,7 @@
       <canvas id="glyphmap" width="420" height="240"></canvas>
       <div class="ztabs"><button data-z="0" class="on">Z 0 · surface</button><button data-z="-1">Z -1 · vault</button></div>
     </div>
-    <div class="sec">Roster <small id="rostercount"></small></div>
+    <div class="sec"><span id="rostertitle">Roster</span> <small id="rostercount"></small></div>
     <div id="roster"></div>
     <div id="legend" class="legend"></div>
   </aside>
@@ -685,8 +687,8 @@ function buildScenario(scn) {
     // diorama base plate with a state-coloured rim
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshLambertMaterial({ color: 0x121820 }));
     plate.position.set(nd.pos[0], nd.pos[1] - 3.1, nd.pos[2]); nodeGroup.add(plate);
-    const rim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(3.05, 3.05, 0.1, 6)), new THREE.LineBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.9 }));
-    rim.position.set(nd.pos[0], nd.pos[1] - 2.9, nd.pos[2]); nodeGroup.add(rim);
+    const rim = new THREE.Mesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.set(nd.pos[0], nd.pos[1] - 2.85, nd.pos[2]); nodeGroup.add(rim);   // neon hex ring, aligned with the plate
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     halo.scale.set(8, 8, 1); halo.position.set(nd.pos[0], nd.pos[1] + 0.8, nd.pos[2]); nodeGroup.add(halo);
     const ch = characterOf(S.dossiers[nd.id] || {});
@@ -1221,8 +1223,11 @@ function buildRail() {
 }
 function renderRoster() {
   const host = document.getElementById("roster"), f = S.frames[frameIndex];
+  // hive vision: the roster is the hive's hunt list, hungriest mark first
+  const rows = hiveVision ? [...S.nodes].sort((a, b) => ((nodeObjs[b.id].appetite == null ? -1 : nodeObjs[b.id].appetite) - (nodeObjs[a.id].appetite == null ? -1 : nodeObjs[a.id].appetite))) : S.nodes;
+  document.getElementById("rostertitle").textContent = hiveVision ? "Marks" : "Roster";
   document.getElementById("rostercount").textContent = S.nodes.length + " units";
-  host.innerHTML = S.nodes.map((nd) => {
+  host.innerHTML = rows.map((nd) => {
     const st = stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), m = moodOf(st, stress), ch = characterOf(S.dossiers[nd.id] || {});
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
     const nm = (ch.name && ch.name !== nd.id) ? `${esc(ch.name)}<small>${esc(ch.occupation)}</small>` : `<small>${esc(nice(nd.archetype || nd.venue || ""))}</small>`;
@@ -1358,6 +1363,14 @@ function setMetrics(rows) {
   prevMetrics = next;
 }
 function metricsFor(scn, f, i) {
+  const base = metricsBase(scn, f, i);
+  if (hiveVision) {   // marks left: units the hive still reads as juicy (appetite ≥ 0.5) that have not turned
+    const left = scn.nodes.filter((nd) => { const o = nodeObjs[nd.id]; if (!o || o.appetite == null || o.appetite < 0.5) return false; const st = stateOf(nd.id, f); return !(st.comp || st.rec || st.burned || st.keyLost); }).length;
+    base.push(["marks left", left, "hun"]);
+  }
+  return base;
+}
+function metricsBase(scn, f, i) {
   if (scn.sim === "feral_custody") return [
     ["funds", (f.funds == null ? 0 : f.funds).toLocaleString(), f.key_compromised ? "hot" : ""],
     ["key", f.key_compromised ? "LOST" : "HELD", f.key_compromised ? "hot" : ""],
