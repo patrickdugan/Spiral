@@ -45,3 +45,14 @@ def test_build_arena_inlines_and_the_page_parses_the_replay(tmp_path):
     assert set(embedded["sims"]) == {"swarm_compromise", "feral_custody", "rtg"}
     # the three.js library and the scene bootstrap are present
     assert "three.min.js" in html and "buildScenario(REPLAY.scenarios[0])" in html
+
+
+def test_built_page_carries_no_spiral_branding(tmp_path):
+    replay = arena_replay.build_combined()
+    replay_path = tmp_path / "replay.json"
+    replay_path.write_text(json.dumps(replay), encoding="utf-8")
+    out = tmp_path / "arena.html"
+    _build_arena_module().main(["--template", str(ARENA / "index.template.html"), "--replay", str(replay_path), "--out", str(out)])
+    html = out.read_text(encoding="utf-8")
+    assert "SPIRAL" not in html and "Spiral" not in html
+    assert "HIVE SWARM" in html
