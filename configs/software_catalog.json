@@ -20,6 +20,8 @@
     {"id": "LND-REVIEW", "software": "lnd", "severity": 0.0, "surface_class": "remote", "status": "open", "exploit_maturity": 0.0, "source": "Lightning BOLT review", "note": "placeholder"},
     {"id": "RL-REVIEW", "software": "rust-lightning", "severity": 0.0, "surface_class": "remote", "status": "open", "exploit_maturity": 0.0, "source": "rust-lightning fuzzing", "note": "placeholder"},
     {"id": "UTXOREF-REVIEW", "software": "utxoref", "severity": 0.0, "surface_class": "local", "status": "open", "exploit_maturity": 0.0, "source": "UTXORef security assessment for testnet", "note": "placeholder"},
-    {"id": "EXAMPLE-KEYMGMT", "software": "example-wallet", "severity": 0.7, "surface_class": "key_management", "status": "open", "exploit_maturity": 0.5, "source": "SYNTHETIC EXAMPLE - not a real finding", "note": "example to exercise the surface-scoring mechanic"}
+    {"id": "EXAMPLE-KEYMGMT", "software": "example-wallet", "severity": 0.7, "surface_class": "key_management", "status": "open", "exploit_maturity": 0.5, "source": "SYNTHETIC EXAMPLE - not a real finding", "note": "example to exercise the surface-scoring mechanic"},
+    {"id": "EXAMPLE-UICONF", "software": "example-wallet", "severity": 0.7, "surface_class": "ui_confusion", "status": "open", "exploit_maturity": 0.5, "source": "SYNTHETIC EXAMPLE - not a real finding", "note": "exercises the spoofed-approval / blind-signing (ui_confusion) surface used by staged signer-deception hacks"},
+    {"id": "EXAMPLE-SUPPLY", "software": "example-wallet", "severity": 0.7, "surface_class": "supply_chain", "status": "open", "exploit_maturity": 0.5, "source": "SYNTHETIC EXAMPLE - not a real finding", "note": "exercises the remote software-implant (supply_chain) surface used by staged credential-compromise hacks"}
   ]
 }
