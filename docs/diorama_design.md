@@ -135,5 +135,51 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
     dim blue) plus an expanding strike ring and a white **flash** on the struck figure.
   - Figures vary per archetype/id via a deterministic hash (`makeHumanoid(v)`): head size,
     torso width, arm splay, and overall build, so a crowd reads as distinct people.
-- **Remaining (optional):** venue set-dressing / interiors; attacker avatars (the hive master
-  as an embodied figure); richer per-archetype outfits.
+- **Increment 6 (done): look & feel pass.** The viewer's single theme was re-authored from
+  "neon arcade" to a cold, overcast night-city diorama. Every choice below is presentation,
+  not measurement:
+  - **Palette / type.** Steel blue-black base, bone text, and three sparing accents: hazard
+    yellow (warnings, honeypots, reticles, the playhead), signal red (compromise / defection /
+    key loss), violet (recruitment / coalition); amber is reserved for graded stress; cold cyan
+    is "clean". Display face Rajdhani, data face Share Tech Mono. Panels are notched
+    (clip-path) with a hazard-stripe tick; a scanline + vignette + animated grain overlay and a
+    red "alert" wash on key loss / extraction are pure CSS over the WebGL canvas.
+  - **Set dressing.** A procedural skyline matte (silhouettes, lit windows, neon smudges) on an
+    inverted cylinder, a ring of lit low-poly towers with blinking beacons, a translucent
+    surface deck over a solid vault floor (the Z 0 / Z −1 levels), rain as wrapped line
+    segments (toggle), hex base plates under every figure with a state-coloured rim, and per-
+    venue "sets": a floor disc, rim ring, hazard kerbs, and a signage pylon in the venue colour.
+    Venue colours (`VENUE_COLORS`) are authored per venue/kind. Figures are lit
+    (`MeshLambertMaterial`) with an emissive state tint so they read by day and glow by night;
+    rtg institutions render as server pylons, not people. Desk props are derived from the
+    character's exported `devices` (phone in hand, laptop on a stand, server rack, hardware
+    wallet) — the software-surface layer made visible.
+  - **Adversary presence.** A dark octahedron with a hot wire, halo, and the hive-master /
+    adversary name from the replay hovers over its most recent target (hidden when the actor is
+    itself a node, as in rtg). Strikes stage as a hazard reticle locking on, a vector-coloured
+    beam, a ring, and a flash; blue's loyalty reinforcement is a soft cyan ring only.
+  - **Dwarf-Fortress-style readouts.** A *roster* lists every unit with a glyph, name /
+    occupation, stress bar, and a mood word derived from the exported pressure track
+    (`moodOf`: steady < 0.10 ≤ uneasy < 0.35 ≤ strained < 0.65 ≤ harrowed; turned / sworn /
+    sprung / breached / watched by state — thresholds authored). A *glyph map* draws a top-down
+    ASCII-style plan per Z level (☺ clean, ☻ turned, ♣ recruited, ¤ honeypot, ✶ sprung /
+    breached, ▲ vault, ◆ agent, ■ host) with the camera heading. The *annals* narrate each
+    exported frame event as a fixed abstract status template per sim (`buildAnnals`): no new
+    persuasion content, only "who → whom via which vector, held / landed / blocked / burned",
+    custody market lines (bid, defect, extraction, drain, reassembly window opens), and rtg
+    boundary / honeypot / prohibited-transfer lines. The timeline carries an event-density strip
+    (landed / held / night shading) under the scrubber.
+  - **Custody key loss.** When a frame's exported `key_compromised` is true, the reassembly host
+    / enclave key node is shown "breached" (hot), the HUD shows KEY · LOST, and the annals
+    record the failure once.
+  - **Motion.** Slow shared breath on compromised halos, a cinematic idle orbit after 7 s
+    without input, a 3.2 s title pull-in, autoplay of the first scenario from its opening frame
+    after the title card, keyboard stepping (← → space esc), hover labels (screen-constant
+    sprites).
+  - **Audio (off by default, user toggle).** An original generative bed synthesized in-page
+    with WebAudio: a detuned low drone under a lowpass whose cutoff opens with the compromised
+    fraction, a sparse minor-key triangle arpeggio on a dotted-eighth delay, a muted ping on
+    attempts, a filtered-noise swell on a break. No samples, no external assets, no
+    copyrighted material.
+- **Remaining (optional):** richer per-archetype outfits / idle gestures; interior props per
+  venue kind beyond the desk stack.
