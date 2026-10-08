@@ -19,6 +19,7 @@ stripped from :meth:`DioramaCharacter.attacker_view`.
 from __future__ import annotations
 
 import hashlib
+import math
 from dataclasses import asdict, dataclass, field
 from random import Random
 
@@ -364,3 +365,138 @@ def from_custody_persona(persona, venue: str, station: str, seed: int) -> Dioram
         availability=persona.availability,
         economics=economics,
     )
+
+
+# ---------------------------------------------------------------------------
+# City layout: ground-level blocks for the diorama viewer (authored presentation)
+# ---------------------------------------------------------------------------
+
+GROUND_Y = 0.0
+VAULT_Y = -24.0
+_DESK_PITCH = 7.5   # spacing between desks along a row
+_ROW_PITCH = 8.5    # spacing between desk rows
+_MARGIN = 4.0       # block edge to the first / last desk column
+_FRONT = 7.0        # plaza between the street edge and the first desk row
+_BACK = 4.0         # gap between the last desk row and the facade
+_KIOSK_W = 12.0     # break kiosk area at the high-x end of a block
+_STREET = 22.0      # main street width
+_GAP = 14.0         # cross-street width between blocks on one side
+
+
+def _r(value: float) -> float:
+    return round(float(value), 2)
+
+
+def _yaw(src: list[float], dst: list[float]) -> float:
+    """Viewer yaw (rotation about +y) that turns a figure's +z front toward ``dst``."""
+    return _r(math.atan2(dst[0] - src[0], dst[2] - src[2]))
+
+
+def city_layout(blocks, seed: int, vault=None) -> dict[str, object]:
+    """Lay venues out as ground-level city blocks along one main street.
+
+    ``blocks`` is an ordered sequence of ``(venue, kind, node_ids)``; a block may
+    have no surface members (a building whose staff all work in its basement).
+    ``vault`` is an optional ``(host_venue, node_ids)`` placed in a sealed basement
+    under the host block.  Blocks alternate sides of the street; inside a block,
+    desks run in rows facing the street, with a break kiosk at one end and a
+    transit stop on the front sidewalk.  Recruited units gather in the street median
+    at night (``gather``).  Each anchor is ``desk`` / ``break`` / ``home`` positions
+    with the yaw a figure faces there.
+
+    Every number is an authored presentation choice; nothing is read from or fed
+    back into a sim beyond which units belong to which venue.  Deterministic in
+    ``seed``.
+    """
+    specs: list[dict[str, object]] = []
+    for index, (venue, kind, members) in enumerate(blocks):
+        members = list(members)
+        n = len(members)
+        cols = max(2, math.ceil(math.sqrt(max(1, n) * 1.6)))
+        rows = max(1, math.ceil(n / cols)) if n else 1
+        specs.append({
+            "venue": venue, "kind": kind, "members": members, "cols": cols, "rows": rows,
+            "w": cols * _DESK_PITCH + 2 * _MARGIN + _KIOSK_W, "d": _FRONT + rows * _ROW_PITCH + _BACK,
+            "side": 1 if index % 2 == 0 else -1,
+        })
+    for side in (1, -1):  # pack each side of the street, then centre the row on x = 0
+        row = [s for s in specs if s["side"] == side]
+        total = sum(s["w"] for s in row) + _GAP * max(0, len(row) - 1)
+        x = -total / 2
+        for s in row:
+            s["x0"] = x
+            x += s["w"] + _GAP
+
+    anchors: dict[str, dict[str, object]] = {}
+    out_blocks: list[dict[str, object]] = []
+    for s in specs:
+        side, x0, w, d = s["side"], s["x0"], s["w"], s["d"]
+        z_edge = side * _STREET / 2
+
+        def at(u: float, v: float) -> list[float]:  # block-local (along street, away from street) -> world
+            return [_r(x0 + u), GROUND_Y, _r(z_edge + side * v)]
+
+        rng = Random(_seed_int("layout", seed, s["venue"]))
+        desk_yaw = _r(math.pi if side > 0 else 0.0)  # figures face the street
+        kiosk = at(w - _MARGIN - _KIOSK_W / 2, _FRONT + 5.0)
+        metro = at(_MARGIN + 2.0, 1.6)
+        members = s["members"]
+        for k, node in enumerate(members):
+            col, row = k % s["cols"], k // s["cols"]
+            desk = at(_MARGIN + col * _DESK_PITCH + _DESK_PITCH / 2 + rng.uniform(-0.6, 0.6),
+                      _FRONT + row * _ROW_PITCH + _ROW_PITCH / 2 + rng.uniform(-0.5, 0.5))
+            ang = 2.0 * math.pi * k / max(1, len(members))
+            radius = 4.0 + (k % 2)
+            brk = [_r(kiosk[0] + math.cos(ang) * radius), GROUND_Y, _r(kiosk[2] + math.sin(ang) * radius * 0.8)]
+            slot_u = _MARGIN + 2.0 + (k % 8) * 2.4
+            home = at(slot_u, 1.6 + 2.0 * (k // 8))
+            anchors[node] = {
+                "desk": desk, "yaw": desk_yaw,
+                "break": brk, "break_yaw": _yaw(brk, kiosk),
+                "home": home, "home_yaw": desk_yaw,
+            }
+        out_blocks.append({
+            "venue": s["venue"], "kind": s["kind"], "side": side,
+            "x": [_r(x0), _r(x0 + w)], "z": [_r(z_edge), _r(z_edge + side * d)],
+            "center": [_r(x0 + w / 2), _r(z_edge + side * d / 2)], "size": [_r(w), _r(d)],
+            "kiosk": [kiosk[0], kiosk[2]], "metro": [metro[0], metro[2]], "y": GROUND_Y,
+        })
+
+    out_vault = None
+    if vault and vault[1]:
+        host_venue, members = vault[0], list(vault[1])
+        host = next((b for b in out_blocks if b["venue"] == host_venue), out_blocks[0] if out_blocks else None)
+        hx, hz = (host["center"] if host else [0.0, _STREET / 2 + 20.0])
+        side = host["side"] if host else 1
+        cols = max(2, math.ceil(math.sqrt(len(members) * 1.4)))
+        rows = math.ceil(len(members) / cols)
+        vw, vd = cols * _DESK_PITCH + 2 * _MARGIN, rows * _ROW_PITCH + 2 * _MARGIN
+        rng = Random(_seed_int("layout", seed, "vault"))
+        for k, node in enumerate(members):
+            col, row = k % cols, k // cols
+            desk = [_r(hx - vw / 2 + _MARGIN + col * _DESK_PITCH + _DESK_PITCH / 2 + rng.uniform(-0.4, 0.4)), VAULT_Y,
+                    _r(hz - side * (vd / 2 - _MARGIN - row * _ROW_PITCH - _ROW_PITCH / 2))]
+            yaw = _r(math.pi if side > 0 else 0.0)
+            anchors[node] = {"desk": desk, "yaw": yaw, "break": desk, "break_yaw": yaw, "home": desk, "home_yaw": yaw}
+        out_vault = {"host": host_venue, "center": [_r(hx), _r(hz)], "size": [_r(vw), _r(vd)], "y": VAULT_Y}
+
+    xs = [x for b in out_blocks for x in b["x"]] or [-30.0, 30.0]
+    zs = [z for b in out_blocks for z in b["z"]] or [-30.0, 30.0]
+    streets = [{"from": [_r(min(xs) - 40.0), 0.0], "to": [_r(max(xs) + 40.0), 0.0], "width": _STREET}]
+    for side in (1, -1):  # cross streets in the gaps between blocks on each side
+        row = sorted((b for b in out_blocks if b["side"] == side), key=lambda b: b["x"][0])
+        for a, b in zip(row, row[1:]):
+            cx = (a["x"][1] + b["x"][0]) / 2
+            far = side * (_STREET / 2 + max(a["size"][1], b["size"][1]) + 30.0)
+            streets.append({"from": [_r(cx), _r(side * _STREET / 2)], "to": [_r(cx), _r(far)], "width": _GAP})
+    return {
+        "ground_y": GROUND_Y,
+        "vault_y": VAULT_Y,
+        "street_width": _STREET,
+        "blocks": out_blocks,
+        "vault": out_vault,
+        "streets": streets,
+        "gather": [0.0, GROUND_Y, 0.0],
+        "extent": {"x": [_r(min(xs)), _r(max(xs))], "z": [_r(min(zs)), _r(max(zs))]},
+        "anchors": anchors,
+    }

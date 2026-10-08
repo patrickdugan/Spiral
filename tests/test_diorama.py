@@ -77,3 +77,48 @@ def test_safety_boundary_is_sealed():
     assert b["real_person_data"] is False
     assert b["persuasion_or_recruitment_content"] is False
     assert b["truth_class_hidden_from_attacker"] is True
+
+
+def _example_layout():
+    return diorama.city_layout(
+        [("a", "community", ["n1", "n2", "n3"]), ("b", "community", ["n4", "n5"]), ("c", "community", [])],
+        7,
+        vault=("b", ["v1", "v2"]),
+    )
+
+
+def test_city_layout_is_deterministic():
+    assert _example_layout() == _example_layout()
+
+
+def test_city_layout_anchors_every_unit_on_the_ground_or_in_the_vault():
+    layout = _example_layout()
+    assert set(layout["anchors"]) == {"n1", "n2", "n3", "n4", "n5", "v1", "v2"}
+    for node, anchor in layout["anchors"].items():
+        for key in ("desk", "break", "home"):
+            assert len(anchor[key]) == 3
+        assert anchor["desk"][1] == (diorama.VAULT_Y if node.startswith("v") else diorama.GROUND_Y)
+    assert layout["vault"]["host"] == "b"
+
+
+def test_city_layout_desks_sit_inside_their_block_and_blocks_never_overlap():
+    layout = _example_layout()
+    blocks = {b["venue"]: b for b in layout["blocks"]}
+    members = {"a": ["n1", "n2", "n3"], "b": ["n4", "n5"]}
+    for venue, nodes in members.items():
+        b = blocks[venue]
+        for node in nodes:
+            x, _, z = layout["anchors"][node]["desk"]
+            assert min(b["x"]) <= x <= max(b["x"]) and min(b["z"]) <= z <= max(b["z"])
+    desks = [a["desk"] for a in layout["anchors"].values()]
+    for i in range(len(desks)):
+        for j in range(i + 1, len(desks)):
+            if desks[i][1] == desks[j][1]:
+                assert ((desks[i][0] - desks[j][0]) ** 2 + (desks[i][2] - desks[j][2]) ** 2) ** 0.5 > 5.0
+    boxes = list(blocks.values())
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            a, b = boxes[i], boxes[j]
+            apart_x = max(a["x"]) <= min(b["x"]) or max(b["x"]) <= min(a["x"])
+            apart_z = max(a["z"]) <= min(b["z"]) or max(b["z"]) <= min(a["z"])
+            assert apart_x or apart_z

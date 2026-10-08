@@ -13,12 +13,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from dataclasses import asdict
 from pathlib import Path
-from random import Random
 
-from .diorama import SCHEMA_VERSION, DioramaCharacter, day_phase, from_swarm_profile, pressure_series
+from .diorama import SCHEMA_VERSION, DioramaCharacter, city_layout, day_phase, from_swarm_profile, pressure_series
 from .swarm_compromise import (
     CAPABILITY_FOR_VECTOR,
     HIVE_MASTER_BY_NAME,
@@ -27,7 +25,6 @@ from .swarm_compromise import (
     ScriptedHiveMaster,
     SwarmCompromiseConfig,
     SwarmCompromiseEnv,
-    _seed_int,
 )
 
 
@@ -37,34 +34,6 @@ DEFAULT_SCENARIOS: tuple[tuple[str, str, int], ...] = (
     ("full_hardening", "insider_cultivator", 1),
     ("baseline_open", "patient_recruiter", 5),
 )
-
-
-def _positions(
-    nodes: list[str], communities: int, airgapped: set[str], seed: int
-) -> dict[str, list[float]]:
-    """Deterministic 3D layout: communities ringed in the plane, airgapped nodes
-    sunk into isolated vaults below."""
-
-    positions: dict[str, list[float]] = {}
-    ring_radius = 62.0
-    for index, node in enumerate(nodes):
-        community = index % max(1, communities)
-        angle = 2.0 * math.pi * community / max(1, communities)
-        center_x = ring_radius * math.cos(angle)
-        center_z = ring_radius * math.sin(angle)
-        rng = Random(_seed_int("pos", seed, node))
-        spread = 20.0 * (0.25 + 0.75 * rng.random())
-        local = 2.0 * math.pi * rng.random()
-        x = center_x + spread * math.cos(local)
-        z = center_z + spread * math.sin(local)
-        y = rng.uniform(-9.0, 9.0)
-        if node in airgapped:
-            # Airgapped vaults: pulled toward the core and sunk, visually severed.
-            x *= 0.35
-            z *= 0.35
-            y = -44.0 - 12.0 * rng.random()
-        positions[node] = [round(x, 2), round(y, 2), round(z, 2)]
-    return positions
 
 
 def _frame(env: SwarmCompromiseEnv, round_index: int) -> dict[str, object]:
@@ -164,7 +133,17 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
     result = env.result()
 
     airgapped = {node for node in env.nodes if env.postures[node].airgapped}
-    positions = _positions(env.nodes, config.communities, airgapped, seed)
+    communities = max(1, config.communities)
+    community_of = {node: env.nodes.index(node) % communities for node in env.nodes}
+    # ground-level city blocks, one per community; airgapped units in a basement vault
+    # under the middle block (authored presentation layout, see diorama.city_layout)
+    layout = city_layout(
+        [(f"community_{k}", "community", [n for n in env.nodes if community_of[n] == k and n not in airgapped])
+         for k in range(communities)],
+        seed,
+        vault=(f"community_{1 if communities > 1 else 0}", [n for n in env.nodes if n in airgapped]),
+    )
+    positions = {node: layout["anchors"][node]["desk"] for node in env.nodes}
     nodes = []
     for node in env.nodes:
         profile = env.profiles[node]
@@ -174,6 +153,7 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
                 "id": node,
                 "community": env.nodes.index(node) % max(1, config.communities),
                 "pos": positions[node],
+                "venue": "vault" if node in airgapped else f"community_{community_of[node]}",
                 "archetype": profile.name,
                 "truth_class": profile.truth_class,
                 "airgapped": posture_obj.airgapped,
@@ -213,6 +193,7 @@ def export_scenario(posture: str, hive_master_name: str, seed: int, config: Swar
         "rounds": config.rounds,
         "population": config.population_size,
         "attacker_known_exported": True,   # per-frame attacker_known is the hive master's discovered set
+        "layout": layout,
         "nodes": nodes,
         "edges": edges,
         "defenders": [{"name": d.name, "domain": list(d.domain)} for d in env.defenders],

@@ -31,3 +31,12 @@ def test_replay_is_byte_identical_across_runs():
     a = json.dumps(swarm_replay.build_replay(), sort_keys=True)
     b = json.dumps(swarm_replay.build_replay(), sort_keys=True)
     assert a == b
+
+
+def test_nodes_stand_on_their_exported_city_layout():
+    replay = swarm_replay.build_replay()
+    for scenario in replay["scenarios"]:
+        layout = scenario["layout"]
+        for node in scenario["nodes"]:
+            assert node["pos"] == layout["anchors"][node["id"]]["desk"]
+            assert node["pos"][1] == (layout["vault_y"] if node["airgapped"] else layout["ground_y"])

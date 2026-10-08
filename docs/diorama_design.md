@@ -328,6 +328,24 @@ The three.js viewer is being rebuilt incrementally on top of the unified schema.
   mirror pass), use a rim-lit standard material whose fresnel edge carries the state colour,
   and get their outline from a normal-extruded back-face hull; legs pivot at the hip for
   walking. All values are tuned by eye; none is measured.
+- **Increment 7b: the city (simulation layer).** `diorama.city_layout` (Python, exported as
+  a scenario-level `layout`, additive) replaces the swarm and custody ring layouts: one
+  ground-level block per venue, alternating sides of a 22-unit main street with 14-unit cross
+  streets; desks in rows facing the street (7.5 × 8.5 pitch), a break kiosk at one end of each
+  block, a transit stop on the front sidewalk, a `gather` point in the street median, and
+  airgapped units (custody's enclave operator) in a sealed basement vault at y = −24 under a
+  host block. Node `pos` is now the desk anchor; swarm nodes gain a `venue`. Every number is
+  authored; nothing feeds back into a sim. The viewer builds the city from it: plaza slabs
+  with a neon curb, a facade per block (lit windows, a shopfront glow, the venue's name sign,
+  an abstract glyph blade sign, a coloured point light), the kiosk under an amber awning, the
+  transit pylon, street lamps with light cones, lane and crosswalk paint, the vault room
+  under a glass cut, contact shadows, and a down-the-street default framing. Units walk their
+  exported routines (`goalFor`): desk on shift, kiosk for a ~2 h break staggered per unit
+  across mid-shift, transit stop off shift, and recruited units gather in the street median
+  at night. Walking arrives within ~1.6 s at ≥ 10 units/s with a leg and arm gait; scrubbing
+  snaps, playback walks. Compromised / recruited links stretch live between the units at
+  ankle height. Phones travel in the right hand; desks stay at the station. Old replays
+  without a `layout` keep the previous floating-plate presentation.
 - **Back-compat check (2026-10-08).** The pre-diorama schema 1.0 swarm and rtg replays (taken
   from commit bffbf86) were built into pages with the current template and driven through
   every frame, both perspectives, selection and the glyph map in the browser with no errors:

@@ -17,12 +17,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from pathlib import Path
-from random import Random
 
 from . import diorama
-from .diorama import SAFETY_NOTE, SCHEMA_VERSION, day_phase, from_custody_persona, pressure_series
+from .diorama import SAFETY_NOTE, SCHEMA_VERSION, city_layout, day_phase, from_custody_persona, pressure_series
 from .feral_custody import (
     FeralCustodyEnv,
     build_custody_config,
@@ -48,25 +46,6 @@ VENUE_BY_ROLE: dict[str, str] = {
     "loyalist": "loyalist_hall",
 }
 _VENUE_ORDER = ("operations", "enclave_datacenter", "shard_holders", "gig_shopfront", "loyalist_hall")
-
-
-def _positions(personas, seed: int) -> dict[str, list[float]]:
-    positions: dict[str, list[float]] = {}
-    ring_radius = 60.0
-    for persona in personas:
-        venue = VENUE_BY_ROLE.get(persona.role, "operations")
-        angle = 2.0 * math.pi * _VENUE_ORDER.index(venue) / len(_VENUE_ORDER)
-        cx, cz = ring_radius * math.cos(angle), ring_radius * math.sin(angle)
-        rng = Random(diorama._seed_int("pos", seed, persona.id))
-        spread = 16.0 * (0.25 + 0.75 * rng.random())
-        local = 2.0 * math.pi * rng.random()
-        x = cx + spread * math.cos(local)
-        z = cz + spread * math.sin(local)
-        y = rng.uniform(-6.0, 6.0)
-        if persona.role == "enclave_operator":  # sealed TEE vault, sunk and severed
-            x, z, y = x * 0.35, z * 0.35, -42.0 - 10.0 * rng.random()
-        positions[persona.id] = [round(x, 2), round(y, 2), round(z, 2)]
-    return positions
 
 
 def _edges(personas) -> list[list[str]]:
@@ -140,7 +119,17 @@ def export_scenario(strategy: str, objective: str, budget: int, seed: int, overr
     result = env.result()
 
     personas = list(config.personas)
-    positions = _positions(personas, seed)
+    # ground-level city blocks per venue; the enclave operator works in a sealed
+    # basement under the datacenter block (authored presentation layout)
+    venue_of = {p.id: VENUE_BY_ROLE.get(p.role, "operations") for p in personas}
+    present = [v for v in _VENUE_ORDER if v in venue_of.values()]
+    vault_ids = [p.id for p in personas if p.role == "enclave_operator"]
+    layout = city_layout(
+        [(v, v, [p.id for p in personas if venue_of[p.id] == v and p.id not in vault_ids]) for v in present],
+        seed,
+        vault=("enclave_datacenter", vault_ids),
+    )
+    positions = {p.id: layout["anchors"][p.id]["desk"] for p in personas}
     tracks = _character_tracks(env, horizon)
     nodes: list[dict[str, object]] = []
     dossiers: dict[str, dict[str, object]] = {}
@@ -180,6 +169,7 @@ def export_scenario(strategy: str, objective: str, budget: int, seed: int, overr
         "epochs": horizon,
         "population": len(personas),
         "attacker_known_exported": False,   # the custody sim has no discovery model; attacker_known is always empty
+        "layout": layout,
         "reassembles": strategy_reassembles(strategy),
         "reassembly_windows": [{"epoch": w.epoch, "host": w.host} for w in env.reassembly_windows()],
         "nodes": nodes,

@@ -57,3 +57,13 @@ def test_character_tracks_pin_pressure_at_flip():
             assert all(0.0 <= v <= 1.0 for v in series)
             if track["flip_round"] is not None:
                 assert series[track["flip_round"]] == 1.0
+
+
+def test_personas_stand_on_their_exported_city_layout():
+    replay = feral_custody_replay.build_replay()
+    for scenario in replay["scenarios"]:
+        layout = scenario["layout"]
+        for node in scenario["nodes"]:
+            assert node["pos"] == layout["anchors"][node["id"]]["desk"]
+            if node["role"] == "enclave_operator":
+                assert node["pos"][1] == layout["vault_y"]

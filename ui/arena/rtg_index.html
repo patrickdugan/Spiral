@@ -416,6 +416,10 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const nice = (s) => String(s == null ? "" : s).replace(/_/g, " ");
 
+/* layout constants shared by the rig, the blocks and the edges */
+const SLAB = 0.3;   // plaza slab height: surface units stand on it, vault units stand on the vault floor
+function liftOf(p) { const L = S && S.layout; return (L && p[1] > L.vault_y + 1) ? SLAB : 0; }
+function edgeY(nd) { return (S && S.layout) ? nd.pos[1] + liftOf(nd.pos) + 0.08 : nd.pos[1] - 2.9; }   // floor traces in the city, plate-height lines otherwise
 /* deterministic [0,1) hash + a tiny seeded RNG so set-dressing is stable per scenario */
 function hashUnit(s) {
   let h = 2166136261;
@@ -574,7 +578,7 @@ function mergeParts(parts) {
 const XF = (x, y, z, rz) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, rz || 0)), new THREE.Vector3(1, 1, 1));
 /* the wet street: a glossy standard surface (neon point lights pool on it) that also samples
    the mirror pass, smeared vertically like rain on asphalt and stronger at grazing angles */
-function makeGround(y, opacity) {
+function makeGround(y, opacity, holes) {
   const mat = new THREE.MeshStandardMaterial({ color: 0x0c1018, roughness: 0.62, metalness: 0.35, emissive: 0xffffff, emissiveMap: GROUND_TEX, emissiveIntensity: 0.16,
     transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
   mat.onBeforeCompile = (sh) => {
@@ -593,9 +597,26 @@ function makeGround(y, opacity) {
     totalEmissiveRadiance += refl * mirrorStrength * fres;
   }`);
   };
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), mat);
+  const mesh = new THREE.Mesh(holes && holes.length ? rectShapeGeo(-450, 450, -450, 450, holes, 900) : new THREE.PlaneGeometry(900, 900), mat);
   mesh.rotation.x = -Math.PI / 2; mesh.position.y = y;
   return mesh;
+}
+/* a flat rectangle in world x / z with rectangular holes, for a mesh rotated -90° about x
+   (shape y = -world z); uvSpan > 0 normalises the UVs over that span, else UVs are world units */
+function rectShape(x0, x1, z0, z1, holes) {
+  const sh = new THREE.Shape();
+  sh.moveTo(x0, -z0); sh.lineTo(x1, -z0); sh.lineTo(x1, -z1); sh.lineTo(x0, -z1); sh.lineTo(x0, -z0);
+  for (const h of holes || []) {
+    const hx0 = h.center[0] - h.size[0] / 2, hx1 = h.center[0] + h.size[0] / 2, hz0 = h.center[1] - h.size[1] / 2, hz1 = h.center[1] + h.size[1] / 2;
+    const path = new THREE.Path(); path.moveTo(hx0, -hz0); path.lineTo(hx1, -hz0); path.lineTo(hx1, -hz1); path.lineTo(hx0, -hz1); path.lineTo(hx0, -hz0);
+    sh.holes.push(path);
+  }
+  return sh;
+}
+function rectShapeGeo(x0, x1, z0, z1, holes, uvSpan) {
+  const geo = new THREE.ShapeGeometry(rectShape(x0, x1, z0, z1, holes));
+  if (uvSpan) { const uv = geo.attributes.uv, P = geo.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, (P.getX(i) + uvSpan / 2) / uvSpan, (P.getY(i) + uvSpan / 2) / uvSpan); }
+  return geo;
 }
 
 function canvasTex(w, h, draw) {
@@ -623,6 +644,27 @@ const GROUND_TEX = canvasTex(256, 256, (g, w, h) => {
   g.strokeRect(1, 1, w - 2, h - 2);
 });
 GROUND_TEX.wrapS = GROUND_TEX.wrapT = THREE.RepeatWrapping; GROUND_TEX.repeat.set(28, 28);
+/* plaza paving: a faint tile grid, repeated every 6 world units on the block slabs */
+const TILE_TEX = canvasTex(64, 64, (g, w, h) => {
+  g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
+  g.strokeStyle = "rgba(255,255,255,0.55)"; g.lineWidth = 1.5; g.strokeRect(0.75, 0.75, w - 1.5, h - 1.5);
+  g.fillStyle = "rgba(255,255,255,0.06)"; g.fillRect(2, 2, w - 4, h - 4);
+});
+TILE_TEX.wrapS = TILE_TEX.wrapT = THREE.RepeatWrapping; TILE_TEX.repeat.set(1 / 6, 1 / 6);
+/* contact shadow under each walking figure */
+const SHADOW_TEX = canvasTex(64, 64, (g) => {
+  const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, "rgba(0,0,0,0.75)"); grd.addColorStop(0.55, "rgba(0,0,0,0.35)"); grd.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+});
+const SHADOW_GEO = new THREE.CircleGeometry(2.2, 24);
+const SHADOW_MAT = new THREE.MeshBasicMaterial({ map: SHADOW_TEX, transparent: true, depthWrite: false, color: 0x000000 });
+/* light cone texture: bright at the lamp head, fading toward the ground */
+const CONE_TEX = canvasTex(4, 128, (g, w, h) => {
+  const grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, "rgba(255,255,255,0.9)"); grd.addColorStop(0.35, "rgba(255,255,255,0.25)"); grd.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});
 const WINDOW_TEX = canvasTex(64, 256, (g, w, h) => {
   g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
   const r = rng("windows");
@@ -670,17 +712,18 @@ function textSprite(text, opts) {
   else sp.scale.set(26 * o.scale, 26 * o.scale * o.h / o.w, 1);
   return sp;
 }
-/* desk props from the character's device stack (software_surface presets) */
-function makeProps(devices, aw) {
-  const g = new THREE.Group(); const seen = new Set();
-  const glow = (c) => new THREE.MeshLambertMaterial({ color: 0x141a24, emissive: c, emissiveIntensity: 0.9 });
-  const dark = new THREE.MeshLambertMaterial({ color: 0x1a2230 });
-  // hive vision: a small neon halo per device so entry points read as hot spots at range (opacity set per frame)
-  const mark = (x, y, z, c) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 })); s.scale.set(2.6, 2.6, 1); s.position.set(x, y, z); s.userData.devHalo = true; g.add(s); };
+/* desk props from the character's device stack (software_surface presets): the desk stays at
+   the station; a phone (if any) travels in the unit's right hand (makePhone) */
+function makeProps(devices) {
+  const g = new THREE.Group(); const seen = new Set(); let phone = false;
+  const glow = (c) => new THREE.MeshStandardMaterial({ color: 0x141a24, emissive: c, emissiveIntensity: 0.9, roughness: 0.4 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.45, metalness: 0.4 });
+  // infrared: a small neon halo per device so entry points read as hot spots at range (opacity set per frame)
+  const mark = (x, y, z, c) => { const sp = devHalo(c); sp.position.set(x, y, z); g.add(sp); };
   for (const dev of devices || []) {
     const d = String(dev).toLowerCase(); if (seen.has(d)) continue; seen.add(d);
-    if (/phone|iphone|android/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.95, 0.08), glow(COL.ice)); m.position.set(aw + 0.15, -0.45, 0.45); m.rotation.x = -0.5; g.add(m); mark(aw + 0.15, -0.45, 0.45, COL.ice); }
-    else if (/mac|laptop|book/.test(d)) {
+    if (/phone|iphone|android/.test(d)) { phone = true; continue; }
+    if (/mac|laptop|book/.test(d)) {
       const stand = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.6, 1.4), dark); stand.position.set(0, -2.1, 2.4); g.add(stand);
       const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.1), dark); base.position.set(0, -1.26, 2.4); g.add(base);
       const lid = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.06), glow(COL.ice)); lid.position.set(0, -0.78, 2.95); lid.rotation.x = -0.35; g.add(lid); mark(0, -0.7, 2.9, COL.ice);
@@ -690,11 +733,17 @@ function makeProps(devices, aw) {
       mark(-2.6, -1.2, 1.1, COL.violet);
     } else if (/wallet|ledger|hardware/.test(d)) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.7), glow(COL.hazard)); m.position.set(1.4, -2.6, 1.6); g.add(m); mark(1.4, -2.5, 1.6, COL.hazard); }
   }
-  return g;
+  return { desk: g, phone };
 }
-
-/* procedural low-poly humanoid (self-authored geometry; lit material with an
-   emissive state tint so figures read in daylight and glow at night) */
+function devHalo(c) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
+  sp.scale.set(2.6, 2.6, 1); sp.userData.devHalo = true; return sp;
+}
+function makePhone() {   // held in the right hand: the spear_social pose brings it to the face
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.95, 0.08), new THREE.MeshStandardMaterial({ color: 0x141a24, emissive: COL.ice, emissiveIntensity: 0.9, roughness: 0.4 }));
+  m.position.set(0.1, -2.25, 0.32); m.rotation.x = -0.4; m.add(devHalo(COL.ice));
+  return m;
+}
 /* archetype silhouettes: authored presentation hints so a crowd reads at a glance */
 const ARCH_BUILD = {
   guarded_engineer: { sh: 1.1, hd: 0.95, hood: true },
@@ -750,6 +799,28 @@ function makeHumanoid(v, arch) {
   group.scale.setScalar((0.9 + 0.24 * v) * (b.scale || 1));
   return { group, mat, vmat, picks, arms, legs, slump: b.slump || 0 };
 }
+/* where a unit should be this frame (authored presentation rule over the exported routine,
+   clock and layout): at the desk on shift, at the block's kiosk for a break around mid-shift,
+   at the transit stop off shift — except recruited units, who gather in the street at night */
+function onBreak(r, cl, id) {   // a ~2 h break, staggered per unit across the middle of the shift so the kiosk always has a few
+  if (!r || !cl || cl.hour == null) return false;
+  const start = r.work_start_hour == null ? 8 : r.work_start_hour, len = r.work_hours == null ? 8 : r.work_hours;
+  const mid = len / 2 + (hashUnit("break" + id) - 0.5) * len * 0.45;
+  return Math.abs(((cl.hour - start + 24) % 24) - mid) < 1.0;
+}
+function goalFor(o, st, f) {
+  const a = o.anchors, L = S.layout, r = o.routine, cl = f.clock;
+  let p = a.desk, yaw = a.yaw, where = "desk";
+  if (r && cl && cl.hour != null) {
+    if (!onShift(r, cl)) {
+      if (st.rec && L.gather) {
+        const ang = hashUnit("gather" + o.data.id) * Math.PI * 2, rad = 2.5 + 4 * hashUnit("gr" + o.data.id);
+        p = [L.gather[0] + Math.cos(ang) * rad, L.gather[1], L.gather[2] + Math.sin(ang) * rad]; yaw = Math.atan2(-Math.cos(ang), -Math.sin(ang)); where = "gather";
+      } else { p = a.home; yaw = a.home_yaw; where = "home"; }
+    } else if (onBreak(r, cl, o.data.id)) { p = a.break; yaw = a.break_yaw; where = "break"; }
+  }
+  return { x: p[0], y: p[1] + liftOf(p) + 3, z: p[2], yaw, where };
+}
 /* on-shift test from the exported routine + per-frame clock (authored presentation rule) */
 function onShift(r, cl) {
   if (!r || !cl || cl.hour == null) return true;
@@ -776,42 +847,47 @@ function makePylon(v) {
 
 /* ---------- environment: ground, vault floor, city, rain ---------- */
 let envGroup = null, rainLines = null, rainPos = null, beacons = [], cityMats = [], rainOn = true, matteMat = null;
-function buildEnvironment(seedStr) {
+function buildEnvironment(seedStr, L) {
   if (envGroup) { scene.remove(envGroup); envGroup.traverse(disposeObj); }
   envGroup = new THREE.Group(); beacons = []; cityMats = [];
   matteMat = new THREE.MeshBasicMaterial({ map: SKYLINE_TEX, transparent: true, side: THREE.BackSide, fog: false, depthWrite: false });
   const matte = new THREE.Mesh(new THREE.CylinderGeometry(430, 430, 300, 64, 1, true), matteMat);
   matte.position.y = -30 + 150; envGroup.add(matte);
-  // the wet street (reflective; translucent here so the vault level still reads through) + vault floor
-  groundMesh = makeGround(-12.5, 0.82); envGroup.add(groundMesh);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, color: 0x6b7f94 }));
-  floor.rotation.x = -Math.PI / 2; floor.position.y = -64; envGroup.add(floor);
+  // the wet street: opaque in the city (the vault shows through a glass cut), translucent in the legacy layout
+  const gy = L ? L.ground_y : -12.5;
+  groundMesh = makeGround(gy, L ? 1 : 0.82, L && L.vault ? [L.vault] : []); envGroup.add(groundMesh);
+  if (!L) {
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial({ map: GROUND_TEX, color: 0x6b7f94 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -64; envGroup.add(floor);
+  }
+  const reach = L ? Math.max(Math.abs(L.extent.x[0]), Math.abs(L.extent.x[1]), Math.abs(L.extent.z[0]), Math.abs(L.extent.z[1])) + 55 : 165;
   // skyline: an annulus of dark towers with lit windows, deterministic per scenario
   const r = rng("city:" + seedStr);
   const box = new THREE.BoxGeometry(1, 1, 1);
-  for (let i = 0; i < 44; i++) {
-    const ang = r() * Math.PI * 2, rad = 165 + r() * 120;
+  for (let i = 0; i < 52; i++) {
+    const ang = r() * Math.PI * 2, rad = reach + r() * 120;
+    if (L && Math.abs(Math.sin(ang) * rad) < 22) continue;   // keep the street corridor open as a vista
     const w = 10 + r() * 24, d = 10 + r() * 24, h = 16 + Math.pow(r(), 1.6) * 150;
     const mat = new THREE.MeshLambertMaterial({ color: 0x0d1219, emissive: 0xb8d6ea, emissiveMap: WINDOW_TEX.clone(), emissiveIntensity: 0.9 });
     mat.emissiveMap.needsUpdate = true; mat.emissiveMap.repeat.set(Math.max(1, Math.round(w / 8)), Math.max(1, Math.round(h / 16)));
     mat.emissiveMap.offset.set(r(), r());
     const b = new THREE.Mesh(box, mat); b.scale.set(w, h, d);
-    b.position.set(Math.cos(ang) * rad, -12.5 + h / 2, Math.sin(ang) * rad); envGroup.add(b); cityMats.push(mat);
+    b.position.set(Math.cos(ang) * rad, gy + h / 2, Math.sin(ang) * rad); envGroup.add(b); cityMats.push(mat);
     if (h > 60 && r() < 0.5) {   // neon strip up the face that looks toward the diorama
       const nc = [COL.hunger, COL.ice, COL.hazard, COL.violet][Math.floor(r() * 4)];
       const strip = new THREE.Mesh(new THREE.BoxGeometry(0.9, h * (0.35 + r() * 0.4), 0.3), new THREE.MeshBasicMaterial({ color: nc, transparent: true, opacity: 0.85 }));
       const inward = Math.atan2(-b.position.z, -b.position.x);
-      strip.position.set(b.position.x + Math.cos(inward) * (Math.max(w, d) / 2 + 0.2), -12.5 + h * 0.5, b.position.z + Math.sin(inward) * (Math.max(w, d) / 2 + 0.2)); envGroup.add(strip);
+      strip.position.set(b.position.x + Math.cos(inward) * (Math.max(w, d) / 2 + 0.2), gy + h * 0.5, b.position.z + Math.sin(inward) * (Math.max(w, d) / 2 + 0.2)); envGroup.add(strip);
     }
     if (h > 120 && beacons.length < 7) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.hot, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-      s.scale.set(7, 7, 1); s.position.set(b.position.x, -12.5 + h + 2, b.position.z); envGroup.add(s); beacons.push({ s, ph: r() * 6.28 });
+      s.scale.set(7, 7, 1); s.position.set(b.position.x, gy + h + 2, b.position.z); envGroup.add(s); beacons.push({ s, ph: r() * 6.28 });
     }
   }
   // rain: short vertical segments, wrapped in a volume around the diorama
   const n = 1100; rainPos = new Float32Array(n * 6);
   for (let i = 0; i < n; i++) {
-    const x = (r() - 0.5) * 360, y = -60 + r() * 180, z = (r() - 0.5) * 360;
+    const x = (r() - 0.5) * 360, y = (L ? gy : -60) + r() * (L ? 150 : 180), z = (r() - 0.5) * 360;
     rainPos[i*6] = x; rainPos[i*6+1] = y; rainPos[i*6+2] = z; rainPos[i*6+3] = x; rainPos[i*6+4] = y - 2.6; rainPos[i*6+5] = z;
   }
   const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
@@ -838,6 +914,7 @@ function applyDayCycle(clock) {
   if (matteMat) { matteMat.color.setHex(daylight > 0 ? (0xffffff - Math.round(daylight * 0x70) * 0x010101) : 0xffffff); matteMat.opacity = lerp(1, 0.8, daylight); }
   if (rainLines) rainLines.material.opacity = lerp(0.17, 0.11, daylight);
   for (const s of lampHalos) s.material.opacity = lerp(0.55, 0.06, daylight);
+  for (const c of lampCones) c.material.opacity = lerp(0.1, 0.0, daylight);
   for (const l of venueLights) l.intensity = 1.1;
   if (hiveVision) {   // infrared: the city goes cold; only heat shows
     renderer.setClearColor(0x05040c, 1); scene.fog.color.setHex(0x05040c);
@@ -846,6 +923,7 @@ function applyDayCycle(clock) {
     if (matteMat) { matteMat.color.setHex(0x5a5aa0); matteMat.opacity = 0.35; }
     if (rainLines) rainLines.material.opacity = 0.05;
     for (const s of lampHalos) s.material.opacity = 0.04;
+    for (const c of lampCones) c.material.opacity = 0;
     for (const l of venueLights) l.intensity = 0.25;
   }
   drawSkyArc(t);
@@ -861,6 +939,7 @@ function drawSkyArc(t) {
 }
 
 /* ---------- scenario build ---------- */
+let activePairs = [];   // compromised / recruited links; in the city they stretch between the units where they stand
 let S = null, nodeObjs = {}, nodeMeshes = [], baseEdges = null, activeEdges = null, cageGroup = null, cageByNode = {}, nodeGroup = null, venueGroup = null, scanLines = null, scanTargets = [];
 let hiveVision = false;   // infrared overlay (H): the attacker's perspective — devices as vectors, cash, marks; decoys and truth class unknown. Off = the city view.
 let venueLights = [];
@@ -901,45 +980,55 @@ function buildScenario(scn) {
   clearGroup(nodeGroup); clearGroup(baseEdges); clearGroup(activeEdges); clearGroup(cageGroup); clearGroup(venueGroup); clearGroup(hive); clearGroup(scanLines); scanTargets = [];
   for (const e of effects) { if (e.obj) { scene.remove(e.obj); disposeObj(e.obj); } else if (e.cage) { e.cage.scale.setScalar(1); } }   // effects in flight from the last scenario
   nodeObjs = {}; nodeMeshes = []; effects.length = 0; hovered = null;
-  buildEnvironment(S.id);
+  buildEnvironment(S.id, S.layout || null);
   nodeGroup = new THREE.Group(); scene.add(nodeGroup);
+  const L = S.layout || null;
   for (const nd of S.nodes) {
     const v = hashUnit(String(nd.archetype) + nd.id);
     const h = isPerson(nd) ? makeHumanoid(v, nd.archetype) : makePylon(v);
-    h.group.position.set(nd.pos[0], nd.pos[1], nd.pos[2]);
-    h.group.rotation.y = nd.pos[0] * 0.17 + nd.pos[2] * 0.11;
+    const a = L && L.anchors ? L.anchors[nd.id] : null;
+    const sc = h.group.scale.x, lift = a ? liftOf(a.desk) : 0;
+    // the rig carries the figure and everything that should follow it; its origin is the figure's centre (feet at -3)
+    const rig = new THREE.Group(); nodeGroup.add(rig);
+    let baseRot;
+    if (a) { rig.position.set(a.desk[0], a.desk[1] + lift + 3, a.desk[2]); h.group.position.y = 3 * (sc - 1); baseRot = a.yaw; }
+    else { rig.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); baseRot = nd.pos[0] * 0.17 + nd.pos[2] * 0.11; }
+    h.group.rotation.y = baseRot; rig.add(h.group);
     for (const pm of h.picks) { pm.userData.id = nd.id; nodeMeshes.push(pm); }
-    nodeGroup.add(h.group);
-    // diorama base plate with a state-coloured rim
-    const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshLambertMaterial({ color: 0x121820 }));
-    plate.position.set(nd.pos[0], nd.pos[1] - 3.1, nd.pos[2]); nodeGroup.add(plate);
+    let plate = null;
+    if (!a) { plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.2, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.6 })); plate.position.y = -3.1; rig.add(plate); }   // legacy diorama base
+    else { const shadow = new THREE.Mesh(SHADOW_GEO, SHADOW_MAT); shadow.rotation.x = -Math.PI / 2; shadow.position.y = -2.96; shadow.raycast = () => {}; rig.add(shadow); }   // contact shadow
     const rim = new THREE.Mesh(new THREE.RingGeometry(2.75, 3.35, 6), new THREE.MeshBasicMaterial({ color: COL.dark, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.set(nd.pos[0], nd.pos[1] - 2.85, nd.pos[2]); nodeGroup.add(rim);   // neon hex ring, aligned with the plate
+    rim.rotation.set(-Math.PI / 2, 0, Math.PI / 2); rim.position.y = a ? -2.94 : -2.85; rig.add(rim);   // neon hex ring under the feet
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.dark, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    halo.scale.set(8, 8, 1); halo.position.set(nd.pos[0], nd.pos[1] + 0.8, nd.pos[2]); nodeGroup.add(halo);
+    halo.scale.set(8, 8, 1); halo.position.y = 0.8; rig.add(halo);
     const ch = characterOf(S.dossiers[nd.id] || {});
     const label = textSprite((ch.name && ch.name !== nd.id) ? `${nd.id} · ${ch.name.toUpperCase()}` : nd.id, { tick: "#f2e23a", scale: 1.0, fixed: true });
-    label.position.set(nd.pos[0], nd.pos[1] + 5.6, nd.pos[2]); label.visible = false; nodeGroup.add(label);
+    label.position.y = 5.6; label.visible = false; rig.add(label);
     let props = null; const glowMats = [], devHalos = [];
+    const collect = (root) => root.traverse((q) => { if (q.userData.devHalo) devHalos.push(q); else if (q.material && q.material.emissive && q.material.emissive.getHex() !== 0) glowMats.push(q.material); });
     if (isPerson(nd) && ch.devices.length) {
-      props = makeProps(ch.devices, 0.95 + 0.18 * v); props.position.copy(h.group.position); props.rotation.y = h.group.rotation.y; props.scale.copy(h.group.scale); nodeGroup.add(props);
-      props.traverse((o) => { if (o.userData.devHalo) devHalos.push(o); else if (o.material && o.material.emissive && o.material.emissive.getHex() !== 0) glowMats.push(o.material); });
+      const pr = makeProps(ch.devices);
+      props = pr.desk; props.position.copy(rig.position); props.rotation.y = baseRot; props.scale.setScalar(sc); nodeGroup.add(props); collect(props);
+      if (pr.phone && h.arms) { const ph = makePhone(); h.arms[0].add(ph); collect(ph); }
     }
-    nodeObjs[nd.id] = { group: h.group, mat: h.mat, baseColor: isPerson(nd) ? COL.slate : 0x3b4654, vmat: h.vmat || null, slump: h.slump || 0, arms: h.arms || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot: h.group.rotation.y, data: nd,
+    nodeObjs[nd.id] = { rig, group: h.group, gy: h.group.position.y, mat: h.mat, baseColor: isPerson(nd) ? COL.slate : 0x3b4654, vmat: h.vmat || null, slump: h.slump || 0,
+      arms: h.arms || null, legs: h.legs || null, halo, label, rim, plate, props, glowMats, devHalos, routine: ch.routine, baseRot, data: nd,
+      anchors: a, lift, goal: rig.position.clone(), goalYaw: baseRot, where: "desk", heading: baseRot, walk: 0, stride: 0,
       hasDesk: ch.devices.some((d) => /mac|laptop|book|server|rack|node/i.test(d)), _pose: null, _shake: 0, phase: Math.abs(nd.pos[0] * 0.3 + nd.pos[2] * 0.2) % 6.283 };
-    // hive vision: appetite heat ring, the device/vector tag, the cash tag
+    // infrared: appetite heat ring, the device/vector tag, the cash tag
     const o = nodeObjs[nd.id];
     o.appetite = isPerson(nd) ? appetiteOf(S.dossiers[nd.id]) : null;
     const heat = new THREE.Sprite(new THREE.SpriteMaterial({ map: RING_TEX, color: heatColor(o.appetite || 0), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
-    heat.scale.set(7, 7, 1); heat.position.set(nd.pos[0], nd.pos[1] - 2.5, nd.pos[2]); nodeGroup.add(heat); o.heat = heat;
+    heat.scale.set(7, 7, 1); heat.position.y = -2.5; rig.add(heat); o.heat = heat;
     const tagText = hiveTagText(nd, ch);
     o.tag = tagText ? textSprite(tagText, { size: 30, color: hex(COL.ice), tick: hex(COL.hunger), scale: 0.95, fixed: true }) : null;
-    if (o.tag) { o.tag.position.set(nd.pos[0], nd.pos[1] + 8.0 + 2.6 * hashUnit("tag" + nd.id), nd.pos[2]); o.tag.visible = false; nodeGroup.add(o.tag); }   // staggered so neighbours' tags don't stack
+    if (o.tag) { o.tag.position.y = 8.0 + 2.6 * hashUnit("tag" + nd.id); o.tag.visible = false; rig.add(o.tag); }   // staggered so neighbours' tags don't stack
     o.cash = null; o.cashText = null; const cashText = cashTagText(nd, ch); if (cashText) setCash(o, cashText);
   }
   // base edges
   const bp = [];
-  for (const [a, b] of S.edges) { if (!nodeObjs[a] || !nodeObjs[b]) continue; const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos; bp.push(pa[0], pa[1] - 2.9, pa[2], pb[0], pb[1] - 2.9, pb[2]); }
+  for (const [a, b] of S.edges) { if (!nodeObjs[a] || !nodeObjs[b]) continue; const na = nodeObjs[a].data, nb = nodeObjs[b].data; bp.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]); }
   const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bp), 3));
   baseEdges = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({ color: 0x2a3a4c, transparent: true, opacity: 0.7 })); scene.add(baseEdges);
   // cages around airgapped vaults
@@ -947,7 +1036,7 @@ function buildScenario(scn) {
   for (const nd of S.nodes) {
     if (!nd.airgapped) continue;
     const box = new THREE.Mesh(new THREE.BoxGeometry(7.5, 7.5, 7.5), new THREE.MeshBasicMaterial({ color: COL.steel, wireframe: true, transparent: true, opacity: 0.45 }));
-    box.position.set(nd.pos[0], nd.pos[1], nd.pos[2]); cageGroup.add(box); cageByNode[nd.id] = box;
+    box.position.copy(nodeObjs[nd.id].rig.position); cageGroup.add(box); cageByNode[nd.id] = box;
   }
   scene.add(cageGroup);
   // active edges: one fixed-size buffer per scenario, updated in place (replacing attributes every frame leaks GL buffers)
@@ -957,7 +1046,7 @@ function buildScenario(scn) {
   eg.setDrawRange(0, 0);
   activeEdges = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
   scene.add(activeEdges);
-  buildVenues();
+  if (S.layout) buildBlocks(S.layout); else buildVenues();
   // adversary presence: a dark octahedron with a hot wire, hovering over its last target
   hive = new THREE.Group();
   const core = new THREE.Mesh(new THREE.OctahedronGeometry(3.4, 0), new THREE.MeshLambertMaterial({ color: 0x05070a, emissive: 0x3a0a14, emissiveIntensity: 1 }));
@@ -1020,6 +1109,99 @@ function buildVenues() {
     sg.scale.set(28, 28, 1); sg.position.set(px, y + 18.5, pz); venueGroup.add(sg);
     const pl = new THREE.PointLight(c, 1.1, R * 3.2, 1.2); pl.position.set(px, y + 16, pz); venueGroup.add(pl); venueLights.push(pl);
     dressVenue(key, cx, cz, R, y, pa);
+  }
+  scene.add(venueGroup);
+}
+/* the city from the exported layout: plaza slabs with a curb of neon, a facade with a lit
+   shopfront and a sign along the back of each block, a break kiosk, a transit stop, street lamps
+   with light cones, lane and crosswalk markings, and the vault room under a glass cut */
+let lampCones = [];
+function signTexture(text, color, w, h) {
+  return canvasTex(w || 512, h || 96, (g, W, H) => {
+    g.clearRect(0, 0, W, H); g.fillStyle = "rgba(4,6,10,0.85)"; g.fillRect(0, 0, W, H);
+    g.strokeStyle = color; g.lineWidth = 3; g.strokeRect(5, 5, W - 10, H - 10);
+    g.font = `700 ${Math.round(H * 0.56)}px 'Rajdhani', sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillStyle = color; g.fillText(text, W / 2, H / 2 + 2);
+  });
+}
+function bladeTexture(color, seedStr) {   // abstract glyph stack (no real-world text or marks)
+  const r = rng("blade:" + seedStr);
+  return canvasTex(64, 256, (g, W, H) => {
+    g.fillStyle = "rgba(4,6,10,0.9)"; g.fillRect(0, 0, W, H); g.fillStyle = color;
+    for (let y = 12; y < H - 16; y += 30) { for (let k = 0; k < 4; k++) { if (r() < 0.6) g.fillRect(12 + r() * 30, y + r() * 18, 6 + r() * 14, 3 + r() * 5); } }
+    g.strokeStyle = color; g.lineWidth = 2; g.strokeRect(3, 3, W - 6, H - 6);
+  });
+}
+function buildBlocks(L) {
+  venueGroup = new THREE.Group(); lampHalos = []; venueLights = []; lampCones = [];
+  const gy = L.ground_y, top = gy + SLAB;
+  const pave = new THREE.MeshStandardMaterial({ color: 0x161c26, roughness: 0.46, metalness: 0.3, emissive: 0xffffff, emissiveMap: TILE_TEX, emissiveIntensity: 0.07 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x141a24, roughness: 0.5, metalness: 0.45 });
+  const basic = (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: o != null, opacity: o == null ? 1 : o });
+  const add = (m, x, y, z, ry) => { m.position.set(x, y, z); if (ry) m.rotation.y = ry; venueGroup.add(m); return m; };
+  const lamp = (x, z, c) => {
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 9, 0.28), darkMat), x, top + 4.5, z);
+    const hl = add(new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 })), x, top + 9.1, z);
+    hl.scale.set(5, 5, 1); lampHalos.push(hl);
+    const cone = add(new THREE.Mesh(new THREE.CylinderGeometry(0.35, 4.2, 9, 20, 1, true), new THREE.MeshBasicMaterial({ map: CONE_TEX, color: c, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })), x, top + 4.5, z);
+    cone.raycast = () => {}; lampCones.push(cone);
+  };
+  for (const b of L.blocks) {
+    const c = venueColor(b.venue), cs = hex(c), side = b.side;
+    const x0 = Math.min(b.x[0], b.x[1]), x1 = Math.max(b.x[0], b.x[1]), w = x1 - x0, cx = (x0 + x1) / 2;
+    const zs = b.z[0], zb = b.z[1];   // street edge, back edge
+    const r = rng("block:" + b.venue);
+    // slab, with a glass cut over the vault when this block hosts it
+    const holes = L.vault && L.vault.host === b.venue ? [L.vault] : [];
+    const slab = new THREE.Mesh(new THREE.ExtrudeGeometry(rectShape(x0, x1, Math.min(zs, zb), Math.max(zs, zb), holes), { depth: SLAB, bevelEnabled: false }), pave);
+    slab.rotation.x = -Math.PI / 2; slab.position.y = gy; venueGroup.add(slab);
+    // neon curb on the street edge, dimmer on the sides
+    add(new THREE.Mesh(new THREE.BoxGeometry(w, 0.14, 0.22), basic(c)), cx, top + 0.07, zs + side * 0.12);
+    for (const xe of [x0 + 0.11, x1 - 0.11]) add(new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, Math.abs(zb - zs)), basic(c, 0.35)), xe, top + 0.06, (zs + zb) / 2);
+    // facade along the back edge: windows, a shopfront glow, a sign, and a blade sign at the corner
+    const H = 18 + r() * 24, D = 10, fz = zb + side * D / 2, face = zb + side * 0.02, ry = side > 0 ? Math.PI : 0;
+    const wmat = new THREE.MeshStandardMaterial({ color: 0x0e131b, roughness: 0.6, metalness: 0.3, emissive: 0xb8d6ea, emissiveMap: WINDOW_TEX.clone(), emissiveIntensity: 0.9 });
+    wmat.emissiveMap.needsUpdate = true; wmat.emissiveMap.repeat.set(Math.max(1, Math.round(w / 8)), Math.max(1, Math.round(H / 16))); wmat.emissiveMap.offset.set(r(), r());
+    add(new THREE.Mesh(new THREE.BoxGeometry(w, H, D), wmat), cx, gy + H / 2, fz); cityMats.push(wmat);
+    add(new THREE.Mesh(new THREE.PlaneGeometry(w * 0.86, 4.2), basic(new THREE.Color(c).multiplyScalar(0.32).getHex())), cx, top + 2.3, face - side * 0.01, ry);
+    const sw = Math.min(w * 0.62, 30), sign = add(new THREE.Mesh(new THREE.PlaneGeometry(sw, sw * 96 / 512), new THREE.MeshBasicMaterial({ map: signTexture(nice(b.venue).toUpperCase(), cs), transparent: true })), cx, top + 7.6, face - side * 0.06, ry);
+    sign.raycast = () => {};
+    const bx = (r() < 0.5 ? x0 + 1.4 : x1 - 1.4);
+    add(new THREE.Mesh(new THREE.PlaneGeometry(2.4, 9.6), new THREE.MeshBasicMaterial({ map: bladeTexture(cs, b.venue), transparent: true, side: THREE.DoubleSide })), bx, top + 13, face - side * 1.4, ry + Math.PI / 2);
+    const pl = add(new THREE.PointLight(c, 1.15, Math.max(w, 40) * 1.4, 1.2), cx, top + 8.5, zb - side * 4); venueLights.push(pl);
+    // break kiosk: a counter under a lit awning
+    const [kx, kz] = b.kiosk;
+    add(new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.3, 1.6), darkMat), kx, top + 0.65, kz);
+    add(new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.18, 2.8), basic(COL.amber, 0.85)), kx, top + 3.6, kz);
+    for (const ox of [-2.3, 2.3]) add(new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.6, 0.18), darkMat), kx + ox, top + 1.8, kz - side * 1.2);
+    const kh = add(new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: COL.amber, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 })), kx, top + 3.2, kz); kh.scale.set(9, 6, 1); lampHalos.push(kh);
+    // transit stop: a pylon with a lit cap on the front sidewalk
+    const [mx, mz] = b.metro;
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.4, 0.6), darkMat), mx - 1.6, top + 2.2, mz);
+    add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), basic(COL.ice, 0.9)), mx - 1.6, top + 4.9, mz);
+    // street lamps along the curb
+    for (let x = x0 + 5; x < x1 - 3; x += 15) lamp(x, zs + side * 1.0, c);
+  }
+  // the vault: a sealed room under a glass cut in the host block's plaza
+  if (L.vault) {
+    const V = L.vault, [vx, vz] = V.center, [vw, vd] = V.size, depth = gy - L.vault_y, vy = L.vault_y;
+    const wall = new THREE.MeshStandardMaterial({ color: 0x10161f, roughness: 0.55, metalness: 0.4, side: THREE.DoubleSide });
+    add(new THREE.Mesh(new THREE.PlaneGeometry(vw, vd), new THREE.MeshStandardMaterial({ color: 0x121924, roughness: 0.4, metalness: 0.35, emissive: 0xffffff, emissiveMap: TILE_TEX, emissiveIntensity: 0.1 })), vx, vy, vz).rotation.x = -Math.PI / 2;
+    for (const [px, pz, pw, rot] of [[vx, vz - vd / 2, vw, 0], [vx, vz + vd / 2, vw, 0], [vx - vw / 2, vz, vd, Math.PI / 2], [vx + vw / 2, vz, vd, Math.PI / 2]]) {
+      add(new THREE.Mesh(new THREE.PlaneGeometry(pw, depth), wall), px, vy + depth / 2, pz, rot);
+      add(new THREE.Mesh(new THREE.BoxGeometry(rot ? 0.12 : pw, 0.12, rot ? pw : 0.12), basic(COL.ice, 0.8)), px, vy + 0.08, pz);
+      add(new THREE.Mesh(new THREE.BoxGeometry(rot ? 0.2 : pw, 0.2, rot ? pw : 0.2), basic(COL.steel)), px, top + 0.1, pz);
+    }
+    const glass = add(new THREE.Mesh(new THREE.PlaneGeometry(vw, vd), new THREE.MeshStandardMaterial({ color: 0x6fb6d6, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.16, depthWrite: false })), vx, top - 0.02, vz);
+    glass.rotation.x = -Math.PI / 2; glass.raycast = () => {};
+    const vl = add(new THREE.PointLight(COL.ice, 1.3, Math.max(vw, vd) * 2, 1.2), vx, vy + depth * 0.6, vz); venueLights.push(vl);
+  }
+  // street markings: a dashed centre line, crosswalks at the cross-street mouths
+  const paint = basic(0x9aa4b4, 0.38);
+  for (const st of L.streets) {
+    const [ax, az] = st.from, [bx, bz] = st.to, len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len, ang = Math.atan2(ux, uz);
+    for (let t = 4; t < len - 4; t += 9) add(new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 4), paint), ax + ux * t, gy + 0.02, az + uz * t, ang);
+    if (Math.abs(uz) > 0.5) for (let k = -3; k <= 3; k++) add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.02, 5), paint), ax + k * 1.9, gy + 0.02, az + Math.sign(az || 1) * -3.5);
   }
   scene.add(venueGroup);
 }
@@ -1117,6 +1299,7 @@ function applyFrame(i) {
     o.rim.material.color.setHex(c); if (o.vmat) o.vmat.color.setHex(c);
     // routine: off-shift figures dim in the city view and their desk goes dark (flipped states keep their glow; heat is heat)
     const on = onShift(o.routine, f.clock); o._off = !on;
+    if (o.anchors) { const g = goalFor(o, st, f); o.goal.set(g.x, g.y, g.z); o.goalYaw = g.yaw; o.where = g.where; if (!playing) { o.rig.position.copy(o.goal); o.walk = 0; } }
     if (!on && !turned && !hiveVision) { o.mat.emissiveIntensity *= 0.55; o.mat.userData.rim.value *= 0.5; o.halo.material.opacity *= 0.45; }
     o._gi = st.unseen ? 0.05 : (hiveVision ? 1.6 : (on ? 0.9 : 0.08));   // desk glow: infrared burns every device white-hot; ghosts stay dark
     for (const m of o.glowMats) m.emissiveIntensity = o._gi;
@@ -1131,11 +1314,11 @@ function applyFrame(i) {
   // the hive's gaze: its three hottest discovered marks that have not turned
   scanTargets = S.nodes.filter((nd) => { const o = nodeObjs[nd.id]; const st = o._st; return o.appetite != null && !st.unseen && !(st.comp || st.rec || st.burned || st.keyLost); })
     .sort((a, b) => nodeObjs[b.id].appetite - nodeObjs[a.id].appetite).slice(0, 3).map((nd) => nd.id);
-  const verts = [], cols = [];
+  const verts = [], cols = []; activePairs = [];
   for (const [a, b] of S.edges) {
     const sa = nodeObjs[a] && nodeObjs[a]._st, sb = nodeObjs[b] && nodeObjs[b]._st; if (!sa || !sb) continue;
     let c = null; if (sa.rec && sb.rec) c = COL.recruit; else if (sa.comp && sb.comp) c = COL.comp;
-    if (c) { const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos, cc = new THREE.Color(c); verts.push(pa[0], pa[1] - 2.9, pa[2], pb[0], pb[1] - 2.9, pb[2]); cols.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b); }
+    if (c) { const na = nodeObjs[a].data, nb = nodeObjs[b].data, cc = new THREE.Color(c); verts.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]); cols.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b); activePairs.push([a, b]); }
   }
   const ag = activeEdges.geometry, pa = ag.attributes.position, ca = ag.attributes.color;
   pa.array.set(verts.slice(0, pa.array.length)); ca.array.set(cols.slice(0, ca.array.length)); pa.needsUpdate = true; ca.needsUpdate = true;
@@ -1143,7 +1326,8 @@ function applyFrame(i) {
   // adversary presence follows the most recent attempt
   let lastT = null;
   for (let k = i; k >= 0 && !lastT; k--) for (const ev of S.frames[k].events) { const t = evTarget(ev); if (t && !nodeObjs[ev.actor]) { lastT = t; break; } }
-  if (lastT) { const p = nodeObjs[lastT].group.position; hive.userData.target.set(p.x, p.y + 17, p.z); if (!hive.visible) { hive.position.copy(hive.userData.target); hive.visible = true; } }
+  hive.userData.follow = lastT;
+  if (lastT) { const p = nodeObjs[lastT].rig.position; hive.userData.target.set(p.x, p.y + 17, p.z); if (!hive.visible) { hive.position.copy(hive.userData.target); hive.visible = true; } }
   else hive.visible = false;
 
   setMetrics(metricsFor(S, f, i));
@@ -1177,7 +1361,7 @@ function spawnEffects(f) {
   for (const ev of f.events) {
     const k = ev.vector || ev.kind; if (k === "signed") continue;
     const id = evTarget(ev); if (!id) { if (k === "extraction" || k === "funds_drained") flashAlert(); continue; }
-    const landed = evLanded(ev) || !!ev.honeypot, o = nodeObjs[id], soft = k === "reinforce", p = o.group.position, c = vectorColor(ev);
+    const landed = evLanded(ev) || !!ev.honeypot, o = nodeObjs[id], soft = k === "reinforce", p = o.rig.position, c = vectorColor(ev);
     const lateral = (nodeObjs[ev.actor] && ev.actor !== id) ? ev.actor : null;   // a node acting on a node: contagion / the agent's reach
     if (!soft) o._pose = { kind: k, landed, blocked: !!ev.blocked, t: 1.8 };
     if (!landed && !ev.blocked && !soft) {                    // a probe that was declined: the unit checks, waves it off; a reticle that fails to lock
@@ -1203,7 +1387,7 @@ function spawnEffects(f) {
     if (ev.honeypot && hive) hive.userData.burn = 1.4;       // the decoy burns the adversary: its marker flares and staggers
     if (ev.blocked && cageByNode[id]) effects.push({ obj: null, cage: cageByNode[id], t: 0, life: 0.9, kind: "cage", delay: 0.1 });   // the air gap holds: the cage flashes
     if (lateral) {                                           // the attempt travels along the link from the acting node
-      const a = nodeObjs[lateral].group.position;
+      const a = nodeObjs[lateral].rig.position;
       const pulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }));
       pulse.scale.set(4.5, 4.5, 1); pulse.position.copy(a); scene.add(pulse);
       effects.push({ obj: pulse, t: 0, life: 0.5, kind: "pulse", delay: 0, from: new THREE.Vector3(a.x, a.y + 0.8, a.z), to: new THREE.Vector3(p.x, p.y + 0.8, p.z) });
@@ -1221,7 +1405,13 @@ function flashAlert() { const el = document.getElementById("fx-alert"); el.class
 /* ---------- camera ---------- */
 const cam = { theta: 0.7, phi: 1.1, radius: 170, target: new THREE.Vector3(0, -16, 0) };
 let tween = null, idleSince = 0;
-function frameTarget() { cam.target.set(0, -16, 0); cam.radius = 145; cam.theta = 0.7; cam.phi = 1.1; }
+function framing() {
+  const L = S && S.layout;
+  if (!L) return { tx: 0, ty: -16, tz: 0, r: 145, phi: 1.1, theta: 0.7 };
+  const span = Math.max(L.extent.x[1] - L.extent.x[0], L.extent.z[1] - L.extent.z[0]);
+  return { tx: (L.extent.x[0] + L.extent.x[1]) / 2, ty: L.ground_y + 4, tz: 0, r: Math.max(80, Math.min(170, span * 1.0)), phi: 1.12, theta: 0.22 };   // down the street, facades framing both sides
+}
+function frameTarget() { const f = framing(); cam.target.set(f.tx, f.ty, f.tz); cam.radius = f.r; cam.theta = f.theta; cam.phi = f.phi; }
 function applyCam() {
   const r = cam.radius, st = Math.sin(cam.phi);
   camera.position.set(cam.target.x + r * st * Math.cos(cam.theta), cam.target.y + r * Math.cos(cam.phi), cam.target.z + r * st * Math.sin(cam.theta));
@@ -1230,8 +1420,14 @@ function applyCam() {
 function flyToPoint(x, y, z, radius, phi, dur) {
   tween = { t: 0, dur: dur || 1.3, from: { tx: cam.target.x, ty: cam.target.y, tz: cam.target.z, r: cam.radius, phi: cam.phi }, to: { tx: x, ty: y, tz: z, r: radius, phi: phi == null ? 1.12 : phi } };
 }
-function flyTo(id) { const o = nodeObjs[id]; if (!o) return; const p = o.group.position; flyToPoint(p.x, p.y - 1.5, p.z, 30, 1.2); }
+function flyTo(id) { const o = nodeObjs[id]; if (!o) return; const p = o.rig.position; flyToPoint(p.x, p.y - 1.5, p.z, 30, 1.2); }
 function flyToVenue(nodes) {
+  const L = S.layout, key = nodes.length ? venueKey(nodes[0]) : null;
+  if (L) {
+    const b = L.blocks.find((q) => q.venue === key), vlt = key === "vault" && L.vault ? L.vault : null;
+    if (b) { flyToPoint(b.center[0], L.ground_y + 3, b.center[1], Math.max(b.size[0], b.size[1]) * 0.85 + 18, 1.0); return; }
+    if (vlt) { flyToPoint(vlt.center[0], L.vault_y + 3, vlt.center[1], Math.max(vlt.size[0], vlt.size[1]) + 20, 0.62); return; }
+  }
   let x = 0, y = 0, z = 0; nodes.forEach((n) => { x += n.pos[0]; y += n.pos[1]; z += n.pos[2]; });
   const k = Math.max(1, nodes.length); x /= k; y /= k; z /= k;
   let rad = 38; nodes.forEach((n) => { rad = Math.max(rad, Math.hypot(n.pos[0] - x, n.pos[2] - z) + 26); });
@@ -1294,7 +1490,7 @@ function updateSelEdges() {
   const v = [];
   for (const [a, b] of S.edges) {
     if ((a !== selected && b !== selected) || !nodeObjs[a] || !nodeObjs[b]) continue;
-    const pa = nodeObjs[a].data.pos, pb = nodeObjs[b].data.pos; v.push(pa[0], pa[1] - 2.9, pa[2], pb[0], pb[1] - 2.9, pb[2]);
+    const na = nodeObjs[a].data, nb = nodeObjs[b].data; v.push(na.pos[0], edgeY(na), na.pos[2], nb.pos[0], edgeY(nb), nb.pos[2]);
   }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(v), 3));
   selEdges = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: COL.white, transparent: true, opacity: 0.85 })); scene.add(selEdges);
@@ -1338,9 +1534,9 @@ function cashTagText(nd, ch) {
 }
 function setCash(o, text) {
   if (o.cashText === text) return;
-  if (o.cash) { nodeGroup.remove(o.cash); o.cash.material.map.dispose(); o.cash.material.dispose(); }
+  if (o.cash) { o.rig.remove(o.cash); o.cash.material.map.dispose(); o.cash.material.dispose(); }
   o.cash = textSprite(text, { size: 34, color: hex(COL.hazard), tick: hex(COL.hazard), scale: 0.8, fixed: true });
-  o.cash.position.set(o.data.pos[0], o.data.pos[1] + 7.2, o.data.pos[2]); o.cash.visible = hiveVision; nodeGroup.add(o.cash); o.cashText = text;
+  o.cash.position.set(0, 7.2, 0); o.cash.visible = hiveVision; o.rig.add(o.cash); o.cashText = text;
 }
 
 /* ---------- dossier ---------- */
@@ -1524,7 +1720,7 @@ function drawGlyphMap() {
   g.font = "16px 'Share Tech Mono', monospace"; g.textAlign = "center"; g.textBaseline = "middle";
   mapHits = [];
   for (const nd of S.nodes) {
-    const st = nodeObjs[nd.id]._st || stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), x = px(nd), y = pz(nd);
+    const st = nodeObjs[nd.id]._st || stateOf(nd.id, f), stress = stressOf(nd.id, frameIndex), rp = nodeObjs[nd.id].rig.position, x = px({ pos: [rp.x, 0, rp.z] }), y = pz({ pos: [rp.x, 0, rp.z] });
     if (!onLevel(nd)) { g.fillStyle = "#1c232e"; g.fillText(mapZ === 0 ? "▽" : "△", x, y); continue; }
     mapHits.push({ id: nd.id, x, y });
     const c = (stress > 0.12 && !st.comp && !st.rec && !st.burned && !st.keyLost) ? COL.amber : st.color;
@@ -1910,25 +2106,38 @@ function tick(ts) {
   } else if (!dragging && now - idleSince > 7000) cam.theta += dt * 0.025;   // slow cinematic drift when idle
   if (playing && S) {
     acc += dt * speed;
-    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) flyToPoint(0, -16, 0, 145, 1.1, 2.6); if (tour) scheduleTourCut(); } }   // the run ends on a slow pull-back to the full frame
+    if (acc >= BEAT) { acc = 0; if (frameIndex < S.frames.length - 1) { applyFrame(frameIndex + 1); spawnEffects(S.frames[frameIndex]); } else { stop(); if (director && now - idleSince > 5000) { const fr = framing(); flyToPoint(fr.tx, fr.ty, fr.tz, fr.r, fr.phi, 2.6); } if (tour) scheduleTourCut(); } }   // the run ends on a slow pull-back to the full frame
   }
   { const u = post.composite.uniforms.ir; u.value += ((hiveVision ? 1 : 0) - u.value) * Math.min(1, dt * 5); }   // the infrared grade eases in and out
   const pulse = 0.5 + 0.5 * Math.sin(now * 0.0029);   // slow shared breath
   if (S) for (const nd of S.nodes) {
     const o = nodeObjs[nd.id], st = o._st; if (!st) continue;
-    o.group.position.y = nd.pos[1] + Math.sin(now * 0.0016 + o.phase) * 0.18;
-    o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress : 0;
-    let ry = o.baseRot;
-    if (o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                 // off-shift: turned away from the desk
-    else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.group.position.x, hive.position.z - o.group.position.z);   // pressed: eyes on the adversary
-    o.group.rotation.y += (ry - o.group.rotation.y) * Math.min(1, dt * 3);
+    // walking: head for the routine's goal at a pace that arrives within ~1.6 s; legs and arms swing with speed
+    let moving = false;
+    if (o.anchors) {
+      const dx = o.goal.x - o.rig.position.x, dz = o.goal.z - o.rig.position.z, dist = Math.hypot(dx, dz);
+      if (dist > 0.2) { const step = Math.min(dist, dt * Math.max(10, dist / 1.6)); o.rig.position.x += dx / dist * step; o.rig.position.z += dz / dist * step; o.heading = Math.atan2(dx, dz); moving = true; }
+      o.rig.position.y += (o.goal.y - o.rig.position.y) * Math.min(1, dt * 6);
+    }
+    o.walk += ((moving ? 1 : 0) - o.walk) * Math.min(1, dt * 8);
+    o.stride += dt * 10 * o.walk;
+    o.group.position.y = o.gy + Math.sin(now * 0.0016 + o.phase) * 0.18 * (1 - o.walk) + Math.abs(Math.sin(o.stride)) * 0.22 * o.walk;
+    o.group.rotation.z = o._stress ? Math.sin(now * 0.016 + o.phase) * 0.12 * o._stress * (1 - o.walk) : 0;
+    let ry = o.anchors ? o.goalYaw : o.baseRot;
+    if (o.walk > 0.3) ry = o.heading;                                                                            // face where you're going
+    else if (!o.anchors && o._off && !(st.comp || st.rec || st.burned)) ry += Math.PI;                           // legacy: off-shift turns away from the desk
+    else if (o._stress > 0.12 && hive && hive.visible) ry = Math.atan2(hive.position.x - o.rig.position.x, hive.position.z - o.rig.position.z);   // pressed: eyes on the adversary
+    const dYaw = Math.atan2(Math.sin(ry - o.group.rotation.y), Math.cos(ry - o.group.rotation.y));                 // shortest way round
+    o.group.rotation.y += dYaw * Math.min(1, dt * 5);
+    if (o.legs) { const sw = Math.sin(o.stride) * 0.55 * o.walk; o.legs[0].rotation.x = sw; o.legs[1].rotation.x = -sw; }
     if (o._shake > 0) { o._shake -= dt; o.group.rotation.y += Math.sin(now * 0.045) * 0.09; }   // checks, then shakes it off
     // body language (authored tells, see design note): idle swing → working at the desk → the event pose
     let lean = 0;
     if (o.arms) {
       const sw = Math.sin(now * 0.0018 + o.phase) * (0.07 + 0.3 * (o._stress || 0));
       let rx = [sw, -sw], rz = [-0.35, 0.35];
-      if (!o._off && o.hasDesk && !(st.comp || st.rec)) { const j = Math.sin(now * 0.02 + o.phase) * 0.05; rx = [-0.8 + j, -0.8 - j]; rz = [-0.15, 0.15]; }   // typing
+      if (!o._off && o.hasDesk && !(st.comp || st.rec) && o.where === "desk" && o.walk < 0.3) { const j = Math.sin(now * 0.02 + o.phase) * 0.05; rx = [-0.8 + j, -0.8 - j]; rz = [-0.15, 0.15]; }   // typing
+      if (o.walk > 0.05) { const as = Math.sin(o.stride) * 0.5 * o.walk; rx = [-as, as]; rz = [-0.25, 0.25]; }   // arms swing on the walk
       if (o._pose) {
         o._pose.t -= dt;
         if (o._pose.t <= 0) { o._pose = null; for (const m of o.glowMats) m.emissiveIntensity = o._gi; }
@@ -1954,14 +2163,21 @@ function tick(ts) {
     if (scanLines && hive) {
       const show = hiveVision && hive.visible && scanTargets.length > 0; scanLines.visible = show;
       if (show) { const pa = scanLines.geometry.attributes.position, v = pa.array; let n = 0;
-        for (const id of scanTargets.slice(0, 3)) { const p = nodeObjs[id].group.position; v[n++] = hive.position.x; v[n++] = hive.position.y - 3.5; v[n++] = hive.position.z; v[n++] = p.x; v[n++] = p.y + 1; v[n++] = p.z; }
+        for (const id of scanTargets.slice(0, 3)) { const p = nodeObjs[id].rig.position; v[n++] = hive.position.x; v[n++] = hive.position.y - 3.5; v[n++] = hive.position.z; v[n++] = p.x; v[n++] = p.y + 1; v[n++] = p.z; }
         pa.needsUpdate = true; scanLines.geometry.setDrawRange(0, n / 3); scanLines.material.opacity = 0.2 + 0.35 * pulse; }
       // scanning pulses ride the gaze lines out from the marker
-      for (let k = 0; k < scanDots.length; k++) { const d = scanDots[k], id = scanTargets[k]; d.visible = show && !!id; if (d.visible) { const p = nodeObjs[id].group.position, t = ((now * 0.00045) + k / 3) % 1; d.position.set(lerp(hive.position.x, p.x, t), lerp(hive.position.y - 3.5, p.y + 1, t), lerp(hive.position.z, p.z, t)); } }
+      for (let k = 0; k < scanDots.length; k++) { const d = scanDots[k], id = scanTargets[k]; d.visible = show && !!id; if (d.visible) { const p = nodeObjs[id].rig.position, t = ((now * 0.00045) + k / 3) % 1; d.position.set(lerp(hive.position.x, p.x, t), lerp(hive.position.y - 3.5, p.y + 1, t), lerp(hive.position.z, p.z, t)); } }
     }
+  }
+  if (S && S.layout && activePairs.length) {   // live links: follow the people, at ankle height
+    const arr = activeEdges.geometry.attributes.position.array; let n = 0;
+    for (const [a, b] of activePairs) { const pa = nodeObjs[a].rig.position, pb = nodeObjs[b].rig.position; if (n + 6 > arr.length) break;
+      arr[n++] = pa.x; arr[n++] = pa.y - 2.75; arr[n++] = pa.z; arr[n++] = pb.x; arr[n++] = pb.y - 2.75; arr[n++] = pb.z; }
+    activeEdges.geometry.attributes.position.needsUpdate = true;
   }
   if (cageGroup) cageGroup.children.forEach((c) => { c.rotation.y += dt * 0.3; c.rotation.x += dt * 0.11; });
   if (hive && hive.visible) {
+    { const fo = hive.userData.follow && nodeObjs[hive.userData.follow]; if (fo) hive.userData.target.set(fo.rig.position.x, fo.rig.position.y + 17, fo.rig.position.z); }
     hive.position.lerp(hive.userData.target, Math.min(1, dt * 1.6)); hive.rotation.y += dt * 0.9; hive.position.y += Math.sin(now * 0.002) * 0.02; hive.children[1].material.opacity = 0.45 + 0.35 * pulse;
     if (hive.userData.burn > 0) {   // burned by a decoy: flare hazard-yellow and stagger
       hive.userData.burn -= dt; hive.position.x += (Math.random() - 0.5) * 0.9; hive.position.z += (Math.random() - 0.5) * 0.9; hive.rotation.y += dt * 6;
@@ -1969,7 +2185,7 @@ function tick(ts) {
     } else { hive.children[1].material.color.setHex(COL.hot); hive.children[3].material.color.setHex(COL.hot); hive.children[3].material.opacity = 0.45; }
   }
   if (rainLines && rainOn) {
-    const p = rainPos; for (let i = 0; i < p.length; i += 6) { p[i + 1] -= dt * 95; p[i + 4] -= dt * 95; if (p[i + 1] < -66) { p[i + 1] += 180; p[i + 4] += 180; } }
+    const p = rainPos, floorY = groundMesh ? groundMesh.position.y : -66, span = S && S.layout ? 150 : 180; for (let i = 0; i < p.length; i += 6) { p[i + 1] -= dt * 95; p[i + 4] -= dt * 95; if (p[i + 1] < floorY) { p[i + 1] += span; p[i + 4] += span; } }
     rainLines.geometry.attributes.position.needsUpdate = true;
   }
   for (const b of beacons) b.s.material.opacity = (Math.sin(now * 0.004 + b.ph) > 0.6) ? 0.9 : 0.12;
@@ -2002,7 +2218,7 @@ if (link.scenario != null) { sel.value = String(link.scenario); buildScenario(RE
 else buildScenario(REPLAY.scenarios[0]);
 if (link.frame != null) applyFrame(Math.min(S.frames.length - 1, link.frame));
 if (link.unit && nodeObjs[link.unit]) select(link.unit, false);
-cam.radius = 520; tween = { t: 0, dur: 3.2, from: { tx: 0, ty: -6, tz: 0, r: 520, phi: 0.55 }, to: { tx: 0, ty: -16, tz: 0, r: 145, phi: 1.1 } };
+{ const f = framing(); cam.radius = 520; cam.theta = f.theta; tween = { t: 0, dur: 3.2, from: { tx: f.tx, ty: f.ty + 10, tz: f.tz, r: 520, phi: 0.55 }, to: { tx: f.tx, ty: f.ty, tz: f.tz, r: f.r, phi: f.phi } }; }
 idleSince = 0;
 // after the title card, run the first scenario from its opening frame so the compromise unfolds (not when a deep link asked for a frame)
 setTimeout(() => { if (S) scenarioCard(S); }, 1900);
