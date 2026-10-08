@@ -339,7 +339,7 @@
   </aside>
 
   <div class="safety" id="safety">Synthetic simulation. Dossiers and feeds are fictional, abstract eval data — not surveillance of any real person.</div>
-  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play</div>
+  <div id="hint">drag to orbit · scroll to zoom · click a figure · ← → step · space play · H hive vision · D director · M audio · R rain</div>
 
   <footer id="dock">
     <div id="timeline">
@@ -368,7 +368,7 @@
     </div>
   </div>
 
-  <div id="intro"><div><div class="t">HIVE SWARM</div><div class="s">Diorama · sealed synthetic telemetry</div><div class="l"></div></div></div>
+  <div id="intro"><div><div class="t">HIVE SWARM</div><div class="s">Diorama · vectors · cash · marks</div><div class="l"></div></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1014,6 +1014,10 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowLeft") { stop(); applyFrame(Math.max(0, frameIndex - 1)); }
   else if (e.key === " ") { e.preventDefault(); togglePlay(); }
   else if (e.key === "Escape") { closeInspector(); document.getElementById("about").hidden = true; }
+  else if (e.key === "h" || e.key === "H") document.getElementById("hivevis").click();
+  else if (e.key === "d" || e.key === "D") document.getElementById("director").click();
+  else if (e.key === "m" || e.key === "M") document.getElementById("audio").click();
+  else if (e.key === "r" || e.key === "R") document.getElementById("weather").click();
 });
 const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
 function castAt(e) {
@@ -1414,7 +1418,7 @@ function buildAbout() {
   ].map(([g, t, c]) => `<div><i style="color:${hex(c)}">${g}</i>${t}</div>`).join("");
   document.getElementById("legend").innerHTML = [
     [GLYPH.clean, "clean", COL.ice], [GLYPH.comp, "turned", COL.hot], [GLYPH.rec, "sworn", COL.violet], [GLYPH.honey, "decoy", COL.hazard],
-    [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654], ["◎", "mark heat", COL.hunger], ["$", "cash", COL.hazard],
+    [GLYPH.airgap, "vault", COL.steel], ["~", "stressed", COL.amber], ["⌂", "off-shift", 0x3b4654], ["◎", "mark heat", COL.hunger], ["$", "cash", COL.hazard], ["?", "unseen by hive", 0x3b4654],
   ].map(([g, t, c]) => `<span><i style="color:${hex(c)}">${g}</i>${t}</span>`).join("") +
   `<span style="flex-basis:100%;height:0"></span>` + [
     ["▮", "phish / emanation", COL.ice], ["▮", "proximity / attrition", COL.amber], ["▮", "recruit / coerce", COL.violet], ["▮", "bribe / breach", COL.hot], ["▮", "decoy", COL.hazard], ["▮", "air gap", COL.steel],
