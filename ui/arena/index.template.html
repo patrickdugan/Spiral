@@ -311,6 +311,7 @@
       <button id="audio" aria-pressed="false" title="Generative ambient bed (original, synthesized in-page)">♪ Audio</button>
       <button id="weather" class="on" aria-pressed="true" title="Rain">☂ Rain</button>
       <button id="still" title="Save the current view as a PNG">⬇ Still</button>
+      <button id="legends" title="Save this scenario's annals as a text file">⬇ Annals</button>
       <button id="aboutbtn" title="About this view">?</button>
     </div>
   </header>
@@ -1567,6 +1568,20 @@ function captureStill() {
   return name;
 }
 document.getElementById("still").addEventListener("click", captureStill);
+/* the annals as plain text: the whole scenario, with the same abstract status lines */
+function annalsText() {
+  const strip = (s) => String(s).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  const who = S.hive_master || (S.result && S.result.adversary) || "";
+  const head = [`# ${S.id}`, `sim: ${S.sim || "swarm"} · ${S.population || S.nodes.length} units · ${S.frames.length} ${S.sim === "feral_custody" ? "epochs" : "rounds"}${who ? " · vs " + nice(who) : ""}`,
+    `generator: ${REPLAY.generator || ""} · schema ${REPLAY.schema_version || ""}`, `note: ${REPLAY.safety_note || ""}`, ""];
+  const body = annals.map((e) => `${e.g} ${e.when || ""}  ${strip(e.text)}${e.minor ? "" : "  *"}`);
+  return head.concat(body, ["", "* landed / consequential"]).join("\n");
+}
+document.getElementById("legends").addEventListener("click", () => {
+  const name = `hive-swarm_${String(S.id).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}_annals.md`;
+  const blob = new Blob([annalsText()], { type: "text/markdown" }), url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
 function writeLink() {
   const q = new URLSearchParams(); q.set("scenario", String(sel.value)); q.set("frame", String(frameIndex + 1)); if (!hiveVision) q.set("hive", "0"); if (selected) q.set("unit", selected);
   try { history.replaceState(null, "", "?" + q.toString()); } catch (e) { /* file:// or sandboxed: links are a convenience only */ }
