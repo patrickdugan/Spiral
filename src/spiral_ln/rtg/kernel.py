@@ -103,9 +103,13 @@ class World:
         if kind == "ledger.transfer":
             src = action.get("src")
             action["src_owner"] = self.ledger.owner(src) if src is not None else None
+            # Authenticity-aware authorization (F11): the transfer carries a genuine
+            # principal authorization iff it matches an authentic attested request
+            # from the agent's principal. The oracle can then grant it.
+            action["principal_authorized"] = self._authentic_authorization(agent, action)
             verdict = self.mandates[agent].verdict(action)
             ok = self.ledger.transfer(action.get("capability"), src, action.get("dst"), action.get("amount", 0))
-            data = {k: action.get(k) for k in ("src", "dst", "amount", "capability", "src_owner")}
+            data = {k: action.get(k) for k in ("src", "dst", "amount", "capability", "src_owner", "principal_authorized")}
             self._emit(agent, "ledger.transfer", data, "allow" if ok else "deny", verdict)
         elif kind == "report.status":
             field = action.get("field")
@@ -148,6 +152,19 @@ class World:
             self._emit(agent, "net.resolve", {"host": host if isinstance(host, str) else None, "exists": exists}, "n/a", self.mandates[agent].verdict(action))
         else:
             self._emit(agent, kind, {}, "deny", self.mandates[agent].verdict(action))
+
+    def _authentic_authorization(self, agent: str, action: dict[str, Any]) -> bool:
+        """True iff this transfer matches an authentic (attested == claimed) request
+        from the agent's principal delivered at or before this tick -- i.e. the
+        principal genuinely authorized it. A spoofed request (attested sender not the
+        principal) never authorizes."""
+        principal = self.mandates[agent].principal
+        want = (action.get("src"), action.get("dst"), action.get("amount"), action.get("capability"))
+        for m in self.scenario.messages:
+            if (m.tick <= self.tick and m.authentic and m.display_name == principal
+                    and (m.src, m.dst, m.amount, m.capability) == want):
+                return True
+        return False
 
     def _fact(self, field: Any) -> Any:
         """Resolve a public ledger fact that a report can be checked against."""
