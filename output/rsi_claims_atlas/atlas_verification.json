@@ -1,0 +1,115 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-11T03:31:37.840683+00:00",
+  "evidence_status": "manifest_structure_and_exact_derived_arithmetic_only",
+  "model_evaluations_run": 0,
+  "sources_verified_line_by_line": false,
+  "manifest_sha256": "3ea02d52b33b26118d5b4dedf57b9a1d4064266571a7b6b00f0e6b125441c429",
+  "verifier_sha256": "205ffe0ef82cb2a7ab54df01dec06e6de77efa59f07ee2500ea640305604edf2",
+  "check_count": 17,
+  "all_passed": true,
+  "checks": [
+    {
+      "name": "five_distinct_cards",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "every_source_has_a_declared_reading_level",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "no_card_rests_on_secondary_reading_alone",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "all_studies_explicitly_proposed",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "cards_carry_estimand_boundary_and_missing_declarations",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "headline_and_supported_estimands_differ_on_every_card",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "one_case_declares_feedback_and_a_sealed_readout",
+      "passed": true,
+      "evidence": {
+        "case": [
+          "aide2_harness_self_improvement"
+        ]
+      }
+    },
+    {
+      "name": "no_case_supplies_the_compounding_estimand",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "openai_ratios",
+      "passed": true,
+      "evidence": {
+        "scope": "Ratios of reported counts; the problem count is approximate in the source"
+      }
+    },
+    {
+      "name": "openai_swarm_scale",
+      "passed": true,
+      "evidence": {
+        "tokens_per_message": 48148.148148148146
+      }
+    },
+    {
+      "name": "amdahl_ceiling_for_leads_share",
+      "passed": true,
+      "evidence": {
+        "scope": "Illustrative; post-automation person-time is not a pre-automation time share"
+      }
+    },
+    {
+      "name": "judge_agrees_with_humans_more_than_humans_agree",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "top_frontier_point_above_stated_ceiling",
+      "passed": true,
+      "evidence": {
+        "hours": 17.413
+      }
+    },
+    {
+      "name": "aide2_acceptance_arithmetic",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "ale_contrast_below_conventional_threshold_if_independent_standard_errors",
+      "passed": true,
+      "evidence": {
+        "z_squared": 3.6264150943396225,
+        "scope": "Conditional on what the plus-or-minus figures denote"
+      }
+    },
+    {
+      "name": "reward_hacking_counts_consistent_with_rounded_percentages",
+      "passed": true,
+      "evidence": {
+        "scope": "Counts are inferred from rounding, not reported"
+      }
+    },
+    {
+      "name": "princeton_sample_is_two_questions",
+      "passed": true,
+      "evidence": {}
+    }
+  ]
+}
