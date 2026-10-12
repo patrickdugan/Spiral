@@ -1,0 +1,1492 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-12T13:09:20.206347+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "all_footprints_sound_on_state_space": true,
+    "disjoint_footprints_commute_on_every_state": true,
+    "some_overlapping_pairs_commute": true,
+    "grant_and_cap_reproduce_the_calculus_order_effect": true,
+    "rescore_then_feedback_differs_from_feedback_then_rescore_only_in_pi": true,
+    "observe_coarsening_then_feedback_differs_only_in_pi": true,
+    "controller_then_feedback_differs_only_in_pi": true,
+    "hide_and_restrict_do_not_commute_with_feedback": true,
+    "payoff_without_training_commutes_with_feedback": true,
+    "payoff_with_training_does_not_commute_with_feedback": true,
+    "repeat_commutes_with_feedback_at_design_time": true,
+    "item_and_score_feedback_do_not_commute": true,
+    "sealed_feedback_commutes_with_item_feedback_despite_shared_generation": true,
+    "typing_iff_ledger_respected_on_all_short_sequences": true,
+    "ledger_raises_exactly_on_readout_of_selection_set": true,
+    "literal_sealed_role_premise_is_too_strict": true,
+    "carry_second_generation_is_selection_over_2k_minus_1": true,
+    "carry_generation_mean_exceeds_independent_blocks_by_one_sixteenth": true,
+    "carry_scores_not_exchangeable_reset_scores_exchangeable": true,
+    "single_candidate_carry_has_no_gap": true,
+    "rescore_of_readout_set_changes_rho_without_selection": true,
+    "rho_change_does_not_identify_feedback_but_ledger_does": true
+  },
+  "all_passed": true,
+  "footprints": {
+    "Restrict[left]": {
+      "reads": [
+        "game.legal"
+      ],
+      "writes": [
+        "game.legal"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Grant[2]": {
+      "reads": [
+        "game.budget"
+      ],
+      "writes": [
+        "game.budget"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Cap[5]": {
+      "reads": [
+        "game.budget"
+      ],
+      "writes": [
+        "game.budget"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Hide[player]": {
+      "reads": [],
+      "writes": [
+        "game.revealed"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Observe[redact:S]": {
+      "reads": [],
+      "writes": [
+        "acquisition"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Controller[follow]": {
+      "reads": [],
+      "writes": [
+        "pi"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Rescore[flip_s1]": {
+      "reads": [],
+      "writes": [
+        "judgment"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Payoff[right_cost=1]": {
+      "reads": [],
+      "writes": [
+        "game.utility"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Payoff[right_cost=1,trains]": {
+      "reads": [],
+      "writes": [
+        "game.utility",
+        "judgment"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Repeat[2,controller]": {
+      "reads": [],
+      "writes": [
+        "game.carry",
+        "game.horizon"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Feedback[S,item_level]": {
+      "reads": [
+        "acquisition",
+        "declarations",
+        "game.legal",
+        "game.revealed",
+        "generation",
+        "items",
+        "judgment",
+        "pi"
+      ],
+      "writes": [
+        "generation",
+        "pi"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Feedback[S,score_only]": {
+      "reads": [
+        "acquisition",
+        "declarations",
+        "game.legal",
+        "game.revealed",
+        "generation",
+        "items",
+        "judgment",
+        "pi"
+      ],
+      "writes": [
+        "generation",
+        "pi"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    },
+    "Feedback[S,sealed]": {
+      "reads": [
+        "declarations",
+        "generation"
+      ],
+      "writes": [
+        "generation"
+      ],
+      "write_sound": true,
+      "read_sound": true
+    }
+  },
+  "commutation": {
+    "states": 384,
+    "operators": [
+      "Restrict[left]",
+      "Grant[2]",
+      "Cap[5]",
+      "Hide[player]",
+      "Observe[redact:S]",
+      "Controller[follow]",
+      "Rescore[flip_s1]",
+      "Payoff[right_cost=1]",
+      "Payoff[right_cost=1,trains]",
+      "Repeat[2,controller]",
+      "Feedback[S,item_level]",
+      "Feedback[S,score_only]",
+      "Feedback[S,sealed]"
+    ],
+    "pairs": [
+      {
+        "a": "Restrict[left]",
+        "b": "Restrict[left]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Grant[2]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Cap[5]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Hide[player]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Observe[redact:S]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left+s0->right",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left+s0->right,s1->right"
+          },
+          "b_then_a": {
+            "pi": "always_left+s0->left,s1->right"
+          }
+        }
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Restrict[left]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Grant[2]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Cap[5]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 4,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "game.budget"
+          ],
+          "a_then_b": {
+            "game.budget": 5
+          },
+          "b_then_a": {
+            "game.budget": 6
+          }
+        }
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Hide[player]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Observe[redact:S]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Grant[2]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Cap[5]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Hide[player]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Observe[redact:S]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Cap[5]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Hide[player]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Observe[redact:S]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "follow",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "follow+s1->right"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Hide[player]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Observe[redact:S]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "always_left+s1->right"
+          }
+        }
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Observe[redact:S]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Controller[follow]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:s1;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "follow+s1->left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:s1;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Controller[follow]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Rescore[flip_s1]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "judgment"
+          ],
+          "a_then_b": {
+            "judgment": "flip:-;right_cost=1"
+          },
+          "b_then_a": {
+            "judgment": "flip:s1;right_cost=0"
+          }
+        }
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "always_left+s1->right"
+          }
+        }
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Rescore[flip_s1]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Payoff[right_cost=1]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1,trains]",
+        "b": "Payoff[right_cost=1,trains]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1,trains]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Payoff[right_cost=1,trains]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:s1;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left+s1->right"
+          },
+          "b_then_a": {
+            "pi": "always_left"
+          }
+        }
+      },
+      {
+        "a": "Payoff[right_cost=1,trains]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Payoff[right_cost=1,trains]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Repeat[2,controller]",
+        "b": "Repeat[2,controller]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Repeat[2,controller]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Repeat[2,controller]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Repeat[2,controller]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": true,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Feedback[S,item_level]",
+        "b": "Feedback[S,item_level]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Feedback[S,item_level]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": false,
+        "witness": {
+          "state": {
+            "game.legal": "left,right",
+            "game.revealed": true,
+            "game.utility": "right_cost=0",
+            "game.budget": 3,
+            "game.horizon": 1,
+            "game.carry": "reset",
+            "pi": "always_left",
+            "items": "s0:S:left;s1:S:right;r0:R:left;r1:R:right",
+            "acquisition": "full",
+            "judgment": "flip:-;right_cost=0",
+            "generation": 0,
+            "declarations": "S:selection/item_level;R:readout/sealed"
+          },
+          "differs_in": [
+            "pi"
+          ],
+          "a_then_b": {
+            "pi": "always_left+s1->right"
+          },
+          "b_then_a": {
+            "pi": "follow"
+          }
+        }
+      },
+      {
+        "a": "Feedback[S,item_level]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Feedback[S,score_only]",
+        "b": "Feedback[S,score_only]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Feedback[S,score_only]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      },
+      {
+        "a": "Feedback[S,sealed]",
+        "b": "Feedback[S,sealed]",
+        "footprints_disjoint": false,
+        "commute": true,
+        "witness": null
+      }
+    ],
+    "disjoint_update_law_holds": true,
+    "commute_despite_overlap": [
+      [
+        "Payoff[right_cost=1]",
+        "Payoff[right_cost=1,trains]"
+      ],
+      [
+        "Feedback[S,item_level]",
+        "Feedback[S,sealed]"
+      ],
+      [
+        "Feedback[S,score_only]",
+        "Feedback[S,sealed]"
+      ]
+    ],
+    "noncommuting": [
+      [
+        "Restrict[left]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Restrict[left]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Grant[2]",
+        "Cap[5]"
+      ],
+      [
+        "Hide[player]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Hide[player]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Observe[redact:S]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Observe[redact:S]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Controller[follow]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Controller[follow]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Rescore[flip_s1]",
+        "Payoff[right_cost=1,trains]"
+      ],
+      [
+        "Rescore[flip_s1]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Rescore[flip_s1]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Payoff[right_cost=1,trains]",
+        "Feedback[S,item_level]"
+      ],
+      [
+        "Payoff[right_cost=1,trains]",
+        "Feedback[S,score_only]"
+      ],
+      [
+        "Feedback[S,item_level]",
+        "Feedback[S,score_only]"
+      ]
+    ]
+  },
+  "typing_ledger": {
+    "alphabet": [
+      "Feedback[S,item_level]",
+      "Feedback[S,score_only]",
+      "Feedback[S,sealed]",
+      "Feedback[R,item_level]",
+      "Feedback[R,score_only]",
+      "Feedback[R,sealed]",
+      "Readout[R]",
+      "Readout[S]",
+      "Rescore[flip_s1]"
+    ],
+    "max_length": 4,
+    "contexts": [
+      "S:selection/sealed;R:readout/sealed",
+      "S:selection/score_only;R:readout/sealed",
+      "S:selection/item_level;R:readout/sealed"
+    ],
+    "readout_budget": 2,
+    "exhaustion_bound": "1",
+    "sequence_count": 22143,
+    "verdict_counts": {
+      "respected": 2581,
+      "breached": 11462,
+      "malformed": 8100
+    },
+    "equivalence_holds": true,
+    "mismatches": [],
+    "malformed_iff_readout_of_selection_set": true,
+    "strict_sealed_role": {
+      "equivalence_holds": false,
+      "mismatch_count": 1414,
+      "every_mismatch_is_a_respected_run_containing": "Feedback[R,sealed]",
+      "claim_holds": true,
+      "example": {
+        "context": "S:selection/sealed;R:readout/sealed",
+        "sequence": [
+          "Feedback[R,sealed]"
+        ],
+        "verdict": "respected",
+        "violations": [
+          "0:Feedback[R,sealed]: F-SEALED literal role premise"
+        ]
+      }
+    }
+  },
+  "repeat_carry": {
+    "items=1,candidates=2,p=1/2": {
+      "items": 1,
+      "candidates": 2,
+      "p": "1/2",
+      "readout_value": "1/2",
+      "one_generation_gap": "1/4",
+      "carry": {
+        "expected_generation_1": "3/4",
+        "expected_generation_2": "7/8",
+        "generation_mean": "13/16",
+        "prob_second_exceeds_first": "1/8",
+        "prob_first_exceeds_second": 0,
+        "exchangeable": false,
+        "matches_selection_over_2k_minus_1": true,
+        "rho_generation_1": "1/4",
+        "rho_generation_2": "3/8"
+      },
+      "reset": {
+        "expected_generation_1": "3/4",
+        "expected_generation_2": "3/4",
+        "generation_mean": "3/4",
+        "prob_second_exceeds_first": "3/16",
+        "prob_first_exceeds_second": "3/16",
+        "exchangeable": true,
+        "matches_independent_blocks": true
+      },
+      "generation_mean_difference": "1/16",
+      "expected_apparent_gain_under_carry": "1/8",
+      "true_value_change": "0"
+    },
+    "items=2,candidates=2,p=1/2": {
+      "items": 2,
+      "candidates": 2,
+      "p": "1/2",
+      "readout_value": "1/2",
+      "one_generation_gap": "3/16",
+      "carry": {
+        "expected_generation_1": "11/16",
+        "expected_generation_2": "25/32",
+        "generation_mean": "47/64",
+        "prob_second_exceeds_first": "11/64",
+        "prob_first_exceeds_second": 0,
+        "exchangeable": false,
+        "matches_selection_over_2k_minus_1": true,
+        "rho_generation_1": "3/16",
+        "rho_generation_2": "9/32"
+      },
+      "reset": {
+        "expected_generation_1": "11/16",
+        "expected_generation_2": "11/16",
+        "generation_mean": "11/16",
+        "prob_second_exceeds_first": "71/256",
+        "prob_first_exceeds_second": "71/256",
+        "exchangeable": true,
+        "matches_independent_blocks": true
+      },
+      "generation_mean_difference": "3/64",
+      "expected_apparent_gain_under_carry": "3/32",
+      "true_value_change": "0"
+    },
+    "items=2,candidates=3,p=1/3": {
+      "items": 2,
+      "candidates": 3,
+      "p": "1/3",
+      "readout_value": "1/3",
+      "one_generation_gap": "22/81",
+      "carry": {
+        "expected_generation_1": "49/81",
+        "expected_generation_2": "14051/19683",
+        "generation_mean": "12979/19683",
+        "prob_second_exceeds_first": "11776/59049",
+        "prob_first_exceeds_second": 0,
+        "exchangeable": false,
+        "matches_selection_over_2k_minus_1": true,
+        "rho_generation_1": "22/81",
+        "rho_generation_2": "7490/19683"
+      },
+      "reset": {
+        "expected_generation_1": "49/81",
+        "expected_generation_2": "49/81",
+        "generation_mean": "49/81",
+        "prob_second_exceeds_first": "46592/177147",
+        "prob_first_exceeds_second": "46592/177147",
+        "exchangeable": true,
+        "matches_independent_blocks": true
+      },
+      "generation_mean_difference": "1072/19683",
+      "expected_apparent_gain_under_carry": "2144/19683",
+      "true_value_change": "0"
+    },
+    "items=1,candidates=1,p=1/2": {
+      "items": 1,
+      "candidates": 1,
+      "p": "1/2",
+      "readout_value": "1/2",
+      "one_generation_gap": "0",
+      "carry": {
+        "expected_generation_1": "1/2",
+        "expected_generation_2": "1/2",
+        "generation_mean": "1/2",
+        "prob_second_exceeds_first": 0,
+        "prob_first_exceeds_second": 0,
+        "exchangeable": true,
+        "matches_selection_over_2k_minus_1": true,
+        "rho_generation_1": "0",
+        "rho_generation_2": "0"
+      },
+      "reset": {
+        "expected_generation_1": "1/2",
+        "expected_generation_2": "1/2",
+        "generation_mean": "1/2",
+        "prob_second_exceeds_first": "1/4",
+        "prob_first_exceeds_second": "1/4",
+        "exchangeable": true,
+        "matches_independent_blocks": true
+      },
+      "generation_mean_difference": "0",
+      "expected_apparent_gain_under_carry": "0",
+      "true_value_change": "0"
+    }
+  },
+  "readout_gap_rescore": {
+    "rows": {
+      "base": {
+        "design": [],
+        "V_s": "1/2",
+        "V_r": "1/2",
+        "rho": "0",
+        "generation": 0,
+        "pi": "always_left",
+        "pi_changed": false,
+        "ledger_patches_on_S": 0,
+        "ledger_declarations_respected": true
+      },
+      "rescore_readout_set": {
+        "design": [
+          "Rescore[flip_r1]"
+        ],
+        "V_s": "1/2",
+        "V_r": "1",
+        "rho": "-1/2",
+        "generation": 0,
+        "pi": "always_left",
+        "pi_changed": false,
+        "ledger_patches_on_S": 0,
+        "ledger_declarations_respected": true
+      },
+      "rescore_selection_set": {
+        "design": [
+          "Rescore[flip_s1]"
+        ],
+        "V_s": "1",
+        "V_r": "1/2",
+        "rho": "1/2",
+        "generation": 0,
+        "pi": "always_left",
+        "pi_changed": false,
+        "ledger_patches_on_S": 0,
+        "ledger_declarations_respected": true
+      },
+      "feedback_item_level": {
+        "design": [
+          "Feedback[S,item_level]"
+        ],
+        "V_s": "1",
+        "V_r": "1/2",
+        "rho": "1/2",
+        "generation": 1,
+        "pi": "always_left+s1->right",
+        "pi_changed": true,
+        "ledger_patches_on_S": 2,
+        "ledger_declarations_respected": true
+      }
+    },
+    "rescore_of_readout_changes_rho_without_selection": true,
+    "rescore_of_selection_matches_feedback_rho": true,
+    "ledger_separates_them": true
+  },
+  "source_sha256": {
+    "scripts/verify_evaluation_feedback_composition.py": "663aef1a61065eaeb2ca5ff62be5b9642f6e31f6f634af0c4805a86e4bf8651c",
+    "src/spiral_ln/evaluation_feedback_composition.py": "6d0c8a015b3f79d671d37f04f7e4a8ba0dd79086e06a37365f74b630f18669cc",
+    "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
+    "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
+  }
+}

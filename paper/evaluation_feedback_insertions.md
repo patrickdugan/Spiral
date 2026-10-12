@@ -173,10 +173,17 @@ checks":
 > `evaluation_game_feedback.py` extends the single split enforced by `confirm()`
 > to a sequence of generations. Sets are declared with a role and an access
 > class. Events record a score reaching the loop, items reaching the loop, or an
-> experimenter reading a sealed set. Malformed declarations raise, including a
-> readout set not declared sealed and identifiers shared across sets. Breaches
-> of a well-formed declaration are recorded instead, and move the readout
-> endpoint to `not_evaluated`: a breach is a finding about the run. Reads of the
+> experimenter reading a sealed set. Malformed declarations and malformed
+> events raise: a readout set not declared sealed, identifiers shared across
+> sets, or a readout event naming a selection set (a readout is by definition
+> a read of a sealed set; a selection set is read through score queries).
+> Breaches of a well-formed declaration are recorded instead, and move the
+> readout endpoint to `not_evaluated`: a breach is a finding about the run.
+> A sealed read transmits nothing and is not an event, so `Feedback` at sealed
+> access is always well-typed. The [composition note](evaluation_feedback_composition.md)
+> checks that, under these rules, well-typed sequences are exactly those the
+> ledger reports as respected, on every sequence of length at most four over a
+> nine-operator alphabet. Reads of the
 > sealed set are budgeted, since a stop-or-continue decision taken on a readout
 > is itself adaptive. Identifiers detect recorded overlap. They do not certify
 > independence.
@@ -194,7 +201,12 @@ checks":
 - No loop with a language model has been run. The first observed-controller
   study would pair a small model with a declared selection set and a sealed
   readout, and report the ledger.
-- Partial leakage, where the loop learns failure categories and not items, has
-  no fixture.
+- Partial leakage, where the loop learns failure categories and not items, is
+  now treated in [evaluation_feedback_lattice.md](evaluation_feedback_lattice.md):
+  category channels form a lattice of partial leaks, with the cost of each
+  position exact. Composition with the other operators is in
+  [evaluation_feedback_composition.md](evaluation_feedback_composition.md),
+  and the selection gap across generations in
+  [evaluation_feedback_multigen.md](evaluation_feedback_multigen.md).
 - The simulations fix one parameter set each. No sweep over candidate count,
   decay rate, or label-noise rate was run.

@@ -1,0 +1,502 @@
+from fractions import Fraction as Q
+from itertools import permutations, product
+from math import ceil
+
+import pytest
+
+from spiral_ln.evaluation_game_feedback import (
+    EvalSet, LoopEvent, access_kernel, ceiling_detection_threshold,
+    targeted_ceiling_detection_threshold,
+)
+from spiral_ln.evaluation_feedback_lattice import (
+    CategoryFeedbackEvent, all_category_maps, all_partitions, audit_category_ledger,
+    below, category_channel, category_counts, category_order_fixture,
+    ceiling_cost_fixture, channel_kernel, conditional_hit_probability,
+    crossing_error_bound, expected_gain_per_patch, expected_hits_after,
+    expected_patches_adaptive, expected_patches_static, expected_score_crossing,
+    greedy_schedule, hits_needed, item_level_partition, join, lattice_fixture,
+    leak_class, meet, partition_from_kernel, rational_simplex, records, refines,
+    render_partition, score_only_partition, sealed_partition, small_set_fixture,
+    tv_through, validate_categories, validate_category_counts, validate_partition,
+    verify,
+)
+
+
+# --- independent brute-force helpers -----------------------------------------
+
+def _mass(distribution, element):
+    return distribution.get(element, Q(0))
+
+
+def _tv_by_block_unions(partition, left, right):
+    """TV of the pushforwards as the supremum over unions of blocks."""
+    blocks = list(partition)
+    best = Q(0)
+    for mask in product((0, 1), repeat=len(blocks)):
+        union = set().union(*(block for block, keep in zip(blocks, mask) if keep))
+        best = max(best, abs(sum(_mass(left, x) - _mass(right, x) for x in union)))
+    return best
+
+
+def _same_block(partition, x, y):
+    return any(x in block and y in block for block in partition)
+
+
+def _refines_by_relation(fine, coarse, elements):
+    return all(_same_block(coarse, x, y) for x, y in product(elements, repeat=2)
+               if _same_block(fine, x, y))
+
+
+def _static_by_enumeration(categories, hits_needed):
+    """Average first-crossing time over every within-category patch order."""
+    counts = validate_category_counts(categories)
+    order = greedy_schedule(counts)
+    per_category = []
+    for index in order:
+        size, failures = counts[index]
+        items = [1] * failures + [0] * (size - failures)  # 1 marks a failed item
+        per_category.append(sorted(set(permutations(items))))
+    total, weight = Q(0), 0
+    for choice in product(*per_category):
+        sequence = [bit for block in choice for bit in block]
+        hits, time = 0, None
+        for step, bit in enumerate(sequence, start=1):
+            hits += bit
+            if hits >= hits_needed:
+                time = step
+                break
+        total += 0 if time is None else time
+        weight += 1
+    return total / weight
+
+
+def _adaptive_by_enumeration(categories, hits_needed):
+    """Recursion over concrete item sets with uniformly random unpatched draws."""
+    counts = validate_category_counts(categories)
+    failed = []
+    unpatched = []
+    for size, failures in counts:
+        failed.append(frozenset(range(failures)))
+        unpatched.append(frozenset(range(size)))
+
+    def value(remaining, left):
+        if remaining == 0:
+            return Q(0)
+        best, choice = None, None
+        for index, items in enumerate(left):
+            if not items:
+                continue
+            rate = Q(len(items & failed[index]), len(items))
+            key = (rate, -len(items), -index)
+            if best is None or key > best:
+                best, choice = key, index
+        items = left[choice]
+        expected = Q(1)
+        for item in items:
+            nxt = list(left)
+            nxt[choice] = items - {item}
+            expected += Q(1, len(items)) * value(remaining - (item in failed[choice]), tuple(nxt))
+        return expected
+
+    return value(hits_needed, tuple(unpatched))
+
+
+# --- 1. lattice of channels --------------------------------------------------
+
+def test_partition_counts_are_bell_numbers():
+    assert [len(all_partitions(range(n))) for n in (1, 2, 3, 4, 5)] == [1, 2, 5, 15, 52]
+    assert len(all_partitions(records(2))) == 15
+
+
+def test_access_classes_sit_at_bottom_middle_top_for_small_n():
+    for items in (1, 2, 3):
+        sealed, score, item = sealed_partition(items), score_only_partition(items), item_level_partition(items)
+        for access, reference in (("sealed", sealed), ("score_only", score), ("item_level", item)):
+            assert partition_from_kernel(access_kernel(access, items)) == reference
+        assert below(sealed, score) and below(score, item)
+        assert len(sealed) == 1 and len(item) == 2 ** items and len(score) == items + 1
+
+
+def test_refinement_matches_equivalence_relation_inclusion():
+    space = records(2)
+    partitions = all_partitions(space)
+    for fine, coarse in product(partitions, repeat=2):
+        assert refines(fine, coarse) == _refines_by_relation(fine, coarse, space)
+
+
+def test_tv_through_equals_supremum_over_block_unions():
+    space = records(2)
+    grid = rational_simplex(space, 3)
+    for partition in all_partitions(space):
+        for left, right in product(grid, repeat=2):
+            assert tv_through(partition, left, right) == _tv_by_block_unions(partition, left, right)
+
+
+def test_lattice_data_processing_law_and_converse_exhaustive_n2():
+    space = records(2)
+    partitions = all_partitions(space)
+    assert len(partitions) == 15
+    grid = rational_simplex(space, 3)
+    pairs = list(product(grid, repeat=2))
+    table = {p: [_tv_by_block_unions(p, a, b) for a, b in pairs] for p in partitions}
+    comparable = 0
+    for p, q in product(partitions, repeat=2):
+        if _refines_by_relation(q, p, space):
+            comparable += 1
+            assert all(x <= y for x, y in zip(table[p], table[q]))
+        else:
+            assert any(x > y for x, y in zip(table[p], table[q]))
+    assert comparable > 15
+
+
+def test_join_and_meet_are_lattice_bounds_and_bound_tv():
+    space = records(2)
+    partitions = all_partitions(space)
+    grid = rational_simplex(space, 2)
+    pairs = list(product(grid, repeat=2))
+    table = {p: [tv_through(p, a, b) for a, b in pairs] for p in partitions}
+    for p, q in product(partitions, repeat=2):
+        upper, lower = join(p, q), meet(p, q)
+        assert upper in table and lower in table
+        assert refines(upper, p) and refines(upper, q)
+        assert refines(p, lower) and refines(q, lower)
+        for r in partitions:
+            if refines(r, p) and refines(r, q):
+                assert refines(r, upper)
+            if refines(p, r) and refines(q, r):
+                assert refines(lower, r)
+        for tu, tl, tp, tq in zip(table[upper], table[lower], table[p], table[q]):
+            assert tu >= max(tp, tq) and tl <= min(tp, tq)
+
+
+def test_lattice_fixture_reports_every_flag():
+    fixture = lattice_fixture(2, 2)
+    assert fixture["bell_number"] == 15 and fixture["grid_size"] == 10
+    assert fixture["law_holds_on_every_comparable_pair"]
+    assert fixture["domination_fails_on_every_noncomparable_pair"]
+    assert fixture["join_and_meet_satisfy_lattice_definitions"] and fixture["join_meet_tv_bounds_hold"]
+    assert fixture["sealed_is_bottom"] and fixture["item_level_is_top"]
+    assert fixture["score_only_strictly_between"] and fixture["existing_access_kernels_match"]
+    assert fixture["ordered_pairs_below"] + fixture["ordered_pairs_not_below"] == 225
+
+
+@pytest.mark.parametrize("blocks, elements", [
+    ([["00", "01"], ["01", "10", "11"]], records(2)),
+    ([["00", "01"]], records(2)),
+    ([[], ["00", "01", "10", "11"]], records(2)),
+    ([], records(2)),
+    ([["00", "01", "10", "11", "x"]], records(2)),
+])
+def test_malformed_partitions_rejected(blocks, elements):
+    with pytest.raises(ValueError):
+        validate_partition(blocks, elements)
+
+
+def test_mismatched_ground_sets_and_bad_kernels_rejected():
+    with pytest.raises(ValueError):
+        refines(sealed_partition(2), sealed_partition(3))
+    with pytest.raises(ValueError):
+        join(sealed_partition(2), sealed_partition(3))
+    with pytest.raises(ValueError):
+        meet(sealed_partition(2), sealed_partition(3))
+    with pytest.raises(ValueError):
+        partition_from_kernel({"0": {"a": Q(1, 2), "b": Q(1, 2)}, "1": {"a": Q(1)}})
+    with pytest.raises(ValueError):
+        records(0)
+    with pytest.raises(ValueError):
+        rational_simplex(("a",), 0)
+    assert channel_kernel(sealed_partition(1)) == {"0": {"0|1": Q(1)}, "1": {"0|1": Q(1)}}
+
+
+# --- 2. category leakage -----------------------------------------------------
+
+def test_category_endpoints_are_score_only_and_item_level():
+    for items in (1, 2, 3, 4):
+        assert category_channel([range(items)], items) == score_only_partition(items)
+        assert category_channel([[i] for i in range(items)], items) == item_level_partition(items)
+
+
+def test_category_map_is_order_embedding_by_brute_force():
+    for items in (3, 4):
+        maps = all_category_maps(items)
+        assert len(maps) == {3: 5, 4: 15}[items]
+        space = records(items)
+        channels = {m: category_channel(m, items) for m in maps}
+        parts = {m: validate_partition(m, range(items)) for m in maps}
+        for a, b in product(maps, repeat=2):
+            assert (_refines_by_relation(channels[a], channels[b], space)
+                    == _refines_by_relation(parts[a], parts[b], range(items)))
+        assert len(set(channels.values())) == len(maps)
+
+
+def test_two_incomparable_category_maps_separate_different_pairs():
+    channel_a = category_channel(((0, 1), (2,)), 3)
+    channel_b = category_channel(((0,), (1, 2)), 3)
+    assert not refines(channel_a, channel_b) and not refines(channel_b, channel_a)
+    fail0, fail1, fail2 = {"011": Q(1)}, {"101": Q(1)}, {"110": Q(1)}
+    assert tv_through(channel_a, fail0, fail1) == 0 and tv_through(channel_b, fail0, fail1) == 1
+    assert tv_through(channel_a, fail1, fail2) == 1 and tv_through(channel_b, fail1, fail2) == 0
+    fixture = category_order_fixture()["incomparable_pair"]
+    assert fixture["neither_refines"] and fixture["A_separates_second_pair_only"]
+    assert fixture["B_separates_first_pair_only"]
+
+
+def test_separate_category_leaks_are_coarser_than_the_refined_leak():
+    rows, cols = category_channel(((0, 1), (2, 3)), 4), category_channel(((0, 2), (1, 3)), 4)
+    joint = join(rows, cols)
+    assert refines(item_level_partition(4), joint) and joint != item_level_partition(4)
+    assert _same_block(joint, "1001", "0110")
+    assert tv_through(joint, {"1001": Q(1)}, {"0110": Q(1)}) == 0
+    fixture = category_order_fixture()
+    assert fixture["join_failure"]["joint_leak_strictly_coarser"]
+    assert all(fixture["order_embedding_exhaustive"].values())
+    assert fixture["join_preserved_pairs"][4] < fixture["ordered_pairs"][4]
+
+
+@pytest.mark.parametrize("categories, items", [
+    (((0, 1), (1, 2)), 3), (((0, 1),), 3), (((0, 1, 2, 3),), 3), (((0, True), (2,)), 3),
+    (((0, 1, 2),), 0), (((0, 1, 2),), 3.0),
+])
+def test_malformed_category_maps_rejected(categories, items):
+    with pytest.raises(ValueError):
+        validate_categories(categories, items)
+
+
+def test_category_counts_reads_failures_per_block():
+    assert category_counts(((0, 1), (2, 3), (4, 5)), "011000") == ((2, 1), (2, 1), (2, 2))
+    assert category_counts(((0, 1), (2, 3), (4, 5)), "011001") == ((2, 1), (2, 1), (2, 1))
+    with pytest.raises(ValueError):
+        category_counts(((0, 1),), "0x")
+    with pytest.raises(ValueError):
+        category_counts(((0, 1),), "011")
+
+
+# --- 3. cost of a leak -------------------------------------------------------
+
+def test_conditional_hit_probability_depletes_but_unconditional_gain_does_not():
+    assert conditional_hit_probability(4, 2, 0, 0) == Q(1, 2)
+    assert conditional_hit_probability(4, 2, 1, 1) == Q(1, 3)
+    assert conditional_hit_probability(4, 2, 1, 0) == Q(2, 3)
+    assert conditional_hit_probability(4, 2, 2, 2) == 0
+    for size, failures in ((2, 1), (3, 2), (4, 1), (4, 3), (5, 2)):
+        items = [1] * failures + [0] * (size - failures)
+        orders = sorted(set(permutations(items)))
+        for position in range(size):
+            assert Q(sum(order[position] for order in orders), len(orders)) == Q(failures, size)
+    assert expected_gain_per_patch(((2, 1), (3, 3), (4, 0))) == (Q(1),) * 3 + (Q(1, 2),) * 2 + (Q(0),) * 4
+
+
+@pytest.mark.parametrize("args", [(4, 2, 4, 2), (4, 2, 1, 2), (4, 2, 3, 0), (4, 5, 0, 0),
+                                  (0, 0, 0, 0), (4, 2, 0, -1), (4.0, 2, 0, 0)])
+def test_conditional_hit_probability_rejects_inconsistent_histories(args):
+    with pytest.raises(ValueError):
+        conditional_hit_probability(*args)
+
+
+def test_greedy_schedule_maximizes_expected_hits_at_every_patch_count():
+    categories = ((3, 1), (2, 2), (4, 1), (1, 0))
+    assert greedy_schedule(categories) == (1, 0, 2, 3)
+    sizes = [size for size, _ in categories]
+    for patches in range(sum(sizes) + 1):
+        best = max(
+            sum(Q(m * failures, size) for m, (size, failures) in zip(allocation, categories))
+            for allocation in product(*(range(size + 1) for size in sizes))
+            if sum(allocation) == patches)
+        assert expected_hits_after(categories, patches) == best
+    assert expected_hits_after(categories, Q(5, 2)) == 2 + Q(1, 2) * Q(1, 3)
+    with pytest.raises(ValueError):
+        expected_hits_after(categories, 11)
+
+
+def test_fixture_thresholds_recover_the_existing_module():
+    need = hits_needed(50, Q(4, 5), Q(1, 10))
+    assert need["failures"] == 13 and need["hits_needed"] == 8 and need["hits_needed_integer"] == 8
+    assert expected_score_crossing(((50, 13),), 8) / 50 == Q(8, 13) == ceiling_detection_threshold(Q(4, 5), Q(1, 10))
+    singles = ((1, 0),) * 37 + ((1, 1),) * 13
+    assert expected_score_crossing(singles, 8) / 50 == Q(4, 25) == targeted_ceiling_detection_threshold(Q(4, 5), Q(1, 10))
+    assert expected_patches_static(((50, 13),), 8) == Q(204, 7) == expected_patches_adaptive(((50, 13),), 8)
+    assert expected_patches_static(singles, 8) == 8 == expected_patches_adaptive(singles, 8)
+    with pytest.raises(ValueError):
+        hits_needed(49, Q(4, 5), Q(1, 10))
+    with pytest.raises(ValueError):
+        hits_needed(0, Q(4, 5), Q(1, 10))
+
+
+def test_ceiling_cost_chain_values_and_monotonicity():
+    fixture = ceiling_cost_fixture()
+    shares = [row["crossing_share_of_set"] for row in fixture["chain"]]
+    assert shares == [Q(8, 13), Q(7, 12), Q(8, 15), Q(1, 2), Q(8, 25), Q(4, 25)]
+    statics = [row["expected_patches_static"] for row in fixture["chain"]]
+    # 10 blocks of 5: three rate-2/5 blocks give 6 hits in 15 patches, a whole
+    # rate-1/5 block gives the seventh in 5 more, and the eighth needs 6/2 on
+    # average in the next: 15 + 5 + 3 = 23 (the crossing sits at 15 + 5 + 5).
+    assert statics == [Q(204, 7), Q(201, 7), Q(51, 2), Q(23), Q(31, 2), Q(8)]
+    assert fixture["crossing_nonincreasing_along_chain"]
+    assert fixture["static_nonincreasing_along_chain"] and fixture["adaptive_nonincreasing_along_chain"]
+    assert fixture["adaptive_at_most_static_along_chain"] and fixture["crossing_at_least_static_along_chain"]
+    assert fixture["chain"][0]["expected_patches_adaptive"] == Q(204, 7)
+    assert fixture["chain"][-1]["expected_patches_adaptive"] == 8
+
+
+def _all_cases(categories):
+    sizes = [size for size, _ in categories]
+    for pattern in product(*(range(size + 1) for size in sizes)):
+        counts = tuple(zip(sizes, pattern))
+        total = sum(pattern)
+        for required in range(1, total + 1):
+            yield counts, required
+
+
+def test_static_expectation_matches_enumeration_over_patch_orders():
+    for base in (((2, 0), (2, 0), (2, 0)), ((3, 0), (2, 0), (1, 0)), ((4, 0), (2, 0))):
+        for counts, required in _all_cases(base):
+            assert expected_patches_static(counts, required) == _static_by_enumeration(counts, required)
+
+
+def test_adaptive_expectation_matches_enumeration_over_item_sets():
+    for base in (((2, 0), (2, 0), (2, 0)), ((3, 0), (2, 0), (1, 0)), ((4, 0), (2, 0))):
+        for counts, required in _all_cases(base):
+            adaptive = expected_patches_adaptive(counts, required)
+            assert adaptive == _adaptive_by_enumeration(counts, required)
+            assert adaptive <= expected_patches_static(counts, required)
+
+
+def test_crossing_error_identity_and_bound():
+    for counts, required in _all_cases(((3, 0), (3, 0), (2, 0))):
+        bound = crossing_error_bound(counts, required)
+        assert bound["error"] == bound["closed_form_error"]
+        assert 0 <= bound["error"] < bound["bound"]
+        assert bound["expected_score_crossing"] >= bound["expected_patches_static"]
+    assert crossing_error_bound(((4, 2),), 0)["error"] == 0
+    assert expected_score_crossing(((4, 2),), 0) == 0 == expected_patches_static(((4, 2),), 0)
+
+
+def test_crossing_is_monotone_along_refinement_over_all_partitions_of_six():
+    items = 6
+    maps = all_category_maps(items)
+    assert len(maps) == 203
+    parts = {m: validate_partition(m, range(items)) for m in maps}
+    patterns = [record for record in records(items) if "0" in record]
+    crossing = {m: [expected_score_crossing(category_counts(m, r), r.count("0")) for r in patterns]
+                for m in maps}
+    refining = 0
+    for fine, coarse in product(maps, repeat=2):
+        if fine != coarse and refines(parts[fine], parts[coarse]):
+            refining += 1
+            assert all(a <= b for a, b in zip(crossing[fine], crossing[coarse]))
+    assert refining > 203
+    one_block = maps[0] if len(maps[0]) == 1 else next(m for m in maps if len(m) == 1)
+    singles = next(m for m in maps if len(m) == items)
+    for record, value in zip(patterns, crossing[one_block]):
+        failures = record.count("0")
+        assert value == items
+        assert crossing[singles][patterns.index(record)] == failures
+
+
+def test_static_expectation_is_not_monotone_but_crossing_and_adaptive_are_on_the_witness():
+    coarse, fine = ((4, 2),), ((2, 1), (2, 1))
+    assert expected_patches_static(coarse, 2) == Q(10, 3) < expected_patches_static(fine, 2) == Q(7, 2)
+    assert expected_score_crossing(coarse, 2) == 4 == expected_score_crossing(fine, 2)
+    assert expected_patches_adaptive(coarse, 2) == Q(10, 3) > expected_patches_adaptive(fine, 2) == 3
+    assert _static_by_enumeration(fine, 2) == Q(7, 2)
+    assert _adaptive_by_enumeration(fine, 2) == 3
+
+
+def test_small_set_fixture_flags():
+    fixture = small_set_fixture()
+    assert fixture["category_maps"] == 203 and fixture["patterns"] == 63
+    assert fixture["error_identity_and_bound_hold"] and fixture["adaptive_at_most_static"]
+    assert fixture["crossing_monotone_along_refinement"]
+    assert fixture["four_item_static_refinement_costs_more"]
+    assert fixture["four_item_crossing_and_adaptive_do_not"]
+    assert fixture["static_monotone_along_refinement"] is False
+    assert fixture["static_witness"] is not None
+
+
+@pytest.mark.parametrize("categories, required", [
+    (((4, 2),), 3), (((4, 2),), -1), (((4, 5),), 1), (((0, 0),), 0), ((), 0), (((4, 2),), 1.5),
+    (((4, 2, 1),), 1), (((4.0, 2),), 1), (((4, True),), 1),
+])
+def test_malformed_cost_inputs_rejected(categories, required):
+    with pytest.raises((ValueError, TypeError)):
+        expected_patches_static(categories, required)
+    with pytest.raises((ValueError, TypeError)):
+        expected_patches_adaptive(categories, required)
+
+
+# --- 4. ledger wrapper -------------------------------------------------------
+
+def _sets():
+    return (EvalSet("S", "selection", "score_only", ("s0", "s1", "s2", "s3")),
+            EvalSet("R", "readout", "sealed", ("r0", "r1", "r2", "r3")))
+
+
+def test_leak_class_positions():
+    assert leak_class((("a", "b", "c"),), ("a", "b", "c")) == "score_only"
+    assert leak_class((("a",), ("b",), ("c",)), ("a", "b", "c")) == "item_level"
+    assert leak_class((("a", "b"), ("c",)), ("a", "b", "c")) == "category"
+    with pytest.raises(ValueError):
+        leak_class((("a", "b"),), ("a", "b", "c"))
+
+
+def test_category_ledger_records_partition_and_translates_for_base_ledger():
+    events = (CategoryFeedbackEvent(1, "S", (("s0", "s1", "s2", "s3"),)),
+              CategoryFeedbackEvent(2, "S", (("s0", "s1"), ("s2", "s3"))),
+              LoopEvent(3, "R", "readout"))
+    report = audit_category_ledger(_sets(), events, 2, Q(1, 2))
+    assert report["declarations_respected"]
+    assert report["selection"]["S"]["score_queries"] == 3 and report["selection"]["S"]["patches"] == 0
+    rows = report["category_feedback"]["S"]["events"]
+    assert [row["leak_class"] for row in rows] == ["score_only", "category"]
+    assert rows[1]["partition"] == (("s0", "s1"), ("s2", "s3")) and rows[1]["within_declared_categories"] is None
+    assert report["readout"]["R"]["endpoint_status"] == "evaluable"
+
+
+def test_singleton_blocks_count_as_item_feedback_and_breach_score_only():
+    events = (CategoryFeedbackEvent(1, "S", (("s0",), ("s1", "s2", "s3"))),)
+    report = audit_category_ledger(_sets(), events, 2, Q(1, 2))
+    entry = report["selection"]["S"]
+    assert entry["patches"] == 1 and entry["score_queries"] == 1
+    assert "exceeds declared score_only access" in entry["breaches"][0]
+    assert not report["declarations_respected"]
+
+
+def test_declared_categories_bound_the_leak_in_the_lattice():
+    declared = {"S": (("s0", "s1"), ("s2", "s3"))}
+    fine = CategoryFeedbackEvent(1, "S", (("s0",), ("s1",), ("s2", "s3")))
+    coarse = CategoryFeedbackEvent(1, "S", (("s0", "s1", "s2", "s3"),))
+    sets = (EvalSet("S", "selection", "item_level", ("s0", "s1", "s2", "s3")), _sets()[1])
+    ok = audit_category_ledger(sets, (coarse,), 2, Q(1), declared)
+    assert ok["declarations_respected"] and ok["category_feedback"]["S"]["events"][0]["within_declared_categories"]
+    bad = audit_category_ledger(sets, (fine,), 2, Q(1), declared)
+    assert not bad["declarations_respected"]
+    assert bad["category_feedback"]["S"]["breaches"] == ("category feedback finer than declared categories at generation 1",)
+    assert bad["category_feedback"]["S"]["declared_categories"] == (("s0", "s1"), ("s2", "s3"))
+
+
+def test_category_feedback_on_readout_set_is_a_breach():
+    events = (CategoryFeedbackEvent(1, "R", (("r0", "r1"), ("r2", "r3"))),)
+    report = audit_category_ledger(_sets(), events, 2, Q(1, 2))
+    assert report["readout"]["R"]["endpoint_status"] == "not_evaluated"
+
+
+@pytest.mark.parametrize("events, declared, message", [
+    ((CategoryFeedbackEvent(1, "X", (("s0",),)),), None, "invalid category feedback event"),
+    ((CategoryFeedbackEvent(-1, "S", (("s0", "s1", "s2", "s3"),)),), None, "invalid category feedback event"),
+    ((CategoryFeedbackEvent(1, "S", (("s0", "s1"),)),), None, "cover exactly"),
+    ((CategoryFeedbackEvent(1, "S", (("s0", "s1"), ("s1", "s2", "s3"))),), None, "disjoint"),
+    ((LoopEvent(2, "S", "score_query"), CategoryFeedbackEvent(1, "S", (("s0", "s1", "s2", "s3"),))), None, "ordered by generation"),
+    ((), {"Z": (("s0",),)}, "unknown set"),
+    ((), {"S": (("s0", "s1"),)}, "cover exactly"),
+    (("not an event",), None, "invalid category feedback event"),
+])
+def test_malformed_category_ledgers_raise(events, declared, message):
+    with pytest.raises(ValueError, match=message):
+        audit_category_ledger(_sets(), events, 2, Q(1, 2), declared)
+
+
+def test_verify_reports_every_check_passing():
+    report = verify()
+    assert report["all_passed"] and len(report["checks"]) == 19
+    assert report["evidence_status"].startswith("exact_synthetic")
+    assert render_partition(sealed_partition(1)) == (("0", "1"),)

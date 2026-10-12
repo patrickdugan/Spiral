@@ -1,0 +1,176 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-12T13:00:52.252842+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "credit_images_are_2_T+1_T+1_2^T": true,
+    "outcome_coarser_than_every_other_channel": true,
+    "process_finer_than_every_other_channel": true,
+    "count_and_first_failure_incomparable": true,
+    "outcome_reward_needs_T_episodes_per_T_binary_hypotheses": true,
+    "reconstruction_lower_bound_le_exact_le_binary_splitting": true,
+    "binary_splitting_within_f_times_log2_n_queries": true,
+    "independent_judge_gives_37_over_50": true,
+    "maximally_shared_judge_reaches_ceiling_without_memorization": true,
+    "judge_inflation_is_4_over_25": true,
+    "ceiling_reachable_iff_eps_ge_half_the_error_rate": true,
+    "selection_value_monotone_along_refinement": true,
+    "count_sufficient_for_exchangeable_steps": true,
+    "incomparable_channels_each_win_some_decision": true,
+    "rlvr_setup_types_as_item_level_feedback_with_two_image_steps": true
+  },
+  "all_passed": true,
+  "credit": {
+    "steps": 3,
+    "images": {
+      "outcome": 2,
+      "first_failure": 4,
+      "count": 4,
+      "process": 8
+    },
+    "refinement": {
+      "outcome>=first_failure": false,
+      "outcome>=count": false,
+      "outcome>=process": false,
+      "first_failure>=outcome": true,
+      "first_failure>=count": false,
+      "first_failure>=process": false,
+      "count>=outcome": true,
+      "count>=first_failure": false,
+      "count>=process": false,
+      "process>=outcome": true,
+      "process>=first_failure": true,
+      "process>=count": true
+    },
+    "episodes_to_identify_failing_steps": {
+      "outcome": 3,
+      "first_failure": 2,
+      "count": 2,
+      "process": 1
+    }
+  },
+  "reconstruction": {
+    "n=4,f=0": {
+      "lower_bound": 0,
+      "exact": 0,
+      "binary_splitting": 0
+    },
+    "n=4,f=1": {
+      "lower_bound": 2,
+      "exact": 2,
+      "binary_splitting": 2
+    },
+    "n=4,f=2": {
+      "lower_bound": 2,
+      "exact": 3,
+      "binary_splitting": 3
+    },
+    "n=4,f=3": {
+      "lower_bound": 1,
+      "exact": 2,
+      "binary_splitting": 2
+    },
+    "n=4,f=4": {
+      "lower_bound": 0,
+      "exact": 0,
+      "binary_splitting": 0
+    },
+    "n=6,f=0": {
+      "lower_bound": 0,
+      "exact": 0,
+      "binary_splitting": 0
+    },
+    "n=6,f=1": {
+      "lower_bound": 3,
+      "exact": 3,
+      "binary_splitting": 3
+    },
+    "n=6,f=2": {
+      "lower_bound": 3,
+      "exact": 4,
+      "binary_splitting": 5
+    },
+    "n=6,f=3": {
+      "lower_bound": 3,
+      "exact": 4,
+      "binary_splitting": 5
+    },
+    "n=6,f=4": {
+      "lower_bound": 2,
+      "exact": 4,
+      "binary_splitting": 5
+    },
+    "n=6,f=5": {
+      "lower_bound": 1,
+      "exact": 3,
+      "binary_splitting": 3
+    },
+    "n=6,f=6": {
+      "lower_bound": 0,
+      "exact": 0,
+      "binary_splitting": 0
+    }
+  },
+  "judge": {
+    "accuracy": "4/5",
+    "judge_error": "1/10",
+    "independent_observed": "37/50",
+    "eps1_feasible_low": "0",
+    "eps1_feasible_high": "1/2",
+    "max_shared_observed": "9/10",
+    "max_inflation": "4/25",
+    "noise_ceiling": "9/10"
+  },
+  "decision": {
+    "skill": {
+      "sealed": "1/2",
+      "outcome": "5/8",
+      "first_failure": "83/128",
+      "count": "43/64",
+      "process": "43/64"
+    },
+    "position_of_failure": {
+      "sealed": "1/2",
+      "outcome": "1/2",
+      "first_failure": "3/4",
+      "count": "1/2",
+      "process": "3/4"
+    },
+    "number_of_failures": {
+      "sealed": "1/2",
+      "outcome": "1/2",
+      "first_failure": "1/2",
+      "count": "3/4",
+      "process": "3/4"
+    }
+  },
+  "rl_setups": {
+    "rlvr_outcome_reward": {
+      "operator": "Feedback_{train,item_level}",
+      "selection_set_size": 1000,
+      "step_channel": "outcome",
+      "step_images": 2,
+      "score_queries_to_reconstruct_one_failure": 11,
+      "judge": "verifier",
+      "judge_error": "0",
+      "judge_shared_error": null,
+      "readout_declared": true
+    },
+    "learned_process_reward": {
+      "operator": "Feedback_{train,item_level}",
+      "selection_set_size": 1000,
+      "step_channel": "process",
+      "step_images": 256,
+      "score_queries_to_reconstruct_one_failure": 11,
+      "judge": "learned",
+      "judge_error": "1/10",
+      "judge_shared_error": "1/2",
+      "readout_declared": false
+    }
+  },
+  "source_sha256": {
+    "scripts/verify_evaluation_feedback_signal.py": "fbada2f01f002001274d6ea1ac7c1a88ed7bf8f17db410f6c3a6e80d59d1efcd",
+    "src/spiral_ln/evaluation_feedback_signal.py": "c38ebb9d3d1e4f8cd43d2d48d7326b3ec18caf98e1ed4e5cd51062597c17363f",
+    "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4"
+  }
+}
