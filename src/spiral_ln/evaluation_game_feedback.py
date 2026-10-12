@@ -127,9 +127,10 @@ def noise_ceiling(flip: Q) -> Q:
 def memorized_selection_score(clean_accuracy: Q, flip: Q, patch_share: Q) -> Q:
     """Selection-set score after memorizing a share of its observed labels.
 
-    Memorized items score one; the remainder keep the base observed accuracy.
-    Collateral effects of a patch on other items are assumed absent, which a
-    real learner need not satisfy.
+    The memorized items are chosen independently of whether the controller
+    already got them right, so the remainder keep the base observed accuracy.
+    Memorized items score one.  Collateral effects of a patch on other items
+    are assumed absent, which a real learner need not satisfy.
     """
 
     if not 0 <= patch_share <= 1:
@@ -138,8 +139,23 @@ def memorized_selection_score(clean_accuracy: Q, flip: Q, patch_share: Q) -> Q:
     return patch_share + (1 - patch_share) * base
 
 
+def targeted_patch_selection_score(clean_accuracy: Q, flip: Q, patch_share: Q) -> Q:
+    """Selection-set score after memorizing failed items only.
+
+    This is what item-level feedback supplies: each patch turns one failed
+    item into a pass and leaves every other item unchanged.  ``patch_share``
+    is measured against the whole set and cannot exceed the failure share.
+    """
+
+    base = observed_accuracy(clean_accuracy, flip)
+    if not 0 <= patch_share <= 1 - base:
+        raise ValueError("patch share must lie between zero and the failure share")
+    return base + patch_share
+
+
 def ceiling_detection_threshold(clean_accuracy: Q, flip: Q) -> Q:
-    """Patch share above which the selection score exceeds the noise ceiling.
+    """Share of the set, memorized independently of outcomes, above which the
+    selection score exceeds the noise ceiling.
 
     Below this share the ceiling check is silent however much was memorized.
     """
@@ -148,6 +164,20 @@ def ceiling_detection_threshold(clean_accuracy: Q, flip: Q) -> Q:
     if base >= 1:
         raise ValueError("base observed accuracy must be below one")
     return max(Q(0), (noise_ceiling(flip) - base) / (1 - base))
+
+
+def targeted_ceiling_detection_threshold(clean_accuracy: Q, flip: Q) -> Q:
+    """Share of the set, patched on failed items only, above which the
+    selection score exceeds the noise ceiling.
+
+    As a share of the failed items this equals ``ceiling_detection_threshold``;
+    as a share of the set it is smaller by the failure share.
+    """
+
+    base = observed_accuracy(clean_accuracy, flip)
+    if base >= 1:
+        raise ValueError("base observed accuracy must be below one")
+    return max(Q(0), noise_ceiling(flip) - base)
 
 
 def failed_item_noise_share(clean_accuracy: Q, flip: Q) -> Q:
@@ -167,13 +197,18 @@ def failed_item_noise_share(clean_accuracy: Q, flip: Q) -> Q:
 
 def noise_ceiling_fixture() -> dict[str, Q]:
     clean, flip = Q(4, 5), Q(1, 10)
+    base = observed_accuracy(clean, flip)
+    targeted = targeted_ceiling_detection_threshold(clean, flip)
     return {
         "clean_accuracy": clean, "flip_probability": flip,
-        "base_observed_accuracy": observed_accuracy(clean, flip),
+        "base_observed_accuracy": base,
         "noise_ceiling": noise_ceiling(flip),
         "score_half_memorized": memorized_selection_score(clean, flip, Q(1, 2)),
         "score_fully_memorized": memorized_selection_score(clean, flip, Q(1)),
         "ceiling_detection_threshold": ceiling_detection_threshold(clean, flip),
+        "targeted_threshold_share_of_set": targeted,
+        "targeted_threshold_share_of_failures": targeted / (1 - base),
+        "score_all_failures_patched": targeted_patch_selection_score(clean, flip, 1 - base),
         "failed_item_noise_share": failed_item_noise_share(clean, flip),
     }
 
@@ -373,6 +408,9 @@ def verify() -> dict[str, object]:
             noise["score_half_memorized"] < noise["noise_ceiling"],
         "ceiling_check_threshold_is_eight_thirteenths":
             noise["ceiling_detection_threshold"] == Q(8, 13),
+        "targeted_patching_crosses_at_four_twentyfifths_of_set":
+            noise["targeted_threshold_share_of_set"] == Q(4, 25)
+            and noise["targeted_threshold_share_of_failures"] == noise["ceiling_detection_threshold"],
         "failed_items_enriched_for_flipped_labels":
             noise["failed_item_noise_share"] == Q(4, 13) > noise["flip_probability"],
         "respected_ledger_leaves_readout_evaluable":

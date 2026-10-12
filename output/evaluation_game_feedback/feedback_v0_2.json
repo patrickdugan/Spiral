@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-12T04:34:02.370445+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "item_level_separates_equal_scores_and_score_only_does_not": true,
+    "access_classes_ordered": true,
+    "two_candidates_one_item_gap_is_quarter": true,
+    "single_candidate_has_no_selection_gap": true,
+    "selection_gap_shrinks_with_items": true,
+    "selection_gap_grows_with_candidates": true,
+    "full_memorization_exceeds_noise_ceiling": true,
+    "half_memorization_stays_below_ceiling": true,
+    "ceiling_check_threshold_is_eight_thirteenths": true,
+    "targeted_patching_crosses_at_four_twentyfifths_of_set": true,
+    "failed_items_enriched_for_flipped_labels": true,
+    "respected_ledger_leaves_readout_evaluable": true,
+    "breached_ledger_withholds_endpoint": true,
+    "selection_scores_never_endpoints": true,
+    "divergence_flags_fire_when_selection_outruns_readout": true
+  },
+  "all_passed": true,
+  "access_order": {
+    "operator_type": "judgment_to_controller_feedback_kernel",
+    "gaps": {
+      "same_score": {
+        "sealed": "0",
+        "score_only": "0",
+        "item_level": "1"
+      },
+      "different_score": {
+        "sealed": "0",
+        "score_only": "1",
+        "item_level": "1"
+      }
+    },
+    "access_classes_ordered_by_coarsening": true,
+    "acts_between_generations": true,
+    "changes_recorded_evidence": false
+  },
+  "selection_inflation": {
+    "one_item_two_candidates": {
+      "expected_reported": "3/4",
+      "readout_value": "1/2",
+      "readout_gap": "1/4"
+    },
+    "gap_by_items_two_candidates": {
+      "1": "1/4",
+      "4": "35/256",
+      "16": "300540195/4294967296",
+      "64": "11975573020964041433067793888190275875/340282366920938463463374607431768211456"
+    },
+    "gap_by_candidates_four_items": {
+      "1": "0",
+      "2": "35/256",
+      "4": "16295/65536",
+      "16": "7569782477313687455/18446744073709551616"
+    }
+  },
+  "noise_ceiling": {
+    "clean_accuracy": "4/5",
+    "flip_probability": "1/10",
+    "base_observed_accuracy": "37/50",
+    "noise_ceiling": "9/10",
+    "score_half_memorized": "87/100",
+    "score_fully_memorized": "1",
+    "ceiling_detection_threshold": "8/13",
+    "targeted_threshold_share_of_set": "4/25",
+    "targeted_threshold_share_of_failures": "8/13",
+    "score_all_failures_patched": "1",
+    "failed_item_noise_share": "4/13"
+  },
+  "ledger": {
+    "respected": {
+      "selection": {
+        "S": {
+          "declared_access": "score_only",
+          "size": 8,
+          "score_queries": 3,
+          "patches": 0,
+          "distinct_patched": 0,
+          "patch_share": "0",
+          "retired_at_generation": null,
+          "breaches": [],
+          "selection_scores_usable_as_endpoints": false
+        }
+      },
+      "readout": {
+        "R": {
+          "size": 8,
+          "readouts": 2,
+          "readout_generations": [
+            0,
+            2
+          ],
+          "breaches": [],
+          "endpoint_status": "evaluable"
+        }
+      },
+      "identifier_scope": "recorded overlap only; independence is not certified",
+      "declarations_respected": true
+    },
+    "breached": {
+      "selection": {
+        "S": {
+          "declared_access": "score_only",
+          "size": 8,
+          "score_queries": 3,
+          "patches": 2,
+          "distinct_patched": 2,
+          "patch_share": "1/4",
+          "retired_at_generation": null,
+          "breaches": [
+            "item_feedback exceeds declared score_only access at generation 3"
+          ],
+          "selection_scores_usable_as_endpoints": false
+        }
+      },
+      "readout": {
+        "R": {
+          "size": 8,
+          "readouts": 2,
+          "readout_generations": [
+            0,
+            2
+          ],
+          "breaches": [
+            "score_query exposed the readout set at generation 4"
+          ],
+          "endpoint_status": "not_evaluated"
+        }
+      },
+      "identifier_scope": "recorded overlap only; independence is not certified",
+      "declarations_respected": false
+    }
+  },
+  "divergence": [
+    {
+      "from_generation": 0,
+      "to_generation": 50,
+      "selection_gain": "1/10",
+      "readout_gain": "1/25",
+      "divergence": "3/50",
+      "readout_gap_at_end": "3/50",
+      "flagged": true
+    },
+    {
+      "from_generation": 50,
+      "to_generation": 100,
+      "selection_gain": "3/100",
+      "readout_gain": "-1/100",
+      "divergence": "1/25",
+      "readout_gap_at_end": "1/10",
+      "flagged": true
+    }
+  ],
+  "source_sha256": {
+    "scripts/verify_evaluation_game_feedback.py": "830ac5327980f277fcb8db436d4df22e65662fdc48f775a0121e83a71853d7f0",
+    "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
+    "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
+  }
+}

@@ -1,10 +1,12 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "inspected_date": "2026-10-11",
   "purpose": "Design analyses of published takeoff-relevant claims; not a reproduction of any result",
   "model_evaluations_run": 0,
-  "reading_caveat": "Sources read through a summarizing fetch tool; one chart read from a third-party screenshot; line-level verification outstanding",
+  "sources_verified_line_by_line": true,
+  "reading_note": "Every figure attributed to a source was checked against the source's full text, or the data embedded in its page, on the inspection date. The secondary pages and the screenshot used in draft 0.1 are superseded and not cited.",
   "cases": 5,
+  "cases_declaring_feedback": 2,
   "cases_with_declared_feedback_and_sealed_readout": 1,
   "cases_supplying_weight_level_gain_ratio_on_sealed_readout": 0,
   "cards": [
@@ -13,31 +15,38 @@
       "label": "OpenAI internal model, mathematics",
       "sources": [
         {
-          "kind": "primary_summarized",
+          "kind": "primary",
           "url": "https://openai.com/index/navier-stokes-solution/",
           "read_on": "2026-10-11"
         },
         {
-          "kind": "primary_summarized",
+          "kind": "primary_embedded_data",
+          "url": "https://openai.com/index/navier-stokes-solution/",
+          "read_on": "2026-10-11",
+          "note": "Vega-Lite data behind the pass-rate chart"
+        },
+        {
+          "kind": "primary",
           "url": "https://openai.com/index/sharing-ai-progress-in-mathematics/",
           "read_on": "2026-10-11"
         },
         {
-          "kind": "secondary",
-          "url": "https://cellcog.ai/blog/openai-math-results/",
-          "read_on": "2026-10-11"
+          "kind": "primary",
+          "url": "https://github.com/openai/math",
+          "read_on": "2026-10-11",
+          "note": "README, read after the 2026-10-07 revision"
         },
         {
-          "kind": "screenshot",
-          "url": "https://x.com/AndrewCurran_/status/2108609708441657531",
-          "read_on": "2026-10-11",
-          "note": "chart values read by eye"
+          "kind": "primary",
+          "url": "https://github.com/openai/math/blob/main/history.md",
+          "read_on": "2026-10-11"
         }
       ],
-      "observed_contract": "Pass rate against test-time compute on a curated open-problem set; 722 manuscripts in 372 families from about 4,000 problems posed; 162 Lean-formalized main results.",
+      "observed_contract": "Pass rate against test-time compute on a curated open-problem set for two models; 719 manuscripts in 372 families from about 4,000 problems posed, 722 before three withdrawals on 2026-10-07; about 42% of top-line results formalized in Lean (300 of 719).",
       "what_improves": "test_time_compute_at_one_checkpoint",
-      "loop_present": "unknown",
-      "feedback_access_declared": null,
+      "loop_present": "yes",
+      "feedback_access_declared": "item_level_within_run",
+      "controller_changed_during_run": true,
       "sealed_readout_declared": false,
       "estimand_supported": "amplification slope",
       "headline_estimand": "training-time improvement",
@@ -46,7 +55,7 @@
         "pass criterion and judge for the chart",
         "whether problems or outcomes reached training",
         "whether failed attempts are in the compute average",
-        "error-bar definition"
+        "which checkpoint the chart's internal-model curve uses"
       ],
       "proposed_axes": {
         "training_checkpoint": [
@@ -58,7 +67,7 @@
         ]
       },
       "independent_unit": "problem, with attempts nested",
-      "claim_boundary": "Supports more inference buying more from the newer model on this set; silent on whether that margin is trained back in.",
+      "claim_boundary": "Supports more inference buying more from the newer model on this set; silent on whether that margin is trained back in, and the headline run used at least two checkpoints.",
       "study_status": "proposed_not_executed",
       "evidence_status": "source_grounded_design_analysis"
     },
@@ -67,21 +76,23 @@
       "label": "Anthropic R&D Automation Index",
       "sources": [
         {
-          "kind": "primary_summarized",
+          "kind": "primary",
           "url": "https://www.anthropic.com/institute/measuring-pace-of-ai-development",
           "read_on": "2026-10-11"
         }
       ],
-      "observed_contract": "Frozen basket of 542 task nodes (378 leaves) rated on a six-level automation scale by a Claude judge, person-time weighted; 26% at 'leads' as of August 2026.",
+      "observed_contract": "Frozen basket of 542 task nodes (378 leaves) rated on a six-level automation scale by a Claude judge; weights split each sampled person-week evenly across the tasks touched; 26% at 'leads' as of August 2026.",
       "what_improves": "share_of_work_led_by_model",
       "loop_present": "not_applicable",
       "feedback_access_declared": null,
+      "controller_changed_during_run": null,
       "sealed_readout_declared": null,
       "estimand_supported": "task share under a learned judge",
       "headline_estimand": "degree of automation of AI R&D",
       "missing_declarations": [
-        "agreement statistics at the AL3/AL4 boundary",
-        "pre-automation time weights",
+        "agreement on the binary call at the AL3/AL4 boundary, and the direction of disagreements",
+        "time-based weights to compare with task-touch weights",
+        "coverage of work no sampled person touched",
         "interval on the headline under judge perturbation"
       ],
       "proposed_axes": {
@@ -90,8 +101,8 @@
           "blind human"
         ],
         "weights": [
-          "post-automation person-time",
-          "pre-automation time survey"
+          "even split of sampled person-weeks",
+          "time-use survey"
         ]
       },
       "independent_unit": "task node, with sampled staff-weeks nested",
@@ -104,32 +115,29 @@
       "label": "METR time horizon",
       "sources": [
         {
-          "kind": "primary_summarized",
+          "kind": "primary",
           "url": "https://metr.org/time-horizons/",
           "read_on": "2026-10-11"
         },
         {
-          "kind": "secondary",
-          "url": "https://www.datalearner.com/en/benchmarks/metr-time-horizons-v1-1",
-          "read_on": "2026-10-11"
-        },
-        {
-          "kind": "secondary",
-          "url": "https://manifold.markets/Bayesian/claude-sonnet-5-metr-50-time-horizo",
-          "read_on": "2026-10-11"
+          "kind": "primary_embedded_data",
+          "url": "https://metr.org/time-horizons/",
+          "read_on": "2026-10-11",
+          "note": "benchmark data object for Time Horizon 1.1"
         }
       ],
-      "observed_contract": "Logistic fit of success against human task duration on a fixed suite of over a hundred software tasks; owner states measurements above 16 hours are unreliable; page frozen 2026-09-08.",
+      "observed_contract": "Logistic fit of success against human task duration on a fixed suite of over a hundred software tasks; owner states measurements above 16 hours are unreliable; top point 1044.78 minutes (interval 508.9 to 3304.3); doubling time 128.7 days from 2023 on; page frozen 2026-09-08.",
       "what_improves": "released_models_over_years",
       "loop_present": "field_level_reuse",
       "feedback_access_declared": null,
+      "controller_changed_during_run": null,
       "sealed_readout_declared": false,
       "estimand_supported": "horizon on a fixed suite below its ceiling",
       "headline_estimand": "doubling time of autonomous capability",
       "missing_declarations": [
         "public/private task split",
         "count of items above each model's estimated ability",
-        "whether doubling fits use nested or disjoint windows in secondary quotations"
+        "level of the published intervals"
       ],
       "proposed_axes": {
         "suite": [
@@ -147,56 +155,52 @@
       "label": "AIDE-squared harness self-improvement",
       "sources": [
         {
-          "kind": "primary_summarized",
-          "url": "https://arxiv.org/abs/2609.26457",
+          "kind": "primary",
+          "url": "https://arxiv.org/html/2609.26457v1",
           "read_on": "2026-10-11"
-        },
-        {
-          "kind": "search_excerpt",
-          "url": "https://arxiv.org/pdf/2609.26457",
-          "read_on": "2026-10-11",
-          "note": "ALE-Bench and MLE-Bench figures"
         }
       ],
-      "observed_contract": "99 harness rewrite proposals, 7 accepted, selected on a private-data grade (0.703 to 0.778); reported on four external held-out benchmarks; model frozen.",
+      "observed_contract": "99 harness rewrite proposals, 7 accepted, selected on a private-data grade (0.703 to 0.778); reported on four external held-out benchmarks at two checkpoints fixed by position (steps 47 and 85); model frozen.",
       "what_improves": "agent_harness_with_model_frozen",
       "loop_present": "yes",
       "feedback_access_declared": "score_only_or_item_level",
+      "controller_changed_during_run": false,
       "sealed_readout_declared": true,
       "estimand_supported": "held-out gain across harness generations",
       "headline_estimand": "recursive self-improvement of research agents",
       "missing_declarations": [
-        "number of readout checkpoints and whether fixed in advance",
+        "whether readout positions were fixed before the run",
         "whether the outer loop saw per-task artifacts",
-        "meaning of the plus-or-minus figures"
+        "paired standard errors for contrasts between checkpoints"
       ],
       "proposed_axes": {
         "readout_checkpoints": [
-          "fixed before run"
+          "declared before run"
         ],
         "second_private_split": [
           "sealed, read once at end"
         ]
       },
       "independent_unit": "trajectory; tasks and seeds nested within checkpoint",
-      "claim_boundary": "One trajectory supports existence of held-out harness gains with thinning acceptances; not a rate, and not weights improving weights.",
+      "claim_boundary": "One trajectory supports existence of held-out harness gains, large relative to their standard errors at a fixed model, with thinning acceptances; not a rate, and not weights improving weights.",
       "study_status": "proposed_not_executed",
       "evidence_status": "source_grounded_design_analysis"
     },
     {
       "id": "princeton_shadow_evaluation",
-      "label": "Princeton shadow evaluation",
+      "label": "Princeton-led (CRUX) shadow evaluation",
       "sources": [
         {
-          "kind": "primary_summarized",
-          "url": "https://arxiv.org/abs/2607.27191",
+          "kind": "primary",
+          "url": "https://arxiv.org/html/2607.27191v1",
           "read_on": "2026-10-11"
         }
       ],
-      "observed_contract": "Two unpublished NeurIPS 2026 questions, five runs, six days and $3,000 API credits each; graded 2/6 and 1/6 by the original authors, unblinded.",
+      "observed_contract": "Two unpublished NeurIPS 2026 questions, five runs, six days and $3,000 API credits each; overall scores 2/6 and 1/6 from the original authors, unblinded.",
       "what_improves": "nothing_single_generation_test",
       "loop_present": "no",
       "feedback_access_declared": "sealed",
+      "controller_changed_during_run": false,
       "sealed_readout_declared": true,
       "estimand_supported": "failure on two open-ended questions under one judge",
       "headline_estimand": "ability to conduct open-ended AI research",
@@ -223,14 +227,19 @@
   ],
   "derived_fixtures": {
     "openai_math": {
-      "manuscripts": 722,
+      "manuscripts": 719,
+      "manuscripts_at_release": 722,
+      "withdrawn_2026_10_07": 3,
+      "revised_2026_10_07": 14,
       "families": 372,
       "problems_posed_approx": 4000,
-      "lean_main_results": 162,
-      "manuscripts_per_problem": "361/2000",
+      "lean_top_line_formalized": 300,
+      "lean_share_stated_percent_approx": 42,
+      "manuscripts_per_problem": "719/4000",
       "families_per_problem": "93/1000",
-      "lean_share_of_manuscripts": "81/361",
+      "lean_share_of_manuscripts": "300/719",
       "problems_per_family": "1000/93",
+      "withdrawn_share_at_release": "3/722",
       "swarm_agents": 10000,
       "swarm_hours": 88,
       "swarm_agent_hours_upper_bound": 880000,
@@ -238,19 +247,79 @@
       "messages": 2700000,
       "tokens_per_message": "1300000/27"
     },
+    "openai_chart": {
+      "pass_rate_denominator": 382,
+      "internal_pass_rates": [
+        0.2617801047120419,
+        0.32460732984293195,
+        0.38219895287958117,
+        0.4162303664921466,
+        0.4476439790575916,
+        0.4738219895287958
+      ],
+      "internal_numerators": [
+        100,
+        124,
+        146,
+        159,
+        171,
+        181
+      ],
+      "internal_relative_compute": [
+        2.593825261780105,
+        5.688471858638742,
+        12.40785667539267,
+        26.229702225130893,
+        51.949502617801045,
+        93.2688645287958
+      ],
+      "astra_pass_rates": [
+        0.08376963350785341,
+        0.1256544502617801,
+        0.14397905759162305,
+        0.14921465968586387,
+        0.17015706806282724
+      ],
+      "astra_numerators": [
+        32,
+        48,
+        55,
+        57,
+        65
+      ],
+      "astra_relative_compute": [
+        1.421929319371728,
+        7.74369109947644,
+        12.96744502617801,
+        15.820094240837696,
+        30.874324607329843
+      ],
+      "error_bar": "one standard error"
+    },
     "anthropic_index": {
       "leads_share": "13/50",
       "amdahl_ceiling_if_leads_share_free": "50/37",
       "nodes": 542,
       "leaves": 378,
       "exact_agreement_model_human": "59/100",
-      "exact_agreement_human_human": "7/20"
+      "exact_agreement_human_human": "7/20",
+      "within_one_level_model_human": "97/100"
     },
     "metr": {
-      "top_frontier_minutes": "104478/100",
+      "top_frontier_minutes": "1044.780145",
+      "top_frontier_minutes_ci_low": "508.876789",
+      "top_frontier_minutes_ci_high": "3304.261235",
+      "top_frontier_hours_rounded": "17.41",
       "stated_reliable_ceiling_hours": 16,
-      "top_frontier_hours": "17413/1000",
-      "exceeds_ceiling": true
+      "exceeds_ceiling": true,
+      "interval_straddles_ceiling": true,
+      "doubling_days_from_2023": "128.744",
+      "doubling_days_from_2023_ci": [
+        "104.428",
+        "158.012"
+      ],
+      "doubling_days_all_time_stitched": "187.778",
+      "fit_from_2024_published": false
     },
     "aide2": {
       "proposals": 99,
@@ -278,14 +347,52 @@
       "accepted_first_half": 5,
       "accepted_second_half": 2,
       "proposals_after_last_acceptance": 14,
-      "ale_contrast": 62,
-      "ale_pm": [
+      "readout_checkpoints": [
+        47,
+        85
+      ],
+      "readout_checkpoint_rule": "incumbent within the first 50 nodes, and final incumbent",
+      "pm_meaning": "one standard error of the benchmark mean",
+      "table1_step85_vs_initial": {
+        "ale": [
+          "1790",
+          "9",
+          "1536",
+          "33"
+        ],
+        "mle": [
+          "0.722",
+          "0.011",
+          "0.678",
+          "0.006"
+        ],
+        "wb2": [
+          "0.793",
+          "0.005",
+          "0.262",
+          "0.205"
+        ],
+        "fml": [
+          "19.9",
+          "1.1",
+          "15.0",
+          "0.9"
+        ]
+      },
+      "table1_z_squared": {
+        "ale": "32258/585",
+        "mle": "1936/157",
+        "wb2": "281961/42050",
+        "fml": "2401/202"
+      },
+      "ale_cross_model_contrast": 62,
+      "ale_cross_model_pm": [
         22,
         24
       ],
-      "ale_combined_variance": 1060,
-      "ale_z_squared": "961/265",
-      "ale_below_1_96_if_independent_standard_errors": true,
+      "ale_cross_model_combined_variance": 1060,
+      "ale_cross_model_z_squared": "961/265",
+      "ale_cross_model_below_1_96_if_independent": true,
       "reward_hacking_pairs": 38,
       "reward_hacking_percentages": [
         55,
@@ -305,7 +412,8 @@
         2,
         1
       ],
-      "scale_max": 6
+      "scale_max": 6,
+      "human_interventions_in_a_run": 3
     }
   }
 }

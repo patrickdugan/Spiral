@@ -1,6 +1,7 @@
 # Feedback channel: suggested insertions for the evaluation design calculus
 
-Draft 0.1 — 2026-10-11. Suggestions only.
+Draft 0.2 — 2026-10-12. Suggestions only. Draft 0.2 states the ceiling law for
+failure-targeted patching as well as for patching chosen at random.
 
 This file changes nothing in `evaluation_design_calculus.md` or
 `evaluation_game_testbed.md`. Each block names a location in those documents,
@@ -20,7 +21,7 @@ generation.
 
 | Level | Source | What it supplies |
 |---|---|---|
-| Finite verified example | `src/spiral_ln/evaluation_game_feedback.py`, 29 tests, receipt under `output/evaluation_game_feedback/` | Access-class ordering, one-generation selection gap, noise-ceiling threshold, failed-item enrichment, ledger enforcement |
+| Finite verified example | `src/spiral_ln/evaluation_game_feedback.py`, 30 tests, receipt under `output/evaluation_game_feedback/` | Access-class ordering, one-generation selection gap, noise-ceiling threshold, failed-item enrichment, ledger enforcement |
 | Synthetic mechanism result | `output/eval_reuse_toys/` (two seeded simulations, predictions hashed before each run) | Multi-generation behaviour of the gap under score-only and item-level feedback |
 | Not available | — | Any language-model loop, any observed controller |
 
@@ -96,15 +97,25 @@ across generations is a simulation result, not an exact one.
 **Ceiling law.**
 
 > With labels flipped independently at rate \(\varepsilon<\tfrac12\), no
-> predictor blind to the flips exceeds \(1-\varepsilon\) on observed labels.
-> A controller that has memorized a share \(m/n\) of \(s\), and scores \(v\)
-> elsewhere, scores \(m/n+(1-m/n)v\) on \(s\). It crosses the ceiling only when
-> \(m/n>(1-\varepsilon-v)/(1-v)\). Below that share a ceiling check is silent.
+> predictor blind to the flips exceeds \(1-\varepsilon\) in expectation on
+> observed labels. Let \(v\) be the controller's observed accuracy before any
+> item of \(s\) is memorized. If it memorizes a share \(m/n\) of \(s\) chosen
+> without regard to its outcomes, it scores \(m/n+(1-m/n)v\) on \(s\) and
+> crosses the ceiling only when \(m/n>(1-\varepsilon-v)/(1-v)\). If it memorizes
+> items it failed, which is what item-level feedback supplies, it scores
+> \(v+m/n\) and crosses when \(m/n>1-\varepsilon-v\): the same threshold
+> \((1-\varepsilon-v)/(1-v)\), now as a share of the failed items. Below the
+> threshold a ceiling check is silent.
 
-Support: `ceiling_detection_threshold`. With clean accuracy \(\tfrac45\) and
-\(\varepsilon=\tfrac1{10}\): \(v=\tfrac{37}{50}\), threshold \(\tfrac8{13}\).
-The formula assumes a memorized item has no effect on any other item, which the
-nearest-neighbour learner in the simulations did not satisfy.
+Support: `ceiling_detection_threshold` and
+`targeted_ceiling_detection_threshold`. With clean accuracy \(\tfrac45\) and
+\(\varepsilon=\tfrac1{10}\): \(v=\tfrac{37}{50}\). Memorizing at random, the
+check is silent below \(\tfrac8{13}\) of the set. Patching failures, it is
+silent below \(\tfrac4{25}\) of the set, which is \(\tfrac8{13}\) of the failed
+items. Both formulas assume a memorized item has no effect on any other item.
+The nearest-neighbour learner in the second simulation did not satisfy that,
+and it also did not reliably absorb a patch: at \(n=4000\) it patched a quarter
+of the set and its reported score stayed at 0.759, below the 0.90 ceiling.
 
 **Observation on what item-level feedback selects.**
 
@@ -172,7 +183,7 @@ checks":
 >
 > ```powershell
 > $env:PYTHONPATH = "src"
-> python scripts/verify_evaluation_game_feedback.py --output output/evaluation_game_feedback/feedback_v0_1.json
+> python scripts/verify_evaluation_game_feedback.py --output output/evaluation_game_feedback/feedback_v0_2.json
 > python -m pytest tests/test_evaluation_game_feedback.py -q
 > ```
 

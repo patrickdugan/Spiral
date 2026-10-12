@@ -28,5 +28,11 @@ Each script overwrites its results file in its own directory.
 Prediction record: 5 of 6 passed in run 1, 3 of 6 in run 2. Both runs
 overpredicted the size of the gap between reported and true accuracy.
 
-A re-run from a scratch copy on the same day reproduced all three results
-files byte for byte.
+A re-run from a scratch copy on the same day, in the environment that produced
+them, reproduced all three results files byte for byte.
+
+A second re-run on Node 24.19.0 under Windows reproduced `results2.json` and
+`results2b.json` byte for byte. `results.json` differed in the last digit of 24
+floating-point values, the largest relative difference about 1.2e-15. Its
+`summary` and `checks` were identical. Run 1 is reproducible to its reported
+precision, not to the byte, across platforms.

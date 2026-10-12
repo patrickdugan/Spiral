@@ -1,12 +1,12 @@
 {
-  "schema_version": "0.1",
-  "generated_at_utc": "2026-10-11T03:31:37.840683+00:00",
+  "schema_version": "0.2",
+  "generated_at_utc": "2026-10-12T04:34:02.165398+00:00",
   "evidence_status": "manifest_structure_and_exact_derived_arithmetic_only",
   "model_evaluations_run": 0,
-  "sources_verified_line_by_line": false,
-  "manifest_sha256": "3ea02d52b33b26118d5b4dedf57b9a1d4064266571a7b6b00f0e6b125441c429",
-  "verifier_sha256": "205ffe0ef82cb2a7ab54df01dec06e6de77efa59f07ee2500ea640305604edf2",
-  "check_count": 17,
+  "sources_verified_line_by_line": true,
+  "manifest_sha256": "8eb602b2d855eb2037dbdbc0b57b2332014aab57a1780f2607f5e8850971b7d4",
+  "verifier_sha256": "18779a3d6603e6191ed6c13bc7e84c41e296ef59992d0cbb9f4d58987fde6783",
+  "check_count": 28,
   "all_passed": true,
   "checks": [
     {
@@ -15,12 +15,12 @@
       "evidence": {}
     },
     {
-      "name": "every_source_has_a_declared_reading_level",
+      "name": "every_source_is_primary_and_dated",
       "passed": true,
       "evidence": {}
     },
     {
-      "name": "no_card_rests_on_secondary_reading_alone",
+      "name": "sources_declared_checked_line_by_line",
       "passed": true,
       "evidence": {}
     },
@@ -40,11 +40,30 @@
       "evidence": {}
     },
     {
+      "name": "two_cases_declare_a_feedback_channel",
+      "passed": true,
+      "evidence": {
+        "case": [
+          "openai_internal_model_math",
+          "aide2_harness_self_improvement"
+        ]
+      }
+    },
+    {
       "name": "one_case_declares_feedback_and_a_sealed_readout",
       "passed": true,
       "evidence": {
         "case": [
           "aide2_harness_self_improvement"
+        ]
+      }
+    },
+    {
+      "name": "controller_change_recorded_where_declared",
+      "passed": true,
+      "evidence": {
+        "case": [
+          "openai_internal_model_math"
         ]
       }
     },
@@ -61,6 +80,18 @@
       }
     },
     {
+      "name": "openai_lean_share_matches_stated_percentage",
+      "passed": true,
+      "evidence": {
+        "lean_share": 0.4172461752433936
+      }
+    },
+    {
+      "name": "openai_withdrawals_account_for_count_change",
+      "passed": true,
+      "evidence": {}
+    },
+    {
       "name": "openai_swarm_scale",
       "passed": true,
       "evidence": {
@@ -68,10 +99,30 @@
       }
     },
     {
+      "name": "openai_chart_pass_rates_are_whole_multiples_of_denominator",
+      "passed": true,
+      "evidence": {
+        "denominator": 382
+      }
+    },
+    {
+      "name": "openai_chart_curves_rise_with_compute",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "openai_internal_model_ahead_at_matched_compute",
+      "passed": true,
+      "evidence": {
+        "internal": 0.38219895287958117,
+        "astra": 0.14397905759162305
+      }
+    },
+    {
       "name": "amdahl_ceiling_for_leads_share",
       "passed": true,
       "evidence": {
-        "scope": "Illustrative; post-automation person-time is not a pre-automation time share"
+        "scope": "Illustrative; the share is of task-touch weights, not time"
       }
     },
     {
@@ -83,7 +134,24 @@
       "name": "top_frontier_point_above_stated_ceiling",
       "passed": true,
       "evidence": {
-        "hours": 17.413
+        "hours": 17.413002416666668
+      }
+    },
+    {
+      "name": "top_frontier_interval_straddles_ceiling",
+      "passed": true,
+      "evidence": {
+        "interval_hours": [
+          8.481279816666667,
+          55.071020583333336
+        ]
+      }
+    },
+    {
+      "name": "doubling_time_point_inside_its_interval",
+      "passed": true,
+      "evidence": {
+        "doubling_days": 128.744
       }
     },
     {
@@ -92,11 +160,29 @@
       "evidence": {}
     },
     {
-      "name": "ale_contrast_below_conventional_threshold_if_independent_standard_errors",
+      "name": "aide2_readout_checkpoints_follow_position_rule",
+      "passed": true,
+      "evidence": {}
+    },
+    {
+      "name": "aide2_fixed_model_gains_exceed_1_96_standard_errors",
       "passed": true,
       "evidence": {
-        "z_squared": 3.6264150943396225,
-        "scope": "Conditional on what the plus-or-minus figures denote"
+        "z": {
+          "ale": 7.43,
+          "mle": 3.51,
+          "wb2": 2.59,
+          "fml": 3.45
+        },
+        "scope": "Standard errors treated as independent; runs on shared tasks are paired"
+      }
+    },
+    {
+      "name": "ale_cross_model_contrast_below_conventional_threshold",
+      "passed": true,
+      "evidence": {
+        "z": 1.9,
+        "scope": "Harness gain set against model gain; measures neither"
       }
     },
     {

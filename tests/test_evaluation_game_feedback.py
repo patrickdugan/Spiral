@@ -9,7 +9,8 @@ from spiral_ln.evaluation_game_feedback import (
     audit_ledger, ceiling_detection_threshold, divergence_flags,
     failed_item_noise_share, memorized_selection_score, noise_ceiling,
     noise_ceiling_fixture, observed_accuracy, run_ledger_fixture,
-    selection_inflation, verify,
+    selection_inflation, targeted_ceiling_detection_threshold,
+    targeted_patch_selection_score, verify,
 )
 
 
@@ -89,7 +90,10 @@ def test_noise_ceiling_fixture_exact_values():
         "clean_accuracy": Q(4, 5), "flip_probability": Q(1, 10),
         "base_observed_accuracy": Q(37, 50), "noise_ceiling": Q(9, 10),
         "score_half_memorized": Q(87, 100), "score_fully_memorized": Q(1),
-        "ceiling_detection_threshold": Q(8, 13), "failed_item_noise_share": Q(4, 13)}
+        "ceiling_detection_threshold": Q(8, 13),
+        "targeted_threshold_share_of_set": Q(4, 25),
+        "targeted_threshold_share_of_failures": Q(8, 13),
+        "score_all_failures_patched": Q(1), "failed_item_noise_share": Q(4, 13)}
 
 
 def test_ceiling_threshold_is_exactly_where_score_meets_ceiling():
@@ -101,6 +105,20 @@ def test_ceiling_threshold_is_exactly_where_score_meets_ceiling():
             assert observed_accuracy(clean, flip) <= noise_ceiling(flip)
     with pytest.raises(ValueError):
         ceiling_detection_threshold(Q(1), Q(0))
+
+
+def test_targeted_patching_crosses_the_ceiling_sooner():
+    for clean in (Q(1, 2), Q(3, 5), Q(4, 5), Q(9, 10)):
+        for flip in (Q(1, 20), Q(1, 10), Q(1, 4)):
+            base = observed_accuracy(clean, flip)
+            share = targeted_ceiling_detection_threshold(clean, flip)
+            assert 0 <= share <= ceiling_detection_threshold(clean, flip)
+            assert share / (1 - base) == ceiling_detection_threshold(clean, flip)
+            assert targeted_patch_selection_score(clean, flip, share) == noise_ceiling(flip)
+    with pytest.raises(ValueError):
+        targeted_patch_selection_score(Q(4, 5), Q(1, 10), Q(1, 2))
+    with pytest.raises(ValueError):
+        targeted_ceiling_detection_threshold(Q(1), Q(0))
 
 
 def test_failed_items_enriched_exactly_when_predictor_beats_chance():
@@ -179,5 +197,5 @@ def test_divergence_flags_and_their_absence():
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 14
+    assert report["all_passed"] and len(report["checks"]) == 15
     assert report["evidence_status"].startswith("exact_synthetic")
