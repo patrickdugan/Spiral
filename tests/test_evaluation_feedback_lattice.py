@@ -20,6 +20,155 @@ from spiral_ln.evaluation_feedback_lattice import (
     tv_through, validate_categories, validate_category_counts, validate_partition,
     verify,
 )
+from spiral_ln.evaluation_feedback_lattice import (
+    category_lattice_fixture, greedy_vs_optimal_fixture, intersection_graph,
+    intersection_graph_is_forest, join_failure_witness, last_failure_positions_sum,
+    optimal_adaptive_value, optimal_first_choices,
+)
+
+
+# --- meet preservation and the forest criterion -----------------------------
+
+def _item_components(left, right, items):
+    """Connected components of the item graph whose edges join items sharing a
+    block of either map: the blocks of the finest common coarsening."""
+    adjacency = {i: set() for i in range(items)}
+    for block in tuple(left) + tuple(right):
+        for i in block:
+            adjacency[i] |= set(block)
+    seen, components = set(), []
+    for start in range(items):
+        if start in seen:
+            continue
+        stack, component = [start], set()
+        while stack:
+            node = stack.pop()
+            if node in component:
+                continue
+            component.add(node)
+            stack.extend(adjacency[node])
+        seen |= component
+        components.append(frozenset(component))
+    return frozenset(components)
+
+
+def _margins(blocks, record):
+    return tuple(sum(record[i] == "1" for i in block) for block in blocks)
+
+
+@pytest.mark.parametrize("items", [3, 4, 5])
+def test_meet_of_channels_identifies_equal_component_counts(items):
+    maps = all_category_maps(items)
+    for left, right in product(maps, repeat=2):
+        components = _item_components(left, right, items)
+        by_counts = {}
+        for record in records(items):
+            by_counts.setdefault(_margins(sorted(map(sorted, components)), record), []).append(record)
+        expected = validate_partition(by_counts.values(), records(items))
+        assert meet(category_channel(left, items), category_channel(right, items)) == expected
+
+
+@pytest.mark.parametrize("items", [3, 4, 5])
+def test_join_preserved_exactly_when_margins_determine_cells(items):
+    maps = all_category_maps(items)
+    for left, right in product(maps, repeat=2):
+        cells = validate_categories(render_partition(join(validate_partition(left, range(items)),
+                                                          validate_partition(right, range(items)))), items)
+        seen = {}
+        determined = True
+        for record in records(items):
+            key = (_margins(left, record), _margins(right, record))
+            value = _margins(cells, record)
+            if seen.setdefault(key, value) != value:
+                determined = False
+        assert determined == intersection_graph_is_forest(left, right, items)
+        if not determined:
+            witness = join_failure_witness(left, right, items)
+            first, second = witness["first"], witness["second"]
+            assert first != second
+            assert _margins(left, first) == _margins(left, second)
+            assert _margins(right, first) == _margins(right, second)
+            assert _margins(cells, first) != _margins(cells, second)
+        else:
+            with pytest.raises(ValueError):
+                join_failure_witness(left, right, items)
+
+
+def test_intersection_graph_edges_are_the_cells():
+    rows, cols = ((0, 1), (2, 3)), ((0, 2), (1, 3))
+    graph = intersection_graph(rows, cols, 4)
+    assert graph["edges"] == ((0, 0), (0, 1), (1, 0), (1, 1))
+    assert not intersection_graph_is_forest(rows, cols, 4)
+    assert intersection_graph_is_forest(rows, ((0, 1, 2), (3,)), 4)
+    report = category_lattice_fixture((4,))[4]
+    assert report["non_forest_pairs"] == 6 and report["meet_preserved"] == 225
+
+
+# --- the optimal adaptive policy --------------------------------------------
+
+def _all_states(items):
+    for record in records(items):
+        total = record.count("0")
+        if total == 0:
+            continue
+        for categories in all_category_maps(items):
+            counts = tuple((len(block), sum(record[i] == "0" for i in block)) for block in categories)
+            for required in sorted({1, ceil(Q(total, 2)), total}):
+                yield counts, required
+
+
+def test_optimal_adaptive_value_bounds_and_special_cases():
+    for counts, required in _all_states(5):
+        optimal = optimal_adaptive_value(counts, required)
+        greedy = expected_patches_adaptive(counts, required)
+        assert optimal <= greedy <= expected_patches_static(counts, required)
+        if required == 1:
+            assert optimal == greedy
+        if required == sum(failures for _, failures in counts):
+            assert optimal == greedy == last_failure_positions_sum(counts)
+        assert optimal >= required
+
+
+def test_four_item_greedy_witness_exact():
+    four = ((4, 2), (2, 1))
+    assert expected_patches_adaptive(four, 2) == Q(19, 6)
+    assert optimal_adaptive_value(four, 2) == Q(37, 12)
+    assert optimal_first_choices(four, 2) == ((4, 2),)
+    assert optimal_first_choices(four, 0) == ()
+    assert optimal_adaptive_value(four, 0) == 0
+    with pytest.raises(ValueError):
+        optimal_adaptive_value(four, 4)
+    with pytest.raises(ValueError):
+        optimal_adaptive_value(four, -1)
+
+
+def test_optimal_adaptive_monotone_along_refinement_small():
+    items = 5
+    maps = all_category_maps(items)
+    parts = {m: validate_partition(m, range(items)) for m in maps}
+    patterns = [record for record in records(items) if "0" in record]
+    for fine, coarse in product(maps, repeat=2):
+        if fine == coarse or not refines(parts[fine], parts[coarse]):
+            continue
+        for record in patterns:
+            total = record.count("0")
+            for required in sorted({1, ceil(Q(total, 2)), total}):
+                counts_fine = tuple((len(b), sum(record[i] == "0" for i in b)) for b in fine)
+                counts_coarse = tuple((len(b), sum(record[i] == "0" for i in b)) for b in coarse)
+                assert optimal_adaptive_value(counts_fine, required) <= optimal_adaptive_value(counts_coarse, required)
+
+
+@pytest.mark.parametrize("items, strict_cases", [(4, 0), (5, 0), (6, 180)])
+def test_greedy_vs_optimal_fixture_counts(items, strict_cases):
+    report = greedy_vs_optimal_fixture(items)
+    assert report["optimal_le_greedy_le_static"]
+    assert report["greedy_equals_optimal_for_one_hit"]
+    assert report["greedy_equals_optimal_equals_closed_form_for_all_hits"]
+    assert report["optimal_monotone_along_refinement"]
+    assert report["cases_where_greedy_strictly_worse"] == strict_cases
+    assert report["four_item_witness"]["greedy"] > report["four_item_witness"]["optimal"]
+    if strict_cases:
+        assert report["first_witness"]["counts"] == ((4, 2), (2, 1))
 
 
 # --- independent brute-force helpers -----------------------------------------
@@ -497,6 +646,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 19
+    assert report["all_passed"] and len(report["checks"]) == 27
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)

@@ -116,7 +116,9 @@ greedy optimality proven. One more result from that note bears on
 disclosure: the channel induced by two category maps observed together is
 strictly finer than the join of the two channels observed separately, so a
 ledger must record what the loop saw jointly, not the partitions one at a
-time. *Finite verified example*; the lower bound is an *algebraic identity*.
+time; the two agree exactly when the intersection graph of the two category
+maps is a forest. *Finite verified example*; the lower bound is an
+*algebraic identity*.
 
 **L3. Noise ceiling and its blind range.** From the insertions: with judge
 error \(\varepsilon\) and base observed accuracy \(v\), a ceiling check is

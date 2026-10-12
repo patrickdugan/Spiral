@@ -1,17 +1,22 @@
 # Partial leakage as a lattice of feedback channels
 
-Version 0.1 — 2026-10-12. Exact fixtures for the gap named in
+Version 0.2 — 2026-10-13. Exact fixtures for the gap named in
 [evaluation_feedback_insertions.md](evaluation_feedback_insertions.md) §H:
 feedback that reveals failure *categories* and not items. Files:
 `src/spiral_ln/evaluation_feedback_lattice.py`, `tests/test_evaluation_feedback_lattice.py`,
-`output/evaluation_feedback_lattice/lattice_v0_1.json`. No model was called.
+`output/evaluation_feedback_lattice/lattice_v0_2.json`. No model was called.
+Version 0.2 settles the two items version 0.1 left as finite checks: the
+category map preserves meets (Proposition 2b), preserves joins exactly when
+the intersection graph is a forest (Proposition 2c), and the optimal adaptive
+patch schedule is monotone along refinement (Proposition 6) while the greedy
+one is not optimal.
 Evidence levels follow the calculus card (§11): *algebraic identity* (proved
 for all inputs) or *finite verified example* (checked on the enumerated cases
 only); no synthetic mechanism result is claimed.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_1.json
+python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_2.json
 python -m pytest tests/test_evaluation_feedback_lattice.py -q
 ```
 
@@ -67,13 +72,48 @@ for \(n\ge3\), so "how much leaks" has no scalar. On \([3]\), with
 \(A=\{0,1\}|\{2\}\) and \(B=\{0\}|\{1,2\}\): \(B\) separates "fail item 0" from
 "fail item 1" (\(\mathrm{TV}=1\)) while \(A\) gives 0, and conversely for "fail 1" vs "fail 2".
 
-**Finite observation.** \(\Phi\) does not preserve joins: for rows
-\(\{0,1\}|\{2,3\}\) and columns \(\{0,2\}|\{1,3\}\), \(\Phi(\gamma\vee\gamma')\)
-is `item_level` but \(\Phi(\gamma)\vee\Phi(\gamma')\) confuses `1001` with
-`0110` (equal row and column sums): two separate category leaks are strictly
-coarser than one leak with the refined categories. On \([4]\), 219 of 225
-ordered pairs preserve the join and 225 of 225 the meet. *Finite verified
-example*: the join failure is a proof by witness; meet preservation is not proved.
+**Proposition 2b (meets are preserved).** \(\Phi(\gamma\wedge\gamma')=
+\Phi(\gamma)\wedge\Phi(\gamma')\) for all \(\gamma,\gamma'\).
+
+*Proof.* \(\Phi\) is an order embedding, so \(\Phi(\gamma\wedge\gamma')\le
+\Phi(\gamma)\wedge\Phi(\gamma')\). Conversely let \(r,s\) have equal pass
+counts on every block of \(\gamma\wedge\gamma'\). Those blocks are the
+connected components of the graph on items whose edges join two items lying
+in a common \(\gamma\)-block or a common \(\gamma'\)-block. Swapping the bits
+at two items of one \(\gamma\)-block preserves every \(\gamma\)-count, so a
+record and its swap share a \(\Phi(\gamma)\)-block, hence a block of the
+meet; likewise for \(\gamma'\). The edge transpositions of a connected graph
+generate its symmetric group, so within each component every arrangement of
+a fixed number of passes is reached from every other by such swaps. Hence
+\(r\) and \(s\) share a block of the meet. \(\square\)
+*Evidence status: algebraic identity*, checked on all 25, 225 and 2704
+ordered pairs of maps on 3, 4 and 5 items (`category_lattice_fixture`).
+
+**Proposition 2c (joins are preserved iff the intersection graph is a
+forest).** Let \(I(\gamma,\gamma')\) be the bipartite graph on the blocks of
+\(\gamma\) and of \(\gamma'\) with an edge where two blocks intersect; its
+edges are the cells of \(\gamma\vee\gamma'\). Then
+\(\Phi(\gamma)\vee\Phi(\gamma')=\Phi(\gamma\vee\gamma')\) iff
+\(I(\gamma,\gamma')\) is acyclic.
+
+*Proof.* \(\Phi(\gamma\vee\gamma')\) identifies records with equal cell
+counts, \(\Phi(\gamma)\vee\Phi(\gamma')\) those with equal row and column
+margins; cell counts determine margins, so the refined channel is always at
+least as fine. If \(I\) has a cycle \(A_1B_1A_2B_2\cdots A_kB_k\), put one
+pass in each cell \(A_i\cap B_i\) for one record and one in each
+\(A_{i+1}\cap B_i\) for the other: every block on the cycle then holds
+exactly one pass in both records, so the margins agree while the cells
+differ. If \(I\) is a forest, peel leaves: a leaf block has a single
+nonempty cell, whose count is that block's margin; remove it and recurse,
+so the margins determine every cell. \(\square\)
+
+For rows \(\{0,1\}|\{2,3\}\) and columns \(\{0,2\}|\{1,3\}\) the graph is a
+4-cycle and `1001`, `0110` is the witness: two separate category leaks are
+strictly coarser than one leak with the refined categories. On \([4]\) the
+six failing ordered pairs are the three pairings into two pairs taken
+crosswise; on \([5]\) 210 of 2704 ordered pairs fail, and
+`join_failure_witness` builds a valid witness from a cycle for each.
+*Evidence status: algebraic identity*, checked exhaustively on 3, 4, 5 items.
 
 ## 3. Cost of a leak, exact
 
@@ -114,18 +154,48 @@ then \(m^*(\gamma')\le m^*(\gamma)\) for every failure pattern. *Proof.* Each
 \(\square\) *Algebraic identity*; checked over all 203 maps of \([6]\), 2268
 refining pairs, 63 patterns, two requirements each.
 
-**Finite observations on the stopping time.** \(\mathbb E[T]\) under the static
-greedy schedule is *not* monotone along refinement: one block \((4,2)\), \(H=2\),
-gives \(10/3\); \((2,1),(2,1)\) gives \(7/2\). On \([6]\): record `001101`,
-\(H=3\), \(21/4\) against \(11/2\). An adaptive schedule that re-queries the
-channel after each patch and patches the highest current rate (exact dynamic
-programming on count multisets) was at most the static value in every
-enumerated case and monotone on every refining pair of \([6]\) and along the
-50-item chain; no proof is offered. Chain with block sizes 50, 25, 10, 5, 2, 1
-and failures at items \(0,4,\dots,48\): \(m^*/n=8/13,7/12,8/15,1/2,8/25,4/25\);
+**The stopping time under the static schedule is not monotone.**
+\(\mathbb E[T]\) under the static greedy schedule can rise along refinement:
+one block \((4,2)\), \(H=2\), gives \(10/3\); \((2,1),(2,1)\) gives \(7/2\).
+On \([6]\): record `001101`, \(H=3\), \(21/4\) against \(11/2\). *Finite
+verified example*, a proof by witness.
+
+**Proposition 6 (the optimal adaptive schedule is monotone).** Let
+\(V^*(\gamma)\) be the minimum, over adaptive policies that re-query the
+channel after each patch and patch a uniformly random unpatched item of a
+category they choose, of the expected patches to \(H\) hits. If \(\gamma'\)
+refines \(\gamma\) then \(V^*(\gamma')\le V^*(\gamma)\).
+
+*Proof.* A \(\gamma\)-policy's information, the coarse counts, is a function
+of the \(\gamma'\)-information, and patching a uniformly random unpatched
+item of a coarse block is the same as choosing a sub-block with probability
+proportional to its unpatched items and patching at random there. So every
+\(\gamma\)-policy is a \(\gamma'\)-policy with the same law of patch
+outcomes, and the minimum over \(\gamma'\)-policies is no larger. \(\square\)
+`optimal_adaptive_value` computes \(V^*\) by dynamic programming on the
+multiset of (remaining, failures) pairs. *Evidence status: algebraic
+identity*; checked on all 2268 refining pairs of \([6]\), 162 cases each
+(`greedy_vs_optimal_fixture`).
+
+**Greedy is not optimal.** The greedy rule (highest current rate, ties to
+the smaller category) is one adaptive policy, so \(V^*\le\) greedy \(\le\)
+static everywhere. It is optimal when one hit remains, since exchanging two
+adjacent patches in different categories changes only the chance that the
+first of them ends the run, and when every failure must be hit, since any
+policy that never patches an exhausted category needs
+\(\sum_cF_c(n_c+1)/(F_c+1)\) patches, the sum of the last-failure positions.
+Both are checked exhaustively. It is not optimal in general: with categories
+\((4,2)\) and \((2,1)\) and two hits needed, greedy patches the smaller
+category first and needs \(19/6\) patches; patching the larger first needs
+\(37/12\). On six items greedy is strictly worse in 180 of 32,886 cases; on
+four and five items it is optimal in every case. The greedy value was
+monotone on every enumerated refining pair, which Proposition 6 does not
+imply; what it implies is that the right cost of a leak, the optimal
+expected stopping time, is monotone everywhere. Chain with block sizes
+50, 25, 10, 5, 2, 1 and failures at items \(0,4,\dots,48\):
+\(m^*/n=8/13,7/12,8/15,1/2,8/25,4/25\);
 \(\mathbb E[T]_{\text{static}}=204/7,201/7,51/2,23,31/2,8\);
-\(\mathbb E[T]_{\text{adaptive}}\approx29.14,25.64,21.17,18,12,8\).
-*Finite verified example.*
+greedy adaptive \(\approx29.14,25.64,21.17,18,12,8\).
 
 ## 4. Ledger wrapper
 
@@ -145,4 +215,6 @@ partition, no lattice position, and no converse of Proposition 1; the Blackwell
 preorder on kernels is not treated. Items are independent and a patch changes
 its own item only, which the nearest-neighbour learner in `output/eval_reuse_toys`
 violated. Greedy ties break by index; \(\mathbb E[T]_{\text{static}}\) depends
-on that choice when two categories share a rate. No model or loop evidence.
+on that choice when two categories share a rate. The optimal adaptive policy
+is computed, not characterized: no index rule for it is offered, and the
+enumerations stop at six items. No model or loop evidence.

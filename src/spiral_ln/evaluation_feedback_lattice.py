@@ -21,9 +21,12 @@ that reveal more than a score and less than the items.
 2.  A category map on the item set induces the channel "per-category score
     vector".  The induced map from item partitions to record partitions is an
     order embedding whose image lies between ``score_only`` (one category) and
-    ``item_level`` (singleton categories).  It does not preserve joins: two
-    category leaks taken together are coarser than one leak with the common
-    refinement of the categories.
+    ``item_level`` (singleton categories).  It preserves meets, and it
+    preserves joins exactly when the bipartite intersection graph of the two
+    category maps is a forest: otherwise two category leaks taken together
+    are strictly coarser than one leak with the common refinement of the
+    categories, and a cycle of the graph yields two records with equal
+    margins and different cells.
 
 3.  Under category leakage the loop knows each category's failure count and
     patches at random within a category.  Patches are drawn without
@@ -35,8 +38,12 @@ that reveal more than a score and less than the items.
     the *expected* score reaches the noise ceiling is a deterministic rational
     ``m*``; the patch count at which the *realized* score first reaches it is a
     stopping time whose exact expectation is a negative-hypergeometric mean,
-    never above ``m*``.  An adaptive variant that re-queries the channel after
-    every patch is solved exactly by dynamic programming on category counts.
+    never above ``m*``.  Adaptive schedules that re-query the channel after
+    every patch are solved exactly by dynamic programming on category counts:
+    the greedy one, and the optimal one, which is monotone along refinement
+    because a finer-informed loop can imitate any coarser policy.  Greedy is
+    optimal when one hit remains or every failure must be hit, and not in
+    general.
 
 4.  ``audit_category_ledger`` wraps ``audit_ledger`` with a
     ``category_feedback`` event kind that records the partition used.
@@ -336,6 +343,141 @@ def _item_partition(categories, items: int) -> Partition:
     return validate_partition(validate_categories(categories, items), range(items))
 
 
+def intersection_graph(left, right, items: int) -> dict[str, object]:
+    """Bipartite graph on the blocks of two category maps: an edge joins a
+    block of ``left`` to a block of ``right`` when they intersect, so edges
+    are the cells of the common refinement."""
+
+    rows, cols = validate_categories(left, items), validate_categories(right, items)
+    edges = tuple((a, b) for a, row in enumerate(rows) for b, col in enumerate(cols)
+                  if set(row) & set(col))
+    return {"rows": rows, "columns": cols, "edges": edges}
+
+
+def intersection_graph_is_forest(left, right, items: int) -> bool:
+    """True iff the intersection graph is acyclic: edges = vertices - components."""
+
+    graph = intersection_graph(left, right, items)
+    vertices = [("r", a) for a in range(len(graph["rows"]))] + [("c", b) for b in range(len(graph["columns"]))]
+    parent = {v: v for v in vertices}
+
+    def find(v):
+        while parent[v] != v:
+            parent[v] = parent[parent[v]]
+            v = parent[v]
+        return v
+
+    components = len(vertices)
+    for a, b in graph["edges"]:
+        ra, rb = find(("r", a)), find(("c", b))
+        if ra != rb:
+            parent[ra] = rb
+            components -= 1
+    return len(graph["edges"]) == len(vertices) - components
+
+
+def intersection_cycle(left, right, items: int):
+    """An alternating cycle of blocks ``(A_1, B_1, ..., A_k, B_k)`` in the
+    intersection graph, as index pairs, or ``None`` when it is a forest."""
+
+    graph = intersection_graph(left, right, items)
+    adjacency: dict = {}
+    for a, b in graph["edges"]:
+        adjacency.setdefault(("r", a), []).append(("c", b))
+        adjacency.setdefault(("c", b), []).append(("r", a))
+    seen, parent = {}, {}
+    for start in adjacency:
+        if start in seen:
+            continue
+        stack = [(start, None)]
+        while stack:
+            node, origin = stack.pop()
+            if node in seen:
+                continue
+            seen[node], parent[node] = True, origin
+            for neighbour in adjacency[node]:
+                if neighbour == origin:
+                    continue
+                if neighbour in seen:
+                    # Close the cycle: walk both back to their common ancestor.
+                    path_a, path_b = [node], [neighbour]
+                    while path_a[-1] is not None:
+                        path_a.append(parent[path_a[-1]])
+                    while path_b[-1] is not None:
+                        path_b.append(parent[path_b[-1]])
+                    common = next(v for v in path_a if v in path_b)
+                    cycle = path_a[:path_a.index(common) + 1] + path_b[:path_b.index(common)][::-1]
+                    if cycle[0][0] == "c":
+                        cycle = cycle[1:] + cycle[:1]
+                    return tuple(cycle)
+                stack.append((neighbour, node))
+    return None
+
+
+def join_failure_witness(left, right, items: int) -> dict[str, object]:
+    """Two records with equal per-category counts under both maps and
+    different counts on the common refinement, built from a cycle of the
+    intersection graph: passes on the cycle's forward cells in one record and
+    on its backward cells in the other."""
+
+    cycle = intersection_cycle(left, right, items)
+    if cycle is None:
+        raise ValueError("the intersection graph is a forest; no witness exists")
+    rows, cols = validate_categories(left, items), validate_categories(right, items)
+    forward, backward = [], []
+    k = len(cycle) // 2
+    for i in range(k):
+        a, b = cycle[2 * i][1], cycle[2 * i + 1][1]
+        a_next = cycle[(2 * i + 2) % len(cycle)][1]
+        forward.append(min(set(rows[a]) & set(cols[b])))
+        backward.append(min(set(rows[a_next]) & set(cols[b])))
+    first = "".join("1" if index in forward else "0" for index in range(items))
+    second = "".join("1" if index in backward else "0" for index in range(items))
+    return {"cycle": cycle, "first": first, "second": second}
+
+
+def category_lattice_fixture(sizes=(3, 4, 5)) -> dict[str, object]:
+    """Meet preservation and the forest criterion for joins, exhaustively.
+
+    For every ordered pair of category maps on ``items`` items: the channel of
+    the finest common coarsening equals the meet of the channels; the channel
+    of the common refinement equals the join of the channels exactly when the
+    intersection graph is a forest; and for every non-forest pair the cycle
+    witness is confused by the join of the channels and separated by the
+    channel of the refinement.
+    """
+
+    report = {}
+    for items in sizes:
+        maps = all_category_maps(items)
+        channels = {m: category_channel(m, items) for m in maps}
+        parts = {m: _item_partition(m, items) for m in maps}
+        meets_kept = joins_kept = forests = agree = witnesses = 0
+        for a, b in product(maps, repeat=2):
+            meet_kept = category_channel(render_partition(meet(parts[a], parts[b])), items) == meet(channels[a], channels[b])
+            join_kept = category_channel(render_partition(join(parts[a], parts[b])), items) == join(channels[a], channels[b])
+            forest = intersection_graph_is_forest(a, b, items)
+            meets_kept += meet_kept
+            joins_kept += join_kept
+            forests += forest
+            agree += join_kept == forest
+            if not forest:
+                witness = join_failure_witness(a, b, items)
+                refined = category_channel(render_partition(join(parts[a], parts[b])), items)
+                joint = join(channels[a], channels[b])
+                first, second = {witness["first"]: Q(1)}, {witness["second"]: Q(1)}
+                witnesses += (witness["first"] != witness["second"]
+                              and tv_through(joint, first, second) == 0
+                              and tv_through(refined, first, second) == 1)
+        report[items] = {
+            "ordered_pairs": len(maps) ** 2, "meet_preserved": meets_kept,
+            "join_preserved": joins_kept, "forest_pairs": forests,
+            "join_preserved_iff_forest_pairs": agree,
+            "non_forest_pairs": len(maps) ** 2 - forests, "cycle_witnesses_valid": witnesses,
+        }
+    return report
+
+
 def category_order_fixture() -> dict[str, object]:
     """Order embedding, endpoints, an incomparable pair, and a join failure."""
 
@@ -589,6 +731,153 @@ def _adaptive_value(remaining_hits: int, state: tuple) -> Q:
     return result
 
 
+def _continuation(remaining_hits: int, state: tuple, chosen: tuple, value) -> Q:
+    """Expected patches from ``state`` when the next patch goes to ``chosen``
+    and ``value`` prices every later state."""
+
+    size, failures = chosen
+    rest = list(state)
+    rest.remove(chosen)
+    hit = Q(failures, size)
+    after_hit = tuple(sorted(rest + ([(size - 1, failures - 1)] if failures > 1 else [])))
+    result = 1 + hit * value(remaining_hits - 1, after_hit)
+    if hit < 1:
+        after_miss = tuple(sorted(rest + [(size - 1, failures)]))
+        result += (1 - hit) * value(remaining_hits, after_miss)
+    return result
+
+
+@lru_cache(maxsize=None)
+def _optimal_value(remaining_hits: int, state: tuple) -> Q:
+    """Minimum expected patches over every adaptive policy, by dynamic
+    programming over the same multiset states as the greedy schedule."""
+
+    if remaining_hits == 0:
+        return Q(0)
+    return min(_continuation(remaining_hits, state, chosen, _optimal_value)
+               for chosen in set(state))
+
+
+def _adaptive_state(categories, hits_needed: int) -> tuple:
+    counts = validate_category_counts(categories)
+    if type(hits_needed) is not int or hits_needed < 0:
+        raise ValueError("hits needed must be a nonnegative integer")
+    if hits_needed > sum(failures for _, failures in counts):
+        raise ValueError("ceiling unreachable: more hits needed than failures exist")
+    return tuple(sorted(pair for pair in counts if pair[1] > 0))
+
+
+def optimal_adaptive_value(categories, hits_needed: int) -> Q:
+    """Exact minimum expected number of patches over every adaptive policy
+    that re-queries the category channel after each patch and patches a
+    uniformly random unpatched item of the category it chooses.
+
+    The greedy rule of ``expected_patches_adaptive`` is one such policy, so
+    this value is at most the greedy value; it is strictly below it on some
+    states (see ``greedy_vs_optimal_fixture``).
+    """
+
+    return _optimal_value(hits_needed, _adaptive_state(categories, hits_needed))
+
+
+def optimal_first_choices(categories, hits_needed: int) -> tuple[tuple[int, int], ...]:
+    """The ``(size, failures)`` pairs an optimal policy may patch first."""
+
+    state = _adaptive_state(categories, hits_needed)
+    if hits_needed == 0:
+        return ()
+    best = _optimal_value(hits_needed, state)
+    return tuple(sorted(chosen for chosen in set(state)
+                        if _continuation(hits_needed, state, chosen, _optimal_value) == best))
+
+
+def last_failure_positions_sum(categories) -> Q:
+    """``sum_c F_c (n_c + 1) / (F_c + 1)``: the expected patches any policy that
+    never patches an exhausted category needs to hit every failure, since the
+    patches spent in a category until its last failure are the position of
+    that failure in a uniformly random order of the category's items."""
+
+    counts = validate_category_counts(categories)
+    return sum((Q(failures * (size + 1), failures + 1) for size, failures in counts if failures), Q(0))
+
+
+def greedy_vs_optimal_fixture(items: int = 6) -> dict[str, object]:
+    """Every failure pattern on a small set against every category map, for
+    one hit, half the failures, and all failures.
+
+    Reports whether the optimal adaptive value is at most the greedy adaptive
+    value and that at most the static value; whether greedy equals optimal
+    when one hit remains (the exchange argument) and when every failure must
+    be hit (policy invariance); whether the optimal value is monotone along
+    refinement (the simulation argument); and the first state where greedy
+    is strictly worse than optimal, with the four-item witness.
+    """
+
+    maps = all_category_maps(items)
+    parts = {m: _item_partition(m, items) for m in maps}
+    cases = []
+    for record in records(items):
+        total = record.count("0")
+        if total == 0:
+            continue
+        for required in sorted({1, ceil(Q(total, 2)), total}):
+            cases.append((record, required))
+    values = {}
+    ordering_ok = one_hit_ok = all_hits_ok = True
+    strict = 0
+    witness = None
+    for m in maps:
+        blocks = validate_categories(m, items)
+        rows = []
+        for record, required in cases:
+            counts = tuple((len(block), sum(record[index] == "0" for index in block))
+                           for block in blocks)
+            optimal = optimal_adaptive_value(counts, required)
+            greedy = expected_patches_adaptive(counts, required)
+            static = expected_patches_static(counts, required)
+            ordering_ok &= optimal <= greedy <= static
+            if required == 1:
+                one_hit_ok &= optimal == greedy
+            if required == record.count("0"):
+                all_hits_ok &= optimal == greedy == last_failure_positions_sum(counts)
+            if _greater(greedy, optimal):
+                strict += 1
+                witness = witness or {"map": m, "record": record, "hits_needed": required,
+                                      "counts": counts, "greedy": greedy, "optimal": optimal,
+                                      "optimal_first": optimal_first_choices(counts, required)}
+            rows.append((optimal, greedy))
+        values[m] = rows
+    optimal_mono = greedy_mono = True
+    refining_pairs = 0
+    for fine, coarse in product(maps, repeat=2):
+        if fine == coarse or not refines(parts[fine], parts[coarse]):
+            continue
+        refining_pairs += 1
+        for fine_row, coarse_row in zip(values[fine], values[coarse]):
+            if _greater(fine_row[0], coarse_row[0]):
+                optimal_mono = False
+            if _greater(fine_row[1], coarse_row[1]):
+                greedy_mono = False
+    four = ((4, 2), (2, 1))
+    return {
+        "items": items, "category_maps": len(maps), "cases_per_map": len(cases),
+        "refining_pairs": refining_pairs,
+        "optimal_le_greedy_le_static": ordering_ok,
+        "greedy_equals_optimal_for_one_hit": one_hit_ok,
+        "greedy_equals_optimal_equals_closed_form_for_all_hits": all_hits_ok,
+        "cases_where_greedy_strictly_worse": strict, "first_witness": witness,
+        "optimal_monotone_along_refinement": optimal_mono,
+        "greedy_monotone_along_refinement": greedy_mono,
+        "four_item_witness": {
+            "counts": four, "hits_needed": 2,
+            "greedy": expected_patches_adaptive(four, 2),
+            "optimal": optimal_adaptive_value(four, 2),
+            "optimal_first": optimal_first_choices(four, 2),
+            "greedy_first": (2, 1),
+        },
+    }
+
+
 def hits_needed(items: int, clean_accuracy: Q, flip: Q) -> dict[str, object]:
     """Hits required for the selection score to reach the noise ceiling."""
 
@@ -840,10 +1129,28 @@ def verify() -> dict[str, object]:
 
     lattice = lattice_fixture(2, 2)
     category = category_order_fixture()
+    category_lattice = category_lattice_fixture()
     cost = ceiling_cost_fixture()
     small = small_set_fixture()
+    policy = greedy_vs_optimal_fixture()
     ledger = category_ledger_fixture()
+    four = policy["four_item_witness"]
     checks = {
+        "meet_preserved_on_every_pair_up_to_five_items":
+            all(row["meet_preserved"] == row["ordered_pairs"] for row in category_lattice.values()),
+        "join_preserved_iff_intersection_graph_is_forest":
+            all(row["join_preserved_iff_forest_pairs"] == row["ordered_pairs"]
+                for row in category_lattice.values())
+            and category_lattice[4]["non_forest_pairs"] == 6,
+        "cycle_witnesses_confused_by_joint_leak_only":
+            all(row["cycle_witnesses_valid"] == row["non_forest_pairs"] for row in category_lattice.values()),
+        "optimal_at_most_greedy_at_most_static_over_all_203_maps": policy["optimal_le_greedy_le_static"],
+        "greedy_optimal_when_one_hit_remains": policy["greedy_equals_optimal_for_one_hit"],
+        "all_hits_needed_is_policy_invariant": policy["greedy_equals_optimal_equals_closed_form_for_all_hits"],
+        "greedy_adaptive_not_optimal_four_item_witness":
+            four["greedy"] == Q(19, 6) and four["optimal"] == Q(37, 12)
+            and four["optimal_first"] == ((4, 2),) and policy["cases_where_greedy_strictly_worse"] > 0,
+        "optimal_adaptive_monotone_along_refinement": policy["optimal_monotone_along_refinement"],
         "fifteen_partitions_of_two_item_records": lattice["bell_number"] == 15,
         "lattice_data_processing_law_holds_exhaustively": lattice["law_holds_on_every_comparable_pair"],
         "tv_domination_characterizes_the_order": lattice["domination_fails_on_every_noncomparable_pair"],
@@ -881,5 +1188,6 @@ def verify() -> dict[str, object]:
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
-            "lattice": lattice, "category_order": category, "ceiling_cost": cost,
-            "small_set_enumeration": small, "category_ledger": ledger}
+            "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
+            "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
+            "category_ledger": ledger}

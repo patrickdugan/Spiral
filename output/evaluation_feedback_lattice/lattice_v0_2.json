@@ -1,8 +1,16 @@
 {
   "schema_version": "0.1",
-  "generated_at_utc": "2026-10-12T13:21:28.087084+00:00",
+  "generated_at_utc": "2026-10-12T23:44:21.276358+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
+    "meet_preserved_on_every_pair_up_to_five_items": true,
+    "join_preserved_iff_intersection_graph_is_forest": true,
+    "cycle_witnesses_confused_by_joint_leak_only": true,
+    "optimal_at_most_greedy_at_most_static_over_all_203_maps": true,
+    "greedy_optimal_when_one_hit_remains": true,
+    "all_hits_needed_is_policy_invariant": true,
+    "greedy_adaptive_not_optimal_four_item_witness": true,
+    "optimal_adaptive_monotone_along_refinement": true,
     "fifteen_partitions_of_two_item_records": true,
     "lattice_data_processing_law_holds_exhaustively": true,
     "tv_domination_characterizes_the_order": true,
@@ -158,6 +166,35 @@
       ],
       "tv_through_joint_leak": "0",
       "tv_through_refined_categories": "1"
+    }
+  },
+  "category_lattice": {
+    "3": {
+      "ordered_pairs": 25,
+      "meet_preserved": 25,
+      "join_preserved": 25,
+      "forest_pairs": 25,
+      "join_preserved_iff_forest_pairs": 25,
+      "non_forest_pairs": 0,
+      "cycle_witnesses_valid": 0
+    },
+    "4": {
+      "ordered_pairs": 225,
+      "meet_preserved": 225,
+      "join_preserved": 219,
+      "forest_pairs": 219,
+      "join_preserved_iff_forest_pairs": 225,
+      "non_forest_pairs": 6,
+      "cycle_witnesses_valid": 6
+    },
+    "5": {
+      "ordered_pairs": 2704,
+      "meet_preserved": 2704,
+      "join_preserved": 2494,
+      "forest_pairs": 2494,
+      "join_preserved_iff_forest_pairs": 2704,
+      "non_forest_pairs": 210,
+      "cycle_witnesses_valid": 210
     }
   },
   "ceiling_cost": {
@@ -818,6 +855,77 @@
     "four_item_static_refinement_costs_more": true,
     "four_item_crossing_and_adaptive_do_not": true
   },
+  "greedy_vs_optimal": {
+    "items": 6,
+    "category_maps": 203,
+    "cases_per_map": 162,
+    "refining_pairs": 2268,
+    "optimal_le_greedy_le_static": true,
+    "greedy_equals_optimal_for_one_hit": true,
+    "greedy_equals_optimal_equals_closed_form_for_all_hits": true,
+    "cases_where_greedy_strictly_worse": 180,
+    "first_witness": {
+      "map": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "record": "001101",
+      "hits_needed": 2,
+      "counts": [
+        [
+          4,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "greedy": "19/6",
+      "optimal": "37/12",
+      "optimal_first": [
+        [
+          4,
+          2
+        ]
+      ]
+    },
+    "optimal_monotone_along_refinement": true,
+    "greedy_monotone_along_refinement": true,
+    "four_item_witness": {
+      "counts": [
+        [
+          4,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "hits_needed": 2,
+      "greedy": "19/6",
+      "optimal": "37/12",
+      "optimal_first": [
+        [
+          4,
+          2
+        ]
+      ],
+      "greedy_first": [
+        2,
+        1
+      ]
+    }
+  },
   "category_ledger": {
     "respected": {
       "selection": {
@@ -1035,7 +1143,7 @@
   },
   "source_sha256": {
     "scripts/verify_evaluation_feedback_lattice.py": "6893e337216319aa6ca07d4128726b3dc1ead8c2d17da1d08c2568bc1f41b402",
-    "src/spiral_ln/evaluation_feedback_lattice.py": "8a4adb4294eecbe2a5537c89bece5c6e71a184720c34438104d8b56ec53a2a02",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "3ec9666bc3521443cc9f671413462ffd137edc878397ad86d22161c9acb5d5b0",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }
