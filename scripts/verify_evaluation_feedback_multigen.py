@@ -23,7 +23,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    report = {"schema_version": "0.1",
+    report = {"schema_version": "0.2",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify()}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_feedback_multigen.py",

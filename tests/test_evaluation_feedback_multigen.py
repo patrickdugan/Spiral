@@ -1,22 +1,26 @@
 from fractions import Fraction as Q
 from itertools import product
-from math import comb
+from math import comb, log, sqrt
 
 import pytest
 
 from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_feedback_multigen import (
-    best_of_pmf, binomial_cdf, brute_force_drift_distribution,
-    brute_force_fresh_reported, brute_force_reuse_distribution,
-    ceiling_mass_closed_form, decaying_gain_schedule, divergence_check,
+    BOUND_TOLERANCE, best_of_pmf, binomial_cdf, brute_force_drift_distribution,
+    brute_force_fresh_reported, brute_force_mutation_distribution,
+    brute_force_reuse_distribution, ceiling_mass_closed_form,
+    decaying_gain_schedule, divergence_check, drift_gap_increment_from_one_step,
     drift_levels, drift_trajectory, false_acceptance_probability,
     fresh_block_reported, fresh_trajectory, gate_threshold, late_early_ratio,
-    naive_closed_form, naive_threshold, phantom_share, readout_gap_series,
-    reuse_trajectory, running_max_from_point, state_distribution,
-    transition_kernel, verify,
+    mutation_candidate_law, mutation_state_distribution,
+    mutation_trajectory, mutation_transition_kernel, naive_closed_form,
+    naive_gap_bounds, naive_threshold, one_step_gap_change, phantom_share,
+    readout_gap_series, reuse_trajectory, running_max_from_point,
+    state_distribution, transition_kernel, verify,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
+Q_GRID = (Q(0), QUARTER, HALF, Q(3, 4), Q(1))
 
 
 def _pmf(items, p):
@@ -341,15 +345,237 @@ def test_divergence_check_on_dp_expectations():
     lambda: divergence_check(reuse_trajectory(2, 2, HALF, (0, 0, 0), 2), (0, 3), Q(0)),
     lambda: divergence_check(reuse_trajectory(2, 2, HALF, (0, 0, 0), 2), (0, 2), -Q(1)),
     lambda: brute_force_fresh_reported(2, 2, HALF, (0, 0, 0), 1, "other"),
+    lambda: naive_gap_bounds(4, 2, HALF, -1),
+    lambda: naive_gap_bounds(0, 2, HALF, 1),
+    lambda: naive_gap_bounds(4, 2, 0.5, 1),
+    lambda: mutation_candidate_law(4, HALF, Q(3, 2), 1),
+    lambda: mutation_candidate_law(4, HALF, 0.5, 1),
+    lambda: mutation_candidate_law(4, HALF, HALF, 5),
+    lambda: mutation_candidate_law(4, HALF, HALF, 1.0),
+    lambda: mutation_candidate_law(0, HALF, HALF, 0),
+    lambda: mutation_transition_kernel(4, 0, HALF, HALF, (0,) * 5),
+    lambda: mutation_transition_kernel(4, 2, HALF, HALF, (0,) * 4),
+    lambda: mutation_state_distribution(4, 2, HALF, HALF, (0,) * 5, -1),
+    lambda: mutation_state_distribution(4, 2, HALF, HALF, (0,) * 5, 1, [Q(1), Q(0)]),
+    lambda: brute_force_mutation_distribution(4, 2, HALF, HALF, (0,) * 5, 2),
+    lambda: one_step_gap_change(4, 2, HALF, Q(3, 4), 1, 1),
+    lambda: one_step_gap_change(4, 2, HALF, -QUARTER, 1, 1),
+    lambda: one_step_gap_change(4, 2, HALF, 0.25, 1, 1),
+    lambda: one_step_gap_change(4, 2, HALF, QUARTER, 5, 1),
+    lambda: one_step_gap_change(4, 2, HALF, QUARTER, 1, -1),
+    lambda: one_step_gap_change(4, 2, HALF, QUARTER, 1, 1.0),
+    lambda: one_step_gap_change(4, 0, HALF, QUARTER, 1, 1),
+    lambda: drift_gap_increment_from_one_step(
+        drift_trajectory(4, 2, QUARTER, Q(1, 8), {0: HALF, 1: HALF}, (0,) * 5, 2), 0),
+    lambda: drift_gap_increment_from_one_step(
+        drift_trajectory(4, 2, QUARTER, Q(1, 8), {1: Q(1)}, (0,) * 5, 2), 2),
 ])
 def test_malformed_inputs_raise(call):
     with pytest.raises(ValueError):
         call()
 
 
+# --------------------------------------------------------------------------
+# Part A: proven bounds on the naive gap
+# --------------------------------------------------------------------------
+
+def test_naive_gap_bounds_closed_forms_and_zero_at_one_draw():
+    zero = naive_gap_bounds(8, 2, HALF, 0)
+    assert zero["draws"] == 1 and zero["hoeffding"] == 0 and zero["bernstein"] == 0
+    for items, candidates, p, g in ((4, 1, HALF, 3), (8, 2, QUARTER, 5), (16, 4, Q(1, 10), 20), (5, 3, Q(2, 3), 7)):
+        bounds = naive_gap_bounds(items, candidates, p, g)
+        m = g * candidates + 1
+        variance = float(p * (1 - p))
+        assert bounds["draws"] == m
+        assert bounds["hoeffding"] == pytest.approx(sqrt(log(m) / (2 * items)))
+        assert bounds["gaussian_scale"] == pytest.approx(sqrt(2 * log(m) * variance / items))
+        assert bounds["bernstein"] == pytest.approx(bounds["gaussian_scale"] + log(m) / (3 * items))
+    half = naive_gap_bounds(4, 4, HALF, 20)
+    assert half["hoeffding"] == pytest.approx(half["gaussian_scale"])
+    assert half["hoeffding"] > half["lattice_cap"] == 0.5, "the bound outgrows the lattice cap"
+
+
+@pytest.mark.parametrize("items, candidates", [(3, 1), (4, 2), (7, 3), (16, 4)])
+def test_naive_gap_bounds_dominate_exact_gap(items, candidates):
+    for p in (Q(1, 10), QUARTER, Q(1, 3), HALF, Q(9, 10)):
+        for g in range(0, 9):
+            gap = float(naive_closed_form(items, candidates, p, g)["readout_gap"])
+            bounds = naive_gap_bounds(items, candidates, p, g)
+            assert gap <= bounds["hoeffding"] + BOUND_TOLERANCE
+            assert gap <= bounds["bernstein"] + BOUND_TOLERANCE
+
+
+def test_bernstein_tighter_only_when_variance_is_small():
+    at_half = naive_gap_bounds(16, 1, HALF, 1)
+    assert at_half["bernstein"] > at_half["hoeffding"]
+    at_quarter = naive_gap_bounds(16, 1, QUARTER, 1)
+    assert at_quarter["bernstein"] < at_quarter["hoeffding"]
+    far = naive_gap_bounds(16, 4, QUARTER, 20)
+    assert far["bernstein"] > far["hoeffding"]
+
+
+# --------------------------------------------------------------------------
+# Part B: mutation chain
+# --------------------------------------------------------------------------
+
+def test_mutation_candidate_law_hand_values_and_limits():
+    assert mutation_candidate_law(2, HALF, HALF, 1) == [Q(3, 16), Q(10, 16), Q(3, 16)]
+    assert mutation_candidate_law(3, QUARTER, Q(1), 0) == _pmf(3, QUARTER)
+    for items, p, c in ((4, HALF, 2), (6, QUARTER, 5), (5, Q(2, 3), 0)):
+        for q in Q_GRID:
+            law = mutation_candidate_law(items, p, q, c)
+            assert sum(law) == 1 and all(mass >= 0 for mass in law)
+            assert sum(j * mass for j, mass in enumerate(law)) == c + q * (items * p - c)
+        assert mutation_candidate_law(items, p, Q(1), c) == _pmf(items, p)
+        assert mutation_candidate_law(items, p, Q(0), c) == [Q(int(j == c)) for j in range(items + 1)]
+        for q in Q_GRID:
+            assert mutation_candidate_law(items, p, q, items - 1)[items] == q * p * (1 - q * (1 - p))**(items - 1)
+
+
+def test_mutation_state_n_minus_1_up_probability_peaks_then_falls_in_q():
+    """From ``c = n - 1`` the per-candidate chance of reaching ``n`` is
+    ``q p (1 - q (1 - p))^(n - 1)``, maximal at ``q = 1 / (n (1 - p))``: no
+    state-by-state monotone coupling in ``q`` exists."""
+
+    up = {q: mutation_candidate_law(4, HALF, q, 3)[4] for q in Q_GRID}
+    assert up[QUARTER] < up[HALF] > up[Q(3, 4)] > up[Q(1)]
+    assert up[HALF] == Q(27, 256) and up[Q(1)] == Q(1, 16)
+
+
+def test_mutation_q1_reproduces_independent_chain_exactly():
+    for items, candidates, p in ((4, 2, HALF), (8, 3, QUARTER), (6, 1, Q(2, 3))):
+        for threshold in (naive_threshold(items), gate_threshold(items, 2)):
+            assert mutation_transition_kernel(items, candidates, p, Q(1), threshold) == \
+                transition_kernel(items, candidates, p, threshold)
+            assert mutation_state_distribution(items, candidates, p, Q(1), threshold, 6) == \
+                state_distribution(items, candidates, p, threshold, 6)
+            mutated = mutation_trajectory(items, candidates, p, Q(1), threshold, 6)
+            plain = reuse_trajectory(items, candidates, p, threshold, 6)
+            assert mutated["readout_gap"] == plain["readout_gap"]
+            assert mutated["acceptance_probability"] == plain["acceptance_probability"]
+
+
+def test_mutation_q0_freezes_and_gap_is_monotone_and_capped_for_every_q():
+    for items, candidates, p in ((4, 2, HALF), (8, 2, QUARTER), (16, 4, HALF)):
+        for threshold in (naive_threshold(items), gate_threshold(items, 1)):
+            for q in Q_GRID:
+                kernel = mutation_transition_kernel(items, candidates, p, q, threshold)
+                assert all(sum(row) == 1 for row in kernel)
+                assert all(row[j] == 0 for c, row in enumerate(kernel) for j in range(c))
+                trajectory = mutation_trajectory(items, candidates, p, q, threshold, 12)
+                gaps = trajectory["readout_gap"]
+                assert gaps[0] == 0 and all(b >= a for a, b in zip(gaps, gaps[1:]))
+                assert all(gap <= 1 - p for gap in gaps)
+                if q == 0:
+                    assert all(gap == 0 for gap in gaps) and trajectory["expected_acceptances"] == 0
+
+
+def test_mutation_dp_matches_literal_vector_enumeration():
+    for p in (HALF, QUARTER):
+        for q in (QUARTER, HALF):
+            for threshold in (naive_threshold(2), (0, 1, 0)):
+                dp = mutation_state_distribution(2, 2, p, q, threshold, 2)[-1]
+                assert dp == brute_force_mutation_distribution(2, 2, p, q, threshold, 2)
+    assert (mutation_state_distribution(2, 1, HALF, Q(3, 4), naive_threshold(2), 3)[-1]
+            == brute_force_mutation_distribution(2, 1, HALF, Q(3, 4), naive_threshold(2), 3))
+    assert (mutation_state_distribution(3, 2, QUARTER, HALF, (0, 1, 1, 0), 1)[-1]
+            == brute_force_mutation_distribution(3, 2, QUARTER, HALF, (0, 1, 1, 0), 1))
+
+
+def test_mutation_gap_monotone_in_q_at_first_generation_but_reversed_later_n8_k2():
+    series = {q: mutation_trajectory(8, 2, HALF, q, naive_threshold(8), 20)["readout_gap"] for q in Q_GRID}
+    assert series[Q(0)][1] < series[QUARTER][1] < series[HALF][1] < series[Q(3, 4)][1] < series[Q(1)][1]
+    assert series[Q(1)][20] == naive_closed_form(8, 2, HALF, 20)["readout_gap"]
+    assert all(series[q][20] > series[Q(1)][20] for q in (QUARTER, HALF, Q(3, 4)))
+    first_failure = next(g for g in range(21)
+                         if any(series[b][g] < series[a][g] for a, b in zip(Q_GRID, Q_GRID[1:])))
+    assert first_failure == 3
+
+
+# --------------------------------------------------------------------------
+# Part C: one generation, gate versus naive, under a fixed gain
+# --------------------------------------------------------------------------
+
+def test_one_step_gap_change_hand_values():
+    step = one_step_gap_change(2, 1, HALF, QUARTER, 0, 1)
+    assert step["naive_change"] == Q(33, 64) and step["gate_change"] == Q(27, 64)
+    assert step["difference"] == Q(3, 32) == step["window_integral"]
+    assert step["window_mass"] == Q(6, 16)
+    assert step["predicted_sign_of_difference"] == "nonnegative"
+    assert one_step_gap_change(2, 1, HALF, QUARTER, 0, 0)["difference"] == 0
+    assert one_step_gap_change(2, 1, HALF, QUARTER, 0, 0)["predicted_sign_of_difference"] == "zero"
+    saturated = one_step_gap_change(2, 1, HALF, HALF, 0, 1)
+    assert saturated["difference"] == 0 and saturated["predicted_sign_of_difference"] == "zero"
+    assert one_step_gap_change(8, 2, QUARTER, Q(3, 16), 4, 2)["predicted_sign_of_difference"] == "undetermined"
+
+
+@pytest.mark.parametrize("items, candidates", [(4, 2), (8, 2), (16, 2)])
+def test_one_step_identity_and_sign_by_case_on_drift_states(items, candidates):
+    levels = drift_levels(QUARTER, Q(1, 8))
+    threshold = gate_threshold(items, 1)
+    zero_everywhere = True
+    for level in range(len(levels) - 1):
+        delta = levels[level + 1] - levels[level]
+        for c in range(items + 1):
+            step = one_step_gap_change(items, candidates, levels[level], delta, c, threshold[c])
+            assert step["difference"] == step["window_integral"]
+            predicted, difference = step["predicted_sign_of_difference"], step["difference"]
+            assert predicted != "undetermined"
+            assert predicted != "zero" or difference == 0
+            assert predicted != "nonnegative" or difference >= 0
+            assert predicted != "nonpositive" or difference <= 0
+            zero_everywhere &= difference == 0
+    assert zero_everywhere == (items == 8), "t <= 1 and delta = 1/n make the difference vanish"
+
+
+def test_one_step_case_iii_takes_both_signs():
+    negative = one_step_gap_change(16, 2, QUARTER, Q(3, 32), 8, 2)
+    positive = one_step_gap_change(16, 2, HALF, Q(3, 32), 8, 2)
+    assert negative["predicted_sign_of_difference"] == positive["predicted_sign_of_difference"] == "undetermined"
+    assert negative["difference"] < 0 < positive["difference"]
+
+
+def test_one_step_increment_matches_drift_dp():
+    for items, candidates, step in ((4, 2, Q(1, 8)), (8, 2, Q(1, 16)), (16, 2, QUARTER)):
+        for threshold in (naive_threshold(items), gate_threshold(items, 1)):
+            trajectory = drift_trajectory(items, candidates, QUARTER, step, {1: Q(1)}, threshold, 5)
+            for g in range(5):
+                assert drift_gap_increment_from_one_step(trajectory, g) == \
+                    trajectory["readout_gap"][g + 1] - trajectory["readout_gap"][g]
+
+
+def test_gate_order_chaining_on_fixed_gain_cells():
+    def runs(items, candidates, step):
+        return (drift_trajectory(items, candidates, QUARTER, step, {1: Q(1)}, naive_threshold(items), 20),
+                drift_trajectory(items, candidates, QUARTER, step, {1: Q(1)}, gate_threshold(items, 1), 20))
+
+    naive, gate = runs(8, 2, Q(1, 8))
+    diff = [a - b for a, b in zip(naive["readout_gap"], gate["readout_gap"])]
+    assert diff[1] == 0, "both cases hold at n = 8: identical first-generation gap"
+    assert diff[2] > 0 and all(d < 0 for d in diff[3:]), "gate above naive from generation 3 on"
+    naive, gate = runs(16, 2, Q(1, 8))
+    diff = [a - b for a, b in zip(naive["readout_gap"], gate["readout_gap"])]
+    assert all(d < 0 for d in diff[1:]), "case (ii) chains at every generation"
+    naive, gate = runs(4, 2, Q(1, 8))
+    diff = [a - b for a, b in zip(naive["readout_gap"], gate["readout_gap"])]
+    assert all(d > 0 for d in diff[1:15]) and all(d < 0 for d in diff[15:]), "case (i) reverses at generation 15"
+
+
+def test_naive_dominates_gate_in_expectation_on_fixed_gain_cells():
+    for items, candidates in ((4, 2), (8, 2), (16, 2)):
+        for step in (Q(1, 16), Q(1, 8), QUARTER):
+            naive = drift_trajectory(items, candidates, QUARTER, step, {1: Q(1)}, naive_threshold(items), 20)
+            gate = drift_trajectory(items, candidates, QUARTER, step, {1: Q(1)}, gate_threshold(items, 1), 20)
+            assert all(a >= b for a, b in zip(naive["expected_reported"], gate["expected_reported"]))
+            assert all(a >= b for a, b in zip(naive["expected_true"], gate["expected_true"]))
+
+
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 30
+    assert report["all_passed"] and len(report["checks"]) == 56
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["brute_force"]["all_match"]
     assert report["headline"]["naive_readout_gap_n8_k2_p_half"]["G=1"]["exact"] == Q(19305, 131072)
+    assert report["one_step"]["states_checked"] == 270
+    assert report["gate_order"]["later_generation_agreement_counts"]["ii"]["agree"] == 76
+    assert report["mutation"]["cells_where_rho_not_monotone_in_q"] == {"naive": 18, "gate_z1": 15}

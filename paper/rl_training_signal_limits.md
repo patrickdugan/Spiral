@@ -164,15 +164,27 @@ candidates and so reaches \(2K-1\) draws; the two conventions agree once the
 pool size is fixed.) At \(p=\tfrac12\), \(n=8\), \(K=2\) the gap runs
 \(0.147,\ 0.273,\ 0.321,\ 0.365\) at \(G=1,5,10,20\). Fresh blocks remove
 the accumulation: a separate readout block gives gap zero, and reporting on
-the selection block gives the one-generation gap at every generation. A
+the selection block gives the one-generation gap at every generation. The
+gap is bounded for every \(G\) by \(\sqrt{\ln(GK+1)/(2n)}\) (Hoeffding),
+which is what the old extreme-value remark asserted without proof. A
 gate that accepts only gains above a noise margin lowers the gap under the
-null, by a coupling argument, but the ordering can reverse once candidates
-carry true gains, because the gate refuses those too. The companion
-multi-generation note proves these as a Markov chain on the score lattice,
-and finds that the simulations' "late gains look larger than they are"
-prediction was a property of their decaying gain schedule, not of reuse.
-*Algebraic identity* for the chain results; *synthetic mechanism result*
-for the drift cells.
+null, by a coupling argument; with true gains \(\delta\) per accepted
+candidate, one generation's gap change is lowered by the gate when
+\(\delta\le1/n\) and raised when \(\delta\ge t/n\), \(t\) the gate's margin
+in items, because the gate refuses true gains too; over many generations
+the ordering can also come from the two chains reaching the ceiling at
+different times. Candidates that are perturbations of the incumbent, which
+is what a policy update produces, change the picture in the wrong
+direction: a per-item mutation model lowers the first generation's
+inflation and raises the accumulated gap, since a mutated candidate need
+only flip one wrong item without losing a right one and so keeps climbing
+the fixed set where an independent redraw would stall (at \(n=8\),
+\(K=2\), \(p=\tfrac12\): \(0.455\) against \(0.365\) at \(G=20\)). The
+companion multi-generation note proves these as a Markov chain on the
+score lattice, and finds that the simulations' "late gains look larger
+than they are" prediction was a property of their decaying gain schedule,
+not of reuse. *Algebraic identity* for the chain results and the bound;
+*synthetic mechanism result* for the drift and mutation cells.
 
 **L6. Finer feedback is worth at least as much.** For the loop's decision
 of which candidate to keep, with any prior over candidate types and any
@@ -194,7 +206,9 @@ under which the reported gains are not phantom.
 
 1. **Supply.** Fresh sealed items arrive at least as fast as the loop
    consumes them. Otherwise L2 turns score-only reuse into item-level reuse
-   and L5 adds a running-maximum gap to every reported score. The
+   and L5 adds a running-maximum gap to every reported score, larger still
+   when each candidate is a perturbation of the last, as a policy update
+   is. The
    environments-hub programme is a bet on this condition; the ledger
    quantities that test it are `score_queries` and `distinct_patched` per
    set, against the set's size, and the joint channel through which any

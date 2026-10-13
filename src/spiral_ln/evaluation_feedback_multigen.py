@@ -37,22 +37,32 @@ The drift model (``drift_trajectory``) adds a level index for the incumbent's
 true success probability on a finite lattice ``p_0 + i * step`` capped at one,
 so that true gains and phantom gains can be separated exactly.
 
+Version 0.2 adds three pieces.  (A) Proven upper bounds on the naive gap
+(Hoeffding and Bernstein maximal inequalities), compared with the exact DP
+in floating point under a stated tolerance.  (B) The mutation chain
+(``mutation_candidate_law`` and friends): a candidate copies the incumbent's
+outcome on each item with probability ``1 - q`` and redraws it as
+Bernoulli(p) with probability ``q``, which is an exact model of
+item-correlated candidates and still a Markov chain on the count.  (C) The
+one-generation gate-versus-naive theorem under true gains
+(``one_step_gap_change``) and finite checks of how its sign chains across
+generations.
+
 Boundaries
 ----------
-Candidates are independent of the incumbent.  ``sim.js`` instead perturbs the
-incumbent's per-item quirks, which correlates a candidate's item outcomes with
-the incumbent's; that correlation shrinks the spread of ``M - c`` and hence the
-per-generation inflation, but leaves the ratchet structure (a state only ever
-moves up to a realized candidate count) unchanged.  ``n`` is fixed, labels are
-clean, and every statement concerns distributions and expectations, not sample
-paths.
+The independent chain has candidates independent of the incumbent; the
+mutation chain correlates them item by item through one parameter ``q``,
+which is not an exact image of ``sim.js``'s latent rotation.  ``n`` is fixed,
+labels are clean, and every statement concerns distributions and
+expectations, not sample paths.  Bounds that involve ``ln`` or ``sqrt`` are
+floats and are compared to exact values under ``BOUND_TOLERANCE``.
 """
 
 from __future__ import annotations
 
 from fractions import Fraction as Q
 from itertools import product
-from math import isqrt
+from math import isqrt, log, sqrt
 
 from spiral_ln.evaluation_game_feedback import (_binomial_pmf, divergence_flags,
                                                 selection_inflation)
@@ -259,9 +269,13 @@ def state_distribution(items, candidates, p, threshold, generations,
     kernel = transition_kernel(items, candidates, p, threshold)
     current = (_binomial_pmf(items, Q(p)) if initial is None
                else _check_distribution(initial, items))
+    return _propagate(kernel, current, generations)
+
+
+def _propagate(kernel, current, generations):
     history = [current]
     for _ in range(generations):
-        following = [Q(0)] * (items + 1)
+        following = [Q(0)] * len(current)
         for c, mass in enumerate(current):
             if mass:
                 for j, prob in enumerate(kernel[c]):
@@ -344,6 +358,59 @@ def ceiling_mass_closed_form(items, candidates, p, generations) -> Q:
 
 
 # --------------------------------------------------------------------------
+# proven upper bounds for naive reuse (floats; compared under a tolerance)
+# --------------------------------------------------------------------------
+
+BOUND_TOLERANCE = 1e-12
+
+
+def naive_gap_bounds(items, candidates, p, generations) -> dict[str, object]:
+    """Upper bounds on ``rho_G`` under naive reuse, from maximal inequalities.
+
+    ``c_G`` is the max of ``m = G K + 1`` i.i.d. ``Bin(n, p)`` draws
+    (``naive_closed_form``).  Write ``Y_i = X_i - n p``.
+
+    Hoeffding.  Each centred Bernoulli lies in an interval of length one, so
+    Hoeffding's lemma gives ``E exp(lam (B - p)) <= exp(lam^2 / 8)``, and by
+    independence over items ``E exp(lam Y_i) <= exp(lam^2 n / 8)``.  The
+    maximal inequality ``E max_i Y_i <= (1 / lam) ln sum_i E exp(lam Y_i)``
+    (Jensen, then ``max <= sum`` on the exponentials) gives
+    ``E max_i Y_i <= (ln m) / lam + lam n / 8`` for every ``lam > 0``, and
+    ``lam = sqrt(8 ln m / n)`` makes the right side ``sqrt(n ln m / 2)``.
+    Dividing by ``n``: ``rho_G <= sqrt(ln m / (2 n))``.
+
+    Bernstein.  For a centred variable ``Z`` with ``|Z| <= 1`` and variance
+    ``v``, ``E exp(lam Z) <= exp(v (e^lam - 1 - lam))``, and
+    ``e^lam - 1 - lam <= lam^2 / (2 (1 - lam / 3))`` for ``0 < lam < 3``
+    (``k! >= 2 * 3^(k-2)``).  Over ``n`` items ``v = n p (1 - p)``, and the
+    maximal inequality with ``lam = 1 / (1/3 + sqrt(v / (2 ln m)))`` gives
+    ``E max_i Y_i <= sqrt(2 v ln m) + (ln m) / 3`` (Boucheron, Lugosi and
+    Massart, Corollary 2.6).  Dividing by ``n``:
+    ``rho_G <= sqrt(2 p (1 - p) ln m / n) + ln m / (3 n)``.
+
+    ``gaussian_scale`` is the leading term ``sqrt(2 p (1 - p) ln m / n)``,
+    the Gaussian extreme-value scale the earlier remark used.  Both bounds
+    are proven for every ``n, K, p, G``; both grow without bound in ``G``
+    while ``rho_G <= 1 - p``, so they are loose for large ``G`` at fixed
+    ``n``.  The values are floats (``math.log``, ``math.sqrt``); compare with
+    exact gaps under ``BOUND_TOLERANCE``.
+    """
+
+    _check_generations(generations)
+    _check_items_candidates(items, candidates)
+    p = _check_probability(p)
+    draws = generations * candidates + 1
+    log_draws = log(draws)
+    variance = float(p * (1 - p))
+    gaussian = sqrt(2 * log_draws * variance / items)
+    return {"draws": draws, "log_draws": log_draws,
+            "hoeffding": sqrt(log_draws / (2 * items)),
+            "bernstein": gaussian + log_draws / (3 * items),
+            "gaussian_scale": gaussian,
+            "lattice_cap": float(1 - p)}
+
+
+# --------------------------------------------------------------------------
 # fresh-set arm
 # --------------------------------------------------------------------------
 
@@ -398,6 +465,111 @@ def fresh_trajectory(items, candidates, p, threshold, generations, report_on) ->
     return {"report_on": report_on, "expected_reported": reported,
             "expected_true": [p] * (generations + 1), "readout_value": p,
             "readout_gap": [value - p for value in reported]}
+
+
+# --------------------------------------------------------------------------
+# mutation chain: candidates correlated with the incumbent item by item
+# --------------------------------------------------------------------------
+
+def _check_state(c, items):
+    if type(c) is not int or not 0 <= c <= items:
+        raise ValueError("c must be a state in 0..items")
+
+
+def mutation_candidate_law(items, p, q, c) -> list[Q]:
+    """Law of one candidate's count given the incumbent's count ``c``.
+
+    On each item, independently, the candidate copies the incumbent's
+    outcome with probability ``1 - q`` and otherwise redraws it as
+    Bernoulli(p).  An item the incumbent got right is lost iff it is redrawn
+    and fails, probability ``q (1 - p)``; an item the incumbent got wrong is
+    gained iff it is redrawn and succeeds, probability ``q p``.  Hence
+    ``count = c - L + U`` with ``L ~ Bin(c, q (1 - p))`` and
+    ``U ~ Bin(n - c, q p)`` independent.  The law depends on the incumbent's
+    outcome vector only through ``c`` because items are exchangeable and
+    the perturbation is the same on every item, so the chain on ``c`` is
+    Markov.  ``q = 1`` gives ``Bin(c, p) + Bin(n - c, p) = Bin(n, p)``, the
+    independent chain; ``q = 0`` gives the point mass at ``c``.  Marginally
+    (incumbent ``~ Bin(n, p)``) a candidate is again ``Bin(n, p)``, with
+    per-item outcome correlation ``1 - q`` to the incumbent.
+    """
+
+    if type(items) is not int or items < 1:
+        raise ValueError("items must be a positive integer")
+    p = _check_probability(p)
+    q = _check_probability(q, "q")
+    _check_state(c, items)
+    loss = _binomial_pmf(c, q * (1 - p))
+    gain = _binomial_pmf(items - c, q * p)
+    law = [Q(0)] * (items + 1)
+    for lost, mass_lost in enumerate(loss):
+        for gained, mass_gained in enumerate(gain):
+            law[c - lost + gained] += mass_lost * mass_gained
+    return law
+
+
+def mutation_transition_kernel(items, candidates, p, q, threshold) -> list[list[Q]]:
+    """As ``transition_kernel`` with ``K`` i.i.d. mutation candidates given
+    ``c``: ``kernel[c][c] = F_c(cap)^K``, ``kernel[c][j] = P(M = j)`` for
+    ``j > cap``, where ``F_c`` is the CDF of ``mutation_candidate_law``."""
+
+    _check_items_candidates(items, candidates)
+    threshold = _check_threshold(threshold, items)
+    rows = []
+    for c in range(items + 1):
+        cdf, running = [], Q(0)
+        for mass in mutation_candidate_law(items, p, q, c):
+            running += mass
+            cdf.append(running)
+        cap = min(items, c + threshold[c])
+        row = [Q(0)] * (items + 1)
+        row[c] = cdf[cap]**candidates
+        for j in range(cap + 1, items + 1):
+            row[j] = cdf[j]**candidates - cdf[j - 1]**candidates
+        rows.append(row)
+    return rows
+
+
+def mutation_state_distribution(items, candidates, p, q, threshold, generations,
+                                initial=None) -> list[list[Q]]:
+    """Exact state law after ``0..generations`` generations of the mutation
+    chain; ``initial`` defaults to ``Bin(items, p)``."""
+
+    _check_generations(generations)
+    kernel = mutation_transition_kernel(items, candidates, p, q, threshold)
+    current = (_binomial_pmf(items, Q(p)) if initial is None
+               else _check_distribution(initial, items))
+    return _propagate(kernel, current, generations)
+
+
+def mutation_trajectory(items, candidates, p, q, threshold, generations) -> dict[str, object]:
+    """Per-generation expectations for the mutation chain under the null.
+
+    Acceptance never lowers ``c`` (it requires ``M > c + t(c) >= c``), so
+    ``c_g`` is pointwise non-decreasing and ``rho_g`` is non-decreasing in
+    ``g`` and bounded by ``1 - p`` for every ``q``.  Unlike the independent
+    chain, ``c_G`` is not a running maximum of i.i.d. draws: the candidate
+    law moves with the state, so Proposition 1 has no analogue here.
+    """
+
+    history = mutation_state_distribution(items, candidates, p, q, threshold, generations)
+    kernel = mutation_transition_kernel(items, candidates, p, q, threshold)
+    threshold = _check_threshold(threshold, items)
+    alpha = tuple(1 - kernel[c][c] for c in range(items + 1))
+    reported = [sum(c * mass for c, mass in enumerate(dist)) / items for dist in history]
+    acceptance = [sum(mass * alpha[c] for c, mass in enumerate(dist)) for dist in history[:-1]]
+    p, q = Q(p), Q(q)
+    return {
+        "items": items, "candidates": candidates, "p": p, "q": q, "threshold": threshold,
+        "generations": generations,
+        "expected_reported": reported, "expected_true": [p] * (generations + 1),
+        "readout_value": p, "readout_gap": [value - p for value in reported],
+        "acceptance_probability": acceptance,
+        "acceptance_by_state": alpha,
+        "expected_acceptances": sum(acceptance, Q(0)),
+        "ceiling_mass": history[-1][items],
+        "final_distribution": history[-1],
+    }
 
 
 # --------------------------------------------------------------------------
@@ -512,7 +684,85 @@ def drift_trajectory(items, candidates, p0, step, gain, threshold, generations) 
         "expected_true_gain_acceptances": sum(true_gain_acceptance, Q(0)),
         "mass_per_generation": [sum(dist.values(), Q(0)) for dist in history],
         "final_distribution": {f"{c},{level}": mass for (c, level), mass in sorted(history[-1].items())},
+        "state_history": history,
     }
+
+
+# --------------------------------------------------------------------------
+# one generation, gate versus naive, under a fixed true gain
+# --------------------------------------------------------------------------
+
+def one_step_gap_change(items, candidates, p_inc, delta, c, t) -> dict[str, object]:
+    """One generation from incumbent count ``c`` and true value ``p_inc``
+    when every candidate has true probability ``p_inc + delta``.
+
+    ``M`` is the max of ``K`` i.i.d. ``Bin(n, p_inc + delta)`` counts.  On
+    acceptance the reported score changes by ``(M - c) / n`` and the true
+    value by ``delta``; otherwise neither moves.  Naive accepts iff
+    ``M > c``; the gate iff ``M > c + t``.  Since
+    ``1{M > c} - 1{M > c + t} = 1{c < M <= c + t}``,
+
+        naive_change - gate_change
+            = E[ ((M - c) / n - delta) * 1{c < M <= c + t} ].
+
+    On the window ``1 <= M - c <= t``, so the integrand lies in
+    ``[1/n - delta, t/n - delta]``: (i) ``delta <= 1/n`` makes it ``>= 0``
+    (the gate lowers the one-generation gap change); (ii)
+    ``delta >= t/n`` makes it ``<= 0`` (the gate raises it); (iii) in
+    between the sign depends on the law of ``M`` on the window.  When both
+    (i) and (ii) hold (``t <= 1`` and ``delta = 1/n``, or ``t = 0``) the
+    difference is exactly zero.  ``t`` is the gate's threshold at ``c``.
+    All quantities are exact rationals.
+    """
+
+    _check_items_candidates(items, candidates)
+    p_inc = _check_probability(p_inc, "p_inc")
+    if type(delta) is bool or not isinstance(delta, (int, Q)) or delta < 0 or p_inc + delta > 1:
+        raise ValueError("delta must be a non-negative Fraction with p_inc + delta <= 1")
+    delta = Q(delta)
+    _check_state(c, items)
+    if type(t) is not int or t < 0:
+        raise ValueError("t must be a non-negative integer")
+    best = best_of_pmf(items, candidates, p_inc + delta)
+
+    def change(cap):
+        return sum((Q(j - c, items) - delta) * best[j] for j in range(cap + 1, items + 1))
+
+    naive, gate = change(c), change(min(items, c + t))
+    window = range(c + 1, min(items, c + t) + 1)
+    window_integral = sum(((Q(j - c, items) - delta) * best[j] for j in window), Q(0))
+    window_mass = sum((best[j] for j in window), Q(0))
+    case_i, case_ii = delta <= Q(1, items), delta >= Q(t, items)
+    predicted = ("zero" if case_i and case_ii else "nonnegative" if case_i
+                 else "nonpositive" if case_ii else "undetermined")
+    return {"items": items, "candidates": candidates, "p_inc": p_inc, "delta": delta,
+            "c": c, "t": t, "naive_change": naive, "gate_change": gate,
+            "difference": naive - gate, "window_integral": window_integral,
+            "window_mass": window_mass,
+            "case_i_delta_at_most_one_over_n": case_i,
+            "case_ii_delta_at_least_t_over_n": case_ii,
+            "predicted_sign_of_difference": predicted}
+
+
+def drift_gap_increment_from_one_step(trajectory, generation) -> Q:
+    """``rho_{g+1} - rho_g`` of a fixed-gain drift trajectory recomputed from
+    ``one_step_gap_change`` on the state law at ``g``: the consistency
+    check between the one-step theorem and the drift DP.  Requires the
+    gain law ``{1: 1}`` (every candidate carries exactly one lattice step)."""
+
+    schedule = trajectory["gain_schedule"]
+    if not 0 <= generation < len(schedule) or schedule[generation] != {1: Q(1)}:
+        raise ValueError("generation must index a fixed-gain generation of the trajectory")
+    items, candidates = trajectory["items"], trajectory["candidates"]
+    levels, threshold = trajectory["levels"], trajectory["threshold"]
+    top = len(levels) - 1
+    increment = Q(0)
+    for (c, level), mass in trajectory["state_history"][generation].items():
+        nxt = min(top, level + 1)
+        step = one_step_gap_change(items, candidates, levels[level], levels[nxt] - levels[level],
+                                   c, threshold[c])
+        increment += mass * step["gate_change"]
+    return increment
 
 
 # --------------------------------------------------------------------------
@@ -711,6 +961,51 @@ def brute_force_drift_distribution(items, candidates, p0, step, gain, threshold,
     return distribution
 
 
+_MUTATION_BRUTE_FORCE_PATH_LIMIT = 2**16
+
+
+def brute_force_mutation_distribution(items, candidates, p, q, threshold, generations) -> list[Q]:
+    """Enumerate the incumbent's item outcomes and, for every candidate item,
+    one of three symbols (copy the incumbent's outcome, redraw and fail,
+    redraw and succeed, weights ``1 - q``, ``q (1 - p)``, ``q p``), tracking
+    outcome *vectors* rather than counts so that the Markov-on-count claim
+    is itself under test.  Ties among candidates go to the first index."""
+
+    _check_items_candidates(items, candidates)
+    _check_generations(generations)
+    p = _check_probability(p)
+    q = _check_probability(q, "q")
+    threshold = _check_threshold(threshold, items)
+    symbols = items * generations * candidates
+    if 2**items * 3**symbols > _MUTATION_BRUTE_FORCE_PATH_LIMIT:
+        raise ValueError("brute force limited to 2^16 paths")
+    symbol_weight = (1 - q, q * (1 - p), q * p)
+    distribution = [Q(0)] * (items + 1)
+    for incumbent in product((0, 1), repeat=items):
+        base = _path_weight(incumbent, p)
+        for choice in product((0, 1, 2), repeat=symbols):
+            weight = base
+            for symbol in choice:
+                weight *= symbol_weight[symbol]
+            if not weight:
+                continue
+            vector, c, position = incumbent, sum(incumbent), 0
+            for _ in range(generations):
+                best, best_vector = -1, None
+                for _ in range(candidates):
+                    block = choice[position:position + items]
+                    position += items
+                    candidate = tuple(vector[j] if block[j] == 0 else block[j] - 1
+                                      for j in range(items))
+                    count = sum(candidate)
+                    if count > best:
+                        best, best_vector = count, candidate
+                if best > c + threshold[c]:
+                    vector, c = best_vector, best
+            distribution[c] += weight
+    return distribution
+
+
 # --------------------------------------------------------------------------
 # fixtures and verify()
 # --------------------------------------------------------------------------
@@ -725,10 +1020,262 @@ DRIFT_P0, DRIFT_STEP = Q(1, 4), Q(1, 8)
 DRIFT_GAINS = {"fixed": {1: Q(1)}, "two_point": {0: Q(3, 4), 1: Q(1, 4)}}
 DRIFT_DECAY_Q0, DRIFT_DECAY_RATIO = Q(1, 4), Q(3, 4)
 DRIFT_CELLS = ((4, 2), (4, 4), (8, 2), (8, 4), (16, 2))
+MUTATION_Q_VALUES = (Q(0), Q(1, 4), Q(1, 2), Q(3, 4), Q(1))
+GATE_ORDER_STEPS = (Q(1, 16), Q(1, 8), Q(1, 4))
+ONE_STEP_CONSISTENCY_GENERATIONS = (0, 1, 2)
 
 
 def _cell(items, candidates, p):
     return f"n={items},K={candidates},p={p}"
+
+
+def _sign(value):
+    return "+" if value > 0 else "-" if value < 0 else "0"
+
+
+def bound_fixture() -> dict[str, object]:
+    """Hoeffding and Bernstein bounds against the exact DP gap on every null
+    cell and generation, in floats under ``BOUND_TOLERANCE``, with the ratio
+    of the exact gap to the Gaussian scale ``sqrt(2 ln(GK+1) p(1-p)/n)``
+    tabulated at the report generations."""
+
+    cells, ratios = {}, []
+    flags = {"hoeffding_holds": True, "bernstein_holds": True,
+             "hoeffding_tighter_at_p_half": True, "bernstein_tighter_somewhere_at_p_quarter": False,
+             "ratio_below_one": True, "bound_exceeds_cap_somewhere": False}
+    tighter = {"hoeffding": 0, "bernstein": 0}
+    for items in NULL_ITEMS:
+        for candidates in NULL_CANDIDATES:
+            for p in NULL_PROBABILITIES:
+                gaps = reuse_trajectory(items, candidates, p, naive_threshold(items), HORIZON)["readout_gap"]
+                cap, table, cap_crossing = float(1 - p), {}, None
+                for g in range(HORIZON + 1):
+                    bounds = naive_gap_bounds(items, candidates, p, g)
+                    gap = float(gaps[g])
+                    flags["hoeffding_holds"] &= gap <= bounds["hoeffding"] + BOUND_TOLERANCE
+                    flags["bernstein_holds"] &= gap <= bounds["bernstein"] + BOUND_TOLERANCE
+                    if g:
+                        # At p = 1/2 the Gaussian scale equals the Hoeffding
+                        # bound, so Bernstein exceeds it by ln m / (3 n).
+                        bernstein_tighter = bounds["bernstein"] < bounds["hoeffding"] - BOUND_TOLERANCE
+                        tighter["bernstein" if bernstein_tighter else "hoeffding"] += 1
+                        if p == Q(1, 2):
+                            flags["hoeffding_tighter_at_p_half"] &= not bernstein_tighter
+                        else:
+                            flags["bernstein_tighter_somewhere_at_p_quarter"] |= bernstein_tighter
+                        if cap_crossing is None and bounds["hoeffding"] > cap:
+                            cap_crossing = g
+                    if g in REPORT_GENERATIONS:
+                        ratio = gap / bounds["gaussian_scale"]
+                        ratios.append(ratio)
+                        flags["ratio_below_one"] &= ratio < 1
+                        table[g] = {"exact_gap": gaps[g], "gap_float": gap,
+                                    "hoeffding": bounds["hoeffding"],
+                                    "bernstein": bounds["bernstein"],
+                                    "gaussian_scale": bounds["gaussian_scale"],
+                                    "ratio_gap_to_gaussian_scale": ratio,
+                                    "hoeffding_slack": bounds["hoeffding"] - gap}
+                flags["bound_exceeds_cap_somewhere"] |= cap_crossing is not None
+                cells[_cell(items, candidates, p)] = {
+                    "by_generation": table, "lattice_cap": cap,
+                    "first_generation_hoeffding_exceeds_cap": cap_crossing}
+    return {"cells": cells, "flags": flags, "tolerance": BOUND_TOLERANCE,
+            "tighter_bound_counts_over_cells_and_generations": tighter,
+            "ratio_range_over_cells_and_report_generations": (min(ratios), max(ratios)),
+            "note": "bounds are floats from math.log/math.sqrt; the exact gap is a Fraction"}
+
+
+def mutation_fixture() -> dict[str, object]:
+    """The mutation chain on the null cells for ``q`` in ``MUTATION_Q_VALUES``
+    under naive and ``z = 1`` policies: structural checks (q = 1 is the
+    independent chain, q = 0 never accepts, monotone in G, bounded by the
+    cap), and the finite monotonicity-in-q survey with witnesses."""
+
+    cells = {}
+    flags = {"rows_sum": True, "upward_only": True, "q1_equals_independent": True,
+             "q0_never_accepts": True, "monotone_in_generations": True,
+             "bounded_by_cap": True, "rho1_non_decreasing_in_q": True,
+             "rho_monotone_in_q_fails_on_every_naive_cell": True,
+             "half_q_above_independent_at_horizon_on_naive_cells": True,
+             "every_q_above_independent_at_horizon_on_naive_cells_n_ge_8": True,
+             "state_n_minus_1_identity": True}
+    nonmonotone = {"naive": 0, "gate_z1": 0}
+    for items in NULL_ITEMS:
+        for candidates in NULL_CANDIDATES:
+            for p in NULL_PROBABILITIES:
+                for policy, threshold in (("naive", naive_threshold(items)),
+                                          ("gate_z1", gate_threshold(items, 1))):
+                    series = {}
+                    for q in MUTATION_Q_VALUES:
+                        kernel = mutation_transition_kernel(items, candidates, p, q, threshold)
+                        flags["rows_sum"] &= all(sum(row) == 1 for row in kernel)
+                        flags["upward_only"] &= all(
+                            row[j] == 0 for c, row in enumerate(kernel) for j in range(c))
+                        trajectory = mutation_trajectory(items, candidates, p, q, threshold, HORIZON)
+                        gaps = trajectory["readout_gap"]
+                        flags["monotone_in_generations"] &= all(b >= a for a, b in zip(gaps, gaps[1:]))
+                        flags["bounded_by_cap"] &= all(gap <= 1 - p for gap in gaps)
+                        if q == 1:
+                            flags["q1_equals_independent"] &= (
+                                mutation_state_distribution(items, candidates, p, q, threshold, HORIZON)
+                                == state_distribution(items, candidates, p, threshold, HORIZON))
+                        if q == 0:
+                            flags["q0_never_accepts"] &= (
+                                all(gap == 0 for gap in gaps) and trajectory["expected_acceptances"] == 0)
+                        series[q] = gaps
+                    failing = [g for g in range(HORIZON + 1)
+                               if any(series[b][g] < series[a][g]
+                                      for a, b in zip(MUTATION_Q_VALUES, MUTATION_Q_VALUES[1:]))]
+                    flags["rho1_non_decreasing_in_q"] &= 1 not in failing
+                    nonmonotone[policy] += bool(failing)
+                    if policy == "naive":
+                        flags["rho_monotone_in_q_fails_on_every_naive_cell"] &= bool(failing)
+                        flags["half_q_above_independent_at_horizon_on_naive_cells"] &= (
+                            series[Q(1, 2)][HORIZON] > series[Q(1)][HORIZON])
+                        if items >= 8:
+                            flags["every_q_above_independent_at_horizon_on_naive_cells_n_ge_8"] &= all(
+                                series[q][HORIZON] > series[Q(1)][HORIZON] for q in MUTATION_Q_VALUES[1:-1])
+                    cells[f"{_cell(items, candidates, p)},policy={policy}"] = {
+                        "readout_gap_by_q": {str(q): {g: series[q][g] for g in REPORT_GENERATIONS}
+                                             for q in MUTATION_Q_VALUES},
+                        "generations_where_rho_not_monotone_in_q": failing,
+                        "first_generation_rho_not_monotone_in_q": failing[0] if failing else None,
+                        "witness_at_first_failure": (
+                            {str(q): series[q][failing[0]] for q in MUTATION_Q_VALUES} if failing else None),
+                        "q_above_independent_at_horizon": {
+                            str(q): series[q][HORIZON] > series[Q(1)][HORIZON] for q in MUTATION_Q_VALUES[1:-1]},
+                    }
+    # From c = n - 1 one candidate reaches n iff its single wrong item is
+    # redrawn and succeeds and none of its n - 1 right items is redrawn and
+    # fails: probability q p (1 - q (1 - p))^(n - 1), maximal at
+    # q = 1 / (n (1 - p)) and decreasing beyond it, so no state-by-state
+    # monotone coupling in q exists.
+    identity, peak = {}, {}
+    for items in NULL_ITEMS:
+        for p in NULL_PROBABILITIES:
+            for q in MUTATION_Q_VALUES:
+                law = mutation_candidate_law(items, p, q, items - 1)
+                flags["state_n_minus_1_identity"] &= law[items] == q * p * (1 - q * (1 - p))**(items - 1)
+            identity[f"n={items},p={p}"] = {str(q): mutation_candidate_law(items, p, q, items - 1)[items]
+                                             for q in MUTATION_Q_VALUES}
+            peak[f"n={items},p={p}"] = Q(1, items * (1 - p))
+    return {"cells": cells, "flags": flags, "q_values": MUTATION_Q_VALUES,
+            "cells_per_policy": len(NULL_ITEMS) * len(NULL_CANDIDATES) * len(NULL_PROBABILITIES),
+            "cells_where_rho_not_monotone_in_q": nonmonotone,
+            "state_n_minus_1_up_probability": identity,
+            "state_n_minus_1_up_probability_peak_q": peak}
+
+
+def one_step_fixture() -> dict[str, object]:
+    """``one_step_gap_change`` on every state of the drift cells (``z = 1``,
+    lattice ``1/4 + i/8``): identity check, sign-by-case tally, the ``n = 8``
+    identically-zero difference, and two case (iii) examples of either sign."""
+
+    levels = drift_levels(DRIFT_P0, DRIFT_STEP)
+    top = len(levels) - 1
+    cells, identity, signs_ok, states = {}, True, True, 0
+    for items, candidates in DRIFT_CELLS:
+        threshold = gate_threshold(items, 1)
+        tally, zero_everywhere = {}, True
+        for level in range(top):
+            delta = levels[level + 1] - levels[level]
+            for c in range(items + 1):
+                step = one_step_gap_change(items, candidates, levels[level], delta, c, threshold[c])
+                states += 1
+                identity &= step["difference"] == step["window_integral"]
+                predicted, sign = step["predicted_sign_of_difference"], _sign(step["difference"])
+                signs_ok &= {"zero": sign == "0", "nonnegative": sign != "-",
+                             "nonpositive": sign != "+", "undetermined": True}[predicted]
+                zero_everywhere &= sign == "0"
+                tally.setdefault(predicted, {"+": 0, "0": 0, "-": 0})[sign] += 1
+        cells[f"n={items},K={candidates},z=1,step={DRIFT_STEP}"] = {
+            "threshold": threshold, "one_over_n": Q(1, items),
+            "max_threshold_over_n": Q(max(threshold), items), "delta": DRIFT_STEP,
+            "sign_tally_by_predicted_case": tally,
+            "difference_zero_at_every_state": zero_everywhere}
+    examples = {}
+    for p_inc in (Q(1, 4), Q(1, 2)):
+        step = one_step_gap_change(16, 2, p_inc, Q(3, 32), 8, 2)
+        examples[f"n=16,K=2,c=8,t=2,p_inc={p_inc},delta=3/32"] = {
+            "predicted": step["predicted_sign_of_difference"],
+            "difference": step["difference"], "sign": _sign(step["difference"])}
+    both_signs = {e["sign"] for e in examples.values()} == {"+", "-"}
+    return {"cells": cells, "states_checked": states,
+            "difference_equals_window_integral": identity,
+            "sign_matches_predicted_case": signs_ok,
+            "n8_difference_identically_zero": all(
+                cells[k]["difference_zero_at_every_state"] for k in cells if k.startswith("n=8,")),
+            "case_iii_examples": examples, "case_iii_takes_both_signs": both_signs}
+
+
+def gate_order_fixture() -> dict[str, object]:
+    """Fixed-gain drift chains, naive versus ``z = 1``, for steps in
+    ``GATE_ORDER_STEPS``: the sign of ``rho^naive_g - rho^gate_g`` against
+    the one-step prediction at every generation, the DP-versus-one-step
+    consistency identity, and the expectation ordering (naive above gate in
+    reported and in true value) that the coupling argument does not reach."""
+
+    cells = {}
+    flags = {"lattice_steps_uniform": True, "first_generation_matches_prediction": True,
+             "case_ii_gate_above_naive_every_generation": True,
+             "case_i_reverses_somewhere": False, "both_cases_zero_at_first_generation": True,
+             "one_step_increment_matches_dp": True,
+             "naive_dominates_gate_reported": True, "naive_dominates_gate_true": True}
+    agreement = {"i": [0, 0], "ii": [0, 0]}
+    for items, candidates in DRIFT_CELLS:
+        threshold = gate_threshold(items, 1)
+        for step in GATE_ORDER_STEPS:
+            levels = drift_levels(DRIFT_P0, step)
+            flags["lattice_steps_uniform"] &= all(b - a == step for a, b in zip(levels, levels[1:]))
+            runs = {policy: drift_trajectory(items, candidates, DRIFT_P0, step, DRIFT_GAINS["fixed"],
+                                             thr, HORIZON)
+                    for policy, thr in (("naive", naive_threshold(items)), ("gate_z1", threshold))}
+            naive, gate = runs["naive"], runs["gate_z1"]
+            for policy, run in runs.items():
+                for g in ONE_STEP_CONSISTENCY_GENERATIONS:
+                    flags["one_step_increment_matches_dp"] &= (
+                        drift_gap_increment_from_one_step(run, g)
+                        == run["readout_gap"][g + 1] - run["readout_gap"][g])
+            diff = [a - b for a, b in zip(naive["readout_gap"], gate["readout_gap"])]
+            signs = "".join(_sign(d) for d in diff)
+            case_i, case_ii = step <= Q(1, items), step >= Q(max(threshold), items)
+            label = "both" if case_i and case_ii else "i" if case_i else "ii" if case_ii else "none"
+            if label == "i":
+                flags["first_generation_matches_prediction"] &= diff[1] >= 0
+                later = [d >= 0 for d in diff[2:]]
+                agreement["i"][0] += sum(later)
+                agreement["i"][1] += len(later)
+                flags["case_i_reverses_somewhere"] |= not all(later)
+            elif label == "ii":
+                flags["first_generation_matches_prediction"] &= diff[1] <= 0
+                later = [d <= 0 for d in diff[2:]]
+                agreement["ii"][0] += sum(later)
+                agreement["ii"][1] += len(later)
+                flags["case_ii_gate_above_naive_every_generation"] &= all(d < 0 for d in diff[1:])
+            else:
+                flags["first_generation_matches_prediction"] &= diff[1] == 0
+                flags["both_cases_zero_at_first_generation"] &= diff[1] == 0
+            flags["naive_dominates_gate_reported"] &= all(
+                a >= b for a, b in zip(naive["expected_reported"], gate["expected_reported"]))
+            flags["naive_dominates_gate_true"] &= all(
+                a >= b for a, b in zip(naive["expected_true"], gate["expected_true"]))
+            negatives = [g for g, d in enumerate(diff) if d < 0]
+            cells[f"n={items},K={candidates},z=1,step={step}"] = {
+                "case": label, "one_over_n": Q(1, items),
+                "max_threshold_over_n": Q(max(threshold), items),
+                "sign_of_naive_minus_gate_gap_by_generation": signs,
+                "first_generation_gate_gap_above_naive": negatives[0] if negatives else None,
+                "gap_at_horizon": {"naive": naive["readout_gap"][HORIZON], "gate_z1": gate["readout_gap"][HORIZON]},
+                "reported_at_horizon": {"naive": naive["expected_reported"][HORIZON],
+                                        "gate_z1": gate["expected_reported"][HORIZON]},
+                "true_at_horizon": {"naive": naive["expected_true"][HORIZON],
+                                    "gate_z1": gate["expected_true"][HORIZON]},
+            }
+    return {"cells": cells, "flags": flags,
+            "later_generation_agreement_counts": {
+                k: {"agree": v[0], "of": v[1]} for k, v in agreement.items()},
+            "dominance_note": ("expectation ordering checked on the enumerated cells only; "
+                               "no monotone coupling is claimed")}
 
 
 def naive_fixture() -> dict[str, object]:
@@ -938,6 +1485,15 @@ def brute_force_fixture() -> dict[str, object]:
             brute = brute_force_drift_distribution(2, 2, DRIFT_P0, DRIFT_STEP, gain, threshold, 2)
             checks[f"drift,n=2,K=2,G=2,gain={gain_name},{name}"] = (
                 dp == {f"{c},{level}": mass for (c, level), mass in brute.items()})
+    for p in (Q(1, 2), Q(1, 4)):
+        for q in (Q(1, 4), Q(1, 2)):
+            for name, threshold in (("naive", naive_threshold(2)), ("gate_z2", gate_threshold(2, 2))):
+                dp = mutation_state_distribution(2, 2, p, q, threshold, 2)[-1]
+                checks[f"mutation,n=2,K=2,G=2,p={p},q={q},{name}"] = (
+                    dp == brute_force_mutation_distribution(2, 2, p, q, threshold, 2))
+    dp = mutation_state_distribution(3, 2, Q(1, 2), Q(1, 2), (0, 1, 1, 0), 1)[-1]
+    checks["mutation,n=3,K=2,G=1,p=1/2,q=1/2,t=(0,1,1,0)"] = (
+        dp == brute_force_mutation_distribution(3, 2, Q(1, 2), Q(1, 2), (0, 1, 1, 0), 1))
     return {"checks": checks, "all_match": all(checks.values()),
             "gate_z2_threshold_n2": gate_threshold(2, 2)}
 
@@ -967,9 +1523,12 @@ def verify() -> dict[str, object]:
 
     naive, gated, fresh = naive_fixture(), gated_fixture(), fresh_fixture()
     drift, brute, divergence = drift_fixture(), brute_force_fixture(), divergence_fixture()
+    bounds, mutation = bound_fixture(), mutation_fixture()
+    one_step, gate_order = one_step_fixture(), gate_order_fixture()
     naive_8_2 = naive["cells"][_cell(8, 2, Q(1, 2))]["readout_gap_by_generation"]
     gated_16_4 = gated["cells"][f"{_cell(16, 4, Q(1, 2))},z=3"]
     orderings = drift["orderings_on_enumerated_cells"]
+    bound_flags, mutation_flags, order_flags = bounds["flags"], mutation["flags"], gate_order["flags"]
     checks = {
         "kernel_rows_sum_to_one": naive["consistency"]["rows_sum"],
         "naive_dp_equals_closed_form_gk_plus_one": naive["consistency"]["closed_form"],
@@ -1018,19 +1577,59 @@ def verify() -> dict[str, object]:
             divergence["drift"]["flags_match_rho_increments"],
         "divergence_flags_silent_on_constant_fresh_gap":
             divergence["fresh_selection_block_never_flags_after_first_interval"],
+        # Part A: proven bounds, compared in floats under BOUND_TOLERANCE
+        "hoeffding_bound_holds_on_null_cells": bound_flags["hoeffding_holds"],
+        "bernstein_bound_holds_on_null_cells": bound_flags["bernstein_holds"],
+        "hoeffding_tighter_than_bernstein_at_p_half": bound_flags["hoeffding_tighter_at_p_half"],
+        "bernstein_tighter_somewhere_at_p_quarter": bound_flags["bernstein_tighter_somewhere_at_p_quarter"],
+        "gap_below_gaussian_scale_on_null_cells": bound_flags["ratio_below_one"],
+        "hoeffding_bound_exceeds_lattice_cap_on_some_cell": bound_flags["bound_exceeds_cap_somewhere"],
+        # Part B: mutation chain
+        "mutation_kernel_rows_sum_to_one_upward_only":
+            mutation_flags["rows_sum"] and mutation_flags["upward_only"],
+        "mutation_q1_equals_independent_chain": mutation_flags["q1_equals_independent"],
+        "mutation_q0_never_accepts": mutation_flags["q0_never_accepts"],
+        "mutation_gap_non_decreasing_in_generations_every_q": mutation_flags["monotone_in_generations"],
+        "mutation_gap_bounded_by_lattice_cap": mutation_flags["bounded_by_cap"],
+        "mutation_dp_matches_brute_force_enumeration": all(
+            value for key, value in brute["checks"].items() if key.startswith("mutation")),
+        "mutation_state_n_minus_1_up_probability_identity": mutation_flags["state_n_minus_1_identity"],
+        "mutation_rho1_non_decreasing_in_q_on_cells": mutation_flags["rho1_non_decreasing_in_q"],
+        "mutation_rho_not_monotone_in_q_on_every_naive_cell":
+            mutation_flags["rho_monotone_in_q_fails_on_every_naive_cell"],
+        "mutation_half_q_gap_above_independent_at_horizon_on_naive_cells":
+            mutation_flags["half_q_above_independent_at_horizon_on_naive_cells"],
+        "mutation_every_q_gap_above_independent_at_horizon_on_naive_cells_n_ge_8":
+            mutation_flags["every_q_above_independent_at_horizon_on_naive_cells_n_ge_8"],
+        # Part C: one-generation theorem and its chaining
+        "one_step_difference_equals_window_integral_on_drift_states":
+            one_step["difference_equals_window_integral"],
+        "one_step_sign_matches_predicted_case_on_drift_states": one_step["sign_matches_predicted_case"],
+        "one_step_difference_identically_zero_n8_z1_step_eighth": one_step["n8_difference_identically_zero"],
+        "one_step_case_iii_takes_both_signs": one_step["case_iii_takes_both_signs"],
+        "one_step_increment_matches_drift_dp": order_flags["one_step_increment_matches_dp"],
+        "gate_order_first_generation_matches_one_step_prediction":
+            order_flags["first_generation_matches_prediction"] and order_flags["lattice_steps_uniform"],
+        "gate_order_case_ii_cells_gate_above_naive_every_generation":
+            order_flags["case_ii_gate_above_naive_every_generation"],
+        "gate_order_case_i_sign_reverses_on_some_cell": order_flags["case_i_reverses_somewhere"],
+        "gate_order_naive_dominates_gate_in_expectation_on_cells":
+            order_flags["naive_dominates_gate_reported"] and order_flags["naive_dominates_gate_true"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
-            "headline": _headline(naive, gated, drift),
+            "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order),
             "naive": naive, "gated": gated, "fresh": fresh, "drift": drift,
-            "brute_force": brute, "divergence": divergence}
+            "brute_force": brute, "divergence": divergence,
+            "bounds": bounds, "mutation": mutation, "one_step": one_step,
+            "gate_order": gate_order}
 
 
 def _approx(value):
     return None if value is None else {"exact": value, "float": round(float(value), 6)}
 
 
-def _headline(naive, gated, drift) -> dict[str, object]:
+def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order) -> dict[str, object]:
     """Named cells with a float rendering beside the exact value."""
 
     def gaps(items, candidates):
@@ -1053,6 +1652,24 @@ def _headline(naive, gated, drift) -> dict[str, object]:
             "phantom_share_whole", "phantom_share_early_half", "phantom_share_late_half",
             "late_early_ratio_reported", "late_early_ratio_true")}
 
+    def bound_cell(items, candidates, p):
+        table = bounds["cells"][_cell(items, candidates, p)]["by_generation"]
+        return {f"G={g}": {key: round(row[key], 6) for key in (
+            "gap_float", "hoeffding", "bernstein", "gaussian_scale", "ratio_gap_to_gaussian_scale")}
+            for g, row in table.items()}
+
+    def mutation_cell(items, candidates, p, policy):
+        entry = mutation["cells"][f"{_cell(items, candidates, p)},policy={policy}"]
+        return {"gap_at_horizon_by_q": {q: _approx(v[HORIZON]) for q, v in entry["readout_gap_by_q"].items()},
+                "gap_at_g1_by_q": {q: _approx(v[1]) for q, v in entry["readout_gap_by_q"].items()},
+                "first_generation_rho_not_monotone_in_q": entry["first_generation_rho_not_monotone_in_q"]}
+
+    def order_cell(items, candidates, step):
+        entry = gate_order["cells"][f"n={items},K={candidates},z=1,step={step}"]
+        return {"case": entry["case"], "signs": entry["sign_of_naive_minus_gate_gap_by_generation"],
+                "first_generation_gate_gap_above_naive": entry["first_generation_gate_gap_above_naive"],
+                "gap_at_horizon": {k: _approx(v) for k, v in entry["gap_at_horizon"].items()}}
+
     return {
         "naive_readout_gap_n8_k2_p_half": gaps(8, 2),
         "naive_readout_gap_n16_k4_p_half": gaps(16, 4),
@@ -1063,4 +1680,19 @@ def _headline(naive, gated, drift) -> dict[str, object]:
         "drift_n8_k2_fixed_naive": drift_cell("fixed", "naive"),
         "drift_n8_k2_fixed_gate_z1": drift_cell("fixed", "gate_z1"),
         "drift_n16_k2_fixed_naive": drift_cell("fixed", "naive", 16, 2),
+        "bounds_n8_k2_p_half": bound_cell(8, 2, Q(1, 2)),
+        "bounds_n16_k4_p_half": bound_cell(16, 4, Q(1, 2)),
+        "bounds_n16_k4_p_quarter": bound_cell(16, 4, Q(1, 4)),
+        "bounds_ratio_range": bounds["ratio_range_over_cells_and_report_generations"],
+        "mutation_n8_k2_p_half_naive": mutation_cell(8, 2, Q(1, 2), "naive"),
+        "mutation_n16_k4_p_half_naive": mutation_cell(16, 4, Q(1, 2), "naive"),
+        "mutation_n8_k2_p_half_gate_z1": mutation_cell(8, 2, Q(1, 2), "gate_z1"),
+        "one_step_sign_tally_by_cell": {k: v["sign_tally_by_predicted_case"]
+                                        for k, v in one_step["cells"].items()},
+        "one_step_case_iii_examples": {k: {"sign": v["sign"], "difference": _approx(v["difference"])}
+                                       for k, v in one_step["case_iii_examples"].items()},
+        "gate_order_n8_k2_step_eighth": order_cell(8, 2, Q(1, 8)),
+        "gate_order_n16_k2_step_eighth": order_cell(16, 2, Q(1, 8)),
+        "gate_order_n4_k2_step_eighth": order_cell(4, 2, Q(1, 8)),
+        "gate_order_later_generation_agreement": gate_order["later_generation_agreement_counts"],
     }
