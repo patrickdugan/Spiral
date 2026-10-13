@@ -74,6 +74,16 @@ every lemma and every intermediate inequality of the proof exactly;
 pathwise same-uniform route fails; the pointwise cone witness shows the
 naive rule is not optimal among all accept/reject policies.
 
+Version 0.5 asks whether (E) and Proposition 8 survive MIXED gain laws,
+where an accepted candidate may carry gain zero (``mixed_gain_dominance_
+fixture``, discussion before ``MIXED_LATTICES``).  No counterexample was
+found for the count or the level on any enumerated cell (every threshold
+rule at small ``n``, every objective, constant laws and the decaying
+schedule); (L1)-(L3) hold, the averaging step of (L4) fails with exact
+witnesses, an exact recursion for the window sums is proven and closes
+the window condition two below the target for every law; beyond that the
+mixed-law orderings are finite results.
+
 Boundaries
 ----------
 The independent chain has candidates independent of the incumbent; the
@@ -1593,7 +1603,9 @@ def dominance_structure_fixture() -> dict[str, object]:
 # exhibits a path on which the gated level passes the naive level while
 # the naive count is still below m.  Mixed gain laws: (L1)-(L3) go through,
 # (L4)'s averaging step does not (the landing level is then not a function
-# of the landing count); the window condition is checked finitely only.
+# of the landing count); see the version 0.5 section before
+# ``MIXED_LATTICES`` for the exact search, the recursion that replaces the
+# averaging step, and what remains finite.
 
 
 LEMMA_HORIZON = 12
@@ -1857,6 +1869,482 @@ def coupling_crossing_fixture() -> dict[str, object]:
             "gate_cells_first_m_with_crossing": gate_cells,
             "no_crossing_on_gate_cells_within_horizon": all(v is None for v in gate_cells.values()),
             "gate_horizon": CROSSING_GATE_HORIZON}
+
+
+# --------------------------------------------------------------------------
+# Version 0.5: mixed gain laws (an accepted candidate may carry gain zero)
+# --------------------------------------------------------------------------
+#
+# Question.  Propositions 8 and 9 assume the fixed law {1: 1}.  Under a
+# mixed law a draw J > c may be accepted with gain 0 and land at (J, i),
+# which by (L2) is WORSE for reaching m than staying at (c, i); a threshold
+# rule that rejects exactly such draws could in principle make the count
+# (or the level) more likely to reach its target than the naive rule.
+# ``mixed_gain_dominance_fixture`` searches for that exactly: the window
+# screen (all prefix sums of the naive iterates, which cover every
+# threshold rule at once by Q^k f = Q(Q^{k-1} f) <= Q(P^{k-1} f) <= P^k f),
+# every rule at small n and random rules beyond, every start state, every
+# objective (count, level, hitting and level indicators), constant laws and
+# the decaying schedule.  No violation was found anywhere (finite).
+#
+# Proof status for the count.  (L1)-(L3) hold under mixed laws: (L1) uses
+# only that every landing's death rate H(i + mu) is >= H(i); (L2) is the
+# first divergence plus (L3) at the landing levels; (L3)'s waiting-chain
+# argument needs every landing of the lower chain to be no better than
+# (c, i+1), which holds for laws supported on {0, 1} (finite beyond).
+# (L4)'s averaging step fails: the posterior-averaged landing survival
+# g_k(J) = sum_mu w_mu(J) s_k(J, i+mu), w_mu(J) = q_mu Bin(n, p(i+mu))(J)
+# / mix(J), is not monotone in J (the posterior on the gain shifts upward
+# with J by the monotone likelihood ratio of the binomials, and a higher
+# level means lower survival), so the prefix average can exceed the full
+# average e_k, already at k = 1 where g_1(J) = 1 - E[H(i + mu) | M = J].
+# Bounding the prefix landings by their own death rates for one step does
+# not close the induction either (both one-step compensations are false,
+# witnesses in the fixture).  What is exact is the recursion, for a < m,
+#   W^a_k(x) = (1 - H(i)) W^a_{k-1}(x) + E^a_{k-1}(x)
+#              + sum_{y in (c,a]} rho(y) W^{m-1}_{k-1}(y) - B_a W^{m-1}_{k-1}(x),
+# with E^a = sum_{prefix} rho(y) (H(i_y) - H(i)) s(y) >= 0 (the real
+# landings die faster), W^{m-1}(.) the full-window sums (the NBU slacks,
+# >= 0 by (L1) at every state) and B_a the prefix mass; it follows from
+# s_k(z) = (1 - H(z)) s_{k-1}(z) - W^{m-1}_{k-1}(z) at x and at every
+# landing.  Only the last term is negative.  Two below the target
+# (c = m - 2) the landings have no landings and the prefix is the full
+# window, so W_k = A W_{k-1} + E_{k-1} = sum_t A^{t-1} E_{k-t} >= 0 for
+# EVERY gain law: the window condition is a theorem at distance two and
+# at distance one (no landings).  For c < m - 2 the sign rests on the
+# finite checks: the carry, the excess death and the landings' slacks must
+# pay for B_a times the state's own slack, and no one-horizon inequality
+# among naive quantities that implies this was found.
+#
+# The level.  Dominance (D) and both suppressed-state forms hold finitely
+# under every mixed law, but Proposition 8's route breaks: (M1) holds and
+# (M2) (naive level iterate non-decreasing in the level) is FALSE for the
+# {0, 2} law (a higher level is more likely to be absorbed at count n
+# below the top), and the suppressed-state step pulls landings beyond the
+# window, whose posterior gain is higher, down to a window landing with a
+# lower posterior, which is the wrong direction.
+
+
+MIXED_LATTICES = {"quarter_half_jump": (Q(1, 4), Q(3, 4), Q(1)),
+                  "eighth_seven_eighths": (Q(1, 8), Q(7, 8)),
+                  "eighth_seven_eighths_one": (Q(1, 8), Q(7, 8), Q(1)),
+                  "quarter_steps": (Q(1, 4), Q(1, 2), Q(3, 4), Q(1)),
+                  "std_eighth": drift_levels(Q(1, 4), Q(1, 8))}
+MIXED_LAWS = {"two_point_q=1/4": {0: Q(3, 4), 1: Q(1, 4)}, "two_point_q=1/2": {0: Q(1, 2), 1: Q(1, 2)},
+              "two_point_q=3/4": {0: Q(1, 4), 1: Q(3, 4)}, "zero_or_two_q=1/2": {0: Q(1, 2), 2: Q(1, 2)},
+              "three_point": {0: Q(1, 2), 1: Q(1, 4), 2: Q(1, 4)}}
+MIXED_SCREEN = {"items": (2, 3, 4, 5, 6), "candidates": (1, 2), "horizon": 20,
+                "lattices": ("quarter_half_jump", "eighth_seven_eighths", "std_eighth"),
+                "laws": ("two_point_q=1/4", "two_point_q=1/2", "two_point_q=3/4", "zero_or_two_q=1/2")}
+MIXED_SCREEN_FULL = {"items": (2, 3, 4, 5, 6), "candidates": (1, 2), "horizon": 30,
+                     "lattices": tuple(MIXED_LATTICES), "laws": tuple(MIXED_LAWS)}
+MIXED_RULES = {"items_all": (2, 3, 4), "items_random": (5, 6), "random_rules": 20, "seed": 20261013,
+               "candidates": (1, 2), "horizon": 16, "lattices": ("quarter_half_jump", "eighth_seven_eighths"),
+               "laws": ("two_point_q=1/4", "two_point_q=1/2")}
+MIXED_RULES_FULL = dict(MIXED_RULES, random_rules=60, horizon=20, lattices=tuple(MIXED_LATTICES), laws=tuple(MIXED_LAWS))
+MIXED_DECAY = {"items": (2, 3, 4), "candidates": (1, 2), "lattices": ("quarter_half_jump", "eighth_seven_eighths"),
+               "q0": (Q(1, 4), Q(1, 2)), "ratio": Q(3, 4), "horizon": 16, "direct_items": (2, 3), "direct_horizon": 12}
+MIXED_DECAY_FULL = dict(MIXED_DECAY, items=(2, 3, 4, 5), q0=(Q(1, 4), Q(1, 2), Q(3, 4)), horizon=30,
+                        direct_items=(2, 3, 4), direct_horizon=20)
+MIXED_STRUCTURE = {"items": (3, 4, 5), "candidates": (1, 2), "horizon": 10,
+                   "lattices": ("quarter_half_jump", "eighth_seven_eighths", "quarter_steps"), "laws": tuple(MIXED_LAWS)}
+
+
+def mixed_window_sums(kernel, iterate, items) -> dict[tuple[int, int], list[Q]]:
+    """``window_sums`` for a kernel with several landings per count: the
+    prefix sums over ``J = c+1..n`` of ``sum_{y: count J} p(y) [f(y) -
+    f(c, i)]`` with the kernel's own landing probabilities, so that the
+    entry for ``a`` is ``(P f - Q f)(c, i)`` for the rule with ``a(c) = a``."""
+
+    out = {}
+    for (c, i), entries in kernel.items():
+        by_count: dict[int, Q] = {}
+        for y, p in entries[1:]:
+            by_count[y[0]] = by_count.get(y[0], Q(0)) + p * (iterate[y] - iterate[(c, i)])
+        running, sums = Q(0), []
+        for J in range(c + 1, items + 1):
+            running += by_count.get(J, Q(0))
+            sums.append(running)
+        out[(c, i)] = sums
+    return out
+
+
+def mixed_objectives(items, levels) -> dict[str, object]:
+    """Count, level value, every hitting indicator ``1{c >= m}`` and every
+    level indicator ``1{i >= l}``: the functions whose ordering is
+    Propositions 8 and 9 (and their stochastic-dominance forms)."""
+
+    levels = _check_levels(levels)
+    fs = {"count": lambda x: Q(x[0]), "level": lambda x: levels[x[1]]}
+    for m in range(1, items + 1):
+        fs[f"hit>={m}"] = (lambda x, m=m: Q(int(x[0] >= m)))
+    for ell in range(1, len(levels)):
+        fs[f"level>={ell}"] = (lambda x, ell=ell: Q(int(x[1] >= ell)))
+    return fs
+
+
+def threshold_rules(items) -> list[tuple[int, ...]]:
+    """Every threshold rule on ``{0..n}`` with ``t(c) <= n - c`` (a larger
+    ``t(c)`` acts the same): ``(n+1)!`` rules."""
+
+    if type(items) is not int or items < 1:
+        raise ValueError("items must be a positive integer")
+    return list(product(*[range(items - c + 1) for c in range(items + 1)]))
+
+
+def random_threshold_rules(items, count, seed) -> list[tuple[int, ...]]:
+    """``count`` rules with ``t(c)`` uniform on ``0..n-c``, from a seeded
+    generator (the sample is part of the fixture's definition)."""
+
+    import random
+    if type(items) is not int or items < 1 or type(count) is not int or count < 0:
+        raise ValueError("items must be positive and count non-negative integers")
+    rng = random.Random(seed)
+    return [tuple(rng.randint(0, items - c) for c in range(items + 1)) for _ in range(count)]
+
+
+def mixed_window_screen(items, candidates, levels, law, horizon) -> dict[str, object]:
+    """All prefix window sums of the naive iterates ``P^k f`` for every
+    objective, state and ``k <= horizon`` under a constant gain law.  A
+    negative sum would be a state at which one gated step followed by naive
+    steps beats the naive rule for that objective; none means every
+    threshold rule is dominated at every horizon up to ``horizon + 1``."""
+
+    kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    negatives, windows = [], 0
+    for name, f in mixed_objectives(items, levels).items():
+        iterates = kernel_iterates(kernel, f, horizon)
+        for k in range(horizon + 1):
+            for (c, i), sums in mixed_window_sums(kernel, iterates[k], items).items():
+                windows += len(sums)
+                for idx, w in enumerate(sums):
+                    if w < 0:
+                        negatives.append({"objective": name, "horizon": k, "state": (c, i),
+                                          "window_top": c + 1 + idx, "window_sum": w})
+    return {"windows_checked": windows, "negatives": negatives}
+
+
+def scheduled_window_screen(items, candidates, levels, schedule, horizon) -> dict[str, object]:
+    """The same screen for a gain schedule: for every final horizon ``G <=
+    horizon`` and generation ``g < G`` the prefix window sums of ``v_{g+1} =
+    P_{g+2} ... P_G f`` with generation ``g+1``'s landings (so that
+    ``Q_{t,g+1} v_{g+1} <= P_{g+1} v_{g+1}`` for every rule), which by the
+    backward induction orders every rule at every ``G``."""
+
+    schedule = _check_gain_schedule(schedule, horizon)
+    kernels = [drift_kernel(items, candidates, levels, law, naive_threshold(items)) for law in schedule]
+    states = list(kernels[0])
+    negatives, windows = [], 0
+    for name, f in mixed_objectives(items, levels).items():
+        for G in range(1, horizon + 1):
+            v = {x: Q(f(x)) for x in states}
+            for g in range(G - 1, -1, -1):
+                for (c, i), sums in mixed_window_sums(kernels[g], v, items).items():
+                    windows += len(sums)
+                    for idx, w in enumerate(sums):
+                        if w < 0:
+                            negatives.append({"objective": name, "final_horizon": G, "generation": g + 1,
+                                              "state": (c, i), "window_top": c + 1 + idx, "window_sum": w})
+                v = {x: sum((p * v[y] for y, p in entries), Q(0)) for x, entries in kernels[g].items()}
+    return {"windows_checked": windows, "negatives": negatives}
+
+
+def rule_dominance_check(items, candidates, levels, law, rules, horizon) -> dict[str, object]:
+    """``Q_t^k f <= P^k f`` at every state and ``k <= horizon`` for every
+    rule in ``rules`` and every objective, exactly; the first violation
+    with its values, or ``None``."""
+
+    naive = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    fs = mixed_objectives(items, levels)
+    u = {name: kernel_iterates(naive, f, horizon) for name, f in fs.items()}
+    violation, compared, checked = None, 0, 0
+    for rule in rules:
+        if not any(rule):
+            continue
+        checked += 1
+        gated = drift_kernel(items, candidates, levels, law, rule)
+        for name, f in fs.items():
+            w = kernel_iterates(gated, f, horizon)
+            for k in range(horizon + 1):
+                for x in naive:
+                    compared += 1
+                    if violation is None and w[k][x] > u[name][k][x]:
+                        violation = {"rule": rule, "objective": name, "horizon": k, "state": x,
+                                     "gated": w[k][x], "naive": u[name][k][x]}
+    return {"rules_checked": checked, "comparisons": compared, "first_violation": violation}
+
+
+def scheduled_rule_dominance_check(items, candidates, levels, schedule, rules, horizon) -> dict[str, object]:
+    """The rule check for a gain schedule, by forward propagation from every
+    start state (the chain is time-inhomogeneous)."""
+
+    schedule = _check_gain_schedule(schedule, horizon)
+    fs = mixed_objectives(items, levels)
+    naive = [drift_kernel(items, candidates, levels, law, naive_threshold(items)) for law in schedule]
+    states = list(naive[0])
+
+    def values(kernels, start):
+        dist, out = {start: Q(1)}, []
+        for kernel in kernels:
+            following: dict[tuple[int, int], Q] = {}
+            for x, mass in dist.items():
+                for y, p in kernel[x]:
+                    if p:
+                        following[y] = following.get(y, Q(0)) + mass * p
+            dist = following
+            out.append({name: sum((mass * f(x) for x, mass in dist.items()), Q(0)) for name, f in fs.items()})
+        return out
+
+    reference = {x: values(naive, x) for x in states}
+    violation, compared, checked = None, 0, 0
+    for rule in rules:
+        if not any(rule):
+            continue
+        checked += 1
+        gated = [drift_kernel(items, candidates, levels, law, rule) for law in schedule]
+        for x in states:
+            for g, row in enumerate(values(gated, x)):
+                for name, value in row.items():
+                    compared += 1
+                    if violation is None and value > reference[x][g][name]:
+                        violation = {"rule": rule, "objective": name, "horizon": g + 1, "state": x,
+                                     "gated": value, "naive": reference[x][g][name]}
+    return {"rules_checked": checked, "comparisons": compared, "first_violation": violation}
+
+
+def mixed_count_structure(items, candidates, levels, law, horizon) -> dict[str, object]:
+    """Per cell: (L1)-(L3) under the law, the window-sum recursion identity
+    and its distance-two closure (exact), and the smallest witnesses of
+    the failing steps of the fixed-gain route: ``g_k(J)`` not monotone in
+    ``J``, prefix average above the full average, and the two one-step
+    compensations (prefix landings decayed by their own death rates for
+    one step, with and without the suffix comparison)."""
+
+    kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    states = list(kernel)
+    top = len(_check_levels(levels)) - 1
+    flags = {"L1": True, "L2": True, "L3": True, "recursion_identity": True, "distance_two_closure": True,
+             "windows_nonnegative": True}
+    witnesses = {"g_not_monotone": None, "prefix_average_above_full": None,
+                 "one_step_decay_bound_fails": None, "one_step_suffix_compensation_fails": None}
+    identity_checks = 0
+    for m in range(2, items + 1):
+        u = kernel_iterates(kernel, lambda x, m=m: Q(int(x[0] >= m)), horizon)
+        s = [{x: 1 - u[k][x] for x in states} for k in range(horizon + 1)]
+        death = {i: 1 - e[0][1] - sum((p for y, p in e[1:] if y[0] < m), Q(0))
+                 for (c, i), e in kernel.items() if c == 0}
+
+        def W(x, a, k):
+            return sum((p * (s[k][x] - s[k][y]) for y, p in kernel[x][1:] if y[0] <= a), Q(0))
+
+        for (c, i) in states:
+            if c >= m:
+                continue
+            landings = [(y, p) for y, p in kernel[(c, i)][1:] if y[0] < m]
+            for k in range(horizon + 1):
+                if k:
+                    flags["L1"] &= s[k][(c, i)] <= (1 - death[i]) * s[k - 1][(c, i)]
+                if c + 1 < m:
+                    flags["L2"] &= s[k][(c, i)] <= s[k][(c + 1, i)]
+                if i < top:
+                    flags["L3"] &= s[k][(c, i + 1)] <= s[k][(c, i)]
+                gs, pis = [], []
+                for J in range(c + 1, m):
+                    at = [(y, p) for y, p in landings if y[0] == J]
+                    pi = sum((p for _, p in at), Q(0))
+                    if pi:
+                        gs.append(sum((p * s[k][y] for y, p in at), Q(0)) / pi)
+                        pis.append(pi)
+                if witnesses["g_not_monotone"] is None and any(b < a for a, b in zip(gs, gs[1:])):
+                    witnesses["g_not_monotone"] = {"m": m, "horizon": k, "state": (c, i), "g_by_landing_count": gs,
+                                                   "survival_at_state": s[k][(c, i)]}
+                if gs:
+                    full = sum(p * g for p, g in zip(pis, gs)) / sum(pis)
+                    run_p = run_g = Q(0)
+                    for idx, (p, g) in enumerate(zip(pis, gs)):
+                        run_p += p
+                        run_g += p * g
+                        if witnesses["prefix_average_above_full"] is None and run_g / run_p > full:
+                            witnesses["prefix_average_above_full"] = {
+                                "m": m, "horizon": k, "state": (c, i), "window_top": c + 1 + idx,
+                                "prefix_average": run_g / run_p, "full_average": full,
+                                "survival_at_state": s[k][(c, i)]}
+                for a in range(c + 1, m):
+                    prefix = [(y, p) for y, p in landings if y[0] <= a]
+                    Ba = sum((p for _, p in prefix), Q(0))
+                    if not Ba:
+                        continue
+                    flags["windows_nonnegative"] &= W((c, i), a, k) >= 0
+                    if k < horizon:
+                        decayed = sum((p * (1 - death[y[1]]) * s[k][y] for y, p in prefix), Q(0))
+                        if witnesses["one_step_decay_bound_fails"] is None and decayed > Ba * s[k + 1][(c, i)]:
+                            witnesses["one_step_decay_bound_fails"] = {
+                                "m": m, "horizon": k, "state": (c, i), "window_top": a,
+                                "prefix_landings_decayed_one_step": decayed, "prefix_mass": Ba,
+                                "survival_at_state_next_horizon": s[k + 1][(c, i)]}
+                        suffix = [(y, p) for y, p in landings if y[0] > a]
+                        Bs = sum((p for _, p in suffix), Q(0))
+                        if Bs and witnesses["one_step_suffix_compensation_fails"] is None:
+                            phi_a = sum((p * s[k][y] for y, p in prefix), Q(0)) / Ba
+                            phi_s = sum((p * s[k][y] for y, p in suffix), Q(0)) / Bs
+                            excess = sum((p * (death[y[1]] - death[i]) * s[k][y] for y, p in prefix), Q(0))
+                            if Ba * Bs * (phi_a - phi_s) > excess:
+                                witnesses["one_step_suffix_compensation_fails"] = {
+                                    "m": m, "horizon": k, "state": (c, i), "window_top": a,
+                                    "prefix_average": phi_a, "suffix_average": phi_s,
+                                    "scaled_excess_of_prefix": Ba * Bs * (phi_a - phi_s),
+                                    "excess_death_of_prefix_real_landings": excess}
+                    if k:
+                        identity_checks += 1
+                        E = sum((p * (death[y[1]] - death[i]) * s[k - 1][y] for y, p in prefix), Q(0))
+                        rhs = ((1 - death[i]) * W((c, i), a, k - 1) + E
+                               + sum((p * W(y, m - 1, k - 1) for y, p in prefix), Q(0))
+                               - Ba * W((c, i), m - 1, k - 1))
+                        flags["recursion_identity"] &= W((c, i), a, k) == rhs
+                        if c == m - 2:
+                            flags["distance_two_closure"] &= W((c, i), a, k) == kernel[(c, i)][0][1] * W((c, i), a, k - 1) + E
+    return {"flags": flags, "witnesses": witnesses, "identity_checks": identity_checks}
+
+
+def mixed_level_structure(items, candidates, levels, law, horizon) -> dict[str, object]:
+    """Per cell, for the level value: (M1)/(M2) of the naive iterates,
+    dominance (D) and both suppressed-state forms (posterior-averaged
+    ``w_k(c,i) <= sum_mu w_mu(j) u_k(j, i+mu)`` and per-gain ``w_k(c,i) <=
+    u_k(j, i+mu)``) for the gates ``z = 1, 2, 3`` and the unit rule."""
+
+    levels = _check_levels(levels)
+    top = len(levels) - 1
+    kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    states = list(kernel)
+    fp = lambda x: levels[x[1]]
+    u = kernel_iterates(kernel, fp, horizon)
+    flags = {"M1": True, "M2": True, "D": True, "S_posterior": True, "S_per_gain": True}
+    m2_witness = None
+    for k in range(horizon + 1):
+        for (c, i) in states:
+            if c < items:
+                flags["M1"] &= u[k][(c, i)] >= u[k][(c + 1, i)]
+            if i < top and u[k][(c, i)] > u[k][(c, i + 1)]:
+                flags["M2"] = False
+                if m2_witness is None:
+                    m2_witness = {"horizon": k, "state": (c, i), "value": u[k][(c, i)],
+                                  "value_one_level_up": u[k][(c, i + 1)]}
+    rules = {f"z={z}": gate_threshold(items, z) for z in GATE_Z_VALUES}
+    rules["unit"] = tuple(int(c < items) for c in range(items + 1))
+    for rule in rules.values():
+        w = kernel_iterates(drift_kernel(items, candidates, levels, law, rule), fp, horizon)
+        for k in range(horizon + 1):
+            for (c, i) in states:
+                flags["D"] &= w[k][(c, i)] <= u[k][(c, i)]
+                a = min(items, c + rule[c])
+                for j in range(c + 1, a + 1):
+                    at = [(y, p) for y, p in kernel[(c, i)][1:] if y[0] == j]
+                    pj = sum((p for _, p in at), Q(0))
+                    if pj:
+                        flags["S_posterior"] &= w[k][(c, i)] <= sum((p * u[k][y] for y, p in at), Q(0)) / pj
+                        flags["S_per_gain"] &= all(w[k][(c, i)] <= u[k][y] for y, _ in at)
+    return {"flags": flags, "M2_witness": m2_witness}
+
+
+def mixed_gain_dominance_fixture(full=False) -> dict[str, object]:
+    """Count and level dominance under mixed gain laws: the window screen,
+    the direct rule checks (constant laws and the decaying schedule) and
+    the proof-structure checks and witnesses.  ``full`` enlarges every
+    grid (the receipt)."""
+
+    screen_grid = MIXED_SCREEN_FULL if full else MIXED_SCREEN
+    rules_grid = MIXED_RULES_FULL if full else MIXED_RULES
+    decay_grid = MIXED_DECAY_FULL if full else MIXED_DECAY
+    screen, screen_windows, screen_negatives = {}, 0, []
+    for items in screen_grid["items"]:
+        for candidates in screen_grid["candidates"]:
+            for lname in screen_grid["lattices"]:
+                for law_name in screen_grid["laws"]:
+                    out = mixed_window_screen(items, candidates, MIXED_LATTICES[lname], MIXED_LAWS[law_name],
+                                              screen_grid["horizon"])
+                    key = f"n={items},K={candidates},lattice={lname},law={law_name}"
+                    screen[key] = {"windows_checked": out["windows_checked"], "negatives": len(out["negatives"])}
+                    screen_windows += out["windows_checked"]
+                    screen_negatives += [{"cell": key, **neg} for neg in out["negatives"][:1]]
+    rules, rule_comparisons, rules_checked, rule_violations = {}, 0, 0, []
+    for items in rules_grid["items_all"] + rules_grid["items_random"]:
+        rule_set = (threshold_rules(items) if items in rules_grid["items_all"]
+                    else random_threshold_rules(items, rules_grid["random_rules"], rules_grid["seed"] + items))
+        for candidates in rules_grid["candidates"]:
+            for lname in rules_grid["lattices"]:
+                for law_name in rules_grid["laws"]:
+                    out = rule_dominance_check(items, candidates, MIXED_LATTICES[lname], MIXED_LAWS[law_name],
+                                               rule_set, rules_grid["horizon"])
+                    key = f"n={items},K={candidates},lattice={lname},law={law_name}"
+                    rules[key] = {"rules_checked": out["rules_checked"], "comparisons": out["comparisons"],
+                                  "all_rules" if items in rules_grid["items_all"] else "random_rules": True,
+                                  "first_violation": out["first_violation"]}
+                    rule_comparisons += out["comparisons"]
+                    rules_checked += out["rules_checked"]
+                    if out["first_violation"]:
+                        rule_violations.append({"cell": key, **out["first_violation"]})
+    decay, decay_windows, decay_negatives, decay_violations, decay_comparisons = {}, 0, [], [], 0
+    for items in decay_grid["items"]:
+        for candidates in decay_grid["candidates"]:
+            for lname in decay_grid["lattices"]:
+                for q0 in decay_grid["q0"]:
+                    schedule = decaying_gain_schedule(decay_grid["horizon"], q0, decay_grid["ratio"])
+                    out = scheduled_window_screen(items, candidates, MIXED_LATTICES[lname], schedule, decay_grid["horizon"])
+                    key = f"n={items},K={candidates},lattice={lname},q0={q0}"
+                    entry = {"windows_checked": out["windows_checked"], "negatives": len(out["negatives"])}
+                    decay_windows += out["windows_checked"]
+                    decay_negatives += [{"cell": key, **neg} for neg in out["negatives"][:1]]
+                    if items in decay_grid["direct_items"]:
+                        direct = scheduled_rule_dominance_check(
+                            items, candidates, MIXED_LATTICES[lname], schedule[:decay_grid["direct_horizon"]],
+                            threshold_rules(items), decay_grid["direct_horizon"])
+                        entry["direct"] = direct
+                        decay_comparisons += direct["comparisons"]
+                        if direct["first_violation"]:
+                            decay_violations.append({"cell": key, **direct["first_violation"]})
+                    decay[key] = entry
+    structure, level = {}, {}
+    count_flags = {"L1": True, "L2": True, "L3": True, "recursion_identity": True, "distance_two_closure": True,
+                   "windows_nonnegative": True}
+    level_flags = {"M1": True, "M2": True, "D": True, "S_posterior": True, "S_per_gain": True}
+    m2_fails_on, witnesses, identity_checks = [], {}, 0
+    for items in MIXED_STRUCTURE["items"]:
+        for candidates in MIXED_STRUCTURE["candidates"]:
+            for lname in MIXED_STRUCTURE["lattices"]:
+                for law_name in MIXED_STRUCTURE["laws"]:
+                    key = f"n={items},K={candidates},lattice={lname},law={law_name}"
+                    cs = mixed_count_structure(items, candidates, MIXED_LATTICES[lname], MIXED_LAWS[law_name],
+                                               MIXED_STRUCTURE["horizon"])
+                    ls = mixed_level_structure(items, candidates, MIXED_LATTICES[lname], MIXED_LAWS[law_name],
+                                               MIXED_STRUCTURE["horizon"])
+                    structure[key] = cs["flags"]
+                    level[key] = ls["flags"]
+                    identity_checks += cs["identity_checks"]
+                    for name in count_flags:
+                        count_flags[name] &= cs["flags"][name]
+                    for name in level_flags:
+                        level_flags[name] &= ls["flags"][name]
+                    if not ls["flags"]["M2"]:
+                        m2_fails_on.append(law_name)
+                        witnesses.setdefault("M2_fails", {"cell": key, **ls["M2_witness"]})
+                    for name, value in cs["witnesses"].items():
+                        if value is not None and name not in witnesses:
+                            witnesses[name] = {"cell": key, **value}
+    averaging_fails = all(name in witnesses for name in (
+        "g_not_monotone", "prefix_average_above_full", "one_step_decay_bound_fails",
+        "one_step_suffix_compensation_fails"))
+    return {"full": full,
+            "screen": {"cells": len(screen), "windows_checked": screen_windows, "negatives": screen_negatives,
+                       "horizon": screen_grid["horizon"], "by_cell": screen},
+            "rules": {"cells": len(rules), "rules_checked": rules_checked, "comparisons": rule_comparisons,
+                      "violations": rule_violations, "horizon": rules_grid["horizon"], "by_cell": rules},
+            "decaying": {"cells": len(decay), "windows_checked": decay_windows, "negatives": decay_negatives,
+                         "direct_comparisons": decay_comparisons, "violations": decay_violations,
+                         "horizon": decay_grid["horizon"], "by_cell": decay},
+            "count_structure": {"flags": count_flags, "by_cell": structure, "identity_checks": identity_checks},
+            "level_structure": {"flags": level_flags, "by_cell": level, "M2_fails_on_laws": sorted(set(m2_fails_on))},
+            "witnesses": witnesses, "fixed_gain_averaging_step_fails": averaging_fails,
+            "no_violation_anywhere": not (screen_negatives or rule_violations or decay_negatives or decay_violations)}
 
 
 # --------------------------------------------------------------------------
@@ -2419,6 +2907,7 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
     one_step, gate_order = one_step_fixture(), gate_order_fixture()
     consistency, structure = consistency_fixture(), dominance_structure_fixture()
     lemmas, crossing = count_dominance_lemma_fixture(), coupling_crossing_fixture()
+    mixed = mixed_gain_dominance_fixture(full_sweep)
     sweep = dominance_sweep_fixture(full_sweep)
     naive_8_2 = naive["cells"][_cell(8, 2, Q(1, 2))]["readout_gap_by_generation"]
     gated_16_4 = gated["cells"][f"{_cell(16, 4, Q(1, 2))},z=3"]
@@ -2559,17 +3048,37 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
         "quantile_coupling_level_crossing_before_first_passage_witness": crossing["witness_replays"],
         "quantile_coupling_no_crossing_found_on_gate_cells_within_horizon":
             crossing["no_crossing_on_gate_cells_within_horizon"],
+        # Part F: mixed gain laws (version 0.5)
+        "mixed_law_window_sums_nonnegative_every_objective_on_cells":
+            not mixed["screen"]["negatives"] and mixed["screen"]["windows_checked"] > 0,
+        "mixed_law_every_threshold_rule_dominated_n_le_4_and_random_beyond":
+            not mixed["rules"]["violations"] and mixed["rules"]["rules_checked"] > 0,
+        "mixed_law_decaying_schedule_windows_and_rules_dominated":
+            not mixed["decaying"]["negatives"] and not mixed["decaying"]["violations"]
+            and mixed["decaying"]["direct_comparisons"] > 0,
+        "mixed_law_lemmas_L1_L3_and_windows_hold_on_cells": all(
+            mixed["count_structure"]["flags"][name] for name in ("L1", "L2", "L3", "windows_nonnegative")),
+        "mixed_law_window_recursion_identity_exact_and_distance_two_closes":
+            mixed["count_structure"]["flags"]["recursion_identity"]
+            and mixed["count_structure"]["flags"]["distance_two_closure"]
+            and mixed["count_structure"]["identity_checks"] > 0,
+        "mixed_law_fixed_gain_averaging_step_fails_with_witnesses": mixed["fixed_gain_averaging_step_fails"],
+        "mixed_law_level_dominance_holds_but_M2_fails_for_zero_or_two_law":
+            all(mixed["level_structure"]["flags"][name] for name in ("M1", "D", "S_posterior", "S_per_gain"))
+            and not mixed["level_structure"]["flags"]["M2"]
+            and mixed["level_structure"]["M2_fails_on_laws"] == ["zero_or_two_q=1/2"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
-                                  lemmas, crossing),
+                                  lemmas, crossing, mixed),
             "naive": naive, "gated": gated, "fresh": fresh, "drift": drift,
             "brute_force": brute, "divergence": divergence,
             "bounds": bounds, "mutation": mutation, "one_step": one_step,
             "gate_order": gate_order, "dominance_consistency": consistency,
             "dominance_structure": structure, "dominance_sweep": sweep,
-            "count_dominance_lemmas": lemmas, "coupling_crossing": crossing}
+            "count_dominance_lemmas": lemmas, "coupling_crossing": crossing,
+            "mixed_gain_laws": mixed}
 
 
 def _approx(value):
@@ -2577,15 +3086,34 @@ def _approx(value):
 
 
 def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
-              lemmas, crossing) -> dict[str, object]:
+              lemmas, crossing, mixed) -> dict[str, object]:
     """Named cells with a float rendering beside the exact value."""
 
     def sweep_row(law, key):
         return sweep["by_law"][law]["rows"][key]
 
+    def render(mapping):
+        return {k: (_approx(v) if isinstance(v, Q) else [_approx(e) for e in v] if isinstance(v, list) else v)
+                for k, v in mapping.items()}
+
     pair = structure["threshold_pair"]
     pointwise = lemmas["pointwise_cone_failure"] or {}
     witness = crossing["witness"] or {}
+    mixed_laws = {
+        "full_grids": mixed["full"], "no_violation_anywhere": mixed["no_violation_anywhere"],
+        "screen": {k: mixed["screen"][k] for k in ("cells", "windows_checked", "horizon")},
+        "screen_negatives": len(mixed["screen"]["negatives"]),
+        "rules": {k: mixed["rules"][k] for k in ("cells", "rules_checked", "comparisons", "horizon")},
+        "rule_violations": len(mixed["rules"]["violations"]),
+        "decaying": {k: mixed["decaying"][k] for k in ("cells", "windows_checked", "direct_comparisons", "horizon")},
+        "decaying_violations": len(mixed["decaying"]["negatives"]) + len(mixed["decaying"]["violations"]),
+        "count_structure_flags": mixed["count_structure"]["flags"],
+        "recursion_identity_checks": mixed["count_structure"]["identity_checks"],
+        "level_structure_flags": mixed["level_structure"]["flags"],
+        "M2_fails_on_laws": mixed["level_structure"]["M2_fails_on_laws"],
+        "fixed_gain_averaging_step_fails": mixed["fixed_gain_averaging_step_fails"],
+        "witnesses": {name: render(value) for name, value in mixed["witnesses"].items()},
+    }
     count_dominance = {
         "lemma_flags": lemmas["flags"], "lemma_horizon": lemmas["horizon"],
         "cells": len(lemmas["cells"]), "states_below_m_checked": lemmas["states_below_m_checked"],
@@ -2685,4 +3213,5 @@ def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep
         "gate_order_later_generation_agreement": gate_order["later_generation_agreement_counts"],
         "dominance": dominance,
         "count_dominance": count_dominance,
+        "mixed_gain_laws": mixed_laws,
     }

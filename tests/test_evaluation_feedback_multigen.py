@@ -15,12 +15,14 @@ from spiral_ln.evaluation_feedback_multigen import (
     drift_gap_increment_from_one_step, drift_kernel, drift_levels, drift_limit,
     drift_trajectory, false_acceptance_probability, fresh_block_reported,
     fresh_trajectory, gate_threshold, kernel_iterates, late_early_ratio,
-    mutation_candidate_law, mutation_state_distribution,
+    mixed_count_structure, mixed_level_structure, mixed_objectives, mixed_window_screen,
+    mixed_window_sums, mutation_candidate_law, mutation_state_distribution,
     mutation_trajectory, mutation_transition_kernel, naive_closed_form,
     naive_draw_law, naive_gap_bounds, naive_threshold, one_step_gap_change, phantom_share,
-    quantile_coupling_crossing, readout_gap_series, replay_quantile_coupling,
-    reuse_trajectory, running_max_from_point,
-    state_distribution, threshold_pair_counterexample, transition_kernel, verify, window_sums,
+    quantile_coupling_crossing, random_threshold_rules, readout_gap_series, replay_quantile_coupling,
+    reuse_trajectory, rule_dominance_check, running_max_from_point, scheduled_rule_dominance_check,
+    scheduled_window_screen, state_distribution, threshold_pair_counterexample, threshold_rules,
+    transition_kernel, verify, window_sums,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
@@ -391,6 +393,9 @@ def test_divergence_check_on_dp_expectations():
     lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 3, 2),
     lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 0, 2),
     lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 1, -1),
+    lambda: threshold_rules(0),
+    lambda: random_threshold_rules(3, -1, 0),
+    lambda: mixed_objectives(2, (HALF, QUARTER)),
 ])
 def test_malformed_inputs_raise(call):
     with pytest.raises(ValueError):
@@ -885,9 +890,124 @@ def test_quantile_coupling_crossing_witness_replays_and_is_exact():
     assert fixture["witness_replays"] and fixture["no_crossing_on_gate_cells_within_horizon"]
 
 
+# --------------------------------------------------------------------------
+# Part F: mixed gain laws (an accepted candidate may carry gain zero)
+# --------------------------------------------------------------------------
+
+JUMP = (QUARTER, Q(3, 4), Q(1))
+TWO_POINT_QUARTER = {0: Q(3, 4), 1: QUARTER}
+
+
+def test_mixed_window_sums_are_the_one_step_difference_and_reduce_to_window_sums():
+    items, candidates = 4, 2
+    naive = drift_kernel(items, candidates, LATTICE, {0: HALF, 1: HALF}, naive_threshold(items))
+    f = kernel_iterates(naive, lambda x: Q(x[0]), 3)[3]
+    sums = mixed_window_sums(naive, f, items)
+    assert sums[(items, 0)] == [] and all(len(sums[(c, i)]) == items - c for (c, i) in naive)
+    for threshold in (gate_threshold(items, 1), gate_threshold(items, 3), (0, 2, 0, 3, 0)):
+        gated = drift_kernel(items, candidates, LATTICE, {0: HALF, 1: HALF}, threshold)
+        for (c, i) in naive:
+            pf = sum(p * f[y] for y, p in naive[(c, i)])
+            qf = sum(p * f[y] for y, p in gated[(c, i)])
+            a = min(items, c + threshold[c])
+            assert pf - qf == (sums[(c, i)][a - c - 1] if a > c else 0)
+    fixed = drift_kernel(items, candidates, LATTICE, FIXED, naive_threshold(items))
+    g = kernel_iterates(fixed, lambda x: Q(x[0]), 2)[2]
+    assert mixed_window_sums(fixed, g, items) == window_sums(fixed, g, items, naive_draw_law(items, candidates, LATTICE))
+    names = set(mixed_objectives(3, JUMP))
+    assert names == {"count", "level", "hit>=1", "hit>=2", "hit>=3", "level>=1", "level>=2"}
+
+
+def test_mixed_law_hand_values_n3_k1_averaging_step_fails_but_window_holds():
+    """``n = 3, K = 1``, levels ``(1/4, 3/4, 1)``, gain 1 w.p. 1/4, target
+    ``m = 3``: from ``(0, 0)`` the landings at count 1 are ``(1, 0)`` w.p.
+    81/256 and ``(1, 1)`` w.p. 9/256, at count 2 w.p. 27/256 each; the death
+    rates are ``H(0) = 30/256``, ``H(1) = 145/256``.  The posterior-averaged
+    landing survival ``g_1`` is decreasing in the count and the prefix
+    average exceeds the full one, yet the unit window stays positive."""
+
+    kernel = drift_kernel(3, 1, JUMP, TWO_POINT_QUARTER, naive_threshold(3))
+    assert kernel[(0, 0)] == [((0, 0), Q(82, 256)), ((1, 0), Q(81, 256)), ((1, 1), Q(9, 256)),
+                              ((2, 0), Q(27, 256)), ((2, 1), Q(27, 256)), ((3, 0), Q(3, 256)), ((3, 1), Q(27, 256))]
+    u = kernel_iterates(kernel, lambda x: Q(int(x[0] >= 3)), 2)
+    s = lambda k, x: 1 - u[k][x]
+    assert s(1, (0, 0)) == Q(113, 128) == s(1, (1, 0)) == s(1, (2, 0)) and s(1, (1, 1)) == Q(111, 256)
+    assert s(2, (0, 0)) == Q(5867, 8192) and s(2, (1, 0)) == Q(47971, 65536) and s(2, (1, 1)) == Q(12321, 65536)
+    assert s(2, (1, 0)) > s(2, (0, 0)), "L2: the gain-0 landing is worse for hitting than staying"
+    g1 = [(Q(81, 90) * s(1, (1, 0)) + Q(9, 90) * s(1, (1, 1))), (s(1, (2, 0)) + s(1, (2, 1))) / 2]
+    assert g1 == [Q(429, 512), Q(337, 512)] and g1[0] > g1[1]
+    assert g1[0] > (Q(90, 256) * g1[0] + Q(54, 256) * g1[1]) / Q(144, 256) == Q(789, 1024)
+    sums = {k: mixed_window_sums(kernel, u[k], 3) for k in (1, 2)}
+    assert sums[1][(0, 0)][0] == Q(1035, 65536) and sums[2][(0, 0)][0] == Q(56925, 4194304)
+    assert all(w >= 0 for k in (1, 2) for ws in sums[k].values() for w in ws)
+    structure = mixed_count_structure(3, 1, JUMP, TWO_POINT_QUARTER, 4)
+    assert all(structure["flags"].values())
+    witness = structure["witnesses"]["g_not_monotone"]
+    assert witness["m"] == 3 and witness["horizon"] == 1 and witness["state"] == (0, 0)
+    assert witness["g_by_landing_count"] == [Q(429, 512), Q(337, 512)]
+    assert structure["witnesses"]["prefix_average_above_full"]["full_average"] == Q(789, 1024)
+    assert structure["witnesses"]["one_step_decay_bound_fails"]["horizon"] == 1
+    assert structure["witnesses"]["one_step_suffix_compensation_fails"]["horizon"] == 1
+
+
+def test_mixed_window_recursion_identity_and_distance_two_closure():
+    """``W_k = A W_{k-1} + E_{k-1}`` two below the target: at ``(1, 0)`` of
+    the hand cell, ``W_1 = rho(2, 1) (H(1) - H(0)) = 27/256 * 115/256``."""
+
+    kernel = drift_kernel(3, 1, JUMP, TWO_POINT_QUARTER, naive_threshold(3))
+    u = kernel_iterates(kernel, lambda x: Q(int(x[0] >= 3)), 3)
+    sums = {k: mixed_window_sums(kernel, u[k], 3) for k in range(4)}
+    assert sums[1][(1, 0)][0] == Q(27, 256) * Q(115, 256) == Q(3105, 65536)
+    A = kernel[(1, 0)][0][1]
+    assert A == Q(172, 256)
+    for k in (2, 3):
+        E = Q(27, 256) * Q(115, 256) * (1 - u[k - 1][(2, 1)])
+        assert sums[k][(1, 0)][0] == A * sums[k - 1][(1, 0)][0] + E
+    for law in ({0: HALF, 1: QUARTER, 2: QUARTER}, {0: HALF, 2: HALF}, FIXED):
+        structure = mixed_count_structure(4, 2, (QUARTER, HALF, Q(3, 4), Q(1)), law, 8)
+        assert structure["flags"]["recursion_identity"] and structure["flags"]["distance_two_closure"]
+        assert structure["flags"]["windows_nonnegative"] and structure["identity_checks"] > 0
+
+
+def test_mixed_laws_every_threshold_rule_dominated_on_small_cells():
+    assert len(threshold_rules(2)) == 6 and len(threshold_rules(3)) == 24 and len(threshold_rules(4)) == 120
+    assert random_threshold_rules(5, 3, 7) == random_threshold_rules(5, 3, 7)
+    assert all(0 <= t <= 5 - c for rule in random_threshold_rules(5, 10, 1) for c, t in enumerate(rule))
+    out = rule_dominance_check(3, 1, JUMP, {0: HALF, 1: HALF}, threshold_rules(3), 10)
+    assert out["first_violation"] is None and out["rules_checked"] == 23 and out["comparisons"] == 23 * 7 * 11 * 12
+    out = rule_dominance_check(4, 2, (Q(1, 8), Q(7, 8)), {0: QUARTER, 1: Q(3, 4)}, random_threshold_rules(4, 15, 3), 8)
+    assert out["first_violation"] is None
+    screen = mixed_window_screen(4, 2, JUMP, {0: HALF, 2: HALF}, 12)
+    assert screen["negatives"] == [] and screen["windows_checked"] == 8 * 13 * 30
+
+
+def test_mixed_laws_decaying_schedule_dominated_on_small_cells():
+    schedule = decaying_gain_schedule(8, QUARTER, Q(3, 4))
+    screen = scheduled_window_screen(3, 1, JUMP, schedule, 8)
+    assert screen["negatives"] == [] and screen["windows_checked"] > 0
+    out = scheduled_rule_dominance_check(2, 2, JUMP, schedule[:6], threshold_rules(2), 6)
+    assert out["first_violation"] is None and out["rules_checked"] == 5
+    constant = scheduled_rule_dominance_check(3, 1, JUMP, [TWO_POINT_QUARTER] * 5, threshold_rules(3), 5)
+    assert constant["first_violation"] is None and constant["comparisons"] == 23 * 12 * 5 * 7
+
+
+def test_level_dominance_holds_under_mixed_laws_but_M2_fails_for_zero_or_two_law():
+    """From ``(0, 0)`` the lattice ``(1/4, 3/4, 1)`` with gain 2 w.p. 1/2
+    reaches ``p = 1`` on every real draw, while from ``(0, 1)`` a null draw
+    of 3 absorbs the chain at ``p = 3/4``: the naive level iterate is not
+    monotone in the level, although every gate is still dominated."""
+
+    out = mixed_level_structure(3, 1, JUMP, {0: HALF, 2: HALF}, 6)
+    assert out["flags"] == {"M1": True, "M2": False, "D": True, "S_posterior": True, "S_per_gain": True}
+    assert out["M2_witness"] == {"horizon": 4, "state": (0, 0), "value": Q(15856573, 16777216),
+                                 "value_one_level_up": Q(15512157, 16777216)}
+    assert all(mixed_level_structure(3, 1, JUMP, {0: HALF, 1: HALF}, 6)["flags"].values())
+    assert all(mixed_level_structure(4, 2, LATTICE, FIXED, 6)["flags"].values())
+
+
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 79
+    assert report["all_passed"] and len(report["checks"]) == 86
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["brute_force"]["all_match"]
     assert report["headline"]["naive_readout_gap_n8_k2_p_half"]["G=1"]["exact"] == Q(19305, 131072)
@@ -901,3 +1021,8 @@ def test_verify_reports_every_check_passing():
     lemmas = report["count_dominance_lemmas"]
     assert len(lemmas["cells"]) == 23 and lemmas["states_below_m_checked"] == 6168
     assert report["headline"]["count_dominance"]["quantile_coupling_crossing"]["generations"] == 4
+    mixed = report["mixed_gain_laws"]
+    assert mixed["no_violation_anywhere"] and not mixed["full"] and mixed["fixed_gain_averaging_step_fails"]
+    assert mixed["screen"]["cells"] == 120 and mixed["rules"]["cells"] == 40 and mixed["decaying"]["cells"] == 24
+    assert mixed["level_structure"]["M2_fails_on_laws"] == ["zero_or_two_q=1/2"]
+    assert report["headline"]["mixed_gain_laws"]["witnesses"]["g_not_monotone"]["state"] == (0, 0)

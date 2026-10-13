@@ -1,6 +1,6 @@
 {
-  "schema_version": "0.4",
-  "generated_at_utc": "2026-10-13T07:29:44.072444+00:00",
+  "schema_version": "0.5",
+  "generated_at_utc": "2026-10-13T12:49:14.036149+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
     "kernel_rows_sum_to_one": true,
@@ -81,7 +81,14 @@
     "count_window_condition_holds_under_mixed_gain_laws_on_cells": true,
     "count_pointwise_cone_fails_and_a_non_threshold_policy_beats_naive": true,
     "quantile_coupling_level_crossing_before_first_passage_witness": true,
-    "quantile_coupling_no_crossing_found_on_gate_cells_within_horizon": true
+    "quantile_coupling_no_crossing_found_on_gate_cells_within_horizon": true,
+    "mixed_law_window_sums_nonnegative_every_objective_on_cells": true,
+    "mixed_law_every_threshold_rule_dominated_n_le_4_and_random_beyond": true,
+    "mixed_law_decaying_schedule_windows_and_rules_dominated": true,
+    "mixed_law_lemmas_L1_L3_and_windows_hold_on_cells": true,
+    "mixed_law_window_recursion_identity_exact_and_distance_two_closes": true,
+    "mixed_law_fixed_gain_averaging_step_fails_with_witnesses": true,
+    "mixed_law_level_dominance_holds_but_M2_fails_for_zero_or_two_law": true
   },
   "all_passed": true,
   "headline": {
@@ -1018,6 +1025,161 @@
           "n=8,z=2": null,
           "n=8,z=3": null,
           "n=8,nongate": null
+        }
+      }
+    },
+    "mixed_gain_laws": {
+      "full_grids": true,
+      "no_violation_anywhere": true,
+      "screen": {
+        "cells": 250,
+        "windows_checked": 3368150,
+        "horizon": 30
+      },
+      "screen_negatives": 0,
+      "rules": {
+        "cells": 250,
+        "rules_checked": 13300,
+        "comparisons": 60690000,
+        "horizon": 20
+      },
+      "rule_violations": 0,
+      "decaying": {
+        "cells": 48,
+        "windows_checked": 3646530,
+        "direct_comparisons": 3127920,
+        "horizon": 30
+      },
+      "decaying_violations": 0,
+      "count_structure_flags": {
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "recursion_identity": true,
+        "distance_two_closure": true,
+        "windows_nonnegative": true
+      },
+      "recursion_identity_checks": 23800,
+      "level_structure_flags": {
+        "M1": true,
+        "M2": false,
+        "D": true,
+        "S_posterior": true,
+        "S_per_gain": true
+      },
+      "M2_fails_on_laws": [
+        "zero_or_two_q=1/2"
+      ],
+      "fixed_gain_averaging_step_fails": true,
+      "witnesses": {
+        "g_not_monotone": {
+          "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+          "m": 3,
+          "horizon": 1,
+          "state": [
+            0,
+            0
+          ],
+          "g_by_landing_count": [
+            {
+              "exact": "429/512",
+              "float": 0.837891
+            },
+            {
+              "exact": "337/512",
+              "float": 0.658203
+            }
+          ],
+          "survival_at_state": {
+            "exact": "113/128",
+            "float": 0.882812
+          }
+        },
+        "prefix_average_above_full": {
+          "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+          "m": 3,
+          "horizon": 1,
+          "state": [
+            0,
+            0
+          ],
+          "window_top": 1,
+          "prefix_average": {
+            "exact": "429/512",
+            "float": 0.837891
+          },
+          "full_average": {
+            "exact": "789/1024",
+            "float": 0.770508
+          },
+          "survival_at_state": {
+            "exact": "113/128",
+            "float": 0.882812
+          }
+        },
+        "one_step_decay_bound_fails": {
+          "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+          "m": 3,
+          "horizon": 1,
+          "state": [
+            0,
+            0
+          ],
+          "window_top": 1,
+          "prefix_landings_decayed_one_step": {
+            "exact": "4248045/16777216",
+            "float": 0.253203
+          },
+          "prefix_mass": {
+            "exact": "45/128",
+            "float": 0.351562
+          },
+          "survival_at_state_next_horizon": {
+            "exact": "5867/8192",
+            "float": 0.716187
+          }
+        },
+        "one_step_suffix_compensation_fails": {
+          "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+          "m": 3,
+          "horizon": 1,
+          "state": [
+            0,
+            0
+          ],
+          "window_top": 1,
+          "prefix_average": {
+            "exact": "429/512",
+            "float": 0.837891
+          },
+          "suffix_average": {
+            "exact": "337/512",
+            "float": 0.658203
+          },
+          "scaled_excess_of_prefix": {
+            "exact": "27945/2097152",
+            "float": 0.013325
+          },
+          "excess_death_of_prefix_real_landings": {
+            "exact": "114885/16777216",
+            "float": 0.006848
+          }
+        },
+        "M2_fails": {
+          "cell": "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2",
+          "horizon": 4,
+          "state": [
+            0,
+            0
+          ],
+          "value": {
+            "exact": "15856573/16777216",
+            "float": 0.945125
+          },
+          "value_one_level_up": {
+            "exact": "15512157/16777216",
+            "float": 0.924597
+          }
         }
       }
     }
@@ -29604,9 +29766,4356 @@
     "no_crossing_on_gate_cells_within_horizon": true,
     "gate_horizon": 10
   },
+  "mixed_gain_laws": {
+    "full": true,
+    "screen": {
+      "cells": 250,
+      "windows_checked": 3368150,
+      "negatives": [],
+      "horizon": 30,
+      "by_cell": {
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=1,lattice=std_eighth,law=three_point": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 930,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 1674,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 2604,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=2,K=2,lattice=std_eighth,law=three_point": {
+          "windows_checked": 6510,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=1,lattice=std_eighth,law=three_point": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 2232,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 3906,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 5952,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=3,K=2,lattice=std_eighth,law=three_point": {
+          "windows_checked": 14322,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=1,lattice=std_eighth,law=three_point": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 4340,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 11160,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=4,K=2,lattice=std_eighth,law=three_point": {
+          "windows_checked": 26040,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=std_eighth,law=three_point": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 7440,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 12555,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 18600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=std_eighth,law=three_point": {
+          "windows_checked": 42315,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=1,lattice=std_eighth,law=three_point": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=three_point": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "windows_checked": 11718,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "windows_checked": 19530,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=quarter_steps,law=three_point": {
+          "windows_checked": 28644,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "windows_checked": 63798,
+          "negatives": 0
+        },
+        "n=6,K=2,lattice=std_eighth,law=three_point": {
+          "windows_checked": 63798,
+          "negatives": 0
+        }
+      }
+    },
+    "rules": {
+      "cells": 250,
+      "rules_checked": 13300,
+      "comparisons": 60690000,
+      "violations": [],
+      "horizon": 20,
+      "by_cell": {
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=1,lattice=std_eighth,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 3150,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 5670,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 8820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=2,K=2,lattice=std_eighth,law=three_point": {
+          "rules_checked": 5,
+          "comparisons": 22050,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=1,lattice=std_eighth,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 23184,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 40572,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 61824,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=3,K=2,lattice=std_eighth,law=three_point": {
+          "rules_checked": 23,
+          "comparisons": 148764,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=1,lattice=std_eighth,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 174930,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 299880,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 449820,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=4,K=2,lattice=std_eighth,law=three_point": {
+          "rules_checked": 119,
+          "comparisons": 1049580,
+          "all_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=1,lattice=std_eighth,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 118944,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 200718,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 297360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=5,K=2,lattice=std_eighth,law=three_point": {
+          "rules_checked": 59,
+          "comparisons": 676494,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=1,lattice=std_eighth,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_half_jump,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 158760,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=eighth_seven_eighths_one,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 264600,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=quarter_steps,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 388080,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=1/4": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=std_eighth,law=two_point_q=3/4": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=std_eighth,law=zero_or_two_q=1/2": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        },
+        "n=6,K=2,lattice=std_eighth,law=three_point": {
+          "rules_checked": 60,
+          "comparisons": 864360,
+          "random_rules": true,
+          "first_violation": null
+        }
+      }
+    },
+    "decaying": {
+      "cells": 48,
+      "windows_checked": 3646530,
+      "negatives": [],
+      "direct_comparisons": 3127920,
+      "violations": [],
+      "horizon": 30,
+      "by_cell": {
+        "n=2,K=1,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=1,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=1,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=2,K=1,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 25110,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 5400,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=2,K=2,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 13950,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 5,
+            "comparisons": 3000,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 58590,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 38640,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 33480,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 23,
+            "comparisons": 22080,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 111600,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 285600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 65100,
+          "negatives": 0,
+          "direct": {
+            "rules_checked": 119,
+            "comparisons": 166600,
+            "first_violation": null
+          }
+        },
+        "n=5,K=1,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 111600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 111600,
+          "negatives": 0
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 111600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,q0=1/4": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,q0=1/2": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=quarter_half_jump,q0=3/4": {
+          "windows_checked": 188325,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,q0=1/4": {
+          "windows_checked": 111600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,q0=1/2": {
+          "windows_checked": 111600,
+          "negatives": 0
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,q0=3/4": {
+          "windows_checked": 111600,
+          "negatives": 0
+        }
+      }
+    },
+    "count_structure": {
+      "flags": {
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "recursion_identity": true,
+        "distance_two_closure": true,
+        "windows_nonnegative": true
+      },
+      "by_cell": {
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=three_point": {
+          "L1": true,
+          "L2": true,
+          "L3": true,
+          "recursion_identity": true,
+          "distance_two_closure": true,
+          "windows_nonnegative": true
+        }
+      },
+      "identity_checks": 23800
+    },
+    "level_structure": {
+      "flags": {
+        "M1": true,
+        "M2": false,
+        "D": true,
+        "S_posterior": true,
+        "S_per_gain": true
+      },
+      "by_cell": {
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=1,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=3,K=2,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=1,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=4,K=2,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=1,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_half_jump,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=eighth_seven_eighths,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=1/2": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=two_point_q=3/4": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=zero_or_two_q=1/2": {
+          "M1": true,
+          "M2": false,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        },
+        "n=5,K=2,lattice=quarter_steps,law=three_point": {
+          "M1": true,
+          "M2": true,
+          "D": true,
+          "S_posterior": true,
+          "S_per_gain": true
+        }
+      },
+      "M2_fails_on_laws": [
+        "zero_or_two_q=1/2"
+      ]
+    },
+    "witnesses": {
+      "g_not_monotone": {
+        "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+        "m": 3,
+        "horizon": 1,
+        "state": [
+          0,
+          0
+        ],
+        "g_by_landing_count": [
+          "429/512",
+          "337/512"
+        ],
+        "survival_at_state": "113/128"
+      },
+      "prefix_average_above_full": {
+        "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+        "m": 3,
+        "horizon": 1,
+        "state": [
+          0,
+          0
+        ],
+        "window_top": 1,
+        "prefix_average": "429/512",
+        "full_average": "789/1024",
+        "survival_at_state": "113/128"
+      },
+      "one_step_decay_bound_fails": {
+        "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+        "m": 3,
+        "horizon": 1,
+        "state": [
+          0,
+          0
+        ],
+        "window_top": 1,
+        "prefix_landings_decayed_one_step": "4248045/16777216",
+        "prefix_mass": "45/128",
+        "survival_at_state_next_horizon": "5867/8192"
+      },
+      "one_step_suffix_compensation_fails": {
+        "cell": "n=3,K=1,lattice=quarter_half_jump,law=two_point_q=1/4",
+        "m": 3,
+        "horizon": 1,
+        "state": [
+          0,
+          0
+        ],
+        "window_top": 1,
+        "prefix_average": "429/512",
+        "suffix_average": "337/512",
+        "scaled_excess_of_prefix": "27945/2097152",
+        "excess_death_of_prefix_real_landings": "114885/16777216"
+      },
+      "M2_fails": {
+        "cell": "n=3,K=1,lattice=quarter_half_jump,law=zero_or_two_q=1/2",
+        "horizon": 4,
+        "state": [
+          0,
+          0
+        ],
+        "value": "15856573/16777216",
+        "value_one_level_up": "15512157/16777216"
+      }
+    },
+    "fixed_gain_averaging_step_fails": true,
+    "no_violation_anywhere": true
+  },
   "source_sha256": {
-    "scripts/verify_evaluation_feedback_multigen.py": "c15539f06956702cb19772e8ba2e02750a14482f8119ac0f2b41aeef325d9ca0",
-    "src/spiral_ln/evaluation_feedback_multigen.py": "0021ecefaa61915306bf8f411ad9324bd076664102d1e995c9af28253560a5b1",
+    "scripts/verify_evaluation_feedback_multigen.py": "bda51e35499c1e59cb4f388a636d7b2552b6fcfa67e12d680005a63a24f2e4b3",
+    "src/spiral_ln/evaluation_feedback_multigen.py": "96713763974b1820679ef93c14c5b7972c7e2e1c1499b70596a8f752905b98f6",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }

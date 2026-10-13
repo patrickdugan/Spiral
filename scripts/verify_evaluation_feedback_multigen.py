@@ -23,9 +23,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--full-sweep", action="store_true",
-                        help="run the dominance sweep on all 324 cells per gain law (several minutes)")
+                        help="run the dominance sweep on all 324 cells per gain law and the mixed-law "
+                             "fixture on its full grids (several minutes)")
     args = parser.parse_args()
-    report = {"schema_version": "0.4",
+    report = {"schema_version": "0.5",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify(args.full_sweep)}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_feedback_multigen.py",

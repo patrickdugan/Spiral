@@ -1,18 +1,18 @@
 # The selection gap across generations, exactly
 
-Draft 0.4 — 2026-10-13 (0.3, 0.2: 2026-10-13; 0.1: 2026-10-12). Companion to `evaluation_feedback_insertions.md`, whose
+Draft 0.5 — 2026-10-13 (0.4–0.2: 2026-10-13; 0.1: 2026-10-12). Companion to `evaluation_feedback_insertions.md`, whose
 selection law stops at one generation and whose multi-generation rows come from seeded JavaScript. This note replaces the
 accumulation claim with a finite Markov chain in exact arithmetic. No model is called; nothing here is evidence about any
 controller. Evidence levels follow the calculus card (§11): *algebraic identity* (every parameter), *finite verified example*
 (enumerated cells only), *synthetic mechanism result* (a property of this toy chain). 0.2 added Props. 5–7; 0.3 proved the
-naive chain above every gated chain in true value (Prop. 8) and left the count as a 972-cell search; 0.4 proves the count
-ordering (Prop. 9, stochastic dominance at every generation from every state, by the window sums of the naive iterates) and
-records exact witnesses for why the standard routes fail. Source `src/spiral_ln/evaluation_feedback_multigen.py`; 158 tests
-(`python -m pytest tests/test_evaluation_feedback_multigen.py -q` with `PYTHONPATH=src`); receipt
-`output/evaluation_feedback_multigen/multigen_v0_4.json` (79 checks, source hashes, exact fractions, float renderings under
-`headline`) from `python scripts/verify_evaluation_feedback_multigen.py --full-sweep --output <receipt>`; without
-`--full-sweep` the dominance sweep runs the fixed law on every cell and the other laws on subsets. Bounds involving \(\ln\)
-or \(\sqrt{}\) are floats, compared with exact values under an absolute tolerance of \(10^{-12}\).
+naive chain above every gated chain in true value (Prop. 8); 0.4 proved the count ordering (Prop. 9) and recorded why the
+standard routes fail; 0.5 asks whether both survive mixed gain laws (§6): no counterexample in an exact search over every rule, the
+proof extended two below the target, finite beyond. Source `src/spiral_ln/evaluation_feedback_multigen.py`; 167 tests (`python -m
+pytest tests/test_evaluation_feedback_multigen.py -q` with `PYTHONPATH=src`); receipt `output/evaluation_feedback_multigen/
+multigen_v0_5.json` (86 checks, source hashes, exact fractions, float renderings under `headline`) from `python
+scripts/verify_evaluation_feedback_multigen.py --full-sweep --output <receipt>`; without `--full-sweep` the dominance sweep and the
+mixed-law fixture run on reduced grids. Bounds involving \(\ln\) or \(\sqrt{}\) are floats, compared with exact values under an
+absolute tolerance of \(10^{-12}\).
 
 ## 1. The chain: vertices, edges, policy
 
@@ -184,12 +184,11 @@ holds for \(\varphi=1\{i\ge\ell\}\). The naive hypothesis is needed: for \(t=(0,
 \((\tfrac1{32},\tfrac5{32},\tfrac9{16},\tfrac{23}{32},\tfrac{15}{16})\), the higher rule is ahead from \((0,0)\) in the limit
 (\(1483/2752\) vs \(9175/41872\): the lower rule lands at count 1, which \(t=2\) absorbs) and at horizon 3 from \((0,2)\).
 
-**The count: search.** \(\mathbb E^0[c_\infty]=n\) whenever \(p(1)>0\), so the limit ordering is trivial. Exact search
-(`dominance_sweep_fixture`) over \(n\in\{4,8,16\}\), \(K\in\{1,2,4\}\), \(z\in\{1,2,3\}\),
-\(\delta\in\{\tfrac1{16},\tfrac18,\tfrac14,\tfrac38\}\), \(p_0\in\{\tfrac14,\tfrac12,0\}\), fixed, two-point and decaying laws:
-972 cells, \(g\le100\) (stopping at absorbed mass \(\ge1-10^{-9}\)), 88,171 comparisons of \(\mathbb E[c_g]\) and
-\(\mathbb E[p(i_g)]\), exact limits on the 648 constant-law cells: naive above gate everywhere. The fixed-law rows are now
-covered by Prop. 9; the two-point and decaying rows remain finite; the mutation chain was not searched.
+**The count: search.** \(\mathbb E^0[c_\infty]=n\) whenever \(p(1)>0\), so the limit ordering is trivial. Exact search (`dominance_sweep_fixture`)
+over \(n\in\{4,8,16\}\), \(K\in\{1,2,4\}\), \(z\in\{1,2,3\}\), \(\delta\in\{\tfrac1{16},\tfrac18,\tfrac14,\tfrac38\}\), \(p_0\in\{\tfrac14,\tfrac12,0\}\), fixed,
+two-point and decaying laws: 972 cells, \(g\le100\) (stopping at absorbed mass \(\ge1-10^{-9}\)), 88,171 comparisons of \(\mathbb E[c_g]\)
+and \(\mathbb E[p(i_g)]\), exact limits on the 648 constant-law cells: naive above gate everywhere. The fixed-law rows are now covered by
+Prop. 9; the two-point and decaying rows remain finite; the mutation chain was not searched.
 
 **Proposition 9 (dominance in count).** Fixed gain, any non-decreasing level function, any \(n,K\), any threshold rule
 \(t\ge0\), any state \(x\) and any non-decreasing \(\psi\) on counts: \(\mathbb E^t_x[\psi(c_g)]\le\mathbb E^0_x[\psi(c_g)]\)
@@ -217,19 +216,30 @@ only that the best of \(K\) is stochastically non-decreasing in the level and th
 non-uniform and big-jump lattices), every \(m\) and state (6,168 below \(m\)), horizon \(\le12\); dominance for all 120 rules
 at \(n=4\) (test).
 
-**Why the standard routes fail, with witnesses.** The pointwise cone \(u_k(J,i+1)\ge u_k(c,i)\) is false: \(n=4,K=2,
-\delta=\tfrac1{16}\), from \((0,2)\) at horizon 5 the landing \((3,3)\) is worth \(3.4756<3.4840\), so rejecting the draw 3
-once and then playing naive beats the naive rule at horizon 6: the naive rule maximizes \(\mathbb E[c_g]\) among threshold
-rules, not among all accept/reject policies. Prop. 8's route (i)–(iii), the policy-improvement and componentwise conditions
-fail because the naive count iterates are not monotone in the count (\(n=4,K=2,\delta=\tfrac1{16}\): two naive steps give
-\(2.344\) from \((0,0)\), \(2.260\) from \((1,0)\); witnesses in `dominance_structure_fixture`). The same-uniform coupling
-cannot give the hitting form either: \(n=5,K=1\), levels \((0,\tfrac18,\tfrac38,\tfrac7{16},\tfrac12,\tfrac{15}{16})\),
-\(t=(1,4,0,0,0,0)\), \(m=5\): the uniforms \((45619/65536,\,31371/32768,\,420931/524288,\,1955493/2097152)\) drive the naive
-chain \((0,0)\to(1,1)\to(4,2)\) and hold it there while the gated chain goes \((0,0)\to(2,1)\to(3,2)\to(4,3)\), its level
-passing the naive's while the naive count is \(4<m\) (`quantile_coupling_crossing`, replayed from the uniforms); on the lattice
-\(\tfrac14+i/8\) no such path exists for \(z=1,2,3\) or the non-gate rule within 10 generations. Mixed gain laws: (L1)–(L3) go
-through, but (L4)'s averaging step needs the landing level to be a function of the landing count; the window condition holds
-on 12 two-point and \(\{0,2\}\) cells (finite only).
+**Why the standard routes fail, with witnesses.** The pointwise cone \(u_k(J,i+1)\ge u_k(c,i)\) is false: \(n=4,K=2,\delta=\tfrac1{16}\),
+from \((0,2)\) at horizon 5 the landing \((3,3)\) is worth \(3.4756<3.4840\), so rejecting the draw 3 once and then playing naive beats
+the naive rule at horizon 6: the naive rule maximizes \(\mathbb E[c_g]\) among threshold rules, not among all accept/reject policies.
+Prop. 8's route (i)–(iii), the policy-improvement and componentwise conditions fail because the naive count iterates are not monotone
+in the count (\(n=4,K=2,\delta=\tfrac1{16}\): two naive steps give \(2.344\) from \((0,0)\), \(2.260\) from \((1,0)\); witnesses in
+`dominance_structure_fixture`). The same-uniform coupling cannot give the hitting form either: \(n=5,K=1\), levels
+\((0,\tfrac18,\tfrac38,\tfrac7{16},\tfrac12,\tfrac{15}{16})\), \(t=(1,4,0,0,0,0)\), \(m=5\): the uniforms \((45619/65536,\,31371/32768,\,420931/524288,\,
+1955493/2097152)\) drive the naive chain \((0,0)\to(1,1)\to(4,2)\) and hold it there while the gated chain goes
+\((0,0)\to(2,1)\to(3,2)\to(4,3)\), its level passing the naive's while the naive count is \(4<m\) (`quantile_coupling_crossing`, replayed
+from the uniforms); on the lattice \(\tfrac14+i/8\) no such path exists for \(z=1,2,3\) or the non-gate rule within 10 generations.
+
+**Mixed gain laws (0.5).** If an accepted candidate may carry gain 0, a draw \(J>c\) accepted with gain 0 lands at \((J,i)\), which
+(L2) makes *worse* for reaching \(m\) than staying at \((c,i)\); a rule rejecting such draws could beat naive. Exact search
+(`mixed_gain_dominance_fixture`): every prefix window sum of the naive iterates for every objective (count, level, each hitting and
+level indicator), which by \(Q^kf\le QP^{k-1}f\le P^kf\) covers every rule at once (\(n=2..6\), \(K\le2\), jumps \((\tfrac14,\tfrac34,1)\),
+\((\tfrac18,\tfrac78)\), two-point \(q\in\{\tfrac14,\tfrac12,\tfrac34\}\) and \(\{0,2\}\) laws, \(g\le20\)); every rule at \(n\le4\) and random
+rules at \(n=5,6\) from every state; the decaying schedule. **No violation anywhere** (count, level, both hitting forms). The fixed-gain
+proof does not extend: (L1) holds for every law and (L2)–(L3) for laws on \(\{0,1\}\) (finite beyond: \(\{0,2\}\) and three-point), but the landing average \(g_k(J)=\sum_\mu w_\mu(J)s_k(J,i+\mu)\), \(w\) the posterior on the gain
+given the count, is not monotone in \(J\): \(n=3,K=1\), levels \((\tfrac14,\tfrac34,1)\), \(q=\tfrac14\), \(m=3\), from \((0,0)\) at \(k=1\),
+\(g_1=(\tfrac{429}{512},\tfrac{337}{512})\), prefix average above \(e_1=\tfrac{789}{1024}\), unit window \(\tfrac{1035}{65536}>0\). Exact
+instead, for \(a<m\): \(W^a_k(x)=(1-H(i))W^a_{k-1}(x)+E^a_{k-1}(x)+\sum_{y\in(c,a]}\rho(y)W^{m-1}_{k-1}(y)-B_aW^{m-1}_{k-1}(x)\), with
+\(E^a=\sum_{(c,a]}\rho(y)(H(i_y)-H(i))s_{k-1}(y)\ge0\) and \(W^{m-1}\) the full-window slacks (\(\ge0\) by (L1)); only the last term is
+negative, and at \(c=m-2\) it cancels: \(W_k=AW_{k-1}+E_{k-1}\ge0\), **a theorem two below the target for every gain law**; below that
+finite. Level: (M1) holds, (M2) fails for \(\{0,2\}\) (\(u_4(0,0)=\tfrac{15856573}{16777216}>u_4(0,1)\) on the same cell); (D) holds finitely.
 
 ## 7. The readout-gap series and the divergence flags
 
@@ -243,6 +253,7 @@ increments require; two-point drift matches; the fresh arm flags only the first 
 Candidates are independent of the incumbent, or correlated through one parameter \(q\) (§5, where the correlation raises
 rather than lowers the accumulated gap); neither chain is an exact image of `sim.js`. \(n\) is fixed; labels are clean; gains
 are i.i.d. across candidates; the \(p\)-lattice is capped at one, and results near the corner \((n,\text{top})\) are timing
-effects. Propositions 5–9 are general (Props. 8–9 for the fixed gain law); the \(q\)-survey, the chaining counts, the two-point
-and decaying orderings and the mixed-law window condition are finite checks on the enumerated cells. Results are about
-distributions, not sample paths; no model, agent or observed-controller evidence is claimed.
+effects. Propositions 5–9 are general (Props. 8–9 for the fixed gain law; under mixed laws only the window recursion and its
+distance-two closure are proven); the \(q\)-survey, the chaining counts, the two-point and decaying orderings and the mixed-law dominance
+are finite checks on the enumerated cells. Results are about distributions, not sample paths; no model, agent or observed-controller
+evidence is claimed.
