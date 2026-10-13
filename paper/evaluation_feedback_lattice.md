@@ -1,12 +1,14 @@
 # Partial leakage as a lattice of feedback channels
 
-Version 0.4 — 2026-10-13. Exact fixtures for the gap named in
+Version 0.5 — 2026-10-13. Exact fixtures for the gap named in
 [evaluation_feedback_insertions.md](evaluation_feedback_insertions.md) §H:
 feedback that reveals failure *categories* and not items. Files:
 `src/spiral_ln/evaluation_feedback_lattice.py`, `tests/test_evaluation_feedback_lattice.py`,
-`output/evaluation_feedback_lattice/lattice_v0_4.json`. No model was called.
-Version 0.4 adds the pair-commutation lemma (Lemma 9) and a survey of what
-structure the optimal first patch does not have.
+`output/evaluation_feedback_lattice/lattice_v0_5.json`. No model was called.
+Version 0.4 added the pair-commutation lemma (Lemma 9) and a survey of what
+structure the optimal first patch does not have; version 0.5 refutes the two
+regularities that survey left standing and records the one two-category
+pattern that holds on every state enumerated.
 Version 0.2 settled the two items version 0.1 left as finite checks: the
 category map preserves meets (Proposition 2b), preserves joins exactly when
 the intersection graph is a forest (Proposition 2c), and the optimal adaptive
@@ -19,7 +21,7 @@ only); no synthetic mechanism result is claimed.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_4.json
+python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_5.json
 python -m pytest tests/test_evaluation_feedback_lattice.py -q
 ```
 
@@ -180,14 +182,37 @@ multiset of (remaining, failures) pairs. *Evidence status: algebraic
 identity*; checked on all 2268 refining pairs of \([6]\), 162 cases each
 (`greedy_vs_optimal_fixture`).
 
+**Theorem 10 (one hit: the best finisher, in closed form).** With one hit
+needed the optimal expected patch count is \(\min_c(n_c+1)/(F_c+1)\), attained
+by patching a category of minimal \((n_c+1)/(F_c+1)\) until it hits and never
+switching. *Proof.* Induct on the total number of items. Sticking with
+\(c\) costs \(1+(1-F_c/n_c)\,n_c/(F_c+1)=(n_c+1)/(F_c+1)\). A miss in \(c\)
+lowers its value to \(n_c/(F_c+1)\) and changes nothing else, so if \(c\)
+was a best finisher it still is, and by induction continuing with it is
+optimal from the new state. Starting in any other \(c'\) costs at least
+\(1+(1-F_{c'}/n_{c'})\min(n_{c'}/(F_{c'}+1),\,v)\) with \(v\) the best
+finisher's value; the first branch gives \((n_{c'}+1)/(F_{c'}+1)\ge v\), and
+the second gives \(1+(1-F_{c'}/n_{c'})v\ge v\) because
+\(v\le(n_{c'}+1)/(F_{c'}+1)\le n_{c'}/F_{c'}\). \(\square\) *Algebraic
+identity*; `one_hit_fixture` checks the closed form against the dynamic
+programme on every state with at most four categories of size at most
+eight. The highest current rate is therefore *not* the right rule at one hit:
+in \(\{(2,1),(16,9)\}\) the rates are \(\tfrac12<\tfrac9{16}\) but the
+finishers are \(\tfrac32<\tfrac{17}{10}\), and patching \((2,1)\) first costs
+\(3/2\) against \(53/32\) for the higher rate. The exchange argument that
+version 0.2 offered for "greedy is optimal at one hit" only compares
+policies that would patch the other category next; it does not cover a
+policy that stays in a category whose rate rose after a miss. On the
+exhaustive grid the two rules happen to agree, which is why the error
+survived the checks.
+
 **Greedy is not optimal.** The greedy rule (highest current rate, ties to
 the smaller category) is one adaptive policy, so \(V^*\le\) greedy \(\le\)
-static everywhere. It is optimal when one hit remains, since exchanging two
-adjacent patches in different categories changes only the chance that the
-first of them ends the run, and when every failure must be hit, since any
-policy that never patches an exhausted category needs
+static everywhere. It agrees with the optimum at one hit on the grid, but
+not in general (Theorem 10's witness), and it is optimal when every failure
+must be hit, since any policy that never patches an exhausted category needs
 \(\sum_cF_c(n_c+1)/(F_c+1)\) patches, the sum of the last-failure positions.
-Both are checked exhaustively. It is not optimal in general: with categories
+It is not optimal in general: with categories
 \((4,2)\) and \((2,1)\) and two hits needed, greedy patches the smaller
 category first and needs \(19/6\) patches; patching the larger first needs
 \(37/12\). On six items greedy is strictly worse in 180 of 32,886 cases; on
@@ -225,9 +250,10 @@ probability).** In \(\{(2,1),(5,2)\}\) with \(H=2\) the rates are
 patches, \((2,1)\) first \(7/2\). So beyond \(H=1\) the optimal policy is not
 "a highest-rate category with the right tie-break": `rate_violations` finds
 82 states among the 33,915 in which every optimal first patch has a strictly
-sub-maximal rate, none with \(H=1\), where the exchange argument makes the
-highest rate optimal. The same enumeration puts greedy's first patch off the
-optimum in 131 states, and no \(H\)-dependent tie-break repairs the 82.
+sub-maximal rate, none with \(H=1\) on that grid, where the highest-rate and
+best-finisher orders never strictly disagree (they do at larger sizes,
+Theorem 10). The same enumeration puts greedy's first patch off the optimum
+in 131 states, and no \(H\)-dependent tie-break repairs the 82.
 *Evidence status: algebraic identity* for the witness; *finite verified
 example* for the counts. What remains open is a structural description of
 the optimal policy; the dynamic programme is exact and cheap, so the gap is
@@ -252,9 +278,16 @@ best-finisher (smallest \((n+1)/(F+1)\)) or the worst-finisher category.
 Equal rates do not favour the larger category: in
 \(\{(2,1),(2,1),(4,2)\}\) with two hits needed the optimal first patch is a
 \((2,1)\), against the two-category witness of Proposition 7, in four such
-states. One regularity survives every state: where three or more distinct
-rates are present, the lowest is never the unique optimal first choice.
-That is a conjecture with a finite check behind it, not a theorem.
+states. Two regularities survived every state of that grid and fail just
+beyond it (`conjecture_refutations`): with exactly two categories of equal
+rate the larger is *not* always optimal first for \(H\ge2\), since in
+\(\{(3,2),(6,4)\}\) with two hits needed the smaller costs \(13/5\) against
+\(121/45\) (58 such pairs among 1,044 with sizes at most twelve); and the
+lowest of three or more distinct rates *can* be the unique optimal first
+patch, as in \(\{(5,3),(8,5),(9,6)\}\) with three hits needed, where the
+rate-\(\tfrac35\) category costs \(21/5\) against \(1675/392\) and
+\(443/105\). Each refutation is an exact state; neither regularity is a
+theorem, and the earlier conjecture is withdrawn.
 
 ## 4. Ledger wrapper
 

@@ -1,11 +1,14 @@
 {
   "schema_version": "0.1",
-  "generated_at_utc": "2026-10-13T04:55:57.141718+00:00",
+  "generated_at_utc": "2026-10-13T07:16:38.288311+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
     "two_patches_in_different_categories_commute_when_two_hits_remain": true,
     "no_extremal_rule_covers_the_optimal_first_patch": true,
-    "lowest_of_three_rates_never_uniquely_optimal": true,
+    "lowest_of_three_rates_never_uniquely_optimal_on_the_grid": true,
+    "both_grid_regularities_refuted_beyond_the_grid": true,
+    "one_hit_value_is_the_best_finisher_closed_form": true,
+    "highest_rate_first_not_optimal_at_one_hit_witness": true,
     "no_index_rule_on_own_counts_and_hits_needed": true,
     "no_index_rule_even_with_global_totals": true,
     "optimal_first_patch_can_have_lower_hit_probability": true,
@@ -1312,6 +1315,168 @@
     "lowest_of_three_rates_uniquely_optimal": 0,
     "lowest_witness": null
   },
+  "conjecture_refutations": {
+    "equal_rates_larger_first": {
+      "state": [
+        [
+          3,
+          2
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "hits_needed": 2,
+      "values": [
+        [
+          [
+            3,
+            2
+          ],
+          "13/5"
+        ],
+        [
+          [
+            6,
+            4
+          ],
+          "121/45"
+        ]
+      ],
+      "refuted": true
+    },
+    "lowest_rate_never_uniquely_optimal": {
+      "state": [
+        [
+          5,
+          3
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          6
+        ]
+      ],
+      "hits_needed": 3,
+      "values": [
+        [
+          [
+            5,
+            3
+          ],
+          "21/5"
+        ],
+        [
+          [
+            8,
+            5
+          ],
+          "1675/392"
+        ],
+        [
+          [
+            9,
+            6
+          ],
+          "443/105"
+        ]
+      ],
+      "rates": [
+        [
+          [
+            5,
+            3
+          ],
+          "3/5"
+        ],
+        [
+          [
+            8,
+            5
+          ],
+          "5/8"
+        ],
+        [
+          [
+            9,
+            6
+          ],
+          "2/3"
+        ]
+      ],
+      "refuted": true
+    }
+  },
+  "one_hit": {
+    "states": 91389,
+    "closed_form_mismatches": 0,
+    "best_finisher_not_optimal_first": 0,
+    "rate_versus_finisher_witness": {
+      "state": [
+        [
+          2,
+          1
+        ],
+        [
+          16,
+          9
+        ]
+      ],
+      "values": [
+        [
+          [
+            2,
+            1
+          ],
+          "3/2"
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          "53/32"
+        ]
+      ],
+      "rates": [
+        [
+          [
+            2,
+            1
+          ],
+          "1/2"
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          "9/16"
+        ]
+      ],
+      "finishers": [
+        [
+          [
+            2,
+            1
+          ],
+          "3/2"
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          "17/10"
+        ]
+      ],
+      "highest_rate_first_is_worse": true
+    }
+  },
   "category_ledger": {
     "respected": {
       "selection": {
@@ -1529,7 +1694,7 @@
   },
   "source_sha256": {
     "scripts/verify_evaluation_feedback_lattice.py": "6893e337216319aa6ca07d4128726b3dc1ead8c2d17da1d08c2568bc1f41b402",
-    "src/spiral_ln/evaluation_feedback_lattice.py": "7bc0700c0e4542d6e3f9507dad77e562980395c76bf0d91a71fbe7bd514c622d",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "9231b76226a4daf37bc6891223a336cf6780d46dc5d7a9abd71449ab727498bb",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }

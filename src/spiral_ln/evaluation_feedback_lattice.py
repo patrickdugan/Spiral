@@ -41,9 +41,10 @@ that reveal more than a score and less than the items.
     never above ``m*``.  Adaptive schedules that re-query the channel after
     every patch are solved exactly by dynamic programming on category counts:
     the greedy one, and the optimal one, which is monotone along refinement
-    because a finer-informed loop can imitate any coarser policy.  Greedy is
-    optimal when one hit remains or every failure must be hit, and not in
-    general.
+    because a finer-informed loop can imitate any coarser policy.  With one
+    hit needed the optimum is the best finisher, ``min_c (n_c+1)/(F_c+1)``,
+    in closed form; greedy by rate is optimal when every failure must be hit
+    and not in general, not even at one hit.
 
 4.  ``audit_category_ledger`` wraps ``audit_ledger`` with a
     ``category_feedback`` event kind that records the partition used.
@@ -1046,6 +1047,80 @@ def policy_structure_fixture(max_size: int = 5, max_categories: int = 4) -> dict
             "lowest_of_three_rates_uniquely_optimal": lowest_rate_unique, "lowest_witness": lowest_witness}
 
 
+def one_hit_value(categories) -> Q:
+    """Exact minimum expected patches to one hit: ``min_c (n_c + 1)/(F_c + 1)``.
+
+    A miss in a category lowers that category's value from ``(n+1)/(F+1)``
+    to ``n/(F+1)``, so the best finisher stays best and an optimal policy
+    never switches; sticking with it costs ``(n+1)/(F+1)`` by the identity
+    ``1 + (1 - F/n) n/(F+1) = (n+1)/(F+1)``.
+    """
+
+    counts = validate_category_counts(categories)
+    if not any(failures for _, failures in counts):
+        raise ValueError("no failure to hit")
+    return min(Q(size + 1, failures + 1) for size, failures in counts if failures)
+
+
+def best_finishers(categories) -> tuple[tuple[int, int], ...]:
+    """The categories attaining ``one_hit_value``: the optimal first patches at one hit."""
+
+    counts = validate_category_counts(categories)
+    value = one_hit_value(counts)
+    return tuple(sorted({pair for pair in counts if pair[1] and Q(pair[0] + 1, pair[1] + 1) == value}))
+
+
+def one_hit_fixture(max_size: int = 8, max_categories: int = 4) -> dict[str, object]:
+    """Checks the closed form against the dynamic programme on every state,
+    and exhibits a state where the highest-rate category is not an optimal
+    first patch at one hit."""
+
+    states = [state for required, state in adaptive_states(max_size, max_categories) if required == 1]
+    mismatches = sum(_optimal_value(1, state) != one_hit_value(state) for state in states)
+    wrong_first = sum(
+        not set(best_finishers(state)) <= {c for c, v in first_patch_values(1, state).items()
+                                            if v == min(first_patch_values(1, state).values())}
+        for state in states)
+    witness_state = ((2, 1), (16, 9))
+    witness = first_patch_values(1, witness_state)
+    return {"states": len(states), "closed_form_mismatches": mismatches,
+            "best_finisher_not_optimal_first": wrong_first,
+            "rate_versus_finisher_witness": {
+                "state": witness_state, "values": _render_values(witness),
+                "rates": (((2, 1), Q(1, 2)), ((16, 9), Q(9, 16))),
+                "finishers": (((2, 1), Q(3, 2)), ((16, 9), Q(17, 10))),
+                "highest_rate_first_is_worse": witness[(16, 9)] > witness[(2, 1)] == one_hit_value(witness_state),
+            }}
+
+
+def conjecture_refutations() -> dict[str, object]:
+    """Two regularities that hold on the exhaustive grid (sizes at most five)
+    and fail just beyond it, each refuted by one exact state.
+
+    Equal rates with the larger category first: in {(3,2),(6,4)} with two
+    hits needed the smaller category is strictly better first.  The lowest
+    of three or more distinct rates never uniquely optimal: in
+    {(5,3),(8,5),(9,6)} with three hits needed the lowest rate, 3/5, is the
+    unique optimal first patch.
+    """
+
+    equal = first_patch_values(2, ((3, 2), (6, 4)))
+    lowest = first_patch_values(3, ((5, 3), (8, 5), (9, 6)))
+    rates = {c: Q(c[1], c[0]) for c in lowest}
+    return {
+        "equal_rates_larger_first": {
+            "state": ((3, 2), (6, 4)), "hits_needed": 2, "values": _render_values(equal),
+            "refuted": equal[(3, 2)] < equal[(6, 4)],
+        },
+        "lowest_rate_never_uniquely_optimal": {
+            "state": ((5, 3), (8, 5), (9, 6)), "hits_needed": 3, "values": _render_values(lowest),
+            "rates": _render_values(rates),
+            "refuted": (lowest[(5, 3)] < lowest[(8, 5)] and lowest[(5, 3)] < lowest[(9, 6)]
+                        and rates[(5, 3)] < rates[(8, 5)] < rates[(9, 6)]),
+        },
+    }
+
+
 def rate_violations(max_size: int, max_categories: int) -> dict[str, object]:
     """States in which every optimal first patch has a strictly lower current
     hit probability than some other category, so no rule that patches a
@@ -1361,6 +1436,8 @@ def verify() -> dict[str, object]:
     policy = greedy_vs_optimal_fixture()
     index = index_rule_fixture()
     structure = policy_structure_fixture()
+    refutations = conjecture_refutations()
+    one_hit = one_hit_fixture()
     ledger = category_ledger_fixture()
     four = policy["four_item_witness"]
     checks = {
@@ -1368,8 +1445,15 @@ def verify() -> dict[str, object]:
             structure["commutation"]["violations"] == 0 and structure["commutation"]["pairs_checked"] > 0,
         "no_extremal_rule_covers_the_optimal_first_patch":
             structure["optimal_outside_extremal_rules"] > 0 and structure["equal_rates_largest_not_optimal"] > 0,
-        "lowest_of_three_rates_never_uniquely_optimal":
+        "lowest_of_three_rates_never_uniquely_optimal_on_the_grid":
             structure["lowest_of_three_rates_uniquely_optimal"] == 0,
+        "both_grid_regularities_refuted_beyond_the_grid":
+            refutations["equal_rates_larger_first"]["refuted"]
+            and refutations["lowest_rate_never_uniquely_optimal"]["refuted"],
+        "one_hit_value_is_the_best_finisher_closed_form":
+            one_hit["closed_form_mismatches"] == 0 and one_hit["best_finisher_not_optimal_first"] == 0,
+        "highest_rate_first_not_optimal_at_one_hit_witness":
+            one_hit["rate_versus_finisher_witness"]["highest_rate_first_is_worse"],
         "no_index_rule_on_own_counts_and_hits_needed":
             index["own_counts"]["reversals"] > 0 and index["reversal_witness"]["holds"],
         "no_index_rule_even_with_global_totals":
@@ -1432,4 +1516,5 @@ def verify() -> dict[str, object]:
             "checks": checks, "all_passed": all(checks.values()),
             "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
             "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
-            "index_rules": index, "policy_structure": structure, "category_ledger": ledger}
+            "index_rules": index, "policy_structure": structure, "conjecture_refutations": refutations,
+            "one_hit": one_hit, "category_ledger": ledger}

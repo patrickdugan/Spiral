@@ -30,8 +30,44 @@ from spiral_ln.evaluation_feedback_lattice import (
     preference_reversals, rate_violations,
 )
 from spiral_ln.evaluation_feedback_lattice import (
+    best_finishers, conjecture_refutations, one_hit_fixture, one_hit_value,
     pair_commutation_check, policy_structure_fixture, two_patch_value,
 )
+
+
+def test_one_hit_closed_form_matches_the_dynamic_programme():
+    for required, state in adaptive_states(6, 3):
+        if required != 1:
+            continue
+        assert optimal_adaptive_value(state, 1) == one_hit_value(state)
+        values = first_patch_values(1, state)
+        best = min(values.values())
+        assert all(values[c] == best for c in best_finishers(state))
+    with pytest.raises(ValueError):
+        one_hit_value(((3, 0),))
+
+
+def test_one_hit_highest_rate_is_not_the_rule():
+    values = first_patch_values(1, ((2, 1), (16, 9)))
+    assert values[(2, 1)] == Q(3, 2) < values[(16, 9)] == Q(53, 32)
+    assert one_hit_value(((2, 1), (16, 9))) == Q(3, 2) and best_finishers(((2, 1), (16, 9))) == ((2, 1),)
+    small = first_patch_values(1, ((2, 1), (7, 4)))
+    assert small[(7, 4)] == Q(8, 5) > small[(2, 1)] == Q(3, 2)
+    report = one_hit_fixture(6, 3)
+    assert report["closed_form_mismatches"] == 0 and report["best_finisher_not_optimal_first"] == 0
+    assert report["rate_versus_finisher_witness"]["highest_rate_first_is_worse"]
+
+
+def test_grid_regularities_fail_beyond_the_grid():
+    equal = first_patch_values(2, ((3, 2), (6, 4)))
+    assert equal[(3, 2)] == Q(13, 5) < equal[(6, 4)] == Q(121, 45)
+    lowest = first_patch_values(3, ((5, 3), (8, 5), (9, 6)))
+    assert lowest[(5, 3)] == Q(21, 5)
+    assert lowest[(5, 3)] < lowest[(8, 5)] == Q(1675, 392)
+    assert lowest[(5, 3)] < lowest[(9, 6)] == Q(443, 105)
+    report = conjecture_refutations()
+    assert report["equal_rates_larger_first"]["refuted"]
+    assert report["lowest_rate_never_uniquely_optimal"]["refuted"]
 
 
 # --- structure of the optimal first patch ------------------------------------
@@ -742,6 +778,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 33
+    assert report["all_passed"] and len(report["checks"]) == 36
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)
