@@ -288,6 +288,14 @@ evidence either way about the true one until the ledger is published.
   assumption, and the check against grader dependence has no power when
   the labels are balanced. A grader that copies the gold grader makes an
   independent judge look shared; the constraint check is what catches it.
+  The estimate's sampling law is exact and prior-free (a four-category
+  multinomial); at the fixture its delta standard error falls below 0.02
+  from about 740 items, and a weak controller makes the gold grader hard
+  to calibrate. Letting each rater have separate false-positive and
+  false-negative rates (two-class Dawid–Skene, three raters) is just
+  identified and has an explicit solution, but it leaves no degree of
+  freedom: the dependence the symmetric check catches is absorbed as
+  asymmetry, so that model cannot test grader independence at all.
 - No result here is an instance of a statement in the RSITopology problem
   set; the [crosswalk](feedback_channel_rsitopology_crosswalk.md) finds the
   selection law to be one summand of the ASMP-8 KL-slice bound, within ten

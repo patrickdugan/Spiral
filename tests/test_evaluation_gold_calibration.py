@@ -4,17 +4,23 @@ from itertools import product
 import pytest
 
 from spiral_ln.evaluation_gold_calibration import (
-    CELLS3, HALF, PAIRS, RANGE_FALSIFIER, RESOLUTION, SIGN_FALSIFIER, LabelTable,
-    RecordTable, agreement_rate, calibrate, calibration_valid, copy_grader_residual,
-    copy_grader_table, eps1_displacement, eps1_sensitivity, error_rate_at_most,
+    ANTI_INFORMATIVE_SECOND, CELLS3, DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES, DS_PRIOR,
+    HALF, OUTSIDE_MODEL, PAIRS, RANGE_FALSIFIER, RESOLUTION, SIGN_FALSIFIER, LabelTable,
+    RecordTable, _binomial_upper_tail, agreement_covariance, agreement_covariance_model,
+    agreement_patterns, agreement_rate, asymmetric_gold_noise_forward,
+    asymmetric_gold_noise_inverse, calibrate, calibrate_asymmetric, calibration_valid,
+    copy_grader_residual, copy_grader_table, dawid_skene_jacobian_rank, dawid_skene_model,
+    dawid_skene_moments, dawid_skene_three_raters, delta_variance, delta_variance_from_table,
+    disagreement_bound, eps1_displacement, eps1_sensitivity, error_rate_at_most,
     error_rate_bracket, error_rate_from_square, eta_gradient, exact_square_root,
-    expected_record_table, inverted_eps1, measured_judge_rates, model_constraints,
-    model_jacobian_rank, pairwise_kappas, polarity_squares, three_rater_model, verify,
-    walsh_coefficients,
+    expected_record_table, expected_record_table_asymmetric, inverted_eps1,
+    measured_judge_rates, model_constraints, model_jacobian_rank, pairwise_kappas,
+    planning_size, polarity_squares, root_bracket, sampling_law, sampling_law_by_tables,
+    three_rater_model, verify, walsh_coefficients,
 )
 from spiral_ln.evaluation_game_feedback import LoopEvent
 from spiral_ln.evaluation_judge_measurement import (
-    JudgeTable, gold_noise_forward, gold_noise_inverse, measurement_ledger,
+    JudgeTable, binomial_upper_tail, gold_noise_forward, gold_noise_inverse, measurement_ledger,
 )
 
 PRIORS = (Q(0), Q(1, 4), Q(1, 3), Q(1, 2), Q(7, 10), Q(1))
@@ -258,7 +264,321 @@ def test_calibration_valid_needs_ledger_and_constraints():
     assert calibration_valid(result, once) and not calibration_valid(result, twice)
 
 
+# --- sampling law ------------------------------------------------------------
+
+FIXTURE_ERRORS = (Q(1, 10), Q(1, 5), Q(1, 5))
+
+
+def _count_moments(m, errors):
+    """Exact first and second moments of the agreement counts by listing every
+    assignment of ``m`` items to the eight cells (``8^m`` sequences)."""
+
+    table = three_rater_model(Q(1, 3), errors)
+    first = {pair: Q(0) for pair in PAIRS}
+    second = {(p, r): Q(0) for p in PAIRS for r in PAIRS}
+    for items in product(CELLS3, repeat=m):
+        weight = Q(1)
+        for cell in items:
+            weight *= table.probability(cell)
+        counts = {pair: sum(1 for cell in items if cell[pair[0] - 1] == cell[pair[1] - 1]) for pair in PAIRS}
+        for p in PAIRS:
+            first[p] += weight * counts[p]
+            for r in PAIRS:
+                second[(p, r)] += weight * counts[p] * counts[r]
+    return {(p, r): second[(p, r)] - first[p] * first[r] for p in PAIRS for r in PAIRS}
+
+
+def test_agreement_covariance_matches_count_enumeration_and_closed_form():
+    for m in (2, 3):
+        for errors in (FIXTURE_ERRORS, (Q(1, 20), Q(1, 4), Q(2, 5))):
+            sigma = agreement_covariance(three_rater_model(Q(1, 3), errors))
+            assert _count_moments(m, errors) == {key: m * v for key, v in sigma.items()}
+    for prior, errors in GRID:
+        table = three_rater_model(prior, errors)
+        sigma = agreement_covariance(table)
+        assert sigma == agreement_covariance_model(errors)
+        q = agreement_patterns(table)
+        assert sum(q.values()) == 1
+        kappas = pairwise_kappas(table)
+        assert q["all"] == (1 + sum(kappas.values())) / 4
+        for pair in PAIRS:
+            assert q[pair] == agreement_rate(table, *pair) - q["all"]
+        assert agreement_patterns(three_rater_model(Q(9, 10), errors)) == q
+
+
+def test_delta_variance_closed_form_and_planning():
+    delta = delta_variance(FIXTURE_ERRORS)
+    assert delta["eta"] == Q(2401, 8100) and delta["root_of_eta_variance"] == Q(49, 90)
+    assert delta["square"] == 16 * Q(16, 25) * delta["eta"]
+    assert planning_size(FIXTURE_ERRORS, Q(1, 50)) == 742
+    assert Q(2401, 8100) / 742 < Q(1, 2500) <= Q(2401, 8100) / 741
+    for errors in (FIXTURE_ERRORS, (Q(1, 20), Q(1, 10), Q(1, 10)), (Q(1, 5), Q(1, 4), Q(3, 10)), (Q(0), Q(1, 10), Q(1, 5))):
+        table = three_rater_model(Q(1, 4), errors)
+        assert delta_variance_from_table(table) == delta_variance(errors)["eta"]
+        d1, d2, d3 = (1 - 2 * e for e in errors)
+        g = delta_variance(errors)["gradient_per_agreement_rate"]
+        assert g == {pair: 2 * v for pair, v in eta_gradient(pairwise_kappas(table), 1)["per_kappa"].items()}
+        assert g == {(1, 2): -1 / (2 * d2), (1, 3): -1 / (2 * d3), (2, 3): d1 / (2 * d2 * d3)}
+    assert delta_variance_from_table(copy_grader_table(Q(1, 4), Q(1, 10), Q(1, 5), Q(1, 5), HALF)) is None
+    with pytest.raises(ValueError):
+        delta_variance((Q(1, 2), Q(1, 5), Q(1, 5)))
+
+
+def test_sampling_law_reduction_equals_label_table_enumeration():
+    keys = ("p_undefined_sign", "p_undefined_range", "p_exact", "p_bracketed", "p_within_tolerance",
+            "square_mean", "square_variance", "root_mean_bracket", "eta_mean_bracket")
+    for m, errors in ((8, FIXTURE_ERRORS), (12, FIXTURE_ERRORS), (8, (Q(1, 5), Q(1, 4), Q(3, 10)))):
+        reduced, tables = sampling_law(m, errors), sampling_law_by_tables(m, errors)
+        assert all(reduced[k] == tables[k] for k in keys)
+        assert reduced["compositions"] < tables["compositions"]
+        total = reduced["p_undefined"] + reduced["p_exact"] + reduced["p_bracketed"]
+        assert total == 1 and reduced["p_defined"] == 1 - reduced["p_undefined"]
+        assert sum(tables["square_distribution"].values()) == reduced["p_defined"]
+        assert all(0 < s <= 1 for s in tables["square_distribution"])
+        mean = sum((s * p for s, p in tables["square_distribution"].items()), Q(0)) / reduced["p_defined"]
+        assert mean == reduced["square_mean"]
+        lo, hi = reduced["eta_mean_bracket"]
+        assert 0 <= lo < hi <= HALF and hi - lo <= Q(1, 2 ** 17)
+        vlo, vhi = reduced["eta_variance_bracket"]
+        assert 0 <= vlo <= vhi
+        assert reduced["p_within_tolerance_given_defined"] == reduced["p_within_tolerance"] / reduced["p_defined"]
+    one = sampling_law(1, FIXTURE_ERRORS)
+    q_all = agreement_patterns(three_rater_model(Q(1, 4), FIXTURE_ERRORS))["all"]
+    assert one["p_defined"] == one["p_exact"] == q_all and one["square_mean"] == 1 and one["square_variance"] == 0
+
+
+def test_sampling_law_is_prior_free_and_tolerance_is_exact():
+    law = sampling_law(12, FIXTURE_ERRORS, Q(1, 50))
+    assert law["pattern_probabilities"] == {str(k): v for k, v in agreement_patterns(three_rater_model(Q(9, 10), FIXTURE_ERRORS)).items()}
+    wide = sampling_law(12, FIXTURE_ERRORS, HALF)
+    assert wide["p_within_tolerance"] == wide["p_defined"]
+    tables = sampling_law_by_tables(12, FIXTURE_ERRORS, Q(1, 50))
+    low, high = (1 - 2 * (Q(1, 10) + Q(1, 50))) ** 2, (1 - 2 * (Q(1, 10) - Q(1, 50))) ** 2
+    assert law["p_within_tolerance"] == sum((p for s, p in tables["square_distribution"].items() if low <= s <= high), Q(0))
+
+
+def test_disagreement_bound_and_fast_tail():
+    for n in (1, 5, 9):
+        for k in range(0, n + 2):
+            for p in (Q(0), Q(1, 3), Q(3, 4), Q(1)):
+                assert _binomial_upper_tail(n, p, k) == binomial_upper_tail(n, p, k)
+    bound = disagreement_bound(100, 74, Q(1, 20))
+    low, high = bound["lower_endpoint_bracket"]
+    assert high - low <= RESOLUTION and bound["eta_upper_bound"] == 1 - low
+    assert _binomial_upper_tail(100, low, 74) < Q(1, 20) <= _binomial_upper_tail(100, high, 74)
+    assert bound["eta_upper_bound"] > bound["eta_upper_bound_at_population_rate"] == Q(13, 50)
+    assert disagreement_bound(100, 74, Q(1, 100))["eta_upper_bound"] > bound["eta_upper_bound"]
+    assert disagreement_bound(10, 0, Q(1, 20))["eta_upper_bound"] == 1
+    assert disagreement_bound(10, 10, Q(1, 20))["eta_upper_bound"] < Q(3, 10)
+
+
+def test_root_bracket_agrees_with_bisection():
+    for square in (Q(148, 175), Q(1, 2), Q(2, 3), Q(1, 10), Q(9, 25), Q(16, 25), Q(0), Q(1)):
+        root = root_bracket(square)
+        bisect = error_rate_bracket(square)
+        if root["exact"] is not None:
+            assert root["exact"] == exact_square_root(square) and bisect["exact"] == (1 - root["exact"]) / 2
+            continue
+        assert root["upper"] - root["lower"] == Q(1, 2 ** 16)
+        assert root["lower"] ** 2 <= square < root["upper"] ** 2
+        eta_low, eta_high = (1 - root["upper"]) / 2, (1 - root["lower"]) / 2
+        assert bisect["lower"] <= eta_high and eta_low <= bisect["upper"]
+        assert error_rate_at_most(square, eta_high) and not error_rate_at_most(square, eta_low)
+
+
+# --- asymmetric model --------------------------------------------------------
+
+DS_GRID_PAIRS = ((Q(1, 10), Q(1, 20)), (Q(1, 5), Q(1, 10)), (Q(0), Q(1, 4)), (Q(3, 10), Q(3, 10)), (Q(1, 2), Q(1, 2)))
+
+
+def _enumerate_ds(prior, fn, fp):
+    cells = {cell: Q(0) for cell in CELLS3}
+    for y, x1, x2, x3 in product((0, 1), repeat=4):
+        w = prior if y else 1 - prior
+        for x, a, b in zip((x1, x2, x3), fn, fp):
+            hit = (1 - a) if y else b
+            w *= hit if x == 1 else 1 - hit
+        cells[(x1, x2, x3)] += w
+    return cells
+
+
+def _enumerate_record_asymmetric(prior, controller, judge_error, eps1, gold, second):
+    acc = {1: 1 - controller[0], 0: 1 - controller[1]}
+    accuracy = prior * acc[1] + (1 - prior) * acc[0]
+    eps0 = (judge_error - (1 - accuracy) * eps1) / accuracy
+    cells = {}
+    for y, x, v, g1, g2 in product((0, 1), repeat=5):
+        w = prior if y else 1 - prior
+        right = x == y
+        w *= acc[y] if right else 1 - acc[y]
+        says = (1 - eps0) if right else eps1
+        w *= says if v else 1 - says
+        for g, (a, b) in ((g1, gold), (g2, second)):
+            hit = (1 - a) if y else b
+            w *= hit if g == 1 else 1 - hit
+        cells[(x, v, g1, g2)] = cells.get((x, v, g1, g2), Q(0)) + w
+    return cells
+
+
+def test_dawid_skene_round_trip_on_grid_with_both_conventions():
+    for prior in (Q(1, 4), Q(1, 3), HALF, Q(7, 10)):
+        for pairs in product(DS_GRID_PAIRS, repeat=3):
+            fn, fp = tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)
+            table = dawid_skene_model(prior, fn, fp)
+            assert table.cells == _enumerate_ds(prior, fn, fp)
+            moments = dawid_skene_moments(table)
+            u = prior * (1 - prior)
+            deltas = [1 - a - b for a, b in zip(fn, fp)]
+            for i, j in PAIRS:
+                assert moments["covariances"][(i, j)] == u * deltas[i - 1] * deltas[j - 1]
+            assert moments["third_cumulant"] == u * (1 - 2 * prior) * deltas[0] * deltas[1] * deltas[2]
+            assert moments["radicand"] == (u * deltas[0] * deltas[1] * deltas[2]) ** 2
+            fit = dawid_skene_three_raters(table)
+            if any(d == 0 for d in deltas):
+                assert fit["status"] == "not_identified"
+                continue
+            assert fit["status"] == "exact" and fit["in_range"]
+            assert fit["solution"]["prior"] == prior
+            for i in (1, 2, 3):
+                assert fit["solution"]["false_negatives"][i] == fn[i - 1]
+                assert fit["solution"]["false_positives"][i] == fp[i - 1]
+            alt = fit["alternative"]
+            assert alt["prior"] == 1 - prior
+            assert dawid_skene_model(alt["prior"], tuple(alt["false_negatives"][i] for i in (1, 2, 3)),
+                                     tuple(alt["false_positives"][i] for i in (1, 2, 3))) == table
+            assert dawid_skene_three_raters(table, "rater_1_informative")["solution"] == fit["solution"]
+
+
+def test_dawid_skene_symmetric_special_case_and_rank():
+    for prior, errors in GRID:
+        if prior in (Q(0), Q(1)) or any(e >= HALF for e in errors):
+            continue
+        table = three_rater_model(prior, errors)
+        fit = dawid_skene_three_raters(table)
+        squares = polarity_squares(pairwise_kappas(table))
+        assert fit["status"] == "exact" and fit["solution"]["prior"] == prior
+        for i in (1, 2, 3):
+            assert fit["solution"]["false_negatives"][i] == fit["solution"]["false_positives"][i] == errors[i - 1]
+            assert error_rate_from_square(squares[i]) == errors[i - 1]
+        assert dawid_skene_jacobian_rank(prior, errors, errors) == 7
+    assert dawid_skene_jacobian_rank(DS_PRIOR, DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES) == 7
+    assert dawid_skene_jacobian_rank(DS_PRIOR, (Q(1, 10), HALF, Q(1, 10)), (Q(1, 5), HALF, Q(3, 10))) < 7
+    assert dawid_skene_jacobian_rank(Q(0), DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES) < 7
+
+
+def test_dawid_skene_conventions_falsifiers_and_brackets():
+    anti = dawid_skene_model(DS_PRIOR, (Q(1, 10), ANTI_INFORMATIVE_SECOND[0], Q(1, 10)),
+                             (Q(1, 5), ANTI_INFORMATIVE_SECOND[1], Q(3, 10)))
+    assert dawid_skene_three_raters(anti)["status"] == "convention_violated"
+    found = dawid_skene_three_raters(anti, "rater_1_informative")
+    assert found["status"] == "exact" and found["solution"]["prior"] == DS_PRIOR
+    assert found["solution"]["deltas"][2] == -Q(1, 5) and found["solution"]["false_negatives"][2] == Q(3, 5)
+    outside = dawid_skene_three_raters(LabelTable(OUTSIDE_MODEL))
+    assert outside["status"] == "outside_model" and outside["radicand"] < 0
+    assert dawid_skene_three_raters(LabelTable({(0, 0, 0): 1, (0, 1, 1): 1, (1, 0, 1): 1, (1, 1, 0): 1}))["status"] == "not_identified"
+    table = dawid_skene_model(DS_PRIOR, DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES)
+    cells = dict(table.cells)
+    cells[(0, 0, 1)] += Q(1, 100)
+    cells[(1, 1, 0)] -= Q(1, 100)
+    perturbed = dawid_skene_three_raters(LabelTable(cells))
+    assert perturbed["status"] == "bracketed" and perturbed["in_range"]
+    low, high = perturbed["root_bracket"]
+    assert high - low == Q(1, 2 ** 16) and low ** 2 <= perturbed["radicand"] < high ** 2
+    for key in ("false_negatives", "false_positives", "deltas"):
+        for i in (1, 2, 3):
+            lo, hi = perturbed["solution"][key][i]
+            assert lo <= hi
+    assert perturbed["solution"]["prior"][0] < perturbed["solution"]["prior"][1]
+    copied = dawid_skene_three_raters(copy_grader_table(Q(1, 4), Q(1, 10), Q(1, 5), Q(1, 5), Q(1)))
+    assert copied["status"] == "exact" and copied["in_range"] and copied["solution"]["false_negatives"][1] == 0
+
+
+def test_asymmetric_record_forward_inverse_and_symmetric_reduction():
+    gold, second, controller = (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10)), (Q(1, 10), Q(3, 10))
+    for prior in (Q(1, 4), HALF, Q(9, 10)):
+        for judge_error, eps1 in ((Q(1, 10), Q(1, 10)), (Q(1, 10), Q(2, 5)), (Q(1, 5), Q(1, 5))):
+            record = expected_record_table_asymmetric(1, prior, controller, judge_error, eps1, gold, second)
+            assert record.cells == _enumerate_record_asymmetric(prior, controller, judge_error, eps1, gold, second)
+            assert record.label_table() == dawid_skene_model(prior, (gold[0], second[0], controller[0]),
+                                                             (gold[1], second[1], controller[1]))
+            forward = asymmetric_gold_noise_forward(prior, controller, judge_error, eps1, gold)
+            measured = measured_judge_rates(record, 1)
+            assert measured["accuracy"] == forward["accuracy"] and measured["judge_error"] == forward["judge_error"]
+            assert measured["wrong_wrong_rate"] == forward["wrong_wrong_rate"]
+            cells = measured["cells"]
+            assert cells["right_right"] + cells["wrong_wrong"] == forward["agreement_rate"]
+            inverse = asymmetric_gold_noise_inverse(prior, controller, gold, forward["accuracy"],
+                                                    forward["judge_error"], forward["wrong_wrong_rate"])
+            assert inverse["eps1"] == eps1 and inverse["judge_error"] == judge_error
+            assert inverse["accuracy"] == forward["true_accuracy"] and inverse["eps0"] == forward["eps0"]
+            assert inverse["measured_accuracy_consistent"]
+    for accuracy, judge_error, eps1 in ((Q(4, 5), Q(1, 10), Q(1, 10)), (Q(7, 10), Q(1, 4), Q(2, 5))):
+        for eta in (Q(0), Q(1, 20), Q(1, 10)):
+            sym = gold_noise_forward(accuracy, judge_error, eps1, eta)
+            asym = asymmetric_gold_noise_forward(Q(1, 3), (1 - accuracy, 1 - accuracy), judge_error, eps1, (eta, eta))
+            assert all(asym[k] == sym[k] for k in ("accuracy", "judge_error", "wrong_wrong_rate", "agreement_rate"))
+            inverse = asymmetric_gold_noise_inverse(Q(1, 3), (1 - accuracy, 1 - accuracy), (eta, eta),
+                                                    sym["accuracy"], sym["judge_error"], sym["wrong_wrong_rate"])
+            assert inverse["eps1"] == gold_noise_inverse(sym["accuracy"], sym["judge_error"], sym["eps1"], eta)["eps1"]
+            assert inverse["determinant"] == accuracy * (1 - accuracy) * (1 - 2 * eta)
+
+
+def test_calibrate_asymmetric_recovers_and_symmetric_pipeline_misreads():
+    gold, second, controller = (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10)), (Q(1, 10), Q(3, 10))
+    record = expected_record_table_asymmetric(4000, Q(1, 4), controller, Q(1, 10), Q(1, 10), gold, second)
+    result = calibrate_asymmetric(record, Q(1, 10), Q(1, 20))
+    assert result["status"] == "exact" and result["fit"]["in_range"]
+    inversion = result["inversions"][0]
+    assert inversion["recovered"]["eps1"] == Q(1, 10) and inversion["recovered"]["accuracy"] == Q(3, 4)
+    assert inversion["corrected_table"] == JudgeTable(2700, 300, 900, 100)
+    assert inversion["tests"]["independence_p"] > Q(1, 20)
+    symmetric = calibrate(record, Q(1, 10), Q(1, 20))
+    assert symmetric["status"] == "bracketed" and not symmetric["constraints"]["passes"]
+    assert all(inv["recovered"]["eps1"] > Q(12, 100) for inv in symmetric["inversions"])
+    marginal = Q(1, 4) * gold[0] + Q(3, 4) * gold[1]
+    assert marginal == Q(7, 40)
+    measured = result["measured"]
+    assert inverted_eps1(measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"], marginal) == Q(5, 62)
+    chance = calibrate_asymmetric(expected_record_table_asymmetric(100, Q(1, 4), controller, Q(1, 10), Q(1, 10), gold, (HALF, HALF)))
+    assert chance["status"] == "not_identified" and chance["inversions"] == []
+    bracketed = calibrate_asymmetric(expected_record_table(10000, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5), HALF), Q(1, 10))
+    assert bracketed["status"] == "bracketed" and len(bracketed["inversions"]) == 2
+    assert bracketed["bracket_ends_are_a_bracket_only_if_monotone"]
+
+
 # --- malformed inputs --------------------------------------------------------
+
+@pytest.mark.parametrize("call", [
+    lambda: root_bracket(Q(-1)),
+    lambda: root_bracket(Q(1, 2), 0),
+    lambda: root_bracket(0.5),
+    lambda: delta_variance((Q(1, 10), Q(1, 5))),
+    lambda: delta_variance((Q(1, 10), HALF, Q(1, 5))),
+    lambda: planning_size(FIXTURE_ERRORS, Q(0)),
+    lambda: planning_size(FIXTURE_ERRORS, 0.02),
+    lambda: sampling_law(0, FIXTURE_ERRORS),
+    lambda: sampling_law(4, FIXTURE_ERRORS, Q(2)),
+    lambda: sampling_law(4, (0.1, Q(1, 5), Q(1, 5))),
+    lambda: sampling_law_by_tables(4, (Q(1, 10), Q(1, 5))),
+    lambda: disagreement_bound(10, 11, Q(1, 20)),
+    lambda: disagreement_bound(10, 5, Q(1)),
+    lambda: disagreement_bound(10, Q(5), Q(1, 20)),
+    lambda: dawid_skene_model(Q(1, 4), (Q(1, 10),) * 2, (Q(1, 10),) * 3),
+    lambda: dawid_skene_model(Q(1, 4), (Q(1, 10),) * 3, (Q(3, 2),) * 3),
+    lambda: dawid_skene_three_raters(three_rater_model(Q(1, 4), FIXTURE_ERRORS), "majority"),
+    lambda: dawid_skene_jacobian_rank(Q(1, 4), (Q(1, 10),) * 3, (0.1,) * 3),
+    lambda: expected_record_table_asymmetric(0, Q(1, 4), (Q(1, 10), Q(3, 10)), Q(1, 10), Q(1, 10), (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10))),
+    lambda: expected_record_table_asymmetric(10, Q(1, 4), (Q(1, 10),), Q(1, 10), Q(1, 10), (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10))),
+    lambda: expected_record_table_asymmetric(10, Q(1, 4), (Q(1, 10), Q(3, 10)), Q(1, 10), Q(3, 5), (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10))),
+    lambda: asymmetric_gold_noise_forward(Q(1, 4), (Q(1, 10), Q(3, 10)), Q(1, 10), Q(3, 5), (Q(1, 10), Q(1, 5))),
+    lambda: asymmetric_gold_noise_inverse(Q(1, 4), (Q(1), Q(1)), (Q(1, 10), Q(1, 5)), Q(1, 2), Q(1, 2), Q(1, 4)),
+    lambda: asymmetric_gold_noise_inverse(Q(1, 4), (Q(1, 10), Q(3, 10)), (Q(1, 10), Q(1, 5)), 0.5, Q(1, 2), Q(1, 4)),
+    lambda: calibrate_asymmetric(RecordTable({(0, 0, 0, 0): Q(1, 2), (1, 1, 1, 1): Q(1, 2), (0, 1, 0, 1): Q(1, 3)})),
+])
+def test_rejects_malformed_v02(call):
+    with pytest.raises(ValueError):
+        call()
+
 
 @pytest.mark.parametrize("call", [
     lambda: LabelTable({}),
@@ -303,8 +623,18 @@ def test_rejects_malformed(call):
 
 def test_fixture_values_and_verify():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 23
+    assert report["all_passed"] and len(report["checks"]) == 40
     assert report["evidence_status"].startswith("exact_synthetic")
+    sampling = report["sampling"]
+    assert sampling["delta"]["eta"] == Q(2401, 8100) and sampling["planning_size"] == 742
+    assert sampling["laws"][16]["p_undefined"] == sampling["label_table_enumeration"]["p_undefined"]
+    assert Q(32, 100) < sampling["laws"][16]["p_undefined"] < Q(33, 100)
+    assert Q(1, 100) < sampling["laws"][200]["p_undefined"] < Q(13, 1000)
+    ds = report["dawid_skene"]
+    assert ds["fit"]["root"] == Q(441, 8000) and ds["copy_grader"]["1"]["solution"]["prior"] == Q(3, 10)
+    asym = report["asymmetric_pipeline"]["judges"]
+    assert asym["independent"]["forward"]["accuracy"] == Q(67, 100)
+    assert asym["independent"]["calibration"]["inversions"][0]["corrected_table"] == JudgeTable(2700, 300, 900, 100)
     raters = report["three_raters"]
     assert raters["kappas"] == {(1, 2): Q(12, 25), (1, 3): Q(12, 25), (2, 3): Q(9, 25)}
     assert raters["walsh"][(1,)] == Q(2, 5) and raters["walsh"][(1, 2, 3)] == Q(18, 125)
