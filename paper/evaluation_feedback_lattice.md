@@ -1,10 +1,13 @@
 # Partial leakage as a lattice of feedback channels
 
-Version 0.5 — 2026-10-13. Exact fixtures for the gap named in
+Version 0.6 — 2026-10-13. Exact fixtures for the gap named in
 [evaluation_feedback_insertions.md](evaluation_feedback_insertions.md) §H:
 feedback that reveals failure *categories* and not items. Files:
 `src/spiral_ln/evaluation_feedback_lattice.py`, `tests/test_evaluation_feedback_lattice.py`,
-`output/evaluation_feedback_lattice/lattice_v0_5.json`. No model was called.
+`output/evaluation_feedback_lattice/lattice_v0_6.json`. No model was called.
+Version 0.6 tests the last natural structure for the optimal policy beyond
+one hit, committing to a category until it hits, and finds it suboptimal
+by at most a tenth of a percent on the grid.
 Version 0.4 added the pair-commutation lemma (Lemma 9) and a survey of what
 structure the optimal first patch does not have; version 0.5 refutes the two
 regularities that survey left standing and records the one two-category
@@ -21,7 +24,7 @@ only); no synthetic mechanism result is claimed.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_5.json
+python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_6.json
 python -m pytest tests/test_evaluation_feedback_lattice.py -q
 ```
 
@@ -288,6 +291,18 @@ patch, as in \(\{(5,3),(8,5),(9,6)\}\) with three hits needed, where the
 rate-\(\tfrac35\) category costs \(21/5\) against \(1675/392\) and
 \(443/105\). Each refutation is an exact state; neither regularity is a
 theorem, and the earlier conjecture is withdrawn.
+
+**Committing until a hit.** Theorem 10 suggests one more candidate shape:
+commit to a category until it hits, then re-decide, never switching on a
+miss. That class contains the one-hit optimum and is exact there, and it
+is *not* optimal beyond one hit: in \(\{(4,2),(4,2),(6,3)\}\) with four hits
+needed the best committing policy costs \(509/80\) against the optimum
+\(763/120\), and `commit_until_hit_fixture` finds 82 such states among
+the 39,060 with at most three categories of size at most seven. The gap
+is small everywhere on that grid, below one part in a thousand, so an
+optimal policy does switch categories after a miss, and gains almost
+nothing by it. *Finite verified example*; the DP remains the only exact
+description for two or more hits.
 
 ## 4. Ledger wrapper
 

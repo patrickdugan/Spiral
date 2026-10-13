@@ -33,6 +33,21 @@ from spiral_ln.evaluation_feedback_lattice import (
     best_finishers, conjecture_refutations, one_hit_fixture, one_hit_value,
     pair_commutation_check, policy_structure_fixture, two_patch_value,
 )
+from spiral_ln.evaluation_feedback_lattice import commit_until_hit_fixture, commit_until_hit_value
+
+
+def test_commit_until_hit_bounds_and_witness():
+    for required, state in adaptive_states(5, 3):
+        committed = commit_until_hit_value(state, required)
+        assert committed >= optimal_adaptive_value(state, required)
+        if required == 1:
+            assert committed == one_hit_value(state)
+    state = ((4, 2), (4, 2), (6, 3))
+    assert optimal_adaptive_value(state, 4) == Q(763, 120)
+    assert commit_until_hit_value(state, 4) == Q(509, 80) > Q(763, 120)
+    report = commit_until_hit_fixture(6, 3)
+    assert report["one_hit_always_commits"]
+    assert report["largest_relative_gap"] < Q(1, 1000)
 
 
 def test_one_hit_closed_form_matches_the_dynamic_programme():
@@ -778,6 +793,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 36
+    assert report["all_passed"] and len(report["checks"]) == 37
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)

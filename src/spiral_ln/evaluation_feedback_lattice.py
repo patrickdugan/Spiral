@@ -1093,6 +1093,61 @@ def one_hit_fixture(max_size: int = 8, max_categories: int = 4) -> dict[str, obj
             }}
 
 
+@lru_cache(maxsize=None)
+def _commit_value(remaining_hits: int, state: tuple) -> Q:
+    """Best value over policies that commit to one category until it hits,
+    then re-decide; a miss never triggers a switch."""
+
+    if remaining_hits == 0:
+        return Q(0)
+    best = None
+    for chosen in set(state):
+        size, failures = chosen
+        rest = list(state)
+        rest.remove(chosen)
+        total, survive = Q(0), Q(1)
+        for patch in range(1, size - failures + 2):
+            remaining_items = size - (patch - 1)
+            hit = Q(failures, remaining_items)
+            after = (remaining_items - 1, failures - 1)
+            next_state = tuple(sorted(rest + ([after] if after[1] > 0 else [])))
+            total += survive * hit * (patch + _commit_value(remaining_hits - 1, next_state))
+            survive *= 1 - hit
+        if best is None or total < best:
+            best = total
+    return best
+
+
+def commit_until_hit_value(categories, hits_needed: int) -> Q:
+    """Exact minimum over the commit-until-hit policies; at least the optimum."""
+
+    return _commit_value(hits_needed, _adaptive_state(categories, hits_needed))
+
+
+def commit_until_hit_fixture(max_size: int = 7, max_categories: int = 3) -> dict[str, object]:
+    """Where committing to a category until it hits is not optimal, and by how much."""
+
+    states = adaptive_states(max_size, max_categories)
+    worse = 0
+    largest = (Q(0), None)
+    first = None
+    for required, state in states:
+        optimal = _optimal_value(required, state)
+        committed = _commit_value(required, state)
+        if committed < optimal:
+            raise AssertionError("commit-until-hit value below the optimum")
+        if committed > optimal:
+            worse += 1
+            gap = (committed - optimal) / optimal
+            if gap > largest[0]:
+                largest = (gap, {"hits_needed": required, "state": state, "optimal": optimal, "committed": committed})
+            first = first or {"hits_needed": required, "state": state, "optimal": optimal, "committed": committed}
+    return {"states": len(states), "commit_until_hit_suboptimal": worse,
+            "first_witness": first, "largest_relative_gap": largest[0], "largest_witness": largest[1],
+            "one_hit_always_commits": all(_commit_value(1, s) == _optimal_value(1, s)
+                                          for r, s in states if r == 1)}
+
+
 def conjecture_refutations() -> dict[str, object]:
     """Two regularities that hold on the exhaustive grid (sizes at most five)
     and fail just beyond it, each refuted by one exact state.
@@ -1438,6 +1493,7 @@ def verify() -> dict[str, object]:
     structure = policy_structure_fixture()
     refutations = conjecture_refutations()
     one_hit = one_hit_fixture()
+    commit = commit_until_hit_fixture()
     ledger = category_ledger_fixture()
     four = policy["four_item_witness"]
     checks = {
@@ -1454,6 +1510,9 @@ def verify() -> dict[str, object]:
             one_hit["closed_form_mismatches"] == 0 and one_hit["best_finisher_not_optimal_first"] == 0,
         "highest_rate_first_not_optimal_at_one_hit_witness":
             one_hit["rate_versus_finisher_witness"]["highest_rate_first_is_worse"],
+        "commit_until_hit_not_optimal_beyond_one_hit_but_within_a_tenth_of_a_percent":
+            commit["commit_until_hit_suboptimal"] > 0 and commit["one_hit_always_commits"]
+            and commit["largest_relative_gap"] < Q(1, 1000),
         "no_index_rule_on_own_counts_and_hits_needed":
             index["own_counts"]["reversals"] > 0 and index["reversal_witness"]["holds"],
         "no_index_rule_even_with_global_totals":
@@ -1517,4 +1576,4 @@ def verify() -> dict[str, object]:
             "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
             "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
             "index_rules": index, "policy_structure": structure, "conjecture_refutations": refutations,
-            "one_hit": one_hit, "category_ledger": ledger}
+            "one_hit": one_hit, "commit_until_hit": commit, "category_ledger": ledger}
