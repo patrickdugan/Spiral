@@ -1,0 +1,2019 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-13T05:11:22.388920+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "A_first_index_uniform_and_conditioned_on_max_agree": true,
+    "A_closed_forms_match_brute_force_enumeration": true,
+    "A_kl_on_records_equals_kl_of_max_law_fixture": true,
+    "A_kl_on_records_equals_kl_of_max_law_null_cells": true,
+    "A_gap_on_records_matches_selection_inflation": true,
+    "B_kl_strictly_below_radius_on_grid": true,
+    "B_jittered_marginal_is_pi_K": true,
+    "B_jittered_kl_dominates_discrete_kl": true,
+    "B_jittered_kl_rises_toward_radius": true,
+    "B_radius_is_supremum_over_uniform_supports": true,
+    "C_gap_matches_max_law_on_grid": true,
+    "C_gap_le_dv_at_exact_kl_on_grid": true,
+    "C_gap_le_dv_at_radius_on_grid": true,
+    "C_kearns_saul_between_variance_and_hoeffding": true,
+    "C_proxies_hold_on_t_grid": true,
+    "C_hoeffding_bound_dominates_kearns_saul_bound": true,
+    "D_gap_bounded_by_one_minus_p_on_grid": true,
+    "D_ratio_below_envelope_one_minus_p_over_bound_which_falls_in_K": true,
+    "D_gaussian_quadratures_agree_and_match_closed_forms": true,
+    "D_c_K_below_one_and_increasing": true,
+    "D_ratio_below_c_K_on_grid": true,
+    "D_sqrt_n_gap_approaches_gaussian_and_ratio_rises_below_c_K": true,
+    "D_n_equals_1_gap_equals_kl_ball_supremum": true,
+    "D_n_at_least_2_chain_strict": true
+  },
+  "all_passed": true,
+  "tolerances": {
+    "log_and_sqrt": 1e-12,
+    "kl_ball_supremum": 1e-09,
+    "gaussian_quadrature": 1e-09
+  },
+  "grid": {
+    "items": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      64
+    ],
+    "candidates": [
+      2,
+      3,
+      5,
+      10,
+      20
+    ],
+    "p": [
+      "1/4",
+      "1/2",
+      "3/4"
+    ],
+    "cells": 90
+  },
+  "headline": {
+    "c_K": {
+      "K=2": 0.9077492093944037,
+      "K=3": 0.910514332792257,
+      "K=5": 0.9140283772905547,
+      "K=10": 0.9187328167160698,
+      "K=100": 0.9325621567172954,
+      "K=1000": 0.9429190733901949,
+      "K=10000": 0.9504838411778188
+    },
+    "expected_max_of_K_normals": {
+      "K=2": 0.564189583548446,
+      "K=3": 0.8462843753226688,
+      "K=5": 1.1629644736419409,
+      "K=10": 1.5387527308370537,
+      "K=100": 2.5075936364447484,
+      "K=1000": 3.2414357691373956,
+      "K=10000": 3.8516158170714108
+    },
+    "max_ratio_radius_on_grid": 0.9191802300479901,
+    "max_ratio_radius_cell": "n=64,K=20,p=1/2",
+    "max_ratio_exact_kl_on_grid": 0.9999301797551668,
+    "max_ratio_exact_kl_cell": "n=1,K=5,p=1/4",
+    "max_ratio_radius_per_K": {
+      "K=2": 0.9059780099850993,
+      "K=3": 0.9087377380767621,
+      "K=5": 0.9119159671178474,
+      "K=10": 0.915783187428882,
+      "K=20": 0.9191802300479901
+    },
+    "max_kl_over_radius_on_grid": 0.9935522724243009
+  },
+  "tie_rules": {
+    "p0": {
+      "a": "1/2",
+      "b": "1/4",
+      "c": "1/8",
+      "d": "1/8"
+    },
+    "score": {
+      "a": "0",
+      "b": "1",
+      "c": "1",
+      "d": "2"
+    },
+    "laws": {
+      "K=1": {
+        "law": {
+          "a": "1/2",
+          "b": "1/4",
+          "c": "1/8",
+          "d": "1/8"
+        },
+        "kl": 0.0,
+        "radius": 0.0
+      },
+      "K=2": {
+        "law": {
+          "a": "1/4",
+          "b": "11/32",
+          "c": "11/64",
+          "d": "15/64"
+        },
+        "kl": 0.13824606452012717,
+        "radius": 0.1931471805599453
+      },
+      "K=3": {
+        "law": {
+          "a": "1/8",
+          "b": "93/256",
+          "c": "93/512",
+          "d": "169/512"
+        },
+        "kl": 0.35087047061514054,
+        "radius": 0.43194562200144315
+      },
+      "K=4": {
+        "law": {
+          "a": "1/16",
+          "b": "715/2048",
+          "c": "715/4096",
+          "d": "1695/4096"
+        },
+        "kl": 0.5403100348736725,
+        "radius": 0.6362943611198906
+      }
+    },
+    "closed_forms_agree": true,
+    "brute_force_agrees": true,
+    "kl_on_records_equals_kl_of_max_law": true
+  },
+  "records": {
+    "n=1,K=2,p=1/2": {
+      "kl_on_records": 0.13081203594113702,
+      "kl_on_scores": 0.13081203594113702,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=1,K=2,p=1/4": {
+      "kl_on_records": 0.08301074146762072,
+      "kl_on_scores": 0.08301074146762072,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=1,K=3,p=1/2": {
+      "kl_on_records": 0.31637701930350864,
+      "kl_on_scores": 0.31637701930350864,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=1,K=3,p=1/4": {
+      "kl_on_records": 0.2419273145713788,
+      "kl_on_scores": 0.2419273145713788,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=2,K=2,p=1/2": {
+      "kl_on_records": 0.15818850965175424,
+      "kl_on_scores": 0.15818850965175424,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=2,K=2,p=1/4": {
+      "kl_on_records": 0.1261165342968495,
+      "kl_on_scores": 0.12611653429684966,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=2,K=3,p=1/2": {
+      "kl_on_records": 0.35698387247641056,
+      "kl_on_scores": 0.35698387247641045,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=2,K=3,p=1/4": {
+      "kl_on_records": 0.3287988719684388,
+      "kl_on_scores": 0.32879887196843843,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=3,K=2,p=1/2": {
+      "kl_on_records": 0.16888448496689693,
+      "kl_on_scores": 0.1688844849668968,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=3,K=2,p=1/4": {
+      "kl_on_records": 0.1485159131999127,
+      "kl_on_scores": 0.14851591319991303,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=3,K=3,p=1/2": {
+      "kl_on_records": 0.37891585216441703,
+      "kl_on_scores": 0.3789158521644167,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=3,K=3,p=1/4": {
+      "kl_on_records": 0.3611348962023672,
+      "kl_on_scores": 0.3611348962023668,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=4,K=2,p=1/2": {
+      "kl_on_records": 0.17454560545461728,
+      "kl_on_scores": 0.17454560545461711,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=4,K=2,p=1/4": {
+      "kl_on_records": 0.16080900986080787,
+      "kl_on_scores": 0.1608090098608075,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=4,K=3,p=1/2": {
+      "kl_on_records": 0.39070644048973113,
+      "kl_on_scores": 0.39070644048973047,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=4,K=3,p=1/4": {
+      "kl_on_records": 0.37678569895335967,
+      "kl_on_scores": 0.3767856989533579,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=5,K=2,p=1/2": {
+      "kl_on_records": 0.17805758717126333,
+      "kl_on_scores": 0.17805758717126313,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=5,K=2,p=1/4": {
+      "kl_on_records": 0.16809499321887372,
+      "kl_on_scores": 0.1680949932188734,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=5,K=3,p=1/2": {
+      "kl_on_records": 0.39825125573525333,
+      "kl_on_scores": 0.398251255735253,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    },
+    "n=5,K=3,p=1/4": {
+      "kl_on_records": 0.38661952936854105,
+      "kl_on_scores": 0.3866195293685397,
+      "equal": true,
+      "gap_matches_selection_inflation": true
+    }
+  },
+  "jitter": {
+    "candidates": 3,
+    "rows": {
+      "levels=1": {
+        "joint_kl": 0.35087047061514054,
+        "marginal_kl": 0.35087047061514054
+      },
+      "levels=2": {
+        "joint_kl": 0.410680923906957,
+        "marginal_kl": 0.35087047061514054
+      },
+      "levels=4": {
+        "joint_kl": 0.42648671460035203,
+        "marginal_kl": 0.35087047061514054
+      },
+      "levels=8": {
+        "joint_kl": 0.4305617898651279,
+        "marginal_kl": 0.35087047061514054
+      },
+      "levels=16": {
+        "joint_kl": 0.43159719431723925,
+        "marginal_kl": 0.35087047061514054
+      }
+    },
+    "radius": 0.43194562200144315,
+    "marginal_is_pi_K": true,
+    "joint_kl_dominates_discrete_kl": true,
+    "joint_kl_rises_with_levels": true,
+    "joint_kl_below_radius": true
+  },
+  "grid_cells": {
+    "n=1,K=2,p=1/4": {
+      "items": 1,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "3/16",
+      "gap_from_max_law_equal": true,
+      "kl": 0.08301074146762072,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.19437030780858405,
+      "dv_at_radius": 0.2964878920445477,
+      "dv_hoeffding_at_radius": 0.3107629165134937,
+      "ratio_exact": 0.9646535117115216,
+      "ratio_radius": 0.6324035653092636,
+      "c_K": 0.9077492093944037
+    },
+    "n=1,K=2,p=1/2": {
+      "items": 1,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "1/4",
+      "gap_from_max_law_equal": true,
+      "kl": 0.13081203594113702,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.2557460028437757,
+      "dv_at_radius": 0.3107629165134937,
+      "dv_hoeffding_at_radius": 0.3107629165134937,
+      "ratio_exact": 0.9775323845538822,
+      "ratio_radius": 0.8044717909227909,
+      "c_K": 0.9077492093944037
+    },
+    "n=1,K=2,p=3/4": {
+      "items": 1,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "3/16",
+      "gap_from_max_law_equal": true,
+      "kl": 0.12255368178707844,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.23617066766444747,
+      "dv_at_radius": 0.2964878920445477,
+      "dv_hoeffding_at_radius": 0.3107629165134937,
+      "ratio_exact": 0.7939173897175114,
+      "ratio_radius": 0.6324035653092636,
+      "c_K": 0.9077492093944037
+    },
+    "n=1,K=3,p=1/4": {
+      "items": 1,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "21/64",
+      "gap_from_max_law_equal": true,
+      "kl": 0.2419273145713788,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.3318220394393352,
+      "dv_at_radius": 0.44338124053428435,
+      "dv_hoeffding_at_radius": 0.464728749918403,
+      "ratio_exact": 0.9888583668354823,
+      "ratio_radius": 0.7400516079674503,
+      "c_K": 0.910514332792257
+    },
+    "n=1,K=3,p=1/2": {
+      "items": 1,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "3/8",
+      "gap_from_max_law_equal": true,
+      "kl": 0.31637701930350864,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.3977291913497855,
+      "dv_at_radius": 0.464728749918403,
+      "dv_hoeffding_at_radius": 0.464728749918403,
+      "ratio_exact": 0.9428525945690615,
+      "ratio_radius": 0.806922317730165,
+      "c_K": 0.910514332792257
+    },
+    "n=1,K=3,p=3/4": {
+      "items": 1,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "15/64",
+      "gap_from_max_law_equal": true,
+      "kl": 0.2243630523942134,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.31954972327866704,
+      "dv_at_radius": 0.44338124053428435,
+      "dv_hoeffding_at_radius": 0.464728749918403,
+      "ratio_exact": 0.7334539288447781,
+      "ratio_radius": 0.5286082914053216,
+      "c_K": 0.910514332792257
+    },
+    "n=1,K=5,p=1/4": {
+      "items": 1,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "525/1024",
+      "gap_from_max_law_equal": true,
+      "kl": 0.5776353842413333,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.5127311115117393,
+      "dv_at_radius": 0.6069522795971926,
+      "dv_hoeffding_at_radius": 0.6361752558981292,
+      "ratio_exact": 0.9999301797551668,
+      "ratio_radius": 0.8447044845770301,
+      "c_K": 0.9140283772905547
+    },
+    "n=1,K=5,p=1/2": {
+      "items": 1,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "15/32",
+      "gap_from_max_law_equal": true,
+      "kl": 0.5540863821052042,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.526348925193737,
+      "dv_at_radius": 0.6361752558981292,
+      "dv_hoeffding_at_radius": 0.6361752558981292,
+      "ratio_exact": 0.8905689316786651,
+      "ratio_radius": 0.7368252626208099,
+      "c_K": 0.9140283772905547
+    },
+    "n=1,K=5,p=3/4": {
+      "items": 1,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "255/1024",
+      "gap_from_max_law_equal": true,
+      "kl": 0.28100983507223154,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.35762143039161054,
+      "dv_at_radius": 0.6069522795971926,
+      "dv_hoeffding_at_radius": 0.6361752558981292,
+      "ratio_exact": 0.6963325358530915,
+      "ratio_radius": 0.41028503536598604,
+      "c_K": 0.9140283772905547
+    },
+    "n=1,K=10,p=1/4": {
+      "items": 1,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "727383/1048576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.1077264780695595,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.7100338346558233,
+      "dv_at_radius": 0.7989643203313997,
+      "dv_hoeffding_at_radius": 0.8374321145603523,
+      "ratio_exact": 0.9769766614386481,
+      "ratio_radius": 0.8682321195554709,
+      "c_K": 0.9187328167160698
+    },
+    "n=1,K=10,p=1/2": {
+      "items": 1,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "511/1024",
+      "gap_from_max_law_equal": true,
+      "kl": 0.6854020796172436,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.5854067302385768,
+      "dv_at_radius": 0.8374321145603523,
+      "dv_hoeffding_at_radius": 0.8374321145603523,
+      "ratio_exact": 0.8524388458886146,
+      "ratio_radius": 0.595897182378759,
+      "c_K": 0.9187328167160698
+    },
+    "n=1,K=10,p=3/4": {
+      "items": 1,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "262143/1048576",
+      "gap_from_max_law_equal": true,
+      "kl": 0.28766894576297075,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.36183391128793063,
+      "dv_at_radius": 0.7989643203313997,
+      "dv_hoeffding_at_radius": 0.8374321145603523,
+      "ratio_exact": 0.6909221013470624,
+      "ratio_radius": 0.31290389315756595,
+      "c_K": 0.9187328167160698
+    },
+    "n=1,K=20,p=1/4": {
+      "items": 1,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "821146936431/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3613982339356292,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.7871461349675514,
+      "dv_at_radius": 0.9649108151962404,
+      "dv_hoeffding_at_radius": 1.0113684475882148,
+      "ratio_exact": 0.9487803533353468,
+      "ratio_radius": 0.7739873740654243,
+      "c_K": 0.9232417049661397
+    },
+    "n=1,K=20,p=1/2": {
+      "items": 1,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "524287/1048576",
+      "gap_from_max_law_equal": true,
+      "kl": 0.6931330061528118,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.5886989919104719,
+      "dv_at_radius": 1.0113684475882148,
+      "dv_hoeffding_at_radius": 1.0113684475882148,
+      "ratio_exact": 0.8493288644899232,
+      "ratio_radius": 0.4943787276714227,
+      "c_K": 0.9232417049661397
+    },
+    "n=1,K=20,p=3/4": {
+      "items": 1,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "274877906943/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 0.28768207242665395,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.3618421666417855,
+      "dv_at_radius": 0.9649108151962404,
+      "dv_hoeffding_at_radius": 1.0113684475882148,
+      "ratio_exact": 0.6909089737089269,
+      "ratio_radius": 0.2590913025969621,
+      "c_K": 0.9232417049661397
+    },
+    "n=2,K=2,p=1/4": {
+      "items": 2,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "39/256",
+      "gap_from_max_law_equal": true,
+      "kl": 0.12611653429684966,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.16940795188185637,
+      "dv_at_radius": 0.2096485990044047,
+      "dv_hoeffding_at_radius": 0.21974256560800032,
+      "ratio_exact": 0.899271541316096,
+      "ratio_radius": 0.7266623803996862,
+      "c_K": 0.9077492093944037
+    },
+    "n=2,K=2,p=1/2": {
+      "items": 2,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "3/16",
+      "gap_from_max_law_equal": true,
+      "kl": 0.15818850965175424,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.19886459567489273,
+      "dv_at_radius": 0.21974256560800032,
+      "dv_hoeffding_at_radius": 0.21974256560800032,
+      "ratio_exact": 0.9428525945690616,
+      "ratio_radius": 0.8532711879521878,
+      "c_K": 0.9077492093944037
+    },
+    "n=2,K=2,p=3/4": {
+      "items": 2,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "39/256",
+      "gap_from_max_law_equal": true,
+      "kl": 0.15264759298664857,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.1863771894483169,
+      "dv_at_radius": 0.2096485990044047,
+      "dv_hoeffding_at_radius": 0.21974256560800032,
+      "ratio_exact": 0.8173948241785537,
+      "ratio_radius": 0.7266623803996862,
+      "c_K": 0.9077492093944037
+    },
+    "n=2,K=3,p=1/4": {
+      "items": 2,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "255/1024",
+      "gap_from_max_law_equal": true,
+      "kl": 0.32879887196843843,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.27353502103767624,
+      "dv_at_radius": 0.3135178818326962,
+      "dv_hoeffding_at_radius": 0.32861285047965,
+      "ratio_exact": 0.910389596751854,
+      "ratio_radius": 0.7942878283187923,
+      "c_K": 0.910514332792257
+    },
+    "n=2,K=3,p=1/2": {
+      "items": 2,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "9/32",
+      "gap_from_max_law_equal": true,
+      "kl": 0.35698387247641045,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.29874063687269364,
+      "dv_at_radius": 0.32861285047965,
+      "dv_hoeffding_at_radius": 0.32861285047965,
+      "ratio_exact": 0.941452100203739,
+      "ratio_radius": 0.8558703641366483,
+      "c_K": 0.910514332792257
+    },
+    "n=2,K=3,p=3/4": {
+      "items": 2,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "213/1024",
+      "gap_from_max_law_equal": true,
+      "kl": 0.3202757107963943,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.2699664401840859,
+      "dv_at_radius": 0.3135178818326962,
+      "dv_hoeffding_at_radius": 0.32861285047965,
+      "ratio_exact": 0.7704950747143339,
+      "ratio_radius": 0.6634639507133442,
+      "c_K": 0.910514332792257
+    },
+    "n=2,K=5,p=1/4": {
+      "items": 2,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "94305/262144",
+      "gap_from_max_law_equal": true,
+      "kl": 0.6653266918676712,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.3891036023541227,
+      "dv_at_radius": 0.42918007275980824,
+      "dv_hoeffding_at_radius": 0.4498438374686543,
+      "ratio_exact": 0.9245481754943048,
+      "ratio_radius": 0.8382146527014964,
+      "c_K": 0.9140283772905547
+    },
+    "n=2,K=5,p=1/2": {
+      "items": 2,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "195/512",
+      "gap_from_max_law_equal": true,
+      "kl": 0.6681921883907561,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.40871511728548654,
+      "dv_at_radius": 0.4498438374686543,
+      "dv_hoeffding_at_radius": 0.4498438374686543,
+      "ratio_exact": 0.9318455787236533,
+      "ratio_radius": 0.8466479770916919,
+      "c_K": 0.9140283772905547
+    },
+    "n=2,K=5,p=3/4": {
+      "items": 2,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "63435/262144",
+      "gap_from_max_law_equal": true,
+      "kl": 0.4997036306235807,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.33721278381810754,
+      "dv_at_radius": 0.42918007275980824,
+      "dv_hoeffding_at_radius": 0.4498438374686543,
+      "ratio_exact": 0.7176042328675436,
+      "ratio_radius": 0.5638316790638823,
+      "c_K": 0.9140283772905547
+    },
+    "n=2,K=10,p=1/4": {
+      "items": 2,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "534565133319/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.1202848427567957,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.5049077165365751,
+      "dv_at_radius": 0.5649530888324338,
+      "dv_hoeffding_at_radius": 0.5921539269890148,
+      "ratio_exact": 0.9629168669497861,
+      "ratio_radius": 0.8605743841686876,
+      "c_K": 0.9187328167160698
+    },
+    "n=2,K=10,p=1/2": {
+      "items": 2,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "494763/1048576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.1305488735863751,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.5316363591747594,
+      "dv_at_radius": 0.5921539269890148,
+      "dv_hoeffding_at_radius": 0.5921539269890148,
+      "ratio_exact": 0.8875291497002398,
+      "ratio_radius": 0.7968245152190956,
+      "c_K": 0.9187328167160698
+    },
+    "n=2,K=10,p=3/4": {
+      "items": 2,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "274736669319/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 0.5730876182924141,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.36112561196344933,
+      "dv_at_radius": 0.5649530888324338,
+      "dv_hoeffding_at_radius": 0.5921539269890148,
+      "ratio_exact": 0.69192418607424,
+      "ratio_radius": 0.44228724484854337,
+      "c_K": 0.9187328167160698
+    },
+    "n=2,K=20,p=1/4": {
+      "items": 2,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "740425449374259808619919/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.691406894002108,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.62040005301172,
+      "dv_at_radius": 0.6822949806655012,
+      "dv_hoeffding_at_radius": 0.7151454875677381,
+      "ratio_exact": 0.9872107099121749,
+      "ratio_radius": 0.8976551112333561,
+      "c_K": 0.9232417049661397
+    },
+    "n=2,K=20,p=1/2": {
+      "items": 2,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "548012421687/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3626840497070203,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.5836702942815876,
+      "dv_at_radius": 0.7151454875677381,
+      "dv_hoeffding_at_radius": 0.7151454875677381,
+      "ratio_exact": 0.8539314042760274,
+      "ratio_radius": 0.6969412555831428,
+      "c_K": 0.9232417049661397
+    },
+    "n=2,K=20,p=3/4": {
+      "items": 2,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "302231415007524144870543/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 0.5753630144037397,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.36184181117601166,
+      "dv_at_radius": 0.6822949806655012,
+      "dv_hoeffding_at_radius": 0.7151454875677381,
+      "ratio_exact": 0.690909561242175,
+      "ratio_radius": 0.36641038565877415,
+      "c_K": 0.9232417049661397
+    },
+    "n=4,K=2,p=1/4": {
+      "items": 4,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "7563/65536",
+      "gap_from_max_law_equal": true,
+      "kl": 0.1608090098608075,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.13526578871352177,
+      "dv_at_radius": 0.14824394602227384,
+      "dv_hoeffding_at_radius": 0.15538145825674685,
+      "ratio_exact": 0.8531515823568431,
+      "ratio_radius": 0.7784616153050066,
+      "c_K": 0.9077492093944037
+    },
+    "n=4,K=2,p=1/2": {
+      "items": 4,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "35/256",
+      "gap_from_max_law_equal": true,
+      "kl": 0.17454560545461711,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.14770985302892675,
+      "dv_at_radius": 0.15538145825674685,
+      "dv_hoeffding_at_radius": 0.15538145825674685,
+      "ratio_exact": 0.925589912903276,
+      "ratio_radius": 0.8798910213218025,
+      "c_K": 0.9077492093944037
+    },
+    "n=4,K=2,p=3/4": {
+      "items": 4,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "7563/65536",
+      "gap_from_max_law_equal": true,
+      "kl": 0.17086400812068214,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.13943059322209891,
+      "dv_at_radius": 0.14824394602227384,
+      "dv_hoeffding_at_radius": 0.15538145825674685,
+      "ratio_exact": 0.8276678669498548,
+      "ratio_radius": 0.7784616153050066,
+      "c_K": 0.9077492093944037
+    },
+    "n=4,K=3,p=1/4": {
+      "items": 4,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "94677/524288",
+      "gap_from_max_law_equal": true,
+      "kl": 0.3767856989533579,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.20705226490531226,
+      "dv_at_radius": 0.22169062026714217,
+      "dv_hoeffding_at_radius": 0.2323643749592015,
+      "ratio_exact": 0.8721568276076169,
+      "ratio_radius": 0.8145678256084251,
+      "c_K": 0.910514332792257
+    },
+    "n=4,K=3,p=1/2": {
+      "items": 4,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "105/512",
+      "gap_from_max_law_equal": true,
+      "kl": 0.39070644048973047,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.22099390276932146,
+      "dv_at_radius": 0.2323643749592015,
+      "dv_hoeffding_at_radius": 0.2323643749592015,
+      "ratio_exact": 0.9279809190666463,
+      "ratio_radius": 0.882571285017368,
+      "c_K": 0.910514332792257
+    },
+    "n=4,K=3,p=3/4": {
+      "items": 4,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "86835/524288",
+      "gap_from_max_law_equal": true,
+      "kl": 0.37518001933209055,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.20661061524117172,
+      "dv_at_radius": 0.22169062026714217,
+      "dv_hoeffding_at_radius": 0.2323643749592015,
+      "ratio_exact": 0.8016268589924275,
+      "ratio_radius": 0.747097997789406,
+      "c_K": 0.910514332792257
+    },
+    "n=4,K=5,p=1/4": {
+      "items": 4,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "2203893555/8589934592",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7164427058947149,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.28551143903004217,
+      "dv_at_radius": 0.3034761397985963,
+      "dv_hoeffding_at_radius": 0.3180876279490646,
+      "ratio_exact": 0.8986224101887417,
+      "ratio_radius": 0.8454271813523945,
+      "c_K": 0.9140283772905547
+    },
+    "n=4,K=5,p=1/2": {
+      "items": 4,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "36675/131072",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7297233168427397,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.3020188977619488,
+      "dv_at_radius": 0.3180876279490646,
+      "dv_hoeffding_at_radius": 0.3180876279490646,
+      "ratio_exact": 0.9264587299240407,
+      "ratio_radius": 0.8796571128456446,
+      "c_K": 0.9140283772905547
+    },
+    "n=4,K=5,p=3/4": {
+      "items": 4,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "1824277875/8589934592",
+      "gap_from_max_law_equal": true,
+      "kl": 0.6800638110228862,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.27816828481208355,
+      "dv_at_radius": 0.3034761397985963,
+      "dv_hoeffding_at_radius": 0.3180876279490646,
+      "ratio_exact": 0.7634727160335724,
+      "ratio_radius": 0.6998042615832168,
+      "c_K": 0.9140283772905547
+    },
+    "n=4,K=10,p=1/4": {
+      "items": 4,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "422046123622428699421563/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.2595406042318968,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.37856361181133436,
+      "dv_at_radius": 0.3994821601656999,
+      "dv_hoeffding_at_radius": 0.41871605728017613,
+      "ratio_exact": 0.9221920971041913,
+      "ratio_radius": 0.8739022811902937,
+      "c_K": 0.9187328167160698
+    },
+    "n=4,K=10,p=1/2": {
+      "items": 4,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "399106418675/1099511627776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.247725166558718,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.3949248609797055,
+      "dv_at_radius": 0.41871605728017613,
+      "dv_hoeffding_at_radius": 0.41871605728017613,
+      "ratio_exact": 0.9191246464656823,
+      "ratio_radius": 0.8669005329919691,
+      "c_K": 0.9187328167160698
+    },
+    "n=4,K=10,p=3/4": {
+      "items": 4,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "295496264444377684765563/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.0375055649049254,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.3435800967423934,
+      "dv_at_radius": 0.3994821601656999,
+      "dv_hoeffding_at_radius": 0.41871605728017613,
+      "ratio_exact": 0.7114171727284235,
+      "ratio_radius": 0.6118640715491425,
+      "c_K": 0.9187328167160698
+    },
+    "n=4,K=20,p=1/4": {
+      "items": 4,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "628570905191883909253310896746908318889245868375/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.819640102788711,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.4550148074378425,
+      "dv_at_radius": 0.4824554075981202,
+      "dv_hoeffding_at_radius": 0.5056842237941074,
+      "ratio_exact": 0.9452124613653835,
+      "ratio_radius": 0.8914516436600406,
+      "c_K": 0.9232417049661397
+    },
+    "n=4,K=20,p=1/2": {
+      "items": 4,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "521163304032748317467975/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.7988170179358007,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.4741857518335774,
+      "dv_at_radius": 0.5056842237941074,
+      "dv_hoeffding_at_radius": 0.5056842237941074,
+      "ratio_exact": 0.9091293430960536,
+      "ratio_radius": 0.8525007520216651,
+      "c_K": 0.9232417049661397
+    },
+    "n=4,K=20,p=3/4": {
+      "items": 4,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "365193982723294713386365013252763468350673158487/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.146311360248643,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.3611470555788671,
+      "dv_at_radius": 0.4824554075981202,
+      "dv_hoeffding_at_radius": 0.5056842237941074,
+      "ratio_exact": 0.6918950577510871,
+      "ratio_radius": 0.5179253024033239,
+      "c_K": 0.9232417049661397
+    },
+    "n=8,K=2,p=1/4": {
+      "items": 8,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "361080435/4294967296",
+      "gap_from_max_law_equal": true,
+      "kl": 0.1783035645492685,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.10071584368290029,
+      "dv_at_radius": 0.10482429950220234,
+      "dv_hoeffding_at_radius": 0.10987128280400016,
+      "ratio_exact": 0.8347305351138401,
+      "ratio_radius": 0.8020143276998758,
+      "c_K": 0.9077492093944037
+    },
+    "n=8,K=2,p=1/2": {
+      "items": 8,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "6435/65536",
+      "gap_from_max_law_equal": true,
+      "kl": 0.18350880865104144,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.10709482032614878,
+      "dv_at_radius": 0.10987128280400016,
+      "dv_hoeffding_at_radius": 0.10987128280400016,
+      "ratio_exact": 0.9168539367091396,
+      "ratio_radius": 0.8936849112096888,
+      "c_K": 0.9077492093944037
+    },
+    "n=8,K=2,p=3/4": {
+      "items": 8,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "361080435/4294967296",
+      "gap_from_max_law_equal": true,
+      "kl": 0.18126919207699735,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.1015499659057789,
+      "dv_at_radius": 0.10482429950220234,
+      "dv_hoeffding_at_radius": 0.10987128280400016,
+      "ratio_exact": 0.8278741340974201,
+      "ratio_radius": 0.8020143276998758,
+      "c_K": 0.9077492093944037
+    },
+    "n=8,K=3,p=1/4": {
+      "items": 8,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "284408293713/2199023255552",
+      "gap_from_max_law_equal": true,
+      "kl": 0.40268746480125994,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.1513567653205954,
+      "dv_at_radius": 0.1567589409163481,
+      "dv_hoeffding_at_radius": 0.164306425239825,
+      "ratio_exact": 0.8544971072959859,
+      "ratio_radius": 0.8250497061289993,
+      "c_K": 0.910514332792257
+    },
+    "n=8,K=3,p=1/2": {
+      "items": 8,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "19305/131072",
+      "gap_from_max_law_equal": true,
+      "kl": 0.41019678066265053,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.16011651629802484,
+      "dv_at_radius": 0.164306425239825,
+      "dv_hoeffding_at_radius": 0.164306425239825,
+      "ratio_exact": 0.9198642640440593,
+      "ratio_radius": 0.8964071929067923,
+      "c_K": 0.910514332792257
+    },
+    "n=8,K=3,p=3/4": {
+      "items": 8,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "270211254447/2199023255552",
+      "gap_from_max_law_equal": true,
+      "kl": 0.40242182468557314,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.15130683446220233,
+      "dv_at_radius": 0.1567589409163481,
+      "dv_hoeffding_at_radius": 0.164306425239825,
+      "ratio_exact": 0.8121103886432667,
+      "ratio_radius": 0.7838650313735748,
+      "c_K": 0.910514332792257
+    },
+    "n=8,K=5,p=1/4": {
+      "items": 8,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "858951071340503453895/4722366482869645213696",
+      "gap_from_max_law_equal": true,
+      "kl": 0.758884381420946,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.2077808840527365,
+      "dv_at_radius": 0.21459003637990412,
+      "dv_hoeffding_at_radius": 0.22492191873432715,
+      "ratio_exact": 0.8753931585449949,
+      "ratio_radius": 0.8476160750268178,
+      "c_K": 0.9140283772905547
+    },
+    "n=8,K=5,p=1/2": {
+      "items": 8,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "1733044995/8589934592",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7673527010590784,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.21899667535419892,
+      "dv_at_radius": 0.22492191873432715,
+      "dv_hoeffding_at_radius": 0.22492191873432715,
+      "ratio_exact": 0.9212605191707781,
+      "ratio_radius": 0.8969912401991815,
+      "c_K": 0.9140283772905547
+    },
+    "n=8,K=5,p=3/4": {
+      "items": 8,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "770255889147100942905/4722366482869645213696",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7454769035422396,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.2059372356065765,
+      "dv_at_radius": 0.21459003637990412,
+      "dv_hoeffding_at_radius": 0.22492191873432715,
+      "ratio_exact": 0.7920278647066284,
+      "ratio_radius": 0.7600913431614356,
+      "c_K": 0.9140283772905547
+    },
+    "n=8,K=10,p=1/4": {
+      "items": 8,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "359486913645942561159264920311402131563919599235/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.319659043853526,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.2739987941908168,
+      "dv_at_radius": 0.2824765444162169,
+      "dv_hoeffding_at_radius": 0.2960769634945074,
+      "ratio_exact": 0.8977080664855343,
+      "ratio_radius": 0.8707658480485322,
+      "c_K": 0.9187328167160698
+    },
+    "n=8,K=10,p=1/2": {
+      "items": 8,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "320112689239469508821235/1208925819614629174706176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3248130418358421,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.28775130775504765,
+      "dv_at_radius": 0.2960769634945074,
+      "dv_hoeffding_at_radius": 0.2960769634945074,
+      "ratio_exact": 0.9202078434913958,
+      "ratio_radius": 0.8943316874296894,
+      "c_K": 0.9187328167160698
+    },
+    "n=8,K=10,p=3/4": {
+      "items": 8,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "299869380183249951012933126699924805336023852675/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.2653999406048522,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.2683068047159127,
+      "dv_at_radius": 0.2824765444162169,
+      "dv_hoeffding_at_radius": 0.2960769634945074,
+      "ratio_exact": 0.7647176755242764,
+      "ratio_radius": 0.7263574979428253,
+      "c_K": 0.9187328167160698
+    },
+    "n=8,K=20,p=1/4": {
+      "items": 8,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "647356973889730456800966187411955017780166440912255682588861356363326192781907199970460207067303/2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.928762805916292,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.3312509966781095,
+      "dv_at_radius": 0.3411474903327506,
+      "dv_hoeffding_at_radius": 0.35757274378386905,
+      "ratio_exact": 0.9149303302020613,
+      "ratio_radius": 0.8883887244043704,
+      "c_K": 0.9232417049661397
+    },
+    "n=8,K=20,p=1/2": {
+      "items": 8,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "464446802608614755514204835096086731071091812359/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.9239318129540177,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.34676467281086476,
+      "dv_at_radius": 0.35757274378386905,
+      "dv_hoeffding_at_radius": 0.35757274378386905,
+      "ratio_exact": 0.9164353320603692,
+      "ratio_radius": 0.8887349598053068,
+      "c_K": 0.9232417049661397
+    },
+    "n=8,K=20,p=3/4": {
+      "items": 8,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "501588933206068164202587879681084048334698354656810329138179980376710042090803536528588555858087/2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.8121861560329329,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.32108438582902915,
+      "dv_at_radius": 0.3411474903327506,
+      "dv_hoeffding_at_radius": 0.35757274378386905,
+      "ratio_exact": 0.7313582198346272,
+      "ratio_radius": 0.6883465700057346,
+      "c_K": 0.9232417049661397
+    },
+    "n=16,K=2,p=1/4": {
+      "items": 16,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "1111810927395575235/18446744073709551616",
+      "gap_from_max_law_equal": true,
+      "kl": 0.18600523666551272,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.07273867239366169,
+      "dv_at_radius": 0.07412197301113692,
+      "dv_hoeffding_at_radius": 0.07769072912837342,
+      "ratio_exact": 0.8286017487036544,
+      "ratio_radius": 0.8131379764366831,
+      "c_K": 0.9077492093944037
+    },
+    "n=16,K=2,p=1/2": {
+      "items": 16,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "300540195/4294967296",
+      "gap_from_max_law_equal": true,
+      "kl": 0.18823677107428555,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.07669679977724901,
+      "dv_at_radius": 0.07769072912837342,
+      "dv_hoeffding_at_radius": 0.07769072912837342,
+      "ratio_exact": 0.9123583676103595,
+      "ratio_radius": 0.900686192944403,
+      "c_K": 0.9077492093944037
+    },
+    "n=16,K=2,p=3/4": {
+      "items": 16,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "1111810927395575235/18446744073709551616",
+      "gap_from_max_law_equal": true,
+      "kl": 0.18697367625019842,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.072927784157848,
+      "dv_at_radius": 0.07412197301113692,
+      "dv_hoeffding_at_radius": 0.07769072912837342,
+      "ratio_exact": 0.8264530705240728,
+      "ratio_radius": 0.8131379764366831,
+      "c_K": 0.9077492093944037
+    },
+    "n=16,K=3,p=1/4": {
+      "items": 16,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "14224797664106102262569373/154742504910672534362390528",
+      "gap_from_max_law_equal": true,
+      "kl": 0.4169676355814721,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.10890653936691831,
+      "dv_at_radius": 0.11084531013357109,
+      "dv_hoeffding_at_radius": 0.11618218747960075,
+      "ratio_exact": 0.8440778752845641,
+      "ratio_radius": 0.8293142961362167,
+      "c_K": 0.910514332792257
+    },
+    "n=16,K=3,p=1/2": {
+      "items": 16,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "901620585/8589934592",
+      "gap_from_max_law_equal": true,
+      "kl": 0.42077150742669556,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.11466956704847296,
+      "dv_at_radius": 0.11618218747960075,
+      "dv_hoeffding_at_radius": 0.11618218747960075,
+      "ratio_exact": 0.9153470556332933,
+      "ratio_radius": 0.9034298014658532,
+      "c_K": 0.910514332792257
+    },
+    "n=16,K=3,p=3/4": {
+      "items": 16,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "13754840456007722480199267/154742504910672534362390528",
+      "gap_from_max_law_equal": true,
+      "kl": 0.41692002588904603,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.10890032167228753,
+      "dv_at_radius": 0.11084531013357109,
+      "dv_hoeffding_at_radius": 0.11618218747960075,
+      "ratio_exact": 0.8162379294468856,
+      "ratio_radius": 0.8019155070320525,
+      "c_K": 0.910514332792257
+    },
+    "n=16,K=5,p=1/4": {
+      "items": 16,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "183261975756686534713090149625879587478165635/1427247692705959881058285969449495136382746624",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7826709023264483,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.1492080926128166,
+      "dv_at_radius": 0.15173806989929814,
+      "dv_hoeffding_at_radius": 0.1590438139745323,
+      "ratio_exact": 0.8605589706965997,
+      "ratio_radius": 0.8462105962182288,
+      "c_K": 0.9140283772905547
+    },
+    "n=16,K=5,p=1/2": {
+      "items": 16,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "5313479147234740995/36893488147419103232",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7878238247607877,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.15690600537829844,
+      "dv_at_radius": 0.1590438139745323,
+      "dv_hoeffding_at_radius": 0.1590438139745323,
+      "ratio_exact": 0.917888008970547,
+      "ratio_radius": 0.9055500951157432,
+      "c_K": 0.9140283772905547
+    },
+    "n=16,K=5,p=3/4": {
+      "items": 16,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "170671969532627443737802925307785621356291965/1427247692705959881058285969449495136382746624",
+      "gap_from_max_law_equal": true,
+      "kl": 0.7780363330325141,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.1487656704001187,
+      "dv_at_radius": 0.15173806989929814,
+      "dv_hoeffding_at_radius": 0.1590438139745323,
+      "ratio_exact": 0.8038224415825036,
+      "ratio_radius": 0.7880763508066377,
+      "c_K": 0.9140283772905547
+    },
+    "n=16,K=10,p=1/4": {
+      "items": 16,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "368953954190740482940860433245682063693692861021327975666700813123139131618952313857100871978515/2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.357720250645781,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.19652053255666851,
+      "dv_at_radius": 0.19974108008284994,
+      "dv_hoeffding_at_radius": 0.20935802864008807,
+      "ratio_exact": 0.8789529423888004,
+      "ratio_radius": 0.8647810468374897,
+      "c_K": 0.9187328167160698
+    },
+    "n=16,K=10,p=1/2": {
+      "items": 16,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "277450292584686522182808406248529578029208226035/1461501637330902918203684832716283019655932542976",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3631434818292139,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.20639339574502605,
+      "dv_at_radius": 0.20935802864008807,
+      "dv_hoeffding_at_radius": 0.20935802864008807,
+      "ratio_exact": 0.9197929668532128,
+      "ratio_radius": 0.9067681571342241,
+      "c_K": 0.9187328167160698
+    },
+    "n=16,K=10,p=3/4": {
+      "items": 16,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "328391338941410318816422156665103365139318646753019594823340631886113270546897774147130950503955/2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3393984433630899,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.19519005187508986,
+      "dv_at_radius": 0.19974108008284994,
+      "dv_hoeffding_at_radius": 0.20935802864008807,
+      "ratio_exact": 0.7876538541992764,
+      "ratio_radius": 0.7697074462449137,
+      "c_K": 0.9187328167160698
+    },
+    "n=16,K=20,p=1/4": {
+      "items": 16,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "968306352406712704123966905251478623506384443855819028257300388856492111597922298653745807603631472040600757670812036078829790945013810813944916676657268999194997024899954326133303059028388167/4562440617622195218641171605700291324893228507248559930579192517899275167208677386505912811317371399778642309573594407310688704721375437998252661319722214188251994674360264950082874192246603776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.9812599982709647,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.2373960672966206,
+      "dv_at_radius": 0.2412277037990601,
+      "dv_hoeffding_at_radius": 0.2528421118970537,
+      "ratio_exact": 0.8940092985017492,
+      "ratio_radius": 0.879808945027784,
+      "c_K": 0.9232417049661397
+    },
+    "n=16,K=20,p=1/2": {
+      "items": 16,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "489630584140531529075109881829921931129641926756255353953649745092574719945470221849392805169159/2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936576",
+      "gap_from_max_law_equal": true,
+      "kl": 1.9849255863406183,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.24905606712775402,
+      "dv_at_radius": 0.2528421118970537,
+      "dv_hoeffding_at_radius": 0.2528421118970537,
+      "ratio_exact": 0.9203919240919426,
+      "ratio_radius": 0.9066100227948487,
+      "c_K": 0.9232417049661397
+    },
+    "n=16,K=20,p=3/4": {
+      "items": 16,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "827130233345777979476399847818784056206036519917172217694659098566561831759599820315987673121693408232354581270973587916893697887998860006816640367946531357188714453222341730161013452111620423/4562440617622195218641171605700291324893228507248559930579192517899275167208677386505912811317371399778642309573594407310688704721375437998252661319722214188251994674360264950082874192246603776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.9383052207979108,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.23480852872246327,
+      "dv_at_radius": 0.2412277037990601,
+      "dv_hoeffding_at_radius": 0.2528421118970537,
+      "ratio_exact": 0.7720808899737991,
+      "ratio_radius": 0.7515354786135645,
+      "c_K": 0.9232417049661397
+    },
+    "n=64,K=2,p=1/4": {
+      "items": 64,
+      "candidates": 2,
+      "p": "1/4",
+      "gap": "3524478909679388734267390461230091410295792613726361836282899229127013196707/115792089237316195423570985008687907853269984665640564039457584007913129639936",
+      "gap_from_max_law_equal": true,
+      "kl": 0.1914218921216083,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.03689509145920305,
+      "dv_at_radius": 0.03706098650556846,
+      "dv_hoeffding_at_radius": 0.03884536456418671,
+      "ratio_exact": 0.8249876265118808,
+      "ratio_radius": 0.8212947577176162,
+      "c_K": 0.9077492093944037
+    },
+    "n=64,K=2,p=1/2": {
+      "items": 64,
+      "candidates": 2,
+      "p": "1/2",
+      "gap": "11975573020964041433067793888190275875/340282366920938463463374607431768211456",
+      "gap_from_max_law_equal": true,
+      "kl": 0.1919018201576804,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.038719929880900845,
+      "dv_at_radius": 0.03884536456418671,
+      "dv_hoeffding_at_radius": 0.03884536456418671,
+      "ratio_exact": 0.9089129601540689,
+      "ratio_radius": 0.9059780099850993,
+      "c_K": 0.9077492093944037
+    },
+    "n=64,K=2,p=3/4": {
+      "items": 64,
+      "candidates": 2,
+      "p": "3/4",
+      "gap": "3524478909679388734267390461230091410295792613726361836282899229127013196707/115792089237316195423570985008687907853269984665640564039457584007913129639936",
+      "gap_from_max_law_equal": true,
+      "kl": 0.19153853286474576,
+      "radius": 0.1931471805599453,
+      "dv_at_exact_kl": 0.03690633054860444,
+      "dv_at_radius": 0.03706098650556846,
+      "dv_hoeffding_at_radius": 0.03884536456418671,
+      "ratio_exact": 0.8247363929280598,
+      "ratio_radius": 0.8212947577176162,
+      "c_K": 0.9077492093944037
+    },
+    "n=64,K=3,p=1/4": {
+      "items": 64,
+      "candidates": 3,
+      "p": "1/4",
+      "gap": "221351794139729234923514274171755142171651003940251974633098257153724360549955531510011944595011383715116326629/4809815209520810450717656262224562232065397860164239095208531909697964083434718092213655548692006303809402830848",
+      "gap_from_max_law_equal": true,
+      "kl": 0.42813748567004895,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.05517780448852543,
+      "dv_at_radius": 0.055422655066785544,
+      "dv_hoeffding_at_radius": 0.05809109373980038,
+      "ratio_exact": 0.8340464517473423,
+      "ratio_radius": 0.830361735528676,
+      "c_K": 0.910514332792257
+    },
+    "n=64,K=3,p=1/2": {
+      "items": 64,
+      "candidates": 3,
+      "p": "1/2",
+      "gap": "35926719062892124299203381664570827625/680564733841876926926749214863536422912",
+      "gap_from_max_law_equal": true,
+      "kl": 0.4290939118278731,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.057899017143257785,
+      "dv_at_radius": 0.05809109373980038,
+      "dv_hoeffding_at_radius": 0.05809109373980038,
+      "ratio_exact": 0.9117524222716202,
+      "ratio_radius": 0.9087377380767621,
+      "c_K": 0.910514332792257
+    },
+    "n=64,K=3,p=3/4": {
+      "items": 64,
+      "candidates": 3,
+      "p": "3/4",
+      "gap": "217851584357083835701287612186826150711359007508040001320499680284595625969592038247736061452609995928373846299/4809815209520810450717656262224562232065397860164239095208531909697964083434718092213655548692006303809402830848",
+      "gap_from_max_law_equal": true,
+      "kl": 0.42813596954076927,
+      "radius": 0.43194562200144315,
+      "dv_at_exact_kl": 0.055177706790050254,
+      "dv_at_radius": 0.055422655066785544,
+      "dv_hoeffding_at_radius": 0.05809109373980038,
+      "ratio_exact": 0.8208592271164158,
+      "ratio_radius": 0.8172313234571245,
+      "c_K": 0.910514332792257
+    },
+    "n=64,K=5,p=1/4": {
+      "items": 64,
+      "candidates": 5,
+      "p": "1/4",
+      "gap": "17757957522507457574066706235407080161317657808529770830020258562101894045119200673386901072533016514925786104689046862267274614866428268546340959833819199383963419812048803591075176007275/278469275977917188637766821636980671685377716506870112950390168328813181592326500641230029987632531724770648777685205524334027387779262573135538410627576549575927409323746640019706676772864",
+      "gap_from_max_law_equal": true,
+      "kl": 0.8023510389952384,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.07553617661933716,
+      "dv_at_radius": 0.07586903494964907,
+      "dv_hoeffding_at_radius": 0.07952190698726615,
+      "ratio_exact": 0.8442298983405806,
+      "ratio_radius": 0.8405260295020284,
+      "c_K": 0.9140283772905547
+    },
+    "n=64,K=5,p=1/2": {
+      "items": 64,
+      "candidates": 5,
+      "p": "1/2",
+      "gap": "16793858585488264412312327248863727662846596866282850787470015419495590243075/231584178474632390847141970017375815706539969331281128078915168015826259279872",
+      "gap_from_max_law_equal": true,
+      "kl": 0.8039212463055577,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.07925045575113224,
+      "dv_at_radius": 0.07952190698726615,
+      "dv_hoeffding_at_radius": 0.07952190698726615,
+      "ratio_exact": 0.9150394913194209,
+      "ratio_radius": 0.9119159671178474,
+      "c_K": 0.9140283772905547
+    },
+    "n=64,K=5,p=3/4": {
+      "items": 64,
+      "candidates": 5,
+      "p": "3/4",
+      "gap": "17169748891060081182405161996319974221080703924295419599574547939052025686247638961991815336050181771059795258652582579970890027891208695322358709886869268529457938746289310263752493742485/278469275977917188637766821636980671685377716506870112950390168328813181592326500641230029987632531724770648777685205524334027387779262573135538410627576549575927409323746640019706676772864",
+      "gap_from_max_law_equal": true,
+      "kl": 0.8017818134975631,
+      "radius": 0.8094379124341002,
+      "dv_at_exact_kl": 0.07550937741027004,
+      "dv_at_radius": 0.07586903494964907,
+      "dv_hoeffding_at_radius": 0.07952190698726615,
+      "ratio_exact": 0.8165556130602684,
+      "ratio_radius": 0.8126847270953382,
+      "c_K": 0.9140283772905547
+    },
+    "n=64,K=10,p=1/4": {
+      "items": 64,
+      "candidates": 10,
+      "p": "1/4",
+      "gap": "1772432205609299704851911936867210522875135669901201718296375429000252425339079306441201659546007608422470979039065058830728964227855775360421411862622018548276298220130482695219568957415008677610265977700295268731742468390510580801761113979574909362450612035009161484452036111843763885685002871232880440630957433079879829083822804566905814586511856145636790234281692059760994290584947/20815864389328798163850480654728171077230524494533409610638224700807216119346720596024478883464648369684843227908562015582767132496646929816279813211354641525848259018778440691546366699323167100945918841095379622423387354295096957733925002768876520583464697770622321657076833170056511209332449663781837603694136444406281042053396870977465916057756101739472373801429441421111406337458176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3903009619135993,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.09943223478953135,
+      "dv_at_radius": 0.09987054004142497,
+      "dv_hoeffding_at_radius": 0.10467901432004403,
+      "ratio_exact": 0.8563434540179282,
+      "ratio_radius": 0.8525851902379877,
+      "c_K": 0.9187328167160698
+    },
+    "n=64,K=10,p=1/2": {
+      "items": 64,
+      "candidates": 10,
+      "p": "1/2",
+      "gap": "437370528756495380527268202636355148380555097787390205668677930014583934022617999285616800378379865310413913141717206854731673238914745495358245719444357233551122528628786638558027845663639795/4562440617622195218641171605700291324893228507248559930579192517899275167208677386505912811317371399778642309573594407310688704721375437998252661319722214188251994674360264950082874192246603776",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3925988595018945,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.104305697782329,
+      "dv_at_radius": 0.10467901432004403,
+      "dv_hoeffding_at_radius": 0.10467901432004403,
+      "ratio_exact": 0.9190608320455935,
+      "ratio_radius": 0.915783187428882,
+      "c_K": 0.9187328167160698
+    },
+    "n=64,K=10,p=3/4": {
+      "items": 64,
+      "candidates": 10,
+      "p": "3/4",
+      "gap": "1678229558735843080711724427468515153246301421072170376040523474833969754267483753412417705890100623324797203071983215582276047984956028240712791247750902528882043729259703316374999032271833575267852860552712560389033798113185726197284857862668201472428702398391816198262961312011805527105399731108813626853256474826550979645903116819387616176242320404438511401517148603250445692783987/20815864389328798163850480654728171077230524494533409610638224700807216119346720596024478883464648369684843227908562015582767132496646929816279813211354641525848259018778440691546366699323167100945918841095379622423387354295096957733925002768876520583464697770622321657076833170056511209332449663781837603694136444406281042053396870977465916057756101739472373801429441421111406337458176",
+      "gap_from_max_law_equal": true,
+      "kl": 1.3880740781986323,
+      "radius": 1.402585092994046,
+      "dv_at_exact_kl": 0.09935257118905988,
+      "dv_at_radius": 0.09987054004142497,
+      "dv_hoeffding_at_radius": 0.10467901432004403,
+      "ratio_exact": 0.8114799715139864,
+      "ratio_radius": 0.8072713094862453,
+      "c_K": 0.9187328167160698
+    },
+    "n=64,K=20,p=1/4": {
+      "items": 64,
+      "candidates": 20,
+      "p": "1/4",
+      "gap": "45106908836954557618201374938439058822625371450106194408185150312108349001199850594177004863270026286899714479942151036853672712601812442549799410209925920400221078392389949977078226017393433898505824950887376005529356686878533042900852598765561832290960018325346564613865226303534197290111663802942169588032701430485142236419263066663615110712769155873705051912643403627087487067512745443582969109628457609159488433522800337275266360355332372811988800772730277381811214209544973003941002533850618367006382047334020712002428334073444769270312396755632889093633509178544165869823092431582103281405299305256364780367355295128895560728729525768860719947716661968814790894161407019430691828034583850117751862723288483751787364521659002404897111566882376725777625206524357895/433300210274926779301235722995130529126851924312253566276831366547097655953268278873591999368453759375352459120642109169274240110620843517970102311224458427564046616227161115801662152359395451958893835480905010246703239443701925453743683726938789767940577524555724362397039358587448248740993955708382317083531851133758531532844694304737183093418571190053292997716413815714417740434254315670267335553209606545389900958653541702218767662872949109999460596999125719155768466778443229719919179735890978537026576050107500869340314188887101095263339865901080787145771915722368720844521851040375582291274824574444462419841916186875058374404329003250698574832235855871168399140082282900718430116575617097058691735266917705341386171618452673063526784039252631042036988932549246976",
+      "gap_from_max_law_equal": true,
+      "kl": 2.0277158897109278,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.12008156548485024,
+      "dv_at_radius": 0.12061385189953006,
+      "dv_hoeffding_at_radius": 0.12642105594852684,
+      "ratio_exact": 0.8669176102698345,
+      "ratio_radius": 0.8630917771725075,
+      "c_K": 0.9232417049661397
+    },
+    "n=64,K=20,p=1/2": {
+      "items": 64,
+      "candidates": 20,
+      "p": "1/2",
+      "gap": "2418881195323371964957243661786331019947594586922690867237408271753373627604953932213298266784230286138748002233432994647956585401801996715778519087972977378889705863186028222951709482138466622928863400987947370321310122386240318781816547627405331139619079694980374828983585959680511855486440088862171552483830973064546037612795153214914076115735441443001071790457505288420394109708295/20815864389328798163850480654728171077230524494533409610638224700807216119346720596024478883464648369684843227908562015582767132496646929816279813211354641525848259018778440691546366699323167100945918841095379622423387354295096957733925002768876520583464697770622321657076833170056511209332449663781837603694136444406281042053396870977465916057756101739472373801429441421111406337458176",
+      "gap_from_max_law_equal": true,
+      "kl": 2.0305465999271144,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.12595096391822724,
+      "dv_at_radius": 0.12642105594852684,
+      "dv_hoeffding_at_radius": 0.12642105594852684,
+      "ratio_exact": 0.9226109247176637,
+      "ratio_radius": 0.9191802300479901,
+      "c_K": 0.9232417049661397
+    },
+    "n=64,K=20,p=3/4": {
+      "items": 64,
+      "candidates": 20,
+      "p": "3/4",
+      "gap": "41936621334395395866317811296048882629896296199075600843162826563541774685104924049358879413778756596205323147591654008664435703988110855644689208760353905139413289259302388687358028202011870266056193737566858208736809320502123871526993632564802002013400775715127572370864915690533088493934569628883565939810427420552133503630138569727754417115121276934399724824610139672626122381056398201132487790802187887825285469806191238462837530274965325565665845983832274293106611553906313734690860913959836902266278019607298062663548822291395576372024594244550531267212346733325945673078110036926967762203459290395036448801659760218594889792531245633682086375553347281859869983764952480574756791182698077416738392908348431610348658667074181946726332713022798460058289720056753415/433300210274926779301235722995130529126851924312253566276831366547097655953268278873591999368453759375352459120642109169274240110620843517970102311224458427564046616227161115801662152359395451958893835480905010246703239443701925453743683726938789767940577524555724362397039358587448248740993955708382317083531851133758531532844694304737183093418571190053292997716413815714417740434254315670267335553209606545389900958653541702218767662872949109999460596999125719155768466778443229719919179735890978537026576050107500869340314188887101095263339865901080787145771915722368720844521851040375582291274824574444462419841916186875058374404329003250698574832235855871168399140082282900718430116575617097058691735266917705341386171618452673063526784039252631042036988932549246976",
+      "gap_from_max_law_equal": true,
+      "kl": 2.0227392843994147,
+      "radius": 2.045732273553991,
+      "dv_at_exact_kl": 0.1199341173930063,
+      "dv_at_radius": 0.12061385189953006,
+      "dv_hoeffding_at_radius": 0.12642105594852684,
+      "ratio_exact": 0.8069781855486815,
+      "ratio_radius": 0.8024303586607193,
+      "c_K": 0.9232417049661397
+    }
+  },
+  "proxies": {
+    "p=1/4": {
+      "kearns_saul": 0.22755980665670933,
+      "variance": 0.1875,
+      "hoeffding": 0.25,
+      "grid_violation_kearns_saul": -1.5462386826481378e-07,
+      "grid_violation_hoeffding": -7.617828530873322e-05
+    },
+    "p=1/2": {
+      "kearns_saul": 0.25,
+      "variance": 0.25,
+      "hoeffding": 0.25,
+      "grid_violation_kearns_saul": -3.254665892246352e-08,
+      "grid_violation_hoeffding": -3.254665892246352e-08
+    },
+    "p=3/4": {
+      "kearns_saul": 0.22755980665670933,
+      "variance": 0.1875,
+      "hoeffding": 0.25,
+      "grid_violation_kearns_saul": -1.5462386826481378e-07,
+      "grid_violation_hoeffding": -7.617828530873322e-05
+    }
+  },
+  "supremum": {
+    "n_equals_1": {
+      "K=2,p=1/4": {
+        "gap": "3/16",
+        "kl_ball_sup": 0.1875,
+        "equal": true
+      },
+      "K=2,p=1/2": {
+        "gap": "1/4",
+        "kl_ball_sup": 0.25,
+        "equal": true
+      },
+      "K=2,p=3/4": {
+        "gap": "3/16",
+        "kl_ball_sup": 0.18749999999999978,
+        "equal": true
+      },
+      "K=3,p=1/4": {
+        "gap": "21/64",
+        "kl_ball_sup": 0.3281250000000001,
+        "equal": true
+      },
+      "K=3,p=1/2": {
+        "gap": "3/8",
+        "kl_ball_sup": 0.375,
+        "equal": true
+      },
+      "K=3,p=3/4": {
+        "gap": "15/64",
+        "kl_ball_sup": 0.234375,
+        "equal": true
+      },
+      "K=5,p=1/4": {
+        "gap": "525/1024",
+        "kl_ball_sup": 0.5126953124999999,
+        "equal": true
+      },
+      "K=5,p=1/2": {
+        "gap": "15/32",
+        "kl_ball_sup": 0.46875,
+        "equal": true
+      },
+      "K=5,p=3/4": {
+        "gap": "255/1024",
+        "kl_ball_sup": 0.2490234374999999,
+        "equal": true
+      },
+      "K=10,p=1/4": {
+        "gap": "727383/1048576",
+        "kl_ball_sup": 0.6936864852905275,
+        "equal": true
+      },
+      "K=10,p=1/2": {
+        "gap": "511/1024",
+        "kl_ball_sup": 0.4990234375,
+        "equal": true
+      },
+      "K=10,p=3/4": {
+        "gap": "262143/1048576",
+        "kl_ball_sup": 0.2499990463256836,
+        "equal": true
+      },
+      "K=20,p=1/4": {
+        "gap": "821146936431/1099511627776",
+        "kl_ball_sup": 0.7468287880610657,
+        "equal": true
+      },
+      "K=20,p=1/2": {
+        "gap": "524287/1048576",
+        "kl_ball_sup": 0.4999990463256836,
+        "equal": true
+      },
+      "K=20,p=3/4": {
+        "gap": "274877906943/1099511627776",
+        "kl_ball_sup": 0.2499999999990905,
+        "equal": true
+      }
+    },
+    "n_at_least_2": {
+      "n=2,K=2,p=1/4": {
+        "gap": 0.15234375,
+        "kl_ball_sup": 0.16243847740760697,
+        "dv_at_exact_kl": 0.16940795188185637,
+        "chain_strict": true
+      },
+      "n=2,K=2,p=1/2": {
+        "gap": 0.1875,
+        "kl_ball_sup": 0.19619615258503997,
+        "dv_at_exact_kl": 0.19886459567489273,
+        "chain_strict": true
+      },
+      "n=2,K=2,p=3/4": {
+        "gap": 0.15234375,
+        "kl_ball_sup": 0.15345566391295018,
+        "dv_at_exact_kl": 0.1863771894483169,
+        "chain_strict": true
+      },
+      "n=2,K=5,p=1/4": {
+        "gap": 0.3597450256347656,
+        "kl_ball_sup": 0.3871745712761355,
+        "dv_at_exact_kl": 0.3891036023541227,
+        "chain_strict": true
+      },
+      "n=2,K=5,p=1/2": {
+        "gap": 0.380859375,
+        "kl_ball_sup": 0.3839151357315518,
+        "dv_at_exact_kl": 0.40871511728548654,
+        "chain_strict": true
+      },
+      "n=2,K=5,p=3/4": {
+        "gap": 0.24198532104492188,
+        "kl_ball_sup": 0.2419933540550152,
+        "dv_at_exact_kl": 0.33721278381810754,
+        "chain_strict": true
+      },
+      "n=4,K=2,p=1/4": {
+        "gap": 0.1154022216796875,
+        "kl_ball_sup": 0.12853393612577302,
+        "dv_at_exact_kl": 0.13526578871352177,
+        "chain_strict": true
+      },
+      "n=4,K=2,p=1/2": {
+        "gap": 0.13671875,
+        "kl_ball_sup": 0.1466251980591352,
+        "dv_at_exact_kl": 0.14770985302892675,
+        "chain_strict": true
+      },
+      "n=4,K=2,p=3/4": {
+        "gap": 0.1154022216796875,
+        "kl_ball_sup": 0.11823939794222849,
+        "dv_at_exact_kl": 0.13943059322209891,
+        "chain_strict": true
+      },
+      "n=4,K=5,p=1/4": {
+        "gap": 0.25656697747763246,
+        "kl_ball_sup": 0.28041832697196556,
+        "dv_at_exact_kl": 0.28551143903004217,
+        "chain_strict": true
+      },
+      "n=4,K=5,p=1/2": {
+        "gap": 0.27980804443359375,
+        "kl_ball_sup": 0.2924321671663421,
+        "dv_at_exact_kl": 0.3020188977619488,
+        "chain_strict": true
+      },
+      "n=4,K=5,p=3/4": {
+        "gap": 0.21237389591988176,
+        "kl_ball_sup": 0.21298847705638746,
+        "dv_at_exact_kl": 0.27816828481208355,
+        "chain_strict": true
+      },
+      "n=8,K=2,p=1/4": {
+        "gap": 0.08407059009186924,
+        "kl_ball_sup": 0.09473959524482617,
+        "dv_at_exact_kl": 0.10071584368290029,
+        "chain_strict": true
+      },
+      "n=8,K=2,p=1/2": {
+        "gap": 0.0981903076171875,
+        "kl_ball_sup": 0.10668332589924667,
+        "dv_at_exact_kl": 0.10709482032614878,
+        "chain_strict": true
+      },
+      "n=8,K=2,p=3/4": {
+        "gap": 0.08407059009186924,
+        "kl_ball_sup": 0.0879502232212136,
+        "dv_at_exact_kl": 0.1015499659057789,
+        "chain_strict": true
+      },
+      "n=8,K=5,p=1/4": {
+        "gap": 0.18188996437619637,
+        "kl_ball_sup": 0.20104633486749318,
+        "dv_at_exact_kl": 0.2077808840527365,
+        "chain_strict": true
+      },
+      "n=8,K=5,p=1/2": {
+        "gap": 0.20175299083348364,
+        "kl_ball_sup": 0.21541892117394457,
+        "dv_at_exact_kl": 0.21899667535419892,
+        "chain_strict": true
+      },
+      "n=8,K=5,p=3/4": {
+        "gap": 0.16310802898106264,
+        "kl_ball_sup": 0.16727092631628138,
+        "dv_at_exact_kl": 0.2059372356065765,
+        "chain_strict": true
+      }
+    }
+  },
+  "gaussian": {
+    "rows": {
+      "K=2": {
+        "expected_max": 0.564189583548446,
+        "expected_max_tail_form": 0.5641895835484456,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 0.6215258330269874,
+        "c_K": 0.9077492093944037
+      },
+      "K=3": {
+        "expected_max": 0.8462843753226688,
+        "expected_max_tail_form": 0.8462843753226685,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 0.929457499836806,
+        "c_K": 0.910514332792257
+      },
+      "K=5": {
+        "expected_max": 1.1629644736419409,
+        "expected_max_tail_form": 1.1629644736419407,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 1.2723505117962584,
+        "c_K": 0.9140283772905547
+      },
+      "K=10": {
+        "expected_max": 1.5387527308370537,
+        "expected_max_tail_form": 1.5387527308370532,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 1.6748642291207045,
+        "c_K": 0.9187328167160698
+      },
+      "K=100": {
+        "expected_max": 2.5075936364447484,
+        "expected_max_tail_form": 2.507593636444748,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 2.6889292240548435,
+        "c_K": 0.9325621567172954
+      },
+      "K=1000": {
+        "expected_max": 3.2414357691373956,
+        "expected_max_tail_form": 3.241435769137397,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 3.4376606228603013,
+        "c_K": 0.9429190733901949
+      },
+      "K=10000": {
+        "expected_max": 3.8516158170714108,
+        "expected_max_tail_form": 3.85161581707132,
+        "quadratures_agree": true,
+        "sqrt_2_radius": 4.052268592276722,
+        "c_K": 0.9504838411778188
+      }
+    },
+    "closed_forms": {
+      "K=2": 0.5641895835477563,
+      "K=3": 0.8462843753216345
+    },
+    "closed_forms_match": true
+  },
+  "limit": {
+    "n=64,K=2": {
+      "sqrt_n_gap": 0.28154436868006055,
+      "gaussian_target": 0.282094791774223,
+      "ratio_radius": 0.9059780099850993,
+      "c_K": 0.9077492093944037
+    },
+    "n=256,K=2": {
+      "sqrt_n_gap": 0.2819570838867099,
+      "gaussian_target": 0.282094791774223,
+      "ratio_radius": 0.9073060809508364,
+      "c_K": 0.9077492093944037
+    },
+    "n=1024,K=2": {
+      "sqrt_n_gap": 0.2820603584775443,
+      "gaussian_target": 0.282094791774223,
+      "ratio_radius": 0.9076384069310178,
+      "c_K": 0.9077492093944037
+    },
+    "K=2": {
+      "error_shrinks": true,
+      "ratio_rises": true,
+      "ratio_below_c_K": true
+    },
+    "n=64,K=5": {
+      "sqrt_n_gap": 0.5801383737387865,
+      "gaussian_target": 0.5814822368209704,
+      "ratio_radius": 0.9119159671178474,
+      "c_K": 0.9140283772905547
+    },
+    "n=256,K=5": {
+      "sqrt_n_gap": 0.5811465473364257,
+      "gaussian_target": 0.5814822368209704,
+      "ratio_radius": 0.9135007090396561,
+      "c_K": 0.9140283772905547
+    },
+    "n=1024,K=5": {
+      "sqrt_n_gap": 0.5813983315873904,
+      "gaussian_target": 0.5814822368209704,
+      "ratio_radius": 0.9138964871662499,
+      "c_K": 0.9140283772905547
+    },
+    "K=5": {
+      "error_shrinks": true,
+      "ratio_rises": true,
+      "ratio_below_c_K": true
+    }
+  },
+  "uniform_supports": {
+    "N=10,K=2": {
+      "deficit": 0.00382898570377857
+    },
+    "N=100,K=2": {
+      "deficit": 5.7475663720635284e-05
+    },
+    "N=1000,K=2": {
+      "deficit": 7.666384874704946e-07
+    },
+    "K=2": {
+      "deficit_positive_and_shrinking": true,
+      "deficit_at_1000": 7.666384874704946e-07
+    },
+    "N=10,K=3": {
+      "deficit": 0.004918043787623616
+    },
+    "N=100,K=3": {
+      "deficit": 4.991654519137523e-05
+    },
+    "N=1000,K=3": {
+      "deficit": 4.999163948360419e-07
+    },
+    "K=3": {
+      "deficit_positive_and_shrinking": true,
+      "deficit_at_1000": 4.999163948360419e-07
+    },
+    "N=10,K=5": {
+      "deficit": 0.011068651393251194
+    },
+    "N=100,K=5": {
+      "deficit": 0.00011110668715574867
+    },
+    "N=1000,K=5": {
+      "deficit": 1.111110665807935e-06
+    },
+    "K=5": {
+      "deficit_positive_and_shrinking": true,
+      "deficit_at_1000": 1.111110665807935e-06
+    }
+  },
+  "source_sha256": {
+    "scripts/verify_evaluation_selection_kl.py": "0a44e1447a14ef0ab0a98ca22d6b05f4924b3917c02d170af0a17acf02aa6d98",
+    "src/spiral_ln/evaluation_selection_kl.py": "b2230fe2c0e8949ba0ba7af6ccb3fa0aa83428138fe7c157aacf5f9e1d227ff2",
+    "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4"
+  }
+}

@@ -71,10 +71,13 @@ depends only on the score, and R3 cites Beirami et al. for \(\mathrm{KL}(\pi_K\|
 \gamma(n,K,p)\ \le\ \sup_{\mathrm{KL}(\pi\|p_0)\le\lambda_K}\mathbb E_\pi[\hat S]-p\ \le\ \sigma_n\sqrt{2\lambda_K},
 \qquad \sigma_n^2=v(p)/n,\quad v(p)=\tfrac{1-2p}{2\ln\frac{1-p}{p}},\ v(\tfrac12)=\tfrac14,
 \]
-\(v\) the Kearns–Saul variance proxy of a Bernoulli (Kearns and Saul 1998; its optimality is attributed from
-memory to Buldygin and Moskvichova 2013 and was not checked against that paper; the constant itself is checked
-on a \(t\)-grid by the script, not reproved). R3's Beirami citation is likewise taken as stated there; whether it
-covers the tied best-of-\(K\) law was not determined, though the inequality held on every cell. The running maximum is the same with
+\(v\) the Kearns–Saul variance proxy of a Bernoulli (Kearns and Saul 1998; the constant is checked on a
+\(t\)-grid, not reproved; its optimality remains a citation, attributed from memory to Buldygin and Moskvichova
+2013 and not checked against that paper). Settled, see `selection_law_kl_containment.md`: the containment
+\(\mathrm{KL}(\pi_K\|p_0)\le\ln K-(K-1)/K\) holds for every finite base law, score and \(K\), strictly for
+\(K\ge2\), tied best-of-\(K\) included (Theorem B there, by continuous jitter and Jensen on \(x\ln x\); R3's
+Beirami citation is no longer load-bearing), and the DV step \(\gamma\le\sqrt{2v(p)\mathrm{KL}(\pi_K\|p_0)/n}\)
+is proved for every \(n,K,p\) (Theorem C). The running maximum is the same with
 \(K\mapsto GK+1\) (multigen Prop 1), the carry fixture with \(K\mapsto2K-1\) (composition Prop 4). Status:
 **same object, different regime** for the summand (exact value at a point of an atomic lattice versus a
 supremum over a KL ball, sharp only at an exponential tilt); **bound** for the theorem.
@@ -106,7 +109,8 @@ percent of the exact finite optimizer's curse under the null. Off centre the rat
 chain, multigen §5) the candidate laws share no base law, so no KL comparison was attempted. Nothing here is a
 result on ASMP-8 as a whole, whose open part (R3) is the tail class and the learned-proxy frontier.
 
-*Evidence: finite verified example (script, 20 cells); R3 and the Kearns–Saul constant cited.*
+*Evidence: finite verified example (script, 20 cells); R3 and the Kearns–Saul constant cited; the containment
+and the DV step are algebraic identities in `selection_law_kl_containment.md`.*
 
 ## 2. ASMP-10 and the noise ceiling
 
@@ -237,10 +241,15 @@ No exact instance was found in either direction, and none is claimed.
 
 ## 8. What a joint result would need
 
-1. **Best-of-\(K\) inside the KL slice, all parameters.** Prove for every \(n,K,p\) that the tied best-of-\(K\) law
-   has \(\mathrm{KL}(\pi_K\|p_0)\le\ln K-(K-1)/K\) and \(\gamma(n,K,p)\le\sqrt{2v(p)\,\mathrm{KL}(\pi_K\|p_0)/n}\);
-   then decide whether \(\gamma/(\sigma_n\sqrt{2\lambda_K})\) at \(p=\tfrac12\) is bounded away from 1 uniformly
-   in \(K\) (observed 0.91–0.92 for \(M\le81\); limit 0.9077 at \(K=2\)). A single cell refutes.
+1. **Best-of-\(K\) inside the KL slice, all parameters.** *Settled, see `selection_law_kl_containment.md`.*
+   Containment holds for every \(n,K,p\), and for every finite base law and score: \(\mathrm{KL}(\pi_K\|p_0)<\ln K-(K-1)/K\)
+   for \(K\ge2\) (Theorem B) and \(\gamma(n,K,p)\le\sqrt{2v(p)\,\mathrm{KL}(\pi_K\|p_0)/n}\) (Theorem C). The ratio
+   \(\gamma/(\sigma_n\sqrt{2\lambda_K})\) is *not* bounded away from 1 uniformly in \(K\): its supremum over
+   \(n,K,p\) is 1, approached in the Gaussian limit \(n\to\infty\) at \(p=\tfrac12\) as \(K\to\infty\) and never
+   attained; the per-\(K\) limit is \(c_K=\mathbb E[\max\text{ of }K\text{ standard normals}]/\sqrt{2\lambda_K}\),
+   0.9077, 0.9187, 0.9326, 0.9429, 0.9505 at \(K=2,10,100,1000,10^4\), with \(c_K<1\) for each \(K\) and
+   \(c_K\to1\); at fixed \(n\) the ratio tends to 0 as \(K\to\infty\); on a 90-cell grid every finite-\(n\) ratio
+   lies below its \(c_K\) (finite verified). The 0.91–0.92 observed for \(M\le81\) was the early stretch of that sequence.
 2. **Regret with true gains.** For the drift chain (multigen §5), compute the KL of the accepted candidate's record
    law against the base-candidate law per generation; show either that R3's light-tail bound covers the
    reported-minus-true gap there, or that the laws share no base and the KL slice does not cover reuse with gains.
@@ -256,4 +265,5 @@ No exact instance was found in either direction, and none is claimed.
    history, \(C=p(i_G)\); compute \(B(F_s)\) exactly and decide whether the reported-score filtration is sufficient
    for \(C\) against the full chain state (under the null \(C\equiv p\) and the question is empty: a liveness check on R4).
 
-*Evidence for §7–§8: documentary; the observations in item 1 are finite verified examples from the script.*
+*Evidence for §7–§8: documentary; item 1 is settled in `selection_law_kl_containment.md` (algebraic identities
+plus finite checks); items 2–5 remain open.*

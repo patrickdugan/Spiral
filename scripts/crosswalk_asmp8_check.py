@@ -22,11 +22,14 @@ Three quantities are computed per cell: the exact gap (rational), the exact
 KL(pi_K||p0) (float; it is a finite sum of rationals times logs of rationals),
 and the KL-ball supremum at that radius (exponential tilt, bisection).  The
 sub-Gaussian constant of a Bernoulli(p) is the Kearns-Saul value
-v(p) = (1-2p) / (2 ln((1-p)/p)), v(1/2) = 1/4 (optimal: Berend-Kontorovich
-2013); for the mean of n independent draws sigma_n^2 = v(p)/n.  The script
-checks that constant on a t-grid (sanity, not proof).  Beirami et al. (arXiv
-2401.01879) give log K - (K-1)/K as an upper bound on the best-of-K KL; the
-exact KL is compared with it.  Under the null the ASMP-8 Regret is identically
+v(p) = (1-2p) / (2 ln((1-p)/p)), v(1/2) = 1/4 (its optimality is a citation,
+not checked here); for the mean of n independent draws sigma_n^2 = v(p)/n.
+The script checks that constant on a t-grid (sanity, not proof).  Beirami et
+al. (arXiv 2401.01879) give log K - (K-1)/K as an upper bound on the best-of-K
+KL; the exact KL is compared with it.  For the tied law used here the bound is
+proved, strictly for K >= 2, in paper/selection_law_kl_containment.md
+(Theorem B; module spiral_ln.evaluation_selection_kl), together with the DV
+step gamma <= sqrt(2 v(p) KL / n).  Under the null the ASMP-8 Regret is identically
 zero, so no regret is computed: the comparison is between the selection gap
 and the single-term DV bound that R3's proof passes through.
 

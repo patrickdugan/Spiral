@@ -166,7 +166,14 @@ pool size is fixed.) At \(p=\tfrac12\), \(n=8\), \(K=2\) the gap runs
 the accumulation: a separate readout block gives gap zero, and reporting on
 the selection block gives the one-generation gap at every generation. The
 gap is bounded for every \(G\) by \(\sqrt{\ln(GK+1)/(2n)}\) (Hoeffding),
-which is what the old extreme-value remark asserted without proof. A
+which is what the old extreme-value remark asserted without proof. The
+selected record's law also lies inside a KL ball of radius
+\(\ln K-(K-1)/K\) about the base law for every finite base law and every
+tie rule, so the gap obeys the Donsker–Varadhan bound
+\(\sqrt{2v(p)(\ln K-(K-1)/K)/n}\) as well; the ratio of the exact gap to
+that bound tends to a constant below one for each \(K\) and to one as
+\(K\) grows, so no uniform constant separates the two
+([containment note](selection_law_kl_containment.md)). A
 gate that accepts only gains above a noise margin lowers the gap under the
 null, by a coupling argument; with true gains \(\delta\) per accepted
 candidate, one generation's gap change is lowered by the gate when
