@@ -1,0 +1,795 @@
+     1	"""Estimating the gold grader's error rate with a second independent grader, exactly.
+     2	
+     3	The judge-measurement note inverts gold noise at a known flip rate ``eta`` and
+     4	stops there: ``eta`` must be known.  This module estimates it.  Three raters of
+     5	a binary truth with symmetric error rates, conditionally independent given the
+     6	truth -- the gold grader G1 (error ``eta1``), a second grader G2 (``eta2``) and
+     7	the controller's own answer C (error ``1 - a``) -- have pairwise agreement
+     8	rates whose polarities ``kappa_ij = 2 A_ij - 1`` factor as
+     9	``(1 - 2 e_i)(1 - 2 e_j)``, so ``(1 - 2 e_i)^2 = kappa_ij kappa_ik / kappa_jk``.
+    10	The judge is left out: its errors are correlated with the controller's (that
+    11	is what ``eps1`` measures), so it is a conditionally independent rater only if
+    12	A2 already holds.
+    13	
+    14	1. Walsh coefficients of the 2^3 label table; the factorization of the pairwise
+    15	   polarities; exact recovery when the square is a perfect square, an exact
+    16	   membership test ``eta1 <= eta0`` otherwise, and a 2^-16 bracket by bisection.
+    17	2. The symmetric model has four parameters on seven degrees of freedom.  The
+    18	   three polynomial constraints ``M_i kappa_jk = P`` (a rater's marginal bias
+    19	   times the opposite pair's polarity equals the parity bias), the sign and
+    20	   range conditions, and tables that violate each.
+    21	3. A pipeline from a 2^4 record table (controller answer, judge verdict, two
+    22	   gold labels): ``eta1`` from the three-rater identity, the judge note's
+    23	   Proposition 2 inverted at that ``eta1``, the judge module's exact tests on
+    24	   the corrected counts, and the exact propagation of an error in ``eta1``
+    25	   into ``eps1``.
+    26	
+    27	Nothing here calls a model.  Every quantity is a ``fractions.Fraction``; floats
+    28	are rejected at the boundary.
+    29	"""
+    30	
+    31	from __future__ import annotations
+    32	
+    33	from dataclasses import dataclass
+    34	from fractions import Fraction as Q
+    35	from itertools import product
+    36	from math import isqrt
+    37	
+    38	from spiral_ln.evaluation_feedback_signal import shared_error_bounds
+    39	from spiral_ln.evaluation_game_feedback import LoopEvent
+    40	from spiral_ln.evaluation_judge_measurement import (
+    41	    HALF, JudgeTable, ceiling_p_value, clopper_pearson_contains, expected_table,
+    42	    fisher_p_value, gold_noise_forward, gold_noise_inverse, independence_p_value,
+    43	    measurement_ledger, rounded_table, table_estimates,
+    44	)
+    45	
+    46	RATERS = {1: "G1", 2: "G2", 3: "C"}
+    47	PAIRS = ((1, 2), (1, 3), (2, 3))
+    48	SUBSETS = ((1,), (2,), (3,)) + PAIRS + ((1, 2, 3),)
+    49	CELLS3 = tuple(product((0, 1), repeat=3))
+    50	CELLS4 = tuple(product((0, 1), repeat=4))
+    51	RESOLUTION = Q(1, 2 ** 16)
+    52	DEGREES_OF_FREEDOM = {"cells": 8, "free_cell_probabilities": 7, "symmetric_parameters": 4,
+    53	                      "constraints": 3, "asymmetric_dawid_skene_parameters": 7}
+    54	
+    55	
+    56	def _as_q(value, name: str) -> Q:
+    57	    if isinstance(value, bool) or not isinstance(value, (int, Q)):
+    58	        raise ValueError(f"{name} must be an int or Fraction, not {type(value).__name__}")
+    59	    return Q(value)
+    60	
+    61	
+    62	def _probability(value, name: str) -> Q:
+    63	    value = _as_q(value, name)
+    64	    if not 0 <= value <= 1:
+    65	        raise ValueError(f"{name} must lie in [0, 1]")
+    66	    return value
+    67	
+    68	
+    69	def _pair(i: int, j: int) -> tuple[int, int]:
+    70	    return (i, j) if i < j else (j, i)
+    71	
+    72	
+    73	def _others(i: int) -> tuple[int, int]:
+    74	    return tuple(k for k in (1, 2, 3) if k != i)
+    75	
+    76	
+    77	def _weights(cells, keys, what: str) -> dict:
+    78	    if not isinstance(cells, dict) or not set(cells) <= set(keys):
+    79	        raise ValueError(f"cells must map {what} to weights")
+    80	    table = {}
+    81	    for key in keys:
+    82	        value = _as_q(cells.get(key, 0), f"cell {key}")
+    83	        if value < 0:
+    84	            raise ValueError("cell weights must be nonnegative")
+    85	        table[key] = value
+    86	    if sum(table.values()) <= 0:
+    87	        raise ValueError("the table needs positive total weight")
+    88	    return table
+    89	
+    90	
+    91	# --- 1. three raters: the label table and its Walsh coefficients --------------
+    92	
+    93	@dataclass(frozen=True)
+    94	class LabelTable:
+    95	    """Rational weights on the 2^3 cells ``(x_1, x_2, x_3)`` of three binary
+    96	    raters' labels: counts or probabilities, nonnegative, positive total.
+    97	    Rater 1 is the gold grader G1, rater 2 the second grader G2, rater 3 the
+    98	    controller's answer."""
+    99	
+   100	    cells: dict
+   101	
+   102	    def __post_init__(self) -> None:
+   103	        object.__setattr__(self, "cells", _weights(self.cells, CELLS3, "(x_1, x_2, x_3) in {0,1}^3"))
+   104	
+   105	    @property
+   106	    def total(self) -> Q:
+   107	        return sum(self.cells.values(), Q(0))
+   108	
+   109	    def probability(self, cell: tuple[int, int, int]) -> Q:
+   110	        return self.cells[cell] / self.total
+   111	
+   112	
+   113	def walsh_coefficients(table: LabelTable) -> dict[tuple[int, ...], Q]:
+   114	    """``p_S = sum_x p(x) prod_{i in S} (-1)^{x_i}`` for every nonempty ``S``.
+   115	    ``p_{i}`` is rater ``i``'s marginal bias ``P[X_i = 0] - P[X_i = 1]``,
+   116	    ``p_{ij}`` the pair's polarity ``2 A_ij - 1`` and ``p_{123}`` the parity
+   117	    bias ``P[even parity] - P[odd parity]``."""
+   118	
+   119	    out = {}
+   120	    for subset in SUBSETS:
+   121	        out[subset] = sum((table.cells[cell] * (-1) ** sum(cell[i - 1] for i in subset)
+   122	                           for cell in CELLS3), Q(0)) / table.total
+   123	    return out
+   124	
+   125	
+   126	def agreement_rate(table: LabelTable, i: int, j: int) -> Q:
+   127	    """``A_ij = P[X_i = X_j]``, directly from the cells."""
+   128	
+   129	    if i == j or {i, j} - {1, 2, 3}:
+   130	        raise ValueError("i and j must be two distinct raters among 1, 2, 3")
+   131	    return sum((table.cells[cell] for cell in CELLS3 if cell[i - 1] == cell[j - 1]), Q(0)) / table.total
+   132	
+   133	
+   134	def pairwise_kappas(table: LabelTable) -> dict[tuple[int, int], Q]:
+   135	    """``kappa_ij = 2 A_ij - 1`` for the three pairs."""
+   136	
+   137	    return {pair: 2 * agreement_rate(table, *pair) - 1 for pair in PAIRS}
+   138	
+   139	
+   140	def three_rater_model(prior, errors) -> LabelTable:
+   141	    """Cell probabilities when ``Y ~ Bernoulli(prior)`` and rater ``i`` reports
+   142	    ``Y`` flipped independently with probability ``errors[i]``.
+   143	
+   144	    In Walsh coordinates, with ``tau = 1 - 2 prior`` and ``d_i = 1 - 2 e_i``:
+   145	    ``p_S = tau^[|S| odd] prod_{i in S} d_i``.  Proof: ``E[(-1)^{X_i} | Y] =
+   146	    (-1)^Y d_i``, the raters are independent given ``Y``, and ``E[(-1)^{kY}]``
+   147	    is ``tau`` for odd ``k`` and ``1`` for even ``k``."""
+   148	
+   149	    prior = _probability(prior, "prior")
+   150	    if not isinstance(errors, (tuple, list)) or len(errors) != 3:
+   151	        raise ValueError("errors must list three rates")
+   152	    errors = tuple(_probability(e, f"error of rater {i + 1}") for i, e in enumerate(errors))
+   153	    cells = {}
+   154	    for cell in CELLS3:
+   155	        weight = Q(0)
+   156	        for y in (0, 1):
+   157	            w = prior if y else 1 - prior
+   158	            for i in range(3):
+   159	                w *= (1 - errors[i]) if cell[i] == y else errors[i]
+   160	            weight += w
+   161	        cells[cell] = weight
+   162	    return LabelTable(cells)
+   163	
+   164	
+   165	# --- identification from the pairwise polarities -----------------------------
+   166	
+   167	def polarity_squares(kappas: dict[tuple[int, int], Q]) -> dict[int, Q]:
+   168	    """``(1 - 2 e_i)^2 = kappa_ij kappa_ik / kappa_jk``.
+   169	
+   170	    Proof: ``kappa_ij = d_i d_j`` for conditionally independent symmetric
+   171	    raters, so the ratio is ``d_i d_j d_i d_k / (d_j d_k) = d_i^2``.  A rater
+   172	    at chance has ``d = 0``, both of its polarities vanish, and the other two
+   173	    raters are left unidentified (one equation, two unknowns)."""
+   174	
+   175	    values = {pair: _as_q(kappas[pair], f"kappa {pair}") for pair in PAIRS}
+   176	    if any(k == 0 for k in values.values()):
+   177	        raise ValueError("a rater at chance (kappa = 0) leaves the others unidentified")
+   178	    return {i: values[_pair(i, j)] * values[_pair(i, k)] / values[_pair(j, k)]
+   179	            for i in (1, 2, 3) for j, k in (_others(i),)}
+   180	
+   181	
+   182	def exact_square_root(value) -> Q | None:
+   183	    """The rational square root of ``value`` if it has one, else ``None``.  A
+   184	    fraction in lowest terms is a rational square iff numerator and
+   185	    denominator are both perfect squares."""
+   186	
+   187	    value = _as_q(value, "value")
+   188	    if value < 0:
+   189	        return None
+   190	    n, d = isqrt(value.numerator), isqrt(value.denominator)
+   191	    return Q(n, d) if n * n == value.numerator and d * d == value.denominator else None
+   192	
+   193	
+   194	def _square_in_range(square) -> Q:
+   195	    square = _as_q(square, "square")
+   196	    if not 0 <= square <= 1:
+   197	        raise ValueError("no error rate in [0, 1/2] has this squared polarity")
+   198	    return square
+   199	
+   200	
+   201	def error_rate_from_square(square) -> Q | None:
+   202	    """``e = (1 - sqrt(square)) / 2`` exactly when the square is a perfect
+   203	    square (always the case at expected counts with rational rates); ``None``
+   204	    otherwise.  The sign is fixed by ``e < 1/2``."""
+   205	
+   206	    root = exact_square_root(_square_in_range(square))
+   207	    return None if root is None else (1 - root) / 2
+   208	
+   209	
+   210	def error_rate_at_most(square, bound) -> bool:
+   211	    """Exact membership ``e <= bound`` for rational ``bound`` without taking the
+   212	    root: ``e <= bound`` iff ``d >= 1 - 2 bound`` iff (for ``1 - 2 bound > 0``)
+   213	    ``square >= (1 - 2 bound)^2``; trivially true when ``bound >= 1/2``."""
+   214	
+   215	    square, bound = _square_in_range(square), _probability(bound, "bound")
+   216	    floor = 1 - 2 * bound
+   217	    return True if floor <= 0 else square >= floor * floor
+   218	
+   219	
+   220	def error_rate_bracket(square, resolution=RESOLUTION) -> dict[str, object]:
+   221	    """Rational bracket of width at most ``resolution`` around ``e``, by
+   222	    bisection on the exact membership test; exact when the square is perfect.
+   223	    The true ``e`` lies in ``(lower, upper]``."""
+   224	
+   225	    square, resolution = _square_in_range(square), _as_q(resolution, "resolution")
+   226	    if resolution <= 0:
+   227	        raise ValueError("resolution must be positive")
+   228	    exact = error_rate_from_square(square)
+   229	    if exact is not None:
+   230	        return {"lower": exact, "upper": exact, "exact": exact, "width": Q(0), "resolution": resolution}
+   231	    low, high = Q(0), HALF
+   232	    while high - low > resolution:
+   233	        mid = (low + high) / 2
+   234	        if error_rate_at_most(square, mid):
+   235	            high = mid
+   236	        else:
+   237	            low = mid
+   238	    return {"lower": low, "upper": high, "exact": None, "width": high - low, "resolution": resolution}
+   239	
+   240	
+   241	def eta_gradient(kappas: dict[tuple[int, int], Q], rater: int = 1) -> dict[str, object] | None:
+   242	    """Partial derivatives of ``e_i = (1 - sqrt(kappa_ij kappa_ik / kappa_jk)) / 2``:
+   243	    ``-d_i / (4 kappa_ij)``, ``-d_i / (4 kappa_ik)``, ``+d_i / (4 kappa_jk)``;
+   244	    exact only when ``d_i`` is rational, else ``None``.  Per agreement rate the
+   245	    values double, since ``kappa = 2 A - 1``."""
+   246	
+   247	    if rater not in (1, 2, 3):
+   248	        raise ValueError("rater must be 1, 2 or 3")
+   249	    root = exact_square_root(polarity_squares(kappas)[rater])
+   250	    if root is None:
+   251	        return None
+   252	    j, k = _others(rater)
+   253	    per_kappa = {_pair(rater, j): -root / (4 * kappas[_pair(rater, j)]),
+   254	                 _pair(rater, k): -root / (4 * kappas[_pair(rater, k)]),
+   255	                 _pair(j, k): root / (4 * kappas[_pair(j, k)])}
+   256	    return {"polarity": root, "per_kappa": per_kappa,
+   257	            "per_agreement_rate": {pair: 2 * g for pair, g in per_kappa.items()}}
+   258	
+   259	
+   260	# --- 2. the model's testable constraints -------------------------------------
+   261	
+   262	def model_constraints(table: LabelTable) -> dict[str, object]:
+   263	    """Residuals of the three equalities ``M_i kappa_jk - P`` (each is
+   264	    ``tau d_i d_j d_k - tau d_1 d_2 d_3 = 0`` under the model), the sign
+   265	    condition (``kappa_ij = d_i d_j`` has zero or two negative pairs, never one
+   266	    or three), the range conditions (``d_i^2 <= 1`` and ``tau^2 = M_i^2 / d_i^2
+   267	    <= 1``) and identifiability (every ``kappa > 0`` under ``e_i < 1/2``).
+   268	
+   269	    At ``tau = 0`` (balanced prior) every odd coefficient vanishes and the
+   270	    equalities read ``0 = 0``: they then have no power against dependence."""
+   271	
+   272	    coefficients = walsh_coefficients(table)
+   273	    kappas = {pair: coefficients[pair] for pair in PAIRS}
+   274	    biases = {i: coefficients[(i,)] for i in (1, 2, 3)}
+   275	    parity = coefficients[(1, 2, 3)]
+   276	    residuals = {i: biases[i] * kappas[_others(i)] - parity for i in (1, 2, 3)}
+   277	    negatives = sum(1 for k in kappas.values() if k < 0)
+   278	    chance = any(k == 0 for k in kappas.values())
+   279	    squares = None if chance else polarity_squares(kappas)
+   280	    squares_ok = None if chance else all(0 <= s <= 1 for s in squares.values())
+   281	    prior_ok = None if chance else all(biases[i] ** 2 <= squares[i] for i in (1, 2, 3))
+   282	    equalities = all(r == 0 for r in residuals.values())
+   283	    signs = negatives in (0, 2)
+   284	    consistent = equalities and signs and squares_ok is not False and prior_ok is not False
+   285	    identifiable = negatives == 0 and not chance
+   286	    return {"kappas": kappas, "biases": biases, "parity": parity, "residuals": residuals,
+   287	            "equalities_hold": equalities, "negative_kappas": negatives, "signs_consistent": signs,
+   288	            "chance_rater": chance, "squares": squares, "squares_in_unit_interval": squares_ok,
+   289	            "prior_in_range": prior_ok, "model_consistent": consistent,
+   290	            "identifiable": identifiable, "passes": consistent and identifiable,
+   291	            "vacuous_at_balanced_prior": all(b == 0 for b in biases.values()) and parity == 0}
+   292	
+   293	
+   294	def _rank(rows: list[list[Q]]) -> int:
+   295	    matrix = [list(row) for row in rows]
+   296	    rank = 0
+   297	    for col in range(len(matrix[0]) if matrix else 0):
+   298	        pivot = next((r for r in range(rank, len(matrix)) if matrix[r][col] != 0), None)
+   299	        if pivot is None:
+   300	            continue
+   301	        matrix[rank], matrix[pivot] = matrix[pivot], matrix[rank]
+   302	        for r in range(len(matrix)):
+   303	            if r != rank and matrix[r][col] != 0:
+   304	                factor = matrix[r][col] / matrix[rank][col]
+   305	                matrix[r] = [x - factor * y for x, y in zip(matrix[r], matrix[rank])]
+   306	        rank += 1
+   307	    return rank
+   308	
+   309	
+   310	def model_jacobian_rank(prior, errors) -> int:
+   311	    """Rank of the exact Jacobian of ``(tau, d_1, d_2, d_3) -> (p_S)_S`` at the
+   312	    point: four wherever every ``d_i != 0`` (the three pair rows alone have
+   313	    determinant ``-2 d_1 d_2 d_3`` on the ``d`` columns), so the model is
+   314	    four-dimensional inside the seven-dimensional simplex and leaves exactly
+   315	    three constraints.  With a chance rater the rank drops at a balanced prior
+   316	    (``tau = 0``) but not at an unbalanced one, where the marginal bias
+   317	    ``tau d_i`` still moves."""
+   318	
+   319	    tau = 1 - 2 * _probability(prior, "prior")
+   320	    if not isinstance(errors, (tuple, list)) or len(errors) != 3:
+   321	        raise ValueError("errors must list three rates")
+   322	    d1, d2, d3 = (1 - 2 * _probability(e, "error") for e in errors)
+   323	    zero = Q(0)
+   324	    rows = [[d1, tau, zero, zero], [d2, zero, tau, zero], [d3, zero, zero, tau],
+   325	            [zero, d2, d1, zero], [zero, d3, zero, d1], [zero, zero, d3, d2],
+   326	            [d1 * d2 * d3, tau * d2 * d3, tau * d1 * d3, tau * d1 * d2]]
+   327	    return _rank(rows)
+   328	
+   329	
+   330	def copy_grader_table(prior, eta1, eta2, controller_error, copy_rate) -> LabelTable:
+   331	    """Labels when G2 copies G1 with probability ``copy_rate`` and otherwise
+   332	    grades independently at ``eta2``: conditional independence fails.  Closed
+   333	    form of the residuals: ``r_1 = r_2 = -tau d_C rho 4 eta1 (1 - eta1)``,
+   334	    ``r_3 = 0``; the failing constraints name the dependent pair."""
+   335	
+   336	    prior, rho = _probability(prior, "prior"), _probability(copy_rate, "copy_rate")
+   337	    eta1, eta2, ec = (_probability(eta1, "eta1"), _probability(eta2, "eta2"),
+   338	                      _probability(controller_error, "controller_error"))
+   339	    cells = {}
+   340	    for cell in CELLS3:
+   341	        g1, g2, c = cell
+   342	        weight = Q(0)
+   343	        for y in (0, 1):
+   344	            w = prior if y else 1 - prior
+   345	            w *= (1 - eta1) if g1 == y else eta1
+   346	            w *= rho * (1 if g2 == g1 else 0) + (1 - rho) * ((1 - eta2) if g2 == y else eta2)
+   347	            w *= (1 - ec) if c == y else ec
+   348	            weight += w
+   349	        cells[cell] = weight
+   350	    return LabelTable(cells)
+   351	
+   352	
+   353	def copy_grader_residual(prior, eta1, controller_error, copy_rate) -> Q:
+   354	    """``-tau d_C rho 4 eta1 (1 - eta1)``, the residual of constraints 1 and 2."""
+   355	
+   356	    tau = 1 - 2 * _probability(prior, "prior")
+   357	    d_c = 1 - 2 * _probability(controller_error, "controller_error")
+   358	    eta1, rho = _probability(eta1, "eta1"), _probability(copy_rate, "copy_rate")
+   359	    return -tau * d_c * rho * 4 * eta1 * (1 - eta1)
+   360	
+   361	
+   362	# --- 3. the record table and the pipeline ------------------------------------
+   363	
+   364	@dataclass(frozen=True)
+   365	class RecordTable:
+   366	    """Rational weights on the 2^4 cells ``(x_C, v_J, g_1, g_2)``: the
+   367	    controller's answer, the judge's verdict (``1`` = "correct"), the gold
+   368	    label and the second grader's label.  Counts on a sealed sample, or
+   369	    expected counts."""
+   370	
+   371	    cells: dict
+   372	
+   373	    def __post_init__(self) -> None:
+   374	        object.__setattr__(self, "cells", _weights(self.cells, CELLS4, "(x_C, v_J, g_1, g_2) in {0,1}^4"))
+   375	
+   376	    @property
+   377	    def total(self) -> Q:
+   378	        return sum(self.cells.values(), Q(0))
+   379	
+   380	    def label_table(self) -> LabelTable:
+   381	        """Marginal over the judge: ``(g_1, g_2, x_C)`` as raters 1, 2, 3."""
+   382	
+   383	        cells = {cell: Q(0) for cell in CELLS3}
+   384	        for (x, _v, g1, g2), weight in self.cells.items():
+   385	            cells[(g1, g2, x)] += weight
+   386	        return LabelTable(cells)
+   387	
+   388	    def judge_cells(self, gold: int = 1) -> dict[str, Q]:
+   389	        """The judge note's 2x2 table measured against grader ``gold``:
+   390	        controller right iff ``x_C`` equals that label, judge right iff its
+   391	        verdict equals that measured correctness."""
+   392	
+   393	        if gold not in (1, 2):
+   394	            raise ValueError("gold must be 1 or 2")
+   395	        names = {(1, 1): "right_right", (1, 0): "right_wrong", (0, 1): "wrong_right", (0, 0): "wrong_wrong"}
+   396	        out = {name: Q(0) for name in names.values()}
+   397	        for (x, v, g1, g2), weight in self.cells.items():
+   398	            c = int(x == (g1 if gold == 1 else g2))
+   399	            out[names[(c, int(v == c))]] += weight
+   400	        return out
+   401	
+   402	
+   403	def expected_record_table(size: int, prior, accuracy, judge_error, eps1, eta1, eta2,
+   404	                          copy_rate=Q(0)) -> RecordTable:
+   405	    """Expected counts for ``size`` items: ``Y ~ Bernoulli(prior)``; the
+   406	    controller answers ``Y`` with probability ``a``; the judge says "correct"
+   407	    with probability ``1 - eps0`` on a right answer and ``eps1`` on a wrong
+   408	    one; G1 flips ``Y`` at ``eta1``; G2 copies G1 with probability
+   409	    ``copy_rate`` (zero for an independent grader) and otherwise flips at
+   410	    ``eta2``."""
+   411	
+   412	    if type(size) is not int or size < 1:
+   413	        raise ValueError("size must be a positive integer")
+   414	    prior, accuracy = _probability(prior, "prior"), _probability(accuracy, "accuracy")
+   415	    judge_error, eps1 = _probability(judge_error, "judge_error"), _probability(eps1, "eps1")
+   416	    eta1, eta2, rho = (_probability(eta1, "eta1"), _probability(eta2, "eta2"),
+   417	                       _probability(copy_rate, "copy_rate"))
+   418	    low, high = shared_error_bounds(accuracy, judge_error)
+   419	    if not low <= eps1 <= high:
+   420	        raise ValueError("eps1 is infeasible for the marginal judge error")
+   421	    eps0 = (judge_error - (1 - accuracy) * eps1) / accuracy
+   422	    cells = {}
+   423	    for cell in CELLS4:
+   424	        x, v, g1, g2 = cell
+   425	        weight = Q(0)
+   426	        for y in (0, 1):
+   427	            w = prior if y else 1 - prior
+   428	            right = x == y
+   429	            w *= accuracy if right else 1 - accuracy
+   430	            says_correct = (1 - eps0) if right else eps1
+   431	            w *= says_correct if v == 1 else 1 - says_correct
+   432	            w *= (1 - eta1) if g1 == y else eta1
+   433	            w *= rho * (1 if g2 == g1 else 0) + (1 - rho) * ((1 - eta2) if g2 == y else eta2)
+   434	            weight += w
+   435	        cells[cell] = size * weight
+   436	    return RecordTable(cells)
+   437	
+   438	
+   439	def measured_judge_rates(record: RecordTable, gold: int = 1) -> dict[str, object]:
+   440	    """``a'``, ``eps'``, ``w = W1'/m`` and ``eps1'`` of the table measured
+   441	    against grader ``gold``, plus the half-up rounded ``JudgeTable`` when the
+   442	    total is an integer count (``None`` for a probability table)."""
+   443	
+   444	    cells = record.judge_cells(gold)
+   445	    m = record.total
+   446	    measured_accuracy = (cells["right_right"] + cells["right_wrong"]) / m
+   447	    measured_error = (cells["right_wrong"] + cells["wrong_wrong"]) / m
+   448	    wrong_wrong_rate = cells["wrong_wrong"] / m
+   449	    table, changed = None, None
+   450	    if m.denominator == 1:
+   451	        try:
+   452	            table, changed = rounded_table(cells)
+   453	        except ValueError:  # every cell rounds to zero: no table to test
+   454	            pass
+   455	    return {"cells": cells, "accuracy": measured_accuracy, "judge_error": measured_error,
+   456	            "wrong_wrong_rate": wrong_wrong_rate,
+   457	            "eps1": None if measured_accuracy == 1 else wrong_wrong_rate / (1 - measured_accuracy),
+   458	            "table": table, "rounding_changed_a_cell": changed}
+   459	
+   460	
+   461	def inverted_eps1(measured_accuracy, measured_error, wrong_wrong_rate, eta) -> Q:
+   462	    """Proposition 2 inverted as one rational function of ``eta``:
+   463	    ``eps1(eta) = (w (1 - 2 eta) - eta (a' - eps')) / (1 - a' - eta)``.
+   464	    Proof: substitute ``a - eps = (a' - eps') / (1 - 2 eta)`` and
+   465	    ``1 - a = (1 - a' - eta) / (1 - 2 eta)`` into the note's
+   466	    ``eps1 = (eps1' (1 - a') - eta (a - eps)) / (1 - a)`` with
+   467	    ``eps1' (1 - a') = w``."""
+   468	
+   469	    a, e, w = (_probability(measured_accuracy, "measured_accuracy"),
+   470	               _probability(measured_error, "measured_error"),
+   471	               _probability(wrong_wrong_rate, "wrong_wrong_rate"))
+   472	    eta = _probability(eta, "eta")
+   473	    if not eta < HALF or not 1 - a - eta > 0:
+   474	        raise ValueError("eta must lie below one half and below 1 - a'")
+   475	    return (w * (1 - 2 * eta) - eta * (a - e)) / (1 - a - eta)
+   476	
+   477	
+   478	def _sensitivity_numerator(a: Q, e: Q, w: Q) -> Q:
+   479	    return w * (2 * a - 1) - (a - e) * (1 - a)
+   480	
+   481	
+   482	def eps1_sensitivity(measured_accuracy, measured_error, wrong_wrong_rate, eta) -> Q:
+   483	    """``d eps1 / d eta = K / (1 - a' - eta)^2`` with the ``eta``-free
+   484	    ``K = w (2a' - 1) - (a' - eps')(1 - a')``.  Proof: ``eps1 = N / D`` with
+   485	    ``N = w - eta (2w + a' - eps')`` and ``D = 1 - a' - eta`` both affine, so
+   486	    ``N' D - N D' = -(2w + a' - eps') D + N = K``."""
+   487	
+   488	    a, e, w = (_probability(measured_accuracy, "measured_accuracy"),
+   489	               _probability(measured_error, "measured_error"),
+   490	               _probability(wrong_wrong_rate, "wrong_wrong_rate"))
+   491	    eta = _probability(eta, "eta")
+   492	    if not eta < HALF or not 1 - a - eta > 0:
+   493	        raise ValueError("eta must lie below one half and below 1 - a'")
+   494	    return _sensitivity_numerator(a, e, w) / (1 - a - eta) ** 2
+   495	
+   496	
+   497	def eps1_displacement(measured_accuracy, measured_error, wrong_wrong_rate, eta, delta) -> Q:
+   498	    """Exact ``eps1(eta + delta) - eps1(eta) = delta K / (D(eta) D(eta + delta))``:
+   499	    the derivative's denominator with one factor moved to the displaced point."""
+   500	
+   501	    a, e, w = (_probability(measured_accuracy, "measured_accuracy"),
+   502	               _probability(measured_error, "measured_error"),
+   503	               _probability(wrong_wrong_rate, "wrong_wrong_rate"))
+   504	    eta, delta = _probability(eta, "eta"), _as_q(delta, "delta")
+   505	    moved = eta + delta
+   506	    if not 0 <= moved < HALF or not eta < HALF or not 1 - a - eta > 0 or not 1 - a - moved > 0:
+   507	        raise ValueError("eta and eta + delta must lie in [0, 1/2) and below 1 - a'")
+   508	    return delta * _sensitivity_numerator(a, e, w) / ((1 - a - eta) * (1 - a - moved))
+   509	
+   510	
+   511	def _judge_tests(table: JudgeTable, error, alpha, plug_in: bool) -> dict[str, object]:
+   512	    wrong, wrong_wrong = table.controller_wrong, table.wrong_wrong
+   513	    if wrong < 1:
+   514	        return {"note": "no controller-wrong items; the conditional tests are undefined"}
+   515	    return {"independence_p": independence_p_value(wrong, wrong_wrong, error),
+   516	            "independence_error": error, "independence_error_is_plug_in": plug_in,
+   517	            "fisher_p": fisher_p_value(table), "ceiling_p": ceiling_p_value(wrong, wrong_wrong),
+   518	            "cp_contains_error": clopper_pearson_contains(wrong, wrong_wrong, alpha, error),
+   519	            "cp_contains_half": clopper_pearson_contains(wrong, wrong_wrong, alpha, HALF),
+   520	            "alpha": alpha}
+   521	
+   522	
+   523	def calibrate(record: RecordTable, declared_judge_error=None, alpha=Q(1, 20),
+   524	              resolution=RESOLUTION) -> dict[str, object]:
+   525	    """The pipeline.  From the 2^4 record: the label table's constraint check;
+   526	    ``eta1``, ``eta2`` and ``a`` from the three-rater identity (exact or
+   527	    bracketed); Proposition 2 inverted at ``eta1`` (at both bracket ends when
+   528	    bracketed -- every inverted rate is monotone in ``eta``, so the ends map
+   529	    to ends); the corrected expected counts rounded half-up; the judge
+   530	    module's exact tests on them; the sensitivity of ``eps1`` to ``eta1``.
+   531	
+   532	    The tests take the corrected counts as given.  They are an estimate, not a
+   533	    sample, so the sampling error of ``eta1`` is not in their p-values; the
+   534	    sensitivity is the first-order account of it."""
+   535	
+   536	    alpha = _probability(alpha, "alpha")
+   537	    declared = None if declared_judge_error is None else _probability(declared_judge_error, "declared_judge_error")
+   538	    labels = record.label_table()
+   539	    constraints = model_constraints(labels)
+   540	    measured = measured_judge_rates(record, 1)
+   541	    out = {"size": record.total, "constraints": constraints, "identifiable": constraints["identifiable"],
+   542	           "measured": measured, "declared_judge_error": declared}
+   543	    if not constraints["identifiable"]:
+   544	        out.update({"status": "not_identified", "eta1": None, "eta2": None, "accuracy_from_identity": None,
+   545	                    "inversions": [], "valid": False})
+   546	        return out
+   547	    squares = constraints["squares"]
+   548	    brackets = {i: error_rate_bracket(squares[i], resolution) for i in (1, 2, 3)}
+   549	    accuracy_identity = {"lower": 1 - brackets[3]["upper"], "upper": 1 - brackets[3]["lower"],
+   550	                         "exact": None if brackets[3]["exact"] is None else 1 - brackets[3]["exact"]}
+   551	    eta1 = brackets[1]
+   552	    points = [eta1["exact"]] if eta1["exact"] is not None else [eta1["lower"], eta1["upper"]]
+   553	    if record.total.denominator != 1:
+   554	        raise ValueError("corrected counts need an integer total")
+   555	    size = int(record.total)
+   556	    inversions = []
+   557	    for eta in points:
+   558	        rates = gold_noise_inverse(measured["accuracy"], measured["judge_error"], measured["eps1"], eta)
+   559	        closed = inverted_eps1(measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"], eta)
+   560	        if closed != rates["eps1"]:
+   561	            raise AssertionError("closed-form inversion disagrees with the judge module")
+   562	        expected = expected_table(size, rates["accuracy"], rates["judge_error"], rates["eps1"])
+   563	        table, changed = rounded_table(expected)
+   564	        error = declared if declared is not None else rates["judge_error"]
+   565	        inversions.append({"eta": eta, "recovered": rates, "corrected_expected": expected,
+   566	                           "corrected_table": table, "rounding_changed_a_cell": changed,
+   567	                           "tests": _judge_tests(table, error, alpha, declared is None),
+   568	                           "sensitivity_d_eps1_d_eta": eps1_sensitivity(
+   569	                               measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"], eta)})
+   570	    recovered_accuracies = [inv["recovered"]["accuracy"] for inv in inversions]
+   571	    if accuracy_identity["exact"] is not None:
+   572	        consistent = all(a == accuracy_identity["exact"] for a in recovered_accuracies)
+   573	    else:
+   574	        consistent = (min(recovered_accuracies) <= accuracy_identity["upper"]
+   575	                      and max(recovered_accuracies) >= accuracy_identity["lower"])
+   576	    gradient = eta_gradient(constraints["kappas"], 1)
+   577	    chain = None
+   578	    if gradient is not None and len(inversions) == 1:
+   579	        sens = inversions[0]["sensitivity_d_eps1_d_eta"]
+   580	        chain = {"d_eps1_d_kappa": {pair: sens * g for pair, g in gradient["per_kappa"].items()},
+   581	                 "d_eps1_d_agreement": {pair: sens * g for pair, g in gradient["per_agreement_rate"].items()}}
+   582	    out.update({"status": "exact" if len(points) == 1 else "bracketed",
+   583	                "squares": squares, "eta1": eta1, "eta2": brackets[2],
+   584	                "accuracy_from_identity": accuracy_identity, "accuracy_consistent": consistent,
+   585	                "inversions": inversions, "eta_gradient": gradient, "chain_sensitivity": chain,
+   586	                "valid": constraints["passes"]})
+   587	    return out
+   588	
+   589	
+   590	def calibration_valid(result: dict[str, object], ledger: dict[str, object]) -> bool:
+   591	    """Identifiable, constraints passed, and the sealed sample read once."""
+   592	
+   593	    status = ledger["readout"]["judge_sample"]["endpoint_status"]
+   594	    return bool(result["identifiable"]) and bool(result["constraints"]["passes"]) and status == "evaluable"
+   595	
+   596	
+   597	# --- fixtures and verification ------------------------------------------------
+   598	
+   599	FIXTURE_SIZE, FIXTURE_PRIOR = 10000, Q(1, 4)
+   600	FIXTURE_ACCURACY, FIXTURE_ERROR = Q(4, 5), Q(1, 10)
+   601	FIXTURE_ETA1, FIXTURE_ETA2 = Q(1, 10), Q(1, 5)
+   602	FIXTURE_ALPHA = Q(1, 20)
+   603	JUDGES = {"independent": FIXTURE_ERROR, "maximally_shared": HALF}
+   604	SIGN_FALSIFIER = {(0, 0, 0): Q(3, 20), (1, 1, 1): Q(3, 20), (0, 1, 0): Q(3, 20), (1, 0, 1): Q(3, 20),
+   605	                  (1, 0, 0): Q(3, 20), (0, 1, 1): Q(3, 20), (0, 0, 1): Q(1, 20), (1, 1, 0): Q(1, 20)}
+   606	RANGE_FALSIFIER = {(0, 0, 0): Q(1, 4), (1, 1, 1): Q(1, 4), (0, 0, 1): Q(3, 25), (1, 1, 0): Q(3, 25),
+   607	                   (0, 1, 0): Q(3, 25), (1, 0, 1): Q(3, 25), (1, 0, 0): Q(1, 100), (0, 1, 1): Q(1, 100)}
+   608	
+   609	
+   610	def three_rater_fixture() -> dict[str, object]:
+   611	    """G1, G2 and the controller's answer at the fixture rates, prior 1/4."""
+   612	
+   613	    errors = (FIXTURE_ETA1, FIXTURE_ETA2, 1 - FIXTURE_ACCURACY)
+   614	    table = three_rater_model(FIXTURE_PRIOR, errors)
+   615	    kappas = pairwise_kappas(table)
+   616	    squares = polarity_squares(kappas)
+   617	    recovered = {i: error_rate_from_square(squares[i]) for i in (1, 2, 3)}
+   618	    swapped = three_rater_model(1 - FIXTURE_PRIOR, tuple(1 - e for e in errors))
+   619	    grid = [(Q(1, 2), (Q(1, 10), Q(1, 5), Q(1, 4))), (Q(1, 3), (Q(0), Q(1, 10), Q(2, 5))),
+   620	            (Q(1, 4), errors), (Q(9, 10), (Q(1, 5), Q(1, 5), Q(1, 20)))]
+   621	    factor = all(pairwise_kappas(three_rater_model(p, e))[pair] == (1 - 2 * e[pair[0] - 1]) * (1 - 2 * e[pair[1] - 1])
+   622	                 for p, e in grid for pair in PAIRS)
+   623	    return {"prior": FIXTURE_PRIOR, "errors": dict(zip(RATERS.values(), errors)), "table": table,
+   624	            "walsh": walsh_coefficients(table), "kappas": kappas, "squares": squares,
+   625	            "recovered_errors": recovered, "recovered_eta1": recovered[1], "recovered_eta2": recovered[2],
+   626	            "recovered_accuracy": 1 - recovered[3],
+   627	            "membership": {"eta1_le_1/10": error_rate_at_most(squares[1], Q(1, 10)),
+   628	                           "eta1_le_9/100": error_rate_at_most(squares[1], Q(9, 100)),
+   629	                           "eta1_le_11/100": error_rate_at_most(squares[1], Q(11, 100))},
+   630	            "bracket_exact_case": error_rate_bracket(squares[1]),
+   631	            "constraints": model_constraints(table), "jacobian_rank": model_jacobian_rank(FIXTURE_PRIOR, errors),
+   632	            "label_swap_equivalent": swapped == table, "factorization_on_grid": factor,
+   633	            "sign_falsifier": model_constraints(LabelTable(SIGN_FALSIFIER)),
+   634	            "range_falsifier": model_constraints(LabelTable(RANGE_FALSIFIER)),
+   635	            "balanced_prior_dependent": model_constraints(copy_grader_table(HALF, FIXTURE_ETA1, FIXTURE_ETA2,
+   636	                                                                            1 - FIXTURE_ACCURACY, HALF)),
+   637	            "degrees_of_freedom": DEGREES_OF_FREEDOM}
+   638	
+   639	
+   640	def pipeline_fixture() -> dict[str, dict[str, object]]:
+   641	    """Both judges of the signal fixture on 10000 items with two graders."""
+   642	
+   643	    out = {}
+   644	    for name, eps1 in JUDGES.items():
+   645	        record = expected_record_table(FIXTURE_SIZE, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, eps1,
+   646	                                       FIXTURE_ETA1, FIXTURE_ETA2)
+   647	        forward = gold_noise_forward(FIXTURE_ACCURACY, FIXTURE_ERROR, eps1, FIXTURE_ETA1)
+   648	        result = calibrate(record, FIXTURE_ERROR, FIXTURE_ALPHA)
+   649	        measured = result["measured"]
+   650	        displacements = {str(d): eps1_displacement(measured["accuracy"], measured["judge_error"],
+   651	                                                   measured["wrong_wrong_rate"], FIXTURE_ETA1, d)
+   652	                         for d in (Q(1, 100), Q(-1, 100), Q(1, 20))}
+   653	        direct = {str(d): inverted_eps1(measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"],
+   654	                                        FIXTURE_ETA1 + d) - eps1 for d in (Q(1, 100), Q(-1, 100), Q(1, 20))}
+   655	        out[name] = {"eps1": eps1, "record": record, "cells_integral": all(c.denominator == 1 for c in record.cells.values()),
+   656	                     "forward_from_judge_note": forward,
+   657	                     "measured_matches_forward": (measured["accuracy"] == forward["accuracy"]
+   658	                                                  and measured["judge_error"] == forward["judge_error"]
+   659	                                                  and measured["wrong_wrong_rate"] == forward["wrong_wrong_rate"]),
+   660	                     "label_table_matches_model": record.label_table().cells == {
+   661	                         cell: FIXTURE_SIZE * w for cell, w in three_rater_model(
+   662	                             FIXTURE_PRIOR, (FIXTURE_ETA1, FIXTURE_ETA2, 1 - FIXTURE_ACCURACY)).cells.items()},
+   663	                     "calibration": result, "displacements": displacements, "direct_differences": direct}
+   664	    return out
+   665	
+   666	
+   667	def dependent_grader_fixture() -> dict[str, object]:
+   668	    """The independent judge with a second grader that copies G1."""
+   669	
+   670	    rows = {}
+   671	    for rho in (Q(1), HALF):
+   672	        record = expected_record_table(FIXTURE_SIZE, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, FIXTURE_ERROR,
+   673	                                       FIXTURE_ETA1, FIXTURE_ETA2, rho)
+   674	        result = calibrate(record, FIXTURE_ERROR, FIXTURE_ALPHA)
+   675	        closed = copy_grader_residual(FIXTURE_PRIOR, FIXTURE_ETA1, 1 - FIXTURE_ACCURACY, rho)
+   676	        rows[str(rho)] = {"copy_rate": rho, "record": record, "calibration": result,
+   677	                          "closed_form_residual": closed,
+   678	                          "residuals_match_closed_form": (result["constraints"]["residuals"][1] == closed
+   679	                                                          and result["constraints"]["residuals"][2] == closed
+   680	                                                          and result["constraints"]["residuals"][3] == 0),
+   681	                          "uncorrected_tests": _judge_tests(result["measured"]["table"], FIXTURE_ERROR, FIXTURE_ALPHA, False)}
+   682	    residual_grid = {str(rho): (model_constraints(copy_grader_table(FIXTURE_PRIOR, FIXTURE_ETA1, FIXTURE_ETA2,
+   683	                                                                     1 - FIXTURE_ACCURACY, rho))["residuals"][1]
+   684	                                == copy_grader_residual(FIXTURE_PRIOR, FIXTURE_ETA1, 1 - FIXTURE_ACCURACY, rho))
+   685	                     for rho in (Q(0), Q(1, 4), HALF, Q(3, 4), Q(1))}
+   686	    return {"rows": rows, "residual_closed_form_on_grid": residual_grid}
+   687	
+   688	
+   689	def ledger_fixture() -> dict[str, object]:
+   690	    train = tuple(f"t{i}" for i in range(8))
+   691	    sample = tuple(f"g{i}" for i in range(8))
+   692	    respected = (LoopEvent(1, "train", "item_feedback", ("t0", "t1")), LoopEvent(2, "judge_sample", "readout"))
+   693	    breached = respected + (LoopEvent(3, "judge_sample", "readout"),)
+   694	    return {"respected": measurement_ledger(train, sample, respected),
+   695	            "breached": measurement_ledger(train, sample, breached)}
+   696	
+   697	
+   698	def verify() -> dict[str, object]:
+   699	    """Run all exact fixtures and return machine-readable checks."""
+   700	
+   701	    raters, pipeline, dependent, ledgers = (three_rater_fixture(), pipeline_fixture(),
+   702	                                            dependent_grader_fixture(), ledger_fixture())
+   703	    ind, shared = pipeline["independent"]["calibration"], pipeline["maximally_shared"]["calibration"]
+   704	    ind_inv, shared_inv = ind["inversions"][0], shared["inversions"][0]
+   705	    copy_full, copy_half = dependent["rows"]["1"]["calibration"], dependent["rows"]["1/2"]["calibration"]
+   706	    half_bracket = copy_half["eta1"]
+   707	    checks = {
+   708	        "pairwise_polarities_factor_on_rational_grid": raters["factorization_on_grid"],
+   709	        "fixture_squares_are_perfect_and_recover_eta1_eta2_a":
+   710	            raters["squares"] == {1: Q(16, 25), 2: Q(9, 25), 3: Q(9, 25)}
+   711	            and raters["recovered_eta1"] == FIXTURE_ETA1 and raters["recovered_eta2"] == FIXTURE_ETA2
+   712	            and raters["recovered_accuracy"] == FIXTURE_ACCURACY,
+   713	        "membership_test_agrees_with_exact_value":
+   714	            raters["membership"]["eta1_le_1/10"] and not raters["membership"]["eta1_le_9/100"]
+   715	            and raters["membership"]["eta1_le_11/100"] and raters["bracket_exact_case"]["width"] == 0,
+   716	        "bracket_on_non_square_has_width_2_pow_minus_16_and_contains_eta1":
+   717	            half_bracket["exact"] is None and half_bracket["width"] <= RESOLUTION
+   718	            and not error_rate_at_most(copy_half["squares"][1], half_bracket["lower"])
+   719	            and error_rate_at_most(copy_half["squares"][1], half_bracket["upper"])
+   720	            and copy_half["squares"][1] == Q(148, 175),
+   721	        "constraints_hold_at_fixture_and_model_is_four_dimensional":
+   722	            raters["constraints"]["passes"] and raters["constraints"]["equalities_hold"]
+   723	            and raters["jacobian_rank"] == 4
+   724	            and DEGREES_OF_FREEDOM["free_cell_probabilities"] - DEGREES_OF_FREEDOM["symmetric_parameters"]
+   725	            == DEGREES_OF_FREEDOM["constraints"] == 3,
+   726	        "label_swap_is_observationally_equivalent": raters["label_swap_equivalent"],
+   727	        "sign_falsifier_has_one_negative_kappa":
+   728	            raters["sign_falsifier"]["negative_kappas"] == 1 and not raters["sign_falsifier"]["signs_consistent"]
+   729	            and not raters["sign_falsifier"]["model_consistent"],
+   730	        "range_falsifier_implies_square_above_one":
+   731	            raters["range_falsifier"]["squares"][1] == Q(144, 25)
+   732	            and raters["range_falsifier"]["squares_in_unit_interval"] is False
+   733	            and not raters["range_falsifier"]["model_consistent"],
+   734	        "constraints_are_vacuous_at_balanced_prior":
+   735	            raters["balanced_prior_dependent"]["vacuous_at_balanced_prior"]
+   736	            and raters["balanced_prior_dependent"]["equalities_hold"],
+   737	        "copy_grader_residuals_match_closed_form":
+   738	            all(dependent["residual_closed_form_on_grid"].values())
+   739	            and all(row["residuals_match_closed_form"] for row in dependent["rows"].values())
+   740	            and dependent["rows"]["1"]["closed_form_residual"] == Q(-27, 250),
+   741	        "record_marginals_match_judge_note_forward_map_and_three_rater_model":
+   742	            all(j["measured_matches_forward"] and j["label_table_matches_model"] for j in pipeline.values()),
+   743	        "expected_record_cells_integral_at_m_10000":
+   744	            all(j["cells_integral"] for j in pipeline.values())
+   745	            and all(c.denominator == 1 for c in dependent["rows"]["1"]["record"].cells.values()),
+   746	        "pipeline_recovers_eta1_eta2_a_exactly_for_both_judges":
+   747	            all(j["calibration"]["status"] == "exact" and j["calibration"]["eta1"]["exact"] == FIXTURE_ETA1
+   748	                and j["calibration"]["eta2"]["exact"] == FIXTURE_ETA2
+   749	                and j["calibration"]["accuracy_from_identity"]["exact"] == FIXTURE_ACCURACY
+   750	                for j in pipeline.values()),
+   751	        "inversion_recovers_a_eps_eps1_exactly_for_both_judges":
+   752	            all(j["calibration"]["inversions"][0]["recovered"] == {
+   753	                "accuracy": FIXTURE_ACCURACY, "judge_error": FIXTURE_ERROR, "eps1": j["eps1"]}
+   754	                for j in pipeline.values()),
+   755	        "identity_accuracy_equals_inverted_accuracy":
+   756	            ind["accuracy_consistent"] and shared["accuracy_consistent"] and copy_full["accuracy_consistent"],
+   757	        "corrected_counts_are_integral_and_are_the_clean_fixture_scaled":
+   758	            not ind_inv["rounding_changed_a_cell"] and not shared_inv["rounding_changed_a_cell"]
+   759	            and ind_inv["corrected_table"] == JudgeTable(7200, 800, 1800, 200)
+   760	            and shared_inv["corrected_table"] == JudgeTable(8000, 0, 1000, 1000),
+   761	        "judge_tests_on_corrected_counts_separate_the_judges":
+   762	            ind_inv["tests"]["independence_p"] > FIXTURE_ALPHA > shared_inv["tests"]["independence_p"]
+   763	            and ind_inv["tests"]["fisher_p"] > FIXTURE_ALPHA > shared_inv["tests"]["fisher_p"]
+   764	            and ind_inv["tests"]["ceiling_p"] < FIXTURE_ALPHA < shared_inv["tests"]["ceiling_p"]
+   765	            and ind_inv["tests"]["cp_contains_error"] and not ind_inv["tests"]["cp_contains_half"]
+   766	            and shared_inv["tests"]["cp_contains_half"] and not shared_inv["tests"]["cp_contains_error"],
+   767	        "sensitivity_is_minus_four_and_minus_five_halves":
+   768	            ind_inv["sensitivity_d_eps1_d_eta"] == -4 and shared_inv["sensitivity_d_eps1_d_eta"] == Q(-5, 2),
+   769	        "displacement_formula_matches_direct_inversion":
+   770	            all(j["displacements"] == j["direct_differences"] for j in pipeline.values())
+   771	            and pipeline["independent"]["displacements"]["1/100"] == Q(-4, 100) * Q(4, 25) / (Q(4, 25) - Q(1, 100)),
+   772	        "eta_gradient_chain_at_fixture":
+   773	            ind["eta_gradient"]["per_kappa"] == {(1, 2): Q(-5, 12), (1, 3): Q(-5, 12), (2, 3): Q(5, 9)}
+   774	            and ind["chain_sensitivity"]["d_eps1_d_agreement"][(1, 2)] == Q(10, 3),
+   775	        "copy_grader_hides_gold_noise_and_makes_the_independent_judge_look_shared":
+   776	            copy_full["eta1"]["exact"] == 0 and copy_full["inversions"][0]["recovered"]["eps1"] == Q(9, 26)
+   777	            and copy_full["inversions"][0]["recovered"]["judge_error"] == Q(9, 50)
+   778	            and copy_full["inversions"][0]["tests"]["independence_p"] < FIXTURE_ALPHA
+   779	            and copy_full["inversions"][0]["tests"]["fisher_p"] < FIXTURE_ALPHA
+   780	            and not copy_full["constraints"]["passes"] and not copy_full["valid"],
+   781	        "half_copy_grader_is_bracketed_and_inflates_eps1":
+   782	            copy_half["status"] == "bracketed" and not copy_half["constraints"]["passes"]
+   783	            and Q(4, 100) < half_bracket["lower"] < half_bracket["upper"] < Q(41, 1000)
+   784	            and all(Q(27, 100) < inv["recovered"]["eps1"] < Q(28, 100) for inv in copy_half["inversions"])
+   785	            and all(inv["tests"]["independence_p"] < FIXTURE_ALPHA for inv in copy_half["inversions"]),
+   786	        "ledger_breach_withholds_calibration":
+   787	            calibration_valid(ind, ledgers["respected"]) and not calibration_valid(ind, ledgers["breached"])
+   788	            and not calibration_valid(copy_full, ledgers["respected"]),
+   789	    }
+   790	    return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+   791	            "checks": checks, "all_passed": all(checks.values()),
+   792	            "fixture": {"size": FIXTURE_SIZE, "prior": FIXTURE_PRIOR, "accuracy": FIXTURE_ACCURACY,
+   793	                        "judge_error": FIXTURE_ERROR, "eta1": FIXTURE_ETA1, "eta2": FIXTURE_ETA2,
+   794	                        "judges": JUDGES, "alpha": FIXTURE_ALPHA},
+   795	            "three_raters": raters, "pipeline": pipeline, "dependent_grader": dependent, "ledger": ledgers}

@@ -1,0 +1,93 @@
+{
+ "subagents/agent-a0a48c70545f74f7e.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a2720158120a14204.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a4078b66ab04b87ab.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a58295504f13fcadd.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a714182c964e5a809.jsonl": {
+  "memory_index_lines_other_work": 86,
+  "other_work_lines": 1,
+  "git_status_snapshots": 2,
+  "tokens": 3
+ },
+ "subagents/agent-a7a5fb6b63b2d5a45.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a88021944d49cc33a.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a8dccf5456eb3fcb3.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a8e6a31053670dded.jsonl": {
+  "memory_index_lines_other_work": 170,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a8f175b3b81d6fbfc.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a8f70008319d14008.jsonl": {
+  "memory_index_lines_other_work": 80,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-a992e8ad543fe5899.jsonl": {
+  "memory_index_lines_other_work": 170,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-aaaa7bc0ef80b0eb3.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-ab43631a2b331546e.jsonl": {
+  "memory_index_lines_other_work": 80,
+  "other_work_lines": 1,
+  "git_status_snapshots": 2,
+  "tokens": 4
+ },
+ "subagents/agent-af4031af24ee0c5b0.jsonl": {
+  "memory_index_lines_other_work": 84,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "subagents/agent-afe28ab653cb4d8f7.jsonl": {
+  "memory_index_lines_other_work": 80,
+  "git_status_snapshots": 2,
+  "tokens": 2
+ },
+ "transcript.jsonl": {
+  "memory_index_lines_other_work": 931,
+  "other_work_lines": 78,
+  "git_status_snapshots": 4,
+  "memory_reads_withheld": 5,
+  "tokens": 975,
+  "lines_withheld": 156,
+  "strings_withheld": 21
+ }
+}
