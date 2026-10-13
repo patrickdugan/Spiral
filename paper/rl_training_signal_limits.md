@@ -1,6 +1,7 @@
 # The RL training signal as a feedback channel: limits from falsifiable axioms
 
-Draft 0.1 — 2026-10-12.
+Draft 0.2 — 2026-10-13. Draft 0.2 records the delivered measurement
+procedure for the judge's shared error and the crosswalk to RSITopology.
 
 This note types the reinforcement-learning paradigm in the
 [evaluation design calculus](evaluation_design_calculus.md) and the
@@ -10,10 +11,12 @@ axiom an exact limit with the observation that would falsify the axiom. The
 fixtures are in `src/spiral_ln/evaluation_feedback_signal.py`; the receipt
 is under `output/evaluation_feedback_signal/`. No model was called.
 
-Three companion notes carry the pieces delegated to separate runs:
+Companion notes carry the pieces delegated to separate runs:
 [partial leakage as a lattice](evaluation_feedback_lattice.md),
-[the selection gap across generations](evaluation_feedback_multigen.md), and
-[Feedback's composition laws](evaluation_feedback_composition.md).
+[the selection gap across generations](evaluation_feedback_multigen.md),
+[Feedback's composition laws](evaluation_feedback_composition.md),
+[measuring the judge's shared error](judge_shared_error_measurement.md), and
+[a crosswalk to the RSITopology problem set](feedback_channel_rsitopology_crosswalk.md).
 
 ## 1. The question
 
@@ -71,7 +74,7 @@ the observation that would falsify it.
 | | Axiom | Falsified by |
 |---|---|---|
 | A1 | The loop reads \(J\) only through the declared channel at the declared access class. | A ledger breach; or item-level knowledge shown with fewer score queries than L2 allows. |
-| A2 | The judge's errors are independent of the controller's. | Observed accuracy at or above the noise ceiling with patch share below the L3 threshold; or a measured \(\varepsilon_1>\varepsilon\). |
+| A2 | The judge's errors are independent of the controller's. | Observed accuracy at or above the noise ceiling with patch share below the L3 threshold; or \(\varepsilon_1>\varepsilon\) measured on a sealed gold-labelled sample by the exact test of the [measurement note](judge_shared_error_measurement.md), with the gold's own error rate declared, since noisy gold makes an independent judge look correlated by exactly \(\eta(1-\eta)(2a-1)(1-2\varepsilon)\). |
 | A3 | The readout set never feeds the loop. | A ledger breach on the readout set. |
 | A4 | A patch changes one item's outcome and no other. | Collateral outcome changes on unpatched items (the nearest-neighbour simulation in `output/eval_reuse_toys/` showed them). |
 | A5 | Candidates have equal true value (the null for selection inflation). | A measured gain on a sealed readout. |
@@ -235,5 +238,16 @@ evidence either way about the true one until the ledger is published.
   lower bound.
 - L4 treats a binary judge. A graded judge with correlated errors needs the
   same decomposition on a larger alphabet.
-- A measurement procedure for \(\varepsilon_1\): grade a sealed sample with
-  an independent judge and compare error overlap. Proposed, not built.
+- The measurement procedure for \(\varepsilon_1\) is now in the
+  [measurement note](judge_shared_error_measurement.md): a sealed
+  gold-labelled sample read once, the 2×2 table of controller and judge
+  against gold, exact binomial and Fisher tests of independence and of the
+  ceiling condition \(\varepsilon_1\ge\tfrac12\), exact sample-size planning
+  (a judge at \(\varepsilon=\tfrac15\) against a controller at
+  \(a=\tfrac9{10}\) needs about 240 gold items for power 0.9), and the
+  gold-noise correction. What remains undelivered there is an estimate of
+  the gold's own error rate, which needs a second independent grader.
+- No result here is an instance of a statement in the RSITopology problem
+  set; the [crosswalk](feedback_channel_rsitopology_crosswalk.md) finds the
+  selection law to be one summand of the ASMP-8 KL-slice bound, within ten
+  percent of it at \(p=\tfrac12\), and the rest analogy or no relation.
