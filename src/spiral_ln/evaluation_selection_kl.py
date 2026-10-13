@@ -29,16 +29,23 @@ mean of ``S - p`` under the selected record's law.
    normals] / sqrt(2 lambda_K) < 1`` as ``n`` grows at ``p = 1/2``; ``c_K -> 1``,
    so the supremum of the ratio is 1 and is not attained.  At ``n = 1`` the
    gap equals the KL-ball supremum exactly.
-5. Monotone approach (D.5, version 0.2).  With ``a_n(K) = sqrt(n) gamma(n, K, 1/2)``
+5. Monotone approach (D.5, versions 0.2-0.3).  With ``a_n(K) = sqrt(n) gamma(n, K, 1/2)``
    (so ``r(n, K, 1/2) = 2 a_n(K) / sqrt(2 lambda_K)``), ``a_n(2)^2 = n C(2n,n)^2 /
    (4 * 16^n)`` by de Moivre's mean absolute deviation, ``a_{n+1}(2)^2 / a_n(2)^2 =
    1 + 1/(4n(n+1))``, and ``a_n(3) = (3/2) a_n(2)`` by the order-statistic
    recurrence; both rise strictly to ``E[max]/2``, so ``sup_n r = c_K`` for
-   ``K = 2, 3``.  For ``K = 4, 5, 10, 20`` (``n <= 200``), ``K = 2..30, 40, 50, 100``
-   (``n <= 100``) and ``K = 1000`` (``n <= 40``) the increase is verified exactly on ``a_n^2``; the general
-   case reduces to a second-order inequality (``rho_n + rho_n^2/(4n) >= 1``)
-   that is not proved, and the convex order ``Z_n <=_cx Z_{n+1}`` of
-   standardized counts, which would have settled it, fails at every step.
+   ``K = 2, 3``.  For ``K >= 4`` the increase is verified exactly on ``a_n^2`` for ``K = 4..100``
+   (``n <= 400``) and ``K = 200, 500, 1000, 10000`` (``n <= 60``), but not proved: with the
+   overlap profile ``w_m = F_n(m)(1 - F_n(m))``, ``M_n(4) = 2 sum w_m - sum w_m^2`` (the
+   pair-of-pairs step collapses to one sum), yet ``sum w_m^2 = E[Y_(3:4)]/3`` has no de
+   Moivre identity, its increment carries ``sum C(n,m)^4``, the step ratio of ``M_n(4)`` is
+   not a rational function (exact rank test), and ``2^(4n+1) M_n(4)`` obeys an order-4
+   recurrence; the tie-mass bound ``M_{n+1} - M_n >= P(N >= 2)/4`` is tight only for ``K = 2``
+   and fails to give ``rho_n >= 1`` at ``K = 3`` by exactly ``(n/2) sum q_m^3``.  The margin's
+   limit is ``n (rho_n - 1) -> c(K) = (E[M_K^3] - (5/2) E[M_K]) / (6 E[M_K])`` (Edgeworth, cited;
+   matched by Richardson extrapolation of the exact values to ``5e-8`` at ``K = 4``), zero at
+   ``K = 2, 3`` and positive beyond, so the question is settled asymptotically and verified
+   exactly on the sweeps, with the smallest normalized margin ``1.0826`` at ``K = 4, n = 400``.
 """
 
 from __future__ import annotations
@@ -46,7 +53,7 @@ from __future__ import annotations
 from fractions import Fraction as Q
 from functools import lru_cache
 from itertools import product
-from math import comb, erfc, exp, log, pi, sqrt
+from math import comb, erfc, exp, gcd, log, pi, sqrt
 
 import numpy as np
 
@@ -684,6 +691,431 @@ def exact_kl_ratio_along_items(candidates: int, items_list: tuple[int, ...]) -> 
     return rows
 
 
+# --- D.5 at K >= 4 (version 0.3): overlap profile, pair of pairs, tie masses, recurrence, sweeps ---
+#
+# Write w_m = F_n(m)(1 - F_n(m)) = P(X <= m < X'), m = 0..n-1 (the overlap profile).  Since
+# F_n(n-1-m) = 1 - F_n(m), the sum M_n(K) = sum_m [F_n(m) - F_n(m)^K] symmetrizes to
+# sum_m P_K(w_m) with 2 P_K(u(1-u)) = 1 - u^K - (1-u)^K: P_2 = w, P_3 = 3w/2, P_4 = 2w - w^2,
+# P_5 = (5/2)(w - w^2).  So M_n(2) = S_1, M_n(4) = 2 S_1 - S_2 with S_j = sum_m w_m^j, and the
+# pair-of-pairs step E|Y - Y'| = 2 (S_1 - S_2) (Y = max of two) collapses to a single sum.  The
+# step n -> n+1 replaces the profile by v_m = (w_{m-1} + w_m)/2 + q_m^2/4 (midpoints of
+# consecutive F's), which gives S_2 and M_n(4) increments in the local sums L_1 = sum q^2,
+# L_2 = sum q^2 w, L_4 = sum q^4; L_4 is a Franel-type sum of fourth powers of binomials, and
+# the step ratio of M_n(4) is not a rational function of n (exact rank test), although the
+# integers 2^(4n+1) M_n(4) satisfy an order-4 recurrence with degree-8 coefficients.
+
+WIDE_SWEEP_ITEMS = 400
+WIDE_SWEEP_CANDIDATES = tuple(range(4, 101))
+HUGE_SWEEP_ITEMS = 60
+HUGE_SWEEP_CANDIDATES = (200, 500, 1000, 10000)
+RATIONAL_STEP_DEGREE = 6
+RECURRENCE_ORDER, RECURRENCE_DEGREE, RECURRENCE_VERIFY_ITEMS = 4, 8, 300
+MARGIN_FIT_TOLERANCE = 1e-3
+
+
+def tie_polynomial(candidates: int) -> list[Q]:
+    """Coefficients ``c_0, ..., c_{floor(K/2)}`` of ``P_K(w) = sum_j c_j w^j`` with ``2 P_K(u(1-u)) = 1 - u^K - (1-u)^K``.
+
+    Newton: ``s_K = u^K + (1-u)^K`` obeys ``s_K = s_{K-1} - w s_{K-2}``, ``s_0 = 2``, ``s_1 = 1``
+    (the elementary symmetric functions of ``u, 1-u`` are ``1`` and ``w``); ``P_K = (1 - s_K)/2``.
+    """
+
+    _candidates(candidates)
+    previous, current = [Q(2)], [Q(1)]
+    for _ in range(candidates - 1):
+        shifted = [Q(0)] + previous
+        size = max(len(current), len(shifted))
+        current, previous = [(current[i] if i < len(current) else 0) - (shifted[i] if i < len(shifted) else 0)
+                             for i in range(size)], current
+    poly = [-c / 2 for c in current]
+    poly[0] += Q(1, 2)
+    return poly
+
+
+def overlap_profile(items: int) -> list[Q]:
+    """``w_m = F_n(m)(1 - F_n(m))``, ``m = 0..n-1``, for ``Bin(n, 1/2)``: ``P(X <= m < X')``."""
+
+    _items(items)
+    running, profile = 0, []
+    for m in range(items):
+        running += comb(items, m)
+        profile.append(Q(running * (2**items - running), 4**items))
+    return profile
+
+
+def centered_max_from_profile(items: int, candidates: int) -> Q:
+    """``M_n(K) = sum_m P_K(w_m)``; cross-checks ``centered_max`` through the symmetrized polynomial."""
+
+    poly = tie_polynomial(candidates)
+    return sum((sum((c * w**j for j, c in enumerate(poly)), Q(0)) for w in overlap_profile(items)), Q(0))
+
+
+def profile_power_sums(items: int) -> tuple[Q, Q]:
+    """``(S_1, S_2) = (sum_m w_m, sum_m w_m^2)``: ``M_n(2) = S_1``, ``M_n(4) = 2 S_1 - S_2``, ``E Y_(3:4) = 3 S_2``."""
+
+    profile = overlap_profile(items)
+    return sum(profile, Q(0)), sum((w * w for w in profile), Q(0))
+
+
+def max_of_two_law(items: int) -> dict[int, Q]:
+    """Law of ``max(X_1, X_2)`` on the counts: ``F(j)^2 - F(j-1)^2``."""
+
+    _items(items)
+    running, previous, law = 0, Q(0), {}
+    for j in range(items + 1):
+        running += comb(items, j)
+        current = Q(running, 2**items)**2
+        law[j] = current - previous
+        previous = current
+    return law
+
+
+def mean_absolute_difference(law: dict[int, Q]) -> Q:
+    """``E|Y - Y'| = sum_{i,j} m_i m_j |i - j|`` for i.i.d. ``Y, Y'`` with law ``law`` (the literal double sum)."""
+
+    law = _law(law, "law")
+    return sum((a * b * abs(i - j) for i, a in law.items() for j, b in law.items()), Q(0))
+
+
+def order_statistic_mean_by_enumeration(items: int, size: int, rank: int) -> Q:
+    """``E[X_(rank:size)] - n/2`` by enumerating every ``size``-tuple of ``Bin(n, 1/2)`` counts (tiny ``n``)."""
+
+    _items(items)
+    if type(size) is not int or type(rank) is not int or not 1 <= rank <= size:
+        raise ValueError("rank must lie between 1 and size")
+    masses = [Q(comb(items, j), 2**items) for j in range(items + 1)]
+    total = Q(0)
+    for counts in product(range(items + 1), repeat=size):
+        weight = Q(1)
+        for c in counts:
+            weight *= masses[c]
+        total += weight * sorted(counts)[rank - 1]
+    return total - Q(items, 2)
+
+
+def local_sums(items: int) -> dict[str, Q]:
+    """``L_1 = sum_m q_m^2``, ``L_2 = sum_m q_m^2 w_m`` (``w_n = 0``), ``L_4 = sum_m q_m^4``, ``m = 0..n``.
+
+    ``L_1 = C(2n, n)/4^n`` (hypergeometric); ``L_4 = sum_m C(n, m)^4 / 16^n`` is a Franel-type sum
+    (numerators 1, 2, 18, 164, 1810, ...), not hypergeometric; by the symmetry ``m -> n - m``,
+    ``sum q_m^2 w_{m-1} = L_2``.
+    """
+
+    _items(items)
+    q = [Q(comb(items, m), 2**items) for m in range(items + 1)]
+    w = overlap_profile(items) + [Q(0)]
+    return {"L1": sum((x * x for x in q), Q(0)), "L2": sum((x * x * y for x, y in zip(q, w)), Q(0)),
+            "L4": sum((x**4 for x in q), Q(0))}
+
+
+def second_profile_increment(items: int) -> Q:
+    """``S_2^{(n+1)} - S_2^{(n)} = (6 L_2 - L_1)/4 + 5 L_4/16``.
+
+    The new profile is ``v_m = (w_{m-1} + w_m)/2 + q_m^2/4``; expanding ``sum v_m^2`` with
+    ``w_m - w_{m-1} = q_m (1 - 2 mid_m)`` and ``w_{m-1} + w_m = 2 mid_m (1 - mid_m) - q_m^2/2`` gives
+    ``sum_m q_m^2 (6 v_m - 1 - q_m^2/4)/4``, and ``sum q_m^2 v_m = L_2 + L_4/4``.
+    """
+
+    local = local_sums(items)
+    return (6 * local["L2"] - local["L1"]) / 4 + Q(5, 16) * local["L4"]
+
+
+def quadruple_increment(items: int) -> Q:
+    """``M_{n+1}(4) - M_n(4) = 3 L_1/4 - 3 L_2/2 - 5 L_4/16`` (from ``M_n(4) = 2 S_1 - S_2`` and de Moivre's ``S_1`` step)."""
+
+    local = local_sums(items)
+    return Q(3, 4) * local["L1"] - Q(3, 2) * local["L2"] - Q(5, 16) * local["L4"]
+
+
+def tie_count_law(items: int, candidates: int) -> dict[int, Q]:
+    """``P(N = j) = sum_m C(K, j) q_m^j F(m-1)^{K-j}``, ``j = 1..K``, ``N`` the number of candidates at the maximum."""
+
+    _items(items)
+    _candidates(candidates)
+    q = [Q(comb(items, m), 2**items) for m in range(items + 1)]
+    below, law = Q(0), {}
+    for j in range(1, candidates + 1):
+        law[j] = Q(0)
+    for m in range(items + 1):
+        for j in range(1, candidates + 1):
+            law[j] += comb(candidates, j) * q[m]**j * below**(candidates - j)
+        below += q[m]
+    return law
+
+
+def tie_mass(items: int, candidates: int) -> Q:
+    """``P(N >= 2) = sum_m [F(m)^K - F(m-1)^K - K q_m F(m-1)^{K-1}]``: a tie at the maximum."""
+
+    _items(items)
+    _candidates(candidates)
+    q = [Q(comb(items, m), 2**items) for m in range(items + 1)]
+    below, total = Q(0), Q(0)
+    for m in range(items + 1):
+        upto = below + q[m]
+        total += upto**candidates - below**candidates - candidates * q[m] * below**(candidates - 1)
+        below = upto
+    return total
+
+
+def crude_tie_bound_deficit(items: int, candidates: int) -> Q:
+    """``n P(N >= 2) - 2 M_n(K)``: the sign of the route-R2 sufficient condition for ``rho_n >= 1``.
+
+    Since ``1/2 - 2^{-j} >= 1/4`` for ``j >= 2``, ``M_{n+1} - M_n >= P(N >= 2)/4``, so ``n P(N >= 2) >= 2 M_n``
+    would give ``rho_n >= 1``.  It is an identity for ``K = 2`` (``N <= 2``) and fails for every ``n``
+    at ``K = 3``, by exactly ``-(n/2) sum_m q_m^3``, although ``rho_n(3) = 1``: the bound discards the
+    extra ``1/8`` on triple ties.
+    """
+
+    return items * tie_mass(items, candidates) - 2 * centered_max(items, candidates)
+
+
+def _rank(rows: list[list[Q]]) -> int:
+    rows = [list(r) for r in rows]
+    r = 0
+    for c in range(len(rows[0])):
+        pivot = next((i for i in range(r, len(rows)) if rows[i][c] != 0), None)
+        if pivot is None:
+            continue
+        rows[r], rows[pivot] = rows[pivot], rows[r]
+        head = rows[r][c]
+        rows[r] = [x / head for x in rows[r]]
+        for i in range(len(rows)):
+            if i != r and rows[i][c] != 0:
+                f = rows[i][c]
+                rows[i] = [a - f * b for a, b in zip(rows[i], rows[r])]
+        r += 1
+    return r
+
+
+def _nullspace(rows: list[list[Q]]) -> list[list[Q]]:
+    rows = [list(r) for r in rows]
+    ncol, pivots, r = len(rows[0]), [], 0
+    for c in range(ncol):
+        pivot = next((i for i in range(r, len(rows)) if rows[i][c] != 0), None)
+        if pivot is None:
+            continue
+        rows[r], rows[pivot] = rows[pivot], rows[r]
+        head = rows[r][c]
+        rows[r] = [x / head for x in rows[r]]
+        for i in range(len(rows)):
+            if i != r and rows[i][c] != 0:
+                f = rows[i][c]
+                rows[i] = [a - f * b for a, b in zip(rows[i], rows[r])]
+        pivots.append(c)
+        r += 1
+    basis = []
+    for free in (c for c in range(ncol) if c not in pivots):
+        vector = [Q(0)] * ncol
+        vector[free] = Q(1)
+        for i, pc in enumerate(pivots):
+            vector[pc] = -rows[i][free]
+        basis.append(vector)
+    return basis
+
+
+def rational_step_ratio_rank(sequence, degree: int, points: int | None = None) -> dict[str, object]:
+    """Exact test of whether ``r_n = sequence(n+1)/sequence(n)`` is a rational function of degree ``<= degree``.
+
+    ``p(n) - r_n s(n) = 0`` at ``n = 1..points`` is linear in the ``2(degree+1)`` coefficients; full
+    column rank means no nonzero ``(p, s)`` fits even these points.  For ``K = 2, 3`` the degree-1
+    ratio ``(2n+1)/(2n)`` is found; for ``K = 4`` nothing exists through ``RATIONAL_STEP_DEGREE``.
+    """
+
+    if type(degree) is not int or degree < 0:
+        raise ValueError("degree must be a non-negative integer")
+    columns = 2 * (degree + 1)
+    points = columns + 4 if points is None else points
+    rows = []
+    for n in range(1, points + 1):
+        ratio = Q(sequence(n + 1)) / Q(sequence(n))
+        rows.append([Q(n)**i for i in range(degree + 1)] + [-ratio * Q(n)**i for i in range(degree + 1)])
+    rank = _rank(rows)
+    return {"degree": degree, "points": points, "rank": rank, "columns": columns, "exists": rank < columns}
+
+
+def guess_recurrence(sequence, order: int, degree: int, points: int) -> list[list[list[Q]]]:
+    """Polynomials ``p_0..p_order`` (degree ``<= degree``) with ``sum_i p_i(n) sequence(n+i) = 0``, ``n = 1..points``.
+
+    Returns a basis of the solution space, each element a list of coefficient lists (low degree first).
+    """
+
+    if type(order) is not int or order < 1 or type(degree) is not int or degree < 0:
+        raise ValueError("order must be positive and degree non-negative")
+    _items(points)
+    rows = []
+    for n in range(1, points + 1):
+        row = []
+        for i in range(order + 1):
+            value = Q(sequence(n + i))
+            row += [value * Q(n)**d for d in range(degree + 1)]
+        rows.append(row)
+    return [[vector[i * (degree + 1):(i + 1) * (degree + 1)] for i in range(order + 1)] for vector in _nullspace(rows)]
+
+
+def quadruple_numerator(items: int) -> int:
+    """The integer ``2^{4n+1} M_n(4) = n 16^n - 2 sum_{m<n} G(m)^4``, ``G(m) = sum_{j<=m} C(n, j)``."""
+
+    value = centered_max(items, 4) * 2**(4 * items + 1)
+    if value.denominator != 1:
+        raise ValueError("2^(4n+1) M_n(4) is not an integer")
+    return value.numerator
+
+
+def quadruple_recurrence(verify_items: int = RECURRENCE_VERIFY_ITEMS) -> dict[str, object]:
+    """The order-4, degree-8 recurrence of ``u_n = 2^{4n+1} M_n(4)``, guessed on the first points and verified beyond.
+
+    Its leading coefficients give the characteristic polynomial ``75 (x - 16)^2 (x + 2)(x + 4)``: the
+    double root ``16`` carries ``16^n sqrt(n)``, the roots ``-2, -4`` are exponentially small parity
+    corrections.  No recurrence of order ``<= 3`` exists through degree 12 (nullity zero).
+    """
+
+    order, degree = RECURRENCE_ORDER, RECURRENCE_DEGREE
+    unknowns = (order + 1) * (degree + 1)
+    basis = guess_recurrence(quadruple_numerator, order, degree, unknowns + 8)
+    if len(basis) != 1:
+        return {"order": order, "degree": degree, "nullity": len(basis), "verified": False}
+    polys = basis[0]
+    common = 1
+    for poly in polys:
+        for c in poly:
+            common = common * c.denominator // gcd(common, c.denominator)
+    integers = [[int(c * common) for c in poly] for poly in polys]
+    g = 0
+    for poly in integers:
+        for c in poly:
+            g = gcd(g, abs(c))
+    integers = [[c // g for c in poly] for poly in integers]
+    if integers[-1][-1] < 0:
+        integers = [[-c for c in poly] for poly in integers]
+    verified = all(sum(sum(poly[d] * n**d for d in range(degree + 1)) * quadruple_numerator(n + i)
+                       for i, poly in enumerate(integers)) == 0 for n in range(1, verify_items + 1))
+    leading = [poly[-1] for poly in integers]
+    characteristic = [c // leading[-1] for c in leading] if all(c % leading[-1] == 0 for c in leading) else None
+    roots_check = None
+    if characteristic is not None:
+        roots_check = {str(x): sum(c * x**i for i, c in enumerate(characteristic)) == 0 for x in (16, -2, -4)}
+        derivative_at_16 = sum(i * c * 16**(i - 1) for i, c in enumerate(characteristic) if i)
+        roots_check["16 is a double root"] = derivative_at_16 == 0
+    lower = {f"order={o},degree={d}": len(guess_recurrence(quadruple_numerator, o, d, (o + 1) * (d + 1) + 8))
+             for o, d in ((1, 8), (2, 8), (3, 12))}
+    return {"order": order, "degree": degree, "nullity": 1, "coefficients": integers, "verified_items": verify_items,
+            "verified": verified, "characteristic_monic": characteristic, "characteristic_roots": roots_check,
+            "lower_order_nullity": lower}
+
+
+def gaussian_max_moment(candidates: int, power: int) -> float:
+    """``E[M_K^power]`` for the maximum of ``K`` standard normals, by the same composite Simpson rule."""
+
+    _candidates(candidates)
+    if type(power) is not int or power < 0:
+        raise ValueError("power must be a non-negative integer")
+    x, cdf, pdf = _gaussian_grid()
+    return _simpson(candidates * x**power * pdf * cdf ** (candidates - 1), float(x[1] - x[0]))
+
+
+def asymptotic_margin(candidates: int) -> float:
+    """``c(K) = lim_n n (rho_n - 1) = (E[M_K^3] - (5/2) E[M_K]) / (6 E[M_K])`` (Edgeworth; zero at ``K = 2, 3``).
+
+    Continuity-corrected Edgeworth at ``p = 1/2``: ``F_n(m) = Phi(z) + phi(z)(z^3 - z)/(12 n) + O(n^-2)``,
+    ``z = (2m + 1 - n)/sqrt(n)`` (lattice and kurtosis terms), and the midpoint Riemann sum of
+    ``phi_K(Phi)`` has exponentially small error, so ``M_n(K) = (sqrt(n)/2) E[M_K] - E[M_K^3 - M_K]/(24 sqrt(n))
+    + O(n^-3/2)``; then ``a_n^2 = (E[M_K]/2)^2 (1 - E[M_K^3 - M_K]/(6 n E[M_K]) + ...)``, the step
+    margin ``mu_n -> (2/3) E[M_K^3 - M_K]/E[M_K]`` and ``c(K) = (mu_inf - 1)/4``.  For ``K = 2``,
+    ``E[M^3] = (5/2) E[M] = 5/(2 sqrt(pi))`` reproduces the exact ``1/(8n)`` deficit.  The expansion is
+    cited, not reproved; the limit is checked against Richardson extrapolation of the exact ``rho_n``.
+    """
+
+    first = gaussian_max_moment(candidates, 1)
+    return (gaussian_max_moment(candidates, 3) - 2.5 * first) / (6 * first)
+
+
+def asymptotic_normalized_margin(candidates: int) -> float:
+    """``mu_inf(K) = 1 + 4 c(K) = (2/3) E[M_K^3 - M_K] / E[M_K]``: the limit of ``4n(n+1)(a_{n+1}^2/a_n^2 - 1)``."""
+
+    return 1 + 4 * asymptotic_margin(candidates)
+
+
+def wide_monotonicity_sweep(candidates: tuple[int, ...], max_items: int) -> dict[str, dict[str, object]]:
+    """Exact ``a_{n+1}^2 > a_n^2`` for every ``K`` in ``candidates`` and ``n <= max_items``, integer arithmetic.
+
+    ``M_n(K) = N_n / 2^{nK}`` with ``N_n = n 2^{nK-1} - sum_{m<n} G(m)^K``; the powers ``G(m)^K`` are
+    built incrementally across the sorted ``K`` list.  Per ``K``: the minimal margin ``mu_n`` and ``rho_n``
+    with their locations, ``n (rho_n - 1)`` at ``max_items`` with one Richardson step, and the Gaussian
+    prediction ``c(K)`` with its residual.  Displayed values are floats; every comparison is exact.
+    """
+
+    _items(max_items)
+    ks = tuple(sorted(set(candidates)))
+    if not ks or any(type(k) is not int or k < 1 for k in ks):
+        raise ValueError("candidates must be positive integers")
+    keep = {1, 2, 3, 4, 5, 6, 8, 10, 20, 50, 100, 200, 400, max_items - 1, max_items}
+    state = {k: None for k in ks}
+    summary = {k: {"failures": [], "min_margin": None, "min_margin_at": None, "min_rho": None, "min_rho_at": None,
+                   "margins": {}, "rhos": {}} for k in ks}
+
+    def less(a: tuple[int, int, float], b: tuple[int, int, float]) -> bool:
+        # (numerator, positive denominator, float value); exact cross-multiplication only on near-ties
+        if abs(a[2] - b[2]) > 1e-9 * max(abs(a[2]), abs(b[2]), 1e-300):
+            return a[2] < b[2]
+        return a[0] * b[1] < b[0] * a[1]
+
+    for n in range(1, max_items + 2):
+        partial, running = [], 0
+        for j in range(n):
+            running += comb(n, j)
+            partial.append(running)
+        totals = {k: 0 for k in ks}
+        for g in partial:
+            power, previous_k = g**ks[0], ks[0]
+            for k in ks:
+                if k != previous_k:
+                    power *= g**(k - previous_k)
+                    previous_k = k
+                totals[k] += power
+        for k in ks:
+            numerator = n * 2**(n * k - 1) - totals[k]
+            if state[k] is not None:
+                prev_num, prev_n = state[k]
+                lhs = prev_n * numerator * numerator
+                rhs = (prev_n + 1) * prev_num * prev_num * 4**k
+                margin_num, rho_num, rho_den = 4 * prev_n * (prev_n + 1) * (lhs - rhs), 2 * prev_n * (numerator - 2**k * prev_num), 2**k * prev_num
+                margin = (margin_num, rhs, margin_num / rhs)
+                rho = (rho_num, rho_den, rho_num / rho_den)
+                row = summary[k]
+                if lhs <= rhs:
+                    row["failures"].append(prev_n)
+                if row["min_margin"] is None or less(margin, row["min_margin"]):
+                    row["min_margin"], row["min_margin_at"] = margin, prev_n
+                if row["min_rho"] is None or less(rho, row["min_rho"]):
+                    row["min_rho"], row["min_rho_at"] = rho, prev_n
+                if prev_n in keep:
+                    row["margins"][prev_n] = margin[2]
+                    row["rhos"][prev_n] = rho[2]
+            state[k] = (numerator, n)
+    out = {}
+    for k in ks:
+        row = summary[k]
+        last = row["rhos"][max_items]
+        c_last = max_items * (last - 1)
+        richardson = None
+        if max_items > 1:
+            c_before = (max_items - 1) * (row["rhos"][max_items - 1] - 1)
+            richardson = max_items * c_last - (max_items - 1) * c_before
+        gaussian = asymptotic_margin(k)
+        out[f"K={k}"] = {"candidates": k, "max_items": max_items, "monotone": not row["failures"],
+                         "first_failure": row["failures"][0] if row["failures"] else None,
+                         "min_margin": row["min_margin"][2], "min_margin_at": row["min_margin_at"],
+                         "min_rho": row["min_rho"][2], "min_rho_at": row["min_rho_at"],
+                         "rho_at_least_one": row["min_rho"][0] >= row["min_rho"][1],
+                         "margin_at_max_items": row["margins"][max_items],
+                         "scaled_rho_excess_at_max_items": c_last, "scaled_rho_excess_richardson": richardson,
+                         "gaussian_margin_limit": gaussian, "gaussian_normalized_margin_limit": 1 + 4 * gaussian,
+                         "richardson_minus_gaussian": None if richardson is None else richardson - gaussian,
+                         "margins": {f"n={n}": v for n, v in sorted(row["margins"].items())},
+                         "rhos": {f"n={n}": v for n, v in sorted(row["rhos"].items())}}
+    return out
+
+
 # --- fixtures ------------------------------------------------------------------------
 
 def tie_rule_fixture() -> dict[str, object]:
@@ -981,6 +1413,110 @@ def exact_kl_ratio_fixture(max_items: int = MONOTONE_ITEMS) -> dict[str, object]
     return rows
 
 
+def profile_fixture(max_items: int = 60) -> dict[str, object]:
+    """The overlap-profile polynomial, the pair-of-pairs identities and the profile increments (version 0.3)."""
+
+    polynomial = all(centered_max_from_profile(n, k) == centered_max(n, k)
+                     for n in range(1, 41) for k in (1, 2, 3, 4, 5, 6, 9, 12))
+    named = (tie_polynomial(2) == [0, 1] and tie_polynomial(3) == [0, Q(3, 2)] and tie_polynomial(4) == [0, 2, -1]
+             and tie_polynomial(5) == [0, Q(5, 2), Q(-5, 2)])
+    pairs, mad_double_sum, increments = True, True, True
+    for n in range(1, max_items + 1):
+        s1, s2 = profile_power_sums(n)
+        mad = mean_absolute_difference(max_of_two_law(n))
+        pairs &= s1 == centered_max(n, 2) and 2 * s1 - s2 == centered_max(n, 4) and centered_max(n, 5) == Q(5, 2) * (s1 - s2)
+        mad_double_sum &= mad == 2 * (s1 - s2) and centered_max(n, 4) == centered_max(n, 2) + mad / 2
+        increments &= (second_profile_increment(n) == profile_power_sums(n + 1)[1] - s2
+                       and quadruple_increment(n) == centered_max_increment(n, 4))
+    enumeration = all(order_statistic_mean_by_enumeration(n, 4, 3) == 3 * profile_power_sums(n)[1]
+                      and order_statistic_mean_by_enumeration(n, 4, 4) == centered_max(n, 4)
+                      and order_statistic_mean_by_enumeration(n, 2, 2) == centered_max(n, 2) for n in (1, 2, 3, 4))
+    return {"max_items": max_items, "polynomial_matches_centered_max_n_le_40": polynomial, "named_polynomials": named,
+            "pair_of_pairs_identities": pairs, "mean_absolute_difference_is_two_S1_minus_S2": mad_double_sum,
+            "second_largest_of_four_is_three_S2_by_enumeration_n_le_4": enumeration,
+            "profile_increment_identities": increments,
+            "values": {f"n={n}": {"S1": profile_power_sums(n)[0], "S2": profile_power_sums(n)[1],
+                                  "L": local_sums(n)} for n in (1, 2, 3, 4)}}
+
+
+def tie_mass_fixture(max_items: int = 60) -> dict[str, object]:
+    """Route R2: the exact tie-count law, its weighted sum, and the crude bound's deficit (version 0.3)."""
+
+    def brute_law(n: int, k: int) -> dict[int, Q]:
+        masses = [Q(comb(n, j), 2**n) for j in range(n + 1)]
+        law = {j: Q(0) for j in range(1, k + 1)}
+        for counts in product(range(n + 1), repeat=k):
+            weight = Q(1)
+            for c in counts:
+                weight *= masses[c]
+            law[counts.count(max(counts))] += weight
+        return law
+
+    enumeration = all(tie_count_law(n, k) == brute_law(n, k) for n, k in ((1, 2), (2, 3), (3, 3), (2, 4), (3, 4), (2, 5)))
+    weighted = all(sum((Q(1, 2) - Q(1, 2**j)) * p for j, p in tie_count_law(n, k).items()) == centered_max_increment(n, k)
+                   and sum(tie_count_law(n, k).values()) == 1
+                   and sum(p for j, p in tie_count_law(n, k).items() if j >= 2) == tie_mass(n, k)
+                   for n in range(1, 31) for k in (2, 3, 4, 5, 8))
+    pair_exact, triple, quadruple = True, True, True
+    for n in range(1, max_items + 1):
+        cubes = sum((Q(comb(n, m), 2**n)**3 for m in range(n + 1)), Q(0))
+        pair_exact &= crude_tie_bound_deficit(n, 2) == 0
+        triple &= crude_tie_bound_deficit(n, 3) == -Q(n, 2) * cubes < 0
+        quadruple &= crude_tie_bound_deficit(n, 4) < 0
+    return {"max_items": max_items, "tie_count_law_matches_enumeration": enumeration,
+            "weighted_tie_law_is_increment_n_le_30": weighted, "crude_bound_exact_for_pairs": pair_exact,
+            "crude_bound_fails_for_triples_by_half_n_sum_q_cubed": triple, "crude_bound_fails_for_quadruples": quadruple,
+            "deficits": {f"n={n},K={k}": crude_tie_bound_deficit(n, k) for n in (1, 2, 4, 8) for k in (3, 4)}}
+
+
+def step_ratio_fixture() -> dict[str, object]:
+    """Route R1: rational step ratios exist for ``K = 2, 3`` (degree 1), none for ``K = 4`` or for ``E|Y - Y'|``; the recurrence."""
+
+    ranks = {f"K={k}": rational_step_ratio_rank(lambda n, k=k: centered_max(n, k), RATIONAL_STEP_DEGREE) for k in (2, 3, 4)}
+    degree_one = {f"K={k}": rational_step_ratio_rank(lambda n, k=k: centered_max(n, k), 1)["exists"] for k in (2, 3, 4)}
+    mad = rational_step_ratio_rank(lambda n: mean_absolute_difference(max_of_two_law(n)), RATIONAL_STEP_DEGREE)
+    recurrence = quadruple_recurrence()
+    return {"rank_tests": ranks, "degree_one_exists": degree_one, "mean_absolute_difference_rank_test": mad,
+            "pairs_and_triples_have_degree_one_ratio": degree_one["K=2"] and degree_one["K=3"],
+            "quadruple_has_no_rational_ratio": not ranks["K=4"]["exists"] and not mad["exists"],
+            "recurrence": recurrence}
+
+
+def margin_limit_fixture() -> dict[str, object]:
+    """``c(K)`` from the Gaussian third moment: closed forms at ``K = 2, 3``, positivity and growth beyond."""
+
+    second, third = gaussian_max_moment(2, 3), gaussian_max_moment(3, 3)
+    closed = (abs(second - 2.5 / sqrt(pi)) <= QUADRATURE_TOLERANCE and abs(third - 15 / (4 * sqrt(pi))) <= QUADRATURE_TOLERANCE
+              and abs(asymptotic_margin(2)) <= QUADRATURE_TOLERANCE and abs(asymptotic_margin(3)) <= QUADRATURE_TOLERANCE)
+    values = [asymptotic_margin(k) for k in range(4, 101)]
+    huge = {f"K={k}": asymptotic_margin(k) for k in HUGE_SWEEP_CANDIDATES}
+    return {"third_moment_K_2": second, "third_moment_K_3": third, "closed_forms_K_2_3": closed,
+            "positive_K_4_to_100": all(v > 0 for v in values), "increasing_K_4_to_100": all(a < b for a, b in zip(values, values[1:])),
+            "c_K": {f"K={k}": asymptotic_margin(k) for k in (4, 5, 6, 8, 10, 20, 50, 100)}, "c_K_huge": huge,
+            "normalized_margin_limit": {f"K={k}": asymptotic_normalized_margin(k) for k in (4, 5, 10, 20, 100)}}
+
+
+def wide_sweep_fixture() -> dict[str, object]:
+    """``K = 4..100`` to ``n = 400`` and ``K in HUGE_SWEEP_CANDIDATES`` to ``n = 60``, exact comparisons."""
+
+    wide = wide_monotonicity_sweep(WIDE_SWEEP_CANDIDATES, WIDE_SWEEP_ITEMS)
+    huge = wide_monotonicity_sweep(HUGE_SWEEP_CANDIDATES, HUGE_SWEEP_ITEMS)
+    rows = list(wide.values())
+    global_min = min(rows, key=lambda r: r["min_margin"])
+    fit = max(abs(r["richardson_minus_gaussian"]) / r["gaussian_margin_limit"] for r in rows)
+    return {"wide": wide, "huge": huge,
+            "wide_monotone": all(r["monotone"] for r in rows), "wide_rho_at_least_one": all(r["rho_at_least_one"] for r in rows),
+            "wide_global_min_margin": global_min["min_margin"], "wide_global_min_margin_K": global_min["candidates"],
+            "wide_global_min_margin_at": global_min["min_margin_at"],
+            "wide_margin_at_max_items_above_gaussian_limit": all(r["margin_at_max_items"] > r["gaussian_normalized_margin_limit"]
+                                                                 for r in rows),
+            "wide_min_margin_at_max_items_for": [r["candidates"] for r in rows if r["min_margin_at"] == WIDE_SWEEP_ITEMS],
+            "wide_max_relative_fit_residual": fit,
+            "huge_monotone": all(r["monotone"] for r in huge.values()),
+            "huge_rho_at_least_one": all(r["rho_at_least_one"] for r in huge.values()),
+            "huge_min_margin": min(r["min_margin"] for r in huge.values())}
+
+
 # --- verification ----------------------------------------------------------------------
 
 def verify() -> dict[str, object]:
@@ -1002,6 +1538,11 @@ def verify() -> dict[str, object]:
     mono = monotonicity_fixture()
     convex = convex_order_fixture()
     exact_kl = exact_kl_ratio_fixture()
+    profile = profile_fixture()
+    tie_masses = tie_mass_fixture()
+    steps = step_ratio_fixture()
+    margins = margin_limit_fixture()
+    sweeps = wide_sweep_fixture()
     c_values = [gauss["rows"][f"K={k}"]["c_K"] for k in GAUSSIAN_CANDIDATES]
     full_sweeps = list(mono["full"].values())
     broad_sweeps = list(mono["broad"].values())
@@ -1070,6 +1611,28 @@ def verify() -> dict[str, object]:
         "E_exact_kl_ratio_decreasing_toward_c_K": all(
             r["strictly_decreasing_from_start"] and r["above_c_K_from_start"] and r["within_5e-4_of_c_K_at_max_items"]
             for r in exact_kl.values()),
+        "F_profile_polynomial_matches_centered_max_n_le_40": profile["polynomial_matches_centered_max_n_le_40"]
+            and profile["named_polynomials"],
+        "F_pair_of_pairs_M4_is_2S1_minus_S2_and_mad_is_2S1_minus_2S2_n_le_60": profile["pair_of_pairs_identities"]
+            and profile["mean_absolute_difference_is_two_S1_minus_S2"],
+        "F_second_largest_of_four_is_3S2_by_enumeration_n_le_4": profile["second_largest_of_four_is_three_S2_by_enumeration_n_le_4"],
+        "F_profile_and_quadruple_increments_in_local_sums_n_le_60": profile["profile_increment_identities"],
+        "F_tie_count_law_matches_enumeration_and_weighted_sum_is_increment": tie_masses["tie_count_law_matches_enumeration"]
+            and tie_masses["weighted_tie_law_is_increment_n_le_30"],
+        "F_crude_tie_bound_exact_K_2_fails_K_3_by_half_n_sum_q_cubed_and_K_4_n_le_60": tie_masses["crude_bound_exact_for_pairs"]
+            and tie_masses["crude_bound_fails_for_triples_by_half_n_sum_q_cubed"] and tie_masses["crude_bound_fails_for_quadruples"],
+        "F_rational_step_ratio_degree_1_for_K_2_3_none_through_degree_6_for_K_4": steps["pairs_and_triples_have_degree_one_ratio"]
+            and steps["quadruple_has_no_rational_ratio"] and not steps["degree_one_exists"]["K=4"],
+        "F_quadruple_recurrence_order_4_degree_8_verified_n_le_300_roots_16_16_m2_m4": steps["recurrence"]["verified"]
+            and all(steps["recurrence"]["characteristic_roots"].values())
+            and all(v == 0 for v in steps["recurrence"]["lower_order_nullity"].values()),
+        "F_gaussian_third_moment_closed_forms_K_2_3_give_zero_margin": margins["closed_forms_K_2_3"],
+        "F_gaussian_margin_limit_positive_and_increasing_K_4_to_100": margins["positive_K_4_to_100"] and margins["increasing_K_4_to_100"],
+        "F_scaled_gap_monotone_K_4_to_100_n_le_400_exact": sweeps["wide_monotone"] and sweeps["wide_rho_at_least_one"],
+        "F_scaled_gap_monotone_K_200_500_1000_10000_n_le_60_exact": sweeps["huge_monotone"] and sweeps["huge_rho_at_least_one"],
+        "F_richardson_matches_gaussian_margin_limit_K_4_to_100": sweeps["wide_max_relative_fit_residual"] <= MARGIN_FIT_TOLERANCE,
+        "F_global_min_margin_at_K_4_n_400_and_margins_at_n_400_above_their_limits": sweeps["wide_global_min_margin_K"] == 4
+            and sweeps["wide_global_min_margin_at"] == WIDE_SWEEP_ITEMS and sweeps["wide_margin_at_max_items_above_gaussian_limit"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
@@ -1078,7 +1641,30 @@ def verify() -> dict[str, object]:
             "grid": {"items": GRID_ITEMS, "candidates": GRID_CANDIDATES, "p": GRID_P, "cells": len(grid)},
             "monotonicity": {"items": MONOTONE_ITEMS, "candidates": MONOTONE_CANDIDATES,
                              "sweep_items": SWEEP_ITEMS, "sweep_candidates": SWEEP_CANDIDATES,
-                             "large": (LARGE_CANDIDATES, LARGE_ITEMS)},
+                             "large": (LARGE_CANDIDATES, LARGE_ITEMS),
+                             "wide": (WIDE_SWEEP_CANDIDATES[0], WIDE_SWEEP_CANDIDATES[-1], WIDE_SWEEP_ITEMS),
+                             "huge": (HUGE_SWEEP_CANDIDATES, HUGE_SWEEP_ITEMS)},
+            "headline_v0_3": {
+                "verdict": {"K=2": "theorem", "K=3": "theorem",
+                            "K>=4": "exact on K=4..100 (n<=400) and K=200,500,1000,10000 (n<=60); limit margin c(K)>0 by Edgeworth; unproved"},
+                "wide_sweep_table": {k: {key: r[key] for key in ("monotone", "min_margin", "min_margin_at", "min_rho", "min_rho_at",
+                                                                 "margin_at_max_items", "scaled_rho_excess_at_max_items",
+                                                                 "scaled_rho_excess_richardson", "gaussian_margin_limit",
+                                                                 "gaussian_normalized_margin_limit", "richardson_minus_gaussian")}
+                                     for k, r in sweeps["wide"].items() if r["candidates"] in (4, 5, 6, 8, 10, 20, 50, 100)},
+                "huge_sweep_table": {k: {key: r[key] for key in ("monotone", "min_margin", "min_margin_at", "min_rho", "min_rho_at",
+                                                                 "margin_at_max_items", "gaussian_margin_limit")}
+                                     for k, r in sweeps["huge"].items()},
+                "wide_global_min_margin": (sweeps["wide_global_min_margin"], sweeps["wide_global_min_margin_K"],
+                                           sweeps["wide_global_min_margin_at"]),
+                "wide_min_margin_at_max_items_for_K": sweeps["wide_min_margin_at_max_items_for"],
+                "wide_max_relative_fit_residual": sweeps["wide_max_relative_fit_residual"],
+                "quadruple_recurrence": {key: steps["recurrence"][key] for key in ("coefficients", "characteristic_monic",
+                                                                                   "verified_items", "lower_order_nullity")},
+                "rank_tests": steps["rank_tests"],
+                "crude_tie_bound_deficits": tie_masses["deficits"],
+                "gaussian_margin_limits": {**margins["c_K"], **margins["c_K_huge"]},
+                "normalized_margin_limits": margins["normalized_margin_limit"]},
             "headline": {
                 "monotone_table": {k: {key: s[key] for key in ("monotone", "min_step_ratio", "min_step_ratio_at",
                                                               "min_margin", "min_margin_at", "min_rho", "min_rho_at",
@@ -1103,4 +1689,5 @@ def verify() -> dict[str, object]:
             "proxies": proxies, "supremum": sup, "gaussian": gauss, "limit": limit,
             "uniform_supports": uniform, "mad": mad, "pair_theorem": pair, "odd_candidates": odd,
             "tie_increment": ties_increment, "monotonicity_sweeps": mono, "convex_order": convex,
-            "exact_kl_ratio": exact_kl}
+            "exact_kl_ratio": exact_kl, "profile": profile, "tie_masses": tie_masses, "step_ratios": steps,
+            "margin_limits": margins, "wide_sweeps": sweeps}

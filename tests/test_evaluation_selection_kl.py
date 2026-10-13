@@ -7,16 +7,20 @@ import pytest
 from spiral_ln.evaluation_feedback_multigen import best_of_pmf
 from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_selection_kl import (
-    GRID_P, LOG_TOLERANCE, SUPREMUM_TOLERANCE, TIE_RULES, beirami_radius, binomial_records,
-    binomial_score_law, brute_force_selected_law, brute_force_tie_count_moment, centered_max,
-    centered_max_increment, conditioned_on_max_law, dv_bound, exact_kl_ratio_along_items,
-    expected_max_count, first_index_weight, gaussian_max_expectation, gaussian_ratio_limit,
-    gap_to_bound_ratio, hoeffding_proxy, increment_ratio, kearns_saul_proxy, kl_ball_supremum,
-    kl_divergence, kl_max_law, max_law, monotonicity_sweep, pair_gap_by_enumeration,
-    pair_scaled_gap_squared, pair_step_ratio, scaled_gap, scaled_gap_squared, score_law,
-    selected_record_law, selection_gap, standardized_absolute_moment_squared, stop_loss_excess,
-    subgaussian_violation, symmetric_binomial_mad, symmetric_binomial_mad_closed_form,
-    tie_count_moment, uniform_distinct_scores_kl, uniform_weight, verify,
+    GRID_P, LOG_TOLERANCE, SUPREMUM_TOLERANCE, TIE_RULES, asymptotic_margin, asymptotic_normalized_margin,
+    beirami_radius, binomial_records, binomial_score_law, brute_force_selected_law,
+    brute_force_tie_count_moment, centered_max, centered_max_from_profile, centered_max_increment,
+    conditioned_on_max_law, crude_tie_bound_deficit, dv_bound, exact_kl_ratio_along_items,
+    expected_max_count, first_index_weight, gaussian_max_expectation, gaussian_max_moment,
+    gaussian_ratio_limit, gap_to_bound_ratio, guess_recurrence, hoeffding_proxy, increment_ratio,
+    kearns_saul_proxy, kl_ball_supremum, kl_divergence, kl_max_law, local_sums, max_law, max_of_two_law,
+    mean_absolute_difference, monotonicity_sweep, order_statistic_mean_by_enumeration, overlap_profile,
+    pair_gap_by_enumeration, pair_scaled_gap_squared, pair_step_ratio, profile_power_sums,
+    quadruple_increment, quadruple_numerator, quadruple_recurrence, rational_step_ratio_rank, scaled_gap,
+    scaled_gap_squared, score_law, second_profile_increment, selected_record_law, selection_gap,
+    standardized_absolute_moment_squared, stop_loss_excess, subgaussian_violation, symmetric_binomial_mad,
+    symmetric_binomial_mad_closed_form, tie_count_law, tie_count_moment, tie_mass, tie_polynomial,
+    uniform_distinct_scores_kl, uniform_weight, verify, wide_monotonicity_sweep,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
@@ -320,7 +324,149 @@ def test_exact_kl_ratio_path_at_one_half():
     assert exact_kl_ratio_along_items(5, (1,))["n=1"]["ratio_exact"] < gaussian_ratio_limit(5)
 
 
+def test_overlap_profile_polynomial_reproduces_every_centered_max():
+    assert tie_polynomial(1) == [0]  # M_n(1) = 0
+    assert tie_polynomial(2) == [0, 1] and tie_polynomial(3) == [0, Q(3, 2)]
+    assert tie_polynomial(4) == [0, 2, -1] and tie_polynomial(5) == [0, Q(5, 2), Q(-5, 2)]
+    assert tie_polynomial(6) == [0, 3, Q(-9, 2), 1]
+    # 2 P_K(u(1-u)) = 1 - u^K - (1-u)^K at a few rationals u
+    for k in range(1, 9):
+        poly = tie_polynomial(k)
+        for u in (Q(1, 3), Q(1, 7), Q(4, 5)):
+            w = u * (1 - u)
+            assert 2 * sum(c * w**j for j, c in enumerate(poly)) == 1 - u**k - (1 - u)**k
+    for n in range(1, 16):
+        profile = overlap_profile(n)
+        assert len(profile) == n and profile == profile[::-1] and all(0 < w <= QUARTER for w in profile)
+        q = binomial_score_law(n, HALF)
+        cdf = Q(0)
+        for m in range(n):
+            cdf += q[Q(m, n)]
+            assert profile[m] == cdf * (1 - cdf)
+        for k in (1, 2, 3, 4, 5, 7, 10):
+            assert centered_max_from_profile(n, k) == centered_max(n, k)
+
+
+def test_pair_of_pairs_decomposition_and_second_largest_of_four():
+    for n in range(1, 41):
+        s1, s2 = profile_power_sums(n)
+        law = max_of_two_law(n)
+        assert sum(law.values()) == 1
+        mad = mean_absolute_difference(law)
+        # E max of four = E Y + E|Y - Y'|/2 with Y = max of two; the double sum collapses
+        assert centered_max(n, 4) == s1 + mad / 2 == 2 * s1 - s2
+        assert mad == 2 * (s1 - s2) and s1 == centered_max(n, 2)
+        assert centered_max(n, 5) == Q(5, 2) * (s1 - s2)
+        assert second_profile_increment(n) == profile_power_sums(n + 1)[1] - s2
+        assert quadruple_increment(n) == centered_max_increment(n, 4) == centered_max(n + 1, 4) - centered_max(n, 4)
+    for n in (1, 2, 3):
+        s1, s2 = profile_power_sums(n)
+        assert order_statistic_mean_by_enumeration(n, 4, 3) == 3 * s2
+        assert order_statistic_mean_by_enumeration(n, 4, 2) == -3 * s2
+        assert order_statistic_mean_by_enumeration(n, 4, 4) == centered_max(n, 4)
+        assert order_statistic_mean_by_enumeration(n, 3, 2) == 0 and order_statistic_mean_by_enumeration(n, 2, 2) == s1
+    local = local_sums(1)
+    assert local == {"L1": HALF, "L2": Q(1, 16), "L4": Q(1, 8)}
+    assert profile_power_sums(1) == (QUARTER, Q(1, 16)) and profile_power_sums(2) == (Q(3, 8), Q(9, 128))
+    assert local_sums(3)["L4"] == Q(1 + 81 + 81 + 1, 8**4) == Q(164, 16**3)  # Franel-type numerator 164
+
+
+def test_tie_count_law_and_the_crude_tie_bound_witness():
+    for n, k in ((1, 2), (2, 2), (2, 3), (3, 3), (2, 4), (3, 4), (1, 5)):
+        law = tie_count_law(n, k)
+        q = binomial_score_law(n, HALF)
+        masses = [q[Q(j, n)] for j in range(n + 1)]
+        brute = {j: Q(0) for j in range(1, k + 1)}
+        for counts in product(range(n + 1), repeat=k):
+            weight = Q(1)
+            for c in counts:
+                weight *= masses[c]
+            brute[counts.count(max(counts))] += weight
+        assert law == brute and sum(law.values()) == 1
+        assert sum(p for j, p in law.items() if j >= 2) == tie_mass(n, k)
+        assert sum(Q(1, 2**j) * p for j, p in law.items()) == tie_count_moment(n, k)
+    for n in range(1, 31):
+        cubes = sum(Q(comb(n, m), 2**n)**3 for m in range(n + 1))
+        assert crude_tie_bound_deficit(n, 2) == 0
+        assert crude_tie_bound_deficit(n, 3) == -Q(n, 2) * cubes < 0
+        assert crude_tie_bound_deficit(n, 4) < 0 and crude_tie_bound_deficit(n, 7) < 0
+        # P(N >= 2) for K = 3 is (3/2) sum q^2 - (1/2) sum q^3 by the symmetry m -> n - m
+        squares = sum(Q(comb(n, m), 2**n)**2 for m in range(n + 1))
+        assert tie_mass(n, 3) == Q(3, 2) * squares - cubes / 2
+    assert crude_tie_bound_deficit(1, 3) == -Q(1, 8) and crude_tie_bound_deficit(2, 4) == -Q(17, 64)
+
+
+def test_rational_step_ratio_exists_for_pairs_and_triples_only():
+    for k in (2, 3):
+        assert rational_step_ratio_rank(lambda n, k=k: centered_max(n, k), 1)["exists"]
+    for degree in (1, 2, 3, 4, 6):
+        report = rational_step_ratio_rank(lambda n: centered_max(n, 4), degree)
+        assert not report["exists"] and report["rank"] == report["columns"] == 2 * (degree + 1)
+    assert not rational_step_ratio_rank(lambda n: mean_absolute_difference(max_of_two_law(n)), 4)["exists"]
+    # positive control: a hypergeometric sequence passes at degree 1
+    assert rational_step_ratio_rank(lambda n: Q(comb(2 * n, n), 4**n), 1)["exists"]
+
+
+def test_quadruple_recurrence_is_found_and_holds_far_beyond_the_fit():
+    assert quadruple_numerator(1) == 2**5 * Q(7, 16) and quadruple_numerator(2) == 2**9 * Q(87, 128)
+    rec = quadruple_recurrence(verify_items=200)
+    assert rec["order"] == 4 and rec["degree"] == 8 and rec["nullity"] == 1 and rec["verified"]
+    assert rec["characteristic_monic"] == [2048, 1280, 72, -26, 1]
+    assert all(rec["characteristic_roots"].values())
+    assert all(v == 0 for v in rec["lower_order_nullity"].values())
+    coefficients = rec["coefficients"]
+    for n in (201, 250, 333):
+        assert sum(sum(poly[d] * n**d for d in range(9)) * quadruple_numerator(n + i) for i, poly in enumerate(coefficients)) == 0
+    # the guesser on a known hypergeometric sequence: C(2n, n) obeys (n+1) a_{n+1} - (4n+2) a_n = 0
+    basis = guess_recurrence(lambda n: Q(comb(2 * n, n)), 1, 1, 8)
+    assert len(basis) == 1
+    (p0, p1), = basis
+    assert p0[1] / p1[1] == -4 and p0[0] / p1[1] == -2 and p1[0] / p1[1] == 1
+
+
+def test_gaussian_third_moment_margin_limit():
+    assert abs(gaussian_max_moment(2, 1) - gaussian_max_expectation(2)) <= 1e-12
+    assert abs(gaussian_max_moment(1, 2) - 1) <= 1e-9 and abs(gaussian_max_moment(1, 3)) <= 1e-9
+    assert abs(gaussian_max_moment(2, 3) - 2.5 / sqrt(pi)) <= 1e-9
+    assert abs(gaussian_max_moment(3, 3) - 15 / (4 * sqrt(pi))) <= 1e-9
+    assert abs(asymptotic_margin(2)) <= 1e-9 and abs(asymptotic_margin(3)) <= 1e-9
+    values = [asymptotic_margin(k) for k in range(4, 31)]
+    assert all(v > 0 for v in values) and values == sorted(values)
+    assert abs(asymptotic_margin(4) - 0.0205606) < 2e-7 and abs(asymptotic_margin(10) - 0.159103) < 2e-6
+    assert abs(asymptotic_normalized_margin(4) - 1.08224) < 2e-5
+    # the exact sweep's n(rho_n - 1) approaches c(K) from above at K = 4
+    excess = [n * (increment_ratio(n, 4) - 1) for n in (50, 100, 200)]
+    assert all(float(e) > asymptotic_margin(4) for e in excess)
+    assert all(abs(float(e) - asymptotic_margin(4)) < 0.05 / n for e, n in zip(excess, (50, 100, 200)))
+
+
+def test_wide_sweep_agrees_with_the_rational_sweep_on_small_ranges():
+    wide = wide_monotonicity_sweep((2, 3, 4, 7, 10), 60)
+    for k in (2, 3, 4, 7, 10):
+        row, reference = wide[f"K={k}"], monotonicity_sweep(k, 60)
+        assert row["monotone"] and row["first_failure"] is None and row["rho_at_least_one"]
+        assert row["min_margin_at"] == reference["min_margin_at"] and row["min_rho_at"] == reference["min_rho_at"]
+        assert abs(row["min_margin"] - reference["min_margin"]) <= 1e-9 * reference["min_margin"]
+        assert abs(row["min_rho"] - reference["min_rho"]) <= 1e-12
+        assert abs(row["margins"]["n=60"] - float(4 * 60 * 61 * (scaled_gap_squared(61, k) / scaled_gap_squared(60, k) - 1))) <= 1e-9
+    assert wide["K=2"]["min_margin"] == 1.0 and wide["K=3"]["min_margin"] == 1.0
+    assert wide["K=4"]["richardson_minus_gaussian"] is not None and abs(wide["K=4"]["richardson_minus_gaussian"]) < 1e-4
+    huge = wide_monotonicity_sweep((300,), 12)
+    assert huge["K=300"]["monotone"] and huge["K=300"]["min_margin"] > 1
+
+
 @pytest.mark.parametrize("call", [
+    lambda: tie_polynomial(0),
+    lambda: overlap_profile(0),
+    lambda: mean_absolute_difference({0: 0.5, 1: 0.5}),
+    lambda: order_statistic_mean_by_enumeration(2, 3, 4),
+    lambda: tie_count_law(3, 0),
+    lambda: tie_mass(0, 3),
+    lambda: rational_step_ratio_rank(lambda n: Q(n), -1),
+    lambda: guess_recurrence(lambda n: Q(n), 0, 2, 5),
+    lambda: gaussian_max_moment(3, -1),
+    lambda: wide_monotonicity_sweep((2, 0), 5),
+    lambda: wide_monotonicity_sweep((2,), 0),
     lambda: symmetric_binomial_mad(0),
     lambda: symmetric_binomial_mad_closed_form(-2),
     lambda: expected_max_count(3, 0),
@@ -363,8 +509,14 @@ def test_malformed_inputs_are_rejected(call):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 42
+    assert report["all_passed"] and len(report["checks"]) == 56
+    assert sum(k.startswith("F_") for k in report["checks"]) == 14
     assert report["evidence_status"].startswith("exact_synthetic")
+    v3 = report["headline_v0_3"]
+    assert v3["wide_global_min_margin"][1:] == (4, 400) and 1.0826 < v3["wide_global_min_margin"][0] < 1.0827
+    assert v3["wide_max_relative_fit_residual"] < 1e-3
+    assert all(row["monotone"] for row in v3["huge_sweep_table"].values())
+    assert v3["quadruple_recurrence"]["characteristic_monic"] == [2048, 1280, 72, -26, 1]
     assert report["grid"]["cells"] == 90
     c = report["headline"]["c_K"]
     assert all(c[f"K={k}"] < 1 for k in (2, 3, 5, 10, 100, 1000, 10000))
