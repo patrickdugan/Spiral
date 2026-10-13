@@ -105,7 +105,9 @@ gold therefore mimics a violation of A2, and test (a) on measured counts over-re
 are first inverted at a known \(\eta\). Fixture, \(\eta=\tfrac1{20}\): \(a'=\tfrac{77}{100}\),
 \(\varepsilon'=\tfrac7{50}\); the independent judge measures \(\varepsilon_1'=\tfrac{11}{46}\), excess
 \(\tfrac{57}{575}\approx0.099\); inversion returns \(\tfrac1{10}\), and \(\tfrac12\) for the shared judge,
-exactly. Boundary: \(\eta\) must be known; estimating it needs a second independent grader.
+exactly. Boundary: \(\eta\) must be known; [gold_calibration_second_grader.md](gold_calibration_second_grader.md)
+estimates it from a second independent grader by the three-rater identity
+\((1-2\eta_1)^2=\kappa_{12}\kappa_{1C}/\kappa_{2C}\), with \(d\varepsilon_1/d\eta=-4\) at this fixture.
 
 ## 6. Falsifiers of the design
 
@@ -145,6 +147,7 @@ The receipt's `card.rendered` holds both judges' renderings; `card.withheld_afte
 
 ## 9. Not delivered
 
-- No observed judge; the fixture tables are expectations, not data. Binary labels only.
+- No observed judge; the fixture tables are expectations, not data. Binary labels only. \(\eta\) is taken
+  as known here; its estimation (and the dependent-grader falsifier) is in the gold-calibration note.
 - The sawtooth and guaranteed-\(m\) figures are checked on the listed cells and horizons, not
   proved monotone beyond them. Items are treated as independent draws; clustered items shrink \(W\).

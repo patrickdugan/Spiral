@@ -266,8 +266,14 @@ evidence either way about the true one until the ledger is published.
   ceiling condition \(\varepsilon_1\ge\tfrac12\), exact sample-size planning
   (a judge at \(\varepsilon=\tfrac15\) against a controller at
   \(a=\tfrac9{10}\) needs about 240 gold items for power 0.9), and the
-  gold-noise correction. What remains undelivered there is an estimate of
-  the gold's own error rate, which needs a second independent grader.
+  gold-noise correction. The gold's own error rate comes from a second
+  independent grader by the three-rater identity
+  \((1-2\eta_1)^2=\kappa_{12}\kappa_{1C}/\kappa_{2C}\) of the
+  [calibration note](gold_calibration_second_grader.md), with its own
+  falsifiers: the sign convention that every rater beats chance is an
+  assumption, and the check against grader dependence has no power when
+  the labels are balanced. A grader that copies the gold grader makes an
+  independent judge look shared; the constraint check is what catches it.
 - No result here is an instance of a statement in the RSITopology problem
   set; the [crosswalk](feedback_channel_rsitopology_crosswalk.md) finds the
   selection law to be one summand of the ASMP-8 KL-slice bound, within ten
