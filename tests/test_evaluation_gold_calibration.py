@@ -1,22 +1,28 @@
 from fractions import Fraction as Q
 from itertools import product
+from math import comb
 
 import pytest
 
 from spiral_ln.evaluation_gold_calibration import (
-    ANTI_INFORMATIVE_SECOND, CELLS3, DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES, DS_PRIOR,
-    HALF, OUTSIDE_MODEL, PAIRS, RANGE_FALSIFIER, RESOLUTION, SIGN_FALSIFIER, LabelTable,
-    RecordTable, _binomial_upper_tail, agreement_covariance, agreement_covariance_model,
-    agreement_patterns, agreement_rate, asymmetric_gold_noise_forward,
+    ANTI_INFORMATIVE_SECOND, CELLS3, CELLS4, CONSTRAINTS4, DS_FALSE_NEGATIVES, DS_FALSE_POSITIVES,
+    DS_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, FOUR_PRIOR, HALF, OUTSIDE_MODEL, PAIRS,
+    PAIRS4, RANGE_FALSIFIER, RESOLUTION, SIGN_FALSIFIER, TRIPLES4, FourRaterTable, LabelTable,
+    RecordTable, _binomial_upper_tail, _binomial_window, agreement_counts, agreement_covariance,
+    agreement_covariance_model, agreement_patterns, agreement_rate, asymmetric_gold_noise_forward,
     asymmetric_gold_noise_inverse, calibrate, calibrate_asymmetric, calibration_valid,
-    copy_grader_residual, copy_grader_table, dawid_skene_jacobian_rank, dawid_skene_model,
-    dawid_skene_moments, dawid_skene_three_raters, delta_variance, delta_variance_from_table,
-    disagreement_bound, eps1_displacement, eps1_sensitivity, error_rate_at_most,
-    error_rate_bracket, error_rate_from_square, eta_gradient, exact_square_root,
-    expected_record_table, expected_record_table_asymmetric, inverted_eps1,
-    measured_judge_rates, model_constraints, model_jacobian_rank, pairwise_kappas,
-    planning_size, polarity_squares, root_bracket, sampling_law, sampling_law_by_tables,
-    three_rater_model, verify, walsh_coefficients,
+    clamped_inversion, constraint_jacobian_rank, copy_grader_residual, copy_grader_table,
+    copy_grader_table4, copy_grader_tetrad_residual, dawid_skene_four_raters,
+    dawid_skene_jacobian_rank, dawid_skene_model, dawid_skene_moments, dawid_skene_three_raters,
+    delta_variance, delta_variance_from_table, disagreement_bound, eps1_displacement,
+    eps1_sensitivity, error_rate_at_most, error_rate_bracket, error_rate_from_square,
+    eta_confidence_set, eta_gradient, exact_square_root, expected_record_table,
+    expected_record_table_asymmetric, four_rater_constraints, four_rater_jacobian_rank,
+    four_rater_model, four_rater_moments, four_rater_residuals, inverted_eps1, joint_statement,
+    judges_separated, measured_judge_rates, model_constraints, model_jacobian_rank,
+    observed_square, pairwise_kappas, planning_size, polarity_squares, ratio_relations,
+    root_bracket, sampling_law, sampling_law_by_tables, square_tail_bracket, square_tail_law,
+    square_test, three_rater_model, verify, walsh_coefficients,
 )
 from spiral_ln.evaluation_game_feedback import LoopEvent
 from spiral_ln.evaluation_judge_measurement import (
@@ -546,6 +552,288 @@ def test_calibrate_asymmetric_recovers_and_symmetric_pipeline_misreads():
     assert bracketed["bracket_ends_are_a_bracket_only_if_monotone"]
 
 
+# --- four raters -------------------------------------------------------------
+
+FOUR_GRID_PAIRS = ((Q(1, 10), Q(1, 20)), (Q(1, 5), Q(1, 10)), (Q(0), Q(1, 4)), (Q(3, 10), Q(3, 10)))
+FOUR_GRID_PRIORS = (Q(1, 4), Q(1, 3), HALF, Q(7, 10))
+
+
+def _enumerate_four(prior, fn, fp):
+    """All 2^5 latent cells (Y, X_1, X_2, X_3, X_4); returns the label table as a dict."""
+
+    cells = {cell: Q(0) for cell in CELLS4}
+    for y, *xs in product((0, 1), repeat=5):
+        w = prior if y else 1 - prior
+        for x, a, b in zip(xs, fn, fp):
+            hit = (1 - a) if y else b
+            w *= hit if x == 1 else 1 - hit
+        cells[tuple(xs)] += w
+    return cells
+
+
+def _central_moment(cells, subset):
+    p = {i: sum((w for c, w in cells.items() if c[i - 1] == 1), Q(0)) for i in range(1, 5)}
+    total = Q(0)
+    for cell, w in cells.items():
+        for i in subset:
+            w *= cell[i - 1] - p[i]
+        total += w
+    return total
+
+
+def test_four_rater_moments_match_latent_enumeration_and_closed_forms():
+    for prior in FOUR_GRID_PRIORS:
+        for pairs in product(FOUR_GRID_PAIRS, repeat=4):
+            fn, fp = tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)
+            table = four_rater_model(prior, fn, fp)
+            cells = _enumerate_four(prior, fn, fp)
+            assert table.cells == cells and table.total == 1
+            moments = four_rater_moments(table)
+            u, d = prior * (1 - prior), [1 - a - b for a, b in zip(fn, fp)]
+            for i, j in PAIRS4:
+                assert moments["covariances"][(i, j)] == _central_moment(cells, (i, j)) == u * d[i - 1] * d[j - 1]
+            for t in TRIPLES4:
+                assert moments["third_moments"][t] == _central_moment(cells, t) \
+                    == u * (1 - 2 * prior) * d[t[0] - 1] * d[t[1] - 1] * d[t[2] - 1]
+            assert moments["fourth_moment"] == _central_moment(cells, (1, 2, 3, 4)) == u * (1 - 3 * u) * d[0] * d[1] * d[2] * d[3]
+            assert all(r == 0 for r in four_rater_residuals(moments).values())
+            assert all(r == 0 for r in ratio_relations(moments).values()) and len(ratio_relations(moments)) == 12
+
+
+def test_six_constraints_are_independent_and_the_model_has_rank_nine():
+    for prior in FOUR_GRID_PRIORS:
+        for pairs in product(FOUR_GRID_PAIRS[:2] + FOUR_GRID_PAIRS[3:], repeat=4):
+            fn, fp = tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)
+            assert four_rater_jacobian_rank(prior, fn, fp) == 9
+            assert constraint_jacobian_rank(four_rater_moments(four_rater_model(prior, fn, fp))) == 6
+    assert len(CONSTRAINTS4) == 15 - 9
+    for rater in range(4):
+        fn = tuple(HALF if i == rater else a for i, a in enumerate(FOUR_FALSE_NEGATIVES))
+        fp = tuple(HALF if i == rater else b for i, b in enumerate(FOUR_FALSE_POSITIVES))
+        assert four_rater_jacobian_rank(FOUR_PRIOR, fn, fp) == 9
+        table = four_rater_model(FOUR_PRIOR, fn, fp)
+        assert all(r == 0 for r in four_rater_residuals(four_rater_moments(table)).values())
+        assert four_rater_constraints(table)["fit"]["status"] == "not_identified"
+        assert not four_rater_constraints(table)["identifiable"]
+    two_chance = four_rater_model(FOUR_PRIOR, (HALF, HALF, Q(1, 5), Q(1, 10)), (HALF, HALF, Q(2, 5), Q(3, 10)))
+    assert four_rater_jacobian_rank(FOUR_PRIOR, (HALF, HALF, Q(1, 5), Q(1, 10)), (HALF, HALF, Q(2, 5), Q(3, 10))) < 9
+    assert not four_rater_constraints(two_chance)["passes"]
+    assert four_rater_jacobian_rank(Q(0), FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES) < 9
+
+
+def test_ratio_relations_follow_from_three_of_them_and_the_tetrads():
+    """Moment points that satisfy the six equalities but come from no table:
+    the other nine ratio relations still vanish (an algebraic consequence)."""
+
+    for c12, c13, c14, c23, k123 in ((Q(1, 7), Q(2, 9), Q(-3, 11), Q(5, 13), Q(1, 17)),
+                                     (Q(-2, 5), Q(3, 4), Q(1, 6), Q(-7, 8), Q(-4, 9)),
+                                     (Q(1), Q(1), Q(1), Q(1), Q(0))):
+        c24, c34 = c14 * c23 / c13, c14 * c23 / c12
+        third = {(1, 2, 3): k123, (1, 2, 4): k123 * c14 / c13, (1, 3, 4): k123 * c14 / c12,
+                 (2, 3, 4): k123 * c24 / c12}
+        cov = {(1, 2): c12, (1, 3): c13, (1, 4): c14, (2, 3): c23, (2, 4): c24, (3, 4): c34}
+        fourth = c12 * c34 + third[(1, 2, 3)] * third[(1, 2, 4)] / c12
+        moments = {"marginals": {i: Q(1, 2) for i in range(1, 5)}, "covariances": cov,
+                   "third_moments": third, "fourth_moment": fourth}
+        assert all(r == 0 for r in four_rater_residuals(moments).values())
+        assert all(r == 0 for r in ratio_relations(moments).values())
+        assert constraint_jacobian_rank(moments) == 6
+        moved = dict(moments)
+        moved["covariances"] = dict(cov)
+        moved["covariances"][(3, 4)] = c34 + Q(1, 100)
+        residuals = four_rater_residuals(moved)
+        assert residuals["tetrad_12_34_vs_13_24"] == c12 * Q(1, 100) and residuals["tetrad_13_24_vs_14_23"] == 0
+    # the rank-6 minor needs only c_12 c_13 != 0, at moment points of no model
+    values = [Q(k, 7) for k in (-3, -1, 1, 2, 5)]
+    for shift in range(5):
+        cov = {pair: values[(index + shift) % 5] + index for index, pair in enumerate(PAIRS4)}
+        third = {t: values[(index + 2 * shift) % 5] for index, t in enumerate(TRIPLES4)}
+        point = {"marginals": {i: Q(1, 3) for i in range(1, 5)}, "covariances": cov,
+                 "third_moments": third, "fourth_moment": Q(shift, 11)}
+        assert cov[(1, 2)] * cov[(1, 3)] != 0 and constraint_jacobian_rank(point) == 6
+
+
+def test_four_rater_fixture_recovers_nine_parameters_and_rebuilds_grid_tables():
+    table = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    assert all((10000 * w).denominator == 1 for w in table.cells.values())
+    assert [10000 * table.cells[c] for c in CELLS4] == [2269, 981, 1516, 684, 256, 144, 184, 216,
+                                                         576, 324, 414, 486, 99, 351, 186, 1314]
+    counts = FourRaterTable({c: 10000 * w for c, w in table.cells.items()})
+    result = four_rater_constraints(counts)
+    assert result["passes"] and result["fit"]["status"] == "exact" and result["reproduces_table"]
+    solution = result["fit"]["solution"]
+    assert solution["prior"] == FOUR_PRIOR
+    for i in range(4):
+        assert solution["false_negatives"][i + 1] == FOUR_FALSE_NEGATIVES[i]
+        assert solution["false_positives"][i + 1] == FOUR_FALSE_POSITIVES[i]
+    assert solution["deltas"] == {1: Q(7, 10), 2: Q(7, 10), 3: Q(2, 5), 4: Q(3, 5)}
+    for drop in (1, 2, 3, 4):
+        assert counts.triple(drop).total == 10000
+    for prior in FOUR_GRID_PRIORS:
+        for pairs in product(FOUR_GRID_PAIRS, repeat=4):
+            fn, fp = tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)
+            check = four_rater_constraints(four_rater_model(prior, fn, fp))
+            assert check["passes"] and check["reproduces_table"] and check["fit"]["solution"]["prior"] == prior
+            assert all(check["fit"]["solution"]["false_negatives"][i + 1] == fn[i] for i in range(4))
+            assert all(check["fit"]["solution"]["false_positives"][i + 1] == fp[i] for i in range(4))
+
+
+def test_four_rater_conventions_and_inequality_failures():
+    anti_fn = (FOUR_FALSE_NEGATIVES[0], ANTI_INFORMATIVE_SECOND[0]) + FOUR_FALSE_NEGATIVES[2:]
+    anti_fp = (FOUR_FALSE_POSITIVES[0], ANTI_INFORMATIVE_SECOND[1]) + FOUR_FALSE_POSITIVES[2:]
+    anti = four_rater_model(FOUR_PRIOR, anti_fn, anti_fp)
+    assert four_rater_constraints(anti)["fit"]["status"] == "convention_violated"
+    oriented = four_rater_constraints(anti, "rater_1_informative")
+    assert oriented["passes"] and oriented["fit"]["status"] == "exact" and oriented["reproduces_table"]
+    assert oriented["fit"]["solution"]["deltas"][2] == -Q(1, 5)
+    assert oriented["fit"]["solution"]["false_positives"][2] == ANTI_INFORMATIVE_SECOND[1]
+    # all four raters informative: the rater-1 convention agrees with the default
+    table = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    assert dawid_skene_four_raters(table, "rater_1_informative")["solution"] == dawid_skene_four_raters(table)["solution"]
+    cells = dict(table.cells)
+    cells[(0, 0, 0, 1)] += Q(1, 100)
+    cells[(1, 1, 1, 0)] -= Q(1, 100)
+    perturbed = four_rater_constraints(FourRaterTable(cells))
+    assert not perturbed["equalities_hold"] and not perturbed["passes"]
+    outside = {(a, b, c, d): OUTSIDE_MODEL.get((a, b, c), Q(0)) if d == a else Q(0) for a, b, c, d in CELLS4}
+    result = four_rater_constraints(FourRaterTable(outside))
+    assert result["identifiable"] and result["fit"]["status"] == "outside_model" and not result["passes"]
+
+
+def test_copy_grader_violates_a_tetrad_with_the_closed_form_residual():
+    rate_sets = ((FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES),
+                 ((Q(1, 10), Q(1, 5), Q(3, 10), Q(1, 5)), (Q(1, 10), Q(1, 5), Q(3, 10), Q(1, 5))))
+    for fn, fp in rate_sets:
+        for prior in (Q(1, 4), HALF, Q(2, 3)):
+            for rho in (Q(0), Q(1, 4), HALF, Q(1)):
+                table = copy_grader_table4(prior, fn, fp, rho)
+                result = four_rater_constraints(table)
+                closed = copy_grader_tetrad_residual(prior, fn, fp, rho)
+                u = prior * (1 - prior)
+                v1 = prior * fn[0] * (1 - fn[0]) + (1 - prior) * fp[0] * (1 - fp[0])
+                assert closed == rho * v1 * u * (1 - fn[2] - fp[2]) * (1 - fn[3] - fp[3])
+                assert result["residuals"]["tetrad_12_34_vs_13_24"] == closed
+                assert result["residuals"]["tetrad_13_24_vs_14_23"] == 0
+                assert result["residuals"]["third_123_vs_124"] == 0
+                if rho == 0:
+                    assert table == four_rater_model(prior, fn, fp) and result["passes"]
+                else:
+                    assert closed != 0 and not result["equalities_hold"] and not result["passes"]
+    witness = copy_grader_table4(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, Q(1))
+    assert [10000 * witness.cells[c] for c in CELLS4] == [2525, 1125, 1700, 900] + [0] * 8 + [675, 675, 600, 1800]
+    absorbed = dawid_skene_three_raters(witness.triple(4))
+    assert absorbed["status"] == "exact" and absorbed["in_range"] and absorbed["solution"]["prior"] == Q(3, 8)
+    assert dawid_skene_four_raters(witness)["status"] == "inconsistent"
+    balanced = copy_grader_table(HALF, Q(1, 10), Q(1, 5), Q(1, 5), Q(1))
+    assert model_constraints(balanced)["vacuous_at_balanced_prior"] and model_constraints(balanced)["equalities_hold"]
+
+
+# --- the joint statement -----------------------------------------------------
+
+def test_agreement_counts_keep_parity_and_observed_square_validates():
+    record = expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5))
+    counts = agreement_counts(record)
+    assert counts["patterns"] == {"all": 430, (1, 2): 119, (1, 3): 119, (2, 3): 74} and counts["rounded"]
+    assert counts["counts"] == {(1, 2): 549, (1, 3): 549, (2, 3): 504}
+    assert sum(counts["counts"].values()) - 742 == 2 * counts["patterns"]["all"]
+    assert observed_square(742, counts["counts"]) == Q(356 * 356, 742 * 266) == Q(31684, 49343)
+    with pytest.raises(ValueError):
+        observed_square(742, {(1, 2): 549, (1, 3): 549, (2, 3): 505})
+    exact = agreement_counts(expected_record_table(4000, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5)))
+    assert not exact["rounded"] and observed_square(4000, exact["counts"]) == Q(16, 25)
+    assert observed_square(10, {(1, 2): 5, (1, 3): 9, (2, 3): 6}) == "sign"
+    assert observed_square(10, {(1, 2): 9, (1, 3): 9, (2, 3): 8}) == "range"
+    for m in (1, 2, 5):
+        for k in product(range(m + 1), repeat=4):
+            if sum(k) != m:
+                continue
+            n = {(1, 2): k[0] + k[1], (1, 3): k[0] + k[2], (2, 3): k[0] + k[3]}
+            assert observed_square(m, n) in ("sign", "range") or 0 < observed_square(m, n) <= 1
+
+
+def test_binomial_window_bounds_the_exact_pmf():
+    for n, num, den in ((0, 1, 3), (7, 0, 5), (7, 5, 5), (30, 2, 7), (200, 29, 50), (200, 1, 50)):
+        for bits, cut in ((160, 128), (40, 20)):
+            window = _binomial_window(n, num, den, bits, cut)
+            one = 1 << bits
+            pmf = [Q(comb(n, k) * num ** k * (den - num) ** (n - k), den ** n) for k in range(n + 1)]
+            inside = 0
+            for offset, (lo, hi) in enumerate(zip(window["lo"], window["hi"])):
+                k = window["start"] + offset
+                assert lo <= pmf[k] * one <= hi and hi - lo <= 2 * (n + 1)
+                inside += pmf[k]
+            assert (1 - inside) * one <= window["outside"]
+    assert len(_binomial_window(200, 29, 50, 40, 20)["lo"]) < 201
+
+
+def test_square_tail_bracket_contains_the_exact_law():
+    errors = (Q(1, 10), Q(1, 5), Q(1, 5))
+    tables = sampling_law_by_tables(12, errors)
+    for s in list(tables["square_distribution"])[::5] + [Q(0), HALF, Q(1), "sign", "range"]:
+        exact, bracket = square_tail_law(12, errors, s), square_tail_bracket(12, errors, s)
+        for key in ("p_lower", "p_upper", "p_two_sided"):
+            assert bracket[key][0] <= exact[key] <= bracket[key][1]
+        assert bracket["width"] < Q(1, 2 ** 100)
+        coarse = square_tail_bracket(12, errors, s, 48, 24)
+        assert coarse["p_two_sided"][0] <= exact["p_two_sided"] <= coarse["p_two_sided"][1]
+    for m, errs, s in ((60, (Q(0), Q(1, 4), Q(1, 10)), Q(2, 3)), (90, (Q(1, 5), Q(1, 4), Q(3, 10)), Q(1, 4))):
+        exact, bracket = square_tail_law(m, errs, s), square_tail_bracket(m, errs, s)
+        assert bracket["p_defined"][0] <= 1 - exact["p_sign"] <= bracket["p_defined"][1]
+        assert bracket["p_two_sided"][0] <= exact["p_two_sided"] <= bracket["p_two_sided"][1]
+    for observed in ("sign", "range", Q(16, 25)):
+        extra = square_tail_law(12, errors, observed, (HALF, Q(9, 10)))["extra_lower"]
+        assert extra == {t: square_tail_law(12, errors, t)["p_lower"] for t in (HALF, Q(9, 10))}
+    level = square_tail_law(40, errors, Q(16, 25))["p_two_sided"]
+    forced = square_test((40, errors, Q(16, 25), level))
+    assert forced["decided_by"] == "exact law" and forced["retained"] and forced["p_exact"] == level
+    assert square_test((40, errors, Q(16, 25), Q(1, 40)))["decided_by"] == "bracket"
+
+
+def test_clamped_inversion_matches_the_closed_form_where_feasible():
+    a, e, w = Q(37, 50), Q(9, 50), Q(9, 100)
+    for eta in (Q(0), Q(1, 20), Q(1, 10), Q(1, 5)):
+        rates = clamped_inversion(a, e, w, eta)
+        assert rates["eps1"] == inverted_eps1(a, e, w, eta) or rates["clamped"]
+        assert rates["accuracy"] == (a - eta) / (1 - 2 * eta)
+    assert not clamped_inversion(a, e, w, Q(1, 10))["clamped"]
+    clamped = clamped_inversion(a, e, w, Q(1, 4))
+    assert clamped["clamped"] and clamped["raw"]["eps1"] < 0 == clamped["eps1"]
+    assert clamped_inversion(a, e, w, Q(13, 50)) is None and clamped_inversion(Q(1, 5), e, w, Q(1, 5)) is None
+
+
+def test_eta_confidence_set_and_joint_statement_structure():
+    record = expected_record_table(300, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5))
+    grid = tuple(Q(k, 50) for k in range(25))
+    statement = joint_statement(record, Q(1, 20), grid, Q(1, 10))
+    eta_set = statement["eta_set"]
+    assert statement["square_test_used"] and eta_set["level_per_test"] == Q(1, 40)
+    assert Q(1, 10) in eta_set["retained"] and eta_set["is_grid_interval"] and eta_set["exact_fallbacks"] == 0
+    assert all(row["passes_disagreement_bound"] or not row["retained"] for row in eta_set["rows"])
+    assert statement["coverage"] == Q(9, 10)
+    bound_only = eta_confidence_set(300, eta_set["counts"], Q(1, 5), Q(4, 5), Q(1, 40), grid, False)
+    assert set(eta_set["retained"]) <= set(bound_only["retained"])
+    assert bound_only["retained"] == [e for e in grid if e <= bound_only["disagreement_bound"]["eta_upper_bound"]]
+    if statement["status"] == "stated":
+        low, high = statement["eps1_range"]
+        assert all(low <= row["eps1_bracket"][0] <= row["eps1_bracket"][1] <= high
+                   for row in statement["inversions"])
+    shared = joint_statement(expected_record_table(300, Q(1, 4), Q(4, 5), Q(1, 10), HALF, Q(1, 10), Q(1, 5)),
+                             Q(1, 20), grid, Q(1, 10), True, eta_set)
+    assert shared["eta_set"] is eta_set
+    assert judges_separated(statement, shared) == (statement["eps1_range"] is not None and shared["eps1_range"] is not None
+                                                   and statement["eps1_range"][1] < shared["eps1_range"][0])
+    copied = joint_statement(expected_record_table(300, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5), Q(1)),
+                             Q(1, 20), grid, Q(1, 10))
+    assert copied["status"] == "withheld_constraints_fail" and copied["eta_set"] is None
+    chance = joint_statement(expected_record_table(300, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), HALF),
+                             Q(1, 20), grid)
+    assert chance["status"] == "not_identified"
+    with pytest.raises(ValueError):
+        joint_statement(expected_record_table(300, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5)),
+                        Q(1, 20), grid, Q(1, 10), True,
+                        dict(eta_set, counts={(1, 2): 1, (1, 3): 1, (2, 3): 1}))
+
+
 # --- malformed inputs --------------------------------------------------------
 
 @pytest.mark.parametrize("call", [
@@ -576,6 +864,50 @@ def test_calibrate_asymmetric_recovers_and_symmetric_pipeline_misreads():
     lambda: calibrate_asymmetric(RecordTable({(0, 0, 0, 0): Q(1, 2), (1, 1, 1, 1): Q(1, 2), (0, 1, 0, 1): Q(1, 3)})),
 ])
 def test_rejects_malformed_v02(call):
+    with pytest.raises(ValueError):
+        call()
+
+
+FOUR_FIXTURE = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+FIXTURE_COUNTS = {(1, 2): 549, (1, 3): 549, (2, 3): 504}
+A_MEASURED, E_MEASURED, W_MEASURED = Q(37, 50), Q(9, 50), Q(9, 100)
+
+
+@pytest.mark.parametrize("call", [
+    lambda: four_rater_model(Q(1, 4), (Q(1, 10),) * 3, (Q(1, 10),) * 4),
+    lambda: four_rater_model(Q(5, 4), (Q(1, 10),) * 4, (Q(1, 10),) * 4),
+    lambda: four_rater_model(Q(1, 4), (0.1,) * 4, (Q(1, 10),) * 4),
+    lambda: FourRaterTable({(0, 0, 0): 1}),
+    lambda: FourRaterTable({cell: 0 for cell in CELLS4}),
+    lambda: FourRaterTable({(0, 0, 0, 0): 1}).triple(5),
+    lambda: copy_grader_table4(Q(1, 4), FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, Q(2)),
+    lambda: copy_grader_tetrad_residual(Q(1, 4), FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, 0.5),
+    lambda: four_rater_jacobian_rank(Q(1, 4), FOUR_FALSE_NEGATIVES, (0.1,) * 4),
+    lambda: dawid_skene_four_raters(FOUR_FIXTURE, "majority"),
+    lambda: four_rater_constraints(FOUR_FIXTURE, "majority"),
+    lambda: square_tail_law(10, (Q(1, 10), Q(1, 5), Q(1, 5)), "neither"),
+    lambda: square_tail_law(10, (Q(1, 10), Q(1, 5), Q(1, 5)), Q(3, 2)),
+    lambda: square_tail_bracket(10, (Q(1, 10), Q(1, 5), Q(1, 5)), HALF, 20, 20),
+    lambda: square_tail_bracket(0, (Q(1, 10), Q(1, 5), Q(1, 5)), HALF),
+    lambda: square_tail_bracket(10, (Q(1, 10), Q(1, 5)), HALF),
+    lambda: observed_square(742, {(1, 2): 549, (1, 3): 549, (2, 3): 505}),
+    lambda: observed_square(10, {(1, 2): 5}),
+    lambda: observed_square(10, {(1, 2): 11, (1, 3): 5, (2, 3): 5}),
+    lambda: observed_square(10, {(1, 2): 0, (1, 3): 6, (2, 3): 6}),
+    lambda: eta_confidence_set(742, FIXTURE_COUNTS, Q(1, 5), Q(4, 5), Q(1, 20), ()),
+    lambda: eta_confidence_set(742, FIXTURE_COUNTS, Q(1, 5), Q(4, 5), Q(1, 20), (HALF,)),
+    lambda: eta_confidence_set(742, FIXTURE_COUNTS, Q(1, 5), Q(4, 5), Q(1, 20), (0.1,)),
+    lambda: eta_confidence_set(742, FIXTURE_COUNTS, Q(1, 5), Q(4, 5), Q(0), (Q(1, 10),)),
+    lambda: eta_confidence_set(742, FIXTURE_COUNTS, Q(1, 5), Q(4, 5), Q(1, 20), {Q(1, 10)}),
+    lambda: clamped_inversion(A_MEASURED, E_MEASURED, W_MEASURED, HALF),
+    lambda: clamped_inversion(0.74, E_MEASURED, W_MEASURED, Q(1, 10)),
+    lambda: joint_statement(expected_record_table(100, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5)),
+                            HALF, (Q(1, 10),)),
+    lambda: joint_statement(RecordTable({(0, 0, 0, 0): Q(1, 2), (1, 1, 1, 1): Q(1, 3)}), Q(1, 20), (Q(1, 10),)),
+    lambda: joint_statement(three_rater_model(Q(1, 4), (Q(1, 10), Q(1, 5), Q(1, 5))), Q(1, 20), (Q(1, 10),)),
+    lambda: agreement_counts(RecordTable({(0, 0, 0, 0): Q(1, 2)})),
+])
+def test_rejects_malformed_v03(call):
     with pytest.raises(ValueError):
         call()
 
@@ -623,7 +955,7 @@ def test_rejects_malformed(call):
 
 def test_fixture_values_and_verify():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 40
+    assert report["all_passed"] and len(report["checks"]) == 58
     assert report["evidence_status"].startswith("exact_synthetic")
     sampling = report["sampling"]
     assert sampling["delta"]["eta"] == Q(2401, 8100) and sampling["planning_size"] == 742
@@ -644,3 +976,14 @@ def test_fixture_values_and_verify():
     assert Q(1, 2) < ind["tests"]["independence_p"] < Q(3, 5) and Q(1, 2) < shared["tests"]["ceiling_p"] < Q(3, 5)
     assert report["dependent_grader"]["rows"]["1"]["closed_form_residual"] == Q(-27, 250)
     assert report["dependent_grader"]["rows"]["1/2"]["closed_form_residual"] == Q(-27, 500)
+    four = report["four_raters"]
+    assert four["constraint_jacobian_rank"] == 6 and four["parameter_jacobian_rank"] == 9
+    assert four["copy_grader"]["1"]["closed_form_residual"] == Q(513, 80000)
+    assert four["chance_rater"][2] == {"parameter_rank": 9, "constraint_rank": 4, "status": "not_identified"}
+    joint = report["joint"]["by_size"][742]
+    assert joint["eta_set"]["retained"] == [Q(k, 100) for k in range(6, 15)]
+    ind, shared = (joint["judges"][name]["statement"] for name in ("independent", "maximally_shared"))
+    assert ind["eps1_range"][0] == 0 and Q(29, 100) < ind["eps1_range"][1] < Q(3, 10)
+    assert Q(1, 4) < shared["eps1_range"][0] < Q(26, 100) and Q(65, 100) < shared["eps1_range"][1] < Q(66, 100)
+    assert joint["tests_separate"] and not joint["ranges_disjoint"]
+    assert report["joint"]["asymmetric_record"]["status"] == "withheld_constraints_fail"

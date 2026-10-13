@@ -1,5 +1,5 @@
 """Run exact gold-calibration checks (second-grader estimate of eta, its sampling law, the asymmetric
-Dawid-Skene model); no model, judge or grader is run."""
+Dawid-Skene model, four raters, the joint statement for (eta_1, eps_1)); no model, judge or grader is run."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 
-from spiral_ln.evaluation_gold_calibration import SAMPLING_SIZES, verify
+from spiral_ln.evaluation_gold_calibration import CELLS4, JOINT_SIZES, SAMPLING_SIZES, verify
 
 
 def _encode(value):
@@ -77,6 +77,37 @@ def _ds(params) -> dict:
             "false_positives": {str(i): conv(v) for i, v in params["false_positives"].items()}}
 
 
+def _statement(statement: dict) -> dict:
+    out = {"status": statement["status"],
+           "eps1_range": _pair(statement["eps1_range"]),
+           "below_ceiling_jointly": statement.get("below_ceiling_jointly"),
+           "above_independence_jointly": statement.get("above_independence_jointly"),
+           "clamped_points": statement.get("clamped_points"),
+           "rows": [{"eta0": _f(row["eta0"]), "eps1_hat": _f(row["recovered"]["eps1"]),
+                     "clamped": row["recovered"]["clamped"], "corrected_table": asdict(row["corrected_table"]),
+                     "eps1_bracket": _pair(row["eps1_bracket"]), "ceiling_p": _f(row["tests"]["ceiling_p"]),
+                     "independence_p": _f(row["tests"]["independence_p"])}
+                    for row in statement.get("inversions", []) if row["feasible"]]}
+    return out
+
+
+def _joint(joint: dict) -> dict:
+    out = {}
+    for size, entry in joint["by_size"].items():
+        eta_set = entry["eta_set"]
+        out[str(size)] = {
+            "agreement_counts": {",".join(map(str, k)): v for k, v in eta_set["counts"].items()},
+            "observed_square": _f(eta_set["observed_square"]),
+            "disagreement_bound": _f(eta_set["disagreement_bound"]["eta_upper_bound"]),
+            "eta_set": [_f(e) for e in eta_set["retained"]],
+            "square_p": {str(row["eta0"]): _f(row["square_test"]["p_bracket"][1])
+                         for row in eta_set["rows"] if row["square_test"] is not None},
+            "max_bracket_width": _f(eta_set["max_bracket_width"]),
+            "judges": {name: _statement(j["statement"]) for name, j in entry["judges"].items()},
+            "ranges_disjoint": entry["ranges_disjoint"], "tests_separate": entry["tests_separate"]}
+    return out
+
+
 def _headline(report: dict) -> dict:
     raters = report["three_raters"]
     pipeline = {name: {"eta1": _bracket(j["calibration"]["eta1"]), "eta2": _bracket(j["calibration"]["eta2"]),
@@ -118,12 +149,28 @@ def _headline(report: dict) -> dict:
                         "symmetric_inversion_at_marginal_flip_rate": _f(j["symmetric_inversion_at_marginal_flip_rate"]),
                         "marginal_flip_rate": _f(j["marginal_flip_rate"])}
                  for name, j in asym["judges"].items()}
+    four = report["four_raters"]
+    four_head = {"counts": [int(four["counts"][c]) for c in CELLS4],
+                 "solution": _ds(four["constraints"]["fit"]["solution"]),
+                 "residuals": {k: _f(v) for k, v in four["residuals"].items()},
+                 "constraint_jacobian_rank": four["constraint_jacobian_rank"],
+                 "parameter_jacobian_rank": four["parameter_jacobian_rank"],
+                 "chance_rater": {str(k): v for k, v in four["chance_rater"].items()},
+                 "copy_grader": {rho: {"tetrad_residual": _f(row["closed_form_residual"]),
+                                       "four_rater_status": row["constraints"]["fit"]["status"],
+                                       "triple_123_status": row["triple_123"]["status"],
+                                       "triple_123_prior": _pair(row["triple_123"]["solution"]["prior"])
+                                       if isinstance(row["triple_123"]["solution"]["prior"], tuple)
+                                       else _f(row["triple_123"]["solution"]["prior"])}
+                                 for rho, row in four["copy_grader"].items()},
+                 "copy_witness_counts": [int(four["copy_witness_counts"][c]) for c in CELLS4]}
     return {"kappas": {",".join(map(str, k)): _f(v) for k, v in raters["kappas"].items()},
             "squares": {str(k): _f(v) for k, v in raters["squares"].items()},
             "recovered": {"eta1": _f(raters["recovered_eta1"]), "eta2": _f(raters["recovered_eta2"]),
                           "accuracy": _f(raters["recovered_accuracy"])},
             "pipeline": pipeline, "dependent_grader": dependent, "sampling": sampling_head,
-            "dawid_skene": ds_head, "asymmetric_pipeline": asym_head}
+            "dawid_skene": ds_head, "asymmetric_pipeline": asym_head,
+            "four_raters": four_head, "joint": _joint(report["joint"])}
 
 
 def main() -> int:
@@ -131,12 +178,17 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--sampling-size", type=int, action="append", default=[],
                         help="add an item count to the enumerated sampling-law ladder (default %s)" % (SAMPLING_SIZES,))
+    parser.add_argument("--joint-size", type=int, action="append", default=[],
+                        help="add an item count for the joint statement (default %s)" % (JOINT_SIZES,))
+    parser.add_argument("--workers", type=int, default=1,
+                        help="processes for the square tests of the eta set (results do not depend on it)")
     args = parser.parse_args()
     sizes = tuple(sorted(set(SAMPLING_SIZES) | set(args.sampling_size)))
-    verified = verify(sizes)
-    report = {"schema_version": "0.2",
+    joint_sizes = tuple(sorted(set(JOINT_SIZES) | set(args.joint_size)))
+    verified = verify(sizes, joint_sizes, args.workers)
+    report = {"schema_version": "0.3",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-              "sampling_sizes": list(sizes),
+              "sampling_sizes": list(sizes), "joint_sizes": list(joint_sizes),
               **_stringify_keys(verified), "headline": _headline(verified)}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_gold_calibration.py",

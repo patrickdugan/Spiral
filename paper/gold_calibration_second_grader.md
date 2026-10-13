@@ -1,13 +1,13 @@
 # Estimating the gold grader's error with a second grader
 
-Draft 0.2 — 2026-10-13. Closes the boundary of [judge_shared_error_measurement.md](judge_shared_error_measurement.md) §5: Proposition 2 inverts
-gold noise at a *known* flip rate \(\eta\); here \(\eta\) is estimated from a second independent grader, exactly. 0.2 adds the exact sampling law of
-\(\hat\eta_1\) (§6) and the asymmetric Dawid–Skene model with its inversion (§7). Files: `src/spiral_ln/evaluation_gold_calibration.py`,
-`tests/test_evaluation_gold_calibration.py` (84 tests), `output/evaluation_gold_calibration/gold_v0_2.json` (40 checks, source hashes, exact
-fractions, floats under `headline`). No model, judge or grader was called; every number is a `Fraction`; the judge module's tails and maps are reused.
+Draft 0.3 — 2026-10-13. Closes the boundary of [judge_shared_error_measurement.md](judge_shared_error_measurement.md) §5: Proposition 2 inverts
+gold noise at a *known* flip rate \(\eta\); here \(\eta\) is estimated from a second independent grader, exactly. 0.2 added the sampling law of \(\hat\eta_1\) (§6) and the asymmetric
+Dawid–Skene model (§7); 0.3 adds a fourth rater, which makes that model testable (§8), and a joint statement for \((\eta_1,\varepsilon_1)\) (§9). Files: `src/spiral_ln/evaluation_gold_calibration.py`,
+`tests/test_evaluation_gold_calibration.py` (126 tests), `output/evaluation_gold_calibration/gold_v0_3.json` (58 checks, source hashes, exact fractions, floats under `headline`).
+No model, judge or grader was called; every number is a `Fraction` (or an integer bound, §9); the judge module's tails and maps are reused.
 
 ```powershell
-$env:PYTHONPATH = "src"; python scripts/verify_evaluation_gold_calibration.py --sampling-size 400 --sampling-size 742 --output output/evaluation_gold_calibration/gold_v0_2.json
+$env:PYTHONPATH = "src"; python scripts/verify_evaluation_gold_calibration.py --sampling-size 400 --sampling-size 742 --joint-size 4000 --workers 4 --output output/evaluation_gold_calibration/gold_v0_3.json
 python -m pytest tests/test_evaluation_gold_calibration.py -q
 ```
 
@@ -119,7 +119,7 @@ one pair — with probabilities \(q_{\text{all}}=p(000)+p(111)=\tfrac14(1+\sum\k
 over a common denominator \(D^m\), the square's class by integer comparison, its moments grouped by \(\hat\kappa_{23}\), the moments of \(\hat\eta_1\) bracketed
 through \(\lfloor2^{16}\sqrt{\hat S}\rfloor\) per outcome). Enumerating all \(\binom{m+7}{7}\) label tables instead (`sampling_law_by_tables`; 245,157 at \(m=16\), 0.7 s)
 gives every class probability and moment identically; the reduction reaches \(m=742\) in the receipt (68,638,340 terms; the whole receipt run, with
-\(m=400\) too, takes about 7 minutes, almost all of it there). Moments are conditional on the defined event; "within" is
+\(m=400\) and §9 at 4000, takes about 8 minutes, most of it there). Moments are conditional on the defined event; "within" is
 \(\Pr[\text{defined},\ |\hat\eta_1-\eta_1|\le\tfrac1{50}]\). Truth: \(S=\tfrac{16}{25}\), \(\eta_1=\tfrac1{10}\), \(d=(\tfrac45,\tfrac35,\tfrac35)\).
 
 | \(m\) | undefined (sign + range) | \(\hat S\) perfect | within \(\pm0.02\) | \(E\hat S\) | \(m\,\mathrm{Var}\hat S\) | \(E\hat\eta_1\) | \(m\,\mathrm{Var}\hat\eta_1\) |
@@ -170,7 +170,7 @@ exactly (\((\alpha_2,\beta_2)=(\tfrac35,\tfrac35)\), \(\delta_2=-\tfrac15\)). Bo
 controller is right on 90% / 70%): \(\delta=(\tfrac7{10},\tfrac7{10},\tfrac35)\), \(c=(\tfrac{147}{1600},\tfrac{63}{800},\tfrac{63}{800})\), \(k_3=\tfrac{441}{16000}\), \(R=\tfrac{441}{8000}\), every parameter exact; so on a
 grid of 256 points, and on the symmetric grid the fit returns \(\alpha_i=\beta_i=e_i\), the \(\eta\)'s of §2. The exact Jacobian of \((\pi,\alpha,\beta)\mapsto\) cells (affine in
 each parameter, so differences are exact) has rank 7 there and on the symmetric grid (5 with a chance rater): **no degree of freedom is left, no
-equality constraint, hence no test of conditional independence** — against the symmetric model's three. Only inequalities remain:
+equality constraint, hence no test of conditional independence** — against the symmetric model's three (a fourth rater restores six: §8). Only inequalities remain:
 \(p(100)=p(010)=p(001)=\tfrac7{30}\), \(p(011)=p(101)=p(110)=\tfrac1{10}\) has \(R^2=-\tfrac{49}{30000}\), no real point (`outside_model`); and rates must lie in \([0,1]\). The copy
 grader of §5 passes both: at \(\rho=1\) the fit is exact and in range — \(\pi=\tfrac3{10}\), \(\alpha_1=\beta_1=\alpha_2=\beta_2=0\), controller \((\tfrac7{20},\tfrac{31}{140})\): two *perfect*
 graders and an asymmetric controller — while the symmetric constraints fail; \(\rho=\tfrac12\) likewise (bracketed). The dependence §3 detects is
@@ -190,12 +190,60 @@ on a grid). Record fixture, \(m=4000\) (label table integral; \(a=\tfrac34\), \(
 \(\tfrac5{62}\approx0.081\) and \(\tfrac{239}{620}\approx0.385\): asymmetric gold is misread in both directions, and the constraint check flags it. *Evidence status.*
 Proposition 4, the covariance, delta and inversion formulas: *algebraic identity*, enumeration-checked; the laws, fixtures and falsifiers: *finite verified examples*.
 
-## 8. Not delivered
+## 8. Four raters: the asymmetric model becomes testable
 
-- No observed graders; binary labels only. On real counts the squares and \(R^2\) are not perfect squares: brackets.
-- The sampling law is conditional on the defined event; the moments of \(\hat\eta_1\) are brackets, not rationals; no joint interval for
-  \((\hat\eta_1,\hat\varepsilon_1)\); the only exact confidence statement is the one-sided disagreement bound, which ignores the controller. No sampling law
-  for the Dawid–Skene fit.
-- A bracketed Dawid–Skene fit is inverted at both ends of the bracket on \(R\); that brackets \(\hat\varepsilon_1\) only if the inversion is monotone in \(R\), not
-  checked. The asymmetric model cannot test conditional independence (a fourth rater or the symmetric restriction is needed), and the symmetric
-  check has no power at \(\pi=\tfrac12\).
+Add a third grader \(G_3\), keep the controller \(C\) as rater 4; the cost is one more independent grading of the same sealed sample. Nine parameters \((\pi,\alpha_i,\beta_i)\) on
+15 degrees of freedom (`four_rater_model`); write \(k_S=E\prod_{i\in S}(X_i-p_i)\), \(c_{ij}=k_{ij}\).
+**Proposition 5.** \(k_S=\mu_{|S|}\prod_{i\in S}\delta_i\), \(\mu_2=u\), \(\mu_3=u(1-2\pi)\), \(\mu_4=u(1-3u)\). *Proof.* \(E[X_i-p_i\mid Y]=\delta_i(Y-\pi)\); conditional independence multiplies. \(\square\)
+Hence six equalities (`four_rater_residuals`): tetrads \(c_{12}c_{34}=c_{13}c_{24}=c_{14}c_{23}\) (each \(u^2\prod\delta\)); ratios \(k_{123}c_{14}=k_{124}c_{13}\), \(k_{123}c_{14}=k_{134}c_{12}\), \(k_{123}c_{24}=k_{234}c_{12}\)
+(both sides \(u^2(1-2\pi)\delta_p^2\prod_{q\ne p}\delta_q\), \(p\) the pivot); and \((k_{1234}-c_{12}c_{34})c_{12}=k_{123}k_{124}\), as \(\mu_4-u^2=u(1-2\pi)^2\). The other nine ratio relations follow (`ratio_relations`).
+**Proposition 6 (exactly six).** (a) The \(16\times9\) parameter Jacobian has rank 9 wherever \(0<\pi<1\) and three \(\delta_i\ne0\): Proposition 4 on that triple with \(\delta_4=c_{14}/(u\delta_1)\),
+\(1-\alpha_4=p_4+(1-\pi)\delta_4\), \(\beta_4=p_4-\pi\delta_4\) is a smooth left inverse. (b) The residuals' \(6\times15\) Jacobian in the centred moments (coordinates on the simplex) has rank 6
+wherever \(c_{12}c_{13}\ne0\), model or not: on \((c_{24},c_{34},k_{124},k_{134},k_{234},k_{1234})\) the minor is lower triangular with determinant \(-c_{12}^4c_{13}^2\). So near an identified model
+point the nine-dimensional image is the zero set of six independent functions. \(\square\) Both ranks are also computed exactly on 243 grid points; moments match the \(2^5\) latent
+enumeration on 1024. **Test** (`four_rater_constraints`): with every \(c_{ij}\ne0\), a table is in the model iff the residuals vanish and the triple fits exist with all nine rates in
+\([0,1]\) (triple \((1,2,3)\) fixes \(\pi\) and three raters, \(c_{14},p_4\) rater 4, the equalities the remaining six moments; the four fits must agree; exact fits are rebuilt cell by cell).
+A chance rater keeps rank 9 but zeroes three covariances: the residuals degenerate (rank 4 with \(G_2\) at chance, 6 with \(C\)) and the test refuses; two chance raters lower the rank.
+**Fixture.** \(\pi=\tfrac14\); \((\alpha,\beta)\): \(G_1\) \((\tfrac1{10},\tfrac15)\), \(G_2\) \((\tfrac15,\tfrac1{10})\), \(G_3\) \((\tfrac15,\tfrac25)\), \(C\) \((\tfrac1{10},\tfrac3{10})\); \(\delta=(\tfrac7{10},\tfrac7{10},\tfrac25,\tfrac35)\). Counts at \(m=10000\) (lexicographic
+in \(x_1..x_4\)): 2269, 981, 1516, 684, 256, 144, 184, 216, 576, 324, 414, 486, 99, 351, 186, 1314. \(c_{12}c_{34}=\tfrac{1323}{320000}\), \(k_{123}=\tfrac{147}{8000}\), \(k_{1234}=\tfrac{3087}{320000}\);
+residuals zero, ranks 6 and 9, all nine parameters recovered exactly on every triple (\(R=u|\delta_i\delta_j\delta_k|\) is rational). An anti-informative \(G_2\) needs `rater_1_informative`.
+**Copying grader.** If \(G_2\) copies \(G_1\) with probability \(\rho\), \(\mathrm{Cov}(X_1,X_2\mid Y)=\rho\,\mathrm{Var}(X_1\mid Y)\): \(c_{12}=u\delta_1\tilde\delta_2+\rho V_1\), \(V_1=\pi\alpha_1(1-\alpha_1)+(1-\pi)\beta_1(1-\beta_1)\),
+\(\tilde\delta_2=\rho\delta_1+(1-\rho)\delta_2\), the other covariances keep product form, so **\(c_{12}c_{34}-c_{13}c_{24}=\rho V_1c_{34}\)** and \(c_{13}c_{24}=c_{14}c_{23}\) (`copy_grader_tetrad_residual`; exact on
+24 cells). Fixture: \(V_1=\tfrac{57}{400}\), \(c_{34}=\tfrac9{200}\), residual \(\tfrac{513}{80000}\rho\). Witness at \(\rho=1\), \(m=10000\): 2525, 1125, 1700, 900, eight zeros, 675, 675, 600, 1800; its triple
+\((G_1,G_2,G_3)\) fits exactly and in range (\(\pi=\tfrac38\), two perfect graders: §7's absorption), four raters reject it (residual \(\tfrac{513}{80000}\), triple fits inconsistent). Any \(\rho>0\) is
+detected when \(V_1>0\), \(0<\pi<1\), \(\delta_3\delta_4\ne0\), **at \(\pi=\tfrac12\) too**, where §3's check is vacuous. The odd product names the split \(\{1,2\mid3,4\}\), not the dependent side.
+*Evidence status.* Propositions 5–6, the converse, the residual: *algebraic identities*, enumeration-checked; fixtures: *finite verified examples*. All are population identities:
+on observed counts the residuals never vanish exactly, and their sampling law is not derived.
+
+## 9. A joint statement for \((\eta_1,\varepsilon_1)\)
+
+`joint_statement(record, alpha, grid)`, symmetric model, withheld when §3's check fails. (1) \(H\) = grid points \(\eta_0\) kept by (a) the disagreement bound at level \(\alpha/2\) (exact)
+and (b) the two-sided test of the observed square at \(\alpha/2\): \(p(\eta_0)=\min(1,2\min(\Pr[\tilde S\le\hat s],\Pr[\tilde S\ge\hat s]))\) under §6's law at \((\eta_0,\hat\eta_2,1-\hat a)\), \(\tilde S\) putting
+sign failures below every square and range failures above. (2) At each \(\eta_0\in H\): §4's inversion (clamped into the feasible range, flagged), the exact ceiling and independence
+tests and the two-sided level-\(\alpha\) Clopper–Pearson bracket on the corrected counts. (3) **If \(\eta_1\) is a grid point, with probability \(\ge1-2\alpha\) (Bonferroni) \(\eta_1\in H\) and
+\(\varepsilon_1\in\bigcup_H\mathrm{CP}(\eta_0)\)**: exactly for (1a), else under two plug-ins: (1b) fixes \(\eta_2,a\) at their estimates (their error is not propagated), (2) treats the corrected
+counts as a binomial sample, as §4 does. The sampling law of \(\hat\varepsilon_1\) is not derived.
+*Tails.* Given \(\mathrm{rest}=k_{12}+k_{13}\), \(d=m-2\,\mathrm{rest}\) is fixed and \(ab\le\hat s\,md\) is two tails in \(k_{12}\): `square_tail_law` sums prefix sums, \(O(m^2)\) big-integer products (about 270 s a
+point at \(m=4000\)), equal to the label-table enumeration at \(m=16\). `square_tail_bracket` bounds the same tails in integers: the law factors into \(\mathrm{Bin}(m,q_{12}+q_{13})\), \(\mathrm{Bin}(m-\mathrm{rest},\cdot)\),
+\(\mathrm{Bin}(\mathrm{rest},\cdot)\); each pmf is floored and ceiled at \(2^{-160}\) outward from its exact mode (ratios \(\le1\)), terms below \(2^{-128}\) are bounded in bulk. The bracket holds the exact law
+on nine cases up to \(m=742\), is narrower than \(10^{-34}\), takes 3 s a point at \(m=4000\); one straddling the level would fall back to the exact law (never needed). *Counts.* Rounding the
+\(N_{ij}\) separately can break the parity \(\sum N_{ij}\equiv m\) (at 742: 549, 549, 505, which no table has); `agreement_counts` rounds the four pattern counts by largest remainder: (549, 549, 504),
+\(\hat s=\tfrac{31684}{49343}\approx0.6421\); at 4000 (2960, 2960, 2720), \(\hat s=\tfrac{16}{25}\). Grid \(k/100\), \(\alpha=\tfrac1{20}\), \(\varepsilon=\tfrac1{10}\) declared:
+
+| \(m\) | \(H\) | independent judge: \(\varepsilon_1\in\) | shared judge: \(\varepsilon_1\in\) | ranges | tests, jointly |
+|---|---|---|---|---|---|
+| 742 | 0.06–0.14 (9 points) | [0, 0.2970] | [0.2509, 0.6553] | overlap on [0.251, 0.297] | separate |
+| 4000 | 0.09–0.12 (4 points) | [0.0030, 0.1629] | [0.3927, 0.5580] | disjoint | separate |
+
+"Separate": at every \(\eta_0\in H\) the ceiling test rejects for the independent judge (\(p\le2.8\times10^{-13}\) at 742) and the independence test for the shared one (\(p\le1.7\times10^{-12}\)),
+while neither is rejected under its own hypothesis everywhere (at 742: independence at 0.06–0.08, ceiling at 0.13–0.14). **At the planning size the judges separate jointly by the
+tests but not by the \(\varepsilon_1\) ranges**; at 4000 by both. The overlap comes from the ends of \(H\) (\(\hat\varepsilon_1=\tfrac13\) for the shared judge at 0.14, 0.228 for the independent one
+at 0.06). With the disagreement bound alone (\(\eta_0\le0.288\) at level \(\alpha\)) the set passes \(1-a'=0.26\), where the inversion implies a perfect controller: \(\varepsilon_1\) undetermined. §7's
+asymmetric record is withheld. *Evidence status:* coverage is a theorem given the plug-ins; the sets, ranges and p-values are *finite verified examples*.
+
+## 10. Not delivered
+
+- No observed graders; binary labels only. Real counts give brackets, and §8's residuals never vanish on them: no level-\(\alpha\) test of the six equalities on \(m\) items.
+- §6's law is conditional on the defined event. §9 holds given its plug-ins, on the grid, in the symmetric model; no sampling law for \(\hat\varepsilon_1\) or the three- or four-rater fits.
+- A bracketed Dawid–Skene fit brackets \(\hat\varepsilon_1\) only if the inversion is monotone in \(R\) (not checked). The four-rater test refuses a chance rater though the model stays
+  locally identified; three raters cannot test conditional independence; §3's check has no power at \(\pi=\tfrac12\).

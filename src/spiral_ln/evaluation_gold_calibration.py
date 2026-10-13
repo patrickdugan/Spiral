@@ -38,6 +38,19 @@ A2 already holds.
    switching convention, the symmetric model as the special case, the absence
    of any equality constraint, and the asymmetric inversion of the judge
    note's gold-noise map given the gold grader's two rates.
+6. Four raters make the asymmetric model testable: nine parameters on fifteen
+   degrees of freedom, six exact polynomial constraints in the centred moments
+   (two tetrads, three third-moment ratios, one fourth-moment relation), the
+   rank counts that make them exactly six, the four-triple solver, and the
+   copying grader's closed-form tetrad residual, which the three-rater fit
+   absorbed and the fourth rater exposes.
+7. A joint statement for ``(eta_1, eps_1)``: a confidence set for ``eta_1``
+   on a rational grid (the disagreement bound intersected with the inverted
+   two-sided test of the observed square under a plug-in; the tails are exact
+   in ``O(m^2)`` big-integer products, and decided at large ``m`` by rigorous
+   fixed-point integer brackets with the exact law as fallback), the
+   inversion and the exact judge tests at every retained ``eta_0``, and the
+   Bonferroni union at level ``1 - 2 alpha``.
 
 Nothing here calls a model.  Every quantity is a ``fractions.Fraction``; floats
 are rejected at the boundary.
@@ -53,8 +66,8 @@ from math import comb, factorial, gcd, isqrt
 from spiral_ln.evaluation_feedback_signal import shared_error_bounds
 from spiral_ln.evaluation_game_feedback import LoopEvent
 from spiral_ln.evaluation_judge_measurement import (
-    HALF, JudgeTable, ceiling_p_value, clopper_pearson_contains, expected_table,
-    fisher_p_value, gold_noise_forward, gold_noise_inverse, independence_p_value,
+    HALF, JudgeTable, ceiling_p_value, clopper_pearson_bracket, clopper_pearson_contains,
+    expected_table, fisher_p_value, gold_noise_forward, gold_noise_inverse, independence_p_value,
     measurement_ledger, rounded_table, table_estimates,
 )
 
@@ -65,7 +78,9 @@ CELLS3 = tuple(product((0, 1), repeat=3))
 CELLS4 = tuple(product((0, 1), repeat=4))
 RESOLUTION = Q(1, 2 ** 16)
 DEGREES_OF_FREEDOM = {"cells": 8, "free_cell_probabilities": 7, "symmetric_parameters": 4,
-                      "constraints": 3, "asymmetric_dawid_skene_parameters": 7}
+                      "constraints": 3, "asymmetric_dawid_skene_parameters": 7,
+                      "four_rater_cells": 16, "four_rater_free_cell_probabilities": 15,
+                      "four_rater_parameters": 9, "four_rater_constraints": 6}
 
 
 def _as_q(value, name: str) -> Q:
@@ -1279,6 +1294,916 @@ def calibrate_asymmetric(record: RecordTable, declared_judge_error=None, alpha=Q
     return out
 
 
+# --- 6. four raters: the asymmetric model becomes testable --------------------
+
+RATERS4 = {1: "G1", 2: "G2", 3: "G3", 4: "C"}
+PAIRS4 = tuple((i, j) for i in range(1, 5) for j in range(i + 1, 5))
+TRIPLES4 = ((1, 2, 3), (1, 2, 4), (1, 3, 4), (2, 3, 4))
+CONSTRAINTS4 = ("tetrad_12_34_vs_13_24", "tetrad_13_24_vs_14_23", "third_123_vs_124",
+                "third_123_vs_134", "third_123_vs_234", "fourth_moment")
+MOMENT_KEYS4 = tuple((i,) for i in range(1, 5)) + PAIRS4 + TRIPLES4 + ((1, 2, 3, 4),)
+
+
+def _four(values, name: str) -> tuple[Q, Q, Q, Q]:
+    if not isinstance(values, (tuple, list)) or len(values) != 4:
+        raise ValueError(f"{name} must list four rates")
+    return tuple(_probability(v, f"{name}[{i}]") for i, v in enumerate(values))
+
+
+@dataclass(frozen=True)
+class FourRaterTable:
+    """Rational weights on the 2^4 cells ``(x_1, x_2, x_3, x_4)`` of four binary
+    raters' labels: the gold grader G1, a second grader G2, a third grader G3
+    and the controller's answer C.  One more independent grading of the same
+    sealed sample than ``LabelTable``: that is what a fourth rater costs."""
+
+    cells: dict
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "cells", _weights(self.cells, CELLS4, "(x_1, x_2, x_3, x_4) in {0,1}^4"))
+
+    @property
+    def total(self) -> Q:
+        return sum(self.cells.values(), Q(0))
+
+    def probability(self, cell: tuple[int, int, int, int]) -> Q:
+        return self.cells[cell] / self.total
+
+    def triple(self, drop: int) -> LabelTable:
+        """Marginal over rater ``drop``; the other three keep their order and
+        become raters 1, 2, 3 of a ``LabelTable``."""
+
+        if drop not in (1, 2, 3, 4):
+            raise ValueError("drop must name a rater 1..4")
+        keep = [i - 1 for i in range(1, 5) if i != drop]
+        cells = {cell: Q(0) for cell in CELLS3}
+        for cell, weight in self.cells.items():
+            cells[tuple(cell[i] for i in keep)] += weight
+        return LabelTable(cells)
+
+
+def _four_cells(prior: Q, sensitivities: tuple, false_positives: tuple) -> dict:
+    cells = {}
+    for cell in CELLS4:
+        weight = Q(0)
+        for y in (0, 1):
+            w = prior if y else 1 - prior
+            for i in range(4):
+                hit = sensitivities[i] if y else false_positives[i]
+                w *= hit if cell[i] == 1 else 1 - hit
+            weight += w
+        cells[cell] = weight
+    return cells
+
+
+def four_rater_model(prior, false_negatives, false_positives) -> FourRaterTable:
+    """Four conditionally independent raters with asymmetric rates: nine
+    parameters ``(pi, alpha_i, beta_i)`` on the fifteen degrees of freedom of
+    the 2^4 table, so six constraints (``four_rater_constraints``)."""
+
+    prior = _probability(prior, "prior")
+    alphas, betas = _four(false_negatives, "false_negatives"), _four(false_positives, "false_positives")
+    return FourRaterTable(_four_cells(prior, tuple(1 - a for a in alphas), betas))
+
+
+def four_rater_moments(table: FourRaterTable) -> dict[str, object]:
+    """Centred moments ``k_S = E prod_{i in S} (X_i - p_i)`` for every subset
+    with at least two raters, plus the marginals ``p_i``.  Under the model,
+    with ``u = pi (1 - pi)``, ``delta_i = 1 - alpha_i - beta_i`` and
+    ``E[X_i - p_i | Y] = delta_i (Y - pi)``: conditional independence gives
+    ``k_S = E[(Y - pi)^|S|] prod_{i in S} delta_i`` with ``E[(Y - pi)^2] = u``,
+    ``E[(Y - pi)^3] = u (1 - 2 pi)``, ``E[(Y - pi)^4] = u (1 - 3u)``.  So
+    ``c_ij = u delta_i delta_j``, ``k_ijk = u (1 - 2 pi) delta_i delta_j
+    delta_k`` and ``k_1234 = u (1 - 3u) delta_1 delta_2 delta_3 delta_4``."""
+
+    p = {i: sum((table.probability(c) for c in CELLS4 if c[i - 1] == 1), Q(0)) for i in range(1, 5)}
+    moments = {}
+    for subset in MOMENT_KEYS4[4:]:
+        total = Q(0)
+        for cell in CELLS4:
+            w = table.probability(cell)
+            for i in subset:
+                w *= cell[i - 1] - p[i]
+            total += w
+        moments[subset] = total
+    return {"marginals": p, "covariances": {pair: moments[pair] for pair in PAIRS4},
+            "third_moments": {t: moments[t] for t in TRIPLES4}, "fourth_moment": moments[(1, 2, 3, 4)]}
+
+
+def four_rater_residuals(moments: dict) -> dict[str, Q]:
+    """The six polynomial equalities, as residuals that vanish under the model.
+
+    Tetrads: ``c_12 c_34 = c_13 c_24 = c_14 c_23`` (each is ``u^2 prod delta``;
+    two independent equalities).  Third-moment ratios: ``k_ijk / k_ijl = c_ik
+    / c_il = delta_k / delta_l``; written without division, ``k_ijk c_il = k_ijl
+    c_ik`` (both are ``u^2 (1 - 2 pi) delta_i^2 delta_j delta_k delta_l``).
+    Twelve such relations exist (two per pair ``{i, j}``); three express
+    ``k_124, k_134, k_234`` through ``k_123`` and the covariances, and the other
+    nine follow from those three and the tetrads by substitution wherever the
+    covariances are nonzero (``ratio_relations``).
+    Fourth moment: ``(k_1234 - c_12 c_34) c_12 = k_123 k_124``, since
+    ``k_1234 - c_12 c_34 = u (1 - 4u) prod delta = u (1 - 2 pi)^2 prod delta``
+    and ``k_123 k_124 = u^2 (1 - 2 pi)^2 delta_1^2 delta_2^2 delta_3 delta_4``.
+    The six have a rank-6 Jacobian wherever ``c_12 c_13 != 0``
+    (``constraint_jacobian_rank``) and the model's parameter Jacobian has rank
+    9 (``four_rater_jacobian_rank``): near such a model point the image (nine
+    dimensions) and the zero set of six independent functions (15 - 6 = 9)
+    coincide, so there are exactly six independent equalities."""
+
+    c, k, m4 = moments["covariances"], moments["third_moments"], moments["fourth_moment"]
+    return {"tetrad_12_34_vs_13_24": c[(1, 2)] * c[(3, 4)] - c[(1, 3)] * c[(2, 4)],
+            "tetrad_13_24_vs_14_23": c[(1, 3)] * c[(2, 4)] - c[(1, 4)] * c[(2, 3)],
+            "third_123_vs_124": k[(1, 2, 3)] * c[(1, 4)] - k[(1, 2, 4)] * c[(1, 3)],
+            "third_123_vs_134": k[(1, 2, 3)] * c[(1, 4)] - k[(1, 3, 4)] * c[(1, 2)],
+            "third_123_vs_234": k[(1, 2, 3)] * c[(2, 4)] - k[(2, 3, 4)] * c[(1, 2)],
+            "fourth_moment": (m4 - c[(1, 2)] * c[(3, 4)]) * c[(1, 2)] - k[(1, 2, 3)] * k[(1, 2, 4)]}
+
+
+def _third(k: dict, a: int, b: int, c: int) -> Q:
+    return k[tuple(sorted((a, b, c)))]
+
+
+def ratio_relations(moments: dict) -> dict[tuple[int, int, int], Q]:
+    """All twelve third-moment ratio relations as residuals: for a pair
+    ``{i, j}``, the other two raters ``k < l`` and a pivot ``p`` in ``{i, j}``,
+    ``k_ijk c_pl - k_ijl c_pk`` (zero under the model, both sides being
+    ``u^2 (1 - 2 pi) delta_p^2 prod_{q != p} delta_q``).  Keyed ``(i, j, p)``."""
+
+    c, k = moments["covariances"], moments["third_moments"]
+    out = {}
+    for i, j in PAIRS4:
+        a, b = (r for r in range(1, 5) if r not in (i, j))
+        for pivot in (i, j):
+            out[(i, j, pivot)] = (_third(k, i, j, a) * c[_pair(pivot, b)]
+                                  - _third(k, i, j, b) * c[_pair(pivot, a)])
+    return out
+
+
+def constraint_jacobian_rank(moments: dict) -> int:
+    """Rank of the 6 x 15 Jacobian of the residuals in the centred moments
+    ``(p_i, c_ij, k_ijk, k_1234)``, which are a coordinate system on the
+    simplex.  Every residual has degree at most two in each single moment, so
+    the central difference ``(r(x + h) - r(x - h)) / 2h`` is the exact partial.
+
+    Six wherever ``c_12 c_13 != 0``, at any moment point, model or not.
+    Proof: on the columns ``(c_24, c_34, k_124, k_134, k_234, k_1234)`` with
+    rows ordered (tetrad 2, tetrad 1, the three ratios, fourth moment) the
+    minor is lower triangular with diagonal ``(c_13, c_12, -c_13, -c_12, -c_12,
+    c_12)``, determinant ``-c_12^4 c_13^2``."""
+
+    flat = {(i,): moments["marginals"][i] for i in range(1, 5)}
+    flat.update(moments["covariances"])
+    flat.update(moments["third_moments"])
+    flat[(1, 2, 3, 4)] = moments["fourth_moment"]
+
+    def residuals_at(values: dict) -> list[Q]:
+        split = {"marginals": {i: values[(i,)] for i in range(1, 5)},
+                 "covariances": {pair: values[pair] for pair in PAIRS4},
+                 "third_moments": {t: values[t] for t in TRIPLES4}, "fourth_moment": values[(1, 2, 3, 4)]}
+        r = four_rater_residuals(split)
+        return [r[name] for name in CONSTRAINTS4]
+
+    h = Q(1)
+    columns = []
+    for key in MOMENT_KEYS4:
+        up, down = dict(flat), dict(flat)
+        up[key] += h
+        down[key] -= h
+        columns.append([(a - b) / (2 * h) for a, b in zip(residuals_at(up), residuals_at(down))])
+    return _rank([[col[r] for col in columns] for r in range(len(CONSTRAINTS4))])
+
+
+def four_rater_jacobian_rank(prior, false_negatives, false_positives) -> int:
+    """Rank of the exact 16 x 9 Jacobian of ``(pi, alpha, beta) -> cells``
+    (affine in each parameter, so one difference per column is exact).
+
+    Nine wherever ``0 < pi < 1`` and at least three ``delta_i != 0``.  Proof:
+    if ``delta_1 delta_2 delta_3 != 0`` (relabel otherwise), Proposition 4 on
+    the triple (1, 2, 3) and ``delta_4 = c_14 / (u delta_1)``, ``s_4 = p_4 +
+    (1 - pi) delta_4``, ``t_4 = p_4 - pi delta_4`` form a map ``G``, smooth on
+    a neighbourhood of the table, with ``G(F(theta)) = theta`` near ``theta``;
+    so ``DG DF = I_9``.  A chance rater therefore does not lower the rank,
+    though it zeroes three covariances and can degenerate the six residuals."""
+
+    prior = _probability(prior, "prior")
+    alphas, betas = _four(false_negatives, "false_negatives"), _four(false_positives, "false_positives")
+    sens = tuple(1 - a for a in alphas)
+    base = _four_cells(prior, sens, betas)
+
+    def column(moved_prior, moved_sens, moved_betas) -> list[Q]:
+        cells = _four_cells(moved_prior, moved_sens, moved_betas)
+        return [cells[c] - base[c] for c in CELLS4]
+
+    columns = [column(prior + 1, sens, betas)]
+    for i in range(4):
+        bumped = list(sens)
+        bumped[i] += 1
+        columns.append(column(prior, tuple(bumped), betas))
+        bumped = list(betas)
+        bumped[i] += 1
+        columns.append(column(prior, sens, tuple(bumped)))
+    return _rank([[col[r] for col in columns] for r in range(16)])
+
+
+def _merge_point(values: list) -> tuple[object, bool]:
+    """Exact values agree, or brackets intersect (returning the intersection)."""
+
+    if all(not isinstance(v, tuple) for v in values):
+        return values[0], all(v == values[0] for v in values)
+    lows = [v[0] if isinstance(v, tuple) else v for v in values]
+    highs = [v[1] if isinstance(v, tuple) else v for v in values]
+    low, high = max(lows), min(highs)
+    return (low, high), low <= high
+
+
+def dawid_skene_four_raters(table: FourRaterTable, convention: str = "all_informative",
+                            bits: int = ROOT_BITS) -> dict[str, object]:
+    """Fit the three-rater solution on each of the four triples and check that
+    they agree: the prior on all four, each rater's two rates on the three
+    triples containing it.  Statuses: a triple's failure status
+    (``not_identified``, ``outside_model``, ``convention_violated``), ``exact``
+    (all triples exact and equal), ``bracketed`` (every bracket intersects;
+    the solution is the intersection) or ``inconsistent``.  Agreement uses
+    moments of order at most three; the fourth-moment constraint is checked
+    separately by ``four_rater_constraints``.
+
+    Under ``rater_1_informative`` the triple (2, 3, 4) fixes its own first
+    rater, G2, as informative; the global convention ``delta_1 > 0`` needs
+    ``sign(delta_2) = sign(c_12)``, so that triple's label-switched solution is
+    used when ``c_12 < 0``."""
+
+    fits = {}
+    for triple in TRIPLES4:
+        (drop,) = set(range(1, 5)) - set(triple)
+        fits[triple] = dawid_skene_three_raters(table.triple(drop), convention, bits)
+    out = {"convention": convention, "triple_fits": fits,
+           "degrees_of_freedom_left": DEGREES_OF_FREEDOM["four_rater_free_cell_probabilities"]
+           - DEGREES_OF_FREEDOM["four_rater_parameters"]}
+    bad = [f["status"] for f in fits.values() if f["status"] not in ("exact", "bracketed")]
+    if bad:
+        out["status"] = bad[0]
+        return out
+    oriented = {triple: f["solution"] for triple, f in fits.items()}
+    if convention == "rater_1_informative" and fits[(1, 2, 3)]["moments"]["covariances"][(1, 2)] < 0:
+        oriented[(2, 3, 4)] = fits[(2, 3, 4)]["alternative"]
+    prior, ok = _merge_point([s["prior"] for s in oriented.values()])
+    solution = {"prior": prior, "false_negatives": {}, "false_positives": {}, "deltas": {}}
+    for i in range(1, 5):
+        for key in ("false_negatives", "false_positives", "deltas"):
+            values = [s[key][triple.index(i) + 1] for triple, s in oriented.items() if i in triple]
+            merged, agree = _merge_point(values)
+            solution[key][i] = merged
+            ok = ok and agree
+    exact = all(f["status"] == "exact" for f in fits.values())
+    out.update({"status": "inconsistent" if not ok else "exact" if exact else "bracketed",
+                "solution": solution, "triples_agree": ok})
+    if ok:
+        flat = [solution["prior"]] + list(solution["false_negatives"].values()) + list(solution["false_positives"].values())
+        out["in_range"] = all((0 <= v <= 1) if not isinstance(v, tuple) else (0 <= v[0] and v[1] <= 1) for v in flat)
+    return out
+
+
+def four_rater_constraints(table: FourRaterTable, convention: str = "all_informative",
+                           bits: int = ROOT_BITS) -> dict[str, object]:
+    """The exact test.  Among tables with every ``c_ij != 0``, a table is the
+    image of a four-rater model (every ``delta_i > 0`` under
+    ``all_informative``; ``delta_1 > 0`` under ``rater_1_informative``) iff the
+    six residuals vanish and the triple fits exist (``R^2 > 0``, convention
+    met) with the nine implied parameters in ``[0, 1]``.  Proof of the
+    converse: the fifteen centred moments are coordinates on the simplex
+    (Moebius inversion, then a triangular polynomial change), so they
+    determine the table; the triple-(1, 2, 3) fit reproduces ``p_1, p_2, p_3,
+    c_12, c_13, c_23, k_123``; ``delta_4 = c_14 / (u delta_1)`` and ``p_4`` fix
+    rater 4; then the tetrads give ``c_24 = c_14 c_23 / c_13 = u delta_2
+    delta_4`` and ``c_34``, the three ratio equalities ``k_124, k_134, k_234``,
+    and the fourth-moment equality ``k_1234 = c_12 c_34 + k_123 k_124 / c_12 =
+    u (1 - 3u) prod delta``.  Agreement of the four triple fits then follows
+    and is computed as a cross-check; when the fit is exact the table is also
+    rebuilt cell by cell (``reproduces_table``)."""
+
+    moments = four_rater_moments(table)
+    residuals = four_rater_residuals(moments)
+    cov = moments["covariances"]
+    identifiable = all(c != 0 for c in cov.values())
+    equalities = all(r == 0 for r in residuals.values())
+    fit = dawid_skene_four_raters(table, convention, bits)
+    in_range = fit.get("in_range")
+    reproduces = None
+    if fit["status"] == "exact" and in_range:
+        s = fit["solution"]
+        rebuilt = four_rater_model(s["prior"], tuple(s["false_negatives"][i] for i in range(1, 5)),
+                                   tuple(s["false_positives"][i] for i in range(1, 5)))
+        reproduces = all(rebuilt.cells[c] * table.total == table.cells[c] for c in CELLS4)
+    passes = (equalities and identifiable and fit["status"] in ("exact", "bracketed") and bool(in_range)
+              and reproduces is not False)
+    return {"moments": moments, "residuals": residuals, "equalities_hold": equalities,
+            "identifiable": identifiable, "fit": fit, "in_range": in_range,
+            "reproduces_table": reproduces, "passes": passes,
+            "constraint_count": len(CONSTRAINTS4)}
+
+
+def copy_grader_table4(prior, false_negatives, false_positives, copy_rate) -> FourRaterTable:
+    """Four raters where G2 copies G1 with probability ``rho`` and otherwise
+    labels independently at its own rates.  Given ``Y``, ``X_2`` stays
+    independent of ``X_3, X_4``, with effective rates ``rho (alpha_1, beta_1) +
+    (1 - rho)(alpha_2, beta_2)``; only the pair (1, 2) is dependent."""
+
+    prior, rho = _probability(prior, "prior"), _probability(copy_rate, "copy_rate")
+    alphas, betas = _four(false_negatives, "false_negatives"), _four(false_positives, "false_positives")
+    sens = tuple(1 - a for a in alphas)
+    cells = {}
+    for cell in CELLS4:
+        weight = Q(0)
+        for y in (0, 1):
+            w = prior if y else 1 - prior
+            for i in (0, 2, 3):
+                hit = sens[i] if y else betas[i]
+                w *= hit if cell[i] == 1 else 1 - hit
+            own = sens[1] if y else betas[1]
+            w *= rho * (1 if cell[1] == cell[0] else 0) + (1 - rho) * (own if cell[1] == 1 else 1 - own)
+            weight += w
+        cells[cell] = weight
+    return FourRaterTable(cells)
+
+
+def copy_grader_tetrad_residual(prior, false_negatives, false_positives, copy_rate) -> Q:
+    """Closed form of the tetrad residual ``c_12 c_34 - c_13 c_24`` (and of
+    ``c_12 c_34 - c_14 c_23``) under copying: ``rho V_1 c_34`` with ``V_1 =
+    pi alpha_1 (1 - alpha_1) + (1 - pi) beta_1 (1 - beta_1)`` (the mean
+    conditional variance of G1's label) and ``c_34 = u delta_3 delta_4``.
+    Proof: ``E[X_1 X_2 | Y] = rho E[X_1 | Y] + (1 - rho) E[X_1 | Y] E[X_2' | Y]``
+    exceeds the conditionally independent value ``E[X_1 | Y] E[X_2 | Y]`` by
+    ``rho Var(X_1 | Y)``, so ``c_12 = u delta_1 delta_2~ + rho V_1`` while
+    ``c_13, c_24, c_34`` keep their product form; the tetrad ``c_13 c_24 -
+    c_14 c_23`` is unaffected.  Any ``rho > 0`` is detected whenever ``V_1 >
+    0`` (G1 imperfect on a class of positive prior), ``0 < pi < 1`` and
+    ``delta_3 delta_4 != 0`` -- at a balanced prior too, where the symmetric
+    three-rater check is vacuous.  The odd product ``c_12 c_34`` names the
+    split ``{1, 2 | 3, 4}``, not which side of it is dependent."""
+
+    prior, rho = _probability(prior, "prior"), _probability(copy_rate, "copy_rate")
+    alphas, betas = _four(false_negatives, "false_negatives"), _four(false_positives, "false_positives")
+    u = prior * (1 - prior)
+    v1 = prior * alphas[0] * (1 - alphas[0]) + (1 - prior) * betas[0] * (1 - betas[0])
+    c34 = u * (1 - alphas[2] - betas[2]) * (1 - alphas[3] - betas[3])
+    return rho * v1 * c34
+
+
+# --- 7. a joint statement for (eta_1, eps_1) ---------------------------------
+
+def agreement_counts(record: RecordTable) -> dict[str, object]:
+    """Integer agreement counts ``N_12, N_13, N_23`` (G1-G2, G1-C, G2-C) of
+    the record's label table.  They come from the four agreement-pattern
+    counts ``(k_all, k_12, k_13, k_23)``, ``N_ij = k_all + k_ij``; when the
+    cells are expected rather than observed counts the pattern counts are
+    rounded by largest remainder (ties in the order all, 12, 13, 23), which
+    keeps the total and hence the parity ``N_12 + N_13 + N_23 = m + 2 k_all``
+    of every realisable observation.  (Rounding the three ``N`` separately can
+    break it: at ``m = 742`` it gives 549, 549, 505, which no item table has.)"""
+
+    labels = record.label_table()
+    if labels.total.denominator != 1:
+        raise ValueError("agreement counts need an integer total")
+    m = int(labels.total)
+    exact = {name: Q(0) for name in PATTERNS}
+    for a, b, c in CELLS3:
+        key = "all" if a == b == c else (1, 2) if a == b else (1, 3) if a == c else (2, 3)
+        exact[key] += labels.cells[(a, b, c)]
+    floors = {name: int(v.__floor__()) for name, v in exact.items()}
+    deficit = m - sum(floors.values())
+    order = sorted(PATTERNS, key=lambda name: (-(exact[name] - floors[name]), PATTERNS.index(name)))
+    patterns = {name: floors[name] + (1 if name in order[:deficit] else 0) for name in PATTERNS}
+    counts = {pair: patterns["all"] + patterns[pair] for pair in PAIRS}
+    return {"size": m, "patterns": patterns, "counts": counts,
+            "rounded": any(Q(patterns[name]) != exact[name] for name in PATTERNS)}
+
+
+def observed_square(size: int, counts: dict) -> object:
+    """The observed ``S_hat = kappa_12 kappa_13 / kappa_23`` from the counts, or
+    the class ``"sign"`` (some ``kappa_hat <= 0``) or ``"range"`` (``S_hat > 1``).
+    The counts must be realisable: ``k_all = (N_12 + N_13 + N_23 - m) / 2`` a
+    nonnegative integer and every ``k_ij = N_ij - k_all >= 0``."""
+
+    m = _size(size)
+    if not isinstance(counts, dict) or set(counts) != set(PAIRS):
+        raise ValueError("counts must map the three pairs to agreement counts")
+    kappas = {}
+    for pair in PAIRS:
+        n = counts[pair]
+        if type(n) is not int or not 0 <= n <= m:
+            raise ValueError("counts must be integers between 0 and size")
+        kappas[pair] = Q(2 * n - m, m)
+    twice_all = sum(counts.values()) - m
+    if twice_all < 0 or twice_all % 2 or any(counts[pair] < twice_all // 2 for pair in PAIRS):
+        raise ValueError("no item table has these agreement counts (parity or pattern counts)")
+    if any(k <= 0 for k in kappas.values()):
+        return "sign"
+    square = kappas[(1, 2)] * kappas[(1, 3)] / kappas[(2, 3)]
+    return "range" if square > 1 else square
+
+
+def _threshold(rest: int, sigma: int, rhs: int, den: int, strict: bool) -> tuple[int, int] | None:
+    """The ``k_12`` tails where ``a b <= C`` (or ``< C``), as ``(K_lo, K_hi)``:
+    ``k_12 <= K_lo`` or ``k_12 >= K_hi``; ``None`` when every ``k_12`` qualifies.
+    With ``a + b = sigma`` and ``a - b = 4 k_12 - 2 rest``: ``a b = (sigma^2 -
+    (a - b)^2) / 4 <= C`` iff ``den (a - b)^2 >= den sigma^2 - 4 den C = rhs``."""
+
+    if rhs < 0 or (rhs == 0 and not strict):
+        return None
+    y = rhs // den + 1 if strict else (rhs + den - 1) // den
+    q = isqrt(y - 1) + 1
+    return (2 * rest - q) // 4, -((-(2 * rest + q)) // 4)
+
+
+def square_tail_law(size, errors, observed, thresholds=()) -> dict[str, object]:
+    """Exact tails of the extended square ``S~`` under the four-pattern
+    multinomial, in ``O(m^2)`` big-integer products instead of the ``C(m+3, 3)``
+    terms of ``sampling_law``.  ``S~`` orders sign failures (some ``kappa_hat <=
+    0``) below every defined value and range failures (``S_hat > 1``) above.
+
+    Reduction: ``d = 2 N_23 - m = m - 2 rest`` with ``rest = k_12 + k_13``
+    depends on ``rest`` only; given ``rest`` and ``k_0``, ``a + b`` is fixed and
+    ``a b <= C`` is a pair of tails in ``k_12`` (``_threshold``), so the sum over
+    ``k_12`` is a difference of prefix sums of the inner binomial terms, and
+    the ``k_0`` with the same tails share one product.  Returns, over the
+    common denominator ``D^m``, ``P[S~ <= s]``, ``P[S~ >= s]``, ``P[S~ = s]``,
+    ``P[sign]``, ``P[range]`` and the two-sided ``p = min(1, 2 min(lower,
+    upper))``; also ``P[S~ <= t]`` for each extra threshold ``t``."""
+
+    m, errors = _size(size), _three(errors, "errors")
+    if isinstance(observed, str):
+        if observed not in ("sign", "range"):
+            raise ValueError("observed must be a square in [0, 1], 'sign' or 'range'")
+        s = None
+    else:
+        s = _as_q(observed, "observed")
+        if not 0 <= s <= 1:
+            raise ValueError("observed must be a square in [0, 1], 'sign' or 'range'")
+    extra = tuple(_probability(t, "threshold") for t in thresholds)
+    targets = ([] if s is None else [s]) + list(extra) + [Q(1)]
+    n, den = _pattern_integers(errors)
+    n0, n12, n13, n23 = n["all"], n[(1, 2)], n[(1, 3)], n[(2, 3)]
+    g_in = gcd(n12, n13) or 1
+    a12, a13 = n12 // g_in, n13 // g_in
+    w_sign = w_def = 0
+    w_le = [0] * len(targets)
+    w_lt = [0] * len(targets)
+    total = 0
+    for rest in range(m + 1):
+        outer_total = comb(m, rest) * (n12 + n13) ** rest * (n0 + n23) ** (m - rest)
+        total += outer_total
+        if 2 * rest >= m:
+            w_sign += outer_total
+            continue
+        d = m - 2 * rest
+        # inner binomial terms over k_12 and their prefix sums
+        inner = [0] * (rest + 1)
+        for k in range(rest + 1):
+            inner[k] = comb(rest, k) * a12 ** k * a13 ** (rest - k)
+        pre = [0] * (rest + 2)
+        for k in range(rest + 1):
+            pre[k + 1] = pre[k] + inner[k]
+
+        def interval(lo: int, hi: int) -> int:
+            lo, hi = max(lo, 0), min(hi, rest)
+            return pre[hi + 1] - pre[lo] if lo <= hi else 0
+
+        # outer weights over k_0 (k_23 = m - rest - k_0)
+        span = m - rest
+        outer = [0] * (span + 1)
+        if n23 == 0 or n0 == 0:
+            for k0 in range(span + 1):
+                outer[k0] = comb(span, k0) * n0 ** k0 * n23 ** (span - k0)
+        else:
+            outer[0] = n23 ** span
+            for k0 in range(span):
+                outer[k0 + 1] = outer[k0] * (span - k0) * n0 // ((k0 + 1) * n23)
+        groups_def: dict = {}
+        groups_le = [dict() for _ in targets]
+        groups_diff = [dict() for _ in targets]  # k_0 whose strict and non-strict tails differ
+        for k0 in range(span + 1):
+            t = m - 2 * k0
+            g = max(0, t // 2 + 1)
+            if 2 * g > rest:
+                continue
+            w = outer[k0]
+            groups_def[g] = groups_def.get(g, 0) + w
+            sigma = 2 * (2 * k0 + rest - m)
+            for idx, target in enumerate(targets):
+                rhs = target.denominator * sigma * sigma - 4 * target.numerator * m * d
+                key_le = _threshold(rest, sigma, rhs, target.denominator, False)
+                key_lt = _threshold(rest, sigma, rhs, target.denominator, True)
+                groups_le[idx][(g, key_le)] = groups_le[idx].get((g, key_le), 0) + w
+                if key_lt != key_le:
+                    groups_diff[idx][(g, key_le, key_lt)] = groups_diff[idx].get((g, key_le, key_lt), 0) + w
+        scale = comb(m, rest) * g_in ** rest
+        row_def = sum(w * interval(g, rest - g) for g, w in groups_def.items())
+        w_def += scale * row_def
+
+        def tail(g: int, key) -> int:
+            if key is None:
+                return interval(g, rest - g)
+            k_lo, k_hi = key
+            return interval(g, min(k_lo, rest - g)) + interval(max(k_hi, g), rest - g)
+
+        for idx in range(len(targets)):
+            row_le = sum(w * tail(g, key) for (g, key), w in groups_le[idx].items())
+            row_diff = sum(w * (tail(g, key_le) - tail(g, key_lt))
+                           for (g, key_le, key_lt), w in groups_diff[idx].items())
+            w_le[idx] += scale * row_le
+            w_lt[idx] += scale * (row_le - row_diff)
+    if total != den ** m:
+        raise AssertionError("the multinomial weights do not sum to D^m")
+    if w_sign > total - w_def:
+        raise AssertionError("the d <= 0 rows exceed the sign-failure mass")
+    p_def = Q(w_def, total)
+    p_sign = 1 - p_def  # d <= 0 rows plus a <= 0 or b <= 0 inside the d > 0 rows
+    p_range = p_def - Q(w_le[-1], total)
+    out = {"size": m, "errors": errors, "observed": observed, "p_sign": p_sign, "p_defined_sign": p_def,
+           "p_range": p_range, "p_undefined": p_sign + p_range, "method": "O(m^2) tails"}
+    if s is None:
+        lower = p_sign if observed == "sign" else Q(1)
+        upper = Q(1) if observed == "sign" else p_range
+        equal = p_sign if observed == "sign" else p_range
+    else:
+        lower = p_sign + Q(w_le[0], total)
+        upper = p_def - Q(w_lt[0], total)
+        equal = Q(w_le[0] - w_lt[0], total)
+    out.update({"p_lower": lower, "p_upper": upper, "p_equal": equal,
+                "p_two_sided": min(Q(1), 2 * min(lower, upper)),
+                "extra_lower": {t: p_sign + Q(w_le[(s is not None) + i], total) for i, t in enumerate(extra)}})
+    return out
+
+
+TAIL_BITS = 160   # fixed-point scale of the bracketed tails: integers count units of 2^-160
+TAIL_CUT = 128    # binomial terms below 2^-128 are bounded in bulk instead of summed
+
+
+def _binomial_window(n: int, num: int, den: int, bits: int = TAIL_BITS, cut: int = TAIL_CUT) -> dict[str, object]:
+    """Integer bounds ``lo_k <= 2^bits t_k <= hi_k`` on the ``Bin(n, num/den)``
+    pmf over a window ``[start, start + len(lo))`` around the mode, and an
+    integer ``outside >= 2^bits * (mass outside the window)``.
+
+    The mode term ``M = floor((n + 1) num / den)`` is computed exactly and
+    rounded down and up once.  Moving away from the mode the ratios
+    ``t_{k+1}/t_k = (n - k) num / ((k + 1)(den - num))`` (for ``k >= M``) and
+    ``t_{k-1}/t_k = k (den - num) / ((n - k + 1) num)`` (for ``k <= M``) are at
+    most one; each step rounds the lower chain down and the upper chain up,
+    so both bounds hold by induction and the rounding loss stays below one
+    unit per step.  A chain stops at the first ``hi < 2^(bits - cut)``; the
+    terms beyond it decrease, so ``count * hi`` bounds their mass."""
+
+    one = 1 << bits
+    if n == 0 or num == 0:
+        return {"start": 0, "lo": [one], "hi": [one], "outside": 0}
+    if num == den:
+        return {"start": n, "lo": [one], "hi": [one], "outside": 0}
+    rest = den - num
+    mode = (n + 1) * num // den
+    q, r = divmod((comb(n, mode) * num ** mode * rest ** (n - mode)) << bits, den ** n)
+    lo_mode, hi_mode = q, q + (1 if r else 0)
+    floor_cut = 1 << (bits - cut)
+    outside = 0
+    up_lo, up_hi = [], []
+    lo, hi, k = lo_mode, hi_mode, mode
+    while k < n:
+        a, b = (n - k) * num, (k + 1) * rest
+        lo, hi, k = lo * a // b, -((-hi * a) // b), k + 1
+        if hi < floor_cut:
+            outside += (n - k + 1) * hi
+            break
+        up_lo.append(lo)
+        up_hi.append(hi)
+    down_lo, down_hi = [], []
+    lo, hi, k = lo_mode, hi_mode, mode
+    while k > 0:
+        a, b = k * rest, (n - k + 1) * num
+        lo, hi, k = lo * a // b, -((-hi * a) // b), k - 1
+        if hi < floor_cut:
+            outside += (k + 1) * hi
+            break
+        down_lo.append(lo)
+        down_hi.append(hi)
+    return {"start": mode - len(down_lo), "lo": down_lo[::-1] + [lo_mode] + up_lo,
+            "hi": down_hi[::-1] + [hi_mode] + up_hi, "outside": outside}
+
+
+def square_tail_bracket(size, errors, observed, bits: int = TAIL_BITS, cut: int = TAIL_CUT) -> dict[str, object]:
+    """Rigorous rational brackets on the tails of ``square_tail_law`` in
+    ``O(m^2)`` fixed-point integer operations, windowed to ``O(m)`` terms per
+    row.
+
+    The four-pattern multinomial factors as ``rest ~ Bin(m, q_12 + q_13)``,
+    then independently ``k_all ~ Bin(m - rest, q_all / (q_all + q_23))`` and
+    ``k_12 ~ Bin(rest, q_12 / (q_12 + q_13))``.  Each factor is bounded by
+    ``_binomial_window``; products and sums of nonnegative lower (upper)
+    bounds are lower (upper) bounds, the mass outside a window enters the
+    upper bound only, and every inner sum is capped at one.  So
+    ``P[defined]``, ``P[defined, S_hat <= s]`` and ``P[defined, S_hat < s]``
+    are bracketed exactly as integers over ``2^(3 bits)``, and with them the
+    lower, upper and two-sided p-values.  No floating point; the width is
+    reported and is below ``2^-90`` at every size used here."""
+
+    m, errors = _size(size), _three(errors, "errors")
+    if isinstance(observed, str):
+        if observed not in ("sign", "range"):
+            raise ValueError("observed must be a square in [0, 1], 'sign' or 'range'")
+        s = None
+    else:
+        s = _as_q(observed, "observed")
+        if not 0 <= s <= 1:
+            raise ValueError("observed must be a square in [0, 1], 'sign' or 'range'")
+    if type(bits) is not int or type(cut) is not int or not 0 < cut < bits:
+        raise ValueError("need integers 0 < cut < bits")
+    target = s if s is not None else (Q(1) if observed == "range" else None)
+    n, den = _pattern_integers(errors)
+    n0, n12, n13, n23 = n["all"], n[(1, 2)], n[(1, 3)], n[(2, 3)]
+    one = 1 << bits
+    outer = _binomial_window(m, n12 + n13, den, bits, cut)
+    acc = {key: 0 for key in ("def_lo", "def_hi", "le_lo", "le_hi", "lt_lo", "lt_hi")}
+    for index, (a_lo, a_hi) in enumerate(zip(outer["lo"], outer["hi"])):
+        rest = outer["start"] + index
+        if 2 * rest >= m:
+            continue
+        d = m - 2 * rest
+        middle = _binomial_window(m - rest, n0, n0 + n23, bits, cut)
+        inner = _binomial_window(rest, n12, n12 + n13, bits, cut)
+        c_start, c_lo, c_hi, c_out = inner["start"], inner["lo"], inner["hi"], inner["outside"]
+        c_end = c_start + len(c_lo) - 1
+        pre_lo, pre_hi = [0], [0]
+        for x, y in zip(c_lo, c_hi):
+            pre_lo.append(pre_lo[-1] + x)
+            pre_hi.append(pre_hi[-1] + y)
+
+        def interval(lo: int, hi: int) -> tuple[int, int]:
+            lo, hi = max(lo, 0), min(hi, rest)
+            if lo > hi:
+                return 0, 0
+            i0, i1 = max(lo, c_start) - c_start, min(hi, c_end) - c_start
+            low, high = (pre_lo[i1 + 1] - pre_lo[i0], pre_hi[i1 + 1] - pre_hi[i0]) if i0 <= i1 else (0, 0)
+            if lo < c_start or hi > c_end:
+                high += c_out
+            return low, min(high, one)
+
+        def tail(g: int, key) -> tuple[int, int]:
+            if key is None:
+                return interval(g, rest - g)
+            first, second = interval(g, min(key[0], rest - g)), interval(max(key[1], g), rest - g)
+            return first[0] + second[0], min(first[1] + second[1], one)
+
+        row = {key: 0 for key in acc}
+        for offset, (b_lo, b_hi) in enumerate(zip(middle["lo"], middle["hi"])):
+            k0 = middle["start"] + offset
+            g = max(0, (m - 2 * k0) // 2 + 1)
+            if 2 * g > rest:
+                continue
+            low, high = interval(g, rest - g)
+            row["def_lo"] += b_lo * low
+            row["def_hi"] += b_hi * high
+            if target is None:
+                continue
+            sigma = 2 * (2 * k0 + rest - m)
+            rhs = target.denominator * sigma * sigma - 4 * target.numerator * m * d
+            for name, strict in (("le", False), ("lt", True)):
+                low, high = tail(g, _threshold(rest, sigma, rhs, target.denominator, strict))
+                row[name + "_lo"] += b_lo * low
+                row[name + "_hi"] += b_hi * high
+        for key in ("def_hi", "le_hi", "lt_hi"):
+            row[key] += middle["outside"] * one
+        for key in acc:
+            acc[key] += (a_lo if key.endswith("_lo") else a_hi) * row[key]
+    for key in ("def_hi", "le_hi", "lt_hi"):
+        acc[key] += outer["outside"] * one * one
+    scale = one ** 3
+
+    def clip(value: int) -> Q:
+        return min(max(Q(value, scale), Q(0)), Q(1))
+
+    p_def = (clip(acc["def_lo"]), clip(acc["def_hi"]))
+    if observed == "sign":
+        lower, upper = (clip(scale - acc["def_hi"]), clip(scale - acc["def_lo"])), (Q(1), Q(1))
+    elif observed == "range":
+        lower, upper = (Q(1), Q(1)), (clip(acc["def_lo"] - acc["le_hi"]), clip(acc["def_hi"] - acc["le_lo"]))
+    else:
+        lower = (clip(scale - acc["def_hi"] + acc["le_lo"]), clip(scale - acc["def_lo"] + acc["le_hi"]))
+        upper = (clip(acc["def_lo"] - acc["lt_hi"]), clip(acc["def_hi"] - acc["lt_lo"]))
+    two_sided = tuple(min(Q(1), 2 * min(lower[i], upper[i])) for i in (0, 1))
+    return {"size": m, "errors": errors, "observed": observed, "bits": bits, "cut": cut,
+            "p_defined": p_def, "p_lower": lower, "p_upper": upper, "p_two_sided": two_sided,
+            "width": two_sided[1] - two_sided[0], "method": "fixed-point bracket"}
+
+
+def square_test(args) -> dict[str, object]:
+    """Decide ``p >= level`` for the two-sided square test exactly: by the
+    bracket when it lies on one side of ``level``, else by the exact law.
+    ``args = (size, errors, observed, level)`` (one tuple, for a process pool)."""
+
+    size, errors, observed, level = args
+    bracket = square_tail_bracket(size, errors, observed)
+    low, high = bracket["p_two_sided"]
+    out = {"p_bracket": (low, high), "width": bracket["width"], "p_exact": None}
+    if low >= level:
+        out.update({"retained": True, "decided_by": "bracket"})
+    elif high < level:
+        out.update({"retained": False, "decided_by": "bracket"})
+    else:
+        exact = square_tail_law(size, errors, observed)["p_two_sided"]
+        out.update({"retained": exact >= level, "decided_by": "exact law", "p_exact": exact})
+    return out
+
+
+def eta_confidence_set(size, counts, eta2, accuracy, alpha, grid, use_square_test: bool = True,
+                       resolution=RESOLUTION, workers: int = 1) -> dict[str, object]:
+    """Step 1 of the joint statement: the grid points ``eta_0`` not rejected
+    by (a) the one-sided disagreement bound (``eta_0 <= 1 - A_L`` from
+    ``N_12`` alone; no plug-in) and, when asked, (b) the two-sided test of the
+    observed ``S_hat`` under ``eta_1 = eta_0`` with ``(eta_2, a)`` at the
+    plug-in values, ``p = min(1, 2 min(P[S~ <= s], P[S~ >= s]))`` under the
+    four-pattern law, decided exactly (``square_test``).  Each test runs at
+    level ``alpha / 2`` when both are used (``alpha`` when only (a) is): if
+    the true ``eta_1`` is a grid point, it is retained with probability at
+    least ``1 - alpha``, exactly for (a) and under the plug-in for (b)."""
+
+    m, alpha = _size(size), _probability(alpha, "alpha")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must lie strictly inside (0, 1)")
+    eta2, accuracy = _probability(eta2, "eta2"), _probability(accuracy, "accuracy")
+    if not isinstance(grid, (tuple, list)):
+        raise ValueError("grid must be a nonempty list of rationals in [0, 1/2)")
+    points = sorted({_probability(e, "grid point") for e in grid})
+    if not points or any(e >= HALF for e in points):
+        raise ValueError("grid must be a nonempty list of rationals in [0, 1/2)")
+    observed = observed_square(m, counts)
+    level = alpha / 2 if use_square_test else alpha
+    bound = disagreement_bound(m, counts[(1, 2)], level, resolution)
+    rows = [{"eta0": eta0, "passes_disagreement_bound": eta0 <= bound["eta_upper_bound"], "square_test": None}
+            for eta0 in points]
+    for row in rows:
+        row["retained"] = row["passes_disagreement_bound"]
+    if use_square_test:
+        todo = [row for row in rows if row["retained"]]
+        jobs = [(m, (row["eta0"], eta2, 1 - accuracy), observed, level) for row in todo]
+        if workers > 1 and len(jobs) > 1:
+            from concurrent.futures import ProcessPoolExecutor
+            with ProcessPoolExecutor(max_workers=min(workers, len(jobs))) as pool:
+                results = list(pool.map(square_test, jobs))
+        else:
+            results = [square_test(job) for job in jobs]
+        for row, result in zip(todo, results):
+            row["square_test"] = result
+            row["retained"] = result["retained"]
+    retained = [r["eta0"] for r in rows if r["retained"]]
+    tested = [r["square_test"] for r in rows if r["square_test"] is not None]
+    return {"size": m, "counts": dict(counts), "observed_square": observed, "alpha": alpha, "level_per_test": level,
+            "tests_used": ("disagreement_bound", "square_test") if use_square_test else ("disagreement_bound",),
+            "plug_in": {"eta2": eta2, "accuracy": accuracy}, "disagreement_bound": bound, "rows": rows,
+            "retained": retained, "grid": points,
+            "is_grid_interval": all(points.index(b) - points.index(a) == 1 for a, b in zip(retained, retained[1:])),
+            "max_bracket_width": max((t["width"] for t in tested), default=None),
+            "exact_fallbacks": sum(1 for t in tested if t["decided_by"] == "exact law")}
+
+
+def _plug_in(bracket: dict) -> tuple[Q, bool]:
+    return (bracket["exact"], False) if bracket["exact"] is not None else (bracket["lower"], True)
+
+
+def clamped_inversion(measured_accuracy, measured_error, wrong_wrong_rate, eta) -> dict[str, object] | None:
+    """The judge note's inversion at ``eta`` with every rate clamped into its
+    feasible range: ``eps`` into ``[0, 1]``, ``eps_1`` into the
+    ``shared_error_bounds`` at ``(a, eps)``.  ``None`` when no controller of
+    accuracy strictly inside ``(0, 1)`` is implied: ``eta >= 1 - a'`` (never
+    wrong) or ``eta >= a'`` (never right).  A clamp means the measured rates
+    are not the image of any population at this ``eta``; it is flagged and
+    counted, not hidden."""
+
+    a_m, e_m, w = (_probability(measured_accuracy, "measured_accuracy"),
+                   _probability(measured_error, "measured_error"), _probability(wrong_wrong_rate, "wrong_wrong_rate"))
+    eta = _probability(eta, "eta")
+    if not eta < HALF:
+        raise ValueError("eta must lie below one half")
+    if not 1 - a_m - eta > 0 or not a_m - eta > 0:
+        return None
+    raw_a, raw_e = (a_m - eta) / (1 - 2 * eta), (e_m - eta) / (1 - 2 * eta)
+    raw_eps1 = inverted_eps1(a_m, e_m, w, eta)
+    a, e = min(max(raw_a, Q(0)), Q(1)), min(max(raw_e, Q(0)), Q(1))
+    low, high = shared_error_bounds(a, e)
+    eps1 = min(max(raw_eps1, low), high)
+    return {"accuracy": a, "judge_error": e, "eps1": eps1, "raw": {"accuracy": raw_a, "judge_error": raw_e, "eps1": raw_eps1},
+            "clamped": a != raw_a or e != raw_e or eps1 != raw_eps1}
+
+
+def joint_statement(record: RecordTable, alpha=Q(1, 20), grid=(), declared_judge_error=None,
+                    use_square_test: bool = True, eta_set: dict | None = None,
+                    resolution=RESOLUTION, workers: int = 1) -> dict[str, object]:
+    """A conservative joint statement for ``(eta_1, eps_1)`` at level ``alpha``.
+
+    (1) ``eta_confidence_set`` on the record's agreement counts; (2) for each
+    retained ``eta_0``, the judge note's inversion at ``eta_0``, the corrected
+    counts rounded half-up, the exact ceiling and independence tests and the
+    two-sided level-``alpha`` Clopper-Pearson bracket for ``eps_1``; (3) with
+    probability at least ``1 - 2 alpha`` (Bonferroni over the two steps)
+    ``eta_1`` lies in the set and ``eps_1`` in the union of the brackets.
+
+    Plug-in: step (1b) fixes ``eta_2`` and ``a`` at their estimates (the lower
+    end of each error-rate bracket when not exact); step (2) treats the
+    corrected counts as a binomial sample at the inverted rates, the same
+    assumption as the pipeline's tests.  The sampling law of ``eps1_hat``
+    itself is not derived.  A retained ``eta_0`` whose inversion implies no
+    controller strictly inside ``(0, 1)`` leaves the ``eps_1`` range
+    undetermined.  The statement is withheld when the symmetric constraint
+    check fails: ``eta_1`` and the inversion presuppose that model."""
+
+    alpha = _probability(alpha, "alpha")
+    if not 0 < alpha < HALF:
+        raise ValueError("alpha must lie strictly inside (0, 1/2)")
+    declared = None if declared_judge_error is None else _probability(declared_judge_error, "declared_judge_error")
+    if not isinstance(record, RecordTable):
+        raise ValueError("record must be a RecordTable")
+    if record.total.denominator != 1:
+        raise ValueError("the joint statement needs an integer total")
+    size = int(record.total)
+    calibration = calibrate(record, declared, alpha, resolution)
+    measured = calibration["measured"]
+    out = {"size": size, "alpha": alpha, "coverage": 1 - 2 * alpha, "calibration_status": calibration["status"],
+           "constraints_pass": calibration["constraints"]["passes"], "measured": measured,
+           "square_test_used": False}
+    if not calibration["identifiable"]:
+        out.update({"status": "not_identified", "eta_set": None, "eps1_range": None})
+        return out
+    if not calibration["constraints"]["passes"]:
+        out.update({"status": "withheld_constraints_fail", "eta_set": None, "eps1_range": None,
+                    "residuals": calibration["constraints"]["residuals"]})
+        return out
+    eta2, eta2_bracketed = _plug_in(calibration["eta2"])
+    accuracy, accuracy_bracketed = (calibration["accuracy_from_identity"]["exact"], False)
+    if accuracy is None:
+        accuracy, accuracy_bracketed = calibration["accuracy_from_identity"]["upper"], True
+    counts = agreement_counts(record)
+    if eta_set is None:
+        eta_set = eta_confidence_set(size, counts["counts"], eta2, accuracy, alpha, grid,
+                                     use_square_test, resolution, workers)
+    elif eta_set["counts"] != counts["counts"] or eta_set["size"] != size:
+        raise ValueError("the supplied eta set was computed from other agreement counts")
+    out.update({"agreement_counts": counts, "plug_in_bracketed": eta2_bracketed or accuracy_bracketed,
+                "eta_set": eta_set, "square_test_used": "square_test" in eta_set["tests_used"]})
+    if measured["table"] is None:
+        out.update({"status": "no_judge_table", "eps1_range": None})
+        return out
+    inversions = []
+    undetermined = clamped = 0
+    for eta0 in eta_set["retained"]:
+        row = {"eta0": eta0}
+        rates = clamped_inversion(measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"], eta0)
+        if rates is None:
+            row.update({"feasible": False, "reason": "no controller with accuracy inside (0, 1) at this eta0"})
+            undetermined += 1
+            inversions.append(row)
+            continue
+        expected = expected_table(size, rates["accuracy"], rates["judge_error"], rates["eps1"])
+        table, changed = rounded_table(expected)
+        error = declared if declared is not None else rates["judge_error"]
+        tests = _judge_tests(table, error, alpha, declared is None)
+        clamped += rates["clamped"]
+        row.update({"feasible": True, "recovered": rates, "corrected_table": table,
+                    "rounding_changed_a_cell": changed, "tests": tests})
+        if "ceiling_p" in tests:
+            cp = clopper_pearson_bracket(table.controller_wrong, table.wrong_wrong, alpha, resolution)
+            row["eps1_bracket"] = (cp["lower"][0], cp["upper"][1])
+            row["eps1_point"] = cp["point"]
+        else:
+            row["feasible"] = False
+            undetermined += 1
+        inversions.append(row)
+    feasible = [r for r in inversions if r["feasible"]]
+    if not eta_set["retained"]:
+        status, eps1_range = "empty_set", None
+    elif undetermined:
+        status, eps1_range = "eps1_undetermined", None
+    else:
+        status = "stated"
+        eps1_range = (min(r["eps1_bracket"][0] for r in feasible), max(r["eps1_bracket"][1] for r in feasible))
+    stated = status == "stated"
+    out.update({"status": status, "inversions": inversions, "eps1_range": eps1_range,
+                "clamped_points": clamped, "undetermined_points": undetermined,
+                "below_ceiling_jointly": stated and all(r["tests"]["ceiling_p"] < alpha for r in feasible)
+                and eps1_range[1] < HALF,
+                "above_independence_jointly": stated and all(r["tests"]["independence_p"] < alpha for r in feasible),
+                "statement": (f"with probability >= {1 - 2 * alpha}: eta_1 in the retained set and eps_1 in the "
+                              f"union of the level-{alpha} Clopper-Pearson brackets, under the plug-in"),
+                "assumes": ("conditionally independent symmetric raters (constraint check)",
+                            "step 1b: eta_2 and a fixed at their estimates",
+                            "step 2: the corrected counts are a binomial sample at the inverted rates",
+                            "the sampling law of eps1_hat is not derived")})
+    return out
+
+
+def judges_separated(independent: dict, shared: dict) -> bool:
+    """Both statements made and their ``eps_1`` ranges disjoint."""
+
+    a, b = independent.get("eps1_range"), shared.get("eps1_range")
+    return a is not None and b is not None and (a[1] < b[0] or b[1] < a[0])
+
+
 # --- fixtures and verification ------------------------------------------------
 
 FIXTURE_SIZE, FIXTURE_PRIOR = 10000, Q(1, 4)
@@ -1302,6 +2227,160 @@ DS_PAIR_GRID = ((Q(1, 10), Q(1, 20)), (Q(1, 5), Q(1, 10)), (Q(0), Q(1, 4)), (Q(3
 ANTI_INFORMATIVE_SECOND = (Q(3, 5), Q(3, 5))
 OUTSIDE_MODEL = {(1, 0, 0): Q(7, 30), (0, 1, 0): Q(7, 30), (0, 0, 1): Q(7, 30),
                  (0, 1, 1): Q(1, 10), (1, 0, 1): Q(1, 10), (1, 1, 0): Q(1, 10)}
+FOUR_PRIOR, FOUR_SIZE = Q(1, 4), 10000
+FOUR_FALSE_NEGATIVES = (Q(1, 10), Q(1, 5), Q(1, 5), Q(1, 10))   # gold, second, third grader, controller
+FOUR_FALSE_POSITIVES = (Q(1, 5), Q(1, 10), Q(2, 5), Q(3, 10))
+FOUR_PRIOR_GRID = (Q(1, 4), Q(1, 3), HALF)
+FOUR_PAIR_GRID = ((Q(1, 10), Q(1, 20)), (Q(1, 5), Q(1, 10)), (Q(3, 10), Q(3, 10)))
+FOUR_COPY_RATES = (Q(1, 4), HALF, Q(1))
+PLANNING_SIZE = 742
+JOINT_SIZES = (PLANNING_SIZE,)
+JOINT_GRID = tuple(Q(k, 100) for k in range(50))
+BRACKET_CASES = ((16, (Q(1, 10), Q(1, 5), Q(1, 5)), Q(16, 25)), (16, (Q(1, 10), Q(1, 5), Q(1, 5)), "sign"),
+                 (16, (Q(1, 10), Q(1, 5), Q(1, 5)), "range"), (16, (Q(1, 5), Q(1, 4), Q(3, 10)), HALF),
+                 (100, (Q(1, 10), Q(1, 5), Q(1, 5)), Q(16, 25)), (100, (Q(0), Q(1, 5), Q(1, 5)), Q(9, 10)),
+                 (200, (Q(3, 20), Q(1, 5), Q(1, 5)), Q(16, 25)), (200, (Q(1, 20), Q(1, 10), Q(1, 10)), Q(4, 5)),
+                 (742, (Q(13, 100), Q(1, 5), Q(1, 5)), Q(31684, 49343)))
+
+
+def four_rater_fixture() -> dict[str, object]:
+    """The four-rater fixture, the grid checks of the six constraints and the
+    two ranks, the copying grader's tetrad residual, and tables that fail."""
+
+    table = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    constraints = four_rater_constraints(table)
+    moments = constraints["moments"]
+    u = FOUR_PRIOR * (1 - FOUR_PRIOR)
+    deltas = [1 - a - b for a, b in zip(FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)]
+    product_delta = deltas[0] * deltas[1] * deltas[2] * deltas[3]
+    closed_ok, points, ranks_ok, converse_ok, ratios_ok = True, 0, True, True, True
+    for prior in FOUR_PRIOR_GRID:
+        for pairs in product(FOUR_PAIR_GRID, repeat=4):
+            fn, fp = tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)
+            grid_table = four_rater_model(prior, fn, fp)
+            mom = four_rater_moments(grid_table)
+            uu, dd = prior * (1 - prior), [1 - a - b for a, b in zip(fn, fp)]
+            closed_ok = closed_ok and all(mom["covariances"][(i, j)] == uu * dd[i - 1] * dd[j - 1] for i, j in PAIRS4) \
+                and all(mom["third_moments"][t] == uu * (1 - 2 * prior) * dd[t[0] - 1] * dd[t[1] - 1] * dd[t[2] - 1]
+                        for t in TRIPLES4) \
+                and mom["fourth_moment"] == uu * (1 - 3 * uu) * dd[0] * dd[1] * dd[2] * dd[3] \
+                and all(r == 0 for r in four_rater_residuals(mom).values())
+            ranks_ok = ranks_ok and constraint_jacobian_rank(mom) == 6 and four_rater_jacobian_rank(prior, fn, fp) == 9
+            ratios_ok = ratios_ok and all(r == 0 for r in ratio_relations(mom).values())
+            check = four_rater_constraints(grid_table)
+            converse_ok = converse_ok and check["passes"] and check["reproduces_table"] \
+                and check["fit"]["solution"]["prior"] == prior \
+                and all(check["fit"]["solution"]["false_negatives"][i + 1] == fn[i]
+                        and check["fit"]["solution"]["false_positives"][i + 1] == fp[i] for i in range(4))
+            points += 1
+    copy = {}
+    for rho in FOUR_COPY_RATES:
+        copied = copy_grader_table4(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, rho)
+        check = four_rater_constraints(copied)
+        copy[str(rho)] = {"copy_rate": rho, "constraints": check,
+                          "closed_form_residual": copy_grader_tetrad_residual(FOUR_PRIOR, FOUR_FALSE_NEGATIVES,
+                                                                              FOUR_FALSE_POSITIVES, rho),
+                          "triple_123": check["fit"]["triple_fits"][(1, 2, 3)]}
+    symmetric_errors = (FIXTURE_ETA1, FIXTURE_ETA2, Q(3, 10), 1 - FIXTURE_ACCURACY)
+    symmetric_copy = {str(rho): four_rater_constraints(copy_grader_table4(FIXTURE_PRIOR, symmetric_errors,
+                                                                            symmetric_errors, rho))["residuals"]
+                      for rho in FOUR_COPY_RATES}
+    balanced_copy = copy_grader_table4(HALF, symmetric_errors, symmetric_errors, Q(1))
+    balanced_three = copy_grader_table(HALF, FIXTURE_ETA1, FIXTURE_ETA2, 1 - FIXTURE_ACCURACY, Q(1))
+    perturbed_cells = dict(table.cells)
+    perturbed_cells[(0, 0, 0, 1)] += Q(1, 100)
+    perturbed_cells[(1, 1, 1, 0)] -= Q(1, 100)
+    chance = {}
+    for rater in (2, 4):
+        fn = tuple(HALF if i == rater - 1 else a for i, a in enumerate(FOUR_FALSE_NEGATIVES))
+        fp = tuple(HALF if i == rater - 1 else b for i, b in enumerate(FOUR_FALSE_POSITIVES))
+        chance_table = four_rater_model(FOUR_PRIOR, fn, fp)
+        chance[rater] = {"parameter_rank": four_rater_jacobian_rank(FOUR_PRIOR, fn, fp),
+                         "constraint_rank": constraint_jacobian_rank(four_rater_moments(chance_table)),
+                         "status": four_rater_constraints(chance_table)["fit"]["status"]}
+    anti_fn = (FOUR_FALSE_NEGATIVES[0], ANTI_INFORMATIVE_SECOND[0]) + FOUR_FALSE_NEGATIVES[2:]
+    anti_fp = (FOUR_FALSE_POSITIVES[0], ANTI_INFORMATIVE_SECOND[1]) + FOUR_FALSE_POSITIVES[2:]
+    anti_table = four_rater_model(FOUR_PRIOR, anti_fn, anti_fp)
+    return {"prior": FOUR_PRIOR, "false_negatives": FOUR_FALSE_NEGATIVES, "false_positives": FOUR_FALSE_POSITIVES,
+            "table": table, "size": FOUR_SIZE, "counts": {c: FOUR_SIZE * w for c, w in table.cells.items()},
+            "cells_integral": all((FOUR_SIZE * w).denominator == 1 for w in table.cells.values()),
+            "moments": moments, "residuals": constraints["residuals"], "constraints": constraints,
+            "closed_forms": {"u": u, "deltas": deltas, "tetrad": u * u * product_delta,
+                             "k_123": u * (1 - 2 * FOUR_PRIOR) * deltas[0] * deltas[1] * deltas[2],
+                             "k_1234": u * (1 - 3 * u) * product_delta},
+            "constraint_jacobian_rank": constraint_jacobian_rank(moments),
+            "parameter_jacobian_rank": four_rater_jacobian_rank(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES),
+            "chance_rater": chance, "degenerate_prior_rank": four_rater_jacobian_rank(
+                Q(0), FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES),
+            "grid_points": points, "closed_forms_on_grid": closed_ok, "ranks_on_grid": ranks_ok,
+            "ratio_relations_on_grid": ratios_ok, "converse_on_grid": converse_ok,
+            "copy_grader": copy, "symmetric_copy_residuals": symmetric_copy,
+            "copy_witness_counts": {c: FOUR_SIZE * w for c, w in copy_grader_table4(
+                FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, Q(1)).cells.items()},
+            "balanced_prior_copy": {"four_rater_residuals": four_rater_constraints(balanced_copy)["residuals"],
+                                    "closed_form": copy_grader_tetrad_residual(HALF, symmetric_errors, symmetric_errors, Q(1)),
+                                    "three_rater_check": model_constraints(balanced_three)},
+            "anti_informative_second": {"all_informative": four_rater_constraints(anti_table),
+                                        "rater_1_informative": four_rater_constraints(anti_table, "rater_1_informative")},
+            "perturbed": four_rater_constraints(FourRaterTable(perturbed_cells)),
+            "degrees_of_freedom": DEGREES_OF_FREEDOM}
+
+
+def joint_fixture(sizes=JOINT_SIZES, grid=JOINT_GRID, workers: int = 1) -> dict[str, object]:
+    """The joint statement on the §5 record at each size (both judges share
+    the label table, so the ``eta_1`` set is computed once per size); with
+    the disagreement bound alone (``eps_1`` undetermined); on the asymmetric
+    §7 record (withheld: the symmetric constraints fail); and the
+    cross-checks of the square tails: the ``O(m^2)`` law against the label
+    table enumeration at ``m = 16`` and the sampling law's undefined mass,
+    and the fixed-point bracket against the exact law."""
+
+    errors = (FIXTURE_ETA1, FIXTURE_ETA2, 1 - FIXTURE_ACCURACY)
+    by_size = {}
+    for m in sizes:
+        judges = {}
+        shared_set = None
+        for name, eps1 in JUDGES.items():
+            record = expected_record_table(m, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, eps1,
+                                           FIXTURE_ETA1, FIXTURE_ETA2)
+            statement = joint_statement(record, FIXTURE_ALPHA, grid, FIXTURE_ERROR, True, shared_set,
+                                        RESOLUTION, workers)
+            shared_set = statement["eta_set"]
+            judges[name] = {"eps1": eps1, "statement": {k: v for k, v in statement.items() if k != "eta_set"}}
+        ind, shared = judges["independent"]["statement"], judges["maximally_shared"]["statement"]
+        by_size[m] = {"judges": judges, "eta_set": shared_set,
+                      "ranges_disjoint": judges_separated(ind, shared),
+                      "tests_separate": ind["status"] == shared["status"] == "stated"
+                      and ind["below_ceiling_jointly"] and shared["above_independence_jointly"]
+                      and not ind["above_independence_jointly"] and not shared["below_ceiling_jointly"]}
+    small = sizes[0]
+    bound_only = joint_statement(expected_record_table(small, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, FIXTURE_ERROR,
+                                                       FIXTURE_ETA1, FIXTURE_ETA2), FIXTURE_ALPHA, grid, FIXTURE_ERROR, False)
+    controller = (DS_FALSE_NEGATIVES[2], DS_FALSE_POSITIVES[2])
+    gold, second = (DS_FALSE_NEGATIVES[0], DS_FALSE_POSITIVES[0]), (DS_FALSE_NEGATIVES[1], DS_FALSE_POSITIVES[1])
+    asymmetric = joint_statement(expected_record_table_asymmetric(DS_SIZE, DS_PRIOR, controller, FIXTURE_ERROR,
+                                                                  FIXTURE_ERROR, gold, second),
+                                 FIXTURE_ALPHA, grid, FIXTURE_ERROR, True)
+    laws = {m: square_tail_law(m, errors, Q(16, 25)) for m in (16, 100, 200)}
+    tables16 = sampling_law_by_tables(16, errors)
+    dist = tables16["square_distribution"]
+    agree = True
+    for s in list(dist)[:6] + [HALF, Q(16, 25), Q(1)]:
+        law = square_tail_law(16, errors, s)
+        agree = agree and law["p_lower"] == tables16["p_undefined_sign"] + sum((p for v, p in dist.items() if v <= s), Q(0)) \
+            and law["p_upper"] == tables16["p_undefined_range"] + sum((p for v, p in dist.items() if v >= s), Q(0)) \
+            and law["p_equal"] == dist.get(s, Q(0))
+    contains, widths, cases = True, [], 0
+    for m, errs, observed in BRACKET_CASES:
+        exact, bracket = square_tail_law(m, errs, observed), square_tail_bracket(m, errs, observed)
+        for key in ("p_lower", "p_upper", "p_two_sided"):
+            contains = contains and bracket[key][0] <= exact[key] <= bracket[key][1]
+        contains = contains and bracket["p_defined"][0] <= 1 - exact["p_sign"] <= bracket["p_defined"][1]
+        widths.append(bracket["width"])
+        cases += 1
+    return {"sizes": tuple(sizes), "grid": tuple(grid), "by_size": by_size, "bound_only": bound_only,
+            "asymmetric_record": asymmetric, "tail_laws": laws, "tails_match_label_table_enumeration_at_16": agree,
+            "bracket_contains_exact": contains, "bracket_cases": cases, "bracket_max_width": max(widths)}
 
 
 def three_rater_fixture() -> dict[str, object]:
@@ -1527,12 +2606,20 @@ def asymmetric_pipeline_fixture() -> dict[str, object]:
     return {"judges": judges, "reduces_to_symmetric_inversion": reduces, "size": DS_SIZE}
 
 
-def verify(sampling_sizes=SAMPLING_SIZES) -> dict[str, object]:
+def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int = 1) -> dict[str, object]:
     """Run all exact fixtures and return machine-readable checks."""
 
     raters, pipeline, dependent, ledgers = (three_rater_fixture(), pipeline_fixture(),
                                             dependent_grader_fixture(), ledger_fixture())
     sampling, ds, asym = sampling_fixture(sampling_sizes), dawid_skene_fixture(), asymmetric_pipeline_fixture()
+    joint_sizes = tuple(sorted(set(joint_sizes) | {PLANNING_SIZE}))
+    four, joint = four_rater_fixture(), joint_fixture(joint_sizes, JOINT_GRID, workers)
+    copy4 = four["copy_grader"]
+    small = joint["by_size"][PLANNING_SIZE]
+    small_ind, small_shared = (small["judges"]["independent"]["statement"],
+                               small["judges"]["maximally_shared"]["statement"])
+    small_set = small["eta_set"]["retained"]
+    big_joint = joint["by_size"][max(joint_sizes)]
     ind, shared = pipeline["independent"]["calibration"], pipeline["maximally_shared"]["calibration"]
     ind_inv, shared_inv = ind["inversions"][0], shared["inversions"][0]
     copy_full, copy_half = dependent["rows"]["1"]["calibration"], dependent["rows"]["1/2"]["calibration"]
@@ -1702,14 +2789,100 @@ def verify(sampling_sizes=SAMPLING_SIZES) -> dict[str, object]:
             and all(abs(inv["recovered"]["eps1"] - FIXTURE_ERROR) > Q(1, 50)
                     for inv in asym_ind["symmetric_pipeline"]["inversions"]),
         "asymmetric_inverse_reduces_to_judge_note_inverse": asym["reduces_to_symmetric_inversion"],
+        # --- 0.3: four raters ---
+        "four_rater_moments_match_closed_forms_and_residuals_vanish_on_grid":
+            four["closed_forms_on_grid"] and four["ratio_relations_on_grid"] and four["grid_points"] == 243
+            and four["moments"]["fourth_moment"] == four["closed_forms"]["k_1234"] == Q(3087, 320000)
+            and four["moments"]["third_moments"][(1, 2, 3)] == four["closed_forms"]["k_123"] == Q(147, 8000)
+            and four["moments"]["covariances"][(1, 2)] * four["moments"]["covariances"][(3, 4)]
+            == four["closed_forms"]["tetrad"] == Q(1323, 320000)
+            and all(r == 0 for r in four["residuals"].values()),
+        "four_rater_six_constraints_constraint_rank_6_parameter_rank_9":
+            four["constraint_jacobian_rank"] == 6 and four["parameter_jacobian_rank"] == 9 and four["ranks_on_grid"]
+            and DEGREES_OF_FREEDOM["four_rater_free_cell_probabilities"] - DEGREES_OF_FREEDOM["four_rater_parameters"]
+            == DEGREES_OF_FREEDOM["four_rater_constraints"] == len(CONSTRAINTS4) == 6,
+        "chance_rater_keeps_parameter_rank_9_but_degenerates_the_residuals":
+            all(row["parameter_rank"] == 9 and row["status"] == "not_identified" for row in four["chance_rater"].values())
+            and four["chance_rater"][2]["constraint_rank"] == 4 and four["chance_rater"][4]["constraint_rank"] == 6
+            and four["degenerate_prior_rank"] < 9,
+        "four_rater_fixture_integral_at_10000_and_nine_parameters_recovered_exactly":
+            four["cells_integral"] and four["constraints"]["passes"] and four["constraints"]["fit"]["status"] == "exact"
+            and four["constraints"]["reproduces_table"] and four["constraints"]["fit"]["solution"]["prior"] == FOUR_PRIOR
+            and all(four["constraints"]["fit"]["solution"]["false_negatives"][i + 1] == FOUR_FALSE_NEGATIVES[i]
+                    and four["constraints"]["fit"]["solution"]["false_positives"][i + 1] == FOUR_FALSE_POSITIVES[i]
+                    for i in range(4)),
+        "four_rater_converse_reconstructs_every_grid_table": four["converse_on_grid"],
+        "copy_grader_tetrad_residual_is_rho_V1_c34":
+            all(row["constraints"]["residuals"]["tetrad_12_34_vs_13_24"] == row["closed_form_residual"]
+                == row["copy_rate"] * Q(57, 400) * Q(9, 200)
+                and row["constraints"]["residuals"]["tetrad_13_24_vs_14_23"] == 0
+                and not row["constraints"]["equalities_hold"] and not row["constraints"]["passes"]
+                for row in copy4.values())
+            and all(res["tetrad_12_34_vs_13_24"] == rho * FIXTURE_ETA1 * (1 - FIXTURE_ETA1) * Q(3, 16) * Q(2, 5) * Q(3, 5)
+                    for rho, res in ((Q(1, 4), four["symmetric_copy_residuals"]["1/4"]),
+                                     (HALF, four["symmetric_copy_residuals"]["1/2"]),
+                                     (Q(1), four["symmetric_copy_residuals"]["1"])))
+            and all(v.denominator == 1 for v in four["copy_witness_counts"].values()),
+        "fourth_rater_exposes_the_copy_grader_three_raters_absorb":
+            all(row["triple_123"]["status"] in ("exact", "bracketed") and row["triple_123"]["in_range"]
+                and row["constraints"]["fit"]["status"] == "inconsistent" for row in copy4.values())
+            and copy4["1"]["triple_123"]["status"] == "exact" and copy4["1"]["triple_123"]["solution"]["prior"] == Q(3, 8),
+        "tetrad_detects_copying_at_a_balanced_prior_where_the_symmetric_check_is_vacuous":
+            four["balanced_prior_copy"]["four_rater_residuals"]["tetrad_12_34_vs_13_24"]
+            == four["balanced_prior_copy"]["closed_form"] == FIXTURE_ETA1 * (1 - FIXTURE_ETA1) * Q(1, 4) * Q(2, 5) * Q(3, 5)
+            and four["balanced_prior_copy"]["three_rater_check"]["vacuous_at_balanced_prior"]
+            and four["balanced_prior_copy"]["three_rater_check"]["equalities_hold"],
+        "anti_informative_second_grader_needs_the_rater_1_convention":
+            four["anti_informative_second"]["all_informative"]["fit"]["status"] == "convention_violated"
+            and four["anti_informative_second"]["rater_1_informative"]["passes"]
+            and four["anti_informative_second"]["rater_1_informative"]["fit"]["solution"]["false_negatives"][2]
+            == ANTI_INFORMATIVE_SECOND[0]
+            and four["anti_informative_second"]["rater_1_informative"]["fit"]["solution"]["prior"] == FOUR_PRIOR,
+        "four_rater_perturbed_table_fails_the_equalities":
+            not four["perturbed"]["equalities_hold"] and not four["perturbed"]["passes"],
+        # --- 0.3: the joint statement ---
+        "square_tails_match_label_table_enumeration_and_sampling_law":
+            joint["tails_match_label_table_enumeration_at_16"]
+            and all(joint["tail_laws"][m]["p_undefined"] == sampling["laws"][m]["p_undefined"]
+                    for m in joint["tail_laws"] if m in sampling["laws"]),
+        "fixed_point_bracket_contains_the_exact_tails_within_2_pow_minus_90":
+            joint["bracket_contains_exact"] and joint["bracket_cases"] == len(BRACKET_CASES)
+            and joint["bracket_max_width"] < Q(1, 2 ** 90)
+            and all(entry["eta_set"]["exact_fallbacks"] == 0 and entry["eta_set"]["max_bracket_width"] < Q(1, 2 ** 90)
+                    for entry in joint["by_size"].values()),
+        "eta_set_at_planning_size_is_a_grid_interval_around_the_truth":
+            FIXTURE_ETA1 in small_set and Q(0) not in small_set and Q(1, 5) not in small_set
+            and small["eta_set"]["is_grid_interval"] and small["eta_set"]["level_per_test"] == FIXTURE_ALPHA / 2
+            and small_ind["square_test_used"]
+            and small_ind["agreement_counts"]["counts"] == {(1, 2): 549, (1, 3): 549, (2, 3): 504}
+            and small["eta_set"]["observed_square"] == Q(31684, 49343),
+        "joint_tests_separate_the_judges_at_planning_size_though_the_ranges_overlap":
+            small["tests_separate"] and not small["ranges_disjoint"]
+            and small_ind["eps1_range"][0] < small_shared["eps1_range"][0] < small_ind["eps1_range"][1] < HALF
+            and small_shared["eps1_range"][0] > FIXTURE_ERROR and small_ind["coverage"] == 1 - 2 * FIXTURE_ALPHA,
+        "joint_statement_at_largest_size_is_stated_and_separates_by_tests":
+            all(j["statement"]["status"] == "stated" for j in big_joint["judges"].values()) and big_joint["tests_separate"]
+            and FIXTURE_ETA1 in big_joint["eta_set"]["retained"] and big_joint["eta_set"]["is_grid_interval"],
+        "ranges_disjoint_and_set_nested_at_largest_size_when_above_planning":
+            big_joint is small or (big_joint["ranges_disjoint"]
+                                   and set(big_joint["eta_set"]["retained"]) < set(small_set)),
+        "disagreement_bound_alone_leaves_eps1_undetermined":
+            joint["bound_only"]["status"] == "eps1_undetermined" and not joint["bound_only"]["square_test_used"]
+            and joint["bound_only"]["undetermined_points"] > 0,
+        "asymmetric_record_withholds_the_joint_statement":
+            joint["asymmetric_record"]["status"] == "withheld_constraints_fail"
+            and not joint["asymmetric_record"]["constraints_pass"] and joint["asymmetric_record"]["eta_set"] is None,
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "fixture": {"size": FIXTURE_SIZE, "prior": FIXTURE_PRIOR, "accuracy": FIXTURE_ACCURACY,
                         "judge_error": FIXTURE_ERROR, "eta1": FIXTURE_ETA1, "eta2": FIXTURE_ETA2,
                         "judges": JUDGES, "alpha": FIXTURE_ALPHA, "tolerance": TOLERANCE,
-                        "sampling_sizes": tuple(sampling_sizes),
+                        "sampling_sizes": tuple(sampling_sizes), "joint_sizes": tuple(joint_sizes),
                         "asymmetric": {"size": DS_SIZE, "prior": DS_PRIOR, "false_negatives": DS_FALSE_NEGATIVES,
-                                       "false_positives": DS_FALSE_POSITIVES, "judges": DS_JUDGES}},
+                                       "false_positives": DS_FALSE_POSITIVES, "judges": DS_JUDGES},
+                        "four_raters": {"size": FOUR_SIZE, "prior": FOUR_PRIOR, "false_negatives": FOUR_FALSE_NEGATIVES,
+                                        "false_positives": FOUR_FALSE_POSITIVES}},
             "three_raters": raters, "pipeline": pipeline, "dependent_grader": dependent, "ledger": ledgers,
-            "sampling": sampling, "dawid_skene": ds, "asymmetric_pipeline": asym}
+            "sampling": sampling, "dawid_skene": ds, "asymmetric_pipeline": asym,
+            "four_raters": four, "joint": joint}
