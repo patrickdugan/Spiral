@@ -22,9 +22,11 @@ def _encode(value):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--full-sweep", action="store_true",
+                        help="run the dominance sweep on all 324 cells per gain law (several minutes)")
     args = parser.parse_args()
-    report = {"schema_version": "0.2",
-              "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify()}
+    report = {"schema_version": "0.3",
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify(args.full_sweep)}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_feedback_multigen.py",
                "src/spiral_ln/evaluation_feedback_multigen.py",

@@ -180,7 +180,17 @@ candidate, one generation's gap change is lowered by the gate when
 \(\delta\le1/n\) and raised when \(\delta\ge t/n\), \(t\) the gate's margin
 in items, because the gate refuses true gains too; over many generations
 the ordering can also come from the two chains reaching the ceiling at
-different times. Candidates that are perturbations of the incumbent, which
+different times. What is proven for every horizon is that the gate lowers
+the *true* value: under fixed gains the gated chain's level is
+stochastically dominated by the naive chain's, for any threshold rule and
+any non-decreasing level function, so a gate that is meant to protect the
+readout also slows the thing being measured. The reported count is
+dominated too on every cell searched, 88,171 generation comparisons, but
+that remains a finite result, because the naive count is not monotone in
+the count: a lower count can earn a free level. Lowering a threshold is
+not monotone in general either, with an exact three-item witness, so the
+naive rule's role in the theorem is essential. Candidates that are
+perturbations of the incumbent, which
 is what a policy update produces, change the picture in the wrong
 direction: a per-item mutation model lowers the first generation's
 inflation and raises the accumulated gap, since a mutated candidate need

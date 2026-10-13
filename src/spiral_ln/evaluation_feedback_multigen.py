@@ -48,6 +48,17 @@ one-generation gate-versus-naive theorem under true gains
 (``one_step_gap_change``) and finite checks of how its sign chains across
 generations.
 
+Version 0.3 adds (D) the dominance question: whether the naive chain is
+above every gated chain in both expected count and expected true value at
+every generation under a fixed gain.  For the true value this is a theorem
+(Proposition 8, proof sketched before ``drift_kernel``; every threshold
+rule, every non-decreasing level function, every state); for the count it
+is a finite result of an exact 972-cell search with no counterexample
+(``dominance_sweep_fixture``) plus witnesses showing why the standard
+proof routes fail (``dominance_structure_fixture``).  The search uses an
+exact integer-numerator propagation (``drift_expectations``) and the exact
+``g -> infinity`` limit (``drift_limit``).
+
 Boundaries
 ----------
 The independent chain has candidates independent of the incumbent; the
@@ -62,7 +73,7 @@ from __future__ import annotations
 
 from fractions import Fraction as Q
 from itertools import product
-from math import isqrt, log, sqrt
+from math import isqrt, lcm, log, sqrt
 
 from spiral_ln.evaluation_game_feedback import (_binomial_pmf, divergence_flags,
                                                 selection_inflation)
@@ -1007,6 +1018,509 @@ def brute_force_mutation_distribution(items, candidates, p, q, threshold, genera
 
 
 # --------------------------------------------------------------------------
+# Proposition 8: naive versus gated chains under a fixed true gain
+# --------------------------------------------------------------------------
+#
+# Fix the gain law {1: 1} (every accepted candidate carries one lattice
+# step; a deterministic multiple m is the same chain on the coarser lattice
+# p0 + i m step).  Write P for the naive kernel and Q for the kernel of any
+# threshold rule t >= 0 on states x = (c, i), u_k = P^k f, w_k = Q^k f.
+#
+# Theorem (true value).  For every non-decreasing phi on levels, f = phi(i),
+# every t >= 0, every non-decreasing level function and every state x:
+# w_k(x) <= u_k(x) for all k.  Proof in three steps, all finite inductions.
+#   (M1)/(M2)  The naive iterates u_k are non-increasing in c and
+#     non-decreasing in i.  Downward induction on the level: (M1) at level l
+#     follows from (M2) at level l by the first-divergence identity
+#     u_k(c,l) - u_k(c+1,l) = sum_s F_l(c)^(s-1) pi_l(c+1) [u_{k-s}(c+1,l+1)
+#     - u_{k-s}(c+1,l)]; (M2) at level l follows from (M1) at level l+2 by
+#     expanding the lower chain two jumps and the upper chain one jump: the
+#     upper waits less (sigma <=_st tau), lands below the lower's second
+#     landing (M_{l+1} | > c <=_st M_{l+1} | > x for x > c), and u(., l+2)
+#     is non-increasing in the count and non-decreasing in time.  Base: at
+#     the top levels u is constant in c or equals phi(l) + (phi(l+1) -
+#     phi(l)) (1 - F_l(c)^k).
+#   (S)  w_k(c,i) <= u_k(j,i+1) for c < j <= a(c) = min(n, c + t(c)): one
+#     gated step, then (S)_{k-1} on the self-loop, the theorem at k-1 on the
+#     landings J > a(c) >= j, (M1) to pull every landing back to j, and
+#     u_{k-1} <= u_k.
+#   (D)  Couple both chains on the same draws from x; they agree until the
+#     first generation at which the naive accepts a draw M in (c, a(c)]
+#     that the gate rejects, and then the difference is u_{k-s}(M,i+1) -
+#     w_{k-s}(c,i) >= 0 by (S).
+# Corollary: the level is stochastically dominated (phi = 1{i >= l}) and
+# E[p(i_g)] is ordered, from every initial law, at every horizon.
+#
+# The count.  E[c_infinity] = n for the naive chain whenever p(1) > 0, so
+# the limit ordering is trivial; at finite horizons no proof is known.  The
+# routes that work for the level fail provably: the naive count iterates
+# are not monotone in c (a lower count earns a free level), so neither the
+# pathwise coupling, nor the gate-cone condition u_k(j,i+1) >= u_k(c,i) on
+# the naive iterates, nor the policy-improvement condition on the gated
+# iterates, nor the componentwise condition u_k(c,i) <= u_k(c',i') for
+# c <= c', i < i' holds (``dominance_structure_fixture`` records witnesses).
+# What holds on every enumerated cell, at every state and horizon, is the
+# ordering itself, its hitting-probability form P(c_k >= m), and (S) for
+# the count.  Lowering an arbitrary threshold is NOT monotone in general:
+# ``threshold_pair_counterexample`` gives two rules t <= t' with the higher
+# one ahead in true value.  All of this is finite evidence only.
+
+
+def _check_levels(levels):
+    try:
+        levels = tuple(levels)
+    except TypeError:
+        raise ValueError("levels must be a sequence of rationals") from None
+    if (not levels or any(type(x) is bool or not isinstance(x, (int, Q)) or not 0 <= x <= 1 for x in levels)
+            or any(b < a for a, b in zip(levels, levels[1:]))):
+        raise ValueError("levels must be non-decreasing rationals in [0, 1]")
+    return tuple(Q(x) for x in levels)
+
+
+_PMF_CACHE: dict[tuple[int, Q], list[Q]] = {}
+
+
+def _cached_pmf(items, p):
+    key = (items, p)
+    if key not in _PMF_CACHE:
+        _PMF_CACHE[key] = _binomial_pmf(items, p)
+    return _PMF_CACHE[key]
+
+
+def drift_kernel(items, candidates, levels, gain_law, threshold) -> dict[tuple[int, int], list[tuple[tuple[int, int], Q]]]:
+    """Exact one-generation kernel of the drift chain on ``(count, level)``.
+
+    ``kernel[(c, i)]`` lists ``((c', i'), probability)`` with the self-loop
+    first.  The same chain as ``drift_trajectory`` on the lattice ``levels``
+    (checked by test), with the joint law of the best count and its gain
+    written as ``gain[m] Bin(n, p(i+m))(j) S_j``, ``S_j = sum_{k=1}^K
+    F(j-1)^(k-1) F(j)^(K-k)`` summing the first-max tie rule over the index
+    of the winning candidate; ``mix(j) S_j = F(j)^K - F(j-1)^K``, so the
+    denominators stay powers of the binomial denominators.
+    """
+
+    _check_items_candidates(items, candidates)
+    levels = _check_levels(levels)
+    gain_law = _check_gain(gain_law)
+    threshold = _check_threshold(threshold, items)
+    top = len(levels) - 1
+    kernel = {}
+    for level in range(top + 1):
+        parts = {m: _cached_pmf(items, levels[min(top, level + m)]) for m in gain_law}
+        mixture = [sum(gain_law[m] * parts[m][j] for m in gain_law) for j in range(items + 1)]
+        cdf, running = [], Q(0)
+        for mass in mixture:
+            running += mass
+            cdf.append(running)
+        ties = []
+        for j in range(items + 1):
+            lower = cdf[j - 1] if j else Q(0)
+            ties.append(sum((lower**(k - 1) * cdf[j]**(candidates - k)
+                             for k in range(1, candidates + 1)), Q(0)))
+        for c in range(items + 1):
+            cap = min(items, c + threshold[c])
+            entries = [((c, level), cdf[cap]**candidates)]
+            for j in range(cap + 1, items + 1):
+                for m in gain_law:
+                    prob = gain_law[m] * parts[m][j] * ties[j]
+                    if prob:
+                        entries.append(((j, min(top, level + m)), prob))
+            kernel[(c, level)] = entries
+    return kernel
+
+
+def drift_absorbing_states(items, levels, threshold) -> frozenset[tuple[int, int]]:
+    """States ``(c, i)`` with ``c + t(c) >= n``: nothing is ever accepted."""
+
+    levels = _check_levels(levels)
+    threshold = _check_threshold(threshold, items)
+    return frozenset((c, i) for c in range(items + 1) for i in range(len(levels))
+                     if c + threshold[c] >= items)
+
+
+def drift_expectations(items, candidates, levels, gain, threshold, generations,
+                       absorption_tolerance=None) -> dict[str, object]:
+    """``E[c_g] / n``, ``E[p(i_g)]`` and the absorbed mass for ``g = 0..G``.
+
+    The state law is propagated as integer numerators over one common
+    denominator (the lcm of the kernel's denominators, one factor per
+    generation), so no gcd is taken until an expectation is formed; the
+    values equal ``drift_trajectory``'s exactly (test).  With
+    ``absorption_tolerance`` the run stops at the first generation whose
+    mass on ``drift_absorbing_states`` is at least ``1 - tolerance``
+    (``stopped_at``); from then on each expectation can move by at most the
+    unabsorbed mass.  ``gain`` is one law or a schedule of length ``G``.
+    """
+
+    _check_items_candidates(items, candidates)
+    _check_generations(generations)
+    levels = _check_levels(levels)
+    threshold = _check_threshold(threshold, items)
+    schedule = _check_gain_schedule(gain, generations)
+    if absorption_tolerance is not None:
+        absorption_tolerance = _check_probability(absorption_tolerance, "absorption_tolerance")
+    absorbing = drift_absorbing_states(items, levels, threshold)
+    initial = {(c, 0): mass for c, mass in enumerate(_cached_pmf(items, levels[0])) if mass}
+    denominator = lcm(*[mass.denominator for mass in initial.values()])
+    current = {x: int(mass * denominator) for x, mass in initial.items()}
+    kernels: dict[tuple, tuple[int, dict]] = {}
+    reported, true, absorbed = [], [], []
+
+    def record():
+        by_level = [0] * len(levels)
+        for (_, i), mass in current.items():
+            by_level[i] += mass
+        reported.append(Q(sum(mass * c for (c, _), mass in current.items()), denominator) / items)
+        true.append(sum((level * mass for level, mass in zip(levels, by_level) if mass), Q(0)) / denominator)
+        absorbed.append(Q(sum(mass for x, mass in current.items() if x in absorbing), denominator))
+
+    record()
+    stopped = None
+    for g, law in enumerate(schedule):
+        key = tuple(sorted(law.items()))
+        if key not in kernels:
+            kernel = drift_kernel(items, candidates, levels, law, threshold)
+            common = lcm(*[prob.denominator for entries in kernel.values() for _, prob in entries])
+            kernels[key] = (common, {x: [(y, int(prob * common)) for y, prob in entries]
+                                     for x, entries in kernel.items()})
+        common, integer_kernel = kernels[key]
+        following: dict[tuple[int, int], int] = {}
+        for x, mass in current.items():
+            for y, weight in integer_kernel[x]:
+                following[y] = following.get(y, 0) + mass * weight
+        current = {x: mass for x, mass in following.items() if mass}
+        denominator *= common
+        record()
+        if absorption_tolerance is not None and absorbed[-1] >= 1 - absorption_tolerance:
+            stopped = g + 1
+            break
+    return {"items": items, "candidates": candidates, "levels": levels, "threshold": threshold,
+            "generations": generations, "generations_run": len(reported) - 1,
+            "expected_reported": reported, "expected_true": true, "absorbed_mass": absorbed,
+            "stopped_at": stopped}
+
+
+def drift_limit(items, candidates, levels, gain_law, threshold) -> dict[str, object]:
+    """Exact ``g -> infinity`` expectations of a constant-law drift chain.
+
+    Jumps raise the count, so the states ordered by count form a DAG with
+    self-loops; processing counts from ``n`` downward, the limit value at a
+    transient state is the mean of the limit values at its landings under
+    the law of the jump given that it leaves.  A state that cannot leave
+    (``c + t(c) >= n``, or a zero leaving probability) keeps its own value.
+    ``by_state[(c, i)] = (E[c_inf], E[p(i_inf)])`` from that state;
+    ``expected_reported`` and ``expected_true`` average over the initial
+    law ``(Bin(n, p(0)), 0)``.
+    """
+
+    kernel = drift_kernel(items, candidates, levels, gain_law, threshold)
+    levels = _check_levels(levels)
+    threshold = _check_threshold(threshold, items)
+    top = len(levels) - 1
+    by_state: dict[tuple[int, int], tuple[Q, Q]] = {}
+    for c in range(items, -1, -1):
+        for i in range(top + 1):
+            x = (c, i)
+            stay = kernel[x][0][1]
+            if c + threshold[c] >= items or stay == 1:
+                by_state[x] = (Q(c), levels[i])
+                continue
+            leave = 1 - stay
+            by_state[x] = (sum((prob * by_state[y][0] for y, prob in kernel[x][1:]), Q(0)) / leave,
+                           sum((prob * by_state[y][1] for y, prob in kernel[x][1:]), Q(0)) / leave)
+    initial = _cached_pmf(items, levels[0])
+    return {"by_state": by_state,
+            "expected_reported": sum((initial[c] * by_state[(c, 0)][0] for c in range(items + 1)), Q(0)) / items,
+            "expected_true": sum((initial[c] * by_state[(c, 0)][1] for c in range(items + 1)), Q(0))}
+
+
+def kernel_iterates(kernel, f, horizon) -> list[dict[tuple[int, int], Q]]:
+    """``P^k f`` on every state for ``k = 0..horizon``: ``P^k f(x)`` is the
+    expectation of ``f`` after ``k`` generations from ``x``."""
+
+    _check_generations(horizon)
+    current = {x: Q(f(x)) for x in kernel}
+    history = [current]
+    for _ in range(horizon):
+        current = {x: sum((prob * current[y] for y, prob in entries), Q(0))
+                   for x, entries in kernel.items()}
+        history.append(current)
+    return history
+
+
+DOMINANCE_ITEMS = (4, 8, 16)
+DOMINANCE_CANDIDATES = (1, 2, 4)
+DOMINANCE_Z = (1, 2, 3)
+DOMINANCE_STEPS = (Q(1, 16), Q(1, 8), Q(1, 4), Q(3, 8))
+DOMINANCE_P0 = (Q(1, 4), Q(1, 2), Q(0))
+DOMINANCE_HORIZON = 100
+DOMINANCE_ABSORPTION_TOLERANCE = Q(1, 10**9)
+DOMINANCE_SUBSET = {"candidates": (2,), "z": (1, 3)}
+DOMINANCE_DECAY_SUBSET = {"candidates": (2,), "z": (1,), "steps": (Q(1, 16), Q(1, 8)), "horizon": 60}
+
+
+def _render_float(value):
+    return None if value is None else round(float(value), 9)
+
+
+def dominance_search(gain, items_grid, candidates_grid, z_grid, p0_grid, step_grid,
+                     horizon, tolerance) -> dict[str, object]:
+    """Naive versus ``z``-gate on every cell of the grid: exact expectations
+    at every generation up to ``horizon`` (stopping early once both chains
+    are within ``tolerance`` of absorption) and, for a constant law, the
+    exact limits.  ``gain`` is a constant law or a callable ``horizon ->
+    schedule``.  Records the first generation at which the gate is above
+    the naive chain in either expectation, with exact values, or ``None``.
+    """
+
+    rows, violations, limit_violations, generations, absorbed_cells = {}, [], [], 0, 0
+    constant = isinstance(gain, dict)
+    for p0 in p0_grid:
+        for step in step_grid:
+            levels = drift_levels(p0, step)
+            for items in items_grid:
+                for candidates in candidates_grid:
+                    for z in z_grid:
+                        thresholds = {"naive": naive_threshold(items), "gate": gate_threshold(items, z)}
+                        schedule = gain if constant else gain(horizon)
+                        runs = {name: drift_expectations(items, candidates, levels, schedule, thr,
+                                                         horizon, tolerance)
+                                for name, thr in thresholds.items()}
+                        naive, gate = runs["naive"], runs["gate"]
+                        compared = min(naive["generations_run"], gate["generations_run"])
+                        generations += compared
+                        key = f"gain={'law' if constant else 'schedule'},p0={p0},step={step},n={items},K={candidates},z={z}"
+                        first = next((g for g in range(compared + 1)
+                                      if naive["expected_reported"][g] < gate["expected_reported"][g]
+                                      or naive["expected_true"][g] < gate["expected_true"][g]), None)
+                        if first is not None:
+                            violations.append({"cell": key, "generation": first,
+                                               "naive": (naive["expected_reported"][first], naive["expected_true"][first]),
+                                               "gate": (gate["expected_reported"][first], gate["expected_true"][first])})
+                        limits = None
+                        if constant:
+                            ln = drift_limit(items, candidates, levels, gain, thresholds["naive"])
+                            lg = drift_limit(items, candidates, levels, gain, thresholds["gate"])
+                            limits = {"naive": (ln["expected_reported"], ln["expected_true"]),
+                                      "gate": (lg["expected_reported"], lg["expected_true"])}
+                            if (ln["expected_reported"] < lg["expected_reported"]
+                                    or ln["expected_true"] < lg["expected_true"]):
+                                limit_violations.append({"cell": key, **limits})
+                        absorbed_cells += naive["stopped_at"] is not None and gate["stopped_at"] is not None
+                        rows[key] = {
+                            "generations_compared": compared,
+                            "stopped_at": {"naive": naive["stopped_at"], "gate": gate["stopped_at"]},
+                            "first_violation_generation": first,
+                            "reported_at_end": {k: _render_float(r["expected_reported"][compared]) for k, r in runs.items()},
+                            "true_at_end": {k: _render_float(r["expected_true"][compared]) for k, r in runs.items()},
+                            "limit": None if limits is None else {k: tuple(_render_float(v) for v in vals)
+                                                                  for k, vals in limits.items()},
+                        }
+    return {"cells": len(rows), "generations_compared": generations,
+            "cells_absorbed_within_horizon": absorbed_cells,
+            "violations": violations, "limit_violations": limit_violations,
+            "first_violation": violations[0] if violations else None,
+            "horizon": horizon, "absorption_tolerance": tolerance,
+            "rows": rows, "note": "end-of-horizon and limit values are float renderings; comparisons are exact"}
+
+
+def dominance_sweep_fixture(full=False) -> dict[str, object]:
+    """The three gain laws of section 6 over the dominance grid.  ``full``
+    runs all 324 cells per law (the receipt); otherwise the fixed law runs
+    on every cell and the other laws on subsets, for the test suite."""
+
+    grid = dict(items_grid=DOMINANCE_ITEMS, candidates_grid=DOMINANCE_CANDIDATES, z_grid=DOMINANCE_Z,
+                p0_grid=DOMINANCE_P0, step_grid=DOMINANCE_STEPS,
+                horizon=DOMINANCE_HORIZON, tolerance=DOMINANCE_ABSORPTION_TOLERANCE)
+    subset = dict(grid, candidates_grid=DOMINANCE_SUBSET["candidates"], z_grid=DOMINANCE_SUBSET["z"])
+    decay = dict(grid, candidates_grid=DOMINANCE_DECAY_SUBSET["candidates"], z_grid=DOMINANCE_DECAY_SUBSET["z"],
+                 step_grid=DOMINANCE_DECAY_SUBSET["steps"], horizon=DOMINANCE_DECAY_SUBSET["horizon"])
+    laws = {
+        "fixed": (DRIFT_GAINS["fixed"], grid),
+        "two_point": (DRIFT_GAINS["two_point"], grid if full else subset),
+        "decaying_two_point": (lambda h: decaying_gain_schedule(h, DRIFT_DECAY_Q0, DRIFT_DECAY_RATIO),
+                               grid if full else decay),
+    }
+    out = {name: dominance_search(gain, **params) for name, (gain, params) in laws.items()}
+    return {"full_sweep": full, "by_law": out,
+            "cells": sum(s["cells"] for s in out.values()),
+            "generations_compared": sum(s["generations_compared"] for s in out.values()),
+            "violations": sum(len(s["violations"]) for s in out.values()),
+            "limit_violations": sum(len(s["limit_violations"]) for s in out.values()),
+            "grid": {"items": DOMINANCE_ITEMS, "candidates": DOMINANCE_CANDIDATES, "z": DOMINANCE_Z,
+                     "p0": DOMINANCE_P0, "steps": DOMINANCE_STEPS, "horizon": DOMINANCE_HORIZON,
+                     "lattice_note": "p(i) = min(1, p0 + i step); a gain multiple m on step s is the chain on step m s"}}
+
+
+STRUCTURE_HORIZON = 25
+STRUCTURE_CELLS = ((4, 2), (8, 2), (16, 2), (8, 4))
+STRUCTURE_STEPS = (Q(1, 16), Q(1, 8), Q(1, 4))
+NONGATE_THRESHOLDS = {4: (0, 2, 0, 3, 0), 8: (3, 1, 2, 2, 0, 1, 0, 2, 0), 16: (2, 0, 3, 1, 0, 0, 4, 2, 0, 3, 1, 1, 0, 2, 0, 1, 0)}
+NONUNIFORM_LATTICES = ((Q(1, 32), Q(5, 32), Q(9, 16), Q(23, 32), Q(15, 16)),
+                       (Q(1, 16), Q(1, 8), Q(3, 4), Q(1)))
+INDICATOR_CELLS = ((4, 2), (8, 2))
+
+
+def threshold_pair_counterexample() -> dict[str, object]:
+    """Two rules ``t <= t'`` pointwise (``items = 3``, ``K = 1``, lattice
+    ``NONUNIFORM_LATTICES[0]``) for which the higher rule is ahead in true
+    value at some state and horizon and in the limit: lowering a threshold
+    is not monotone in general; Proposition 8 needs the naive rule."""
+
+    items, candidates, levels = 3, 1, NONUNIFORM_LATTICES[0]
+    lower, higher = (0, 2, 0, 0), (1, 2, 0, 1)
+    f = lambda x: levels[x[1]]
+    law = DRIFT_GAINS["fixed"]
+    low = kernel_iterates(drift_kernel(items, candidates, levels, law, lower), f, STRUCTURE_HORIZON)
+    high = kernel_iterates(drift_kernel(items, candidates, levels, law, higher), f, STRUCTURE_HORIZON)
+    witness = next(((k, x) for k in range(STRUCTURE_HORIZON + 1) for x in sorted(low[k])
+                    if high[k][x] > low[k][x]), None)
+    limit_low = drift_limit(items, candidates, levels, law, lower)["by_state"]
+    limit_high = drift_limit(items, candidates, levels, law, higher)["by_state"]
+    limit_witness = next((x for x in sorted(limit_low) if limit_high[x][1] > limit_low[x][1]), None)
+    return {"items": items, "candidates": candidates, "levels": levels,
+            "lower_threshold": lower, "higher_threshold": higher,
+            "finite_witness": None if witness is None else {
+                "horizon": witness[0], "state": witness[1],
+                "lower_rule_true_value": low[witness[0]][witness[1]],
+                "higher_rule_true_value": high[witness[0]][witness[1]]},
+            "limit_witness": None if limit_witness is None else {
+                "state": limit_witness, "lower_rule_true_value": limit_low[limit_witness][1],
+                "higher_rule_true_value": limit_high[limit_witness][1]},
+            "higher_rule_ahead_somewhere": witness is not None and limit_witness is not None}
+
+
+def dominance_structure_fixture() -> dict[str, object]:
+    """Every-state checks behind Proposition 8 and its count caveat on
+    ``STRUCTURE_CELLS`` x ``STRUCTURE_STEPS`` (lattice ``1/4 + i step``),
+    the gates ``z = 1, 2, 3`` and a non-gate rule, plus two non-uniform
+    lattices: the naive-iterate monotonicities (M1)/(M2), the intermediate
+    (S), the per-state ordering (D) for true value and count, their
+    indicator forms (stochastic dominance of level and count), the limit
+    ordering by state, and the failure witnesses for the routes that do
+    not work for the count."""
+
+    law = DRIFT_GAINS["fixed"]
+    H = STRUCTURE_HORIZON
+    flags = {"naive_M1_true_value": True, "naive_M2_true_value": True,
+             "S_true_value": True, "D_true_value_every_state": True,
+             "D_count_every_state": True, "S_count": True,
+             "naive_count_gain_nonincreasing_in_count": True,
+             "limit_true_value_dominance_every_state": True,
+             "limit_M1_true_value": True,
+             "level_stochastic_dominance": True, "count_hitting_dominance": True,
+             "kernel_rows_sum_to_one": True}
+    witnesses = {"gate_cone_fails_on_naive_iterates": None,
+                 "componentwise_condition_fails_for_count": None,
+                 "policy_improvement_fails_on_gated_iterates": None,
+                 "naive_count_not_monotone_in_count": None}
+    configs = []
+    for items, candidates in STRUCTURE_CELLS:
+        for step in STRUCTURE_STEPS:
+            configs.append((items, candidates, drift_levels(DRIFT_P0, step), f"n={items},K={candidates},step={step}"))
+    for index, levels in enumerate(NONUNIFORM_LATTICES):
+        configs.append((8, 2, levels, f"n=8,K=2,lattice={index}"))
+    cells = {}
+    for items, candidates, levels, name in configs:
+        top = len(levels) - 1
+        up = lambda i: min(top, i + 1)
+        fp = lambda x: levels[x[1]]
+        fc = lambda x: Q(x[0])
+        naive_kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+        flags["kernel_rows_sum_to_one"] &= all(sum(p for _, p in e) == 1 for e in naive_kernel.values())
+        states = list(naive_kernel)
+        u_p = kernel_iterates(naive_kernel, fp, H)
+        u_c = kernel_iterates(naive_kernel, fc, H)
+        limit_naive = drift_limit(items, candidates, levels, law, naive_threshold(items))["by_state"]
+        m1 = all(u_p[k][(c, i)] >= u_p[k][(c + 1, i)] for k in range(H + 1) for (c, i) in states if c < items)
+        m2 = all(u_p[k][(c, i)] <= u_p[k][(c, i + 1)] for k in range(H + 1) for (c, i) in states if i < top)
+        flags["naive_M1_true_value"] &= m1
+        flags["naive_M2_true_value"] &= m2
+        flags["limit_M1_true_value"] &= all(limit_naive[(c, i)][1] >= limit_naive[(c + 1, i)][1]
+                                            for (c, i) in states if c < items)
+        flags["naive_count_gain_nonincreasing_in_count"] &= all(
+            u_c[k][(c, i)] - c >= u_c[k][(c + 1, i)] - (c + 1) for k in range(H + 1) for (c, i) in states if c < items)
+        if witnesses["naive_count_not_monotone_in_count"] is None:
+            hit = next(((k, c, i) for k in range(H + 1) for (c, i) in states if c < items
+                        and u_c[k][(c, i)] > u_c[k][(c + 1, i)]), None)
+            if hit:
+                k, c, i = hit
+                witnesses["naive_count_not_monotone_in_count"] = {
+                    "cell": name, "horizon": k, "state": (c, i),
+                    "value": u_c[k][(c, i)], "value_at_count_plus_one": u_c[k][(c + 1, i)]}
+        if witnesses["componentwise_condition_fails_for_count"] is None:
+            hit = next(((k, x, y) for k in range(H + 1) for x in states for y in states
+                        if x[0] <= y[0] and x[1] < y[1] and u_c[k][x] > u_c[k][y]), None)
+            if hit:
+                witnesses["componentwise_condition_fails_for_count"] = {
+                    "cell": name, "horizon": hit[0], "lower_state": hit[1], "higher_state": hit[2],
+                    "value_lower": u_c[hit[0]][hit[1]], "value_higher": u_c[hit[0]][hit[2]]}
+        rules = {f"z={z}": gate_threshold(items, z) for z in GATE_Z_VALUES}
+        rules["nongate"] = NONGATE_THRESHOLDS[items]
+        entry = {"naive_M1": m1, "naive_M2": m2, "rules": {}}
+        for rule, threshold in rules.items():
+            a = [min(items, c + threshold[c]) for c in range(items + 1)]
+            kernel = drift_kernel(items, candidates, levels, law, threshold)
+            w_p = kernel_iterates(kernel, fp, H)
+            w_c = kernel_iterates(kernel, fc, H)
+            d_p = all(w_p[k][x] <= u_p[k][x] for k in range(H + 1) for x in states)
+            d_c = all(w_c[k][x] <= u_c[k][x] for k in range(H + 1) for x in states)
+            s_p = all(w_p[k][(c, i)] <= u_p[k][(j, up(i))] for k in range(H + 1)
+                      for (c, i) in states for j in range(c + 1, a[c] + 1))
+            s_c = all(w_c[k][(c, i)] <= u_c[k][(j, up(i))] for k in range(H + 1)
+                      for (c, i) in states for j in range(c + 1, a[c] + 1))
+            limit_gate = drift_limit(items, candidates, levels, law, threshold)["by_state"]
+            l_p = all(limit_gate[x][1] <= limit_naive[x][1] for x in states)
+            flags["D_true_value_every_state"] &= d_p
+            flags["D_count_every_state"] &= d_c
+            flags["S_true_value"] &= s_p
+            flags["S_count"] &= s_c
+            flags["limit_true_value_dominance_every_state"] &= l_p
+            if witnesses["gate_cone_fails_on_naive_iterates"] is None:
+                hit = next(((k, c, i, j) for k in range(H + 1) for (c, i) in states
+                            for j in range(c + 1, a[c] + 1) if u_p[k][(j, up(i))] < u_p[k][(c, i)]), None)
+                if hit:
+                    k, c, i, j = hit
+                    witnesses["gate_cone_fails_on_naive_iterates"] = {
+                        "cell": name, "rule": rule, "horizon": k, "state": (c, i), "landing": (j, up(i)),
+                        "naive_value_at_state": u_p[k][(c, i)], "naive_value_at_landing": u_p[k][(j, up(i))]}
+            if witnesses["policy_improvement_fails_on_gated_iterates"] is None:
+                hit = next(((k, c, i, j) for k in range(H + 1) for (c, i) in states
+                            for j in range(c + 1, a[c] + 1) if w_p[k][(j, up(i))] < w_p[k][(c, i)]), None)
+                if hit:
+                    k, c, i, j = hit
+                    witnesses["policy_improvement_fails_on_gated_iterates"] = {
+                        "cell": name, "rule": rule, "horizon": k, "state": (c, i), "landing": (j, up(i)),
+                        "gated_value_at_state": w_p[k][(c, i)], "gated_value_at_landing": w_p[k][(j, up(i))]}
+            entry["rules"][rule] = {"D_true_value": d_p, "D_count": d_c, "S_true_value": s_p, "S_count": s_c,
+                                    "limit_true_value": l_p}
+        cells[name] = entry
+    indicator = {}
+    for items, candidates in INDICATOR_CELLS:
+        levels = drift_levels(DRIFT_P0, DRIFT_STEP)
+        top = len(levels) - 1
+        naive_kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+        states = list(naive_kernel)
+        for z in (1, 2):
+            kernel = drift_kernel(items, candidates, levels, law, gate_threshold(items, z))
+            level_ok, count_ok = True, True
+            for ell in range(1, top + 1):
+                f = lambda x, ell=ell: Q(int(x[1] >= ell))
+                u, w = kernel_iterates(naive_kernel, f, H), kernel_iterates(kernel, f, H)
+                level_ok &= all(w[k][x] <= u[k][x] for k in range(H + 1) for x in states)
+            for m in range(1, items + 1):
+                f = lambda x, m=m: Q(int(x[0] >= m))
+                u, w = kernel_iterates(naive_kernel, f, H), kernel_iterates(kernel, f, H)
+                count_ok &= all(w[k][x] <= u[k][x] for k in range(H + 1) for x in states)
+            flags["level_stochastic_dominance"] &= level_ok
+            flags["count_hitting_dominance"] &= count_ok
+            indicator[f"n={items},K={candidates},z={z}"] = {"level": level_ok, "count": count_ok}
+    return {"flags": flags, "witnesses": witnesses, "cells": cells, "indicator_cells": indicator,
+            "horizon": H, "threshold_pair": threshold_pair_counterexample(),
+            "routes_that_fail_for_the_count": [k for k, v in witnesses.items() if v is not None]}
+
+
+# --------------------------------------------------------------------------
 # fixtures and verify()
 # --------------------------------------------------------------------------
 
@@ -1518,17 +2032,60 @@ def divergence_fixture() -> dict[str, object]:
             "fresh_selection_block_never_flags_after_first_interval": not any(quiet["flags"][1:])}
 
 
-def verify() -> dict[str, object]:
-    """Run all exact fixtures and return machine-readable checks."""
+def consistency_fixture() -> dict[str, object]:
+    """The Proposition 8 machinery against the earlier DP: ``drift_kernel``
+    plus ``drift_expectations`` reproduce ``drift_trajectory`` exactly on
+    every drift cell and gain law (naive and ``z = 1``), and the exact limit
+    lies within the unabsorbed mass of the DP value at the stopping
+    generation on every cell that absorbs within the horizon."""
+
+    gains = dict(DRIFT_GAINS)
+    gains["decaying_two_point"] = decaying_gain_schedule(12, DRIFT_DECAY_Q0, DRIFT_DECAY_RATIO)
+    levels = drift_levels(DRIFT_P0, DRIFT_STEP)
+    matches, limit_within_mass, absorbed = True, True, 0
+    for items, candidates in DRIFT_CELLS:
+        for gain_name, gain in gains.items():
+            for threshold in (naive_threshold(items), gate_threshold(items, 1)):
+                dp = drift_trajectory(items, candidates, DRIFT_P0, DRIFT_STEP, gain, threshold, 12)
+                fast = drift_expectations(items, candidates, levels, gain, threshold, 12)
+                matches &= (dp["expected_reported"] == fast["expected_reported"]
+                            and dp["expected_true"] == fast["expected_true"])
+    for p0 in DOMINANCE_P0:
+        for step in (Q(1, 4), Q(3, 8)):
+            levels = drift_levels(p0, step)
+            for items, candidates in ((4, 4), (8, 4)):
+                for threshold in (naive_threshold(items), gate_threshold(items, 2)):
+                    run = drift_expectations(items, candidates, levels, DRIFT_GAINS["fixed"], threshold,
+                                             DOMINANCE_HORIZON, DOMINANCE_ABSORPTION_TOLERANCE)
+                    if run["stopped_at"] is None:
+                        continue
+                    absorbed += 1
+                    limit = drift_limit(items, candidates, levels, DRIFT_GAINS["fixed"], threshold)
+                    slack = 1 - run["absorbed_mass"][-1]
+                    limit_within_mass &= (abs(limit["expected_reported"] - run["expected_reported"][-1]) <= slack
+                                          and abs(limit["expected_true"] - run["expected_true"][-1]) <= slack)
+    return {"fast_expectations_equal_dp": matches, "limit_within_unabsorbed_mass": limit_within_mass,
+            "cells_absorbed_within_horizon": absorbed}
+
+
+def verify(full_sweep: bool = False) -> dict[str, object]:
+    """Run all exact fixtures and return machine-readable checks.  With
+    ``full_sweep`` the dominance sweep covers all 324 cells per gain law
+    (the receipt); otherwise the fixed law covers every cell and the other
+    laws run on subsets."""
 
     naive, gated, fresh = naive_fixture(), gated_fixture(), fresh_fixture()
     drift, brute, divergence = drift_fixture(), brute_force_fixture(), divergence_fixture()
     bounds, mutation = bound_fixture(), mutation_fixture()
     one_step, gate_order = one_step_fixture(), gate_order_fixture()
+    consistency, structure = consistency_fixture(), dominance_structure_fixture()
+    sweep = dominance_sweep_fixture(full_sweep)
     naive_8_2 = naive["cells"][_cell(8, 2, Q(1, 2))]["readout_gap_by_generation"]
     gated_16_4 = gated["cells"][f"{_cell(16, 4, Q(1, 2))},z=3"]
     orderings = drift["orderings_on_enumerated_cells"]
     bound_flags, mutation_flags, order_flags = bounds["flags"], mutation["flags"], gate_order["flags"]
+    structure_flags, witnesses = structure["flags"], structure["witnesses"]
+    sweep_laws = sweep["by_law"]
     checks = {
         "kernel_rows_sum_to_one": naive["consistency"]["rows_sum"],
         "naive_dp_equals_closed_form_gk_plus_one": naive["consistency"]["closed_form"],
@@ -1615,22 +2172,76 @@ def verify() -> dict[str, object]:
         "gate_order_case_i_sign_reverses_on_some_cell": order_flags["case_i_reverses_somewhere"],
         "gate_order_naive_dominates_gate_in_expectation_on_cells":
             order_flags["naive_dominates_gate_reported"] and order_flags["naive_dominates_gate_true"],
+        # Part D: Proposition 8 (dominance) and its count caveat
+        "dominance_kernel_and_fast_expectations_match_dp":
+            consistency["fast_expectations_equal_dp"] and structure_flags["kernel_rows_sum_to_one"],
+        "dominance_limit_within_unabsorbed_mass_of_dp":
+            consistency["limit_within_unabsorbed_mass"] and consistency["cells_absorbed_within_horizon"] > 0,
+        "dominance_sweep_fixed_law_no_violation":
+            not sweep_laws["fixed"]["violations"] and not sweep_laws["fixed"]["limit_violations"],
+        "dominance_sweep_two_point_law_no_violation":
+            not sweep_laws["two_point"]["violations"] and not sweep_laws["two_point"]["limit_violations"],
+        "dominance_sweep_decaying_law_no_violation":
+            not sweep_laws["decaying_two_point"]["violations"],
+        "dominance_sweep_fixed_law_covers_all_cells": sweep_laws["fixed"]["cells"] == 324,
+        "naive_iterates_monotone_true_value_M1_M2":
+            structure_flags["naive_M1_true_value"] and structure_flags["naive_M2_true_value"]
+            and structure_flags["limit_M1_true_value"],
+        "dominance_true_value_every_state_and_horizon":
+            structure_flags["D_true_value_every_state"] and structure_flags["S_true_value"],
+        "dominance_true_value_limit_every_state": structure_flags["limit_true_value_dominance_every_state"],
+        "dominance_level_stochastic_every_state": structure_flags["level_stochastic_dominance"],
+        "dominance_count_every_state_and_horizon":
+            structure_flags["D_count_every_state"] and structure_flags["S_count"],
+        "dominance_count_hitting_probabilities_every_state": structure_flags["count_hitting_dominance"],
+        "naive_count_gain_nonincreasing_in_count": structure_flags["naive_count_gain_nonincreasing_in_count"],
+        "count_routes_fail_gate_cone_componentwise_policy_improvement":
+            all(witnesses[k] is not None for k in ("gate_cone_fails_on_naive_iterates",
+                                                   "componentwise_condition_fails_for_count",
+                                                   "policy_improvement_fails_on_gated_iterates",
+                                                   "naive_count_not_monotone_in_count")),
+        "threshold_monotonicity_fails_for_a_non_naive_pair":
+            structure["threshold_pair"]["higher_rule_ahead_somewhere"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
-            "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order),
+            "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure),
             "naive": naive, "gated": gated, "fresh": fresh, "drift": drift,
             "brute_force": brute, "divergence": divergence,
             "bounds": bounds, "mutation": mutation, "one_step": one_step,
-            "gate_order": gate_order}
+            "gate_order": gate_order, "dominance_consistency": consistency,
+            "dominance_structure": structure, "dominance_sweep": sweep}
 
 
 def _approx(value):
     return None if value is None else {"exact": value, "float": round(float(value), 6)}
 
 
-def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order) -> dict[str, object]:
+def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure) -> dict[str, object]:
     """Named cells with a float rendering beside the exact value."""
+
+    def sweep_row(law, key):
+        return sweep["by_law"][law]["rows"][key]
+
+    pair = structure["threshold_pair"]
+    dominance = {
+        "full_sweep": sweep["full_sweep"], "cells": sweep["cells"],
+        "generations_compared": sweep["generations_compared"],
+        "violations": sweep["violations"], "limit_violations": sweep["limit_violations"],
+        "cells_by_law": {law: s["cells"] for law, s in sweep["by_law"].items()},
+        "n16_k4_z1_fixed_p0_quarter_step_eighth": sweep_row("fixed", "gain=law,p0=1/4,step=1/8,n=16,K=4,z=1"),
+        "n8_k2_z3_fixed_p0_zero_step_sixteenth": sweep_row("fixed", "gain=law,p0=0,step=1/16,n=8,K=2,z=3"),
+        "structure_flags": structure["flags"],
+        "routes_that_fail_for_the_count": structure["routes_that_fail_for_the_count"],
+        "count_not_monotone_witness": {k: (_approx(v) if isinstance(v, Q) else v) for k, v in
+                                       (structure["witnesses"]["naive_count_not_monotone_in_count"] or {}).items()},
+        "threshold_pair_counterexample": {
+            "lower": pair["lower_threshold"], "higher": pair["higher_threshold"], "levels": pair["levels"],
+            "finite": None if pair["finite_witness"] is None else {
+                k: (_approx(v) if isinstance(v, Q) else v) for k, v in pair["finite_witness"].items()},
+            "limit": None if pair["limit_witness"] is None else {
+                k: (_approx(v) if isinstance(v, Q) else v) for k, v in pair["limit_witness"].items()}},
+    }
 
     def gaps(items, candidates):
         cell = naive["cells"][_cell(items, candidates, Q(1, 2))]["readout_gap_by_generation"]
@@ -1695,4 +2306,5 @@ def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order) -> di
         "gate_order_n16_k2_step_eighth": order_cell(16, 2, Q(1, 8)),
         "gate_order_n4_k2_step_eighth": order_cell(4, 2, Q(1, 8)),
         "gate_order_later_generation_agreement": gate_order["later_generation_agreement_counts"],
+        "dominance": dominance,
     }

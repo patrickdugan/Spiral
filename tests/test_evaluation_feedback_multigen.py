@@ -6,17 +6,19 @@ import pytest
 
 from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_feedback_multigen import (
-    BOUND_TOLERANCE, best_of_pmf, binomial_cdf, brute_force_drift_distribution,
-    brute_force_fresh_reported, brute_force_mutation_distribution,
-    brute_force_reuse_distribution, ceiling_mass_closed_form,
-    decaying_gain_schedule, divergence_check, drift_gap_increment_from_one_step,
-    drift_levels, drift_trajectory, false_acceptance_probability,
-    fresh_block_reported, fresh_trajectory, gate_threshold, late_early_ratio,
+    BOUND_TOLERANCE, NONUNIFORM_LATTICES, best_of_pmf, binomial_cdf,
+    brute_force_drift_distribution, brute_force_fresh_reported,
+    brute_force_mutation_distribution, brute_force_reuse_distribution,
+    ceiling_mass_closed_form, decaying_gain_schedule, divergence_check,
+    dominance_search, drift_absorbing_states, drift_expectations,
+    drift_gap_increment_from_one_step, drift_kernel, drift_levels, drift_limit,
+    drift_trajectory, false_acceptance_probability, fresh_block_reported,
+    fresh_trajectory, gate_threshold, kernel_iterates, late_early_ratio,
     mutation_candidate_law, mutation_state_distribution,
     mutation_trajectory, mutation_transition_kernel, naive_closed_form,
     naive_gap_bounds, naive_threshold, one_step_gap_change, phantom_share,
     readout_gap_series, reuse_trajectory, running_max_from_point,
-    state_distribution, transition_kernel, verify,
+    state_distribution, threshold_pair_counterexample, transition_kernel, verify,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
@@ -369,6 +371,17 @@ def test_divergence_check_on_dp_expectations():
         drift_trajectory(4, 2, QUARTER, Q(1, 8), {0: HALF, 1: HALF}, (0,) * 5, 2), 0),
     lambda: drift_gap_increment_from_one_step(
         drift_trajectory(4, 2, QUARTER, Q(1, 8), {1: Q(1)}, (0,) * 5, 2), 2),
+    lambda: drift_kernel(2, 2, (QUARTER, 0.5, Q(1)), {1: Q(1)}, (0, 0, 0)),
+    lambda: drift_kernel(2, 2, (HALF, QUARTER), {1: Q(1)}, (0, 0, 0)),
+    lambda: drift_kernel(2, 2, (HALF, Q(3, 2)), {1: Q(1)}, (0, 0, 0)),
+    lambda: drift_kernel(2, 2, (), {1: Q(1)}, (0, 0, 0)),
+    lambda: drift_kernel(2, 2, (HALF, Q(1)), {1: HALF}, (0, 0, 0)),
+    lambda: drift_kernel(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0)),
+    lambda: drift_expectations(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0, 0), 2, Q(3, 2)),
+    lambda: drift_expectations(2, 2, (HALF, Q(1)), [{1: Q(1)}], (0, 0, 0), 2),
+    lambda: drift_expectations(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0, 0), -1),
+    lambda: drift_absorbing_states(2, (HALF, Q(1)), (0, 0)),
+    lambda: kernel_iterates(drift_kernel(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0, 0)), lambda x: x[0], -1),
 ])
 def test_malformed_inputs_raise(call):
     with pytest.raises(ValueError):
@@ -570,12 +583,175 @@ def test_naive_dominates_gate_in_expectation_on_fixed_gain_cells():
             assert all(a >= b for a, b in zip(naive["expected_true"], gate["expected_true"]))
 
 
+# --------------------------------------------------------------------------
+# Part D: Proposition 8, naive versus gated chains under a fixed gain
+# --------------------------------------------------------------------------
+
+LATTICE = drift_levels(QUARTER, Q(1, 8))
+FIXED = {1: Q(1)}
+
+
+def test_drift_kernel_hand_values_n2():
+    levels = (QUARTER, HALF, Q(1))
+    one = drift_kernel(2, 1, levels, FIXED, naive_threshold(2))
+    assert one[(0, 0)] == [((0, 0), QUARTER), ((1, 1), HALF), ((2, 1), QUARTER)]
+    assert one[(1, 0)] == [((1, 0), Q(3, 4)), ((2, 1), QUARTER)]
+    assert one[(2, 0)] == [((2, 0), Q(1))] and one[(0, 2)] == [((0, 2), Q(0)), ((2, 2), Q(1))]
+    two = drift_kernel(2, 2, levels, FIXED, naive_threshold(2))
+    assert two[(0, 0)] == [((0, 0), Q(1, 16)), ((1, 1), HALF), ((2, 1), Q(7, 16))]
+    gated = drift_kernel(2, 2, levels, FIXED, (0, 1, 0))
+    assert gated[(1, 0)] == [((1, 0), Q(1))] and gated[(0, 0)] == two[(0, 0)]
+    mixed = drift_kernel(2, 2, levels, {0: HALF, 1: HALF}, naive_threshold(2))
+    assert sum(p for _, p in mixed[(0, 0)]) == 1
+    assert {y for y, _ in mixed[(0, 0)]} == {(0, 0), (1, 0), (1, 1), (2, 0), (2, 1)}
+    for kernel in (one, two, gated, mixed):
+        assert all(entries[0][0] == x and sum(p for _, p in entries) == 1 for x, entries in kernel.items())
+
+
+@pytest.mark.parametrize("items, candidates, gain, z", [
+    (4, 2, FIXED, 1), (8, 3, {0: Q(3, 4), 1: QUARTER}, 2), (6, 2, {0: HALF, 2: HALF}, 3), (5, 1, "decay", 1)])
+def test_drift_expectations_equal_drift_trajectory(items, candidates, gain, z):
+    G = 8
+    schedule = decaying_gain_schedule(G, QUARTER, Q(3, 4)) if gain == "decay" else gain
+    for threshold in (naive_threshold(items), gate_threshold(items, z), (0, 2, 0, 1, 0, 1)[:items + 1] + (0,) * max(0, items - 5)):
+        dp = drift_trajectory(items, candidates, QUARTER, Q(1, 8), schedule, threshold, G)
+        fast = drift_expectations(items, candidates, LATTICE, schedule, threshold, G)
+        assert fast["expected_reported"] == dp["expected_reported"]
+        assert fast["expected_true"] == dp["expected_true"]
+        assert fast["stopped_at"] is None and fast["generations_run"] == G
+        assert fast["absorbed_mass"][0] == sum(
+            mass for c, mass in enumerate(_pmf(items, QUARTER)) if c + threshold[c] >= items)
+
+
+def test_drift_expectations_early_stop_and_absorbing_states():
+    assert drift_absorbing_states(8, LATTICE, gate_threshold(8, 3)) == frozenset(
+        (c, i) for c in (4, 5, 6, 7, 8) for i in range(7))
+    assert drift_absorbing_states(8, LATTICE, naive_threshold(8)) == frozenset((8, i) for i in range(7))
+    run = drift_expectations(4, 4, drift_levels(HALF, QUARTER), FIXED, naive_threshold(4), 100, Q(1, 10**9))
+    assert run["stopped_at"] is not None and run["generations_run"] == run["stopped_at"] < 100
+    assert run["absorbed_mass"][-1] >= 1 - Q(1, 10**9) > run["absorbed_mass"][-2]
+    assert all(b >= a for a, b in zip(run["absorbed_mass"], run["absorbed_mass"][1:]))
+    assert all(b >= a for a, b in zip(run["expected_true"], run["expected_true"][1:]))
+
+
+def test_drift_limit_within_unabsorbed_mass_and_naive_count_limit_is_n():
+    levels = drift_levels(HALF, QUARTER)
+    for threshold in (naive_threshold(4), gate_threshold(4, 1), gate_threshold(4, 3)):
+        run = drift_expectations(4, 4, levels, FIXED, threshold, 200, Q(1, 10**12))
+        limit = drift_limit(4, 4, levels, FIXED, threshold)
+        slack = 1 - run["absorbed_mass"][-1]
+        assert abs(limit["expected_reported"] - run["expected_reported"][-1]) <= slack
+        assert abs(limit["expected_true"] - run["expected_true"][-1]) <= slack
+    for items, candidates in ((4, 2), (8, 1)):
+        naive = drift_limit(items, candidates, LATTICE, FIXED, naive_threshold(items))
+        assert naive["expected_reported"] == 1
+        assert all(value[0] == items for value in naive["by_state"].values())
+        gated = drift_limit(items, candidates, LATTICE, FIXED, gate_threshold(items, 3))
+        assert gated["expected_reported"] < 1 and gated["expected_true"] < naive["expected_true"]
+    # n = 3, K = 1, lattice NONUNIFORM_LATTICES[0], rule (0, 2, 0, 0): from (0, 0) the
+    # first jump lands at 1 (absorbed, 5/32), 2 (then 3 at 9/16) or 3 (5/32).
+    limit = drift_limit(3, 1, NONUNIFORM_LATTICES[0], FIXED, (0, 2, 0, 0))
+    assert limit["by_state"][(0, 0)][1] == (Q(11060) * Q(5, 32) + Q(2025) * Q(9, 16)) / 13085 == Q(9175, 41872)
+
+
+def test_kernel_iterates_one_step_is_the_kernel_expectation():
+    kernel = drift_kernel(4, 2, LATTICE, FIXED, gate_threshold(4, 2))
+    count = kernel_iterates(kernel, lambda x: x[0], 2)
+    assert count[0] == {x: Q(x[0]) for x in kernel}
+    assert count[1] == {x: sum(p * y[0] for y, p in entries) for x, entries in kernel.items()}
+    assert all(count[2][x] >= count[1][x] >= count[0][x] for x in kernel)
+
+
+@pytest.mark.parametrize("levels", [LATTICE, NONUNIFORM_LATTICES[0], NONUNIFORM_LATTICES[1]])
+def test_naive_true_value_iterates_are_monotone_in_count_and_level(levels):
+    items, candidates, top = 6, 2, len(levels) - 1
+    kernel = drift_kernel(items, candidates, levels, FIXED, naive_threshold(items))
+    u = kernel_iterates(kernel, lambda x: levels[x[1]], 12)
+    limit = drift_limit(items, candidates, levels, FIXED, naive_threshold(items))["by_state"]
+    for k in range(13):
+        assert all(u[k][(c, i)] >= u[k][(c + 1, i)] for c in range(items) for i in range(top + 1))
+        assert all(u[k][(c, i)] <= u[k][(c, i + 1)] for c in range(items + 1) for i in range(top))
+    assert all(limit[(c, i)][1] >= limit[(c + 1, i)][1] for c in range(items) for i in range(top + 1))
+
+
+def test_naive_count_iterates_are_not_monotone_in_count():
+    """A lower count earns a free level: from (0, 0) two naive generations
+    report more than from (1, 0)."""
+
+    kernel = drift_kernel(4, 2, drift_levels(QUARTER, Q(1, 16)), FIXED, naive_threshold(4))
+    u = kernel_iterates(kernel, lambda x: x[0], 2)
+    assert u[1][(0, 0)] < u[1][(1, 0)] and u[2][(0, 0)] > u[2][(1, 0)]
+    assert u[2][(0, 0)] == Q(10810976656657108475, 4611686018427387904)
+
+
+@pytest.mark.parametrize("threshold", [gate_threshold(8, 1), gate_threshold(8, 2), gate_threshold(8, 3),
+                                       (3, 1, 2, 2, 0, 1, 0, 2, 0)])
+def test_naive_dominates_any_threshold_rule_at_every_state(threshold):
+    items, candidates, H = 8, 2, 12
+    top = len(LATTICE) - 1
+    naive = drift_kernel(items, candidates, LATTICE, FIXED, naive_threshold(items))
+    gated = drift_kernel(items, candidates, LATTICE, FIXED, threshold)
+    a = [min(items, c + threshold[c]) for c in range(items + 1)]
+    for f in (lambda x: LATTICE[x[1]], lambda x: Q(x[0])):
+        u, w = kernel_iterates(naive, f, H), kernel_iterates(gated, f, H)
+        for k in range(H + 1):
+            assert all(w[k][x] <= u[k][x] for x in naive)
+            assert all(w[k][(c, i)] <= u[k][(j, min(top, i + 1))]
+                       for (c, i) in naive for j in range(c + 1, a[c] + 1))
+    limit_naive = drift_limit(items, candidates, LATTICE, FIXED, naive_threshold(items))["by_state"]
+    limit_gated = drift_limit(items, candidates, LATTICE, FIXED, threshold)["by_state"]
+    assert all(limit_gated[x][1] <= limit_naive[x][1] for x in naive)
+
+
+def test_level_and_count_are_stochastically_dominated_at_every_state():
+    items, candidates, H = 4, 2, 10
+    naive = drift_kernel(items, candidates, LATTICE, FIXED, naive_threshold(items))
+    gated = drift_kernel(items, candidates, LATTICE, FIXED, gate_threshold(items, 2))
+    for ell in range(1, len(LATTICE)):
+        u = kernel_iterates(naive, lambda x, ell=ell: Q(int(x[1] >= ell)), H)
+        w = kernel_iterates(gated, lambda x, ell=ell: Q(int(x[1] >= ell)), H)
+        assert all(w[k][x] <= u[k][x] for k in range(H + 1) for x in naive)
+    for m in range(1, items + 1):
+        u = kernel_iterates(naive, lambda x, m=m: Q(int(x[0] >= m)), H)
+        w = kernel_iterates(gated, lambda x, m=m: Q(int(x[0] >= m)), H)
+        assert all(w[k][x] <= u[k][x] for k in range(H + 1) for x in naive)
+
+
+def test_lowering_a_non_naive_threshold_is_not_monotone():
+    pair = threshold_pair_counterexample()
+    assert pair["higher_rule_ahead_somewhere"]
+    assert pair["lower_threshold"] == (0, 2, 0, 0) and pair["higher_threshold"] == (1, 2, 0, 1)
+    assert pair["limit_witness"] == {"state": (0, 0), "lower_rule_true_value": Q(9175, 41872),
+                                     "higher_rule_true_value": Q(1483, 2752)}
+    finite = pair["finite_witness"]
+    assert finite["horizon"] == 3 and finite["state"] == (0, 2)
+    assert finite["higher_rule_true_value"] > finite["lower_rule_true_value"]
+
+
+def test_dominance_search_small_grid():
+    constant = dominance_search(FIXED, (4,), (2,), (1, 2), (QUARTER,), (Q(1, 8),), 30, Q(1, 10**9))
+    assert constant["cells"] == 2 and constant["violations"] == [] and constant["limit_violations"] == []
+    row = constant["rows"]["gain=law,p0=1/4,step=1/8,n=4,K=2,z=2"]
+    assert row["first_violation_generation"] is None and row["limit"]["naive"][0] == 1.0
+    assert row["reported_at_end"]["naive"] >= row["reported_at_end"]["gate"]
+    assert row["true_at_end"]["naive"] >= row["true_at_end"]["gate"]
+    scheduled = dominance_search(lambda h: decaying_gain_schedule(h, QUARTER, Q(3, 4)),
+                                 (4,), (2,), (1,), (HALF,), (Q(1, 4),), 12, Q(1, 10**9))
+    assert scheduled["cells"] == 1 and scheduled["first_violation"] is None
+    assert scheduled["rows"]["gain=schedule,p0=1/2,step=1/4,n=4,K=2,z=1"]["limit"] is None
+    assert scheduled["generations_compared"] == 12
+
+
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 56
+    assert report["all_passed"] and len(report["checks"]) == 71
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["brute_force"]["all_match"]
     assert report["headline"]["naive_readout_gap_n8_k2_p_half"]["G=1"]["exact"] == Q(19305, 131072)
     assert report["one_step"]["states_checked"] == 270
     assert report["gate_order"]["later_generation_agreement_counts"]["ii"]["agree"] == 76
     assert report["mutation"]["cells_where_rho_not_monotone_in_q"] == {"naive": 18, "gate_z1": 15}
+    sweep = report["dominance_sweep"]
+    assert not sweep["full_sweep"] and sweep["by_law"]["fixed"]["cells"] == 324 and sweep["cells"] == 414
+    assert sweep["violations"] == 0 and sweep["limit_violations"] == 0
+    assert len(report["dominance_structure"]["routes_that_fail_for_the_count"]) == 4
