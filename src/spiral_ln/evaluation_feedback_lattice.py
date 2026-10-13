@@ -62,7 +62,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction as Q
 from functools import lru_cache
-from itertools import product
+from itertools import combinations_with_replacement, product
 from math import ceil, lcm
 
 from spiral_ln.evaluation_game_feedback import (
@@ -878,6 +878,147 @@ def greedy_vs_optimal_fixture(items: int = 6) -> dict[str, object]:
     }
 
 
+def adaptive_states(max_size: int, max_categories: int) -> tuple:
+    """Every state the adaptive schedule can face with at most
+    ``max_categories`` categories of size at most ``max_size``: a sorted
+    multiset of ``(size, failures)`` pairs with ``1 <= failures <= size`` and
+    a requirement from one hit up to every failure."""
+
+    if (type(max_size) is not int or type(max_categories) is not int
+            or max_size < 1 or max_categories < 1):
+        raise ValueError("max_size and max_categories must be positive integers")
+    pairs = [(size, failures) for size in range(1, max_size + 1) for failures in range(1, size + 1)]
+    states = []
+    for count in range(1, max_categories + 1):
+        for combo in combinations_with_replacement(pairs, count):
+            state = tuple(sorted(combo))
+            total = sum(failures for _, failures in state)
+            states.extend((required, state) for required in range(1, total + 1))
+    return tuple(states)
+
+
+def first_patch_values(hits_needed: int, state: tuple) -> dict[tuple[int, int], Q]:
+    """Expected patches to ``hits_needed`` hits when the first patch goes to
+    each distinct category of ``state`` and every later patch is optimal."""
+
+    state = _adaptive_state(state, hits_needed)
+    if hits_needed == 0:
+        return {}
+    return {chosen: _continuation(hits_needed, state, chosen, _optimal_value) for chosen in set(state)}
+
+
+def _render_values(values: dict) -> tuple:
+    return tuple((category, value) for category, value in sorted(values.items()))
+
+
+INDEX_CONTEXTS = ("own_counts", "with_totals", "with_totals_and_category_count")
+
+
+def _index_context(kind: str, state: tuple) -> tuple:
+    if kind == "own_counts":
+        return ()
+    totals = (sum(size for size, _ in state), sum(failures for _, failures in state))
+    if kind == "with_totals":
+        return totals
+    if kind == "with_totals_and_category_count":
+        return totals + (len(state),)
+    raise ValueError("unknown index context")
+
+
+def preference_reversals(max_size: int, max_categories: int, context: str = "own_counts") -> dict[str, object]:
+    """Pairs of categories ``A, B`` with a requirement (and whatever global
+    context an index rule may see) such that patching ``A`` before ``B`` is
+    strictly better in one state and strictly worse in another.
+
+    One reversal defeats every index rule that scores a category by its own
+    ``(size, failures)``, the requirement, and that context, since such a rule
+    ranks ``A`` against ``B`` the same way in both states.
+    """
+
+    if context not in INDEX_CONTEXTS:
+        raise ValueError("unknown index context")
+    states = adaptive_states(max_size, max_categories)
+    seen: dict = {}
+    for required, state in states:
+        values = first_patch_values(required, state)
+        distinct = sorted(values)
+        for position, first in enumerate(distinct):
+            for second in distinct[position + 1:]:
+                sign = (values[first] > values[second]) - (values[first] < values[second])
+                key = (first, second, required) + _index_context(context, state)
+                seen.setdefault(key, {}).setdefault(sign, (state, values[first], values[second]))
+    reversals = []
+    for key, by_sign in seen.items():
+        if 1 in by_sign and -1 in by_sign:
+            reversals.append({
+                "A": key[0], "B": key[1], "hits_needed": key[2], "context": key[3:],
+                "A_first_better_in": by_sign[-1][0], "A_first_values": by_sign[-1][1:],
+                "B_first_better_in": by_sign[1][0], "B_first_values": by_sign[1][1:],
+            })
+    reversals.sort(key=lambda row: (row["hits_needed"], row["A"], row["B"], row["context"]))
+    return {"max_size": max_size, "max_categories": max_categories, "context": context,
+            "states": len(states), "reversals": len(reversals),
+            "first": reversals[0] if reversals else None}
+
+
+def rate_violations(max_size: int, max_categories: int) -> dict[str, object]:
+    """States in which every optimal first patch has a strictly lower current
+    hit probability than some other category, so no rule that patches a
+    highest-rate category can be optimal there."""
+
+    states = adaptive_states(max_size, max_categories)
+    found = []
+    for required, state in states:
+        values = first_patch_values(required, state)
+        best = min(values.values())
+        top_rate = max(Q(failures, size) for size, failures in values)
+        optimal = tuple(sorted(c for c, v in values.items() if v == best))
+        if all(Q(c[1], c[0]) < top_rate for c in optimal):
+            found.append({"hits_needed": required, "state": state, "optimal_first": optimal,
+                          "values": _render_values(values)})
+    return {"states": len(states), "violations": len(found),
+            "min_hits_needed": min((row["hits_needed"] for row in found), default=None),
+            "first": found[0] if found else None}
+
+
+def greedy_failures(max_size: int, max_categories: int) -> dict[str, object]:
+    """States where the greedy first patch is not an optimal first patch."""
+
+    states = adaptive_states(max_size, max_categories)
+    failures = 0
+    for required, state in states:
+        values = first_patch_values(required, state)
+        chosen = max(state, key=lambda pair: (Q(pair[1], pair[0]), -pair[0]))
+        failures += values[chosen] != min(values.values())
+    return {"states": len(states), "greedy_suboptimal": failures}
+
+
+def index_rule_fixture() -> dict[str, object]:
+    """No index rule is optimal, and the optimal first patch need not have
+    the highest hit probability."""
+
+    with_unit = first_patch_values(2, ((1, 1), (2, 1), (4, 2)))
+    without = first_patch_values(2, ((2, 1), (4, 2)))
+    lower = first_patch_values(2, ((2, 1), (5, 2)))
+    return {
+        "own_counts": preference_reversals(5, 4, "own_counts"),
+        "with_totals": preference_reversals(5, 4, "with_totals"),
+        "with_totals_and_category_count": preference_reversals(5, 4, "with_totals_and_category_count"),
+        "rate_violations": rate_violations(5, 4),
+        "greedy": greedy_failures(5, 4),
+        "reversal_witness": {
+            "A": (2, 1), "B": (4, 2), "hits_needed": 2,
+            "with_unit_category": _render_values(with_unit), "without": _render_values(without),
+            "holds": with_unit[(2, 1)] < with_unit[(4, 2)] and without[(4, 2)] < without[(2, 1)],
+        },
+        "lower_rate_witness": {
+            "state": ((2, 1), (5, 2)), "hits_needed": 2, "values": _render_values(lower),
+            "rates": (((2, 1), Q(1, 2)), ((5, 2), Q(2, 5))),
+            "holds": lower[(5, 2)] == Q(69, 20) < lower[(2, 1)] == Q(7, 2),
+        },
+    }
+
+
 def hits_needed(items: int, clean_accuracy: Q, flip: Q) -> dict[str, object]:
     """Hits required for the selection score to reach the noise ceiling."""
 
@@ -1133,9 +1274,18 @@ def verify() -> dict[str, object]:
     cost = ceiling_cost_fixture()
     small = small_set_fixture()
     policy = greedy_vs_optimal_fixture()
+    index = index_rule_fixture()
     ledger = category_ledger_fixture()
     four = policy["four_item_witness"]
     checks = {
+        "no_index_rule_on_own_counts_and_hits_needed":
+            index["own_counts"]["reversals"] > 0 and index["reversal_witness"]["holds"],
+        "no_index_rule_even_with_global_totals":
+            index["with_totals"]["reversals"] > 0
+            and index["with_totals_and_category_count"]["reversals"] > 0,
+        "optimal_first_patch_can_have_lower_hit_probability":
+            index["rate_violations"]["violations"] > 0 and index["lower_rate_witness"]["holds"]
+            and index["rate_violations"]["min_hits_needed"] >= 2,
         "meet_preserved_on_every_pair_up_to_five_items":
             all(row["meet_preserved"] == row["ordered_pairs"] for row in category_lattice.values()),
         "join_preserved_iff_intersection_graph_is_forest":
@@ -1190,4 +1340,4 @@ def verify() -> dict[str, object]:
             "checks": checks, "all_passed": all(checks.values()),
             "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
             "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
-            "category_ledger": ledger}
+            "index_rules": index, "category_ledger": ledger}

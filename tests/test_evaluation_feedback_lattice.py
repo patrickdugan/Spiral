@@ -25,6 +25,64 @@ from spiral_ln.evaluation_feedback_lattice import (
     intersection_graph_is_forest, join_failure_witness, last_failure_positions_sum,
     optimal_adaptive_value, optimal_first_choices,
 )
+from spiral_ln.evaluation_feedback_lattice import (
+    adaptive_states, first_patch_values, greedy_failures, index_rule_fixture,
+    preference_reversals, rate_violations,
+)
+
+
+# --- no index rule --------------------------------------------------------------
+
+def test_adaptive_states_enumeration():
+    states = adaptive_states(2, 2)
+    assert len(states) == 20
+    assert all(1 <= required <= sum(f for _, f in state) for required, state in states)
+    assert all(state == tuple(sorted(state)) for _, state in states)
+    with pytest.raises(ValueError):
+        adaptive_states(0, 1)
+    with pytest.raises(ValueError):
+        preference_reversals(2, 2, "everything")
+
+
+def test_first_patch_values_minimum_is_the_optimum():
+    for required, state in adaptive_states(4, 3):
+        values = first_patch_values(required, state)
+        assert min(values.values()) == optimal_adaptive_value(state, required)
+        assert set(values) == set(state)
+    assert first_patch_values(0, ((2, 1),)) == {}
+
+
+def test_preference_reversal_witness_exact():
+    with_unit = first_patch_values(2, ((1, 1), (2, 1), (4, 2)))
+    without = first_patch_values(2, ((2, 1), (4, 2)))
+    assert with_unit[(2, 1)] < with_unit[(4, 2)]
+    assert without[(4, 2)] == Q(37, 12) < without[(2, 1)] == Q(19, 6)
+    report = preference_reversals(4, 3, "own_counts")
+    assert report["reversals"] >= 1
+    first = report["first"]
+    assert (first["A"], first["B"], first["hits_needed"]) == ((2, 1), (4, 2), 2)
+    assert first["context"] == ()
+    for context in ("with_totals", "with_totals_and_category_count"):
+        assert preference_reversals(5, 4, context)["reversals"] >= 1
+
+
+def test_lower_rate_witness_exact_and_absent_at_one_hit():
+    values = first_patch_values(2, ((2, 1), (5, 2)))
+    assert values[(5, 2)] == Q(69, 20) and values[(2, 1)] == Q(7, 2)
+    report = rate_violations(5, 4)
+    assert report["violations"] >= 1 and report["min_hits_needed"] >= 2
+    for required, state in adaptive_states(4, 3):
+        if required == 1:
+            values = first_patch_values(1, state)
+            top = max(Q(f, n) for n, f in state)
+            assert any(Q(c[1], c[0]) == top for c, v in values.items() if v == min(values.values()))
+
+
+def test_index_rule_fixture_and_greedy_count():
+    report = index_rule_fixture()
+    assert report["reversal_witness"]["holds"] and report["lower_rate_witness"]["holds"]
+    assert report["greedy"]["greedy_suboptimal"] == 131 and report["greedy"]["states"] == 33915
+    assert greedy_failures(4, 3) == {"states": 1560, "greedy_suboptimal": 6}
 
 
 # --- meet preservation and the forest criterion -----------------------------
@@ -646,6 +704,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 27
+    assert report["all_passed"] and len(report["checks"]) == 30
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)

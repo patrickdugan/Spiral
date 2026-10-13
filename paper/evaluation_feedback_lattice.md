@@ -1,22 +1,23 @@
 # Partial leakage as a lattice of feedback channels
 
-Version 0.2 — 2026-10-13. Exact fixtures for the gap named in
+Version 0.3 — 2026-10-13. Exact fixtures for the gap named in
 [evaluation_feedback_insertions.md](evaluation_feedback_insertions.md) §H:
 feedback that reveals failure *categories* and not items. Files:
 `src/spiral_ln/evaluation_feedback_lattice.py`, `tests/test_evaluation_feedback_lattice.py`,
-`output/evaluation_feedback_lattice/lattice_v0_2.json`. No model was called.
-Version 0.2 settles the two items version 0.1 left as finite checks: the
+`output/evaluation_feedback_lattice/lattice_v0_3.json`. No model was called.
+Version 0.2 settled the two items version 0.1 left as finite checks: the
 category map preserves meets (Proposition 2b), preserves joins exactly when
 the intersection graph is a forest (Proposition 2c), and the optimal adaptive
 patch schedule is monotone along refinement (Proposition 6) while the greedy
-one is not optimal.
+one is not optimal. Version 0.3 answers whether an index rule can replace
+the dynamic programme: it cannot (Propositions 7 and 8).
 Evidence levels follow the calculus card (§11): *algebraic identity* (proved
 for all inputs) or *finite verified example* (checked on the enumerated cases
 only); no synthetic mechanism result is claimed.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_2.json
+python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_3.json
 python -m pytest tests/test_evaluation_feedback_lattice.py -q
 ```
 
@@ -197,6 +198,39 @@ expected stopping time, is monotone everywhere. Chain with block sizes
 \(\mathbb E[T]_{\text{static}}=204/7,201/7,51/2,23,31/2,8\);
 greedy adaptive \(\approx29.14,25.64,21.17,18,12,8\).
 
+**Proposition 7 (no index rule is optimal).** An index rule scores each
+category by a function of its own \((n_c,F_c)\), the requirement \(H\), and
+possibly global summaries (total items, total failures, number of
+categories), and patches a maximizer; it therefore ranks two categories the
+same way in any two states that agree on those inputs. No such rule is
+optimal. With \(H=2\), patching \((2,1)\) before \((4,2)\) is strictly better
+in the state \(\{(1,1),(2,1),(4,2)\}\) (\(5/2\) against \(8/3\)) and strictly
+worse in \(\{(2,1),(4,2)\}\) (\(19/6\) against \(37/12\)). With the totals and
+the category count added to the index, \((2,1)\) before \((4,2)\) at
+\(H=3\), ten items, five failures, four categories is strictly better in
+\(\{(2,1),(2,1),(2,1),(4,2)\}\) and strictly worse in
+\(\{(1,1),(2,1),(3,1),(4,2)\}\). *Proof.* By witness; the values are exact
+dynamic-programme continuations (`first_patch_values`). \(\square\)
+`preference_reversals` finds 30 such pairs for own-count indices over all
+33,915 states with at most four categories of size at most five, and 125
+and 120 with the two richer contexts. *Evidence status: algebraic identity*
+(a counterexample proves the universal negative); the counts are a finite
+verified example.
+
+**Proposition 8 (the optimal first patch need not have the highest hit
+probability).** In \(\{(2,1),(5,2)\}\) with \(H=2\) the rates are
+\(\tfrac12\) and \(\tfrac25\); patching \((5,2)\) first needs \(69/20\)
+patches, \((2,1)\) first \(7/2\). So beyond \(H=1\) the optimal policy is not
+"a highest-rate category with the right tie-break": `rate_violations` finds
+82 states among the 33,915 in which every optimal first patch has a strictly
+sub-maximal rate, none with \(H=1\), where the exchange argument makes the
+highest rate optimal. The same enumeration puts greedy's first patch off the
+optimum in 131 states, and no \(H\)-dependent tie-break repairs the 82.
+*Evidence status: algebraic identity* for the witness; *finite verified
+example* for the counts. What remains open is a structural description of
+the optimal policy; the dynamic programme is exact and cheap, so the gap is
+one of understanding, not computation.
+
 ## 4. Ledger wrapper
 
 `audit_category_ledger` accepts a `category_feedback` event carrying the
@@ -216,5 +250,6 @@ preorder on kernels is not treated. Items are independent and a patch changes
 its own item only, which the nearest-neighbour learner in `output/eval_reuse_toys`
 violated. Greedy ties break by index; \(\mathbb E[T]_{\text{static}}\) depends
 on that choice when two categories share a rate. The optimal adaptive policy
-is computed, not characterized: no index rule for it is offered, and the
-enumerations stop at six items. No model or loop evidence.
+is computed, not characterized: Proposition 7 rules out index rules, and the
+enumerations stop at six items for the lattice and at four categories of
+size five for the policy search. No model or loop evidence.
