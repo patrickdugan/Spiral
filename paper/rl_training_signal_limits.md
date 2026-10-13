@@ -185,11 +185,15 @@ the *true* value: under fixed gains the gated chain's level is
 stochastically dominated by the naive chain's, for any threshold rule and
 any non-decreasing level function, so a gate that is meant to protect the
 readout also slows the thing being measured. The reported count is
-dominated too on every cell searched, 88,171 generation comparisons, but
-that remains a finite result, because the naive count is not monotone in
-the count: a lower count can earn a free level. Lowering a threshold is
-not monotone in general either, with an exact three-item witness, so the
-naive rule's role in the theorem is essential. Candidates that are
+dominated as well, for every threshold rule, horizon and start state: the
+proof goes through first-passage probabilities, since under the naive
+rule the count reaches \(m\) exactly when a draw of at least \(m\) first
+appears, and shows that one gated step followed by naive steps is already
+dominated. Two cautions come with it. The naive rule maximizes the
+expected count only among threshold rules, since rejecting a draw once
+and then playing naive can beat it; and lowering a threshold is not
+monotone in general, with an exact three-item witness, so the naive rule's
+role in both theorems is essential. Candidates that are
 perturbations of the incumbent, which
 is what a policy update produces, change the picture in the wrong
 direction: a per-item mutation model lowers the first generation's

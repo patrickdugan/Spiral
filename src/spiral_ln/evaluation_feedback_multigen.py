@@ -52,12 +52,27 @@ Version 0.3 adds (D) the dominance question: whether the naive chain is
 above every gated chain in both expected count and expected true value at
 every generation under a fixed gain.  For the true value this is a theorem
 (Proposition 8, proof sketched before ``drift_kernel``; every threshold
-rule, every non-decreasing level function, every state); for the count it
-is a finite result of an exact 972-cell search with no counterexample
-(``dominance_sweep_fixture``) plus witnesses showing why the standard
-proof routes fail (``dominance_structure_fixture``).  The search uses an
-exact integer-numerator propagation (``drift_expectations``) and the exact
-``g -> infinity`` limit (``drift_limit``).
+rule, every non-decreasing level function, every state); version 0.3 left
+the count as a finite result of an exact 972-cell search with no
+counterexample (``dominance_sweep_fixture``) plus witnesses showing why
+the standard proof routes fail (``dominance_structure_fixture``).  The
+search uses an exact integer-numerator propagation
+(``drift_expectations``) and the exact ``g -> infinity`` limit
+(``drift_limit``).
+
+Version 0.4 settles the count (E): Proposition 9, proof sketched before
+``naive_draw_law``.  The naive count is stochastically above every
+threshold rule's count at every horizon from every state, because one
+gated step followed by naive steps is already dominated: the window sums
+``sum_{c < J <= a} pi(J) [u_k(J, i+1) - u_k(c, i)]`` of the naive count
+iterates are non-negative for every window, which follows from three
+properties of the naive first-passage probabilities ``P(c_k >= m)``
+(new-better-than-used, monotone in the count below ``m``, monotone in the
+level), each a short induction.  ``count_dominance_lemma_fixture`` checks
+every lemma and every intermediate inequality of the proof exactly;
+``quantile_coupling_crossing`` gives the exact witness for why the
+pathwise same-uniform route fails; the pointwise cone witness shows the
+naive rule is not optimal among all accept/reject policies.
 
 Boundaries
 ----------
@@ -1052,18 +1067,18 @@ def brute_force_mutation_distribution(items, candidates, p, q, threshold, genera
 # E[p(i_g)] is ordered, from every initial law, at every horizon.
 #
 # The count.  E[c_infinity] = n for the naive chain whenever p(1) > 0, so
-# the limit ordering is trivial; at finite horizons no proof is known.  The
-# routes that work for the level fail provably: the naive count iterates
-# are not monotone in c (a lower count earns a free level), so neither the
-# pathwise coupling, nor the gate-cone condition u_k(j,i+1) >= u_k(c,i) on
-# the naive iterates, nor the policy-improvement condition on the gated
-# iterates, nor the componentwise condition u_k(c,i) <= u_k(c',i') for
-# c <= c', i < i' holds (``dominance_structure_fixture`` records witnesses).
-# What holds on every enumerated cell, at every state and horizon, is the
-# ordering itself, its hitting-probability form P(c_k >= m), and (S) for
-# the count.  Lowering an arbitrary threshold is NOT monotone in general:
-# ``threshold_pair_counterexample`` gives two rules t <= t' with the higher
-# one ahead in true value.  All of this is finite evidence only.
+# the limit ordering is trivial.  The routes that work for the level fail
+# provably: the naive count iterates are not monotone in c (a lower count
+# earns a free level), so neither the pathwise coupling, nor the gate-cone
+# condition u_k(j,i+1) >= u_k(c,i) on the naive iterates, nor the
+# policy-improvement condition on the gated iterates, nor the componentwise
+# condition u_k(c,i) <= u_k(c',i') for c <= c', i < i' holds
+# (``dominance_structure_fixture`` records witnesses).  The finite-horizon
+# count ordering is nevertheless a theorem (Proposition 9, proof before
+# ``naive_draw_law``) by a different route: the window sums of the naive
+# count iterates are non-negative.  Lowering an arbitrary threshold is NOT
+# monotone in general: ``threshold_pair_counterexample`` gives two rules
+# t <= t' with the higher one ahead in true value.
 
 
 def _check_levels(levels):
@@ -1518,6 +1533,330 @@ def dominance_structure_fixture() -> dict[str, object]:
     return {"flags": flags, "witnesses": witnesses, "cells": cells, "indicator_cells": indicator,
             "horizon": H, "threshold_pair": threshold_pair_counterexample(),
             "routes_that_fail_for_the_count": [k for k, v in witnesses.items() if v is not None]}
+
+
+# --------------------------------------------------------------------------
+# Proposition 9: count dominance under a fixed true gain
+# --------------------------------------------------------------------------
+#
+# Theorem (count).  Fixed gain, any non-decreasing level function, any n, K,
+# any threshold rule t >= 0, any state x and any non-decreasing psi on
+# counts: Q^k psi (x) <= P^k psi (x) for all k.  In particular the gated
+# count is stochastically dominated and E[c_k] is ordered, from every
+# initial law.  The proof shows more: one gated step followed by naive
+# steps is already dominated, Q P^k psi <= P^{k+1} psi.
+#
+# Reduction.  psi = psi(0) + sum_m (psi(m) - psi(m-1)) 1{c >= m} with
+# non-negative weights, so psi = f_m = 1{c >= m} suffices.  Under the naive
+# rule c_k >= m iff c_0 >= m or some draw by generation k was >= m, so
+# u_k = P^k f_m is a first-passage probability; on states with c < m write
+# s_k = 1 - u_k (survival), H(i) = 1 - F_{i+1}(m-1)^K for the probability
+# that a draw from level i is >= m (non-decreasing in i), A = F_{i+1}(c)^K,
+# pi(J) = P(M = J) for the surviving landings c < J < m, B = sum pi(J),
+# e_k = the pi-average of s_k over the landings, so that
+# s_{k+1}(c,i) = A s_k(c,i) + B e_k.  Levels are clamped at the top, where
+# all three lemmas are equalities (the draw-death rate is count-free).
+#   (L1, new better than used)  s_{k+1}(x) <= (1 - H(x)) s_k(x), i.e.
+#     e_k <= s_k(x).  Induction on k (base s_1 = 1 - H): (L1) at the
+#     landings, all at level i+1 where the draw-death rate is H(i+1) >= H(i),
+#     gives e_k <= (1 - H(i+1)) e_{k-1}; (L1) at x gives
+#     s_k(x) = A s_{k-1}(x) + B e_{k-1} >= (A + B) e_{k-1}
+#     = (1 - H(i)) e_{k-1} >= e_k.
+#   (L2, count)  s_k(c,i) <= s_k(c+1,i) for c+1 < m.  First divergence: the
+#     chains share draws and agree unless the draw equals c+1, which sends
+#     the lower to (c+1,i+1) and leaves the upper at (c+1,i):
+#     s_k(c+1,i) - s_k(c,i) = A [s_{k-1}(c+1,i) - s_{k-1}(c,i)]
+#     + pi(c+1) [s_{k-1}(c+1,i) - s_{k-1}(c+1,i+1)] >= 0 by (L2), (L3) at k-1.
+#   (L3, level)  s_k(c,i+1) <= s_k(c,i).  With sigma_r = s_r(c,i+1), (L2) at
+#     level i+1 gives s_r(x,i+1) >= sigma_r for every surviving landing
+#     x > c of the lower chain, so s_k(c,i) >= R_k where R_0 = 1,
+#     R_k = A R_{k-1} + B sigma_{k-1} (wait at (c,i), then continue as the
+#     upper chain); inductively R_k >= (A + B) sigma_{k-1}
+#     = (1 - H(i)) sigma_{k-1} >= (1 - H(i+1)) sigma_{k-1} >= sigma_k by
+#     (L1) at (c,i+1).
+#   (L4, window)  For every state and every a in (c, n]:
+#     W_a = sum_{c < J <= a} pi_{i+1}(J) [u_k(J,i+1) - u_k(c,i)] >= 0.
+#     Terms with J >= m are >= 0 (u = 1 there).  For a' = min(a, m-1) the
+#     rest is (F(a')^K - F(c)^K) s_k(c,i) - sum_{c<J<=a'} pi(J) s_k(J,i+1),
+#     and by (L2) the pi-average of s_k(., i+1) over (c, a'] is at most its
+#     average over (c, m), which is e_k <= s_k(c,i) by (L1).
+#   Since (P f - Q f)(c,i) = W_{a(c)}, (L4) is Q u_k <= P u_k for every rule
+#   t, and Q^k f = Q(Q^{k-1} f) <= Q(P^{k-1} f) <= P^k f closes.
+# Only two facts about the draws are used: the law of the best of K is
+# stochastically non-decreasing in the level (so H is), and an accepted
+# candidate raises the level by exactly one.  The pointwise cone
+# u_k(J,i+1) >= u_k(c,i) is FALSE (witness in
+# ``count_dominance_lemma_fixture``): rejecting one high landing can raise
+# the expected count, so the naive rule maximizes E[c_k] among threshold
+# rules but not among all accept/reject policies.  The same-uniform
+# coupling cannot replace the argument: ``quantile_coupling_crossing``
+# exhibits a path on which the gated level passes the naive level while
+# the naive count is still below m.  Mixed gain laws: (L1)-(L3) go through,
+# (L4)'s averaging step does not (the landing level is then not a function
+# of the landing count); the window condition is checked finitely only.
+
+
+LEMMA_HORIZON = 12
+LEMMA_CELLS = ((4, 2), (8, 2), (16, 2), (8, 4), (4, 4))
+LEMMA_LATTICES = {"jump_quarter_one": (Q(1, 4), Q(1, 4), Q(1, 4), Q(1)),
+                  "half_half_half_one": (Q(1, 2), Q(1, 2), Q(1, 2), Q(1)),
+                  "tiny_then_big": (Q(1, 16), Q(1, 16), Q(15, 16), Q(1))}
+MIXED_WINDOW_LAWS = {"two_point": {0: Q(3, 4), 1: Q(1, 4)}, "zero_or_two": {0: Q(1, 2), 2: Q(1, 2)}}
+CROSSING_CELL = {"items": 5, "levels": (Q(0), Q(1, 8), Q(3, 8), Q(7, 16), Q(1, 2), Q(15, 16)),
+                 "threshold": (1, 4, 0, 0, 0, 0), "m": 5, "horizon": 6}
+CROSSING_GATE_HORIZON = 10
+
+
+def naive_draw_law(items, candidates, levels) -> list[list[Q]]:
+    """``pi_i(J) = P(M = J)`` for the draw made from level ``i`` (best of
+    ``K`` at level ``min(top, i + 1)``), one row per level."""
+
+    _check_items_candidates(items, candidates)
+    levels = _check_levels(levels)
+    top = len(levels) - 1
+    return [best_of_pmf(items, candidates, levels[min(top, i + 1)]) for i in range(top + 1)]
+
+
+def window_sums(kernel, iterate, items, draw_law) -> dict[tuple[int, int], list[Q]]:
+    """``W_a(c, i)`` for ``a = c+1..n``: the prefix sums of
+    ``pi_i(J) [f(J, i') - f(c, i)]`` over the naive landings ``J > c`` of
+    the state, ``f`` an iterate on the kernel's states; ``(P f - Q f)(c, i)``
+    for the rule with ``a(c) = a``."""
+
+    out = {}
+    for (c, i), entries in kernel.items():
+        landing = {y[0]: y for y, _ in entries[1:]}
+        running, sums = Q(0), []
+        for J in range(c + 1, items + 1):
+            if J in landing:
+                running += draw_law[i][J] * (iterate[landing[J]] - iterate[(c, i)])
+            sums.append(running)
+        out[(c, i)] = sums
+    return out
+
+
+def count_dominance_lemma_fixture() -> dict[str, object]:
+    """Every-state, every-``m``, every-horizon checks of (L1)-(L4) and of
+    the intermediate inequalities in their proofs, on ``LEMMA_CELLS`` x
+    ``STRUCTURE_STEPS`` plus the non-uniform and big-jump lattices; the
+    window sums of the count iterates themselves; the first pointwise-cone
+    failure (with the one-step-deviation policy that beats the naive
+    rule); and the window condition under mixed gain laws (finite)."""
+
+    law = DRIFT_GAINS["fixed"]
+    H = LEMMA_HORIZON
+    flags = {"L1_nbu": True, "L1_step_landing_decay": True, "L2_count_below_m": True,
+             "L3_level": True, "L3_step_landing_above_sigma": True, "L3_step_waiting_chain": True,
+             "L4_window_indicators": True, "L4_window_count": True,
+             "unit_cone_count": True, "mixed_law_window_count": True, "naive_hits_only_by_draw": True}
+    pointwise = None
+    configs = [(items, candidates, drift_levels(DRIFT_P0, step), f"n={items},K={candidates},step={step}")
+               for items, candidates in LEMMA_CELLS for step in STRUCTURE_STEPS]
+    configs += [(8, 2, levels, f"n=8,K=2,lattice={index}") for index, levels in enumerate(NONUNIFORM_LATTICES)]
+    configs += [(items, 2, levels, f"n={items},K=2,lattice={name}")
+                for name, levels in LEMMA_LATTICES.items() for items in (4, 6)]
+    cells, states_checked = {}, 0
+    for items, candidates, levels, name in configs:
+        top = len(levels) - 1
+        up = lambda i: min(top, i + 1)
+        kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+        states = list(kernel)
+        pi = naive_draw_law(items, candidates, levels)
+        u_count = kernel_iterates(kernel, lambda x: Q(x[0]), H)
+        for k in range(H + 1):
+            for (c, i), sums in window_sums(kernel, u_count[k], items, pi).items():
+                flags["L4_window_count"] &= all(w >= 0 for w in sums)
+                flags["unit_cone_count"] &= not sums or sums[0] >= 0
+                if pointwise is None and c < items:
+                    bad = next((J for J in range(c + 1, items + 1) if u_count[k][(J, up(i))] < u_count[k][(c, i)]), None)
+                    if bad is not None:
+                        gain = pi[i][bad] * (u_count[k][(c, i)] - u_count[k][(bad, up(i))])
+                        pointwise = {"cell": name, "horizon": k, "state": (c, i), "landing": (bad, up(i)),
+                                     "naive_value_at_state": u_count[k][(c, i)],
+                                     "naive_value_at_landing": u_count[k][(bad, up(i))],
+                                     "deviation_policy": f"from {(c, i)} reject the draw {bad} once, naive otherwise",
+                                     "deviation_gain_at_next_horizon": gain,
+                                     "naive_value_at_next_horizon": u_count[k + 1][(c, i)] if k < H else None}
+        per_m = {}
+        for m in range(1, items + 1):
+            u = kernel_iterates(kernel, lambda x, m=m: Q(int(x[0] >= m)), H)
+            s = [{x: 1 - u[k][x] for x in states} for k in range(H + 1)]
+            death = [1 - sum(pi[i][:m]) for i in range(top + 1)]
+            ok = {key: True for key in ("L1", "L2", "L3", "L4")}
+            for (c, i) in states:
+                if c >= m:
+                    flags["naive_hits_only_by_draw"] &= all(u[k][(c, i)] == 1 for k in range(H + 1))
+                    continue
+                states_checked += 1
+                landings = [(J, pi[i][J]) for J in range(c + 1, m) if pi[i][J]]
+                B = sum((p for _, p in landings), Q(0))
+                A = sum(pi[i][:c + 1])
+                e = [sum((p * s[k][(J, up(i))] for J, p in landings), Q(0)) / B if B else None for k in range(H + 1)]
+                for k in range(1, H + 1):
+                    ok["L1"] &= s[k][(c, i)] <= (1 - death[i]) * s[k - 1][(c, i)]
+                    if B:
+                        ok["L1"] &= e[k] <= s[k][(c, i)]
+                        flags["L1_step_landing_decay"] &= e[k] <= (1 - death[up(i)]) * e[k - 1]
+                for k in range(H + 1):
+                    if c + 1 < m:
+                        ok["L2"] &= s[k][(c, i)] <= s[k][(c + 1, i)]
+                    if i < top:
+                        ok["L3"] &= s[k][(c, i + 1)] <= s[k][(c, i)]
+                if i < top:
+                    sigma = [s[k][(c, i + 1)] for k in range(H + 1)]
+                    if B:
+                        flags["L3_step_landing_above_sigma"] &= all(e[r] >= sigma[r] for r in range(H + 1))
+                    R = Q(1)
+                    for k in range(1, H + 1):
+                        R = A * R + B * sigma[k - 1]
+                        flags["L3_step_waiting_chain"] &= R >= sigma[k]
+            for k in range(H + 1):
+                for sums in window_sums(kernel, u[k], items, pi).values():
+                    ok["L4"] &= all(w >= 0 for w in sums)
+            per_m[m] = ok
+            flags["L1_nbu"] &= ok["L1"]
+            flags["L2_count_below_m"] &= ok["L2"]
+            flags["L3_level"] &= ok["L3"]
+            flags["L4_window_indicators"] &= ok["L4"]
+        cells[name] = {"all_lemmas_every_m": all(all(ok.values()) for ok in per_m.values()),
+                       "failing": [(m, key) for m, ok in per_m.items() for key, v in ok.items() if not v]}
+    mixed = {}
+    for items, candidates in ((4, 2), (6, 2), (8, 2)):
+        for lname, levels in (("step=1/8", drift_levels(DRIFT_P0, DRIFT_STEP)), ("lattice=0", NONUNIFORM_LATTICES[0])):
+            for law_name, mixed_law in MIXED_WINDOW_LAWS.items():
+                kernel = drift_kernel(items, candidates, levels, mixed_law, naive_threshold(items))
+                u = kernel_iterates(kernel, lambda x: Q(x[0]), H)
+                holds = True
+                for k in range(H + 1):
+                    for (c, i), entries in kernel.items():
+                        running = Q(0)
+                        for J in range(c + 1, items + 1):
+                            running += sum((p * (u[k][y] - u[k][(c, i)]) for y, p in entries[1:] if y[0] == J), Q(0))
+                            holds &= running >= 0
+                mixed[f"n={items},K={candidates},{lname},law={law_name}"] = holds
+                flags["mixed_law_window_count"] &= holds
+    return {"flags": flags, "cells": cells, "horizon": H, "states_below_m_checked": states_checked,
+            "pointwise_cone_failure": pointwise, "mixed_law_window": mixed,
+            "lemma_names": {"L1": "new better than used: s_{k+1} <= (1 - H) s_k",
+                            "L2": "survival non-decreasing in the count below m",
+                            "L3": "survival non-increasing in the level",
+                            "L4": "window sums of the naive iterates non-negative: Q u_k <= P u_k for every rule"}}
+
+
+def quantile_coupling_crossing(items, levels, threshold, m, horizon) -> dict[str, object] | None:
+    """Breadth-first search, with ``K = 1`` and one uniform per generation
+    shared by both chains (candidate ``F_l^{-1}(U)`` at level ``l``), for a
+    path from a common start state on which the gated level exceeds the
+    naive level while the naive count is still below ``m``.  Returns the
+    shortest such path with an exact uniform for every generation, or
+    ``None`` if no such path exists within ``horizon`` generations."""
+
+    if type(items) is not int or items < 1:
+        raise ValueError("items must be a positive integer")
+    levels = _check_levels(levels)
+    threshold = _check_threshold(threshold, items)
+    _check_generations(horizon)
+    if type(m) is not int or not 1 <= m <= items:
+        raise ValueError("m must be a count in 1..items")
+    top = len(levels) - 1
+    cdf = [binomial_cdf(items, p) for p in levels]
+
+    def cell(level, j):
+        return (cdf[level][j - 1] if j else Q(0)), cdf[level][j]
+
+    starts = [(c, i, c, i) for i in range(top + 1) for c in range(m)]
+    parent = {x: None for x in starts}
+    depth = {x: 0 for x in starts}
+    queue = list(starts)
+    head = 0
+    while head < len(queue):
+        joint = queue[head]
+        head += 1
+        c0, i0, ct, it = joint
+        if it > i0:
+            path, cur = [], joint
+            while parent[cur] is not None:
+                prev, u, j0, jt = parent[cur]
+                path.append({"uniform": u, "naive_draw": j0, "gated_draw": jt,
+                             "naive_state": (cur[0], cur[1]), "gated_state": (cur[2], cur[3])})
+                cur = prev
+            path.reverse()
+            return {"start": (cur[0], cur[1]), "path": path, "generations": len(path),
+                    "naive_count_at_crossing": c0, "m": m}
+        if depth[joint] >= horizon:
+            continue
+        l0, lt = min(top, i0 + 1), min(top, it + 1)
+        for j0 in range(items + 1):
+            a0, b0 = cell(l0, j0)
+            if b0 <= a0:
+                continue
+            for jt in range(items + 1):
+                at, bt = cell(lt, jt)
+                lo, hi = max(a0, at), min(b0, bt)
+                if hi <= lo:
+                    continue
+                naive = (j0, l0) if j0 > c0 else (c0, i0)
+                if naive[0] >= m:
+                    continue
+                gated = (jt, lt) if jt > ct + threshold[ct] else (ct, it)
+                nxt = (naive[0], naive[1], gated[0], gated[1])
+                if nxt not in parent:
+                    parent[nxt] = (joint, (lo + hi) / 2, j0, jt)
+                    depth[nxt] = depth[joint] + 1
+                    queue.append(nxt)
+    return None
+
+
+def replay_quantile_coupling(items, levels, threshold, witness) -> bool:
+    """Re-run a ``quantile_coupling_crossing`` witness from its uniforms:
+    every draw must be the exact quantile at the chain's own level and the
+    recorded states must follow from the two rules."""
+
+    levels = _check_levels(levels)
+    top = len(levels) - 1
+    cdf = [binomial_cdf(items, p) for p in levels]
+    quantile = lambda level, u: next(j for j in range(items + 1) if cdf[level][j] >= u)
+    naive, gated = witness["start"], witness["start"]
+    for step in witness["path"]:
+        u = step["uniform"]
+        if not 0 < u <= 1:
+            return False
+        l0, lt = min(top, naive[1] + 1), min(top, gated[1] + 1)
+        j0, jt = quantile(l0, u), quantile(lt, u)
+        if (j0, jt) != (step["naive_draw"], step["gated_draw"]):
+            return False
+        naive = (j0, l0) if j0 > naive[0] else naive
+        gated = (jt, lt) if jt > gated[0] + threshold[gated[0]] else gated
+        if (naive, gated) != (step["naive_state"], step["gated_state"]):
+            return False
+        if naive[0] >= witness["m"]:
+            return False
+    return gated[1] > naive[1]
+
+
+def coupling_crossing_fixture() -> dict[str, object]:
+    """The same-uniform coupling behind route R1: on the gate cells of the
+    structure fixture (standard lattice, ``z = 1, 2, 3`` and the non-gate
+    rule) no level crossing before the naive first passage is found within
+    ``CROSSING_GATE_HORIZON`` generations (finite), while ``CROSSING_CELL``
+    gives an exact crossing path, replayed from its uniforms."""
+
+    cell = CROSSING_CELL
+    witness = quantile_coupling_crossing(cell["items"], cell["levels"], cell["threshold"], cell["m"], cell["horizon"])
+    verified = witness is not None and replay_quantile_coupling(cell["items"], cell["levels"], cell["threshold"], witness)
+    gate_cells = {}
+    for items in (4, 8):
+        levels = drift_levels(DRIFT_P0, DRIFT_STEP)
+        rules = {f"z={z}": gate_threshold(items, z) for z in GATE_Z_VALUES}
+        rules["nongate"] = NONGATE_THRESHOLDS[items]
+        for rule, threshold in rules.items():
+            found = next((m for m in range(2, items + 1)
+                          if quantile_coupling_crossing(items, levels, threshold, m, CROSSING_GATE_HORIZON)), None)
+            gate_cells[f"n={items},{rule}"] = found
+    return {"witness_cell": {k: v for k, v in cell.items()}, "witness": witness, "witness_replays": verified,
+            "gate_cells_first_m_with_crossing": gate_cells,
+            "no_crossing_on_gate_cells_within_horizon": all(v is None for v in gate_cells.values()),
+            "gate_horizon": CROSSING_GATE_HORIZON}
 
 
 # --------------------------------------------------------------------------
@@ -2079,12 +2418,14 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
     bounds, mutation = bound_fixture(), mutation_fixture()
     one_step, gate_order = one_step_fixture(), gate_order_fixture()
     consistency, structure = consistency_fixture(), dominance_structure_fixture()
+    lemmas, crossing = count_dominance_lemma_fixture(), coupling_crossing_fixture()
     sweep = dominance_sweep_fixture(full_sweep)
     naive_8_2 = naive["cells"][_cell(8, 2, Q(1, 2))]["readout_gap_by_generation"]
     gated_16_4 = gated["cells"][f"{_cell(16, 4, Q(1, 2))},z=3"]
     orderings = drift["orderings_on_enumerated_cells"]
     bound_flags, mutation_flags, order_flags = bounds["flags"], mutation["flags"], gate_order["flags"]
     structure_flags, witnesses = structure["flags"], structure["witnesses"]
+    lemma_flags, pointwise = lemmas["flags"], lemmas["pointwise_cone_failure"]
     sweep_laws = sweep["by_law"]
     checks = {
         "kernel_rows_sum_to_one": naive["consistency"]["rows_sum"],
@@ -2202,28 +2543,64 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
                                                    "naive_count_not_monotone_in_count")),
         "threshold_monotonicity_fails_for_a_non_naive_pair":
             structure["threshold_pair"]["higher_rule_ahead_somewhere"],
+        # Part E: Proposition 9 (count dominance) and its proof steps
+        "count_lemma_L1_new_better_than_used_every_state_and_m":
+            lemma_flags["L1_nbu"] and lemma_flags["L1_step_landing_decay"],
+        "count_lemma_L2_survival_monotone_in_count_below_m": lemma_flags["L2_count_below_m"],
+        "count_lemma_L3_survival_monotone_in_level":
+            lemma_flags["L3_level"] and lemma_flags["L3_step_landing_above_sigma"]
+            and lemma_flags["L3_step_waiting_chain"],
+        "count_lemma_L4_window_sums_nonnegative_indicators_and_count":
+            lemma_flags["L4_window_indicators"] and lemma_flags["L4_window_count"]
+            and lemma_flags["unit_cone_count"] and lemma_flags["naive_hits_only_by_draw"],
+        "count_window_condition_holds_under_mixed_gain_laws_on_cells": lemma_flags["mixed_law_window_count"],
+        "count_pointwise_cone_fails_and_a_non_threshold_policy_beats_naive":
+            pointwise is not None and pointwise["deviation_gain_at_next_horizon"] > 0,
+        "quantile_coupling_level_crossing_before_first_passage_witness": crossing["witness_replays"],
+        "quantile_coupling_no_crossing_found_on_gate_cells_within_horizon":
+            crossing["no_crossing_on_gate_cells_within_horizon"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
-            "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure),
+            "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
+                                  lemmas, crossing),
             "naive": naive, "gated": gated, "fresh": fresh, "drift": drift,
             "brute_force": brute, "divergence": divergence,
             "bounds": bounds, "mutation": mutation, "one_step": one_step,
             "gate_order": gate_order, "dominance_consistency": consistency,
-            "dominance_structure": structure, "dominance_sweep": sweep}
+            "dominance_structure": structure, "dominance_sweep": sweep,
+            "count_dominance_lemmas": lemmas, "coupling_crossing": crossing}
 
 
 def _approx(value):
     return None if value is None else {"exact": value, "float": round(float(value), 6)}
 
 
-def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure) -> dict[str, object]:
+def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
+              lemmas, crossing) -> dict[str, object]:
     """Named cells with a float rendering beside the exact value."""
 
     def sweep_row(law, key):
         return sweep["by_law"][law]["rows"][key]
 
     pair = structure["threshold_pair"]
+    pointwise = lemmas["pointwise_cone_failure"] or {}
+    witness = crossing["witness"] or {}
+    count_dominance = {
+        "lemma_flags": lemmas["flags"], "lemma_horizon": lemmas["horizon"],
+        "cells": len(lemmas["cells"]), "states_below_m_checked": lemmas["states_below_m_checked"],
+        "mixed_law_window_cells": lemmas["mixed_law_window"],
+        "pointwise_cone_failure": {k: (_approx(v) if isinstance(v, Q) else v) for k, v in pointwise.items()},
+        "quantile_coupling_crossing": {
+            "cell": crossing["witness_cell"], "start": witness.get("start"),
+            "generations": witness.get("generations"),
+            "naive_count_at_crossing": witness.get("naive_count_at_crossing"),
+            "path": [{"uniform": _approx(step["uniform"]), "naive_draw": step["naive_draw"],
+                      "gated_draw": step["gated_draw"], "naive_state": step["naive_state"],
+                      "gated_state": step["gated_state"]} for step in witness.get("path", [])],
+            "replays": crossing["witness_replays"],
+            "gate_cells_first_m_with_crossing": crossing["gate_cells_first_m_with_crossing"]},
+    }
     dominance = {
         "full_sweep": sweep["full_sweep"], "cells": sweep["cells"],
         "generations_compared": sweep["generations_compared"],
@@ -2307,4 +2684,5 @@ def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep
         "gate_order_n4_k2_step_eighth": order_cell(4, 2, Q(1, 8)),
         "gate_order_later_generation_agreement": gate_order["later_generation_agreement_counts"],
         "dominance": dominance,
+        "count_dominance": count_dominance,
     }

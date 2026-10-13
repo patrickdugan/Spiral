@@ -6,19 +6,21 @@ import pytest
 
 from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_feedback_multigen import (
-    BOUND_TOLERANCE, NONUNIFORM_LATTICES, best_of_pmf, binomial_cdf,
+    BOUND_TOLERANCE, CROSSING_CELL, NONUNIFORM_LATTICES, best_of_pmf, binomial_cdf,
     brute_force_drift_distribution, brute_force_fresh_reported,
     brute_force_mutation_distribution, brute_force_reuse_distribution,
-    ceiling_mass_closed_form, decaying_gain_schedule, divergence_check,
+    ceiling_mass_closed_form, count_dominance_lemma_fixture, coupling_crossing_fixture,
+    decaying_gain_schedule, divergence_check,
     dominance_search, drift_absorbing_states, drift_expectations,
     drift_gap_increment_from_one_step, drift_kernel, drift_levels, drift_limit,
     drift_trajectory, false_acceptance_probability, fresh_block_reported,
     fresh_trajectory, gate_threshold, kernel_iterates, late_early_ratio,
     mutation_candidate_law, mutation_state_distribution,
     mutation_trajectory, mutation_transition_kernel, naive_closed_form,
-    naive_gap_bounds, naive_threshold, one_step_gap_change, phantom_share,
-    readout_gap_series, reuse_trajectory, running_max_from_point,
-    state_distribution, threshold_pair_counterexample, transition_kernel, verify,
+    naive_draw_law, naive_gap_bounds, naive_threshold, one_step_gap_change, phantom_share,
+    quantile_coupling_crossing, readout_gap_series, replay_quantile_coupling,
+    reuse_trajectory, running_max_from_point,
+    state_distribution, threshold_pair_counterexample, transition_kernel, verify, window_sums,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
@@ -382,6 +384,13 @@ def test_divergence_check_on_dp_expectations():
     lambda: drift_expectations(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0, 0), -1),
     lambda: drift_absorbing_states(2, (HALF, Q(1)), (0, 0)),
     lambda: kernel_iterates(drift_kernel(2, 2, (HALF, Q(1)), {1: Q(1)}, (0, 0, 0)), lambda x: x[0], -1),
+    lambda: naive_draw_law(0, 2, (HALF, Q(1))),
+    lambda: naive_draw_law(2, 2, (HALF, QUARTER)),
+    lambda: quantile_coupling_crossing(0, (HALF, Q(1)), (0,), 1, 2),
+    lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0), 1, 2),
+    lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 3, 2),
+    lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 0, 2),
+    lambda: quantile_coupling_crossing(2, (HALF, Q(1)), (0, 0, 0), 1, -1),
 ])
 def test_malformed_inputs_raise(call):
     with pytest.raises(ValueError):
@@ -742,9 +751,143 @@ def test_dominance_search_small_grid():
     assert scheduled["generations_compared"] == 12
 
 
+# --------------------------------------------------------------------------
+# Part E: Proposition 9, count dominance via the window sums of the naive iterates
+# --------------------------------------------------------------------------
+
+def test_naive_draw_law_is_best_of_k_at_the_next_level_clamped():
+    levels = (QUARTER, HALF, Q(1))
+    law = naive_draw_law(3, 2, levels)
+    assert law == [best_of_pmf(3, 2, HALF), best_of_pmf(3, 2, Q(1)), best_of_pmf(3, 2, Q(1))]
+    kernel = drift_kernel(3, 2, levels, FIXED, naive_threshold(3))
+    for (c, i), entries in kernel.items():
+        assert {y[0]: p for y, p in entries[1:]} == {J: law[i][J] for J in range(c + 1, 4) if law[i][J]}
+
+
+def test_window_sums_are_the_gated_versus_naive_one_step_difference():
+    """``W_{a(c)}(c, i) = (P f - Q f)(c, i)`` for the rule with ``a(c) = c + t(c)``."""
+
+    items, candidates = 4, 2
+    naive = drift_kernel(items, candidates, LATTICE, FIXED, naive_threshold(items))
+    law = naive_draw_law(items, candidates, LATTICE)
+    f = kernel_iterates(naive, lambda x: Q(x[0]), 3)[3]
+    sums = window_sums(naive, f, items, law)
+    assert sums[(items, 0)] == [] and all(len(sums[(c, i)]) == items - c for (c, i) in naive)
+    for threshold in (gate_threshold(items, 1), gate_threshold(items, 3), (0, 2, 0, 3, 0)):
+        gated = drift_kernel(items, candidates, LATTICE, FIXED, threshold)
+        for (c, i) in naive:
+            pf = sum(p * f[y] for y, p in naive[(c, i)])
+            qf = sum(p * f[y] for y, p in gated[(c, i)])
+            a = min(items, c + threshold[c])
+            assert pf - qf == (sums[(c, i)][a - c - 1] if a > c else 0)
+    # the full window is the one-generation gain of the count, non-negative
+    full = kernel_iterates(naive, lambda x: Q(x[0]), 4)[4]
+    assert all((sums[(c, i)][-1] if c < items else 0) == full[(c, i)] - f[(c, i)] for (c, i) in naive)
+
+
+def test_hitting_lemmas_by_hand_n2_k1():
+    """``n = 2, K = 1``, levels ``(1/4, 1/2, 1)``, ``m = 2``: survival from
+    ``(0, 0)`` is the probability that no draw is ``2``; a draw of ``1`` moves
+    the chain to ``(1, 1)`` where the next draw is at level ``2``."""
+
+    levels = (QUARTER, HALF, Q(1))
+    kernel = drift_kernel(2, 1, levels, FIXED, naive_threshold(2))
+    u = kernel_iterates(kernel, lambda x: Q(int(x[0] >= 2)), 3)
+    s = lambda k, x: 1 - u[k][x]
+    assert s(1, (0, 0)) == Q(3, 4) and s(1, (1, 0)) == Q(3, 4) and s(1, (0, 1)) == 0
+    # (L1) at (0, 0): s_2 = F(0) s_1(0,0) + pi(1) s_1(1,1) = 1/4 * 3/4 + 1/2 * 0 <= (3/4) s_1
+    assert s(2, (0, 0)) == Q(3, 16) <= Q(3, 4) * s(1, (0, 0))
+    # (L2): survival non-decreasing in the count below m; (L3): non-increasing in the level
+    for k in range(4):
+        assert s(k, (0, 0)) <= s(k, (1, 0)) and s(k, (0, 1)) <= s(k, (0, 0)) and s(k, (1, 1)) <= s(k, (1, 0))
+    # (L4): the unit window from (0, 0) is pi(1) [u(1,1) - u(0,0)] >= 0 at every horizon
+    law = naive_draw_law(2, 1, levels)
+    for k in range(4):
+        assert all(w >= 0 for sums in window_sums(kernel, u[k], 2, law).values() for w in sums)
+
+
+@pytest.mark.parametrize("items, candidates, levels", [
+    (4, 2, LATTICE), (6, 1, NONUNIFORM_LATTICES[0]), (5, 3, (Q(1, 8), Q(1, 8), Q(7, 8), Q(1)))])
+def test_hitting_lemmas_and_window_sums_every_state_and_m(items, candidates, levels):
+    H, top = 8, len(levels) - 1
+    kernel = drift_kernel(items, candidates, levels, FIXED, naive_threshold(items))
+    law = naive_draw_law(items, candidates, levels)
+    for m in range(1, items + 1):
+        u = kernel_iterates(kernel, lambda x, m=m: Q(int(x[0] >= m)), H)
+        death = [1 - sum(law[i][:m]) for i in range(top + 1)]
+        for (c, i) in kernel:
+            if c >= m:
+                continue
+            for k in range(1, H + 1):
+                assert 1 - u[k][(c, i)] <= (1 - death[i]) * (1 - u[k - 1][(c, i)]), "L1"
+            for k in range(H + 1):
+                if c + 1 < m:
+                    assert u[k][(c, i)] >= u[k][(c + 1, i)], "L2"
+                if i < top:
+                    assert u[k][(c, i + 1)] >= u[k][(c, i)], "L3"
+        for k in range(H + 1):
+            assert all(w >= 0 for sums in window_sums(kernel, u[k], items, law).values() for w in sums), "L4"
+    count = kernel_iterates(kernel, lambda x: Q(x[0]), H)
+    for k in range(H + 1):
+        assert all(w >= 0 for sums in window_sums(kernel, count[k], items, law).values() for w in sums)
+
+
+def test_window_sums_imply_dominance_for_every_rule_n4():
+    """``Q_t P^k c <= P^{k+1} c`` and ``Q_t^k c <= P^k c`` for all 120 rules on ``n = 4``."""
+
+    items, candidates, H = 4, 2, 6
+    naive = drift_kernel(items, candidates, LATTICE, FIXED, naive_threshold(items))
+    u = kernel_iterates(naive, lambda x: Q(x[0]), H + 1)
+    for threshold in product(*[range(items - c + 1) for c in range(items + 1)]):
+        gated = drift_kernel(items, candidates, LATTICE, FIXED, threshold)
+        w = kernel_iterates(gated, lambda x: Q(x[0]), H)
+        for k in range(H):
+            assert all(sum(p * u[k][y] for y, p in gated[x]) <= u[k + 1][x] for x in naive)
+            assert all(w[k + 1][x] <= u[k + 1][x] for x in naive)
+
+
+def test_pointwise_cone_fails_and_a_one_step_deviation_beats_naive():
+    """``u_k(3, 1) < u_k(0, 0)`` at ``n = 4, K = 2``: rejecting the draw 3 once
+    from ``(0, 0)`` and then following the naive rule beats the naive rule."""
+
+    kernel = drift_kernel(4, 2, LATTICE, FIXED, naive_threshold(4))
+    u = kernel_iterates(kernel, lambda x: Q(x[0]), 9)
+    law = naive_draw_law(4, 2, LATTICE)
+    assert u[8][(3, 1)] < u[8][(0, 0)] and u[1][(3, 1)] > u[1][(0, 0)]
+    deviation = sum(p * u[8][y] for y, p in kernel[(0, 0)]) + law[0][3] * (u[8][(0, 0)] - u[8][(3, 1)])
+    assert deviation > u[9][(0, 0)]
+    fixture = count_dominance_lemma_fixture()
+    assert all(fixture["flags"].values()) and fixture["pointwise_cone_failure"] is not None
+    witness = fixture["pointwise_cone_failure"]
+    assert witness["naive_value_at_landing"] < witness["naive_value_at_state"]
+    assert witness["deviation_gain_at_next_horizon"] > 0
+    assert all(cell["all_lemmas_every_m"] for cell in fixture["cells"].values())
+
+
+def test_quantile_coupling_crossing_witness_replays_and_is_exact():
+    cell = CROSSING_CELL
+    witness = quantile_coupling_crossing(cell["items"], cell["levels"], cell["threshold"], cell["m"], cell["horizon"])
+    assert witness["start"] == (0, 0) and witness["generations"] == 4 and witness["naive_count_at_crossing"] == 4
+    draws = [(step["naive_draw"], step["gated_draw"]) for step in witness["path"]]
+    assert draws == [(1, 1), (4, 2), (3, 3), (4, 4)]
+    assert [step["naive_state"] for step in witness["path"]] == [(1, 1), (4, 2), (4, 2), (4, 2)]
+    assert [step["gated_state"] for step in witness["path"]] == [(0, 0), (2, 1), (3, 2), (4, 3)]
+    # first uniform lies in the level-1 cell of the draw 1: (F(0), F(1)] = ((7/8)^5, (7/8)^5 + 5 (1/8)(7/8)^4]
+    u0 = witness["path"][0]["uniform"]
+    assert Q(7, 8)**5 < u0 <= Q(7, 8)**5 + 5 * Q(1, 8) * Q(7, 8)**4
+    assert replay_quantile_coupling(cell["items"], cell["levels"], cell["threshold"], witness)
+    broken = {**witness, "path": [dict(witness["path"][0], uniform=Q(1, 2))] + witness["path"][1:]}
+    assert not replay_quantile_coupling(cell["items"], cell["levels"], cell["threshold"], broken)
+    # the naive rule never crosses itself, and no crossing on the n = 4 gate within horizon 6
+    assert quantile_coupling_crossing(4, LATTICE, naive_threshold(4), 4, 6) is None
+    assert quantile_coupling_crossing(4, LATTICE, gate_threshold(4, 2), 4, 6) is None
+    fixture = coupling_crossing_fixture()
+    assert fixture["witness_replays"] and fixture["no_crossing_on_gate_cells_within_horizon"]
+
+
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 71
+    assert report["all_passed"] and len(report["checks"]) == 79
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["brute_force"]["all_match"]
     assert report["headline"]["naive_readout_gap_n8_k2_p_half"]["G=1"]["exact"] == Q(19305, 131072)
@@ -755,3 +898,6 @@ def test_verify_reports_every_check_passing():
     assert not sweep["full_sweep"] and sweep["by_law"]["fixed"]["cells"] == 324 and sweep["cells"] == 414
     assert sweep["violations"] == 0 and sweep["limit_violations"] == 0
     assert len(report["dominance_structure"]["routes_that_fail_for_the_count"]) == 4
+    lemmas = report["count_dominance_lemmas"]
+    assert len(lemmas["cells"]) == 23 and lemmas["states_below_m_checked"] == 6168
+    assert report["headline"]["count_dominance"]["quantile_coupling_crossing"]["generations"] == 4

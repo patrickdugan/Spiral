@@ -1,6 +1,6 @@
 {
-  "schema_version": "0.3",
-  "generated_at_utc": "2026-10-13T05:52:13.114649+00:00",
+  "schema_version": "0.4",
+  "generated_at_utc": "2026-10-13T07:29:44.072444+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
     "kernel_rows_sum_to_one": true,
@@ -73,7 +73,15 @@
     "dominance_count_hitting_probabilities_every_state": true,
     "naive_count_gain_nonincreasing_in_count": true,
     "count_routes_fail_gate_cone_componentwise_policy_improvement": true,
-    "threshold_monotonicity_fails_for_a_non_naive_pair": true
+    "threshold_monotonicity_fails_for_a_non_naive_pair": true,
+    "count_lemma_L1_new_better_than_used_every_state_and_m": true,
+    "count_lemma_L2_survival_monotone_in_count_below_m": true,
+    "count_lemma_L3_survival_monotone_in_level": true,
+    "count_lemma_L4_window_sums_nonnegative_indicators_and_count": true,
+    "count_window_condition_holds_under_mixed_gain_laws_on_cells": true,
+    "count_pointwise_cone_fails_and_a_non_threshold_policy_beats_naive": true,
+    "quantile_coupling_level_crossing_before_first_passage_witness": true,
+    "quantile_coupling_no_crossing_found_on_gate_cells_within_horizon": true
   },
   "all_passed": true,
   "headline": {
@@ -843,6 +851,173 @@
             "exact": "1483/2752",
             "float": 0.538881
           }
+        }
+      }
+    },
+    "count_dominance": {
+      "lemma_flags": {
+        "L1_nbu": true,
+        "L1_step_landing_decay": true,
+        "L2_count_below_m": true,
+        "L3_level": true,
+        "L3_step_landing_above_sigma": true,
+        "L3_step_waiting_chain": true,
+        "L4_window_indicators": true,
+        "L4_window_count": true,
+        "unit_cone_count": true,
+        "mixed_law_window_count": true,
+        "naive_hits_only_by_draw": true
+      },
+      "lemma_horizon": 12,
+      "cells": 23,
+      "states_below_m_checked": 6168,
+      "mixed_law_window_cells": {
+        "n=4,K=2,step=1/8,law=two_point": true,
+        "n=4,K=2,step=1/8,law=zero_or_two": true,
+        "n=4,K=2,lattice=0,law=two_point": true,
+        "n=4,K=2,lattice=0,law=zero_or_two": true,
+        "n=6,K=2,step=1/8,law=two_point": true,
+        "n=6,K=2,step=1/8,law=zero_or_two": true,
+        "n=6,K=2,lattice=0,law=two_point": true,
+        "n=6,K=2,lattice=0,law=zero_or_two": true,
+        "n=8,K=2,step=1/8,law=two_point": true,
+        "n=8,K=2,step=1/8,law=zero_or_two": true,
+        "n=8,K=2,lattice=0,law=two_point": true,
+        "n=8,K=2,lattice=0,law=zero_or_two": true
+      },
+      "pointwise_cone_failure": {
+        "cell": "n=4,K=2,step=1/16",
+        "horizon": 5,
+        "state": [
+          0,
+          2
+        ],
+        "landing": [
+          3,
+          3
+        ],
+        "naive_value_at_state": {
+          "exact": "1272950201176122884215786736232403845837915483643/365375409332725729550921208179070754913983135744",
+          "float": 3.483951
+        },
+        "naive_value_at_landing": {
+          "exact": "3821396120479/1099511627776",
+          "float": 3.47554
+        },
+        "deviation_policy": "from (0, 2) reject the draw 3 once, naive otherwise",
+        "deviation_gain_at_next_horizon": {
+          "exact": "540444283362289736766062507584159759844830864648930869/196159429230833773869868419475239575503198607639501078528",
+          "float": 0.002755
+        },
+        "naive_value_at_next_horizon": {
+          "exact": "5615736361657208465192817293535993047795449673899005065659/1569275433846670190958947355801916604025588861116008628224",
+          "float": 3.578554
+        }
+      },
+      "quantile_coupling_crossing": {
+        "cell": {
+          "items": 5,
+          "levels": [
+            "0",
+            "1/8",
+            "3/8",
+            "7/16",
+            "1/2",
+            "15/16"
+          ],
+          "threshold": [
+            1,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          "m": 5,
+          "horizon": 6
+        },
+        "start": [
+          0,
+          0
+        ],
+        "generations": 4,
+        "naive_count_at_crossing": 4,
+        "path": [
+          {
+            "uniform": {
+              "exact": "45619/65536",
+              "float": 0.696091
+            },
+            "naive_draw": 1,
+            "gated_draw": 1,
+            "naive_state": [
+              1,
+              1
+            ],
+            "gated_state": [
+              0,
+              0
+            ]
+          },
+          {
+            "uniform": {
+              "exact": "31371/32768",
+              "float": 0.957367
+            },
+            "naive_draw": 4,
+            "gated_draw": 2,
+            "naive_state": [
+              4,
+              2
+            ],
+            "gated_state": [
+              2,
+              1
+            ]
+          },
+          {
+            "uniform": {
+              "exact": "420931/524288",
+              "float": 0.802862
+            },
+            "naive_draw": 3,
+            "gated_draw": 3,
+            "naive_state": [
+              4,
+              2
+            ],
+            "gated_state": [
+              3,
+              2
+            ]
+          },
+          {
+            "uniform": {
+              "exact": "1955493/2097152",
+              "float": 0.932452
+            },
+            "naive_draw": 4,
+            "gated_draw": 4,
+            "naive_state": [
+              4,
+              2
+            ],
+            "gated_state": [
+              4,
+              3
+            ]
+          }
+        ],
+        "replays": true,
+        "gate_cells_first_m_with_crossing": {
+          "n=4,z=1": null,
+          "n=4,z=2": null,
+          "n=4,z=3": null,
+          "n=4,nongate": null,
+          "n=8,z=1": null,
+          "n=8,z=2": null,
+          "n=8,z=3": null,
+          "n=8,nongate": null
         }
       }
     }
@@ -29182,9 +29357,256 @@
       "lattice_note": "p(i) = min(1, p0 + i step); a gain multiple m on step s is the chain on step m s"
     }
   },
+  "count_dominance_lemmas": {
+    "flags": {
+      "L1_nbu": true,
+      "L1_step_landing_decay": true,
+      "L2_count_below_m": true,
+      "L3_level": true,
+      "L3_step_landing_above_sigma": true,
+      "L3_step_waiting_chain": true,
+      "L4_window_indicators": true,
+      "L4_window_count": true,
+      "unit_cone_count": true,
+      "mixed_law_window_count": true,
+      "naive_hits_only_by_draw": true
+    },
+    "cells": {
+      "n=4,K=2,step=1/16": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=2,step=1/8": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=2,step=1/4": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=2,step=1/16": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=2,step=1/8": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=2,step=1/4": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=16,K=2,step=1/16": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=16,K=2,step=1/8": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=16,K=2,step=1/4": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=4,step=1/16": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=4,step=1/8": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=4,step=1/4": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=4,step=1/16": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=4,step=1/8": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=4,step=1/4": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=2,lattice=0": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=8,K=2,lattice=1": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=2,lattice=jump_quarter_one": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=6,K=2,lattice=jump_quarter_one": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=2,lattice=half_half_half_one": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=6,K=2,lattice=half_half_half_one": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=4,K=2,lattice=tiny_then_big": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      },
+      "n=6,K=2,lattice=tiny_then_big": {
+        "all_lemmas_every_m": true,
+        "failing": []
+      }
+    },
+    "horizon": 12,
+    "states_below_m_checked": 6168,
+    "pointwise_cone_failure": {
+      "cell": "n=4,K=2,step=1/16",
+      "horizon": 5,
+      "state": [
+        0,
+        2
+      ],
+      "landing": [
+        3,
+        3
+      ],
+      "naive_value_at_state": "1272950201176122884215786736232403845837915483643/365375409332725729550921208179070754913983135744",
+      "naive_value_at_landing": "3821396120479/1099511627776",
+      "deviation_policy": "from (0, 2) reject the draw 3 once, naive otherwise",
+      "deviation_gain_at_next_horizon": "540444283362289736766062507584159759844830864648930869/196159429230833773869868419475239575503198607639501078528",
+      "naive_value_at_next_horizon": "5615736361657208465192817293535993047795449673899005065659/1569275433846670190958947355801916604025588861116008628224"
+    },
+    "mixed_law_window": {
+      "n=4,K=2,step=1/8,law=two_point": true,
+      "n=4,K=2,step=1/8,law=zero_or_two": true,
+      "n=4,K=2,lattice=0,law=two_point": true,
+      "n=4,K=2,lattice=0,law=zero_or_two": true,
+      "n=6,K=2,step=1/8,law=two_point": true,
+      "n=6,K=2,step=1/8,law=zero_or_two": true,
+      "n=6,K=2,lattice=0,law=two_point": true,
+      "n=6,K=2,lattice=0,law=zero_or_two": true,
+      "n=8,K=2,step=1/8,law=two_point": true,
+      "n=8,K=2,step=1/8,law=zero_or_two": true,
+      "n=8,K=2,lattice=0,law=two_point": true,
+      "n=8,K=2,lattice=0,law=zero_or_two": true
+    },
+    "lemma_names": {
+      "L1": "new better than used: s_{k+1} <= (1 - H) s_k",
+      "L2": "survival non-decreasing in the count below m",
+      "L3": "survival non-increasing in the level",
+      "L4": "window sums of the naive iterates non-negative: Q u_k <= P u_k for every rule"
+    }
+  },
+  "coupling_crossing": {
+    "witness_cell": {
+      "items": 5,
+      "levels": [
+        "0",
+        "1/8",
+        "3/8",
+        "7/16",
+        "1/2",
+        "15/16"
+      ],
+      "threshold": [
+        1,
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "m": 5,
+      "horizon": 6
+    },
+    "witness": {
+      "start": [
+        0,
+        0
+      ],
+      "path": [
+        {
+          "uniform": "45619/65536",
+          "naive_draw": 1,
+          "gated_draw": 1,
+          "naive_state": [
+            1,
+            1
+          ],
+          "gated_state": [
+            0,
+            0
+          ]
+        },
+        {
+          "uniform": "31371/32768",
+          "naive_draw": 4,
+          "gated_draw": 2,
+          "naive_state": [
+            4,
+            2
+          ],
+          "gated_state": [
+            2,
+            1
+          ]
+        },
+        {
+          "uniform": "420931/524288",
+          "naive_draw": 3,
+          "gated_draw": 3,
+          "naive_state": [
+            4,
+            2
+          ],
+          "gated_state": [
+            3,
+            2
+          ]
+        },
+        {
+          "uniform": "1955493/2097152",
+          "naive_draw": 4,
+          "gated_draw": 4,
+          "naive_state": [
+            4,
+            2
+          ],
+          "gated_state": [
+            4,
+            3
+          ]
+        }
+      ],
+      "generations": 4,
+      "naive_count_at_crossing": 4,
+      "m": 5
+    },
+    "witness_replays": true,
+    "gate_cells_first_m_with_crossing": {
+      "n=4,z=1": null,
+      "n=4,z=2": null,
+      "n=4,z=3": null,
+      "n=4,nongate": null,
+      "n=8,z=1": null,
+      "n=8,z=2": null,
+      "n=8,z=3": null,
+      "n=8,nongate": null
+    },
+    "no_crossing_on_gate_cells_within_horizon": true,
+    "gate_horizon": 10
+  },
   "source_sha256": {
-    "scripts/verify_evaluation_feedback_multigen.py": "a4df094ebe374c04e38f2599999d275e83377d77e337f56164b67af212438a91",
-    "src/spiral_ln/evaluation_feedback_multigen.py": "55865065ee78005bd97267485a5e4db3e9c1b93edb30974446cd8d830a861d94",
+    "scripts/verify_evaluation_feedback_multigen.py": "c15539f06956702cb19772e8ba2e02750a14482f8119ac0f2b41aeef325d9ca0",
+    "src/spiral_ln/evaluation_feedback_multigen.py": "0021ecefaa61915306bf8f411ad9324bd076664102d1e995c9af28253560a5b1",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }
