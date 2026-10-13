@@ -29,6 +29,44 @@ from spiral_ln.evaluation_feedback_lattice import (
     adaptive_states, first_patch_values, greedy_failures, index_rule_fixture,
     preference_reversals, rate_violations,
 )
+from spiral_ln.evaluation_feedback_lattice import (
+    pair_commutation_check, policy_structure_fixture, two_patch_value,
+)
+
+
+# --- structure of the optimal first patch ------------------------------------
+
+def test_two_patches_in_different_categories_commute():
+    for required, state in adaptive_states(4, 3):
+        if required < 2:
+            continue
+        distinct = sorted(set(state))
+        for position, first in enumerate(distinct):
+            for second in distinct[position + 1:]:
+                forward = two_patch_value(required, state, first, second)
+                assert forward == two_patch_value(required, state, second, first)
+                assert forward >= optimal_adaptive_value(state, required)
+    small = pair_commutation_check(4, 3)
+    assert small["violations"] == 0 and small["pairs_checked"] > 0
+
+
+def test_two_patch_value_rejects_malformed():
+    state = ((2, 1), (4, 2))
+    with pytest.raises(ValueError):
+        two_patch_value(1, state, (2, 1), (4, 2))
+    with pytest.raises(ValueError):
+        two_patch_value(2, state, (2, 1), (2, 1))
+    with pytest.raises(ValueError):
+        two_patch_value(2, state, (2, 1), (3, 1))
+
+
+def test_policy_structure_counts_pinned():
+    report = policy_structure_fixture(5, 4)
+    assert report["commutation"] == {"pairs_checked": 114835, "violations": 0}
+    assert report["optimal_outside_extremal_rules"] == 54
+    assert report["equal_rates_largest_not_optimal"] == 4
+    assert report["equal_rate_witness"]["state"] == ((2, 1), (2, 1), (4, 2))
+    assert report["lowest_of_three_rates_uniquely_optimal"] == 0
 
 
 # --- no index rule --------------------------------------------------------------
@@ -704,6 +742,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 30
+    assert report["all_passed"] and len(report["checks"]) == 33
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)

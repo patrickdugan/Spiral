@@ -1,8 +1,11 @@
 {
   "schema_version": "0.1",
-  "generated_at_utc": "2026-10-13T02:45:48.350414+00:00",
+  "generated_at_utc": "2026-10-13T04:55:57.141718+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
+    "two_patches_in_different_categories_commute_when_two_hits_remain": true,
+    "no_extremal_rule_covers_the_optimal_first_patch": true,
+    "lowest_of_three_rates_never_uniquely_optimal": true,
     "no_index_rule_on_own_counts_and_hits_needed": true,
     "no_index_rule_even_with_global_totals": true,
     "optimal_first_patch_can_have_lower_hit_probability": true,
@@ -1252,6 +1255,63 @@
       "holds": true
     }
   },
+  "policy_structure": {
+    "states": 33915,
+    "commutation": {
+      "pairs_checked": 114835,
+      "violations": 0
+    },
+    "optimal_outside_extremal_rules": 54,
+    "extremal_witness": {
+      "hits_needed": 2,
+      "state": [
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "optimal_first": [
+        [
+          4,
+          2
+        ]
+      ]
+    },
+    "equal_rates_largest_not_optimal": 4,
+    "equal_rate_witness": {
+      "hits_needed": 2,
+      "state": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "optimal_first": [
+        [
+          2,
+          1
+        ]
+      ]
+    },
+    "lowest_of_three_rates_uniquely_optimal": 0,
+    "lowest_witness": null
+  },
   "category_ledger": {
     "respected": {
       "selection": {
@@ -1469,7 +1529,7 @@
   },
   "source_sha256": {
     "scripts/verify_evaluation_feedback_lattice.py": "6893e337216319aa6ca07d4128726b3dc1ead8c2d17da1d08c2568bc1f41b402",
-    "src/spiral_ln/evaluation_feedback_lattice.py": "db4ad468832e399a98b3567802d8012eed7edd29909d6b55c8174e27e6494238",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "7bc0700c0e4542d6e3f9507dad77e562980395c76bf0d91a71fbe7bd514c622d",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }

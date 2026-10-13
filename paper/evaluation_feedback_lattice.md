@@ -1,10 +1,12 @@
 # Partial leakage as a lattice of feedback channels
 
-Version 0.3 — 2026-10-13. Exact fixtures for the gap named in
+Version 0.4 — 2026-10-13. Exact fixtures for the gap named in
 [evaluation_feedback_insertions.md](evaluation_feedback_insertions.md) §H:
 feedback that reveals failure *categories* and not items. Files:
 `src/spiral_ln/evaluation_feedback_lattice.py`, `tests/test_evaluation_feedback_lattice.py`,
-`output/evaluation_feedback_lattice/lattice_v0_3.json`. No model was called.
+`output/evaluation_feedback_lattice/lattice_v0_4.json`. No model was called.
+Version 0.4 adds the pair-commutation lemma (Lemma 9) and a survey of what
+structure the optimal first patch does not have.
 Version 0.2 settled the two items version 0.1 left as finite checks: the
 category map preserves meets (Proposition 2b), preserves joins exactly when
 the intersection graph is a forest (Proposition 2c), and the optimal adaptive
@@ -17,7 +19,7 @@ only); no synthetic mechanism result is claimed.
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_3.json
+python scripts/verify_evaluation_feedback_lattice.py --output output/evaluation_feedback_lattice/lattice_v0_4.json
 python -m pytest tests/test_evaluation_feedback_lattice.py -q
 ```
 
@@ -231,6 +233,29 @@ example* for the counts. What remains open is a structural description of
 the optimal policy; the dynamic programme is exact and cheap, so the gap is
 one of understanding, not computation.
 
+**Lemma 9 (pair commutation).** With at least two hits still needed,
+patching category \(A\) and then \(B\ne A\), each followed by an optimal
+continuation, costs the same in expectation as \(B\) and then \(A\).
+*Proof.* Patches in different categories have independent outcomes, and
+the state after both is the same multiset whichever came first; the run
+cannot stop before the second patch, since two hits were needed; and the
+continuation is a function of the state. \(\square\) *Algebraic identity*;
+checked on all 114,835 ordered pairs over the 33,915 states
+(`pair_commutation_check`). So the order of the next two patches is
+immaterial unless one of them could finish the run, which is why the
+exchange argument settles \(H=1\) and nothing beyond it.
+
+**What the enumeration rules out** (`policy_structure_fixture`, sizes at
+most five, at most four categories). No extremal rule covers the optimal
+first patch: in 54 states it is none of the highest-rate, the largest, the
+best-finisher (smallest \((n+1)/(F+1)\)) or the worst-finisher category.
+Equal rates do not favour the larger category: in
+\(\{(2,1),(2,1),(4,2)\}\) with two hits needed the optimal first patch is a
+\((2,1)\), against the two-category witness of Proposition 7, in four such
+states. One regularity survives every state: where three or more distinct
+rates are present, the lowest is never the unique optimal first choice.
+That is a conjecture with a finite check behind it, not a theorem.
+
 ## 4. Ledger wrapper
 
 `audit_category_ledger` accepts a `category_feedback` event carrying the
@@ -250,6 +275,7 @@ preorder on kernels is not treated. Items are independent and a patch changes
 its own item only, which the nearest-neighbour learner in `output/eval_reuse_toys`
 violated. Greedy ties break by index; \(\mathbb E[T]_{\text{static}}\) depends
 on that choice when two categories share a rate. The optimal adaptive policy
-is computed, not characterized: Proposition 7 rules out index rules, and the
-enumerations stop at six items for the lattice and at four categories of
-size five for the policy search. No model or loop evidence.
+is computed, not characterized: Proposition 7 rules out index rules, Lemma 9
+and the survey rule out the obvious extremal rules, and the enumerations
+stop at six items for the lattice and at four categories of size five for
+the policy search. No model or loop evidence.

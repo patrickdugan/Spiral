@@ -961,6 +961,91 @@ def preference_reversals(max_size: int, max_categories: int, context: str = "own
             "first": reversals[0] if reversals else None}
 
 
+def two_patch_value(hits_needed: int, state: tuple, first: tuple, second: tuple) -> Q:
+    """Expected patches when the first patch goes to ``first``, the second to
+    ``second`` (a different category, so it is untouched by the first patch),
+    and every later patch is optimal.  Needs at least two hits, so the run
+    cannot end before the second patch."""
+
+    state = _adaptive_state(state, hits_needed)
+    if hits_needed < 2:
+        raise ValueError("two ordered patches need at least two hits")
+    if first == second or first not in state or second not in state:
+        raise ValueError("first and second must be distinct categories of the state")
+    size, failures = first
+    rest = list(state)
+    rest.remove(first)
+    hit = Q(failures, size)
+    total = Q(0)
+    for outcome, probability in ((True, hit), (False, 1 - hit)):
+        if probability == 0:
+            continue
+        remaining = hits_needed - 1 if outcome else hits_needed
+        updated = (size - 1, failures - 1) if outcome else (size - 1, failures)
+        next_state = tuple(sorted(rest + ([updated] if updated[1] > 0 else [])))
+        total += probability * (1 + _continuation(remaining, next_state, second, _optimal_value))
+    return total
+
+
+def pair_commutation_check(max_size: int, max_categories: int) -> dict[str, int]:
+    """Over every state with at least two hits needed and every ordered pair
+    of distinct categories, compare ``A`` then ``B`` with ``B`` then ``A``."""
+
+    checked = violations = 0
+    for required, state in adaptive_states(max_size, max_categories):
+        if required < 2:
+            continue
+        distinct = sorted(set(state))
+        for position, first in enumerate(distinct):
+            for second in distinct[position + 1:]:
+                checked += 1
+                if two_patch_value(required, state, first, second) != two_patch_value(required, state, second, first):
+                    violations += 1
+    return {"pairs_checked": checked, "violations": violations}
+
+
+def policy_structure_fixture(max_size: int = 5, max_categories: int = 4) -> dict[str, object]:
+    """What the enumeration says about the shape of the optimal first patch:
+    whether an extremal rule covers it, whether equal rates favour the larger
+    category, and whether the lowest of several rates is ever the only
+    optimal choice."""
+
+    def rate(pair):
+        return Q(pair[1], pair[0])
+
+    def finisher(pair):
+        return Q(pair[0] + 1, pair[1] + 1)
+
+    outside_extremal = equal_rate_not_largest = lowest_rate_unique = 0
+    extremal_witness = equal_rate_witness = lowest_witness = None
+    states = adaptive_states(max_size, max_categories)
+    for required, state in states:
+        values = first_patch_values(required, state)
+        best = min(values.values())
+        optimal = {c for c, v in values.items() if v == best}
+        distinct = sorted(values)
+        extremal = {max(distinct, key=rate), max(distinct, key=lambda c: c[0]),
+                    min(distinct, key=finisher), max(distinct, key=finisher)}
+        if not optimal & extremal:
+            outside_extremal += 1
+            extremal_witness = extremal_witness or {"hits_needed": required, "state": state,
+                                                    "optimal_first": tuple(sorted(optimal))}
+        if required >= 2 and len(distinct) > 1 and len({rate(c) for c in distinct}) == 1:
+            largest = max(c[0] for c in distinct)
+            if not any(c[0] == largest for c in optimal):
+                equal_rate_not_largest += 1
+                equal_rate_witness = equal_rate_witness or {"hits_needed": required, "state": state,
+                                                            "optimal_first": tuple(sorted(optimal))}
+        rates = sorted({rate(c) for c in distinct})
+        if len(rates) >= 3 and all(rate(c) == rates[0] for c in optimal):
+            lowest_rate_unique += 1
+            lowest_witness = lowest_witness or {"hits_needed": required, "state": state}
+    return {"states": len(states), "commutation": pair_commutation_check(max_size, max_categories),
+            "optimal_outside_extremal_rules": outside_extremal, "extremal_witness": extremal_witness,
+            "equal_rates_largest_not_optimal": equal_rate_not_largest, "equal_rate_witness": equal_rate_witness,
+            "lowest_of_three_rates_uniquely_optimal": lowest_rate_unique, "lowest_witness": lowest_witness}
+
+
 def rate_violations(max_size: int, max_categories: int) -> dict[str, object]:
     """States in which every optimal first patch has a strictly lower current
     hit probability than some other category, so no rule that patches a
@@ -1275,9 +1360,16 @@ def verify() -> dict[str, object]:
     small = small_set_fixture()
     policy = greedy_vs_optimal_fixture()
     index = index_rule_fixture()
+    structure = policy_structure_fixture()
     ledger = category_ledger_fixture()
     four = policy["four_item_witness"]
     checks = {
+        "two_patches_in_different_categories_commute_when_two_hits_remain":
+            structure["commutation"]["violations"] == 0 and structure["commutation"]["pairs_checked"] > 0,
+        "no_extremal_rule_covers_the_optimal_first_patch":
+            structure["optimal_outside_extremal_rules"] > 0 and structure["equal_rates_largest_not_optimal"] > 0,
+        "lowest_of_three_rates_never_uniquely_optimal":
+            structure["lowest_of_three_rates_uniquely_optimal"] == 0,
         "no_index_rule_on_own_counts_and_hits_needed":
             index["own_counts"]["reversals"] > 0 and index["reversal_witness"]["holds"],
         "no_index_rule_even_with_global_totals":
@@ -1340,4 +1432,4 @@ def verify() -> dict[str, object]:
             "checks": checks, "all_passed": all(checks.values()),
             "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
             "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
-            "index_rules": index, "category_ledger": ledger}
+            "index_rules": index, "policy_structure": structure, "category_ledger": ledger}
