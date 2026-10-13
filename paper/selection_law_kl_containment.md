@@ -1,15 +1,15 @@
 # Best-of-K inside the KL slice: tie rules, containment, the DV bound
 
-Draft 0.1 — 2026-10-13. Settles item 1 of §8 of `feedback_channel_rsitopology_crosswalk.md` and the two "not determined"
-sentences of its §1. Module `src/spiral_ln/evaluation_selection_kl.py`; 50 tests in `tests/test_evaluation_selection_kl.py`;
-receipt `output/evaluation_selection_kl/selection_kl_v0_1.json` (24 checks, source hashes). Nothing is run against a model.
+Draft 0.2 — 2026-10-13 (0.1 the same day; D.5 and the exact-KL path are new). Settles item 1 of §8 of `feedback_channel_rsitopology_crosswalk.md`
+and the two "not determined" sentences of its §1. Module `src/spiral_ln/evaluation_selection_kl.py`; 68 tests in `tests/test_evaluation_selection_kl.py`;
+receipt `output/evaluation_selection_kl/selection_kl_v0_2.json` (42 checks, source hashes). Nothing is run against a model.
 Evidence levels follow the calculus card (§11): *algebraic identity* (proved for every parameter), *finite verified example*
 (checked on enumerated cells), *cited* (taken from the literature, not reproved). Rationals are exact; logarithms, square
 roots and one quadrature are floats under tolerance \(10^{-12}\) (\(10^{-9}\) for the KL-ball supremum and the quadrature).
 
 ```powershell
 $env:PYTHONPATH = "src"
-python scripts/verify_evaluation_selection_kl.py --output output/evaluation_selection_kl/selection_kl_v0_1.json
+python scripts/verify_evaluation_selection_kl.py --output output/evaluation_selection_kl/selection_kl_v0_2.json
 python -m pytest tests/test_evaluation_selection_kl.py -q
 ```
 
@@ -157,7 +157,7 @@ sequence that creeps to 1. For each fixed \(K\) the Gaussian limit \(c_K\) is th
 the grid every \(r(n,K,p)<c_K\) (finite verified; largest 0.9192 at \(K=20\) against \(c_{20}=0.9232\)), and at
 \(K\in\{2,5\}\), \(n\in\{64,256,1024\}\), \(p=\tfrac12\), \(\sqrt n\gamma\) approaches \(\mathbb E[M_K]/2\) with
 shrinking error while \(r\) rises toward \(c_K\) from below (0.90598, 0.90731, 0.90764 → 0.90775 at \(K=2\)).
-That \(\sup_nr(n,K,\tfrac12)=c_K\) for every \(K\), i.e. a monotone approach, is not proved.
+D.5 proves the monotone approach, hence \(\sup_nr(n,K,\tfrac12)=c_K\), for \(K=2,3\), and verifies it exactly on finite ranges beyond.
 
 **D.4 (\(n=1\): the gap equals the KL-ball supremum).** On two points every law \(\pi\ll p_0\) with
 \(0<\pi(1)<1\) is the tilt \(p_0^{tS}\), \(t=\ln\frac{\pi(1)(1-p)}{(1-\pi(1))p}\). \(\mathbb E_\pi[\bar S]=\pi(1)\)
@@ -170,17 +170,28 @@ Algebraic identity; checked to \(10^{-9}\) against the tilt bisection for \(K\in
 strict on the 18 cells tried (\(n\in\{2,4,8\}\), \(K\in\{2,5\}\)), as expected since \(m_K/q\) is not exponential
 in the score there (\(n=2,K=2,p=\tfrac12\): likelihood ratios \(\tfrac14,1,\tfrac74\)).
 
+**D.5 (monotone approach in \(n\); version 0.2).** Let \(X_k\sim\mathrm{Bin}(n,\tfrac12)\) i.i.d., \(Y_k=X_k-n/2\) (symmetric about 0), \(M_n(K)=\mathbb E\max_kY_k=n\gamma(n,K,\tfrac12)\), \(a_n(K)=M_n(K)/\sqrt n=\sqrt n\,\gamma\). Then \(r(n,K,\tfrac12)=2a_n(K)/\sqrt{2\lambda_K}\), so \(r\) is monotone in \(n\) iff \(a_n^2=M_n^2/n\) is: a comparison of rationals (`scaled_gap_squared`, integer arithmetic, cross-checked against `selection_inflation`).
+*Theorem (\(K=2\)).* \(a_n(2)^2=n\binom{2n}n^2/(4\cdot16^n)\), \(a_{n+1}(2)^2/a_n(2)^2=(2n+1)^2/(4n(n+1))=1+1/(4n(n+1))>1\), and \(a_n(2)\uparrow1/(2\sqrt\pi)=\mathbb E[M_2]/2\); so \(r(n,2,\tfrac12)\) increases strictly to \(c_2\) and \(\sup_n=c_2\). *Proof.* \(\max(X_1,X_2)=\frac{X_1+X_2}2+\frac{|X_1-X_2|}2\) and \(X_1-X_2+n=X_1+(n-X_2)\sim\mathrm{Bin}(2n,\tfrac12)\), so \(M_n(2)=\tfrac12\mathbb E|S-n|\), \(S\sim\mathrm{Bin}(2n,\tfrac12)\).
+De Moivre: \(\mathbb E|S-n|=2\sum_{s>n}(s-n)\binom{2n}s4^{-n}\) with \(s\binom{2n}s=2n\binom{2n-1}{s-1}\), \(\sum_{s>n}\binom{2n-1}{s-1}=2^{2n-2}\), \(\sum_{s>n}\binom{2n}s=(4^n-\binom{2n}n)/2\), so \(\mathbb E|S-n|=n\binom{2n}n/4^n\) (enumerated for \(n\le30\); the denominator is \(4^n\), not \(2^{2n-1}\)). Hence the closed form; with \(\binom{2n+2}{n+1}/\binom{2n}n=2(2n+1)/(n+1)\) the step ratio is \(\frac{n+1}n\big(\frac{2n+1}{2n+2}\big)^2=\frac{(2n+1)^2}{4n(n+1)}\), above 1 by the \(+1\) in \((2n+1)^2=4n(n+1)+1\). Telescoping, \(a_n(2)^2=\frac1{16}\prod_{j<n}\frac{(2j+1)^2}{(2j)(2j+2)}\uparrow\frac1{16}\cdot\frac4\pi\) (Wallis). \(\square\) Checked exactly for \(n\le200\); \(4n(1-4\pi a_n^2)=0.99937\) at \(n=200\).
+*Theorem (\(K=3\)).* \(M_n(3)=\tfrac32M_n(2)\), so \(a_n(3)\uparrow3/(4\sqrt\pi)\) strictly and \(\sup_nr(n,3,\tfrac12)=c_3\). *Proof.* Deleting one of \(m\) draws uniformly at random, \(\mathbb EY_{(r:m-1)}=\frac{m-r}m\mathbb EY_{(r:m)}+\frac rm\mathbb EY_{(r+1:m)}\); at \(m=3,r=2\): \(\mathbb EY_{(2:2)}=\frac13\mathbb EY_{(2:3)}+\frac23\mathbb EY_{(3:3)}\), and the median of three symmetric draws has mean 0. \(\square\) The same recurrence gives \(M_n(5)=\tfrac52(M_n(4)-M_n(2))\) (checked exactly, \(n\le200\)): odd \(K\) reduce to even \(K\), which are independent quantities.
+*Finite results (\(a_{n+1}^2\) against \(a_n^2\) as rationals).* Monotone for \(K\in\{3,4,5,10,20\}\), \(n\le200\); smallest step ratio always at \(n=200\): 1.0000062 (\(=160801/160800\), \(K=3\)), 1.0000067, 1.0000074, 1.0000102, 1.0000140. Also monotone for \(K=2..30,40,50,100\) at \(n\le100\) and \(K=1000\) at \(n\le40\). The normalized margin \(\mu_n=4n(n+1)(a_{n+1}^2/a_n^2-1)\) is 1 for \(K=2,3\) and at least 1.083, 1.184, 1.643 (\(K=4,5,10\), at \(n=200\)) and 2.207 (\(K=20\), at \(n=4\): the wobble sits near \(n\approx\log_2K\));
+\(a_n<\mathbb E[M_K]/2\) throughout, \(a_{200}=0.42288,0.51434,0.58105,0.76859,0.93243\) against limits \(0.42314,0.51469,0.58148,0.76938,0.93374\), with \(n(\mathbb E[M_K]/2-a_n)\approx0.053,0.070,0.086,0.158,0.262\).
+*General \(K\).* Adding a fair bit to every count raises the maximum by one iff a candidate at the maximum draws 1, so \(M_{n+1}-M_n=\tfrac12-\mathbb E[2^{-N_n}]\), \(N_n\) the number of candidates at the maximum (identity, enumerated; \(\mathbb E2^{-N}=\sum_m[\bar F(m)^K-F(m-1)^K]\), \(\bar F\) the midpoint CDF, which is \(\mathrm{Bin}(n+1,\tfrac12)\)'s). With \(\rho_n=2n(M_{n+1}-M_n)/M_n\): \(a_{n+1}^2>a_n^2\iff\rho_n+\rho_n^2/(4n)>1\). The sufficient \(\rho_n\ge1\) (\(M_n(K)/M_n(2)\) non-decreasing) holds with equality for \(K=2,3\) and strictly on every cell swept (minimum 1.000103 at \(K=4,n=200\)), but is unproved: \(\rho_n\to1\) for every \(K\) because \(\binom K2\int\varphi^2\Phi^{K-2}=\mathbb E[M_K]/2\) (parts), so the question is second order in \(1/n\).
+The natural route, \(Z_n\le_{cx}Z_{n+1}\) for standardized counts, is false at every step: \(\mathbb E|Z_{2k}|=\sqrt{2k}\binom{2k}k4^{-k}<\mathbb E|Z_{2k+1}|=\sqrt{2k+1}\binom{2k}k4^{-k}>\mathbb E|Z_{2k+2}|\) (exact) and a stop-loss \((x-c)^+\) separates every pair \(n\le60\) (floats, excess \(\ge3.3\times10^{-3}\)). \(K=2\) escapes the parity oscillation because \(X_1-X_2\) is a \(\mathrm{Bin}(2n)\), always of even order. Status: theorem for \(K=2,3\); finite verified example for the rest.
+*Exact-KL ratio* \(\gamma/\sqrt{2\sigma_n^2\mathrm{KL}(\pi_K\|p_0)}\) at \(p=\tfrac12\): \(K=2\) falls strictly from 0.97753 (\(n=1\)) to 0.90812 (\(n=200\)); \(K=5\) rises 0.89057→0.93185 (\(n=1\to2\)) then falls strictly to 0.91436; both stay above \(c_K\) and tend to it, since \(\mathrm{KL}\to\lambda_K\) (\(m_K/q=K\xi_m^{K-1}\), \(\xi_m\in(F(m-1),F(m))\): a Riemann sum of \(g\ln g\) with mesh \(\max_mq_m\to0\); \(\mathrm{KL}/\lambda_K=0.9979\) at \(n=200\)). Finite.
+
 ## 5. Evidence status and what remains
 
-- *Algebraic identities, every parameter:* Theorems A, B (with strictness and the supremum), C given the proxy; D.1–D.4.
+- *Algebraic identities, every parameter:* Theorems A, B (with strictness and the supremum), C given the proxy; D.1–D.4;
+  D.5 for \(K=2,3\), the increment identity \(M_{n+1}-M_n=\tfrac12-\mathbb E2^{-N}\), the odd-\(K\) reductions, \(\mathrm{KL}\to\lambda_K\).
 - *Finite verified examples:* the 90-cell grid for B and C; five tie fixtures and \(\{0,1\}^{n\le6}\) for A;
   the jitter stand-in and uniform supports for B; the \(c_K\) table; \(r<c_K\) on the grid and the \(n\le1024\)
-  approach; the strict chain at \(n\ge2\).
+  approach; the strict chain at \(n\ge2\); the D.5 sweeps, \(\rho_n\ge1\), the convex-order refutation, the exact-KL path.
 - *Cited, not reproved:* the Kearns–Saul inequality (checked on a \(t\)-grid only) and its optimality (attributed,
   unchecked, to Buldygin and Moskvichova 2013 or Berend and Kontorovich 2013); Hoeffding's lemma; de
   Moivre–Laplace; the refined extreme-value expansion (remark only).
 - Beirami et al.'s bound is no longer load-bearing: Theorem B derives the tie-free value and extends it to the
   tied case, which the crosswalk had left undetermined.
-- Open: whether \(r(n,K,\tfrac12)\uparrow c_K\) monotonically in \(n\) for every \(K\); the exact-KL ratio
-  \(\gamma/\sqrt{2\sigma_n^2\mathrm{KL}(\pi_K\|p_0)}\), bounded by 1 (Theorem C) and reaching 0.99993 at \(n=1\),
-  was not studied further; everything is under the Spiral null, and the drift chain (crosswalk §8 item 2) is untouched.
+- Open: whether \(a_n(K)\uparrow\) in \(n\) for every \(K\ge4\) — it reduces to \(\rho_n+\rho_n^2/(4n)\ge1\), or to the sufficient
+  \(M_n(K)/M_n(2)\) non-decreasing, both verified only on the D.5 sweeps; the exact-KL ratio's path is recorded for \(K=2,5\) at
+  \(p=\tfrac12\) only; everything is under the Spiral null, and the drift chain (crosswalk §8 item 2) is untouched.

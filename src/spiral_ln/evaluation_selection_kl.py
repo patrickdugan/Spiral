@@ -29,6 +29,16 @@ mean of ``S - p`` under the selected record's law.
    normals] / sqrt(2 lambda_K) < 1`` as ``n`` grows at ``p = 1/2``; ``c_K -> 1``,
    so the supremum of the ratio is 1 and is not attained.  At ``n = 1`` the
    gap equals the KL-ball supremum exactly.
+5. Monotone approach (D.5, version 0.2).  With ``a_n(K) = sqrt(n) gamma(n, K, 1/2)``
+   (so ``r(n, K, 1/2) = 2 a_n(K) / sqrt(2 lambda_K)``), ``a_n(2)^2 = n C(2n,n)^2 /
+   (4 * 16^n)`` by de Moivre's mean absolute deviation, ``a_{n+1}(2)^2 / a_n(2)^2 =
+   1 + 1/(4n(n+1))``, and ``a_n(3) = (3/2) a_n(2)`` by the order-statistic
+   recurrence; both rise strictly to ``E[max]/2``, so ``sup_n r = c_K`` for
+   ``K = 2, 3``.  For ``K = 4, 5, 10, 20`` (``n <= 200``), ``K = 2..30, 40, 50, 100``
+   (``n <= 100``) and ``K = 1000`` (``n <= 40``) the increase is verified exactly on ``a_n^2``; the general
+   case reduces to a second-order inequality (``rho_n + rho_n^2/(4n) >= 1``)
+   that is not proved, and the convex order ``Z_n <=_cx Z_{n+1}`` of
+   standardized counts, which would have settled it, fails at every step.
 """
 
 from __future__ import annotations
@@ -51,6 +61,12 @@ GRID_ITEMS = (1, 2, 4, 8, 16, 64)
 GRID_CANDIDATES = (2, 3, 5, 10, 20)
 GRID_P = (Q(1, 4), Q(1, 2), Q(3, 4))
 GAUSSIAN_CANDIDATES = (2, 3, 5, 10, 100, 1000, 10000)
+MONOTONE_ITEMS = 200
+MONOTONE_CANDIDATES = (3, 4, 5, 10, 20)
+SWEEP_ITEMS = 100
+SWEEP_CANDIDATES = tuple(range(2, 31)) + (40, 50, 100)
+LARGE_CANDIDATES, LARGE_ITEMS = 1000, 40
+STOP_LOSS_MARGIN = 1e-6
 
 
 # --- argument checks ------------------------------------------------------------
@@ -431,6 +447,243 @@ def gaussian_ratio_limit(candidates: int) -> float:
     return gaussian_max_expectation(candidates) / sqrt(2 * beirami_radius(candidates))
 
 
+# --- D.5: is sqrt(n) gamma(n, K, 1/2) monotone in n?  (exact, sqrt-free) -------------
+#
+# Write X_k ~ Bin(n, 1/2) i.i.d., Y_k = X_k - n/2 (symmetric about 0), M_n(K) = E[max_k Y_k]
+# = n gamma(n, K, 1/2) and a_n(K) = sqrt(n) gamma = M_n(K) / sqrt(n).  Since the bound
+# sigma_n sqrt(2 lambda_K) = sqrt(2 lambda_K / (4n)), r(n, K, 1/2) = 2 a_n(K) / sqrt(2 lambda_K)
+# and r is monotone in n iff a_n^2 = M_n^2 / n is, a comparison of rationals.
+
+def symmetric_binomial_mad(trials: int) -> Q:
+    """``E|S - N/2|`` for ``S ~ Bin(N, 1/2)`` by enumeration over the ``N + 1`` atoms."""
+
+    _items(trials)
+    return sum((Q(comb(trials, s), 2**trials) * abs(Q(2 * s - trials, 2)) for s in range(trials + 1)), Q(0))
+
+
+def symmetric_binomial_mad_closed_form(trials: int) -> Q:
+    """De Moivre: ``E|S - N/2| = m C(N, m) / 2^N`` with ``m = floor(N/2) + 1`` for ``S ~ Bin(N, 1/2)``.
+
+    For ``N = 2n`` this is ``(n+1) C(2n, n+1) / 4^n = n C(2n, n) / 4^n``.  Proof for ``N = 2n``:
+    ``E|S - n| = 2 sum_{s>n} (s - n) C(2n, s) / 4^n``; ``s C(2n, s) = 2n C(2n-1, s-1)`` and
+    ``sum_{s>n} C(2n-1, s-1) = 2^{2n-2}`` (half of ``2^{2n-1}``, by symmetry), while
+    ``sum_{s>n} C(2n, s) = (4^n - C(2n, n)) / 2``; the difference is ``n C(2n, n) / 2``.
+    """
+
+    _items(trials)
+    m = trials // 2 + 1
+    return Q(m * comb(trials, m), 2**trials)
+
+
+def expected_max_count(items: int, candidates: int) -> Q:
+    """``E[max of K i.i.d. Bin(n, 1/2)]`` exactly, in integer arithmetic.
+
+    ``sum_m m (G(m)^K - G(m-1)^K) / 2^{nK}`` with ``G(m) = sum_{j<=m} C(n, j)``; the same
+    quantity as ``selection_inflation`` (cross-checked), but cheap at ``n = 200, K = 100``.
+    """
+
+    _items(items)
+    _candidates(candidates)
+    partial, running = [], 0
+    for j in range(items + 1):
+        running += comb(items, j)
+        partial.append(running)
+    total, previous = 0, 0
+    for m, g in enumerate(partial):
+        current = g**candidates
+        total += m * (current - previous)
+        previous = current
+    return Q(total, 2**(items * candidates))
+
+
+def centered_max(items: int, candidates: int) -> Q:
+    """``M_n(K) = E[max_k X_k] - n/2 = E[max_k Y_k] = n gamma(n, K, 1/2)``."""
+
+    return expected_max_count(items, candidates) - Q(items, 2)
+
+
+def scaled_gap_squared(items: int, candidates: int) -> Q:
+    """``a_n(K)^2 = n gamma(n, K, 1/2)^2 = M_n(K)^2 / n``, exact.
+
+    ``a_n(K)`` is ``sqrt(p(1-p)) = 1/2`` times the expected maximum of ``K`` standardized
+    counts, and ``r(n, K, 1/2) = 2 a_n(K) / sqrt(2 lambda_K)``.
+    """
+
+    return centered_max(items, candidates)**2 / items
+
+
+def scaled_gap(items: int, candidates: int) -> float:
+    return sqrt(scaled_gap_squared(items, candidates))
+
+
+def pair_scaled_gap_squared(items: int) -> Q:
+    """``K = 2`` closed form: ``a_n(2)^2 = n C(2n, n)^2 / (4 * 16^n)``.
+
+    ``max(X_1, X_2) = (X_1 + X_2)/2 + |X_1 - X_2|/2`` and ``X_1 - X_2 + n = X_1 + (n - X_2)
+    ~ Bin(2n, 1/2)``, so ``M_n(2) = E|Bin(2n, 1/2) - n| / 2 = n C(2n, n) / (2 * 4^n)``.
+    """
+
+    _items(items)
+    return Q(items * comb(2 * items, items)**2, 4 * 16**items)
+
+
+def pair_step_ratio(items: int) -> Q:
+    """``a_{n+1}(2)^2 / a_n(2)^2 = ((n+1)/n) ((2n+1)/(2n+2))^2 = (2n+1)^2 / (4n(n+1)) = 1 + 1/(4n(n+1))``.
+
+    ``C(2n+2, n+1) / C(2n, n) = 2(2n+1)/(n+1)``; the excess over 1 is the ``+1`` in
+    ``(2n+1)^2 = 4n(n+1) + 1``.  Telescoping, ``a_n(2)^2 = (1/16) prod_{j<n} (2j+1)^2/((2j)(2j+2))``
+    rises to ``(1/16)(4/pi) = 1/(4 pi)`` (Wallis), i.e. ``a_n(2)`` increases strictly to
+    ``1/(2 sqrt(pi)) = E[max of two standard normals] / 2``.
+    """
+
+    _items(items)
+    n = items
+    return Q((2 * n + 1)**2, 4 * n * (n + 1))
+
+
+def pair_gap_by_enumeration(items: int) -> Q:
+    """``E[max(X_1, X_2)] - n/2`` as ``sum_{i,j} q_i q_j |i - j| / 2`` over the two counts."""
+
+    q = binomial_score_law(items, Q(1, 2))
+    masses = [q[Q(j, items)] for j in range(items + 1)]
+    return sum((masses[i] * masses[j] * abs(i - j) for i in range(items + 1) for j in range(items + 1)), Q(0)) / 2
+
+
+def tie_count_moment(items: int, candidates: int) -> Q:
+    """``E[2^{-N}]``, ``N`` the number of the ``K`` candidates attaining the maximum count.
+
+    ``sum_m sum_{j>=1} C(K, j) q_m^j F(m-1)^{K-j} 2^{-j} = sum_m [((F(m-1) + F(m))/2)^K - F(m-1)^K]``;
+    the midpoint CDF ``(F(m-1) + F(m))/2`` is that of ``Bin(n+1, 1/2)``.
+    """
+
+    _items(items)
+    _candidates(candidates)
+    partial, running = [], 0
+    for j in range(items + 1):
+        running += comb(items, j)
+        partial.append(running)
+    below = [0] + partial[:-1]
+    total = sum((below[m] + partial[m])**candidates - (2 * below[m])**candidates for m in range(items + 1))
+    return Q(total, 2**((items + 1) * candidates))
+
+
+def brute_force_tie_count_moment(items: int, candidates: int) -> Q:
+    """``E[2^{-N}]`` by enumerating every ``K``-tuple of counts with binomial weights."""
+
+    q = binomial_score_law(items, Q(1, 2))
+    masses = [q[Q(j, items)] for j in range(items + 1)]
+    total = Q(0)
+    for counts in product(range(items + 1), repeat=candidates):
+        weight = Q(1)
+        for c in counts:
+            weight *= masses[c]
+        total += weight / 2**counts.count(max(counts))
+    return total
+
+
+def centered_max_increment(items: int, candidates: int) -> Q:
+    """``M_{n+1}(K) - M_n(K) = 1/2 - E[2^{-N_n}]`` (identity; cross-checked against ``centered_max``).
+
+    Adding one fair bit ``B_k`` to every count raises the maximum by one iff some candidate
+    at the maximum draws ``B_k = 1``, probability ``1 - 2^{-N}``; subtract the ``1/2`` of the
+    centering.  For ``K = 2`` this is ``P(X_1 = X_2) / 4 = C(2n, n) / 4^{n+1} = M_n(2) / (2n)``.
+    """
+
+    return Q(1, 2) - tie_count_moment(items, candidates)
+
+
+def increment_ratio(items: int, candidates: int) -> Q:
+    """``rho_n = 2n (M_{n+1} - M_n) / M_n``.
+
+    ``a_{n+1}^2 > a_n^2`` iff ``rho_n + rho_n^2 / (4n) > 1``; ``rho_n >= 1`` (i.e. ``M_n(K)/M_n(2)``
+    non-decreasing) is sufficient, and ``rho_n = 1`` exactly for ``K = 2, 3``.  As ``n -> oo``,
+    ``rho_n -> 1`` for every ``K``, because ``C(K,2) int phi^2 Phi^{K-2} = E[max of K normals]/2``
+    (integration by parts), so the general-``K`` question is second order.
+    """
+
+    before = centered_max(items, candidates)
+    return 2 * items * (centered_max(items + 1, candidates) - before) / before
+
+
+def monotonicity_sweep(candidates: int, max_items: int = MONOTONE_ITEMS) -> dict[str, object]:
+    """Consecutive ratios ``a_{n+1}^2 / a_n^2`` for ``n <= max_items`` compared as rationals.
+
+    Also the normalized margin ``mu_n = 4n(n+1)(a_{n+1}^2/a_n^2 - 1)`` (``1`` for ``K = 2, 3``)
+    and ``rho_n``.  Displayed values are floats; every comparison is exact.
+    """
+
+    _items(max_items)
+    _candidates(candidates)
+    centered = [centered_max(n, candidates) for n in range(1, max_items + 2)]
+    squares = [m * m / n for n, m in enumerate(centered, start=1)]
+    ratios = [b / a for a, b in zip(squares, squares[1:])]
+    margins = [4 * n * (n + 1) * (r - 1) for n, r in enumerate(ratios, start=1)]
+    rhos = [2 * n * (b - a) / a for n, (a, b) in enumerate(zip(centered, centered[1:]), start=1)]
+    failures = [n for n, r in enumerate(ratios, start=1) if r <= 1]
+    i_ratio = min(range(len(ratios)), key=ratios.__getitem__)
+    i_margin = min(range(len(margins)), key=margins.__getitem__)
+    i_rho = min(range(len(rhos)), key=rhos.__getitem__)
+    limit = gaussian_max_expectation(candidates) / 2
+    final = sqrt(squares[max_items - 1])
+    return {"candidates": candidates, "max_items": max_items, "monotone": not failures,
+            "first_failure": failures[0] if failures else None,
+            "min_step_ratio": float(ratios[i_ratio]), "min_step_ratio_at": i_ratio + 1,
+            "min_margin": float(margins[i_margin]), "min_margin_at": i_margin + 1,
+            "rho_at_least_one": all(r >= 1 for r in rhos), "rho_equals_one": all(r == 1 for r in rhos),
+            "min_rho": float(rhos[i_rho]), "min_rho_at": i_rho + 1,
+            "scaled_gap_first": sqrt(squares[0]), "scaled_gap_at_max_items": final,
+            "gaussian_limit": limit, "below_gaussian_limit": all(sqrt(s) < limit for s in squares),
+            "approach_coefficient": max_items * (limit - final)}
+
+
+def standardized_absolute_moment_squared(items: int) -> Q:
+    """``(E|Z_n|)^2 = 4 MAD_n^2 / n`` for the standardized count ``Z_n = (X - n/2) / sqrt(n/4)``.
+
+    ``E|Z_{2k}| = sqrt(2k) C(2k,k)/4^k`` and ``E|Z_{2k+1}| = sqrt(2k+1) C(2k,k)/4^k``, so
+    ``E|Z_n|`` falls at every odd-to-even step (ratio of squares ``(2k+1)/(2k+2)``): ``|x|`` is
+    convex, hence ``Z_{2k+1} <=_cx Z_{2k+2}`` is false and the convex-order route to D.5 is closed.
+    """
+
+    mad = symmetric_binomial_mad_closed_form(items)
+    return 4 * mad * mad / items
+
+
+def stop_loss_excess(items: int) -> float:
+    """``max_c [E(Z_n - c)^+ - E(Z_{n+1} - c)^+]`` over the atoms of both laws (floats).
+
+    The difference is piecewise linear in ``c`` with breakpoints at the atoms, so the maximum
+    is attained there; a positive value refutes ``Z_n <=_cx Z_{n+1}`` with a convex test function.
+    """
+
+    _items(items)
+
+    def call(n: int, c: float) -> float:
+        scale = sqrt(n)
+        return sum(comb(n, j) / 2**n * max((2 * j - n) / scale - c, 0.0) for j in range(n + 1))
+
+    atoms = sorted({(2 * j - items) / sqrt(items) for j in range(items + 1)}
+                   | {(2 * j - items - 1) / sqrt(items + 1) for j in range(items + 2)})
+    return max(call(items, c) - call(items + 1, c) for c in atoms)
+
+
+def exact_kl_ratio_along_items(candidates: int, items_list: tuple[int, ...]) -> dict[str, dict[str, float]]:
+    """``gamma / sqrt(2 sigma_n^2 KL(pi_K || p0))`` and ``KL / lambda_K`` at ``p = 1/2`` along ``n``.
+
+    ``KL(pi_K || p0) -> lambda_K`` as ``n -> oo`` (``m_K(m)/q_m = K xi_m^{K-1}`` with ``xi_m`` in
+    ``(F(m-1), F(m))``, a Riemann sum of ``g ln g`` with mesh ``max_m q_m -> 0``), so this
+    ratio has the same limit ``c_K`` as the radius ratio; its path is a finite result.
+    """
+
+    _candidates(candidates)
+    rows = {}
+    for items in items_list:
+        kl = kl_max_law(items, candidates, Q(1, 2))
+        gap = centered_max(items, candidates) / items
+        rows[f"n={items}"] = {"ratio_exact": float(gap) / dv_bound(items, Q(1, 2), kl),
+                              "kl_over_radius": kl / beirami_radius(candidates)}
+    return rows
+
+
 # --- fixtures ------------------------------------------------------------------------
 
 def tie_rule_fixture() -> dict[str, object]:
@@ -614,6 +867,120 @@ def uniform_support_fixture() -> dict[str, object]:
     return rows
 
 
+def mad_fixture(max_trials: int = 60) -> dict[str, object]:
+    """De Moivre's mean absolute deviation against enumeration for ``N <= max_trials``."""
+
+    closed_matches = all(symmetric_binomial_mad(trials) == symmetric_binomial_mad_closed_form(trials)
+                         for trials in range(1, max_trials + 1))
+    even_form = all(symmetric_binomial_mad_closed_form(2 * n) == Q(n * comb(2 * n, n), 4**n)
+                    for n in range(1, max_trials // 2 + 1))
+    return {"max_trials": max_trials, "closed_form_matches_enumeration": closed_matches,
+            "even_trials_form_n_C_2n_n_over_4_to_n": even_form,
+            "values": {f"N={trials}": symmetric_binomial_mad_closed_form(trials) for trials in (1, 2, 3, 4, 10)}}
+
+
+def pair_theorem_fixture(max_items: int = MONOTONE_ITEMS) -> dict[str, object]:
+    """``K = 2``: the absolute-difference reduction, the closed form, the step identity, the limit."""
+
+    reduction = all(centered_max(n, 2) == pair_gap_by_enumeration(n) == symmetric_binomial_mad(2 * n) / 2
+                    for n in range(1, 31))
+    closed = all(scaled_gap_squared(n, 2) == pair_scaled_gap_squared(n) for n in range(1, max_items + 1))
+    steps = all(scaled_gap_squared(n + 1, 2) / scaled_gap_squared(n, 2) == pair_step_ratio(n)
+                == 1 + Q(1, 4 * n * (n + 1)) > 1 for n in range(1, max_items + 1))
+    last = scaled_gap_squared(max_items, 2)
+    deficit = 4 * max_items * (1 - 4 * pi * float(last))
+    return {"max_items": max_items, "reduction_to_mean_absolute_difference": reduction,
+            "closed_form_matches": closed, "step_identity_and_strict_increase": steps,
+            "limit_squared": 1 / (4 * pi), "scaled_gap_squared_at_max_items": float(last),
+            "below_limit": float(last) < 1 / (4 * pi),
+            "scaled_deficit_4n_times_relative_gap": deficit,
+            "scaled_deficit_near_one": 0.99 < deficit < 1.0}
+
+
+def odd_candidates_fixture(max_items: int = MONOTONE_ITEMS) -> dict[str, object]:
+    """Order-statistic recurrence for symmetric laws: ``M_n(3) = (3/2) M_n(2)``, ``M_n(5) = (5/2)(M_n(4) - M_n(2))``.
+
+    Deleting one of ``n`` draws uniformly gives ``E Y_{(r:n-1)} = ((n-r)/n) E Y_{(r:n)} + (r/n) E Y_{(r+1:n)}``;
+    the median of an odd symmetric sample has mean zero.  ``n = 3, r = 2`` gives the triple,
+    ``n = 5, r = 3, 4`` and ``n = 4, r = 3`` the quintuple.
+    """
+
+    triple = all(centered_max(n, 3) == Q(3, 2) * centered_max(n, 2) for n in range(1, max_items + 1))
+    quintuple = all(centered_max(n, 5) == Q(5, 2) * (centered_max(n, 4) - centered_max(n, 2))
+                    for n in range(1, max_items + 1))
+    return {"max_items": max_items, "triple_is_three_halves_of_pair": triple,
+            "quintuple_is_five_halves_of_quadruple_minus_pair": quintuple,
+            "triple_limit": 3 / (4 * sqrt(pi)), "triple_limit_matches_quadrature":
+            abs(gaussian_max_expectation(3) / 2 - 3 / (4 * sqrt(pi))) <= QUADRATURE_TOLERANCE}
+
+
+def tie_increment_fixture() -> dict[str, object]:
+    """``E[2^{-N}]`` closed form against enumeration; ``M_{n+1} - M_n = 1/2 - E[2^{-N}]``; the ``K = 2`` value."""
+
+    enumeration = all(tie_count_moment(n, k) == brute_force_tie_count_moment(n, k)
+                      for n, k in ((1, 2), (2, 2), (3, 2), (4, 2), (1, 3), (2, 3), (3, 3), (4, 3), (2, 4), (3, 4)))
+    identity = all(centered_max(n + 1, k) - centered_max(n, k) == centered_max_increment(n, k)
+                   for n in range(1, 31) for k in (2, 3, 4, 5, 10))
+    pair = all(centered_max_increment(n, 2) == Q(comb(2 * n, n), 4**(n + 1)) == centered_max(n, 2) / (2 * n)
+               for n in range(1, 31))
+    return {"closed_form_matches_enumeration": enumeration, "increment_identity_n_le_30": identity,
+            "pair_increment_is_tie_probability_over_four": pair}
+
+
+def monotonicity_fixture() -> dict[str, object]:
+    """D.5 sweeps: ``MONOTONE_CANDIDATES`` to ``n = 200`` in full, ``SWEEP_CANDIDATES`` to ``n = 100``
+    as booleans, ``K = 1000`` to ``n = 40``; ``scaled_gap_squared`` against ``selection_inflation``."""
+
+    full = {f"K={k}": monotonicity_sweep(k) for k in MONOTONE_CANDIDATES}
+    broad = {}
+    for k in SWEEP_CANDIDATES:
+        row = monotonicity_sweep(k, SWEEP_ITEMS)
+        broad[f"K={k}"] = {key: row[key] for key in ("monotone", "rho_at_least_one", "rho_equals_one",
+                                                     "min_step_ratio", "min_step_ratio_at", "min_margin",
+                                                     "min_margin_at", "below_gaussian_limit")}
+    large = monotonicity_sweep(LARGE_CANDIDATES, LARGE_ITEMS)
+    cross = all(scaled_gap_squared(n, k) == n * selection_gap(n, k, Q(1, 2))**2
+                for n in range(1, 41) for k in (2,) + MONOTONE_CANDIDATES)
+    return {"full": full, "broad": broad, "large": large, "matches_selection_inflation_n_le_40": cross}
+
+
+def convex_order_fixture(max_pairs: int = 100, max_items: int = 60) -> dict[str, object]:
+    """``Z_n <=_cx Z_{n+1}`` fails at every step: exactly via ``E|Z|`` at odd-to-even steps, by a
+    stop-loss function (floats, margin ``STOP_LOSS_MARGIN``) at every step ``n <= max_items``."""
+
+    odd_to_even = all(standardized_absolute_moment_squared(2 * k + 2) < standardized_absolute_moment_squared(2 * k + 1)
+                      and standardized_absolute_moment_squared(2 * k + 2) / standardized_absolute_moment_squared(2 * k + 1)
+                      == Q(2 * k + 1, 2 * k + 2) for k in range(0, max_pairs))
+    even_to_odd_rises = all(standardized_absolute_moment_squared(2 * k + 1) > standardized_absolute_moment_squared(2 * k)
+                            for k in range(1, max_pairs))
+    excess = {n: stop_loss_excess(n) for n in range(1, max_items + 1)}
+    return {"absolute_moment_falls_odd_to_even_exact": odd_to_even,
+            "absolute_moment_rises_even_to_odd_exact": even_to_odd_rises,
+            "absolute_moment_squared": {f"n={n}": standardized_absolute_moment_squared(n) for n in range(1, 7)},
+            "stop_loss_refutes_every_step": all(v > STOP_LOSS_MARGIN for v in excess.values()),
+            "stop_loss_min_excess": min(excess.values()), "stop_loss_min_excess_at": min(excess, key=excess.get),
+            "stop_loss_first_values": {f"n={n}": excess[n] for n in range(1, 7)}}
+
+
+def exact_kl_ratio_fixture(max_items: int = MONOTONE_ITEMS) -> dict[str, object]:
+    """The exact-KL ratio at ``p = 1/2`` along ``n`` for ``K = 2, 5`` (finite)."""
+
+    rows = {}
+    for candidates, start in ((2, 1), (5, 2)):
+        path = exact_kl_ratio_along_items(candidates, tuple(range(1, max_items + 1)))
+        values = [path[f"n={n}"]["ratio_exact"] for n in range(1, max_items + 1)]
+        c = gaussian_ratio_limit(candidates)
+        rows[f"K={candidates}"] = {
+            "c_K": c, "decreasing_from": start,
+            "strictly_decreasing_from_start": all(a > b for a, b in zip(values[start - 1:], values[start:])),
+            "above_c_K_from_start": all(v > c for v in values[start - 1:]), "max_value": max(values),
+            "max_value_at": values.index(max(values)) + 1, "value_at_max_items": values[-1],
+            "within_5e-4_of_c_K_at_max_items": values[-1] - c < 5e-4,
+            "kl_over_radius_at_max_items": path[f"n={max_items}"]["kl_over_radius"],
+            "path": {f"n={n}": path[f"n={n}"] for n in (1, 2, 3, 4, 8, 16, 64, max_items)}}
+    return rows
+
+
 # --- verification ----------------------------------------------------------------------
 
 def verify() -> dict[str, object]:
@@ -628,7 +995,16 @@ def verify() -> dict[str, object]:
     gauss = gaussian_fixture()
     limit = limit_fixture()
     uniform = uniform_support_fixture()
+    mad = mad_fixture()
+    pair = pair_theorem_fixture()
+    odd = odd_candidates_fixture()
+    ties_increment = tie_increment_fixture()
+    mono = monotonicity_fixture()
+    convex = convex_order_fixture()
+    exact_kl = exact_kl_ratio_fixture()
     c_values = [gauss["rows"][f"K={k}"]["c_K"] for k in GAUSSIAN_CANDIDATES]
+    full_sweeps = list(mono["full"].values())
+    broad_sweeps = list(mono["broad"].values())
     checks = {
         "A_first_index_uniform_and_conditioned_on_max_agree": ties["closed_forms_agree"],
         "A_closed_forms_match_brute_force_enumeration": ties["brute_force_agrees"],
@@ -667,13 +1043,53 @@ def verify() -> dict[str, object]:
             for k in (2, 5)),
         "D_n_equals_1_gap_equals_kl_ball_supremum": all(c["equal"] for c in sup["n_equals_1"].values()),
         "D_n_at_least_2_chain_strict": all(c["chain_strict"] for c in sup["n_at_least_2"].values()),
+        "E_mad_closed_form_matches_enumeration_N_le_60": mad["closed_form_matches_enumeration"]
+            and mad["even_trials_form_n_C_2n_n_over_4_to_n"],
+        "E_pair_gap_is_half_mean_absolute_difference_n_le_30": pair["reduction_to_mean_absolute_difference"],
+        "E_pair_closed_form_n_le_200": pair["closed_form_matches"],
+        "E_pair_step_ratio_identity_strict_increase_n_le_200": pair["step_identity_and_strict_increase"],
+        "E_pair_limit_quarter_pi_from_below": pair["below_limit"] and pair["scaled_deficit_near_one"],
+        "E_triple_is_three_halves_of_pair_n_le_200": odd["triple_is_three_halves_of_pair"]
+            and odd["triple_limit_matches_quadrature"],
+        "E_quintuple_identity_n_le_200": odd["quintuple_is_five_halves_of_quadruple_minus_pair"],
+        "E_tie_count_moment_matches_enumeration": ties_increment["closed_form_matches_enumeration"],
+        "E_increment_is_half_minus_tie_moment_n_le_30": ties_increment["increment_identity_n_le_30"]
+            and ties_increment["pair_increment_is_tie_probability_over_four"],
+        "E_scaled_gap_matches_selection_inflation_n_le_40": mono["matches_selection_inflation_n_le_40"],
+        "E_scaled_gap_monotone_K_3_4_5_10_20_n_le_200": all(s["monotone"] for s in full_sweeps),
+        "E_min_step_ratio_at_end_of_range": all(s["min_step_ratio_at"] == MONOTONE_ITEMS for s in full_sweeps),
+        "E_rho_at_least_one_equality_exactly_for_K_2_3": all(s["rho_at_least_one"] for s in full_sweeps + broad_sweeps)
+            and all(s["rho_equals_one"] == (k in (2, 3)) for k, s in zip(SWEEP_CANDIDATES, broad_sweeps)),
+        "E_scaled_gap_monotone_K_2_to_30_40_50_100_n_le_100_and_K_1000_n_le_40": all(s["monotone"] for s in broad_sweeps)
+            and mono["large"]["monotone"] and mono["large"]["rho_at_least_one"],
+        "E_scaled_gap_below_gaussian_limit_on_sweeps": all(s["below_gaussian_limit"] for s in full_sweeps + broad_sweeps)
+            and mono["large"]["below_gaussian_limit"],
+        "E_convex_order_fails_odd_to_even_exact": convex["absolute_moment_falls_odd_to_even_exact"]
+            and convex["absolute_moment_rises_even_to_odd_exact"],
+        "E_convex_order_fails_every_step_n_le_60_stop_loss": convex["stop_loss_refutes_every_step"],
+        "E_exact_kl_ratio_decreasing_toward_c_K": all(
+            r["strictly_decreasing_from_start"] and r["above_c_K_from_start"] and r["within_5e-4_of_c_K_at_max_items"]
+            for r in exact_kl.values()),
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "tolerances": {"log_and_sqrt": LOG_TOLERANCE, "kl_ball_supremum": SUPREMUM_TOLERANCE,
-                           "gaussian_quadrature": QUADRATURE_TOLERANCE},
+                           "gaussian_quadrature": QUADRATURE_TOLERANCE, "stop_loss_margin": STOP_LOSS_MARGIN},
             "grid": {"items": GRID_ITEMS, "candidates": GRID_CANDIDATES, "p": GRID_P, "cells": len(grid)},
+            "monotonicity": {"items": MONOTONE_ITEMS, "candidates": MONOTONE_CANDIDATES,
+                             "sweep_items": SWEEP_ITEMS, "sweep_candidates": SWEEP_CANDIDATES,
+                             "large": (LARGE_CANDIDATES, LARGE_ITEMS)},
             "headline": {
+                "monotone_table": {k: {key: s[key] for key in ("monotone", "min_step_ratio", "min_step_ratio_at",
+                                                              "min_margin", "min_margin_at", "min_rho", "min_rho_at",
+                                                              "scaled_gap_first", "scaled_gap_at_max_items",
+                                                              "gaussian_limit", "approach_coefficient")}
+                                   for k, s in mono["full"].items()},
+                "pair_step_ratio_at_200": pair_step_ratio(MONOTONE_ITEMS),
+                "exact_kl_ratio": {k: {key: r[key] for key in ("c_K", "decreasing_from", "max_value", "max_value_at",
+                                                               "value_at_max_items", "kl_over_radius_at_max_items")}
+                                   for k, r in exact_kl.items()},
+                "stop_loss_min_excess": convex["stop_loss_min_excess"],
                 "c_K": {f"K={k}": gauss["rows"][f"K={k}"]["c_K"] for k in GAUSSIAN_CANDIDATES},
                 "expected_max_of_K_normals": {f"K={k}": gauss["rows"][f"K={k}"]["expected_max"] for k in GAUSSIAN_CANDIDATES},
                 "max_ratio_radius_on_grid": max(c["ratio_radius"] for c in grid.values()),
@@ -685,4 +1101,6 @@ def verify() -> dict[str, object]:
                 "max_kl_over_radius_on_grid": max(c["kl"] / c["radius"] for c in grid.values())},
             "tie_rules": ties, "records": records, "jitter": jitter, "grid_cells": grid,
             "proxies": proxies, "supremum": sup, "gaussian": gauss, "limit": limit,
-            "uniform_supports": uniform}
+            "uniform_supports": uniform, "mad": mad, "pair_theorem": pair, "odd_candidates": odd,
+            "tie_increment": ties_increment, "monotonicity_sweeps": mono, "convex_order": convex,
+            "exact_kl_ratio": exact_kl}

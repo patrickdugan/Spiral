@@ -1,17 +1,22 @@
 from fractions import Fraction as Q
 from itertools import product
-from math import atan, log, pi, sqrt
+from math import atan, comb, log, pi, sqrt
 
 import pytest
 
 from spiral_ln.evaluation_feedback_multigen import best_of_pmf
+from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_selection_kl import (
     GRID_P, LOG_TOLERANCE, SUPREMUM_TOLERANCE, TIE_RULES, beirami_radius, binomial_records,
-    binomial_score_law, brute_force_selected_law, conditioned_on_max_law, dv_bound,
-    first_index_weight, gaussian_max_expectation, gaussian_ratio_limit, gap_to_bound_ratio,
-    hoeffding_proxy, kearns_saul_proxy, kl_ball_supremum, kl_divergence, kl_max_law, max_law,
-    score_law, selected_record_law, selection_gap, subgaussian_violation, uniform_distinct_scores_kl,
-    uniform_weight, verify,
+    binomial_score_law, brute_force_selected_law, brute_force_tie_count_moment, centered_max,
+    centered_max_increment, conditioned_on_max_law, dv_bound, exact_kl_ratio_along_items,
+    expected_max_count, first_index_weight, gaussian_max_expectation, gaussian_ratio_limit,
+    gap_to_bound_ratio, hoeffding_proxy, increment_ratio, kearns_saul_proxy, kl_ball_supremum,
+    kl_divergence, kl_max_law, max_law, monotonicity_sweep, pair_gap_by_enumeration,
+    pair_scaled_gap_squared, pair_step_ratio, scaled_gap, scaled_gap_squared, score_law,
+    selected_record_law, selection_gap, standardized_absolute_moment_squared, stop_loss_excess,
+    subgaussian_violation, symmetric_binomial_mad, symmetric_binomial_mad_closed_form,
+    tie_count_moment, uniform_distinct_scores_kl, uniform_weight, verify,
 )
 
 HALF, QUARTER = Q(1, 2), Q(1, 4)
@@ -188,7 +193,144 @@ def test_kl_divergence_handles_tiny_atoms_and_basic_identities():
     assert beirami_radius(1) == 0 and abs(beirami_radius(2) - (log(2) - 0.5)) <= 1e-15
 
 
+def _mad_by_enumeration(trials):
+    return sum(Q(comb(trials, s), 2**trials) * abs(Q(s) - Q(trials, 2)) for s in range(trials + 1))
+
+
+def test_de_moivre_mean_absolute_deviation_by_enumeration():
+    for trials in range(1, 61):
+        assert symmetric_binomial_mad(trials) == _mad_by_enumeration(trials) == symmetric_binomial_mad_closed_form(trials)
+    for n in range(1, 31):
+        # the even case used by the K = 2 theorem; the task's 2^(2n-1) would be twice this
+        assert symmetric_binomial_mad(2 * n) == Q(n * comb(2 * n, n), 4**n)
+    assert symmetric_binomial_mad(1) == HALF and symmetric_binomial_mad(2) == HALF and symmetric_binomial_mad(4) == Q(3, 4)
+
+
+def test_expected_max_count_matches_selection_inflation_and_max_law():
+    for items in range(1, 13):
+        for candidates in (1, 2, 3, 4, 6):
+            expected = expected_max_count(items, candidates)
+            assert expected / items - HALF == selection_inflation(items, candidates, HALF)["readout_gap"]
+            assert centered_max(items, candidates) == items * selection_gap(items, candidates, HALF)
+            assert scaled_gap_squared(items, candidates) == items * selection_gap(items, candidates, HALF)**2
+            law = max_law(binomial_score_law(items, HALF), candidates)
+            assert expected == sum(s * items * mass for s, mass in law.items())
+    assert centered_max(1, 2) == QUARTER and scaled_gap(1, 2) == 0.25
+    assert expected_max_count(4, 3) == Q(11552, 4096) and scaled_gap_squared(4, 3) == Q(105, 128)**2 / 4
+
+
+def test_pair_theorem_reduction_closed_form_step_and_limit():
+    for n in range(1, 31):
+        # E max(X1, X2) - n/2 = E|X1 - X2| / 2 = E|Bin(2n, 1/2) - n| / 2
+        assert centered_max(n, 2) == pair_gap_by_enumeration(n) == symmetric_binomial_mad(2 * n) / 2
+    for n in range(1, 121):
+        assert scaled_gap_squared(n, 2) == pair_scaled_gap_squared(n) == Q(n * comb(2 * n, n)**2, 4 * 16**n)
+        step = scaled_gap_squared(n + 1, 2) / scaled_gap_squared(n, 2)
+        assert step == pair_step_ratio(n) == Q((2 * n + 1)**2, 4 * n * (n + 1)) == 1 + Q(1, 4 * n * (n + 1))
+        assert step > 1
+        assert (n + 1) * (2 * n + 1)**2 - n * (2 * n + 2)**2 == n + 1
+    # Wallis: a_n(2)^2 rises to 1/(4 pi); the relative deficit is about 1/(4n)
+    for n in (10, 100, 120):
+        value = float(pair_scaled_gap_squared(n))
+        assert value < 1 / (4 * pi)
+        assert 0.97 < 4 * n * (1 - 4 * pi * value) < 1.0
+    assert abs(sqrt(pair_scaled_gap_squared(120)) - 1 / (2 * sqrt(pi))) < 1e-3
+
+
+def test_triple_and_quintuple_reduce_to_even_candidates_by_the_order_statistic_recurrence():
+    for n in range(1, 61):
+        assert centered_max(n, 3) == Q(3, 2) * centered_max(n, 2)
+        assert centered_max(n, 5) == Q(5, 2) * (centered_max(n, 4) - centered_max(n, 2))
+        assert scaled_gap_squared(n, 3) == Q(9, 4) * scaled_gap_squared(n, 2)
+    # the recurrence (n-r) E Y_(r:n) + r E Y_(r+1:n) = n E Y_(r:n-1) itself, on a symmetric three-point law
+    law = {-1: Q(1, 4), 0: HALF, 1: Q(1, 4)}
+
+    def order_mean(r, size):
+        total = Q(0)
+        for draw in product(law, repeat=size):
+            weight = Q(1)
+            for y in draw:
+                weight *= law[y]
+            total += weight * sorted(draw)[r - 1]
+        return total
+
+    for size in (2, 3, 4):
+        for r in range(1, size):
+            assert (size - r) * order_mean(r, size) + r * order_mean(r + 1, size) == size * order_mean(r, size - 1)
+    assert order_mean(2, 3) == 0 and order_mean(3, 5) == 0
+
+
+def test_tie_count_moment_and_increment_identity():
+    for n, k in ((1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (1, 3), (2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (2, 5)):
+        assert tie_count_moment(n, k) == brute_force_tie_count_moment(n, k)
+    for n in range(1, 21):
+        for k in (1, 2, 3, 4, 7, 12):
+            assert centered_max(n + 1, k) - centered_max(n, k) == centered_max_increment(n, k) == HALF - tie_count_moment(n, k)
+        assert centered_max_increment(n, 1) == 0
+        assert centered_max_increment(n, 2) == Q(comb(2 * n, n), 4**(n + 1)) == centered_max(n, 2) / (2 * n)
+        assert increment_ratio(n, 2) == 1 == increment_ratio(n, 3)
+        assert increment_ratio(n, 4) > 1 and increment_ratio(n, 12) > 1
+    assert tie_count_moment(1, 2) == Q(3, 8)  # N = 2 with probability 1/2, else 1
+
+
+def test_monotonicity_sweep_small_ranges():
+    for candidates in (2, 4, 7, 10, 33):
+        sweep = monotonicity_sweep(candidates, 60)
+        assert sweep["monotone"] and sweep["first_failure"] is None
+        assert sweep["min_step_ratio_at"] == 60 and sweep["rho_at_least_one"]
+        assert sweep["rho_equals_one"] == (candidates in (2, 3))
+        assert sweep["below_gaussian_limit"] and abs(sweep["scaled_gap_first"] - (0.5 - 2.0**-candidates)) < 1e-15
+        assert sweep["min_step_ratio"] > 1 and sweep["min_margin"] > 0
+    assert monotonicity_sweep(2, 60)["min_margin"] == 1.0
+    # the sweep's step ratio is exact: at K = 3 it equals the K = 2 identity
+    squares = [scaled_gap_squared(n, 3) for n in range(1, 12)]
+    assert all(b / a == pair_step_ratio(n) for n, (a, b) in enumerate(zip(squares, squares[1:]), start=1))
+
+
+def test_convex_order_of_standardized_counts_fails_at_every_step():
+    assert standardized_absolute_moment_squared(1) == 1
+    assert standardized_absolute_moment_squared(2) == HALF
+    assert standardized_absolute_moment_squared(3) == Q(3, 4)
+    for k in range(0, 60):
+        odd, even = standardized_absolute_moment_squared(2 * k + 1), standardized_absolute_moment_squared(2 * k + 2)
+        assert even < odd and even / odd == Q(2 * k + 1, 2 * k + 2)
+        if k:
+            assert standardized_absolute_moment_squared(2 * k) < odd
+    # the exact value: (E|Z_{2k}|)^2 = 2k C(2k,k)^2 / 16^k, and E|Z_n| -> sqrt(2/pi)
+    for k in (1, 2, 5, 20):
+        assert standardized_absolute_moment_squared(2 * k) == Q(2 * k * comb(2 * k, k)**2, 16**k)
+    assert abs(sqrt(standardized_absolute_moment_squared(400)) - sqrt(2 / pi)) < 2e-3
+    for n in range(1, 31):
+        assert stop_loss_excess(n) > 1e-3
+    # n = 1 -> 2 at c = 0: 1/2 - sqrt(2)/4; n = 2 -> 3 at c = 1/sqrt(3): (sqrt(2) - 2/sqrt(3))/4
+    assert abs(stop_loss_excess(1) - (0.5 - sqrt(2) / 4)) < 1e-12
+    assert abs(stop_loss_excess(2) - (sqrt(2) - 2 / sqrt(3)) / 4) < 1e-12
+
+
+def test_exact_kl_ratio_path_at_one_half():
+    for candidates, start in ((2, 1), (5, 2)):
+        path = exact_kl_ratio_along_items(candidates, tuple(range(1, 41)))
+        values = [path[f"n={n}"]["ratio_exact"] for n in range(1, 41)]
+        c = gaussian_ratio_limit(candidates)
+        assert all(a > b for a, b in zip(values[start - 1:], values[start:]))
+        assert all(c < v <= 1 for v in values[start - 1:])
+        assert all(0 < path[f"n={n}"]["kl_over_radius"] < 1 for n in range(1, 41))
+        assert path["n=40"]["kl_over_radius"] > path["n=1"]["kl_over_radius"]
+        assert abs(values[0] - gap_to_bound_ratio(1, candidates, HALF, "exact")) <= 1e-12
+    assert exact_kl_ratio_along_items(5, (1,))["n=1"]["ratio_exact"] < gaussian_ratio_limit(5)
+
+
 @pytest.mark.parametrize("call", [
+    lambda: symmetric_binomial_mad(0),
+    lambda: symmetric_binomial_mad_closed_form(-2),
+    lambda: expected_max_count(3, 0),
+    lambda: expected_max_count(0, 3),
+    lambda: pair_scaled_gap_squared(0),
+    lambda: pair_step_ratio(0),
+    lambda: tie_count_moment(2, 1.5),
+    lambda: monotonicity_sweep(2, 0),
+    lambda: stop_loss_excess(0),
+    lambda: exact_kl_ratio_along_items(0, (1, 2)),
     lambda: selected_record_law({"a": HALF, "b": HALF}, {"a": 0, "b": 1}, 0),
     lambda: selected_record_law({"a": HALF, "b": HALF}, {"a": 0, "b": 1}, 2.0),
     lambda: selected_record_law({"a": HALF, "b": HALF}, {"a": 0, "b": 1}, 2, "last_index"),
@@ -221,8 +363,14 @@ def test_malformed_inputs_are_rejected(call):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 24
+    assert report["all_passed"] and len(report["checks"]) == 42
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["grid"]["cells"] == 90
     c = report["headline"]["c_K"]
     assert all(c[f"K={k}"] < 1 for k in (2, 3, 5, 10, 100, 1000, 10000))
+    table = report["headline"]["monotone_table"]
+    assert set(table) == {"K=3", "K=4", "K=5", "K=10", "K=20"}
+    assert all(row["monotone"] and row["min_step_ratio_at"] == 200 and row["min_rho"] >= 1 for row in table.values())
+    assert table["K=3"]["min_margin"] == 1.0 and table["K=3"]["min_rho"] == 1.0
+    assert report["headline"]["pair_step_ratio_at_200"] == Q(160801, 160800)
+    assert report["headline"]["exact_kl_ratio"]["K=5"]["decreasing_from"] == 2
