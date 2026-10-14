@@ -22,9 +22,11 @@ def _encode(value):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--heavy", action="store_true",
+                        help="also close K = 31..40 by exact scans and certify the K = 41..50 tails (several minutes more)")
     args = parser.parse_args()
-    report = {"schema_version": "0.3",
-              "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify()}
+    report = {"schema_version": "0.4",
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(), **verify(heavy=args.heavy)}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_selection_kl.py",
                "src/spiral_ln/evaluation_selection_kl.py",

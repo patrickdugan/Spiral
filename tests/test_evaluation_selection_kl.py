@@ -1,13 +1,19 @@
 from fractions import Fraction as Q
 from itertools import product
-from math import atan, comb, log, pi, sqrt
+from math import atan, comb, erfc, exp, log, pi, sqrt
 
 import pytest
 
 from spiral_ln.evaluation_feedback_multigen import best_of_pmf
 from spiral_ln.evaluation_game_feedback import selection_inflation
 from spiral_ln.evaluation_selection_kl import (
-    GRID_P, LOG_TOLERANCE, SUPREMUM_TOLERANCE, TIE_RULES, asymptotic_margin, asymptotic_normalized_margin,
+    EFFECTIVE_START, GRID_P, LOG_TOLERANCE, SUPREMUM_TOLERANCE, TIE_RULES, ExcessPolynomial, GaussianCells,
+    asymptotic_margin, asymptotic_normalized_margin, cdf_and_midpoint_constants, cdf_remainder_check, ceil_decimal,
+    certify_threshold, effective_threshold_search, exact_rho_sweep, excess_polynomial, exp_neg_bounds,
+    gaussian_moment_bound, gaussian_tail_bound, gaussian_tail_sup_bound, local_expansion_majorants,
+    local_remainder_check, margin_deficit, margin_deficit_from_excess, midpoint_euler_maclaurin_check,
+    midpoint_remainder_check, normal_cdf_bounds, normal_density_bounds, rational_sqrt_bounds, second_order_delta,
+    second_order_margin_constant,
     beirami_radius, binomial_records, binomial_score_law, brute_force_selected_law,
     brute_force_tie_count_moment, centered_max, centered_max_from_profile, centered_max_increment,
     conditioned_on_max_law, crude_tie_bound_deficit, dv_bound, exact_kl_ratio_along_items,
@@ -455,6 +461,148 @@ def test_wide_sweep_agrees_with_the_rational_sweep_on_small_ranges():
     assert huge["K=300"]["monotone"] and huge["K=300"]["min_margin"] > 1
 
 
+# --- version 0.4: the effective second-order bound -------------------------------------------------
+
+
+def _horner(coeffs, x):
+    out = Q(0)
+    for c in reversed(coeffs):
+        out = out * x + c
+    return out
+
+
+def _derivative(coeffs):
+    return [i * coeffs[i] for i in range(1, len(coeffs))] or [Q(0)]
+
+
+def test_excess_polynomial_closed_forms_and_the_margin_identity():
+    w_squared = [0, 0, 1, -2, 1]
+    assert excess_polynomial(2) == [0] and excess_polynomial(3) == [0]
+    assert excess_polynomial(4) == w_squared and excess_polynomial(5) == [Q(5, 2) * c for c in w_squared]
+    for k in (4, 6, 9, 12):
+        H = ExcessPolynomial(k)
+        coeffs = H.u_coefficients()
+        # H = (K/2) w - P_K(w) as a polynomial in w agrees with the u form
+        for u in (Q(0), Q(1, 7), Q(1, 2), Q(5, 6), Q(1)):
+            w = u * (1 - u)
+            assert _horner(coeffs, u) == sum(c * w**i for i, c in enumerate(H.w_coefficients))
+        d = coeffs
+        for j in range(1, k + 1):
+            d = _derivative(d)
+            for u in (Q(0), Q(1, 3), Q(1, 2), Q(4, 5), Q(1)):
+                assert H.derivative_bound(j, u, u) == abs(_horner(d, u))
+            assert all(H.derivative_bound(j, u, u) <= H.sup(j) for u in (Q(0), Q(1, 9), Q(1, 2), Q(1)))
+    four = ExcessPolynomial(4)
+    assert four.lambda0 == 1 and four.lambda1 == 2 and four.sup(2) == 2 and four.sup(4) == 24
+    for n in range(1, 9):
+        for k in (2, 3, 4, 6, 7, 10):
+            d = margin_deficit(n, k)
+            assert d == margin_deficit_from_excess(n, k)
+            assert d == centered_max(n, k) * (increment_ratio(n, k) - 1)
+        assert margin_deficit(n, 5) == Q(5, 2) * margin_deficit(n, 4)
+        assert margin_deficit(n, 2) == margin_deficit(n, 3) == 0
+
+
+def test_rational_enclosures_bracket_the_special_functions():
+    lo, hi = rational_sqrt_bounds(2)
+    assert lo * lo <= 2 <= hi * hi and hi - lo <= Q(1, 10**14)
+    for x in (Q(0), Q(1, 3), Q(5), Q(50), Q(1201, 8)):
+        lo, hi = exp_neg_bounds(x)
+        assert 0 < lo <= hi and lo <= exp(-float(x)) * (1 + 1e-12) and exp(-float(x)) * (1 - 1e-12) <= hi
+        assert hi - lo <= 1e-60 + 1e-15 * float(hi)
+    previous = Q(0)
+    for t in [Q(i, 4) for i in range(-24, 25)] + [Q(13, 2), Q(7), Q(9)]:
+        c_lo, c_hi = normal_cdf_bounds(t)
+        d_lo, d_hi = normal_density_bounds(t)
+        value = 0.5 * erfc(-float(t) / sqrt(2))
+        assert c_lo <= value + 1e-15 and value - 1e-15 <= c_hi and c_lo <= c_hi
+        assert d_lo <= exp(-float(t)**2 / 2) / sqrt(2 * pi) * (1 + 1e-12) and d_lo <= d_hi
+        m_lo, m_hi = normal_cdf_bounds(-t)
+        assert m_lo == 1 - c_hi and m_hi == 1 - c_lo
+        if abs(t) <= 6:
+            assert c_hi - c_lo < 1e-12
+            assert c_lo >= previous
+            previous = c_lo
+    assert normal_cdf_bounds(Q(0)) == (Q(1, 2), Q(1, 2))
+
+
+def test_gaussian_moment_and_tail_bounds():
+    exact = {(0, 1): 1.0, (1, 1): sqrt(2 / pi), (2, 1): 1.0, (4, 1): 3.0, (0, 2): 1 / (2 * sqrt(pi)),
+             (2, 2): 1 / (4 * sqrt(pi)), (1, 2): 1 / (2 * pi), (0, 4): 1 / (4 * pi**1.5 * sqrt(2))}
+    for (k, a), value in exact.items():
+        bound = float(gaussian_moment_bound(k, a))
+        assert value * (1 - 1e-12) <= bound <= value * (1 + 1e-12)
+    for A in (2, 3, 5):
+        tail = 0.5 * erfc(A / sqrt(2))
+        assert tail <= float(gaussian_tail_bound(0, 1, A)) <= tail * (1 + 1 / A**2) * 1.01
+        assert exp(-A * A / 2) / sqrt(2 * pi) <= float(gaussian_tail_sup_bound(0, 1, A)) * (1 + 1e-12)
+    assert float(gaussian_tail_bound(-1, 1, 3)) >= 0.5 * erfc(3 / sqrt(2)) / 3 * 0.99
+
+
+def test_midpoint_euler_maclaurin_and_cell_quadrature():
+    assert midpoint_euler_maclaurin_check()
+    cells = GaussianCells()
+    mass = cells.integral([(Q(1), [Q(1)], 1, None)])
+    assert 1 <= mass <= Q(103, 100)   # upper Riemann sum: about (w/2) int |phi'| above 1
+    assert sqrt(2 / pi) <= float(cells.integral([(Q(1), [Q(0), Q(1)], 1, None)])) <= sqrt(2 / pi) * 1.08   # plus the Taylor slack (w/2) on each cell
+    assert 1 / sqrt(2 * pi) <= float(cells.sup([(Q(1), [Q(1)], 1, None)])) <= 1 / sqrt(2 * pi) * 1.0001
+    H = ExcessPolynomial(4)
+    # int |H'(Phi)| = int 2 g |1 - 2 Phi| with g = Phi(1 - Phi): compare with a fine Riemann sum
+    x = [i / 1000 for i in range(-10000, 10001)]
+    cdf = [0.5 * erfc(-v / sqrt(2)) for v in x]
+    reference = sum(2 * c * (1 - c) * abs(1 - 2 * c) for c in cdf) / 1000
+    bound = float(cells.integral([(Q(1), [Q(1)], 0, (H, 1))]))
+    assert reference <= bound <= reference * 1.1
+
+
+def test_lemma_constants_dominate_the_exact_remainders():
+    cells = GaussianCells()
+    base = cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    assert 0.3 < float(base["R_F"]) < 0.4 and float(base["R_F"]) < float(base["R_mu"]) < 0.5
+    loc = local_expansion_majorants(EFFECTIVE_START)
+    assert loc["tau"] == Q(1, 2) and loc["kappa"] == Q(4, 3) and 1 < loc["gamma"] < Q(1004, 1000)
+    observed = cdf_remainder_check(400)
+    assert observed <= base["R_F"] and 0.027 < float(observed) < 0.029
+    assert midpoint_remainder_check(400) <= base["R_mu"]
+    assert local_remainder_check(400) <= 0
+    # below the proved range the CDF remainder has the same size (no hidden small-n blow-up)
+    assert float(cdf_remainder_check(100)) < 0.03
+
+
+def test_second_order_constant_and_threshold_for_four_candidates():
+    cells = GaussianCells()
+    base = cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    four = second_order_margin_constant(4, EFFECTIVE_START, cells, base)
+    assert four["C"] == ceil_decimal(four["C_exact"]) and four["C"] >= four["C_exact"]
+    assert Q(74, 100) < four["C"] < Q(75, 100)
+    assert four["H3"] < Q(1, 10**10) and four["L2"] < Q(1, 10**10) and four["tails"] < Q(1, 10**10) and four["L5"] == 0
+    search = effective_threshold_search(4, four["C"], EFFECTIVE_START, EFFECTIVE_START)
+    assert search["threshold"] == 400 and 2.8 < search["scaled_margin"] < 2.9
+    assert certify_threshold(4, four["C"], 400)
+    # a larger constant forces a scan past 400 (each scanned D_n is checked positive)
+    forced = effective_threshold_search(4, Q(22, 10), EFFECTIVE_START, 460)
+    assert forced["threshold"] is not None and 400 < forced["threshold"] <= 460 and forced["first_nonpositive"] is None
+    assert effective_threshold_search(4, Q(10**6), EFFECTIVE_START, 402)["threshold"] is None
+    # the observed deviation n (sqrt(n) D_n - delta_4) is about 0.0129, far inside C_4
+    delta = second_order_delta(4)
+    assert abs((float(margin_deficit(400, 4)) * 20 - delta) * 400 - 0.012865) < 1e-5
+    six = second_order_margin_constant(6, EFFECTIVE_START, cells, base)
+    assert four["C"] < six["C"] and six["L5"] > 0
+
+
+def test_second_order_delta_matches_the_gaussian_margin():
+    for k in (4, 6, 12):
+        assert abs(second_order_delta(k) - asymptotic_margin(k) * gaussian_max_expectation(k) / 2) < 1e-9
+    assert abs(second_order_delta(5) - 2.5 * second_order_delta(4)) < 1e-12
+
+
+def test_exact_rho_sweep_is_strict():
+    four = exact_rho_sweep(4, 60)
+    assert four["all_positive"] and four["min_rho_at"] == 60 and four["min_rho"] > 1
+    three = exact_rho_sweep(3, 10)
+    assert not three["all_positive"] and three["first_failure"] == 1 and three["min_rho"] == 1.0
+
+
 @pytest.mark.parametrize("call", [
     lambda: tie_polynomial(0),
     lambda: overlap_profile(0),
@@ -501,6 +649,23 @@ def test_wide_sweep_agrees_with_the_rational_sweep_on_small_ranges():
     lambda: gap_to_bound_ratio(4, 2, HALF, "radius_plus"),
     lambda: uniform_distinct_scores_kl(0, 2),
     lambda: selection_gap(4, 2, Q(3, 2)),
+    lambda: excess_polynomial(1),
+    lambda: ExcessPolynomial(0),
+    lambda: ExcessPolynomial(4).derivative_bound(0, Q(0), Q(1)),
+    lambda: exp_neg_bounds(-1),
+    lambda: rational_sqrt_bounds(-1),
+    lambda: gaussian_moment_bound(-1, 1),
+    lambda: gaussian_moment_bound(2, 0),
+    lambda: gaussian_tail_bound(4, 1, 1),
+    lambda: gaussian_tail_sup_bound(9, 1, 2),
+    lambda: cdf_remainder_check(401),
+    lambda: local_remainder_check(100),
+    lambda: cdf_and_midpoint_constants(401),
+    lambda: second_order_margin_constant(1),
+    lambda: effective_threshold_search(4, 0),
+    lambda: effective_threshold_search(4, Q(1), 0),
+    lambda: margin_deficit(0, 4),
+    lambda: exact_rho_sweep(4, 0),
 ])
 def test_malformed_inputs_are_rejected(call):
     with pytest.raises(ValueError):
@@ -509,8 +674,15 @@ def test_malformed_inputs_are_rejected(call):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 56
+    assert report["all_passed"] and len(report["checks"]) == 65 and not report["heavy"]
     assert sum(k.startswith("F_") for k in report["checks"]) == 14
+    assert sum(k.startswith("G_") for k in report["checks"]) == 9
+    v4 = report["headline_v0_4"]
+    assert all(v4["thresholds"][f"K={k}"] == 400 for k in range(4, 26))
+    assert all(400 < v4["thresholds"][f"K={k}"] <= 500 for k in range(26, 31))
+    assert Q(74, 100) < v4["C_K"]["K=4"] < Q(75, 100) and v4["C_K"]["K=30"] < 104
+    assert v4["R_F"] < Q(36, 100) and v4["R_mu"] < Q(44, 100)
+    assert all(row["within"] for row in v4["deviations"].values())
     assert report["evidence_status"].startswith("exact_synthetic")
     v3 = report["headline_v0_3"]
     assert v3["wide_global_min_margin"][1:] == (4, 400) and 1.0826 < v3["wide_global_min_margin"][0] < 1.0827

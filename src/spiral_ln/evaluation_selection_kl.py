@@ -29,23 +29,24 @@ mean of ``S - p`` under the selected record's law.
    normals] / sqrt(2 lambda_K) < 1`` as ``n`` grows at ``p = 1/2``; ``c_K -> 1``,
    so the supremum of the ratio is 1 and is not attained.  At ``n = 1`` the
    gap equals the KL-ball supremum exactly.
-5. Monotone approach (D.5, versions 0.2-0.3).  With ``a_n(K) = sqrt(n) gamma(n, K, 1/2)``
+5. Monotone approach (D.5, versions 0.2-0.4).  With ``a_n(K) = sqrt(n) gamma(n, K, 1/2)``
    (so ``r(n, K, 1/2) = 2 a_n(K) / sqrt(2 lambda_K)``), ``a_n(2)^2 = n C(2n,n)^2 /
    (4 * 16^n)`` by de Moivre's mean absolute deviation, ``a_{n+1}(2)^2 / a_n(2)^2 =
    1 + 1/(4n(n+1))``, and ``a_n(3) = (3/2) a_n(2)`` by the order-statistic
    recurrence; both rise strictly to ``E[max]/2``, so ``sup_n r = c_K`` for
-   ``K = 2, 3``.  For ``K >= 4`` the increase is verified exactly on ``a_n^2`` for ``K = 4..100``
-   (``n <= 400``) and ``K = 200, 500, 1000, 10000`` (``n <= 60``), but not proved: with the
-   overlap profile ``w_m = F_n(m)(1 - F_n(m))``, ``M_n(4) = 2 sum w_m - sum w_m^2`` (the
-   pair-of-pairs step collapses to one sum), yet ``sum w_m^2 = E[Y_(3:4)]/3`` has no de
-   Moivre identity, its increment carries ``sum C(n,m)^4``, the step ratio of ``M_n(4)`` is
-   not a rational function (exact rank test), and ``2^(4n+1) M_n(4)`` obeys an order-4
-   recurrence; the tie-mass bound ``M_{n+1} - M_n >= P(N >= 2)/4`` is tight only for ``K = 2``
-   and fails to give ``rho_n >= 1`` at ``K = 3`` by exactly ``(n/2) sum q_m^3``.  The margin's
-   limit is ``n (rho_n - 1) -> c(K) = (E[M_K^3] - (5/2) E[M_K]) / (6 E[M_K])`` (Edgeworth, cited;
-   matched by Richardson extrapolation of the exact values to ``5e-8`` at ``K = 4``), zero at
-   ``K = 2, 3`` and positive beyond, so the question is settled asymptotically and verified
-   exactly on the sweeps, with the smallest normalized margin ``1.0826`` at ``K = 4, n = 400``.
+   ``K = 2, 3``.  Version 0.3 verified ``K >= 4`` exactly on ``a_n^2`` (``K = 4..100``, ``n <= 400``;
+   ``K = 200, 500, 1000, 10000``, ``n <= 60``) and recorded why the profile identities (``M_n(4) =
+   2 sum w_m - sum w_m^2``, an order-4 recurrence) and the tie-mass bound do not close it.
+   Version 0.4 proves it for ``K = 4..30`` (and ``31..40`` with ``verify(heavy=True)``): with
+   ``H_K = (K/2) w - P_K(w) = O(w^2)`` the margin ``D_n = 2n (M_{n+1} - M_n) - M_n = M_n (rho_n - 1)``
+   satisfies ``D_n = sum_m H_K(F(m)) + 2n sum_m sum_k H_K^(2k)(mu_m) q_m^(2k) / (4^k (2k)!)`` exactly (de
+   Moivre cancels the ``S_1`` part), and a second-order expansion with every remainder bounded in
+   exact rational arithmetic (Robbins' Stirling bounds, the midpoint Euler-Maclaurin kernels, a
+   rigorous cell quadrature, Poisson summation) gives ``|sqrt(n) D_n - delta_K| <= C_K / n`` for
+   ``n >= 400`` (``C_4 = 0.7413``).  An exact check ``N0^3 D_{N0}^2 > 4 C_K^2`` at ``N0 = 400`` (``K <= 25``)
+   or a short exact scan (``N0 <= 498`` for ``K <= 30``) then gives ``rho_n > 1`` for every ``n >= N0``, and the
+   0.3 sweep covers ``n <= 400``.  ``delta_K`` matches ``c(K) E[M_K] / 2`` (quadrature), replacing the
+   cited Edgeworth expansion of 0.3 for the margin.
 """
 
 from __future__ import annotations
@@ -53,7 +54,7 @@ from __future__ import annotations
 from fractions import Fraction as Q
 from functools import lru_cache
 from itertools import product
-from math import comb, erfc, exp, gcd, log, pi, sqrt
+from math import comb, erfc, exp, factorial, gcd, isqrt, log, pi, sqrt
 
 import numpy as np
 
@@ -538,7 +539,7 @@ def pair_step_ratio(items: int) -> Q:
     """``a_{n+1}(2)^2 / a_n(2)^2 = ((n+1)/n) ((2n+1)/(2n+2))^2 = (2n+1)^2 / (4n(n+1)) = 1 + 1/(4n(n+1))``.
 
     ``C(2n+2, n+1) / C(2n, n) = 2(2n+1)/(n+1)``; the excess over 1 is the ``+1`` in
-    ``(2n+1)^2 = 4n(n+1) + 1``.  Telescoping, ``a_n(2)^2 = (1/16) prod_{j<n} (2j+1)^2/((2j)(2j+2))``
+    ``(2n+1)^2 = 4n(n+1) + 1``.  Telescoping from ``a_1(2)^2 = 1/16``, ``a_n(2)^2 = (1/16) prod_{1<=j<n} (2j+1)^2/((2j)(2j+2))``
     rises to ``(1/16)(4/pi) = 1/(4 pi)`` (Wallis), i.e. ``a_n(2)`` increases strictly to
     ``1/(2 sqrt(pi)) = E[max of two standard normals] / 2``.
     """
@@ -1116,6 +1117,946 @@ def wide_monotonicity_sweep(candidates: tuple[int, ...], max_items: int) -> dict
     return out
 
 
+# --- D.5 at K >= 4 (version 0.4): an effective second-order bound, hence a proof for every n ---------
+#
+# The margin D_n(K) = 2n (M_{n+1}(K) - M_n(K)) - M_n(K) = M_n (rho_n - 1) is positive iff rho_n > 1, and
+# rho_n >= 1 gives a_{n+1}^2 > a_n^2.  Write H_K(u) = (K/2) u(1-u) - phi_K(u), phi_K(u) = (1 - u^K - (1-u)^K)/2,
+# so that M_n(K) = (K/2) S_1 - sum_{m<n} H_K(F_n(m)).  The points {F_n(m)} evolve by midpoint insertion
+# (F_{n+1}(m) = mu_m = (F_n(m-1) + F_n(m))/2), and de Moivre's 2n (S_1(n+1) - S_1(n)) = S_1(n) cancels the
+# (K/2) S_1 part exactly, leaving the algebraic identity
+#
+#     D_n(K) = sum_{m<n} H_K(F_n(m)) + 2n sum_{m<=n} sum_{k>=1} H_K^(2k)(mu_m) q_m^(2k) / (4^k (2k)!),
+#
+# in which H_K = O(w^2) decays in the tails and every local term carries q_m^2.  For n >= N1 = 400 each sum is
+# expanded to second order with explicit remainders: a local expansion of q_m (Robbins' Stirling bounds,
+# cited), a continuity-corrected CDF expansion F_n(m) = Phi(b) + psi(b)/n + O(R_F / n^2) proved from it by
+# the midpoint Euler-Maclaurin formula with explicit kernels, and Poisson summation (cited) for the
+# Gaussian grid sums.  The sqrt(n) terms cancel by an integration by parts, the 1/sqrt(n) terms define delta_K,
+# and every remainder is bounded by exact rational arithmetic:
+#
+#     |sqrt(n) D_n(K) - delta_K| <= C_K / n   for all n >= N1.
+#
+# If some N0 >= N1 has sqrt(N0) D_{N0} > 2 C_K / N0 (an exact check), then D_n > 0 for every n >= N0, and the
+# exact integer sweep covers n < N0.  The rational enclosures of exp, phi and Phi below are rigorous (directed
+# rounding in integer fixed point); floats appear only in delta_K's quadrature, a consistency check that the
+# proof does not use.
+
+EFFECTIVE_START = 400                               # N1: a perfect square, so grid points are rational
+EFFECTIVE_CANDIDATES = tuple(range(4, 31))          # K = 4..25 close at N1 = 400; 26..30 after a short exact scan
+EFFECTIVE_SCAN_LIMIT = 600
+HEAVY_EFFECTIVE_CANDIDATES = tuple(range(31, 41))   # verify(heavy=True): exact scans to N0(K) <= 800
+HEAVY_SCAN_LIMIT = 800
+HEAVY_TAIL_CANDIDATES = tuple(range(41, 51))        # verify(heavy=True): N0 certified by one exact evaluation only
+LOCAL_TAU = Q(1, 2)                                 # the local expansion is used for |m - n/2| <= tau n / 2
+CELL_RANGE, CELLS_PER_UNIT = 10, 20                 # cell quadrature on [-10, 10], width 1/20
+PI_LOWER, PI_UPPER = Q(314159265358979, 10**14), Q(314159265358980, 10**14)
+E_UPPER = Q(2718281828459046, 10**15)
+_FIXED_BITS, _ROUND_BITS = 256, 64
+DELTA_TOLERANCE = 1e-9
+
+
+def rational_sqrt_bounds(x, scale: int = 10**15) -> tuple[Q, Q]:
+    """``(lo, hi)`` with ``lo <= sqrt(x) <= hi``, both rationals with denominator ``scale``."""
+
+    x = Q(x)
+    if x < 0:
+        raise ValueError("x must be non-negative")
+    root = isqrt(x.numerator * scale * scale // x.denominator)
+    return Q(root, scale), Q(root + 1, scale)
+
+
+def _sqrt_hi(x) -> Q:
+    return rational_sqrt_bounds(x)[1]
+
+
+def _sqrt_lo(x) -> Q:
+    return rational_sqrt_bounds(x)[0]
+
+
+INV_SQRT_2PI_UPPER = 1 / _sqrt_lo(2 * PI_LOWER)     # phi(0) <= this
+INV_SQRT_2PI_LOWER = 1 / _sqrt_hi(2 * PI_UPPER)
+SQRT_E_UPPER = _sqrt_hi(E_UPPER)
+
+
+def _round_up(x: Q, bits: int = _ROUND_BITS) -> Q:
+    scale = 1 << bits
+    return Q(-((-x.numerator * scale) // x.denominator), scale)
+
+
+def ceil_decimal(x, digits: int = 6) -> Q:
+    """The least multiple of ``10^-digits`` that is ``>= x`` (constants are reported, and used, rounded up)."""
+
+    x = Q(x)
+    scale = 10**digits
+    return Q(-((-x.numerator * scale) // x.denominator), scale)
+
+
+def _round_down(x: Q, bits: int = _ROUND_BITS) -> Q:
+    scale = 1 << bits
+    return Q(x.numerator * scale // x.denominator, scale)
+
+
+@lru_cache(maxsize=None)
+def exp_neg_bounds(x) -> tuple[Q, Q]:
+    """``(lo, hi)`` with ``lo <= exp(-x) <= hi`` for rational ``x >= 0``.
+
+    ``u = x / 2^k <= 1/2``: the alternating Taylor series of ``exp(-u)`` brackets it between consecutive partial
+    sums; ``k`` squarings in integer fixed point (``2^-256``), rounding down for ``lo`` and up for ``hi``.
+    """
+
+    x = Q(x)
+    if x < 0:
+        raise ValueError("x must be non-negative")
+    k = 0
+    while x > Q(1, 2) * 2**k:
+        k += 1
+    u = x / 2**k
+    lo, term = Q(0), Q(1)
+    for i in range(24):
+        lo += term if i % 2 == 0 else -term
+        term = term * u / (i + 1)
+    hi = lo + term
+    scale = 1 << _FIXED_BITS
+    lo_i = lo.numerator * scale // lo.denominator
+    hi_i = -((-hi.numerator * scale) // hi.denominator)
+    for _ in range(k):
+        lo_i = (lo_i * lo_i) >> _FIXED_BITS
+        hi_i = -((-(hi_i * hi_i)) >> _FIXED_BITS)
+    return Q(lo_i, scale), Q(hi_i, scale)
+
+
+def normal_density_bounds(t) -> tuple[Q, Q]:
+    """Rational enclosure of ``phi(t) = exp(-t^2/2) / sqrt(2 pi)``."""
+
+    lo, hi = exp_neg_bounds(Q(t) * Q(t) / 2)
+    return INV_SQRT_2PI_LOWER * lo, INV_SQRT_2PI_UPPER * hi
+
+
+@lru_cache(maxsize=None)
+def normal_cdf_bounds(t) -> tuple[Q, Q]:
+    """Rational enclosure of ``Phi(t)``.
+
+    ``0 < t <= 6``: ``Phi(t) = 1/2 + phi(t) sum_i t^(2i+1)/(2i+1)!!`` (positive terms; after 120 terms the
+    remainder is at most the next term over ``1 - t^2/243``).  ``t > 6``: Mills' ratio,
+    ``t phi(t)/(1+t^2) <= 1 - Phi(t) <= phi(t)/t`` (integrate ``phi(s) <= (s/t) phi(s)`` and
+    ``(1 + 1/s^2) phi(s) = -(phi(s)/s)'`` over ``[t, oo)``).  ``t < 0`` by symmetry.
+    """
+
+    t = Q(t)
+    if t < 0:
+        lo, hi = normal_cdf_bounds(-t)
+        return 1 - hi, 1 - lo
+    if t == 0:
+        return Q(1, 2), Q(1, 2)
+    density_lo, density_hi = normal_density_bounds(t)
+    if t > 6:
+        return 1 - density_hi / t, 1 - density_lo * t / (1 + t * t)
+    scale = 1 << _FIXED_BITS
+    a2, b2 = (t * t).numerator, (t * t).denominator
+    term_lo = t.numerator * scale // t.denominator
+    term_hi = -((-t.numerator * scale) // t.denominator)
+    sum_lo = sum_hi = 0
+    terms = 120
+    for i in range(terms):
+        sum_lo += term_lo
+        sum_hi += term_hi
+        term_lo = term_lo * a2 // (b2 * (2 * i + 3))
+        term_hi = -((-term_hi * a2) // (b2 * (2 * i + 3)))
+    tail = Q(term_hi, scale) / (1 - t * t / (2 * terms + 3))
+    return Q(1, 2) + density_lo * Q(sum_lo, scale), Q(1, 2) + density_hi * (Q(sum_hi, scale) + tail)
+
+
+# polynomials as coefficient lists, lowest degree first
+
+def _padd(a, b):
+    size = max(len(a), len(b))
+    return [Q(a[i] if i < len(a) else 0) + Q(b[i] if i < len(b) else 0) for i in range(size)]
+
+
+def _pscale(a, c):
+    return [Q(v) * c for v in a]
+
+
+def _pmul(a, b):
+    out = [Q(0)] * (len(a) + len(b) - 1)
+    for i, x in enumerate(a):
+        if x:
+            for j, y in enumerate(b):
+                out[i + j] += x * y
+    return out
+
+
+def _pderiv(a):
+    return [Q(i) * a[i] for i in range(1, len(a))] or [Q(0)]
+
+
+def _pphi(a, power: int = 1):
+    """``(phi^power P)' / phi^power = P' - power z P``."""
+
+    return _padd(_pderiv(a), _pscale([Q(0)] + list(a), -power))
+
+
+def _pphi_iter(a, times: int, power: int = 1):
+    for _ in range(times):
+        a = _pphi(a, power)
+    return a
+
+
+def _pabs(a):
+    return [abs(Q(v)) for v in a]
+
+
+def _ptrim(a):
+    a = [Q(v) for v in a]
+    while len(a) > 1 and a[-1] == 0:
+        a.pop()
+    return a
+
+
+def _peval(a, x):
+    out = Q(0)
+    for c in reversed(a):
+        out = out * x + c
+    return out
+
+
+def _double_factorial(m: int) -> int:
+    out = 1
+    while m > 1:
+        out *= m
+        m -= 2
+    return out
+
+
+def _bernstein_sup(c, width=Q(1), elevate: int = 40) -> Q:
+    """Upper bound for ``sup_{[0, width]} |P|``: the largest Bernstein coefficient after degree elevation."""
+
+    c = [Q(v) * Q(width)**i for i, v in enumerate(c)]
+    degree = len(c) - 1
+    top = degree + elevate
+    return max(abs(sum((Q(comb(j, i), comb(top, i)) * c[i] for i in range(min(j, degree) + 1)), Q(0)))
+               for j in range(top + 1))
+
+
+def gaussian_moment_bound(power: int, phi_power: int) -> Q:
+    """Upper bound for ``int |z|^power phi(z)^phi_power dz`` (``phi_power >= 1``).
+
+    Even ``power = 2i``: ``(2i-1)!! (2 pi)^{(1-a)/2} / (a^i sqrt(a))``; odd ``2i+1``: ``i! 2^{i+1} (2 pi)^{-a/2} / a^{i+1}``.
+    """
+
+    if type(power) is not int or power < 0 or type(phi_power) is not int or phi_power < 1:
+        raise ValueError("power must be >= 0 and phi_power >= 1")
+    a = phi_power
+    if power % 2 == 0:
+        i = power // 2
+        return _double_factorial(2 * i - 1) * INV_SQRT_2PI_UPPER**(a - 1) / (Q(a)**i * _sqrt_lo(a))
+    i = (power - 1) // 2
+    return factorial(i) * Q(2)**(i + 1) * INV_SQRT_2PI_UPPER**a / Q(a)**(i + 1)
+
+
+def gaussian_tail_bound(power: int, phi_power: int, start) -> Q:
+    """``int_A^oo z^k phi(z)^a dz <= A^k phi(A)^a / lambda``, ``lambda = aA - k/A`` (``k >= 0``) or ``aA`` (``k = -1``).
+
+    ``log(z^k phi^a)`` has derivative ``k/z - az <= -lambda`` on ``[A, oo)`` when ``a A^2 > k`` (for ``k = -1`` because
+    ``-1/z <= 0``), so the integrand is at most its value at ``A`` times ``exp(-lambda (z - A))``.
+    """
+
+    A = Q(start)
+    lam = phi_power * A - Q(power) / A if power >= 0 else phi_power * A
+    if A <= 0 or phi_power * A * A <= max(power, 0) or lam <= 0:
+        raise ValueError("tail start too small for this power")
+    return A**power * normal_density_bounds(A)[1]**phi_power / lam
+
+
+def gaussian_tail_sup_bound(power: int, phi_power: int, start) -> Q:
+    """``sup_{z >= A} z^k phi(z)^a = A^k phi(A)^a`` once ``a A^2 >= k`` (the function decreases there)."""
+
+    A = Q(start)
+    if A <= 0 or phi_power * A * A < power:
+        raise ValueError("tail start too small for this power")
+    return A**power * normal_density_bounds(A)[1]**phi_power
+
+
+def _falling(K: int, j: int) -> int:
+    out = 1
+    for i in range(j):
+        out *= K - i
+    return out
+
+
+class ExcessPolynomial:
+    """``H_K(u) = (K/2) u(1-u) - phi_K(u)`` with ``phi_K(u) = (1 - u^K - (1-u)^K)/2``; ``H_K = O(w^2)``, ``w = u(1-u)``.
+
+    Derivatives in closed form: ``H' = (K/2)(1 - 2u) + (K/2)(u^(K-1) - (1-u)^(K-1))``,
+    ``H'' = -K + (K(K-1)/2)(u^(K-2) + (1-u)^(K-2))`` and ``H^(j) = (K^(j)/2)(u^(K-j) + (-1)^j (1-u)^(K-j))`` for ``j >= 3``
+    (``K^(j)`` the falling factorial).  ``H_2 = H_3 = 0``, ``H_4 = w^2``, ``H_5 = (5/2) w^2``.
+    """
+
+    def __init__(self, candidates: int):
+        _candidates(candidates)
+        if candidates < 2:
+            raise ValueError("candidates must be at least 2")
+        self.K = candidates
+        self.w_coefficients = self._w_coefficients()
+        self.lambda0 = _bernstein_sup(self.w_coefficients[2:] or [Q(0)], Q(1, 4))      # sup |H| / w^2
+        self.lambda1 = _bernstein_sup(_pderiv(self.w_coefficients)[1:] or [Q(0)], Q(1, 4))   # sup |H'| / w
+
+    def _w_coefficients(self):
+        hw = [-c for c in tie_polynomial(self.K)] + [Q(0), Q(0)]
+        hw[1] += Q(self.K, 2)
+        return _ptrim(hw)
+
+    def u_coefficients(self):
+        K = self.K
+        out = [Q(comb(K, i) * (-1)**i, 2) for i in range(K + 1)]
+        out[0] -= Q(1, 2)
+        out[1] += Q(K, 2)
+        out[2] -= Q(K, 2)
+        out[K] += Q(1, 2)
+        return _ptrim(out)
+
+    def linear_part(self, j: int):
+        """``((c0, c1), c)``: ``H^(j) = c0 + c1 u + c (u^m + (-1)^j (1-u)^m)``, ``m = K - j``, for ``1 <= j <= K``."""
+
+        K = self.K
+        if j == 1:
+            return (Q(K, 2), Q(-K)), Q(K, 2)
+        if j == 2:
+            return (Q(-K), Q(0)), Q(_falling(K, 2), 2)
+        return (Q(0), Q(0)), Q(_falling(K, j), 2)
+
+    def value(self, j: int, u: Q) -> Q:
+        """``H^(j)(u)`` exactly from the closed form (``1 <= j <= K``)."""
+
+        (c0, c1), c = self.linear_part(j)
+        m = self.K - j
+        return c0 + c1 * u + c * (u**m + (-1)**j * (1 - u)**m)
+
+    def _interval_bound(self, j: int, lo: Q, hi: Q) -> Q:
+        if j > self.K:
+            return Q(0)
+        (c0, c1), c = self.linear_part(j)
+        m = self.K - j
+        lin_lo, lin_hi = sorted((c0 + c1 * lo, c0 + c1 * hi))
+        if j % 2 == 1:
+            pow_lo, pow_hi = lo**m - (1 - lo)**m, hi**m - (1 - hi)**m
+        else:
+            pow_lo, pow_hi = lo**m + (1 - hi)**m, hi**m + (1 - lo)**m
+        return max(abs(lin_lo + c * pow_lo), abs(lin_hi + c * pow_hi))
+
+    def derivative_bound(self, j: int, lo: Q, hi: Q) -> Q:
+        """``sup_{u in [lo, hi]} |H^(j)(u)|``, ``0 <= lo <= hi <= 1``, ``j >= 1``: the smaller of the interval form (linear part
+        and ``u^m - (1-u)^m`` -- increasing, odd ``j`` -- or ``u^m + (1-u)^m`` -- endpoint bounds, even ``j`` -- bounded
+        separately) and the mean-value form ``|H^(j)(centre)| + radius sup |H^(j+1)|``."""
+
+        if j > self.K:
+            return Q(0)
+        if j < 1:
+            raise ValueError("j must be at least 1 (H itself is bounded by lambda0 w^2)")
+        direct = self._interval_bound(j, lo, hi)
+        if hi == lo or j == self.K:
+            return direct
+        centre, radius = (lo + hi) / 2, (hi - lo) / 2
+        return min(direct, abs(self.value(j, centre)) + radius * self._interval_bound(j + 1, lo, hi))
+
+    def sup(self, j: int) -> Q:
+        """``sup_{[0,1]} |H^(j)|``."""
+
+        if j > self.K:
+            return Q(0)
+        if j == 0:
+            return self.lambda0 / 16
+        if j == 1:
+            return self.lambda1 / 4
+        if j == 2:
+            return max(self.derivative_bound(2, v, v) for v in (Q(0), Q(1, 2)))
+        return Q(_falling(self.K, j), 2) * (2 if j == self.K else 1)
+
+
+def excess_polynomial(candidates: int) -> list[Q]:
+    """Coefficients (in ``u``) of ``H_K(u) = (K/2) u(1-u) - phi_K(u)``."""
+
+    return ExcessPolynomial(candidates).u_coefficients()
+
+
+def _binomial_cdf_integers(items: int) -> list[int]:
+    partial, running = [], 0
+    for j in range(items + 1):
+        running += comb(items, j)
+        partial.append(running)
+    return partial
+
+
+def _centered_max_numerator(items: int, candidates: int) -> int:
+    """``2^{nK} M_n(K) = n 2^{nK-1} - sum_{m<n} G(m)^K``."""
+
+    partial = _binomial_cdf_integers(items)
+    return items * 2**(items * candidates - 1) - sum(g**candidates for g in partial[:-1])
+
+
+def margin_deficit(items: int, candidates: int) -> Q:
+    """``D_n(K) = 2n (M_{n+1}(K) - M_n(K)) - M_n(K) = M_n (rho_n - 1)``, exact (integer numerators)."""
+
+    _items(items)
+    _candidates(candidates)
+    n, K = items, candidates
+    now, nxt = _centered_max_numerator(n, K), _centered_max_numerator(n + 1, K)
+    return Q(2 * n * nxt - (2 * n + 1) * 2**K * now, 2**((n + 1) * K))
+
+
+def margin_deficit_from_excess(items: int, candidates: int) -> Q:
+    """The same ``D_n(K)`` from the identity ``sum_{m<n} H(F(m)) + 2n sum_m sum_k H^(2k)(mu_m) q_m^(2k) / (4^k (2k)!)``."""
+
+    _items(items)
+    H = ExcessPolynomial(candidates)
+    coeffs = H.u_coefficients()
+    derivatives = [coeffs]
+    for _ in range(candidates):
+        derivatives.append(_pderiv(derivatives[-1]))
+    cdf = [Q(g, 2**items) for g in _binomial_cdf_integers(items)]
+    first = sum((_peval(coeffs, cdf[m]) for m in range(items)), Q(0))
+    second, previous = Q(0), Q(0)
+    for m in range(items + 1):
+        mu, q = (previous + cdf[m]) / 2, cdf[m] - previous
+        for k in range(1, candidates // 2 + 1):
+            second += _peval(derivatives[2 * k], mu) * q**(2 * k) / (4**k * factorial(2 * k))
+        previous = cdf[m]
+    return first + 2 * items * second
+
+
+def midpoint_euler_maclaurin_check(max_degree: int = 5) -> bool:
+    """Exact check of ``sum_cells D h(c) = int h - (D^2/24)[h'] + (7 D^4/5760)[h''']`` for polynomials of degree <= 5.
+
+    The remainder is ``-int K_6 h^(6)`` with the kernel ``K_6 = D^6 k_6``, ``k_6(a) = 7a^2/11520 - a^4/576 + a^6/720`` in the
+    distance ``a`` to the cell edge, increasing on ``[0, 1/2]``, so ``0 <= K_6 <= D^6/15360``; it vanishes on quintics.
+    """
+
+    width, left, cells = Q(1, 3), Q(-2, 7), 5
+    right = left + cells * width
+    ok = True
+    for degree in range(max_degree + 1):
+        h = [Q(0)] * degree + [Q(1)]
+        antiderivative = [Q(0)] + [c / (i + 1) for i, c in enumerate(h)]
+        d1, d3 = _pderiv(h), _pderiv(_pderiv(_pderiv(h)))
+        lhs = sum((width * _peval(h, left + (i + Q(1, 2)) * width) for i in range(cells)), Q(0))
+        rhs = (_peval(antiderivative, right) - _peval(antiderivative, left)
+               - width**2 / 24 * (_peval(d1, right) - _peval(d1, left))
+               + 7 * width**4 / 5760 * (_peval(d3, right) - _peval(d3, left)))
+        ok &= lhs == rhs
+    kernel = [Q(0), Q(0), Q(7, 11520), Q(0), Q(-1, 576), Q(0), Q(1, 720)]
+    ok &= _peval(kernel, Q(1, 2)) == Q(1, 15360) and _peval(_pderiv(kernel), Q(1, 2)) == 0
+    ok &= _peval(_pderiv(_pderiv(kernel)), Q(0)) == Q(7, 5760)     # k_6'' = k_4 - mean(k_4), mean(k_4) = -7/5760
+    return ok
+
+
+class GaussianCells:
+    """Rigorous cell quadrature for ``W(z) = sum_g c_g |P_g(z)| phi(z)^{a_g} |U_g(Phi(z))|`` on ``[-L, L]`` plus tails.
+
+    Each cell carries an upper bound for ``phi`` and an enclosure of ``Phi`` (rounded outward to ``2^-64``).  On a cell
+    ``|P|`` is bounded by an integer Taylor shift at the centre (exact for polynomials), and ``|U|`` -- a derivative of
+    ``H_K``, optionally at points within ``widen`` of ``Phi`` -- by :meth:`ExcessPolynomial.derivative_bound`.
+    ``U = (H, 0, ...)`` uses ``|H| <= lambda0 w^2``.  Tails ``|z| > L`` use :func:`gaussian_tail_bound` with the sup of
+    ``|U|``; a group with ``a = 0`` must have ``U = H'`` and uses ``|H'(Phi)| <= lambda1 (1 - Phi(|z|)) <= lambda1 phi/|z|``.
+    """
+
+    def __init__(self, half_range: int = CELL_RANGE, per_unit: int = CELLS_PER_UNIT):
+        self.L, self.per_unit, self.width = Q(half_range), per_unit, Q(1, per_unit)
+        self.cells = []
+        count = 2 * half_range * per_unit
+        for i in range(count):
+            left = -self.L + i * self.width
+            right = left + self.width
+            nearest = Q(0) if left < 0 < right else min(abs(left), abs(right))
+            u_lo = _round_down(max(normal_cdf_bounds(left)[0], Q(0)))
+            u_hi = min(_round_up(normal_cdf_bounds(right)[1]), Q(1))
+            centre = 2 * i + 1 - 2 * half_range * per_unit      # centre = this / (2 per_unit)
+            self.cells.append((centre, _round_up(normal_density_bounds(nearest)[1]), u_lo, u_hi))
+        self._p, self._u = {}, {}
+
+    def poly_bounds(self, poly):
+        P = _ptrim(poly)
+        key = tuple(P)
+        if key not in self._p:
+            degree, den = len(P) - 1, 1
+            for c in P:
+                den = den * c.denominator // gcd(den, c.denominator)
+            scale = 2 * self.per_unit
+            base = [int(c * den) * scale**(degree - i) for i, c in enumerate(P)]   # P(y/scale) = base(y) / (den scale^d)
+            values = []
+            for centre, _, _, _ in self.cells:
+                b = list(base)
+                for i in range(degree):
+                    for j in range(degree - 1, i - 1, -1):
+                        b[j] += centre * b[j + 1]
+                values.append(_round_up(Q(sum(abs(v) for v in b), den * scale**degree)))
+            self._p[key] = values
+        return self._p[key]
+
+    def excess_bounds(self, H: ExcessPolynomial, j: int, widen: Q = Q(0)):
+        key = (H.K, j, widen)
+        if key not in self._u:
+            values = []
+            for _, _, u_lo, u_hi in self.cells:
+                lo, hi = max(Q(0), u_lo - widen), min(Q(1), u_hi + widen)
+                if j == 0:
+                    w = Q(1, 4) if lo <= Q(1, 2) <= hi else max(lo * (1 - lo), hi * (1 - hi))
+                    values.append(_round_up(H.lambda0 * w * w))
+                else:
+                    values.append(_round_up(H.derivative_bound(j, lo, hi)))
+            self._u[key] = values
+        return self._u[key]
+
+    def _values(self, groups):
+        total = [Q(0)] * len(self.cells)
+        for coef, P, a, U in groups:
+            pb = self.poly_bounds(P)
+            ub = self.excess_bounds(*U) if U is not None else None
+            for i, (_, phi_max, _, _) in enumerate(self.cells):
+                v = coef * pb[i] * phi_max**a
+                total[i] += v * ub[i] if ub is not None else v
+        return total
+
+    def _tail(self, groups, integral: bool):
+        out = Q(0)
+        for coef, P, a, U in groups:
+            sup_u = U[0].sup(U[1]) if U is not None else Q(1)
+            for k, c in enumerate(_ptrim(P)):
+                if not c:
+                    continue
+                if a >= 1:
+                    piece = 2 * gaussian_tail_bound(k, a, self.L) if integral else gaussian_tail_sup_bound(k, a, self.L)
+                    out += coef * abs(c) * sup_u * piece
+                else:
+                    if U is None or U[1] != 1:
+                        raise ValueError("a group without a Gaussian factor must be H'")
+                    piece = (2 * gaussian_tail_bound(k - 1, 1, self.L) if integral
+                             else gaussian_tail_sup_bound(k, 1, self.L) / self.L)
+                    out += coef * abs(c) * U[0].lambda1 * piece
+        return out
+
+    def integral(self, groups) -> Q:
+        return sum(self._values(groups), Q(0)) * self.width + self._tail(groups, True)
+
+    def sup(self, groups) -> Q:
+        return max(max(self._values(groups)), self._tail(groups, False))
+
+
+def _derivative_groups(groups):
+    """Majorant groups for ``|W'|``: ``|P'| phi^a |U| + a |zP| phi^a |U| + |P| phi^{a+1} |U'|`` (the moving window of a
+    widened ``U`` moves at speed ``phi``, so its sup changes at rate at most ``sup |U'| phi``)."""
+
+    out = []
+    for coef, P, a, U in groups:
+        out.append((coef, _pderiv(P), a, U))
+        if a:
+            out.append((coef * a, [Q(0)] + list(P), a, U))
+        if U is not None and U[1] + 1 <= U[0].K:
+            out.append((coef, P, a + 1, (U[0], U[1] + 1) + tuple(U[2:])))
+    return [g for g in out if any(g[1])]
+
+
+def _moment_bound(groups) -> Q:
+    """Crude: ``int sum c |P| phi^a |U(Phi)| <= sum c sup|U| sum_k |p_k| int |z|^k phi^a``."""
+
+    out = Q(0)
+    for coef, P, a, U in groups:
+        sup_u = U[0].sup(U[1]) if U is not None else Q(1)
+        out += coef * sup_u * sum((abs(c) * gaussian_moment_bound(k, a) for k, c in enumerate(P) if c), Q(0))
+    return out
+
+
+# the polynomials of the expansion (z = standardized grid point)
+EXPANSION_P = [Q(-1, 4), Q(0), Q(1, 2), Q(0), Q(-1, 12)]                        # q = D phi (1 + p/n + ...)
+EXPANSION_C2 = [Q(0), Q(0), Q(-1, 3), Q(0), Q(1, 4), Q(0), Q(-1, 30)]
+EXPANSION_P2 = _padd(EXPANSION_C2, _pscale(_pmul(EXPANSION_P, EXPANSION_P), Q(1, 2)))   # second-order term of q
+PSI_FACTOR = [Q(0), Q(-1, 12), Q(0), Q(1, 12)]                                   # psi = phi (z^3 - z)/12
+CHI_FACTOR = [Q(0), Q(-7, 12), Q(0), Q(1, 12)]                                   # chi = psi - z phi / 2
+
+
+def local_expansion_majorants(start: int = EFFECTIVE_START) -> dict[str, object]:
+    """Lemma L: for ``n >= start``, ``|z_j| <= tau sqrt(n)``: ``q_j = D phi(z_j) (1 + p/n + e_j)`` with
+    ``|e_j| <= (|p_2| + 1/18)/n^2 + e_3(z_j)/n^3`` and ``q_j <= D phi(z_j) Gamma``.
+
+    From Robbins (cited), ``log(q_j/(D phi)) = p/n + c_2/n^2 + rho_eps + eta_3``: ``-(n/2)(Lambda(t) - t^2)``,
+    ``-(1/2)log(1-t^2)`` (series with positive terms, tails ``<= z^8/(56 n^3 (1-t^2))``, ``z^6/(6 n^3 (1-t^2))``) and
+    ``r_n - r_j - r_{n-j} = -1/(4n) - z^2/(3n^2) - z^4/(3n^3(1-t^2)) + rho_eps`` with
+    ``-1/(144 n^2) < rho_eps < (1+t^2)/(18 n^2 (1-t^2)^2) <= (1/18 + eps_1 z^2/n)/n^2`` (chord of a convex function of ``t^2``).
+    Then ``e = e^a - 1 - p/n`` is expanded to second order, the cubic remainder carrying ``Gamma = e^{a_max/n}`` with
+    ``a <= (3 kappa^2/4 - 1/4)/n + c_eps/n^2``.  All majorants are even polynomials with non-negative coefficients.
+    """
+
+    N = Q(start)
+    tau = LOCAL_TAU
+    kappa = 1 / (1 - tau**2)
+    c_eps = (1 + tau**2) / (18 * (1 - tau**2)**2)
+    eps1 = (c_eps - Q(1, 18)) / tau**2
+    p_abs = _pabs(EXPANSION_P)
+    eta3 = [Q(0)] * 4 + [kappa / 3, Q(0), kappa / 6, Q(0), kappa / 56]
+    eta_bar = _padd(_padd(_pabs(EXPANSION_C2), [Q(1, 18)]), _pscale(_padd(eta3, [0, 0, eps1]), 1 / N))
+    a_max = (3 * kappa**2 - 1) / 4 + c_eps / N
+    gamma = 1 / (1 - a_max / N)
+    cube = _padd(p_abs, _pscale(eta_bar, 1 / N))
+    e3 = _padd(_padd(_padd([0, 0, eps1], eta3), _pmul(p_abs, eta_bar)), _pscale(_pmul(eta_bar, eta_bar), 1 / (2 * N)))
+    e3 = _ptrim(_padd(e3, _pscale(_pmul(_pmul(cube, cube), cube), gamma / 6)))
+    return {"tau": tau, "kappa": kappa, "eps1": eps1, "gamma": gamma, "p_abs": p_abs, "e3": e3}
+
+
+def cdf_and_midpoint_constants(start: int = EFFECTIVE_START, cells: GaussianCells | None = None) -> dict[str, object]:
+    """Lemma F (``|F_n(m) - Phi(b) - psi(b)/n| <= R_F/n^2`` for ``|b| <= sqrt(n)/2 - 4/sqrt(n)``) and Lemma M
+    (``|mu_m - Phi(z) - chi(z)/n| <= R_mu/n^2`` for ``|z| <= sqrt(n)/2 - 5/sqrt(n)``), ``n >= start``.
+
+    Lemma F: ``F(m) = sum_{j<j0} q_j + sum_{j0}^m D f(z_j) + sum_{j0}^m D phi e_j``, ``f = phi (1 + p/n)``; the midpoint
+    Euler-Maclaurin formula gives ``Phi(b) + phi(b)(b^3-3b)/(12n) - (1/6n) f'(b) + (7/(360 n^2)) f'''(b) - int K_6 f^(6)``,
+    i.e. ``Phi(b) + psi(b)/n`` plus ``[-(phi p)'(b)/6 + (7/360) phi'''(b)]/n^2``, terms of order ``n^-3``, the local errors
+    ``sum D phi |e_j|`` and tails (Chernoff ``e^{-n/8}``, Gaussian tails beyond ``sqrt(n)/2 - 1/sqrt(n)``).  Lemma M: average
+    Lemma F at ``z +- 1/sqrt(n)`` (Taylor: ``sup|phi'''|/24`` and ``sup|psi''|/2``).
+    """
+
+    cells = cells or GaussianCells()
+    N = Q(start)
+    rt = Q(isqrt(start))
+    if rt * rt != start or start < 100:
+        raise ValueError("start must be a perfect square >= 100")
+    loc = local_expansion_majorants(start)
+    one = [Q(1)]
+    p1 = _pphi(EXPANSION_P)
+    t3 = _pphi_iter(one, 3)
+    out = {}
+    out["leading_sup"] = cells.sup([(Q(1), _padd(_pscale(p1, Q(-1, 6)), _pscale(t3, Q(7, 360))), 1, None)])
+    p3, t6, p6 = _pphi_iter(EXPANSION_P, 3), _pphi_iter(one, 6), _pphi_iter(EXPANSION_P, 6)
+    out["third_order"] = (Q(7, 360) * cells.sup([(Q(1), p3, 1, None)])
+                          + (cells.integral([(Q(1), t6, 1, None)]) + cells.integral([(Q(1), p6, 1, None)]) / N) / 240) / N
+    step = 2 / rt
+    out["local_second_order"] = (cells.integral([(Q(1), EXPANSION_P2, 1, None)])
+                                 + step * cells.integral([(Q(1), _pphi(EXPANSION_P2), 1, None)]))
+    out["robbins_slack"] = Q(1, 18) * (1 + step * cells.integral([(Q(1), _pphi(one), 1, None)]))
+    e3 = loc["e3"]
+    out["local_third_order"] = (_moment_bound([(Q(1), e3, 1, None)]) + step * _moment_bound([(Q(1), _pabs(_pphi(e3)), 1, None)])) / N
+    A = rt / 2 - 1 / rt
+    f0 = _padd(one, _pscale(_pabs(EXPANSION_P), 1 / N))
+    f1 = _padd([0, 1], _pscale(_pabs(p1), 1 / N))
+    f3 = _padd(_pabs(t3), _pscale(_pabs(p3), 1 / N))
+    # n^2 [e^{-n/8} + int_A^oo |f| + |f'(l)|/(6n) + 7|f'''(l)|/(360 n^2)]: each term n^d A^k e^{-A^2/2}, decreasing for n >= start
+    out["tails"] = (N**2 * exp_neg_bounds(N / 8)[1]
+                    + N**2 * sum((c * gaussian_tail_bound(k, 1, A) for k, c in enumerate(f0) if c), Q(0))
+                    + N / 6 * sum((c * gaussian_tail_sup_bound(k, 1, A) for k, c in enumerate(f1) if c), Q(0))
+                    + Q(7, 360) * sum((c * gaussian_tail_sup_bound(k, 1, A) for k, c in enumerate(f3) if c), Q(0)))
+    out["R_F"] = sum((out[k] for k in ("leading_sup", "third_order", "local_second_order", "robbins_slack",
+                                       "local_third_order", "tails")), Q(0))
+    psi2 = _pphi_iter(PSI_FACTOR, 2)
+    out["R_mu"] = cells.sup([(Q(1), t3, 1, None)]) / 24 + cells.sup([(Q(1), psi2, 1, None)]) / 2 + out["R_F"]
+    out["psi_sup"] = cells.sup([(Q(1), PSI_FACTOR, 1, None)])
+    out["chi_sup"] = cells.sup([(Q(1), CHI_FACTOR, 1, None)])
+    out["local"] = loc
+    out["start"] = start
+    return out
+
+
+def _poisson_U(H: ExcessPolynomial, j: int, B: Q) -> Q:
+    """``sup |H^(j)(Phi(x + iy))| <= |c0| + |c1| B + 2 c B^m`` (``|Phi|, |1 - Phi| <= B`` on the strip)."""
+
+    (c0, c1), c = H.linear_part(j)
+    return abs(c0) + abs(c1) * B + 2 * c * B**(H.K - j)
+
+
+def poisson_strip_integral(terms, H: ExcessPolynomial | None = None, strip=Q(1)) -> Q:
+    """``sup_{|y| <= s} int |h(x + iy)| dx`` for ``h = sum c z^k phi^a H^(j)(Phi)`` (``j >= 1``): ``|phi(x+iy)| = phi(x) e^{y^2/2}``,
+    ``|Phi(x+iy)|, |1-Phi(x+iy)| <= B = 1 + s phi(0) e^{s^2/2}``, ``|z| <= |x| + s``."""
+
+    B = 1 + strip * INV_SQRT_2PI_UPPER * SQRT_E_UPPER**(strip * strip)
+    total = Q(0)
+    for coef, P, a, j in terms:
+        sup_u = _poisson_U(H, j, B) if j is not None else Q(1)
+        for k, c in enumerate(P):
+            if c:
+                moment = sum((comb(k, i) * strip**(k - i) * gaussian_moment_bound(i, a) for i in range(k + 1)), Q(0))
+                total += abs(coef) * abs(c) * sup_u * SQRT_E_UPPER**(a * strip * strip) * moment
+    return total
+
+
+def poisson_strip_integral_excess(H: ExcessPolynomial, strip=Q(1)) -> Q:
+    """Same for ``h = H(Phi)``: ``|w(Phi(x+iy))| <= B c_s phi(x)`` with ``c_s = sqrt(2 pi)/2 + s e^{s^2/2}`` (using
+    ``1 - Phi(x) <= e^{-x^2/2}/2`` for ``x >= 0``), and ``|H| <= |w|^2 sum_i |h_i| |w|^{i-2}``."""
+
+    B = 1 + strip * INV_SQRT_2PI_UPPER * SQRT_E_UPPER**(strip * strip)
+    t = B * (1 / (2 * INV_SQRT_2PI_LOWER) + strip * SQRT_E_UPPER**(strip * strip))
+    total = sum((abs(c) * (t * INV_SQRT_2PI_UPPER)**(i - 2) for i, c in enumerate(H.w_coefficients) if i >= 2), Q(0))
+    return t * t * total * gaussian_moment_bound(0, 2)
+
+
+def poisson_factor(start: int, strip=Q(1)) -> Q:
+    """``n^2 E/(1-E)``, ``E = exp(-pi s sqrt n)``, at ``n = start`` (decreasing beyond): Poisson summation (cited) turns a
+    grid sum of spacing ``2/sqrt n`` into ``(sqrt n/2) int h`` plus at most ``sqrt(n) J E/(1-E)``, ``J`` the strip integral."""
+
+    E = exp_neg_bounds(PI_LOWER * strip * _sqrt_lo(start))[1]
+    return Q(start)**2 * E / (1 - E)
+
+
+def second_order_margin_constant(candidates: int, start: int = EFFECTIVE_START, cells: GaussianCells | None = None,
+                                 base: dict | None = None) -> dict[str, object]:
+    """``C_K`` with ``|sqrt(n) D_n(K) - delta_K| <= C_K / n`` for every ``n >= start`` (exact rational upper bound).
+
+    Pieces (each a bound on ``n^{3/2}`` times an error of ``D_n``, valid for all ``n >= start``):
+    ``H1`` CDF error through ``H'(Phi)`` (``R_F int |H'(Phi)| / 2`` + BV term); ``H2`` the quadratic Taylor term of ``H``
+    (``|H''|`` within ``sup|psi|/n + R_F/n^2`` of ``Phi``); ``H3`` Poisson remainders of the two CDF-sum grid sums; ``L1`` the
+    ``k = 1`` local term (``q^2 = (4/n) phi^2 (1 + 2p/n + E_2)``, ``H''(mu) = H''(Phi) + H'''(Phi) chi/n + eps_H``); ``L2``
+    Poisson remainders of the three local grid sums; ``L3`` the ``k = 2`` local term; ``L5`` the ``k >= 3`` local terms
+    (``q^(2k) <= q_max^(2k-4) (D phi Gamma)^4``); ``tails`` everything outside the expansion regions (Chernoff and
+    Gaussian tails, ``e^{-n/8}`` scale).  Grid sums of non-negative majorants use ``sum h <= (sqrt n/2) int h + int |h'|``.
+    """
+
+    _candidates(candidates)
+    if candidates < 2:
+        raise ValueError("candidates must be at least 2")
+    cells = cells or GaussianCells()
+    base = base or cdf_and_midpoint_constants(start, cells)
+    if base["start"] != start:
+        raise ValueError("base constants were computed for another start")
+    N, rt = Q(start), Q(isqrt(start))
+    H = ExcessPolynomial(candidates)
+    K = candidates
+    R_F, R_mu, loc = base["R_F"], base["R_mu"], base["local"]
+    p_abs, e3, Gam = loc["p_abs"], loc["e3"], loc["gamma"]
+    one = [Q(1)]
+    d_mu = base["chi_sup"] / N + R_mu / N**2
+    d_F = base["psi_sup"] / N + R_F / N**2
+    out = {"candidates": K, "start": start}
+    out["H1"] = R_F * (cells.integral([(Q(1), one, 0, (H, 1))]) / 2 + cells.integral([(Q(1), one, 1, (H, 2))]) / rt)
+    psi_sq = [(Q(1), _pmul(PSI_FACTOR, PSI_FACTOR), 2, (H, 2, d_F))]
+    out["H2"] = cells.integral(psi_sq) / 2 + cells.integral(_derivative_groups(psi_sq)) / rt + H.sup(2) * R_F**2 / rt
+    factor = poisson_factor(start)
+    out["H3"] = (poisson_strip_integral_excess(H) + poisson_strip_integral([(Q(1), PSI_FACTOR, 1, 1)], H) / N) * factor
+    # k = 1 local term: n^2 times the error at a grid point is at most W(z_m)
+    ebar2 = _padd(_padd(_pabs(EXPANSION_P2), [Q(1, 18)]), _pscale(e3, 1 / N))
+    M_E = _padd(_padd(_pscale(e3, 2), _pscale(_pmul(p_abs, ebar2), 2)), _pscale(_pmul(ebar2, ebar2), 1 / N))
+    X2 = _pmul(CHI_FACTOR, CHI_FACTOR)
+    U3, U4 = (H, 3), (H, 4, d_mu)
+    fine = [(Q(2), _pmul(EXPANSION_P, CHI_FACTOR), 3, U3), (R_mu, one, 2, U3), (Q(1), X2, 4, U4),
+            (Q(2), EXPANSION_P2, 2, (H, 2)), (Q(1), _pmul(EXPANSION_P, EXPANSION_P), 2, (H, 2)), (Q(1, 9), one, 2, (H, 2))]
+    crude = [(2 * R_mu / N, _pabs(EXPANSION_P), 2, U3), (2 / N, _pabs(_pmul(EXPANSION_P, X2)), 4, U4),
+             (R_mu**2 / N**2, one, 2, U4), (2 * R_mu**2 / N**3, _pabs(EXPANSION_P), 2, U4), (1 / N, M_E, 2, (H, 2))]
+    for c, E in ((Q(2), _pabs(EXPANSION_P2)), (Q(1), _pmul(EXPANSION_P, EXPANSION_P)), (Q(1, 9), one), (1 / N, M_E)):
+        crude += [(c / N, _pmul(E, _pabs(CHI_FACTOR)), 3, U3), (c * R_mu / N**2, E, 2, U3),
+                  (c / N**2, _pmul(E, X2), 4, U4), (c * R_mu**2 / N**4, E, 2, U4)]
+    fine = [g for g in fine if g[3][1] <= K]
+    crude = [g for g in crude if g[3][1] <= K]
+    out["L1"] = (cells.integral(fine) / 2 + cells.integral(_derivative_groups(fine)) / rt
+                 + _moment_bound(crude) / 2 + _moment_bound([(c, _pabs(P), a, U) for c, P, a, U in _derivative_groups(crude)]) / rt)
+    two_p = _pscale(EXPANSION_P, 2)
+    J3 = poisson_strip_integral([(Q(1), one, 2, 2)], H)
+    J4 = poisson_strip_integral([(Q(1), two_p, 2, 2), (Q(1), CHI_FACTOR, 3, 3)], H)
+    J5 = poisson_strip_integral([(Q(1), one, 4, 4)], H) if K >= 4 else Q(0)
+    out["L2"] = (J3 + J4 / N + J5 / (12 * N)) * factor
+    # k = 2: per point (1/(12 n^2)) phi^4 [4 Gamma^3 (|p| + ebar2/N) |H''''| + |H^(5)| (phi |chi| + R_mu/N)]
+    fine2, crude2 = [], []
+    if K >= 4:
+        fine2 = [(4 * Gam**3, EXPANSION_P, 4, U4)]
+        crude2 = [(4 * Gam**3 / N, ebar2, 4, U4)]
+    if K >= 5:
+        U5 = (H, 5, d_mu)
+        fine2 += [(Q(1), CHI_FACTOR, 5, U5), (R_mu / N, one, 4, U5)]
+    out["L3"] = (cells.integral(fine2) / 2 + cells.integral(_derivative_groups(fine2)) / rt
+                 + _moment_bound(crude2) / 2
+                 + _moment_bound([(c, _pabs(P), a, U) for c, P, a, U in _derivative_groups(crude2)]) / rt) / 12 if fine2 else Q(0)
+    qmax2 = 2 / (PI_LOWER * (N - Q(1, 2)))
+    L5 = Q(0)
+    for k in range(3, K // 2 + 1):
+        Wk = [(Gam**4, one, 4, (H, 2 * k, d_mu))]
+        L5 += (16 * N / (4**k * factorial(2 * k)) * qmax2**(k - 2)
+               * (cells.integral(Wk) + 2 * cells.integral(_derivative_groups(Wk)) / rt))
+    out["L5"] = L5
+    out["tails"] = _margin_tails(H, start, base)
+    out["C_exact"] = sum((out[k] for k in ("H1", "H2", "H3", "L1", "L2", "L3", "L5", "tails")), Q(0))
+    out["C"] = ceil_decimal(out["C_exact"])
+    return out
+
+
+def _margin_tails(H: ExcessPolynomial, start: int, base: dict) -> Q:
+    """All pieces outside the expansion regions, ``n^{3/2}`` scale, bounded at ``n = start`` (each is ``c n^d A^k
+    e^{-a A^2/2}`` with ``A >= sqrt(n)/2 - 5/sqrt(n)``, decreasing for ``n >= start``).
+
+    (i) ``m < n`` with ``|b_m| > beta``: ``|H(F)| <= lambda0 e^{-beta^2}``, at most ``n`` terms.  (ii) Grid tails of the
+    CDF-sum approximants ``lambda0 (sqrt(pi/2) phi)^2`` and ``lambda1 sqrt(pi/2) phi^2 |psi factor| / n``.  (iii) Local
+    terms with ``|z_m| > gamma``: ``(n/4)|H''| q^2 + (n/192)|H''''| q^4 + sum_k ...`` is at most
+    ``[(n/4)|H''| q_max + (n/192)|H''''| q_max^3 + 2n sum_k |H^(2k)| q_max^(2k-1)/(4^k (2k)!)] q_m`` and
+    ``sum_tail q_m <= 2 e^{-gamma^2/2}``.  (iv) Grid tails of the local approximants.
+    """
+
+    N, rt = Q(start), Q(isqrt(start))
+    beta = rt / 2 - 4 / rt
+    gamma = rt / 2 - 5 / rt
+    K = H.K
+    cg = 1 / (2 * INV_SQRT_2PI_LOWER)
+    qmax = _sqrt_hi(2 / (PI_LOWER * (N - Q(1, 2))))
+    n32 = N * rt
+
+    def grid_tail(k, a, A):
+        # sum over grid points beyond A (both sides) of |y|^k phi^a <= 2 [A^k phi(A)^a + (sqrt n/2) int_A^oo]
+        return 2 * (gaussian_tail_sup_bound(k, a, A) + rt / 2 * gaussian_tail_bound(k, a, A))
+
+    out = n32 * N * H.lambda0 * exp_neg_bounds(beta * beta)[1]
+    out += n32 * (H.lambda0 * cg * cg * grid_tail(0, 2, beta)
+                  + H.lambda1 * cg / N * sum((abs(c) * grid_tail(k, 2, beta) for k, c in enumerate(PSI_FACTOR) if c), Q(0)))
+    local = N / 4 * H.sup(2) * qmax + N / 192 * H.sup(4) * qmax**3
+    for k in range(3, K // 2 + 1):
+        local += 2 * N * H.sup(2 * k) * qmax**(2 * k - 1) / (4**k * factorial(2 * k))
+    out += n32 * local * 2 * exp_neg_bounds(gamma * gamma / 2)[1]
+    approx = H.sup(2) * grid_tail(0, 2, gamma)
+    approx += sum((H.sup(2) * 2 * abs(c) * grid_tail(k, 2, gamma) for k, c in enumerate(EXPANSION_P) if c), Q(0)) / N
+    approx += sum((H.sup(3) * abs(c) * grid_tail(k, 3, gamma) for k, c in enumerate(CHI_FACTOR) if c), Q(0)) / N
+    approx += H.sup(4) * grid_tail(0, 4, gamma) / (12 * N)
+    out += n32 * approx
+    return out
+
+
+def second_order_delta(candidates: int) -> float:
+    """``delta_K = (1/2)[int H'(Phi) psi + int phi^2 (2p H''(Phi) + H'''(Phi) chi) + (1/12) int phi^4 H''''(Phi)]`` by the
+    module's Simpson rule (floats); it should equal ``c(K) E[M_K]/2 = (E[M_K^3] - (5/2) E[M_K])/12``.  Not used in the proof."""
+
+    H = ExcessPolynomial(candidates)
+    x, cdf, pdf = _gaussian_grid()
+    h = float(x[1] - x[0])
+
+    def derivative(j):
+        if j > H.K:
+            return np.zeros_like(x)
+        (c0, c1), c = H.linear_part(j)
+        m = H.K - j
+        return float(c0) + float(c1) * cdf + float(c) * (cdf**m + (-1)**j * (1 - cdf)**m)
+
+    p = -0.25 + x**2 / 2 - x**4 / 12
+    psi = pdf * (x**3 - x) / 12
+    chi = pdf * (x**3 - 7 * x) / 12
+    integrand = derivative(1) * psi + pdf**2 * (2 * p * derivative(2) + derivative(3) * chi) + pdf**4 * derivative(4) / 12
+    return 0.5 * _simpson(integrand, h)
+
+
+def effective_threshold_search(candidates: int, constant: Q, start: int = EFFECTIVE_START,
+                               limit: int = EFFECTIVE_SCAN_LIMIT) -> dict[str, object]:
+    """Smallest ``N0`` in ``[start, limit]`` with ``N0^3 D_{N0}^2 > 4 C^2`` and ``D_{N0} > 0``, scanning upward exactly.
+
+    Every scanned ``n`` also checks ``D_n > 0`` (so the scan is an exact sweep of ``rho_n > 1`` on ``[start, N0]``).
+    With ``|sqrt(n) D_n - delta| <= C/n`` for ``n >= start``: ``delta >= sqrt(N0) D_{N0} - C/N0 > C/N0``, hence
+    ``sqrt(n) D_n >= delta - C/n > 0`` for every ``n >= N0``.
+    """
+
+    _candidates(candidates)
+    constant = Q(constant)
+    if constant <= 0:
+        raise ValueError("constant must be positive")
+    _items(start)
+    _items(limit)
+    K = candidates
+    now = _centered_max_numerator(start, K)
+    for n in range(start, limit + 1):
+        nxt = _centered_max_numerator(n + 1, K)
+        d = Q(2 * n * nxt - (2 * n + 1) * 2**K * now, 2**((n + 1) * K))
+        if d <= 0:
+            return {"threshold": None, "first_nonpositive": n, "scanned_to": n}
+        if Q(n)**3 * d * d > 4 * constant * constant:
+            return {"threshold": n, "first_nonpositive": None, "scanned_to": n,
+                    "scaled_margin": float(d) * n**1.5 / (2 * float(constant))}
+        now = nxt
+    return {"threshold": None, "first_nonpositive": None, "scanned_to": limit}
+
+
+def certify_threshold(candidates: int, constant: Q, items: int) -> bool:
+    """One exact evaluation: ``n^3 D_n^2 > 4 C^2`` and ``D_n > 0`` at ``n = items`` (proves ``D_n > 0`` for all larger ``n``,
+    leaving ``[start, items)`` to an exact sweep)."""
+
+    d = margin_deficit(items, candidates)
+    return d > 0 and Q(items)**3 * d * d > 4 * Q(constant)**2
+
+
+def exact_rho_sweep(candidates: int, max_items: int) -> dict[str, object]:
+    """``D_n(K) > 0`` (i.e. ``rho_n > 1``) for ``n = 1..max_items``, integer arithmetic, each ``M_n`` computed once."""
+
+    _candidates(candidates)
+    _items(max_items)
+    K = candidates
+    previous = _centered_max_numerator(1, K)
+    failures, worst, worst_at = [], None, None
+    for n in range(1, max_items + 1):
+        nxt = _centered_max_numerator(n + 1, K)
+        num = 2 * n * nxt - (2 * n + 1) * 2**K * previous       # 2^{(n+1)K} D_n
+        if num <= 0:
+            failures.append(n)
+        rho = Q(2 * n * (nxt - 2**K * previous), 2**K * previous)
+        if worst is None or rho < worst:
+            worst, worst_at = rho, n
+        previous = nxt
+    return {"candidates": K, "max_items": max_items, "all_positive": not failures,
+            "first_failure": failures[0] if failures else None, "min_rho": float(worst), "min_rho_at": worst_at}
+
+
+def _square_root_of_items(items: int) -> int:
+    _items(items)
+    root = isqrt(items)
+    if root * root != items:
+        raise ValueError("items must be a perfect square (rational grid points)")
+    return root
+
+
+def cdf_remainder_check(items: int) -> Q:
+    """``max n^2 |F_n(m) - Phi(b_m) - psi(b_m)/n|`` over ``|b_m| <= sqrt(n)/2 - 4/sqrt(n)``, an exact upper bound from the
+    rational enclosures (perfect-square ``n``, so ``b_m`` is rational).  Lemma F says it is at most ``R_F`` for ``n >= 400``."""
+
+    root = _square_root_of_items(items)
+    beta = Q(root, 2) - Q(4, root)
+    worst, cdf = Q(0), _binomial_cdf_integers(items)
+    for m in range(items):
+        b = Q(2 * m + 1 - items, root)
+        if abs(b) > beta:
+            continue
+        F = Q(cdf[m], 2**items)
+        (c_lo, c_hi), (d_lo, d_hi) = normal_cdf_bounds(b), normal_density_bounds(b)
+        y = _peval(PSI_FACTOR, b)
+        p_lo, p_hi = sorted((d_lo * y, d_hi * y))
+        worst = max(worst, items**2 * max(abs(F - c_lo - p_lo / items), abs(F - c_hi - p_hi / items)))
+    return worst
+
+
+def midpoint_remainder_check(items: int) -> Q:
+    """``max n^2 |mu_m - Phi(z_m) - chi(z_m)/n|`` over ``|z_m| <= sqrt(n)/2 - 5/sqrt(n)`` (Lemma M: at most ``R_mu``)."""
+
+    root = _square_root_of_items(items)
+    gamma = Q(root, 2) - Q(5, root)
+    worst, cdf, previous = Q(0), _binomial_cdf_integers(items), 0
+    for m in range(items + 1):
+        z = Q(2 * m - items, root)
+        if abs(z) <= gamma:
+            mu = Q(previous + cdf[m], 2 * 2**items)
+            (c_lo, c_hi), (d_lo, d_hi) = normal_cdf_bounds(z), normal_density_bounds(z)
+            y = _peval(CHI_FACTOR, z)
+            x_lo, x_hi = sorted((d_lo * y, d_hi * y))
+            worst = max(worst, items**2 * max(abs(mu - c_lo - x_lo / items), abs(mu - c_hi - x_hi / items)))
+        previous = cdf[m]
+    return worst
+
+
+def local_remainder_check(items: int, start: int = EFFECTIVE_START) -> Q:
+    """``max n^2 (|e_j| - (|p_2| + 1/18)/n^2 - e_3/n^3)`` over ``|z_j| <= sqrt(n)/2``; Lemma L says it is ``<= 0``."""
+
+    root = _square_root_of_items(items)
+    if items < start:
+        raise ValueError("Lemma L is stated for items >= start")
+    e3 = local_expansion_majorants(start)["e3"]
+    worst = None
+    for j in range(items + 1):
+        z = Q(2 * j - items, root)
+        if abs(z) > Q(root, 2):
+            continue
+        q = Q(comb(items, j), 2**items)
+        d_lo, d_hi = normal_density_bounds(z)
+        step = Q(2, root)
+        p = _peval(EXPANSION_P, z)
+        e_far = max(abs(q / (step * d_hi) - 1 - p / items), abs(q / (step * d_lo) - 1 - p / items))
+        bound = (abs(_peval(EXPANSION_P2, z)) + Q(1, 18)) / items**2 + _peval(e3, z) / items**3
+        excess = items**2 * (e_far - bound)
+        worst = excess if worst is None else max(worst, excess)
+    return worst
+
+
 # --- fixtures ------------------------------------------------------------------------
 
 def tie_rule_fixture() -> dict[str, object]:
@@ -1517,10 +2458,129 @@ def wide_sweep_fixture() -> dict[str, object]:
             "huge_min_margin": min(r["min_margin"] for r in huge.values())}
 
 
+def excess_identity_fixture(max_items: int = 12) -> dict[str, object]:
+    """Version 0.4 algebra: the excess identity for ``D_n(K)``, ``H_4 = w^2``, ``H_5 = (5/2) w^2`` (so ``D_n(5) = (5/2) D_n(4)``),
+    ``K = 8`` not reducible to ``K = 2, 4``, the midpoint Euler-Maclaurin formula and the rational enclosures."""
+
+    identity = all(margin_deficit(n, k) == margin_deficit_from_excess(n, k)
+                   for n in range(1, max_items + 1) for k in (2, 3, 4, 5, 6, 7, 8, 11))
+    w_squared = [Q(0), Q(0), Q(1), Q(-2), Q(1)]
+    excess_named = (excess_polynomial(2) == [0] and excess_polynomial(3) == [0] and excess_polynomial(4) == w_squared
+                    and excess_polynomial(5) == _pscale(w_squared, Q(5, 2)))
+    five_is_four = all(margin_deficit(n, 5) == Q(5, 2) * margin_deficit(n, 4) for n in range(1, 61))
+    a_fit = [[centered_max(1, 4), centered_max(1, 2)], [centered_max(2, 4), centered_max(2, 2)]]
+    y_fit = [centered_max(1, 8), centered_max(2, 8)]
+    det = a_fit[0][0] * a_fit[1][1] - a_fit[0][1] * a_fit[1][0]
+    a = (y_fit[0] * a_fit[1][1] - a_fit[0][1] * y_fit[1]) / det
+    b = (a_fit[0][0] * y_fit[1] - y_fit[0] * a_fit[1][0]) / det
+    eight_not_reducible = all(centered_max(n, 8) != a * centered_max(n, 4) + b * centered_max(n, 2) for n in range(3, 9))
+    samples = [Q(0), Q(1, 7), Q(-3, 4), Q(2), Q(-5, 2), Q(37, 10), Q(-6), Q(13, 2), Q(-9)]
+    brackets, widths = True, []
+    for t in samples:
+        e_lo, e_hi = exp_neg_bounds(t * t / 2)
+        c_lo, c_hi = normal_cdf_bounds(t)
+        brackets &= e_lo <= exp(-float(t)**2 / 2) * (1 + 1e-12) and exp(-float(t)**2 / 2) * (1 - 1e-12) <= e_hi
+        brackets &= c_lo <= 0.5 * erfc(-float(t) / sqrt(2)) + 1e-15 and 0.5 * erfc(-float(t) / sqrt(2)) - 1e-15 <= c_hi
+        widths.append(float(c_hi - c_lo))
+    return {"identity_n_le_max": identity, "max_items": max_items, "excess_polynomials_named": excess_named,
+            "margin_five_is_five_halves_of_four_n_le_60": five_is_four,
+            "M8_fit_on_n_1_2": (a, b), "M8_not_a_combination_of_M4_M2": eight_not_reducible,
+            "euler_maclaurin_exact": midpoint_euler_maclaurin_check(),
+            "enclosures_bracket_floats": brackets, "cdf_enclosure_widths": widths,
+            "cdf_enclosures_tight_for_abs_t_le_6": all(w < 1e-12 for w, t in zip(widths, samples) if abs(t) <= 6)}
+
+
+def effective_lemma_fixture(sizes: tuple[int, ...] = (400, 900), cells: GaussianCells | None = None,
+                            base: dict | None = None) -> dict[str, object]:
+    """Lemmas L, F, M at perfect-square ``n``: observed remainders (exact upper bounds) against the proved constants."""
+
+    cells = cells or GaussianCells()
+    base = base or cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    rows, hold = {}, True
+    for n in sizes:
+        cdf, mid, loc = cdf_remainder_check(n), midpoint_remainder_check(n), local_remainder_check(n)
+        hold &= cdf <= base["R_F"] and mid <= base["R_mu"] and loc <= 0
+        rows[f"n={n}"] = {"cdf_remainder_scaled": ceil_decimal(cdf, 9), "midpoint_remainder_scaled": ceil_decimal(mid, 9),
+                          "local_excess_scaled": ceil_decimal(loc, 9)}
+    pieces = {key: ceil_decimal(base[key], 9) for key in ("leading_sup", "third_order", "local_second_order", "robbins_slack",
+                                                         "local_third_order", "tails")}
+    return {"R_F": ceil_decimal(base["R_F"]), "R_mu": ceil_decimal(base["R_mu"]), "R_F_pieces": pieces, "rows": rows,
+            "lemmas_hold": hold}
+
+
+def effective_theorem_fixture(candidates: tuple[int, ...] = EFFECTIVE_CANDIDATES, wide: dict | None = None,
+                              scan_limit: int = EFFECTIVE_SCAN_LIMIT, cells: GaussianCells | None = None,
+                              base: dict | None = None) -> dict[str, object]:
+    """Per ``K``: ``C_K`` at ``N1 = 400``, the exact threshold scan from 400, and the verdict.
+
+    The theorem for ``K`` (``rho_n(K) >= 1``, hence ``a_n(K)^2`` strictly increasing, for every ``n >= 1``) needs the
+    exact sweep ``rho_n >= 1`` for ``n <= 400`` (taken from ``wide`` when given, else :func:`exact_rho_sweep`), ``D_n > 0`` on
+    the scanned ``[400, N0]``, and ``N0^3 D_{N0}^2 > 4 C_K^2``.
+    """
+
+    cells = cells or GaussianCells()
+    base = base or cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    rows = {}
+    for k in candidates:
+        constant = second_order_margin_constant(k, EFFECTIVE_START, cells, base)
+        search = effective_threshold_search(k, constant["C"], EFFECTIVE_START, scan_limit)
+        if wide is not None and f"K={k}" in wide:
+            below = wide[f"K={k}"]["rho_at_least_one"] and wide[f"K={k}"]["max_items"] >= EFFECTIVE_START
+        else:
+            below = exact_rho_sweep(k, EFFECTIVE_START)["all_positive"]
+        rows[f"K={k}"] = {"candidates": k, "C": constant["C"],
+                          "pieces": {key: float(constant[key]) for key in ("H1", "H2", "H3", "L1", "L2", "L3", "L5", "tails")},
+                          "threshold": search["threshold"], "scaled_margin_at_threshold": search.get("scaled_margin"),
+                          "first_nonpositive": search["first_nonpositive"], "exact_below_400": below,
+                          "theorem_all_n": search["threshold"] is not None and below}
+    return {"start": EFFECTIVE_START, "rows": rows, "all_theorems": all(r["theorem_all_n"] for r in rows.values()),
+            "closed_at_start": [r["candidates"] for r in rows.values() if r["threshold"] == EFFECTIVE_START],
+            "thresholds": {key: r["threshold"] for key, r in rows.items()}}
+
+
+def effective_consistency_fixture(theorem: dict, candidates: tuple[int, ...] = (4, 10, 20),
+                                  sizes: tuple[int, ...] = (400, 900)) -> dict[str, object]:
+    """Floats, under the quadrature tolerance: ``delta_K`` matches ``c(K) E[M_K]/2`` and ``|sqrt(n) D_n - delta_K| <= C_K/n``."""
+
+    deltas = {}
+    for k in sorted({int(key[2:]) for key in theorem["rows"]}):
+        d = second_order_delta(k)
+        target = (gaussian_max_moment(k, 3) - 2.5 * gaussian_max_moment(k, 1)) / 12
+        deltas[f"K={k}"] = {"delta": d, "c_K_half_E_M_K": target, "agree": abs(d - target) <= DELTA_TOLERANCE}
+    rows = {}
+    for k in candidates:
+        C = float(theorem["rows"][f"K={k}"]["C"])
+        for n in sizes:
+            scaled = (float(margin_deficit(n, k)) * sqrt(n) - deltas[f"K={k}"]["delta"]) * n
+            rows[f"K={k},n={n}"] = {"n_times_deviation": scaled, "C_K": C, "within": abs(scaled) <= C}
+    return {"deltas": deltas, "deviations": rows,
+            "deltas_agree": all(r["agree"] for r in deltas.values()),
+            "deviations_within_C": all(r["within"] for r in rows.values())}
+
+
+def heavy_effective_fixture(cells: GaussianCells | None = None, base: dict | None = None) -> dict[str, object]:
+    """``verify(heavy=True)``: full theorems for ``HEAVY_EFFECTIVE_CANDIDATES`` (exact sweeps to 400 and scans to ``N0``) and,
+    for ``HEAVY_TAIL_CANDIDATES``, ``D_n > 0`` for ``n >= N0`` with ``N0`` certified by one exact evaluation (the range
+    ``(400, N0)`` is then not checked)."""
+
+    cells = cells or GaussianCells()
+    base = base or cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    full = effective_theorem_fixture(HEAVY_EFFECTIVE_CANDIDATES, None, HEAVY_SCAN_LIMIT, cells, base)
+    tails = {}
+    for k in HEAVY_TAIL_CANDIDATES:
+        constant = second_order_margin_constant(k, EFFECTIVE_START, cells, base)["C"]
+        guess = max(EFFECTIVE_START, int(2 * float(constant) / second_order_delta(k)) + 1)
+        tails[f"K={k}"] = {"C": constant, "N0": guess, "certified": certify_threshold(k, constant, guess),
+                           "exact_below_400": exact_rho_sweep(k, EFFECTIVE_START)["all_positive"]}
+    return {"full": full, "tails": tails,
+            "all_passed": full["all_theorems"] and all(r["certified"] and r["exact_below_400"] for r in tails.values())}
+
+
 # --- verification ----------------------------------------------------------------------
 
-def verify() -> dict[str, object]:
-    """Run every fixture and return machine-readable checks."""
+def verify(heavy: bool = False) -> dict[str, object]:
+    """Run every fixture and return machine-readable checks (``heavy=True`` adds the ``K = 31..40`` scans and the
+    ``K = 41..50`` certified tails, several minutes more)."""
 
     ties = tie_rule_fixture()
     records = record_fixture()
@@ -1543,6 +2603,13 @@ def verify() -> dict[str, object]:
     steps = step_ratio_fixture()
     margins = margin_limit_fixture()
     sweeps = wide_sweep_fixture()
+    excess = excess_identity_fixture()
+    cells = GaussianCells()
+    base = cdf_and_midpoint_constants(EFFECTIVE_START, cells)
+    lemmas = effective_lemma_fixture(cells=cells, base=base)
+    effective = effective_theorem_fixture(EFFECTIVE_CANDIDATES, sweeps["wide"], EFFECTIVE_SCAN_LIMIT, cells, base)
+    consistency = effective_consistency_fixture(effective)
+    heavy_run = heavy_effective_fixture(cells, base) if heavy else None
     c_values = [gauss["rows"][f"K={k}"]["c_K"] for k in GAUSSIAN_CANDIDATES]
     full_sweeps = list(mono["full"].values())
     broad_sweeps = list(mono["broad"].values())
@@ -1633,17 +2700,59 @@ def verify() -> dict[str, object]:
         "F_richardson_matches_gaussian_margin_limit_K_4_to_100": sweeps["wide_max_relative_fit_residual"] <= MARGIN_FIT_TOLERANCE,
         "F_global_min_margin_at_K_4_n_400_and_margins_at_n_400_above_their_limits": sweeps["wide_global_min_margin_K"] == 4
             and sweeps["wide_global_min_margin_at"] == WIDE_SWEEP_ITEMS and sweeps["wide_margin_at_max_items_above_gaussian_limit"],
+        "G_excess_identity_D_n_equals_H_sum_plus_local_terms_n_le_12": excess["identity_n_le_max"]
+            and excess["excess_polynomials_named"],
+        "G_midpoint_euler_maclaurin_formula_and_K6_kernel_exact": excess["euler_maclaurin_exact"],
+        "G_rational_enclosures_of_exp_and_Phi_bracket_floats": excess["enclosures_bracket_floats"]
+            and excess["cdf_enclosures_tight_for_abs_t_le_6"],
+        "G_lemmas_L_F_M_hold_exactly_at_n_400_and_900": lemmas["lemmas_hold"],
+        "G_delta_K_quadrature_equals_c_K_E_M_K_over_2_K_4_to_30": consistency["deltas_agree"],
+        "G_sqrt_n_D_n_within_C_K_over_n_of_delta_K_at_n_400_900": consistency["deviations_within_C"],
+        "G_threshold_at_n_400_for_K_4_to_25_and_by_n_500_for_K_26_to_30": effective["closed_at_start"] == list(range(4, 26))
+            and all(t is not None and t <= 500 for t in effective["thresholds"].values()),
+        "G_theorem_rho_n_ge_1_for_every_n_K_4_to_30": effective["all_theorems"],
+        "G_K_5_margin_is_five_halves_of_K_4_and_K_8_does_not_reduce": excess["margin_five_is_five_halves_of_four_n_le_60"]
+            and excess["M8_not_a_combination_of_M4_M2"],
     }
+    if heavy:
+        checks["G_heavy_theorem_K_31_to_40_and_certified_tails_K_41_to_50"] = heavy_run["all_passed"]
+    rows4 = effective["rows"]["K=4"]
+    headline_v0_4 = {
+        "verdict": {"K=2,3": "theorem (closed forms)",
+                    "K=4..30": "theorem for every n: |sqrt(n) D_n - delta_K| <= C_K/n for n >= 400, threshold N0 checked exactly, "
+                               "exact rho_n >= 1 below",
+                    "K=5": "equivalent to K=4 (D_n(5) = (5/2) D_n(4))",
+                    "K=31..40": "theorem with verify(heavy=True) (exact scans to N0 <= 800)",
+                    "K=41..50": "D_n > 0 for n >= N0 (certified, heavy run) and for n <= 400 (exact); (400, N0) unchecked",
+                    "K=51..100": "exact for n <= 400; the expansion holds for every K with a computable C_K (not run here, "
+                                 "large through the Poisson terms); delta_K > 0 by quadrature only",
+                    "K=200,500,1000,10000": "exact for n <= 60 only"},
+        "R_F": lemmas["R_F"], "R_mu": lemmas["R_mu"], "R_F_pieces": lemmas["R_F_pieces"],
+        "observed_remainders": lemmas["rows"],
+        "C_K": {key: r["C"] for key, r in effective["rows"].items()},
+        "thresholds": effective["thresholds"],
+        "scaled_margin_at_threshold": {key: r["scaled_margin_at_threshold"] for key, r in effective["rows"].items()},
+        "K4_pieces": rows4["pieces"],
+        "delta_K": {key: r["delta"] for key, r in consistency["deltas"].items()},
+        "deviations": consistency["deviations"]}
+    if heavy:
+        headline_v0_4["heavy"] = {"C_K": {key: r["C"] for key, r in heavy_run["full"]["rows"].items()},
+                                  "thresholds": heavy_run["full"]["thresholds"],
+                                  "tails": heavy_run["tails"]}
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "tolerances": {"log_and_sqrt": LOG_TOLERANCE, "kl_ball_supremum": SUPREMUM_TOLERANCE,
                            "gaussian_quadrature": QUADRATURE_TOLERANCE, "stop_loss_margin": STOP_LOSS_MARGIN},
             "grid": {"items": GRID_ITEMS, "candidates": GRID_CANDIDATES, "p": GRID_P, "cells": len(grid)},
+            "heavy": heavy,
             "monotonicity": {"items": MONOTONE_ITEMS, "candidates": MONOTONE_CANDIDATES,
                              "sweep_items": SWEEP_ITEMS, "sweep_candidates": SWEEP_CANDIDATES,
                              "large": (LARGE_CANDIDATES, LARGE_ITEMS),
                              "wide": (WIDE_SWEEP_CANDIDATES[0], WIDE_SWEEP_CANDIDATES[-1], WIDE_SWEEP_ITEMS),
                              "huge": (HUGE_SWEEP_CANDIDATES, HUGE_SWEEP_ITEMS)},
+            "effective": {"start": EFFECTIVE_START, "candidates": EFFECTIVE_CANDIDATES, "scan_limit": EFFECTIVE_SCAN_LIMIT,
+                          "local_tau": LOCAL_TAU, "cells": (CELL_RANGE, CELLS_PER_UNIT), "delta_tolerance": DELTA_TOLERANCE},
+            "headline_v0_4": headline_v0_4,
             "headline_v0_3": {
                 "verdict": {"K=2": "theorem", "K=3": "theorem",
                             "K>=4": "exact on K=4..100 (n<=400) and K=200,500,1000,10000 (n<=60); limit margin c(K)>0 by Edgeworth; unproved"},
@@ -1690,4 +2799,8 @@ def verify() -> dict[str, object]:
             "uniform_supports": uniform, "mad": mad, "pair_theorem": pair, "odd_candidates": odd,
             "tie_increment": ties_increment, "monotonicity_sweeps": mono, "convex_order": convex,
             "exact_kl_ratio": exact_kl, "profile": profile, "tie_masses": tie_masses, "step_ratios": steps,
-            "margin_limits": margins, "wide_sweeps": sweeps}
+            "margin_limits": margins, "wide_sweeps": sweeps,
+            "excess_identity": excess, "effective_lemmas": lemmas,
+            "effective_theorem": {"start": effective["start"], "thresholds": effective["thresholds"],
+                                  "rows": {key: {k2: v for k2, v in r.items()} for key, r in effective["rows"].items()}},
+            "effective_consistency": consistency}
