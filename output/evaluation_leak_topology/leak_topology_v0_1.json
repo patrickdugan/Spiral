@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1",
-  "generated_at_utc": "2026-10-14T04:27:04.932966+00:00",
+  "generated_at_utc": "2026-10-14T05:28:37.766835+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
     "bareiss_rank_agrees_with_fraction_elimination": true,
@@ -1308,7 +1308,7 @@
   "source_sha256": {
     "scripts/verify_evaluation_leak_topology.py": "9d3f644d3025ef4c194f05b500b0e3df6e1e934acf17477abaaebc288fb52121",
     "src/spiral_ln/evaluation_leak_topology.py": "2f32ce39f9748a7573ad92bd9245eaf6b645a3477817ce92d8656702fd2413ff",
-    "src/spiral_ln/evaluation_feedback_lattice.py": "0d0dc58cecb37139a012f41832833b3efe02e439a6129a81d728a6f5ea65d4fb",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "7ab7b28ba261851b97fe7e972ab3eb78c01df79146eb283caf4f24f25a049966",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }
