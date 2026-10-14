@@ -42,9 +42,12 @@ that reveal more than a score and less than the items.
     every patch are solved exactly by dynamic programming on category counts:
     the greedy one, and the optimal one, which is monotone along refinement
     because a finer-informed loop can imitate any coarser policy.  With one
-    hit needed the optimum is the best finisher, ``min_c (n_c+1)/(F_c+1)``,
-    in closed form; greedy by rate is optimal when every failure must be hit
-    and not in general, not even at one hit.
+    hit needed the optimum is the best finisher, ``(n_c+1)/(F_c+1)``
+    minimized over the categories with ``F_c >= 1``, in closed form; greedy by rate is optimal when every failure must be hit
+    and not in general, not even at one hit.  With two hits needed the
+    optimum commits to one category until it hits and is again a closed
+    form, computable in time linear in the item count; committing until a
+    hit is optimal at every state exactly when at most two hits are needed.
 
 4.  ``audit_category_ledger`` wraps ``audit_ledger`` with a
     ``category_feedback`` event kind that records the partition used.
@@ -64,7 +67,7 @@ from dataclasses import dataclass
 from fractions import Fraction as Q
 from functools import lru_cache
 from itertools import combinations_with_replacement, product
-from math import ceil, lcm
+from math import ceil, comb, floor, lcm
 
 from spiral_ln.evaluation_game_feedback import (
     EvalSet, LoopEvent, access_kernel, audit_ledger, ceiling_detection_threshold,
@@ -879,16 +882,20 @@ def greedy_vs_optimal_fixture(items: int = 6) -> dict[str, object]:
     }
 
 
-def adaptive_states(max_size: int, max_categories: int) -> tuple:
+def adaptive_states(max_size: int, max_categories: int, max_failures: int | None = None) -> tuple:
     """Every state the adaptive schedule can face with at most
-    ``max_categories`` categories of size at most ``max_size``: a sorted
-    multiset of ``(size, failures)`` pairs with ``1 <= failures <= size`` and
-    a requirement from one hit up to every failure."""
+    ``max_categories`` categories of size at most ``max_size`` (and, when
+    given, at most ``max_failures`` failures each): a sorted multiset of
+    ``(size, failures)`` pairs with ``1 <= failures <= size`` and a
+    requirement from one hit up to every failure."""
 
     if (type(max_size) is not int or type(max_categories) is not int
             or max_size < 1 or max_categories < 1):
         raise ValueError("max_size and max_categories must be positive integers")
-    pairs = [(size, failures) for size in range(1, max_size + 1) for failures in range(1, size + 1)]
+    if max_failures is not None and (type(max_failures) is not int or max_failures < 1):
+        raise ValueError("max_failures must be a positive integer")
+    cap = max_size if max_failures is None else max_failures
+    pairs = [(size, failures) for size in range(1, max_size + 1) for failures in range(1, min(size, cap) + 1)]
     states = []
     for count in range(1, max_categories + 1):
         for combo in combinations_with_replacement(pairs, count):
@@ -931,15 +938,22 @@ def preference_reversals(max_size: int, max_categories: int, context: str = "own
     context an index rule may see) such that patching ``A`` before ``B`` is
     strictly better in one state and strictly worse in another.
 
-    One reversal defeats every index rule that scores a category by its own
-    ``(size, failures)``, the requirement, and that context, since such a rule
-    ranks ``A`` against ``B`` the same way in both states.
+    A reversal by itself refutes nothing: in the better-for-``A`` state some
+    third category may tie with ``A`` for the optimum, and a rule that ranks
+    that category first is optimal there.  A pair *refutes* every index rule
+    that scores a category by its own ``(size, failures)``, the requirement
+    and that context (ties broken by any fixed order on those inputs) when
+    ``A`` is the unique optimal first patch of one state containing ``B`` and
+    ``B`` is the unique optimal first patch of another containing ``A``, both
+    with the same requirement and context: an optimal rule would have to
+    rank ``A`` above ``B`` in the first and ``B`` above ``A`` in the second.
     """
 
     if context not in INDEX_CONTEXTS:
         raise ValueError("unknown index context")
     states = adaptive_states(max_size, max_categories)
     seen: dict = {}
+    unique: dict = {}
     for required, state in states:
         values = first_patch_values(required, state)
         distinct = sorted(values)
@@ -948,6 +962,13 @@ def preference_reversals(max_size: int, max_categories: int, context: str = "own
                 sign = (values[first] > values[second]) - (values[first] < values[second])
                 key = (first, second, required) + _index_context(context, state)
                 seen.setdefault(key, {}).setdefault(sign, (state, values[first], values[second]))
+        best = min(values.values())
+        optimal = [c for c in distinct if values[c] == best]
+        if len(optimal) == 1:
+            for other in distinct:
+                if other != optimal[0]:
+                    key = (optimal[0], other, required) + _index_context(context, state)
+                    unique.setdefault(key, (state, best, values[other]))
     reversals = []
     for key, by_sign in seen.items():
         if 1 in by_sign and -1 in by_sign:
@@ -957,9 +978,21 @@ def preference_reversals(max_size: int, max_categories: int, context: str = "own
                 "B_first_better_in": by_sign[1][0], "B_first_values": by_sign[1][1:],
             })
     reversals.sort(key=lambda row: (row["hits_needed"], row["A"], row["B"], row["context"]))
+    refuting = []
+    for key, row in unique.items():
+        a, b = key[0], key[1]
+        mirrored = (b, a) + key[2:]
+        if a < b and mirrored in unique:
+            refuting.append({
+                "A": a, "B": b, "hits_needed": key[2], "context": key[3:],
+                "A_uniquely_optimal_in": row[0], "A_values": row[1:],
+                "B_uniquely_optimal_in": unique[mirrored][0], "B_values": unique[mirrored][1:],
+            })
+    refuting.sort(key=lambda row: (row["hits_needed"], row["A"], row["B"], row["context"]))
     return {"max_size": max_size, "max_categories": max_categories, "context": context,
             "states": len(states), "reversals": len(reversals),
-            "first": reversals[0] if reversals else None}
+            "first": reversals[0] if reversals else None,
+            "refuting_pairs": len(refuting), "first_refuting": refuting[0] if refuting else None}
 
 
 def two_patch_value(hits_needed: int, state: tuple, first: tuple, second: tuple) -> Q:
@@ -1048,7 +1081,10 @@ def policy_structure_fixture(max_size: int = 5, max_categories: int = 4) -> dict
 
 
 def one_hit_value(categories) -> Q:
-    """Exact minimum expected patches to one hit: ``min_c (n_c + 1)/(F_c + 1)``.
+    """Exact minimum expected patches to one hit: ``min (n_c + 1)/(F_c + 1)``
+    over the categories with ``F_c >= 1``.  Read over every category the
+    formula is wrong: ``{(1,0),(10,1)}`` costs 11/2, not 2.  Patching a
+    category without failures only wastes a patch.
 
     A miss in a category lowers that category's value from ``(n+1)/(F+1)``
     to ``n/(F+1)``, so the best finisher stays best and an optimal policy
@@ -1083,7 +1119,15 @@ def one_hit_fixture(max_size: int = 8, max_categories: int = 4) -> dict[str, obj
         for state in states)
     witness_state = ((2, 1), (16, 9))
     witness = first_patch_values(1, witness_state)
+    spent = ((1, 0), (10, 1))
     return {"states": len(states), "closed_form_mismatches": mismatches,
+            "zero_failure_category_excluded": {
+                "state": spent, "value": one_hit_value(spent),
+                "dynamic_programme": optimal_adaptive_value(spent, 1),
+                "minimum_over_every_category": min(Q(n + 1, f + 1) for n, f in spent),
+                "holds": one_hit_value(spent) == optimal_adaptive_value(spent, 1) == Q(11, 2)
+                         and min(Q(n + 1, f + 1) for n, f in spent) == 2,
+            },
             "best_finisher_not_optimal_first": wrong_first,
             "rate_versus_finisher_witness": {
                 "state": witness_state, "values": _render_values(witness),
@@ -1124,13 +1168,15 @@ def commit_until_hit_value(categories, hits_needed: int) -> Q:
     return _commit_value(hits_needed, _adaptive_state(categories, hits_needed))
 
 
-def commit_until_hit_fixture(max_size: int = 7, max_categories: int = 3) -> dict[str, object]:
+def commit_until_hit_fixture(max_size: int = 7, max_categories: int = 3,
+                             max_failures: int | None = None) -> dict[str, object]:
     """Where committing to a category until it hits is not optimal, and by how much."""
 
-    states = adaptive_states(max_size, max_categories)
+    states = adaptive_states(max_size, max_categories, max_failures)
     worse = 0
     largest = (Q(0), None)
     first = None
+    by_hits: dict[int, int] = {}
     for required, state in states:
         optimal = _optimal_value(required, state)
         committed = _commit_value(required, state)
@@ -1138,14 +1184,386 @@ def commit_until_hit_fixture(max_size: int = 7, max_categories: int = 3) -> dict
             raise AssertionError("commit-until-hit value below the optimum")
         if committed > optimal:
             worse += 1
+            by_hits[required] = by_hits.get(required, 0) + 1
             gap = (committed - optimal) / optimal
             if gap > largest[0]:
                 largest = (gap, {"hits_needed": required, "state": state, "optimal": optimal, "committed": committed})
             first = first or {"hits_needed": required, "state": state, "optimal": optimal, "committed": committed}
     return {"states": len(states), "commit_until_hit_suboptimal": worse,
+            "suboptimal_by_hits_needed": tuple(sorted(by_hits.items())),
             "first_witness": first, "largest_relative_gap": largest[0], "largest_witness": largest[1],
             "one_hit_always_commits": all(_commit_value(1, s) == _optimal_value(1, s)
                                           for r, s in states if r == 1)}
+
+
+# --- Two hits: commit until the first hit, in closed form ---------------------
+
+def first_hit_law(size: int, failures: int) -> tuple[tuple[int, Q], ...]:
+    """Law of the position ``T`` of the first failure when a category of
+    ``size`` items with ``failures`` failures is patched in uniformly random
+    order: ``P(T = t) = C(size - t, failures - 1) / C(size, failures)`` for
+    ``t = 1, ..., size - failures + 1`` (the other failures sit among the
+    ``size - t`` later positions)."""
+
+    validate_category_counts(((size, failures),))
+    if failures == 0:
+        raise ValueError("a category without failures never hits")
+    total = comb(size, failures)
+    return tuple((t, Q(comb(size - t, failures - 1), total)) for t in range(1, size - failures + 2))
+
+
+def two_hit_score(size: int, failures: int, best_other=None) -> Q:
+    """Expected patches to two hits when the loop commits to this category
+    until it hits and then commits to the best finisher:
+    ``(n+1)/(F+1) + E[min((n - T + 1)/F, M)]``.
+
+    ``T`` is the first-failure position; after a first hit at ``T`` the
+    category has ``n - T`` items and ``F - 1`` failures, so its own finisher
+    is ``(n - T + 1)/F`` (spent when ``F = 1``).  ``M`` is the best finisher
+    ``(n'+1)/(F'+1)`` among the other categories, ``None`` when there is none.
+    """
+
+    validate_category_counts(((size, failures),))
+    if best_other is not None:
+        best_other = Q(best_other)
+    if failures == 0 or (failures == 1 and best_other is None):
+        raise ValueError("two hits need two failures")
+    total = Q(size + 1, failures + 1)
+    for t, probability in first_hit_law(size, failures):
+        options = [Q(size - t + 1, failures)] if failures >= 2 else []
+        if best_other is not None:
+            options.append(best_other)
+        total += probability * min(options)
+    return total
+
+
+def two_hit_score_closed_form(size: int, failures: int, best_other=None) -> Q:
+    """``two_hit_score`` without the sum.  With ``r = n - T`` the items left
+    after the first hit, ``P(r) = C(r, F-1)/C(n, F)``, and the hockey-stick
+    identities ``sum_{r<=R} C(r, F-1) = C(R+1, F)`` and
+    ``sum_{r<=R} (r+1) C(r, F-1) = F C(R+2, F+1)`` give
+    ``E[min((r+1)/F, M)] = (C(R+2, F+1) + M (C(n, F) - C(R+1, F))) / C(n, F)``
+    with ``R`` the largest ``r <= n - 1`` such that ``(r+1)/F <= M``."""
+
+    validate_category_counts(((size, failures),))
+    if best_other is not None:
+        best_other = Q(best_other)
+    if failures == 0 or (failures == 1 and best_other is None):
+        raise ValueError("two hits need two failures")
+    head = Q(size + 1, failures + 1)
+    if failures == 1:
+        return head + best_other
+    total = comb(size, failures)
+    if best_other is None:
+        cut = size - 1
+    else:
+        cut = max(failures - 2, min(size - 1, floor(best_other * failures) - 1))
+    tail = Q(comb(cut + 2, failures + 1), total)
+    if best_other is not None:
+        tail += best_other * Q(total - comb(cut + 1, failures), total)
+    return head + tail
+
+
+def two_hit_scores(categories) -> dict[tuple[int, int], Q]:
+    """``two_hit_score`` of every distinct category of a state, each against
+    the best finisher among the *other* categories."""
+
+    counts = validate_category_counts(categories)
+    state = tuple(sorted(pair for pair in counts if pair[1] > 0))
+    if sum(failures for _, failures in state) < 2:
+        raise ValueError("two hits need two failures")
+    scores = {}
+    for chosen in set(state):
+        rest = list(state)
+        rest.remove(chosen)
+        best_other = min((Q(size + 1, failures + 1) for size, failures in rest), default=None)
+        scores[chosen] = two_hit_score(chosen[0], chosen[1], best_other)
+    return scores
+
+
+def two_hit_value(categories) -> Q:
+    """Theorem 11: the minimum expected patches to two hits,
+    ``min_c two_hit_score(n_c, F_c, best finisher among the others)``.
+    One pass over the categories plus one first-hit law each: time linear in
+    the number of items, against the dynamic programme's exponential state
+    count."""
+
+    return min(two_hit_scores(categories).values())
+
+
+def two_hit_first_choices(categories) -> tuple[tuple[int, int], ...]:
+    """The categories an optimal policy may patch first at two hits: exactly
+    the minimizers of ``two_hit_scores`` (Theorem 11)."""
+
+    scores = two_hit_scores(categories)
+    best = min(scores.values())
+    return tuple(sorted(c for c, v in scores.items() if v == best))
+
+
+def commit_first_value(hits_needed: int, state: tuple, chosen: tuple) -> Q:
+    """Expected patches when the loop commits to ``chosen`` until it hits and
+    plays optimally afterwards."""
+
+    state = _adaptive_state(state, hits_needed)
+    if hits_needed == 0 or chosen not in state:
+        raise ValueError("chosen must be a category of the state and a hit must be needed")
+    size, failures = chosen
+    rest = list(state)
+    rest.remove(chosen)
+    total = Q(0)
+    for t, probability in first_hit_law(size, failures):
+        after = (size - t, failures - 1)
+        following = tuple(sorted(rest + ([after] if after[1] > 0 else [])))
+        total += probability * (t + _optimal_value(hits_needed - 1, following))
+    return total
+
+
+def switch_after_miss(hits_needed: int, state: tuple, first: tuple, second: tuple) -> dict[str, object]:
+    """Lemma 12, the exact cost of switching after one miss.
+
+    The policy patches ``first`` = (n, F) once; on a hit it plays optimally,
+    on a miss it commits to ``second`` until that hits and then plays
+    optimally.  With ``p = F/n``, ``s'`` the state after the miss and ``K``
+    the commit-then-optimal values,
+
+        switch - K_second(s) = 1/(F+1) + p (K_first'(s') - K_second(s')) + p E[rho] - E[delta],
+
+    where ``delta`` is what one pass removed from ``first`` is worth to the
+    optimum with one hit fewer, after ``second``'s first hit, and ``rho`` is
+    what the ``T'`` passes that ``first'`` = (n-1, F) misses before its first
+    hit are worth to that optimum after ``first``'s hit.
+    """
+
+    state = _adaptive_state(state, hits_needed)
+    if hits_needed == 0:
+        raise ValueError("a hit must be needed")
+    size, failures = first
+    if first not in state or failures >= size:
+        raise ValueError("first must be a category of the state that can miss")
+    rest = list(state)
+    rest.remove(first)
+    if second not in rest:
+        raise ValueError("second must be another category of the state")
+    p = Q(failures, size)
+    reduced = (size - 1, failures)
+    missed = tuple(sorted(rest + [reduced]))
+    hit_state = tuple(sorted(rest + ([(size - 1, failures - 1)] if failures > 1 else [])))
+    k_second_after_miss = commit_first_value(hits_needed, missed, second)
+    k_first_after_miss = commit_first_value(hits_needed, missed, reduced)
+    switch = 1 + p * _optimal_value(hits_needed - 1, hit_state) + (1 - p) * k_second_after_miss
+    k_second = commit_first_value(hits_needed, state, second)
+    k_first = commit_first_value(hits_needed, state, first)
+    others = list(rest)
+    others.remove(second)
+    delta = Q(0)
+    for t, probability in first_hit_law(*second):
+        landed = [(second[0] - t, second[1] - 1)] if second[1] > 1 else []
+        with_full = tuple(sorted(others + landed + [first]))
+        with_reduced = tuple(sorted(others + landed + [reduced]))
+        delta += probability * (_optimal_value(hits_needed - 1, with_full)
+                                - _optimal_value(hits_needed - 1, with_reduced))
+    rho = Q(0)
+    for t, probability in first_hit_law(*reduced):
+        shorter = tuple(sorted(rest + ([(size - 1 - t, failures - 1)] if failures > 1 else [])))
+        rho += probability * (_optimal_value(hits_needed - 1, hit_state)
+                              - _optimal_value(hits_needed - 1, shorter))
+    slack = Q(1, failures + 1) + p * rho - delta
+    return {"hits_needed": hits_needed, "state": state, "first": first, "second": second,
+            "switch": switch, "commit_first": k_first, "commit_second": k_second,
+            "commit_first_after_miss": k_first_after_miss,
+            "commit_second_after_miss": k_second_after_miss,
+            "delta": delta, "rho": rho, "slack": slack,
+            "identity_holds": switch - k_second == slack + p * (k_first_after_miss - k_second_after_miss),
+            "switch_beats_both_commits": switch < min(k_first, k_second)}
+
+
+def single_failure_value(categories, hits_needed: int) -> Q:
+    """When every category has exactly one failure: the sum of the
+    ``hits_needed`` smallest ``(n_c + 1)/2``.  Committing is optimal there
+    (Lemma 12 with one pass worth at most 1/2), each commitment spends its
+    category at expected cost ``(n_c + 1)/2`` and changes no other, so the
+    cheapest categories are taken."""
+
+    counts = validate_category_counts(categories)
+    if any(failures != 1 for _, failures in counts):
+        raise ValueError("every category must have exactly one failure")
+    if type(hits_needed) is not int or not 0 <= hits_needed <= len(counts):
+        raise ValueError("hits needed must be an integer between zero and the number of categories")
+    return sum(sorted(Q(size + 1, 2) for size, _ in counts)[:hits_needed], Q(0))
+
+
+def single_failure_fixture(max_size: int = 8, max_categories: int = 4) -> dict[str, object]:
+    """The single-failure closed form against the dynamic programme."""
+
+    states = adaptive_states(max_size, max_categories, max_failures=1)
+    mismatches = sum(_optimal_value(required, state) != single_failure_value(state, required)
+                     for required, state in states)
+    return {"states": len(states), "closed_form_mismatches": mismatches}
+
+
+def two_hit_fixture(max_size: int = 7, max_categories: int = 3) -> dict[str, object]:
+    """Theorem 11 against the dynamic programme on every state of the grid,
+    the closed form of the score against its sum, and the score as a
+    two-number index (own counts and the best other finisher)."""
+
+    states = [state for required, state in adaptive_states(max_size, max_categories) if required == 2]
+    value_mismatches = choice_mismatches = commit_mismatches = 0
+    for state in states:
+        value = two_hit_value(state)
+        value_mismatches += _optimal_value(2, state) != value
+        commit_mismatches += _commit_value(2, state) != value
+        values = first_patch_values(2, state)
+        best = min(values.values())
+        choice_mismatches += set(two_hit_first_choices(state)) != {c for c, v in values.items() if v == best}
+    others = [None] + [Q(k, 4) for k in range(1, 41)]
+    closed_checked = closed_mismatches = 0
+    for size in range(1, 13):
+        for failures in range(1, size + 1):
+            for best_other in others:
+                if failures == 1 and best_other is None:
+                    continue
+                closed_checked += 1
+                closed_mismatches += (two_hit_score(size, failures, best_other)
+                                      != two_hit_score_closed_form(size, failures, best_other))
+    larger = (((9, 3), (12, 2), (15, 6), (20, 5)), ((6, 1), (11, 4), (13, 13), (18, 2)),
+              ((8, 2), (8, 2), (14, 3), (16, 7)))
+    larger_rows = tuple({"state": state, "two_hit_value": two_hit_value(state),
+                         "dynamic_programme": optimal_adaptive_value(state, 2),
+                         "first_choices": two_hit_first_choices(state)} for state in larger)
+    witness = ((2, 1), (4, 2))
+    return {"states": len(states), "value_mismatches": value_mismatches,
+            "first_choice_mismatches": choice_mismatches,
+            "commit_until_hit_mismatches": commit_mismatches,
+            "closed_form_checked": closed_checked, "closed_form_mismatches": closed_mismatches,
+            "larger_states": larger_rows,
+            "larger_states_agree": all(row["two_hit_value"] == row["dynamic_programme"] for row in larger_rows),
+            "greedy_witness_scores": _render_values(two_hit_scores(witness)),
+            "greedy_witness_reproduced": two_hit_scores(witness) == {(2, 1): Q(19, 6), (4, 2): Q(37, 12)}}
+
+
+def switch_identity_fixture(max_size: int = 5, max_categories: int = 3) -> dict[str, object]:
+    """Lemma 12 on every state of the grid and every ordered pair of distinct
+    categories whose first can miss; at two hits the slack is nonnegative,
+    which is the whole of Theorem 11's inductive step."""
+
+    checked = failures_of_identity = 0
+    two_hit_negative_slack = two_hit_profitable = 0
+    single_failure_rows = single_failure_delta_above_half = 0
+    profitable_by_hits: dict[int, int] = {}
+    worst_slack = None
+    for required, state in adaptive_states(max_size, max_categories):
+        distinct = sorted(set(state))
+        for first in distinct:
+            if first[1] >= first[0]:
+                continue
+            rest = list(state)
+            rest.remove(first)
+            for second in sorted(set(rest)):
+                row = switch_after_miss(required, state, first, second)
+                checked += 1
+                failures_of_identity += not row["identity_holds"]
+                if first[1] == 1:
+                    single_failure_rows += 1
+                    single_failure_delta_above_half += row["delta"] > Q(1, 2)
+                if required == 2:
+                    two_hit_negative_slack += row["slack"] < 0
+                    two_hit_profitable += row["switch_beats_both_commits"]
+                if row["switch_beats_both_commits"]:
+                    profitable_by_hits[required] = profitable_by_hits.get(required, 0) + 1
+                if worst_slack is None or row["slack"] < worst_slack[0]:
+                    worst_slack = (row["slack"], {"hits_needed": required, "state": state,
+                                                  "first": first, "second": second})
+    return {"pairs_checked": checked, "identity_failures": failures_of_identity,
+            "two_hit_negative_slack": two_hit_negative_slack,
+            "two_hit_profitable_switches": two_hit_profitable,
+            "single_failure_first_rows": single_failure_rows,
+            "single_failure_delta_above_half": single_failure_delta_above_half,
+            "profitable_switches_by_hits_needed": tuple(sorted(profitable_by_hits.items())),
+            "most_negative_slack": worst_slack[0], "most_negative_slack_at": worst_slack[1]}
+
+
+def two_category_commit_fixture(max_size: int = 8, slack: bool = True) -> dict[str, object]:
+    """With two categories, every requirement: is committing until a hit
+    optimal, does every optimal first patch stay optimal after it misses, and
+    is every Lemma 12 slack nonnegative (which makes a profitable switch
+    impossible)?"""
+
+    pairs = [(size, failures) for size in range(1, max_size + 1) for failures in range(1, size + 1)]
+    states = checked = commit_gaps = stay_failures = slacks = negative_slacks = 0
+    first_gap = None
+    for index, left in enumerate(pairs):
+        for right in pairs[index:]:
+            state = tuple(sorted((left, right)))
+            for required in range(1, left[1] + right[1] + 1):
+                states += 1
+                if _commit_value(required, state) != _optimal_value(required, state):
+                    commit_gaps += 1
+                    first_gap = first_gap or {"hits_needed": required, "state": state}
+                values = first_patch_values(required, state)
+                best = min(values.values())
+                for chosen, value in values.items():
+                    if value != best or chosen[1] >= chosen[0]:
+                        continue
+                    rest = list(state)
+                    rest.remove(chosen)
+                    reduced = (chosen[0] - 1, chosen[1])
+                    after = first_patch_values(required, tuple(sorted(rest + [reduced])))
+                    checked += 1
+                    stay_failures += after[reduced] != min(after.values())
+                if not slack:
+                    continue
+                for first, second in {(left, right), (right, left)}:
+                    if first[1] < first[0]:
+                        slacks += 1
+                        negative_slacks += switch_after_miss(required, state, first, second)["slack"] < 0
+    return {"max_size": max_size, "states": states, "commit_until_hit_gaps": commit_gaps,
+            "first_gap": first_gap, "optimal_patches_followed_by_a_miss": checked,
+            "optimal_patch_not_optimal_after_its_miss": stay_failures,
+            "switch_slacks_checked": slacks, "negative_switch_slacks": negative_slacks}
+
+
+def commit_boundary_fixture() -> dict[str, object]:
+    """Committing until a hit is optimal at every state exactly when at most
+    two hits are needed: Theorems 10 and 11 below, and above a three-hit
+    witness that sure-hit padding carries to every larger requirement."""
+
+    three = ((4, 2), (5, 2), (14, 7))
+    optimal, committed = optimal_adaptive_value(three, 3), commit_until_hit_value(three, 3)
+    after_miss = ((3, 2), (5, 2), (14, 7))
+    lemma = switch_after_miss(3, three, (4, 2), (14, 7))
+    padded = []
+    for copies in (1, 2, 3):
+        state = tuple(sorted(three + ((1, 1),) * copies))
+        padded.append({"state": state, "hits_needed": 3 + copies,
+                       "optimal": optimal_adaptive_value(state, 3 + copies),
+                       "committed": commit_until_hit_value(state, 3 + copies)})
+    largest = ((10, 2), (12, 2), (19, 3))
+    largest_optimal, largest_committed = optimal_adaptive_value(largest, 4), commit_until_hit_value(largest, 4)
+    return {
+        "largest_gap_found": {
+            "state": largest, "hits_needed": 4, "optimal": largest_optimal, "committed": largest_committed,
+            "gap": largest_committed - largest_optimal,
+            "relative_gap": (largest_committed - largest_optimal) / largest_optimal,
+            "optimal_first": optimal_first_choices(largest, 4),
+        },
+        "largest_gap_exceeds_one_part_in_a_thousand":
+            (largest_committed - largest_optimal) / largest_optimal > Q(1, 1000),
+        "three_hit_witness": {
+            "state": three, "hits_needed": 3, "optimal": optimal, "committed": committed,
+            "gap": committed - optimal, "relative_gap": (committed - optimal) / optimal,
+            "first_patch_values": _render_values(first_patch_values(3, three)),
+            "after_a_miss_in_(4,2)": _render_values(first_patch_values(3, after_miss)),
+            "switch_after_miss": lemma,
+        },
+        "three_hit_witness_holds": (committed - optimal == Q(1, 5148)
+                                    and optimal_first_choices(three, 3) == ((4, 2),)
+                                    and optimal_first_choices(after_miss, 3) == ((14, 7),)
+                                    and lemma["switch_beats_both_commits"] and lemma["slack"] < 0),
+        "padded": tuple(padded),
+        "padding_preserves_the_gap": all(row["optimal"] == optimal + row["hits_needed"] - 3
+                                         and row["committed"] == committed + row["hits_needed"] - 3
+                                         for row in padded),
+    }
 
 
 def conjecture_refutations() -> dict[str, object]:
@@ -1212,19 +1630,39 @@ def index_rule_fixture() -> dict[str, object]:
     """No index rule is optimal, and the optimal first patch need not have
     the highest hit probability."""
 
+    def unique_witness(first_state, second_state, hits):
+        """(2,1) the unique optimum of the first state, (4,2) of the second."""
+        first, second = first_patch_values(hits, first_state), first_patch_values(hits, second_state)
+        return {"A": (2, 1), "B": (4, 2), "hits_needed": hits,
+                "A_uniquely_optimal_in": first_state, "A_values": _render_values(first),
+                "B_uniquely_optimal_in": second_state, "B_values": _render_values(second),
+                "holds": (optimal_first_choices(first_state, hits) == ((2, 1),)
+                          and optimal_first_choices(second_state, hits) == ((4, 2),))}
+
     with_unit = first_patch_values(2, ((1, 1), (2, 1), (4, 2)))
-    without = first_patch_values(2, ((2, 1), (4, 2)))
+    totals_tie = first_patch_values(3, ((1, 1), (2, 1), (3, 1), (4, 2)))
     lower = first_patch_values(2, ((2, 1), (5, 2)))
+    own = unique_witness(((2, 1), (2, 1), (4, 2)), ((2, 1), (4, 2)), 2)
+    totals = unique_witness(((2, 1), (2, 1), (4, 1), (4, 2)), ((2, 1), (3, 1), (3, 1), (4, 2)), 2)
+    totals["same_totals_and_category_count"] = (
+        _index_context("with_totals_and_category_count", totals["A_uniquely_optimal_in"])
+        == _index_context("with_totals_and_category_count", totals["B_uniquely_optimal_in"]) == (12, 5, 4))
+    totals["holds"] = totals["holds"] and totals["same_totals_and_category_count"]
     return {
         "own_counts": preference_reversals(5, 4, "own_counts"),
         "with_totals": preference_reversals(5, 4, "with_totals"),
         "with_totals_and_category_count": preference_reversals(5, 4, "with_totals_and_category_count"),
         "rate_violations": rate_violations(5, 4),
         "greedy": greedy_failures(5, 4),
-        "reversal_witness": {
-            "A": (2, 1), "B": (4, 2), "hits_needed": 2,
-            "with_unit_category": _render_values(with_unit), "without": _render_values(without),
-            "holds": with_unit[(2, 1)] < with_unit[(4, 2)] and without[(4, 2)] < without[(2, 1)],
+        "unique_optimum_witness": own,
+        "totals_unique_optimum_witness": totals,
+        "version_0_6_witnesses_tie": {
+            "own_counts_state": ((1, 1), (2, 1), (4, 2)), "own_counts_values": _render_values(with_unit),
+            "own_counts_optimal": optimal_first_choices(((1, 1), (2, 1), (4, 2)), 2),
+            "totals_state": ((1, 1), (2, 1), (3, 1), (4, 2)), "totals_values": _render_values(totals_tie),
+            "totals_optimal": optimal_first_choices(((1, 1), (2, 1), (3, 1), (4, 2)), 3),
+            "holds": (optimal_first_choices(((1, 1), (2, 1), (4, 2)), 2) == ((1, 1), (2, 1))
+                      and optimal_first_choices(((1, 1), (2, 1), (3, 1), (4, 2)), 3) == ((1, 1), (4, 2))),
         },
         "lower_rate_witness": {
             "state": ((2, 1), (5, 2)), "hits_needed": 2, "values": _render_values(lower),
@@ -1494,9 +1932,39 @@ def verify() -> dict[str, object]:
     refutations = conjecture_refutations()
     one_hit = one_hit_fixture()
     commit = commit_until_hit_fixture()
+    two_hit = two_hit_fixture()
+    switch = switch_identity_fixture()
+    two_category = two_category_commit_fixture()
+    boundary = commit_boundary_fixture()
+    capped = commit_until_hit_fixture(8, 4, max_failures=2)
+    single = single_failure_fixture()
     ledger = category_ledger_fixture()
     four = policy["four_item_witness"]
     checks = {
+        "two_hit_optimum_is_the_commit_closed_form_with_its_minimizers_first":
+            two_hit["value_mismatches"] == 0 and two_hit["first_choice_mismatches"] == 0
+            and two_hit["commit_until_hit_mismatches"] == 0 and two_hit["larger_states_agree"]
+            and two_hit["greedy_witness_reproduced"],
+        "two_hit_score_hockey_stick_closed_form_matches_its_sum": two_hit["closed_form_mismatches"] == 0,
+        "switch_after_miss_identity_exact_and_slack_nonnegative_at_two_hits":
+            switch["identity_failures"] == 0 and switch["pairs_checked"] > 0
+            and switch["two_hit_negative_slack"] == 0 and switch["two_hit_profitable_switches"] == 0,
+        "one_pass_in_a_single_failure_category_worth_at_most_one_half":
+            switch["single_failure_first_rows"] > 0 and switch["single_failure_delta_above_half"] == 0,
+        "single_failure_categories_cost_the_smallest_half_sizes":
+            single["states"] > 0 and single["closed_form_mismatches"] == 0,
+        "commit_until_hit_fails_at_three_hits_and_at_every_larger_requirement":
+            boundary["three_hit_witness_holds"] and boundary["padding_preserves_the_gap"],
+        "commit_until_hit_gap_exceeds_a_tenth_of_a_percent_beyond_the_grid":
+            boundary["largest_gap_exceeds_one_part_in_a_thousand"],
+        "commit_until_hit_gaps_on_the_grid_need_at_least_three_hits":
+            all(hits >= 3 for hits, _ in commit["suboptimal_by_hits_needed"]),
+        "two_categories_commit_until_hit_optimal_with_nonnegative_slack_on_the_grid":
+            two_category["commit_until_hit_gaps"] == 0
+            and two_category["optimal_patch_not_optimal_after_its_miss"] == 0
+            and two_category["negative_switch_slacks"] == 0,
+        "commit_until_hit_optimal_with_at_most_two_failures_per_category_on_the_grid":
+            capped["states"] > 0 and capped["commit_until_hit_suboptimal"] == 0,
         "two_patches_in_different_categories_commute_when_two_hits_remain":
             structure["commutation"]["violations"] == 0 and structure["commutation"]["pairs_checked"] > 0,
         "no_extremal_rule_covers_the_optimal_first_patch":
@@ -1507,17 +1975,21 @@ def verify() -> dict[str, object]:
             refutations["equal_rates_larger_first"]["refuted"]
             and refutations["lowest_rate_never_uniquely_optimal"]["refuted"],
         "one_hit_value_is_the_best_finisher_closed_form":
-            one_hit["closed_form_mismatches"] == 0 and one_hit["best_finisher_not_optimal_first"] == 0,
+            one_hit["closed_form_mismatches"] == 0 and one_hit["best_finisher_not_optimal_first"] == 0
+            and one_hit["zero_failure_category_excluded"]["holds"],
         "highest_rate_first_not_optimal_at_one_hit_witness":
             one_hit["rate_versus_finisher_witness"]["highest_rate_first_is_worse"],
         "commit_until_hit_not_optimal_beyond_one_hit_but_within_a_tenth_of_a_percent":
             commit["commit_until_hit_suboptimal"] > 0 and commit["one_hit_always_commits"]
             and commit["largest_relative_gap"] < Q(1, 1000),
         "no_index_rule_on_own_counts_and_hits_needed":
-            index["own_counts"]["reversals"] > 0 and index["reversal_witness"]["holds"],
+            index["own_counts"]["refuting_pairs"] > 0 and index["unique_optimum_witness"]["holds"],
         "no_index_rule_even_with_global_totals":
-            index["with_totals"]["reversals"] > 0
-            and index["with_totals_and_category_count"]["reversals"] > 0,
+            index["with_totals"]["refuting_pairs"] > 0
+            and index["with_totals_and_category_count"]["refuting_pairs"] > 0
+            and index["totals_unique_optimum_witness"]["holds"],
+        "version_0_6_index_witnesses_tie_with_a_third_category":
+            index["version_0_6_witnesses_tie"]["holds"],
         "optimal_first_patch_can_have_lower_hit_probability":
             index["rate_violations"]["violations"] > 0 and index["lower_rate_witness"]["holds"]
             and index["rate_violations"]["min_hits_needed"] >= 2,
@@ -1576,4 +2048,7 @@ def verify() -> dict[str, object]:
             "lattice": lattice, "category_order": category, "category_lattice": category_lattice,
             "ceiling_cost": cost, "small_set_enumeration": small, "greedy_vs_optimal": policy,
             "index_rules": index, "policy_structure": structure, "conjecture_refutations": refutations,
-            "one_hit": one_hit, "commit_until_hit": commit, "category_ledger": ledger}
+            "one_hit": one_hit, "commit_until_hit": commit, "two_hits": two_hit,
+            "switch_after_miss": switch, "two_categories": two_category, "commit_boundary": boundary,
+            "commit_until_hit_at_most_two_failures": capped, "single_failure": single,
+            "category_ledger": ledger}

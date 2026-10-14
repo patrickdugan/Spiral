@@ -1,8 +1,18 @@
 {
-  "schema_version": "0.1",
-  "generated_at_utc": "2026-10-13T10:32:41.958064+00:00",
+  "schema_version": "0.7",
+  "generated_at_utc": "2026-10-14T04:49:30.207138+00:00",
   "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
   "checks": {
+    "two_hit_optimum_is_the_commit_closed_form_with_its_minimizers_first": true,
+    "two_hit_score_hockey_stick_closed_form_matches_its_sum": true,
+    "switch_after_miss_identity_exact_and_slack_nonnegative_at_two_hits": true,
+    "one_pass_in_a_single_failure_category_worth_at_most_one_half": true,
+    "single_failure_categories_cost_the_smallest_half_sizes": true,
+    "commit_until_hit_fails_at_three_hits_and_at_every_larger_requirement": true,
+    "commit_until_hit_gap_exceeds_a_tenth_of_a_percent_beyond_the_grid": true,
+    "commit_until_hit_gaps_on_the_grid_need_at_least_three_hits": true,
+    "two_categories_commit_until_hit_optimal_with_nonnegative_slack_on_the_grid": true,
+    "commit_until_hit_optimal_with_at_most_two_failures_per_category_on_the_grid": true,
     "two_patches_in_different_categories_commute_when_two_hits_remain": true,
     "no_extremal_rule_covers_the_optimal_first_patch": true,
     "lowest_of_three_rates_never_uniquely_optimal_on_the_grid": true,
@@ -12,6 +22,7 @@
     "commit_until_hit_not_optimal_beyond_one_hit_but_within_a_tenth_of_a_percent": true,
     "no_index_rule_on_own_counts_and_hits_needed": true,
     "no_index_rule_even_with_global_totals": true,
+    "version_0_6_index_witnesses_tie_with_a_third_category": true,
     "optimal_first_patch_can_have_lower_hit_probability": true,
     "meet_preserved_on_every_pair_up_to_five_items": true,
     "join_preserved_iff_intersection_graph_is_forest": true,
@@ -986,6 +997,51 @@
           "19/6",
           "37/12"
         ]
+      },
+      "refuting_pairs": 8,
+      "first_refuting": {
+        "A": [
+          2,
+          1
+        ],
+        "B": [
+          4,
+          2
+        ],
+        "hits_needed": 2,
+        "context": [],
+        "A_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "A_values": [
+          "3",
+          "37/12"
+        ],
+        "B_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "B_values": [
+          "37/12",
+          "19/6"
+        ]
       }
     },
     "with_totals": {
@@ -1047,6 +1103,62 @@
         "B_first_values": [
           "19/6",
           "37/12"
+        ]
+      },
+      "refuting_pairs": 18,
+      "first_refuting": {
+        "A": [
+          2,
+          1
+        ],
+        "B": [
+          4,
+          2
+        ],
+        "hits_needed": 2,
+        "context": [
+          10,
+          5
+        ],
+        "A_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "A_values": [
+          "3",
+          "37/12"
+        ],
+        "B_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "B_values": [
+          "37/12",
+          "19/6"
         ]
       }
     },
@@ -1115,6 +1227,67 @@
           "19/6",
           "37/12"
         ]
+      },
+      "refuting_pairs": 12,
+      "first_refuting": {
+        "A": [
+          2,
+          1
+        ],
+        "B": [
+          4,
+          2
+        ],
+        "hits_needed": 2,
+        "context": [
+          12,
+          5,
+          4
+        ],
+        "A_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "A_values": [
+          "3",
+          "37/12"
+        ],
+        "B_uniquely_optimal_in": [
+          [
+            2,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "B_values": [
+          "37/12",
+          "19/6"
+        ]
       }
     },
     "rate_violations": {
@@ -1161,7 +1334,7 @@
       "states": 33915,
       "greedy_suboptimal": 131
     },
-    "reversal_witness": {
+    "unique_optimum_witness": {
       "A": [
         2,
         1
@@ -1171,7 +1344,175 @@
         2
       ],
       "hits_needed": 2,
-      "with_unit_category": [
+      "A_uniquely_optimal_in": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A_values": [
+        [
+          [
+            2,
+            1
+          ],
+          "3"
+        ],
+        [
+          [
+            4,
+            2
+          ],
+          "37/12"
+        ]
+      ],
+      "B_uniquely_optimal_in": [
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "B_values": [
+        [
+          [
+            2,
+            1
+          ],
+          "19/6"
+        ],
+        [
+          [
+            4,
+            2
+          ],
+          "37/12"
+        ]
+      ],
+      "holds": true
+    },
+    "totals_unique_optimum_witness": {
+      "A": [
+        2,
+        1
+      ],
+      "B": [
+        4,
+        2
+      ],
+      "hits_needed": 2,
+      "A_uniquely_optimal_in": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A_values": [
+        [
+          [
+            2,
+            1
+          ],
+          "3"
+        ],
+        [
+          [
+            4,
+            1
+          ],
+          "29/8"
+        ],
+        [
+          [
+            4,
+            2
+          ],
+          "37/12"
+        ]
+      ],
+      "B_uniquely_optimal_in": [
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "B_values": [
+        [
+          [
+            2,
+            1
+          ],
+          "19/6"
+        ],
+        [
+          [
+            3,
+            1
+          ],
+          "7/2"
+        ],
+        [
+          [
+            4,
+            2
+          ],
+          "37/12"
+        ]
+      ],
+      "holds": true,
+      "same_totals_and_category_count": true
+    },
+    "version_0_6_witnesses_tie": {
+      "own_counts_state": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "own_counts_values": [
         [
           [
             1,
@@ -1194,20 +1535,72 @@
           "8/3"
         ]
       ],
-      "without": [
+      "own_counts_optimal": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "totals_state": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "totals_values": [
+        [
+          [
+            1,
+            1
+          ],
+          "49/12"
+        ],
         [
           [
             2,
             1
           ],
-          "19/6"
+          "25/6"
+        ],
+        [
+          [
+            3,
+            1
+          ],
+          "9/2"
         ],
         [
           [
             4,
             2
           ],
-          "37/12"
+          "49/12"
+        ]
+      ],
+      "totals_optimal": [
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          2
         ]
       ],
       "holds": true
@@ -1415,6 +1808,22 @@
   "one_hit": {
     "states": 91389,
     "closed_form_mismatches": 0,
+    "zero_failure_category_excluded": {
+      "state": [
+        [
+          1,
+          0
+        ],
+        [
+          10,
+          1
+        ]
+      ],
+      "value": "11/2",
+      "dynamic_programme": "11/2",
+      "minimum_over_every_category": "2",
+      "holds": true
+    },
     "best_finisher_not_optimal_first": 0,
     "rate_versus_finisher_witness": {
       "state": [
@@ -1481,6 +1890,40 @@
   "commit_until_hit": {
     "states": 39060,
     "commit_until_hit_suboptimal": 82,
+    "suboptimal_by_hits_needed": [
+      [
+        4,
+        4
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        6,
+        18
+      ],
+      [
+        7,
+        20
+      ],
+      [
+        8,
+        16
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        11,
+        1
+      ]
+    ],
     "first_witness": {
       "hits_needed": 4,
       "state": [
@@ -1521,6 +1964,393 @@
       "committed": "509/80"
     },
     "one_hit_always_commits": true
+  },
+  "two_hits": {
+    "states": 4487,
+    "value_mismatches": 0,
+    "first_choice_mismatches": 0,
+    "commit_until_hit_mismatches": 0,
+    "closed_form_checked": 3186,
+    "closed_form_mismatches": 0,
+    "larger_states": [
+      {
+        "state": [
+          [
+            9,
+            3
+          ],
+          [
+            12,
+            2
+          ],
+          [
+            15,
+            6
+          ],
+          [
+            20,
+            5
+          ]
+        ],
+        "two_hit_value": "32/7",
+        "dynamic_programme": "32/7",
+        "first_choices": [
+          [
+            15,
+            6
+          ]
+        ]
+      },
+      {
+        "state": [
+          [
+            6,
+            1
+          ],
+          [
+            11,
+            4
+          ],
+          [
+            13,
+            13
+          ],
+          [
+            18,
+            2
+          ]
+        ],
+        "two_hit_value": "2",
+        "dynamic_programme": "2",
+        "first_choices": [
+          [
+            13,
+            13
+          ]
+        ]
+      },
+      {
+        "state": [
+          [
+            8,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            14,
+            3
+          ],
+          [
+            16,
+            7
+          ]
+        ],
+        "two_hit_value": "17/4",
+        "dynamic_programme": "17/4",
+        "first_choices": [
+          [
+            16,
+            7
+          ]
+        ]
+      }
+    ],
+    "larger_states_agree": true,
+    "greedy_witness_scores": [
+      [
+        [
+          2,
+          1
+        ],
+        "19/6"
+      ],
+      [
+        [
+          4,
+          2
+        ],
+        "37/12"
+      ]
+    ],
+    "greedy_witness_reproduced": true
+  },
+  "switch_after_miss": {
+    "pairs_checked": 15650,
+    "identity_failures": 0,
+    "two_hit_negative_slack": 0,
+    "two_hit_profitable_switches": 0,
+    "single_failure_first_rows": 5300,
+    "single_failure_delta_above_half": 0,
+    "profitable_switches_by_hits_needed": [],
+    "most_negative_slack": "-1/12",
+    "most_negative_slack_at": {
+      "hits_needed": 3,
+      "state": [
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "first": [
+        4,
+        2
+      ],
+      "second": [
+        3,
+        1
+      ]
+    }
+  },
+  "two_categories": {
+    "max_size": 8,
+    "states": 4440,
+    "commit_until_hit_gaps": 0,
+    "first_gap": null,
+    "optimal_patches_followed_by_a_miss": 3894,
+    "optimal_patch_not_optimal_after_its_miss": 0,
+    "switch_slacks_checked": 6384,
+    "negative_switch_slacks": 0
+  },
+  "commit_boundary": {
+    "largest_gap_found": {
+      "state": [
+        [
+          10,
+          2
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          19,
+          3
+        ]
+      ],
+      "hits_needed": 4,
+      "optimal": "7477604/479655",
+      "committed": "22463159/1438965",
+      "gap": "30347/1438965",
+      "relative_gap": "30347/22432812",
+      "optimal_first": [
+        [
+          10,
+          2
+        ]
+      ]
+    },
+    "largest_gap_exceeds_one_part_in_a_thousand": true,
+    "three_hit_witness": {
+      "state": [
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          14,
+          7
+        ]
+      ],
+      "hits_needed": 3,
+      "optimal": "1055429/205920",
+      "committed": "351823/68640",
+      "gap": "1/5148",
+      "relative_gap": "40/1055429",
+      "first_patch_values": [
+        [
+          [
+            4,
+            2
+          ],
+          "1055429/205920"
+        ],
+        [
+          [
+            5,
+            2
+          ],
+          "2483/480"
+        ],
+        [
+          [
+            14,
+            7
+          ],
+          "113/22"
+        ]
+      ],
+      "after_a_miss_in_(4,2)": [
+        [
+          [
+            3,
+            2
+          ],
+          "15577/3432"
+        ],
+        [
+          [
+            5,
+            2
+          ],
+          "139/30"
+        ],
+        [
+          [
+            14,
+            7
+          ],
+          "46727/10296"
+        ]
+      ],
+      "switch_after_miss": {
+        "hits_needed": 3,
+        "state": [
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            14,
+            7
+          ]
+        ],
+        "first": [
+          4,
+          2
+        ],
+        "second": [
+          14,
+          7
+        ],
+        "switch": "1055429/205920",
+        "commit_first": "351823/68640",
+        "commit_second": "113/22",
+        "commit_first_after_miss": "15577/3432",
+        "commit_second_after_miss": "46727/10296",
+        "delta": "6157/10296",
+        "rho": "5801/11440",
+        "slack": "-2291/205920",
+        "identity_holds": true,
+        "switch_beats_both_commits": true
+      }
+    },
+    "three_hit_witness_holds": true,
+    "padded": [
+      {
+        "state": [
+          [
+            1,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            14,
+            7
+          ]
+        ],
+        "hits_needed": 4,
+        "optimal": "1261349/205920",
+        "committed": "420463/68640"
+      },
+      {
+        "state": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            14,
+            7
+          ]
+        ],
+        "hits_needed": 5,
+        "optimal": "1467269/205920",
+        "committed": "489103/68640"
+      },
+      {
+        "state": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            14,
+            7
+          ]
+        ],
+        "hits_needed": 6,
+        "optimal": "1673189/205920",
+        "committed": "557743/68640"
+      }
+    ],
+    "padding_preserves_the_gap": true
+  },
+  "commit_until_hit_at_most_two_failures": {
+    "states": 21318,
+    "commit_until_hit_suboptimal": 0,
+    "suboptimal_by_hits_needed": [],
+    "first_witness": null,
+    "largest_relative_gap": "0",
+    "largest_witness": null,
+    "one_hit_always_commits": true
+  },
+  "single_failure": {
+    "states": 1760,
+    "closed_form_mismatches": 0
   },
   "category_ledger": {
     "respected": {
@@ -1738,8 +2568,8 @@
     }
   },
   "source_sha256": {
-    "scripts/verify_evaluation_feedback_lattice.py": "6893e337216319aa6ca07d4128726b3dc1ead8c2d17da1d08c2568bc1f41b402",
-    "src/spiral_ln/evaluation_feedback_lattice.py": "0d0dc58cecb37139a012f41832833b3efe02e439a6129a81d728a6f5ea65d4fb",
+    "scripts/verify_evaluation_feedback_lattice.py": "589bdcb5b4a0ca84902c441d80bd65f05cc31bf07ad74846bf260a5b97be69a3",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "7ab7b28ba261851b97fe7e972ab3eb78c01df79146eb283caf4f24f25a049966",
     "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
     "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
   }

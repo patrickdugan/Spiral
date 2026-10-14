@@ -1,3 +1,4 @@
+from functools import lru_cache
 from fractions import Fraction as Q
 from itertools import permutations, product
 from math import ceil
@@ -34,6 +35,175 @@ from spiral_ln.evaluation_feedback_lattice import (
     pair_commutation_check, policy_structure_fixture, two_patch_value,
 )
 from spiral_ln.evaluation_feedback_lattice import commit_until_hit_fixture, commit_until_hit_value
+from spiral_ln.evaluation_feedback_lattice import single_failure_fixture, single_failure_value
+from spiral_ln.evaluation_feedback_lattice import (
+    commit_boundary_fixture, commit_first_value, first_hit_law, switch_after_miss,
+    switch_identity_fixture, two_category_commit_fixture, two_hit_first_choices,
+    two_hit_fixture, two_hit_score, two_hit_score_closed_form, two_hit_scores, two_hit_value,
+)
+
+
+# --- two hits in closed form; where committing until a hit stops being optimal --
+
+def _optimal_by_item_sets(categories, hits_needed):
+    """Independent optimum: recursion over concrete unpatched item sets, every
+    category tried at every step, each unpatched item equally likely."""
+    counts = validate_category_counts(categories)
+    failed = [frozenset(range(failures)) for _, failures in counts]
+
+    @lru_cache(maxsize=None)
+    def value(remaining, left):
+        if remaining == 0:
+            return Q(0)
+        best = None
+        for index, items in enumerate(left):
+            if not items & failed[index]:
+                continue
+            expected = Q(1)
+            for item in items:
+                following = list(left)
+                following[index] = items - {item}
+                expected += Q(1, len(items)) * value(remaining - (item in failed[index]), tuple(following))
+            best = expected if best is None else min(best, expected)
+        return best
+
+    return value(hits_needed, tuple(frozenset(range(size)) for size, _ in counts))
+
+
+def test_first_hit_law_matches_patch_orders_and_has_the_finisher_mean():
+    for size in range(1, 9):
+        for failures in range(1, size + 1):
+            law = first_hit_law(size, failures)
+            assert sum(p for _, p in law) == 1
+            assert sum(t * p for t, p in law) == Q(size + 1, failures + 1)
+    orders = sorted(set(permutations([1] * 2 + [0] * 3)))
+    for t, p in first_hit_law(5, 2):
+        assert Q(sum(order.index(1) + 1 == t for order in orders), len(orders)) == p
+    with pytest.raises(ValueError):
+        first_hit_law(3, 0)
+
+
+def test_two_hit_value_is_the_optimum_and_its_minimizers_the_optimal_first_patches():
+    for required, state in adaptive_states(5, 3):
+        if required != 2:
+            continue
+        values = first_patch_values(2, state)
+        best = min(values.values())
+        assert two_hit_value(state) == best == commit_until_hit_value(state, 2)
+        assert set(two_hit_first_choices(state)) == {c for c, v in values.items() if v == best}
+    for state in (((2, 1), (3, 2), (4, 2)), ((1, 1), (3, 1), (4, 3)), ((2, 2), (4, 1), (4, 2))):
+        assert two_hit_value(state) == _optimal_by_item_sets(state, 2)
+    big = ((9, 3), (12, 2), (15, 6), (20, 5))
+    assert two_hit_value(big) == optimal_adaptive_value(big, 2)
+
+
+def test_two_hit_closed_form_matches_the_sum():
+    for size in range(1, 11):
+        for failures in range(1, size + 1):
+            for best_other in [None] + [Q(k, 3) for k in range(1, 31)]:
+                if failures == 1 and best_other is None:
+                    continue
+                assert two_hit_score(size, failures, best_other) == two_hit_score_closed_form(size, failures, best_other)
+    assert two_hit_score(4, 2, Q(3, 2)) == Q(37, 12) and two_hit_score(2, 1, Q(5, 3)) == Q(19, 6)
+    assert two_hit_score(6, 3, None) == Q(7, 4) + Q(7, 4)  # alone: finisher, then the same finisher in mean
+
+
+def test_two_hit_scores_reproduce_the_greedy_and_index_witnesses():
+    assert two_hit_scores(((2, 1), (4, 2))) == {(2, 1): Q(19, 6), (4, 2): Q(37, 12)}
+    # A second (2,1) lowers the first one's best other finisher from 5/3 to 3/2 and reverses the order.
+    assert two_hit_scores(((2, 1), (2, 1), (4, 2))) == {(2, 1): Q(3), (4, 2): Q(37, 12)}
+    assert two_hit_first_choices(((2, 1), (2, 1), (4, 1), (4, 2))) == ((2, 1),)
+    assert two_hit_first_choices(((2, 1), (3, 1), (3, 1), (4, 2))) == ((4, 2),)
+    assert two_hit_first_choices(((1, 1), (2, 1), (4, 2))) == ((1, 1), (2, 1))
+    assert two_hit_first_choices(((2, 1), (5, 2))) == ((5, 2),)
+    assert two_hit_value(((2, 1), (5, 2))) == Q(69, 20)
+
+
+@pytest.mark.parametrize("args", [(3, 0, None), (3, 1, None), (0, 0, 1), (3, 4, 2), (3.0, 1, 2)])
+def test_two_hit_score_rejects_malformed(args):
+    with pytest.raises(ValueError):
+        two_hit_score(*args)
+    with pytest.raises(ValueError):
+        two_hit_score_closed_form(*args)
+
+
+def test_two_hit_value_rejects_too_few_failures():
+    with pytest.raises(ValueError):
+        two_hit_value(((3, 1), (4, 0)))
+
+
+def test_switch_identity_holds_and_is_nonnegative_at_two_hits():
+    report = switch_identity_fixture(4, 3)
+    assert report["identity_failures"] == 0 and report["pairs_checked"] > 1000
+    assert report["two_hit_negative_slack"] == 0 and report["two_hit_profitable_switches"] == 0
+    assert report["most_negative_slack"] < 0  # beyond two hits the slack can be negative
+    assert report["single_failure_first_rows"] > 0 and report["single_failure_delta_above_half"] == 0
+    row = switch_after_miss(2, ((2, 1), (4, 2)), (4, 2), (2, 1))
+    assert row["identity_holds"] and row["slack"] >= 0
+    assert row["commit_first"] == Q(37, 12) and row["commit_second"] == Q(19, 6)
+    assert commit_first_value(2, ((2, 1), (4, 2)), (4, 2)) == Q(37, 12)
+
+
+def test_switch_after_miss_rejects_malformed():
+    state = ((2, 1), (4, 2))
+    with pytest.raises(ValueError):
+        switch_after_miss(2, state, (1, 1), (2, 1))
+    with pytest.raises(ValueError):
+        switch_after_miss(2, ((2, 2), (4, 2)), (2, 2), (4, 2))
+    with pytest.raises(ValueError):
+        switch_after_miss(2, state, (4, 2), (4, 2))
+    with pytest.raises(ValueError):
+        switch_after_miss(0, state, (4, 2), (2, 1))
+    with pytest.raises(ValueError):
+        commit_first_value(2, state, (3, 1))
+
+
+def test_commit_until_hit_fails_from_three_hits_on():
+    report = commit_boundary_fixture()
+    witness = report["three_hit_witness"]
+    assert witness["optimal"] == Q(1055429, 205920) and witness["committed"] == Q(351823, 68640)
+    assert witness["gap"] == Q(1, 5148) and report["three_hit_witness_holds"]
+    assert witness["switch_after_miss"]["slack"] == Q(-2291, 205920)
+    assert report["padding_preserves_the_gap"]
+    assert [row["hits_needed"] for row in report["padded"]] == [4, 5, 6]
+    largest = report["largest_gap_found"]
+    assert largest["optimal"] == Q(7477604, 479655) and largest["committed"] == Q(22463159, 1438965)
+    assert largest["relative_gap"] == Q(30347, 22432812) > Q(1, 1000)
+    assert report["largest_gap_exceeds_one_part_in_a_thousand"]
+    grid = commit_until_hit_fixture(6, 3)
+    assert all(hits >= 3 for hits, _ in grid["suboptimal_by_hits_needed"])
+
+
+def test_single_failure_categories_take_the_smallest():
+    assert single_failure_value(((3, 1), (5, 1), (4, 1)), 2) == Q(9, 2)
+    assert single_failure_value(((3, 1), (5, 1), (4, 1)), 2) == _optimal_by_item_sets(((3, 1), (5, 1), (4, 1)), 2)
+    assert single_failure_value(((3, 1),), 0) == 0
+    report = single_failure_fixture(6, 4)
+    assert report["states"] > 0 and report["closed_form_mismatches"] == 0
+    with pytest.raises(ValueError):
+        single_failure_value(((3, 2), (4, 1)), 1)
+    with pytest.raises(ValueError):
+        single_failure_value(((3, 1),), 2)
+
+
+def test_at_most_two_failures_per_category_commit_is_optimal_on_the_grid():
+    capped = adaptive_states(6, 3, max_failures=2)
+    assert all(failures <= 2 for _, state in capped for _, failures in state)
+    assert len(capped) < len(adaptive_states(6, 3))
+    report = commit_until_hit_fixture(7, 3, max_failures=2)
+    assert report["commit_until_hit_suboptimal"] == 0
+    with pytest.raises(ValueError):
+        adaptive_states(4, 2, max_failures=0)
+
+
+def test_two_categories_commit_until_hit_is_optimal_on_the_grid():
+    report = two_category_commit_fixture(6)
+    assert report["commit_until_hit_gaps"] == 0
+    assert report["optimal_patch_not_optimal_after_its_miss"] == 0
+    assert report["negative_switch_slacks"] == 0 and report["switch_slacks_checked"] > 0
+    small = two_hit_fixture(4, 3)
+    assert small["value_mismatches"] == small["first_choice_mismatches"] == 0
+    assert small["closed_form_mismatches"] == 0 and small["larger_states_agree"]
 
 
 def test_commit_until_hit_bounds_and_witness():
@@ -60,6 +230,11 @@ def test_one_hit_closed_form_matches_the_dynamic_programme():
         assert all(values[c] == best for c in best_finishers(state))
     with pytest.raises(ValueError):
         one_hit_value(((3, 0),))
+    # The minimum runs over categories with failures: read over every category it would be 2.
+    spent = ((1, 0), (10, 1))
+    assert one_hit_value(spent) == optimal_adaptive_value(spent, 1) == Q(11, 2)
+    assert min(Q(n + 1, f + 1) for n, f in spent) == 2
+    assert one_hit_fixture(4, 2)["zero_failure_category_excluded"]["holds"]
 
 
 def test_one_hit_highest_rate_is_not_the_rule():
@@ -142,17 +317,22 @@ def test_first_patch_values_minimum_is_the_optimum():
 
 
 def test_preference_reversal_witness_exact():
+    # Version 0.6's witness ties: (1,1) is optimal too, so a rule ranking it first is optimal there.
     with_unit = first_patch_values(2, ((1, 1), (2, 1), (4, 2)))
+    assert with_unit[(2, 1)] < with_unit[(4, 2)] and with_unit[(1, 1)] == with_unit[(2, 1)] == Q(5, 2)
+    assert optimal_first_choices(((1, 1), (2, 1), (4, 2)), 2) == ((1, 1), (2, 1))
+    # Corrected witness: each preferred category is the unique optimum.
+    doubled = first_patch_values(2, ((2, 1), (2, 1), (4, 2)))
     without = first_patch_values(2, ((2, 1), (4, 2)))
-    assert with_unit[(2, 1)] < with_unit[(4, 2)]
+    assert doubled[(2, 1)] == 3 < doubled[(4, 2)] == Q(37, 12)
     assert without[(4, 2)] == Q(37, 12) < without[(2, 1)] == Q(19, 6)
+    assert optimal_first_choices(((2, 1), (2, 1), (4, 2)), 2) == ((2, 1),)
+    assert optimal_first_choices(((2, 1), (4, 2)), 2) == ((4, 2),)
     report = preference_reversals(4, 3, "own_counts")
-    assert report["reversals"] >= 1
-    first = report["first"]
-    assert (first["A"], first["B"], first["hits_needed"]) == ((2, 1), (4, 2), 2)
-    assert first["context"] == ()
-    for context in ("with_totals", "with_totals_and_category_count"):
-        assert preference_reversals(5, 4, context)["reversals"] >= 1
+    assert report["reversals"] >= report["refuting_pairs"] >= 1
+    first = report["first_refuting"]
+    assert (first["A"], first["B"], first["hits_needed"], first["context"]) == ((2, 1), (4, 2), 2, ())
+    assert first["A_uniquely_optimal_in"] == ((2, 1), (2, 1), (4, 2))
 
 
 def test_lower_rate_witness_exact_and_absent_at_one_hit():
@@ -169,7 +349,17 @@ def test_lower_rate_witness_exact_and_absent_at_one_hit():
 
 def test_index_rule_fixture_and_greedy_count():
     report = index_rule_fixture()
-    assert report["reversal_witness"]["holds"] and report["lower_rate_witness"]["holds"]
+    assert report["unique_optimum_witness"]["holds"] and report["lower_rate_witness"]["holds"]
+    assert report["totals_unique_optimum_witness"]["holds"]
+    assert report["totals_unique_optimum_witness"]["same_totals_and_category_count"]
+    assert report["version_0_6_witnesses_tie"]["holds"]
+    contexts = ("own_counts", "with_totals", "with_totals_and_category_count")
+    assert [report[c]["reversals"] for c in contexts] == [30, 125, 120]
+    assert [report[c]["refuting_pairs"] for c in contexts] == [8, 18, 12]
+    totals = report["with_totals_and_category_count"]["first_refuting"]
+    assert totals["context"] == (12, 5, 4)
+    assert totals["A_uniquely_optimal_in"] == ((2, 1), (2, 1), (4, 1), (4, 2))
+    assert totals["B_uniquely_optimal_in"] == ((2, 1), (3, 1), (3, 1), (4, 2))
     assert report["greedy"]["greedy_suboptimal"] == 131 and report["greedy"]["states"] == 33915
     assert greedy_failures(4, 3) == {"states": 1560, "greedy_suboptimal": 6}
 
@@ -793,6 +983,6 @@ def test_malformed_category_ledgers_raise(events, declared, message):
 
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 37
+    assert report["all_passed"] and len(report["checks"]) == 48
     assert report["evidence_status"].startswith("exact_synthetic")
     assert render_partition(sealed_partition(1)) == (("0", "1"),)
