@@ -1,18 +1,19 @@
 # The selection gap across generations, exactly
 
-Draft 0.5 — 2026-10-13 (0.4–0.2: 2026-10-13; 0.1: 2026-10-12). Companion to `evaluation_feedback_insertions.md`, whose
+Draft 0.6 — 2026-10-14 (0.5–0.2: 2026-10-13; 0.1: 2026-10-12). Companion to `evaluation_feedback_insertions.md`, whose
 selection law stops at one generation and whose multi-generation rows come from seeded JavaScript. This note replaces the
 accumulation claim with a finite Markov chain in exact arithmetic. No model is called; nothing here is evidence about any
 controller. Evidence levels follow the calculus card (§11): *algebraic identity* (every parameter), *finite verified example*
 (enumerated cells only), *synthetic mechanism result* (a property of this toy chain). 0.2 added Props. 5–7; 0.3 proved the
 naive chain above every gated chain in true value (Prop. 8); 0.4 proved the count ordering (Prop. 9) and recorded why the
-standard routes fail; 0.5 asks whether both survive mixed gain laws (§6): no counterexample in an exact search over every rule, the
-proof extended two below the target, finite beyond. Source `src/spiral_ln/evaluation_feedback_multigen.py`; 167 tests (`python -m
+standard routes fail; 0.5 asked whether both survive mixed gain laws (§6) and found no counterexample on its grids; 0.6 settles
+it: with one positive gain value (any chance of gain zero) both orderings are a theorem (Prop. 10), with two positive gain values
+both fail (exact counterexample at \(n=3,K=1\)). Source `src/spiral_ln/evaluation_feedback_multigen.py`; 177 tests (`python -m
 pytest tests/test_evaluation_feedback_multigen.py -q` with `PYTHONPATH=src`); receipt `output/evaluation_feedback_multigen/
-multigen_v0_5.json` (86 checks, source hashes, exact fractions, float renderings under `headline`) from `python
-scripts/verify_evaluation_feedback_multigen.py --full-sweep --output <receipt>`; without `--full-sweep` the dominance sweep and the
-mixed-law fixture run on reduced grids. Bounds involving \(\ln\) or \(\sqrt{}\) are floats, compared with exact values under an
-absolute tolerance of \(10^{-12}\).
+multigen_v0_6.json` (95 checks, source hashes, exact fractions, float renderings under `headline`) from `python
+scripts/verify_evaluation_feedback_multigen.py --full-sweep --output <receipt>`; without `--full-sweep` the dominance sweep, the
+mixed-law fixture and the gain-support fixture run on reduced grids. Bounds involving \(\ln\) or \(\sqrt{}\) are floats, compared
+with exact values under an absolute tolerance of \(10^{-12}\).
 
 ## 1. The chain: vertices, edges, policy
 
@@ -188,7 +189,7 @@ holds for \(\varphi=1\{i\ge\ell\}\). The naive hypothesis is needed: for \(t=(0,
 over \(n\in\{4,8,16\}\), \(K\in\{1,2,4\}\), \(z\in\{1,2,3\}\), \(\delta\in\{\tfrac1{16},\tfrac18,\tfrac14,\tfrac38\}\), \(p_0\in\{\tfrac14,\tfrac12,0\}\), fixed,
 two-point and decaying laws: 972 cells, \(g\le100\) (stopping at absorbed mass \(\ge1-10^{-9}\)), 88,171 comparisons of \(\mathbb E[c_g]\)
 and \(\mathbb E[p(i_g)]\), exact limits on the 648 constant-law cells: naive above gate everywhere. The fixed-law rows are now covered by
-Prop. 9; the two-point and decaying rows remain finite; the mutation chain was not searched.
+Prop. 9, the two-point rows by Prop. 10; the decaying rows remain finite; the mutation chain was not searched.
 
 **Proposition 9 (dominance in count).** Fixed gain, any non-decreasing level function, any \(n,K\), any threshold rule
 \(t\ge0\), any state \(x\) and any non-decreasing \(\psi\) on counts: \(\mathbb E^t_x[\psi(c_g)]\le\mathbb E^0_x[\psi(c_g)]\)
@@ -228,18 +229,85 @@ in the count (\(n=4,K=2,\delta=\tfrac1{16}\): two naive steps give \(2.344\) fro
 from the uniforms); on the lattice \(\tfrac14+i/8\) no such path exists for \(z=1,2,3\) or the non-gate rule within 10 generations.
 
 **Mixed gain laws (0.5).** If an accepted candidate may carry gain 0, a draw \(J>c\) accepted with gain 0 lands at \((J,i)\), which
-(L2) makes *worse* for reaching \(m\) than staying at \((c,i)\); a rule rejecting such draws could beat naive. Exact search
-(`mixed_gain_dominance_fixture`): every prefix window sum of the naive iterates for every objective (count, level, each hitting and
-level indicator), which by \(Q^kf\le QP^{k-1}f\le P^kf\) covers every rule at once (\(n=2..6\), \(K\le2\), jumps \((\tfrac14,\tfrac34,1)\),
-\((\tfrac18,\tfrac78)\), two-point \(q\in\{\tfrac14,\tfrac12,\tfrac34\}\) and \(\{0,2\}\) laws, \(g\le20\)); every rule at \(n\le4\) and random
-rules at \(n=5,6\) from every state; the decaying schedule. **No violation anywhere** (count, level, both hitting forms). The fixed-gain
-proof does not extend: (L1) holds for every law and (L2)–(L3) for laws on \(\{0,1\}\) (finite beyond: \(\{0,2\}\) and three-point), but the landing average \(g_k(J)=\sum_\mu w_\mu(J)s_k(J,i+\mu)\), \(w\) the posterior on the gain
-given the count, is not monotone in \(J\): \(n=3,K=1\), levels \((\tfrac14,\tfrac34,1)\), \(q=\tfrac14\), \(m=3\), from \((0,0)\) at \(k=1\),
-\(g_1=(\tfrac{429}{512},\tfrac{337}{512})\), prefix average above \(e_1=\tfrac{789}{1024}\), unit window \(\tfrac{1035}{65536}>0\). Exact
-instead, for \(a<m\): \(W^a_k(x)=(1-H(i))W^a_{k-1}(x)+E^a_{k-1}(x)+\sum_{y\in(c,a]}\rho(y)W^{m-1}_{k-1}(y)-B_aW^{m-1}_{k-1}(x)\), with
-\(E^a=\sum_{(c,a]}\rho(y)(H(i_y)-H(i))s_{k-1}(y)\ge0\) and \(W^{m-1}\) the full-window slacks (\(\ge0\) by (L1)); only the last term is
-negative, and at \(c=m-2\) it cancels: \(W_k=AW_{k-1}+E_{k-1}\ge0\), **a theorem two below the target for every gain law**; below that
-finite. Level: (M1) holds, (M2) fails for \(\{0,2\}\) (\(u_4(0,0)=\tfrac{15856573}{16777216}>u_4(0,1)\) on the same cell); (D) holds finitely.
+(L2) makes *worse* for reaching \(m\) than staying at \((c,i)\); a rule rejecting such draws could beat naive. The 0.5 search
+(`mixed_gain_dominance_fixture`: every prefix window sum of the naive iterates for every objective, which by \(Q^kf\le QP^{k-1}f\le P^kf\)
+covers every rule at once; \(n=2..6\), \(K\le2\), jumps \((\tfrac14,\tfrac34,1)\), \((\tfrac18,\tfrac78)\), two-point \(q\in\{\tfrac14,\tfrac12,\tfrac34\}\)
+and \(\{0,2\}\) laws, \(g\le20\); every rule at \(n\le4\), random rules at \(n=5,6\); the decaying schedule) found no violation, and the
+fixed-gain proof does not extend: the landing average \(g_k(J)=\sum_\mu w_\mu(J)s_k(J,i+\mu)\), \(w\) the posterior on the gain given the
+count, is not monotone in \(J\) (\(n=3,K=1\), levels \((\tfrac14,\tfrac34,1)\), \(q=\tfrac14\), \(m=3\), from \((0,0)\) at \(k=1\):
+\(g_1=(\tfrac{429}{512},\tfrac{337}{512})\), prefix average above \(e_1=\tfrac{789}{1024}\), unit window \(\tfrac{1035}{65536}>0\)), and the exact
+recursion \(W^a_k=(1-H(i))W^a_{k-1}+E^a_{k-1}+\sum_{(c,a]}\rho(y)W^{m-1}_{k-1}(y)-B_aW^{m-1}_{k-1}(x)\) closes only at \(c=m-2\), where the one window
+below \(m\) is the full one, i.e. (L1). (L1) itself, \(s_{k+1}(x)\le(1-H(i))s_k(x)\), equivalently \(W^{m-1}_k(x)\ge0\), is a theorem for every
+gain law under two hypotheses: every gain is \(\ge0\) (each landing is at a level \(\ge i\)) and the death rate \(H(i)=P(M\ge m\mid\text{level }i)\)
+is non-decreasing in the level (automatic here: \(p\) is non-decreasing and a candidate's count is \(\mathrm{Bin}(n,p(\min(\text{top},i+\mu)))\));
+the fixed-gain induction carries over unchanged. Algebraic identity (Lean: `full_window_nonneg`, `lean/FeedbackChannel/MultigenMixed.lean`).
+Level: (M1) holds, (M2) fails for \(\{0,2\}\) between adjacent levels, which lie on different
+sub-lattices of that law (\(u_4(0,0)=\tfrac{15856573}{16777216}>u_4(0,1)\) on the same cell). 0.5 also recorded (L2)–(L3) as finite beyond
+\(\{0,1\}\); the witnesses below refute that.
+
+**Proposition 10 (one positive gain value).** *Hypotheses*, on the abstract chain: states \((c,i)\), \(c\in\{0..n\}\), \(i\in\{0..\text{top}\}\);
+from level \(i\) the best candidate is a pair \((J,i')\) drawn from a law \(\pi_i\) that does not depend on the count, and the naive rule
+moves to \((J,i')\) iff \(J>c\); (A) one positive gain value: \(i'\in\{i,i^+\}\), \(i^+=\min(\text{top},i+1)\); (B), for the count only: for
+every \(m\) the death rate \(H_m(i)=\pi_i(J\ge m)\) is non-decreasing in \(i\). The drift chain satisfies (A) for every gain law on
+\(\{0,1\}\) with any \(q_0\in[0,1]\) (a law on \(\{0,g\}\) is the same chain on each sub-lattice \(i+g\mathbb N\) clamped at the top; \(q_0=0\) is
+Props. 8–9) and (B) for every non-decreasing level function and every \(n,K\). *Statement*: for any threshold rule (it may depend on the
+level and on the generation), any state and horizon: \(\mathbb E^t_x[\psi(c_g)]\le\mathbb E^0_x[\psi(c_g)]\) and
+\(\mathbb E^t_x[\varphi(i_g)]\le\mathbb E^0_x[\varphi(i_g)]\) for every non-decreasing \(\psi\) on counts and \(\varphi\) on levels: the naive count
+and the naive level are both stochastically above every threshold rule's, from every initial law. *Proof.* (W, every law and every
+\(f\)) For \(c<a\) let \(\theta=F_i(a)\) be the naive self-loop probability at \((a,i)\). \(Pu_k\) at \((c,i)\) and at \((a,i)\) share every
+landing beyond \(a\), so the window sum is a same-level growth defect,
+\[W^a_k(c,i)=[u_{k+1}(c,i)-\theta u_k(c,i)]-[u_{k+1}(a,i)-\theta u_k(a,i)]=\Gamma_{k+1}-\theta\Gamma_k,\qquad\Gamma_k=u_k(c,i)-u_k(a,i).\]
+(V, every law) Run chains from \((c,i)\) and \((a,i)\) on the same draws: they agree on a draw at most the lower count, merge on a draw
+above \(a\), the lower moves inside the window on a draw there that keeps the level, and diverges on one that raises it, landing at
+\(y\), after which the difference is \(Y_r(y,a)=u_r(y)-u_r(a,i)\). For level objectives and for \(1\{c\ge m\}\) with \(a<m\) (the residual
+term of a pair that has neither diverged nor merged then vanishes), \(\Gamma_k=\sum_{t\le k}\sum_y\kappa_t(y)Y_{k-t}(y,a)\) with
+\(\kappa\ge0\) free of \(k\), so \(\Gamma_{k+1}-\theta\Gamma_k=\sum_y\kappa_{k+1}(y)Y_0(y,a)+\sum_{t\le k}\sum_y\kappa_t(y)[Y_{k+1-t}-\theta Y_{k-t}]\): the window
+condition follows from \(Y_0\ge0\) and the *cross-gap growth* \(Y_{r+1}\ge\theta Y_r\). Under a law on \(\{0,1\}\) every divergence state is
+\((J,i+1)\), \(J\le a\). (Count) For \(1\{c\ge m\}\), \(a<m\), \(s=1-u\): \(Y_0=0\) and
+\[Y_{r+1}-\theta Y_r=\sum_{a<J'<m}\sum_\mu\pi_i(J',\mu)s_r(J',i+\mu)+\theta s_r(J,i+1)-s_{r+1}(J,i+1)\ge(\sigma_i-\sigma_{i+1})s_r(J,i+1)\ge0,\]
+\(\sigma_i=1-H(i)\): every landing beyond \(a\) is worth at least \(s_r(J,i+1)\) by (L3) at \(J'\) and (L2) at level \(i+1\), the landings below
+\(m\) carry mass \(\sigma_i-\theta\), and (L1) at \((J,i+1)\) bounds the last term. Windows with \(a\ge m\) add non-negative terms to the full
+window, which is (L1). (Level) For \(\varphi\): \(Y_0=\varphi(i+1)-\varphi(i)\ge0\), every landing beyond \(a\) is worth at most \(u_r(J,i+1)\) by
+(M2) at \(J'\) and (M1) at level \(i+1\) and carries mass \(1-\theta\), so \(Y_{r+1}-\theta Y_r\ge u_{r+1}(J,i+1)-u_r(J,i+1)\ge0\) (the level never
+decreases). (Lemmas) (L1) from gains \(\ge0\) and (B), as above; (L2), (L3) as in Prop. 9 from (A) and (B), every landing of the lower chain
+being at level \(i\) or \(i+1\); (M1) by first divergence (the chains from \((c,i)\) and \((c+1,i)\) differ only after a gain-1 draw equal to
+\(c+1\), worth \(u(c+1,i+1)-u(c+1,i)\ge0\) by (M2)); (M2) by the waiting chain (every landing of \((c,i)\) is worth at most \(v_r=u_r(c,i+1)\) by
+(M2) and (M1) at level \(i+1\), so \(u_k(c,i)\le Au_{k-1}(c,i)+(1-A)v_{k-1}\le v_{k-1}\le v_k\), \(A=F_i(c)\)); joint induction on \(k\). The
+level statement uses (A) alone; the count statement uses (A) and (B). Then \((Pf-Qf)(c,i)=W^{a(c,i)}_k(c,i)\ge0\)
+for every indicator iterate, so \(QP^kf\le P^{k+1}f\) and \(Q_1\cdots Q_kf\le P^kf\). Algebraic identity; for the fixed law it is a second proof
+of Props. 8 and 9 that avoids the averaging step. Checked (`gain_support_fixture`, `single_gain_structure`): every step — (L1)–(L3),
+(M1), (M2), time monotonicity, both cross-gap growths and every window — at every state and horizon \(\le16\) on 1,176 cells
+(\(n=3..10\), \(K\in\{1,2,4\}\), seven lattices including \(p=0\), a plateau and a non-uniform lattice; \(q_1\in\{\tfrac1{16},\tfrac14,\tfrac12,\tfrac{15}{16},1\}\),
+\(\{0,2\}\), \(\{0,3\}\)), 50,936,046 exact inequalities; identities (W) and (V) on one- and two-gain cells; every rule directly at
+\(n\le4\) on 294 cells (14,406 rule–cell pairs, 64,652,000 comparisons, horizon \(\le24\)); no failure.
+
+**Two positive gain values: counterexample.** The bounds in (Count) and (Level) need every landing beyond the window to be no better
+than the divergence state \((J,i+1)\); with two positive gain values a landing above the divergence level is not, and (L2), (L3)
+fail with it. \(n=3\), \(K=1\), levels \((0,\tfrac14,\tfrac14,\tfrac34)\), gains \(\{0,1,3\}\) w.p. \((\tfrac35,\tfrac15,\tfrac15)\) (`two_gain_counterexample`):
+the rule \(t=(1,0,0,0)\), which rejects a count of one at count zero, is ahead of the naive rule from \((0,0)\) in \(P(c_k=3)\) at every
+\(k=28..80\) (largest at \(k=34\): \(0.99090\) against \(0.99045\)), in \(\mathbb E[c_k]\) at \(k=39..80\), and in \(\mathbb E[p(i_k)]\) at \(k=19..80\)
+and in the limit (\(\tfrac{2909}{3968}\approx0.7331\) against \(\tfrac{8058689}{11073200}\approx0.7278\)). Mechanism: gain-0 candidates score 0 at \(p=0\);
+one unit of gain is worth nothing on the plateau \(p(1)=p(2)\); a count of one comes from a gain-1 candidate w.p. \(\tfrac{27}{320}\) and from a
+gain-3 one w.p. \(\tfrac9{320}\), a count of two the other way round. The gate filters out the small gain and waits for the large one,
+which a locked-in count of one would block (the naive chain at count one rejects the gain-3 candidates scoring one). On the same cell the
+window is first negative at \(k=16\) (\(W^1_{16}(0,0)\approx-1.26\times10^{-5}\) for \(m=3\)), (L3) fails at \(k=10\) (\((1,1)\) survives longer than
+\((1,0)\)) and (L2) at \(k=28\). Neither the plateau nor gain 0 is needed: \(n=4\), levels \((0,\tfrac14,\tfrac34)\), gains \(\{0,1,2\}\) w.p.
+\((\tfrac37,\tfrac17,\tfrac37)\), the same rule, is ahead in \(P(c_k=4)\) and \(\mathbb E[c_k]\) at \(k=31..80\) (by about \(10^{-6}\)) and in \(\mathbb E[p]\) at
+\(k=15..80\); \(n=7\), \(K=2\), levels \((\tfrac1{32},\tfrac5{32},\tfrac9{16},\tfrac{23}{32},\tfrac{15}{16})\), gains \(\{1,3\}\) w.p. \(\tfrac12\) each, \(t(0)=1\), is ahead in
+\(\mathbb E[c_k]\) at \(k=8..12\). A three-level witness for the level, by hand: \(n=3\), \(K=1\), levels \((0,\tfrac12,1)\), gains \(\{0,1,2\}\) w.p.
+\((\tfrac23,\tfrac16,\tfrac16)\), \(t(0)=2\); naively a middling gain-1 acceptance reaches \(p=1\) only w.p. \(\tfrac45\) before a null perfect score locks
+it at \(\tfrac12\), so \(\mathbb E^0[p_\infty]=\tfrac{139}{150}\) against \(\tfrac{17}{18}\) for the gate (finite horizons from \(k=19\)). Finite verified
+examples. Exact window screen by support (`support_window_screen`, count and level indicators, every state and window, \(k\le40\);
+\(n=3..8\), \(K\in\{1,2,4\}\), the seven lattices; seven single-gain and six two-gain laws, 1,638 cells, 51,813,996 windows): no
+negative window on any of the 882 single-gain cells, as Prop. 10 requires; negative count windows on 39 and negative level
+windows on 296 of the 756 two-gain cells (count: \(\{0,1,3\}\) 24, \(\{1,3\}\) 9, the skewed three-point law 4, \(\{0,1,2\}\) 2,
+\(\{1,2\}\) and \(\{0,2,3\}\) none, of 126 each; level: 108, 54, 79, 14, 14 and 27). A negative window shows that one gated step
+followed by naive play wins somewhere; it is necessary, not sufficient, for a threshold rule to win.
+
+**What remains.** Which two-gain cells fail is not characterized (the window condition holds on most screened two-gain cells and on
+all of the 0.5 grids; no count failure was found for \(\{1,2\}\)); \(q_0\le\tfrac12\) does not rescue them (the \(\{1,3\}\) witness has \(q_0=0\), the plateau-free one \(q_0=\tfrac37\)). The time-varying
+single-gain schedule (the decaying law) is outside the proof, whose divergence weights then depend on the generation; it stays finite
+(0.5). The mutation chain was not searched.
 
 ## 7. The readout-gap series and the divergence flags
 
@@ -253,7 +321,7 @@ increments require; two-point drift matches; the fresh arm flags only the first 
 Candidates are independent of the incumbent, or correlated through one parameter \(q\) (§5, where the correlation raises
 rather than lowers the accumulated gap); neither chain is an exact image of `sim.js`. \(n\) is fixed; labels are clean; gains
 are i.i.d. across candidates; the \(p\)-lattice is capped at one, and results near the corner \((n,\text{top})\) are timing
-effects. Propositions 5–9 are general (Props. 8–9 for the fixed gain law; under mixed laws only the window recursion and its
-distance-two closure are proven); the \(q\)-survey, the chaining counts, the two-point and decaying orderings and the mixed-law dominance
-are finite checks on the enumerated cells. Results are about distributions, not sample paths; no model, agent or observed-controller
-evidence is claimed.
+effects. Propositions 5–10 are general (Props. 8–9 for the fixed gain law, Prop. 10 for every law with one positive gain value; with
+two positive gain values both orderings fail, by exact counterexample); the \(q\)-survey, the chaining counts, the decaying-schedule
+ordering and the two-gain screen are finite checks on the enumerated cells. Results are about distributions, not sample paths; no
+model, agent or observed-controller evidence is claimed.

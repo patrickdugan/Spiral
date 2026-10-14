@@ -15,6 +15,9 @@ from spiral_ln.evaluation_feedback_multigen import (
     drift_gap_increment_from_one_step, drift_kernel, drift_levels, drift_limit,
     drift_trajectory, false_acceptance_probability, fresh_block_reported,
     fresh_trajectory, gate_threshold, kernel_iterates, late_early_ratio,
+    SINGLE_GAIN_LATTICES, SINGLE_GAIN_LAWS, TWO_GAIN_CELL, TWO_GAIN_LAWS, divergence_decomposition,
+    gain_support_fixture, integer_iterates, iterate_fraction, rule_dominance_integer, same_level_window,
+    single_gain_structure, support_window_screen, two_gain_counterexample,
     mixed_count_structure, mixed_level_structure, mixed_objectives, mixed_window_screen,
     mixed_window_sums, mutation_candidate_law, mutation_state_distribution,
     mutation_trajectory, mutation_transition_kernel, naive_closed_form,
@@ -1005,9 +1008,123 @@ def test_level_dominance_holds_under_mixed_laws_but_M2_fails_for_zero_or_two_law
     assert all(mixed_level_structure(4, 2, LATTICE, FIXED, 6)["flags"].values())
 
 
+# --------------------------------------------------------------------------
+# version 0.6: one positive gain value (Proposition 10) versus two
+# --------------------------------------------------------------------------
+
+ZERO_PLATEAU = SINGLE_GAIN_LATTICES["zero_plateau"]
+
+
+def test_integer_iterates_and_window_identity_match_the_fraction_versions():
+    """Identity (W): every window sum equals the same-level growth defect
+    ``[u_{k+1}(c,i) - F_i(a) u_k(c,i)] - [u_{k+1}(a,i) - F_i(a) u_k(a,i)]``,
+    for one- and two-gain laws and every objective."""
+
+    for items, candidates, levels, law in ((4, 2, LATTICE, {0: HALF, 1: QUARTER, 2: QUARTER}),
+                                           (3, 1, ZERO_PLATEAU, TWO_GAIN_CELL["law"]),
+                                           (4, 1, JUMP, TWO_POINT_QUARTER)):
+        kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+        for f in mixed_objectives(items, levels).values():
+            exact = kernel_iterates(kernel, f, 4)
+            fast = integer_iterates(kernel, f, 4)
+            assert all(iterate_fraction(fast, k, x) == exact[k][x] for k in range(5) for x in kernel)
+            for k in range(4):
+                for (c, i), sums in mixed_window_sums(kernel, exact[k], items).items():
+                    assert [same_level_window(fast, k, c, a, i) for a in range(c + 1, items + 1)] == sums
+    assert integer_iterates(kernel, lambda x: Q(x[0]), 0)["numerators"][0][(2, 1)] == 2
+
+
+def test_divergence_decomposition_with_and_without_residual():
+    """Identity (V) at ``(0, 0)`` with ``a = 1`` on the two-gain cell: the
+    first divergences are the count-one landings ``(1, 1)`` and ``(1, 3)``
+    with weights 27/320 and 9/320 at generation one; the residual term is
+    zero for a hitting indicator with ``a < m`` and for the level, not for
+    the count itself."""
+
+    items, levels, law = 3, ZERO_PLATEAU, TWO_GAIN_CELL["law"]
+    kernel = drift_kernel(items, 1, levels, law, naive_threshold(items))
+    hit = kernel_iterates(kernel, lambda x: Q(int(x[0] >= 3)), 6)
+    out = divergence_decomposition(kernel, hit, 0, 1, 0)
+    assert out["identity_holds"] and out["kappa_nonnegative"]
+    assert out["kappa"][0] == {(1, 1): Q(27, 320), (1, 3): Q(9, 320)}
+    assert out["kappa"][1] == {(1, 1): Q(11, 16) * Q(27, 320), (1, 3): Q(11, 16) * Q(9, 320)}
+    assert set(out["residual"]) == {0}
+    count = kernel_iterates(kernel, lambda x: Q(x[0]), 6)
+    out = divergence_decomposition(kernel, count, 0, 2, 0)
+    assert out["identity_holds"] and out["residual"][0] == -2 and out["residual"][1] != 0
+    level = kernel_iterates(kernel, lambda x: levels[x[1]], 6)
+    assert set(divergence_decomposition(kernel, level, 1, 3, 1)["residual"]) == {0}
+    with pytest.raises(ValueError):
+        divergence_decomposition(kernel, hit, 2, 2, 0)
+
+
+@pytest.mark.parametrize("law_name", ["q=1/16", "q=15/16", "fixed", "zero_or_two_q=1/2", "zero_or_three_q=1/4"])
+def test_single_gain_structure_every_step_of_proposition_10(law_name):
+    for items, candidates, lname in ((3, 1, "zero_plateau"), (4, 2, "nonuniform"), (5, 2, "zero_to_one")):
+        out = single_gain_structure(items, candidates, SINGLE_GAIN_LATTICES[lname], SINGLE_GAIN_LAWS[law_name], 6)
+        assert all(out["flags"].values()), (lname, out["flags"])
+        assert all(n > 0 for n in out["checks"].values())
+    with pytest.raises(ValueError):
+        single_gain_structure(3, 1, ZERO_PLATEAU, TWO_GAIN_CELL["law"], 4)
+
+
+def test_single_gain_every_rule_dominated_and_integer_check_matches_fraction_check():
+    out = rule_dominance_integer(4, 2, ZERO_PLATEAU, SINGLE_GAIN_LAWS["q=1/4"], threshold_rules(4), 10)
+    assert out["first_violation"] is None and out["rules_checked"] == 119
+    small = (3, 1, JUMP, {0: HALF, 1: HALF}, threshold_rules(3), 6)
+    assert rule_dominance_integer(*small) == rule_dominance_check(*small)
+    two = rule_dominance_integer(3, 1, ZERO_PLATEAU, TWO_GAIN_CELL["law"], threshold_rules(3), 40)
+    assert two["first_violation"] is not None and two["first_violation"]["gated"] > two["first_violation"]["naive"]
+
+
+def test_two_gain_counterexample_count_and_level_exact():
+    """``n = 3, K = 1``, levels ``(0, 1/4, 1/4, 3/4)``, gains ``{0, 1, 3}``
+    w.p. ``(3/5, 1/5, 1/5)``: rejecting a count of one at count zero beats
+    the naive rule in the count tail, the mean count and the true value.
+    The three-level cell (gains ``{0, 1, 2}`` w.p. ``(2/3, 1/6, 1/6)``,
+    levels ``(0, 1/2, 1)``) by hand: naively the first acceptance is a
+    gain-2 candidate (weight 1/6), a gain-1 candidate scoring 3 (1/48, stuck
+    at p = 1/2) or one scoring 1 or 2 (1/8), which then reaches the top
+    before a null 3 w.p. (1/3) / (1/3 + 1/12) = 4/5; so P(top) = (1/6 +
+    1/10) / (15/48) = 64/75 and E[p] = 139/150, while the gate t(0) = 2
+    gives P(top) = 8/9 and E[p] = 17/18."""
+
+    out = two_gain_counterexample()
+    assert out["count_dominance_fails"] and out["level_dominance_fails"] and out["no_zero_gain_needed"]
+    assert out["draws_from_start"]["naive"] == [
+        ((0, 0), Q(11, 16)), ((1, 1), Q(27, 320)), ((1, 3), Q(9, 320)), ((2, 1), Q(9, 320)),
+        ((2, 3), Q(27, 320)), ((3, 1), Q(1, 320)), ((3, 3), Q(27, 320))]
+    assert out["draws_from_start"]["gated"][0] == ((0, 0), Q(4, 5))
+    assert out["top_count"]["first"]["horizon"] == 28 and out["top_count"]["largest"]["horizon"] == 34
+    assert out["top_count"]["horizons_gate_ahead"] == list(range(28, 81))
+    assert out["count"]["first"]["horizon"] == 39 and out["level"]["first"]["horizon"] == 19
+    assert out["limit_true_value"] == {"naive": Q(8058689, 11073200), "gated": Q(2909, 3968)}
+    assert out["first_negative_window_m3_state00_top1"]["horizon"] == 16
+    assert out["L3_fails"]["horizon"] == 10 and out["L3_fails"]["state"] == (1, 0)
+    assert out["L2_fails"]["horizon"] == 28 and out["L2_fails"]["state"] == (0, 0)
+    assert out["level_cell"]["limit_true_value"] == {"naive": Q(139, 150), "gated": Q(17, 18)}
+    assert out["level_cell"]["level"]["first"]["horizon"] == 19
+    assert out["no_zero_cell"]["count"]["horizons_gate_ahead"] == [8, 9, 10, 11, 12]
+    plateau_free = out["no_plateau_cell"]
+    assert out["no_plateau_needed"] and plateau_free["top_count"]["horizons_gate_ahead"] == list(range(31, 81))
+    assert plateau_free["level"]["first"]["horizon"] == 15
+
+
+def test_support_screen_single_gain_clean_two_gains_negative():
+    for law in (SINGLE_GAIN_LAWS["q=1/4"], SINGLE_GAIN_LAWS["zero_or_two_q=1/2"], SINGLE_GAIN_LAWS["fixed"]):
+        out = support_window_screen(3, 1, ZERO_PLATEAU, law, 30)
+        assert out["negatives"] == {"count": 0, "level": 0} and out["first_negative"] is None
+    out = support_window_screen(3, 1, ZERO_PLATEAU, TWO_GAIN_LAWS["0|1|3"], 30)
+    assert out["negatives"]["count"] > 0 and out["negatives"]["level"] > 0
+    assert out["windows_checked"] == (3 + 3) * 31 * 4 * (3 + 2 + 1)
+    fixture = gain_support_fixture()
+    assert fixture["support_screen"]["single_gain_clean"] and fixture["structure"]["all_cells_pass"]
+    assert not fixture["rules"]["violations"] and all(fixture["identities"].values())
+
+
 def test_verify_reports_every_check_passing():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 86
+    assert report["all_passed"] and len(report["checks"]) == 95
     assert report["evidence_status"].startswith("exact_synthetic")
     assert report["brute_force"]["all_match"]
     assert report["headline"]["naive_readout_gap_n8_k2_p_half"]["G=1"]["exact"] == Q(19305, 131072)
@@ -1026,3 +1143,7 @@ def test_verify_reports_every_check_passing():
     assert mixed["screen"]["cells"] == 120 and mixed["rules"]["cells"] == 40 and mixed["decaying"]["cells"] == 24
     assert mixed["level_structure"]["M2_fails_on_laws"] == ["zero_or_two_q=1/2"]
     assert report["headline"]["mixed_gain_laws"]["witnesses"]["g_not_monotone"]["state"] == (0, 0)
+    gain = report["gain_support"]
+    assert not gain["full"] and gain["structure"]["cells"] == 72 and gain["rules"]["cells"] == 6
+    assert gain["support_screen"]["cells"] == 48 and gain["support_screen"]["single_gain_clean"]
+    assert report["headline"]["gain_support"]["two_gain_ahead"]["top_count"]["first_horizon"] == 28

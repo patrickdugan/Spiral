@@ -79,10 +79,23 @@ where an accepted candidate may carry gain zero (``mixed_gain_dominance_
 fixture``, discussion before ``MIXED_LATTICES``).  No counterexample was
 found for the count or the level on any enumerated cell (every threshold
 rule at small ``n``, every objective, constant laws and the decaying
-schedule); (L1)-(L3) hold, the averaging step of (L4) fails with exact
+schedule); (L1)-(L3) hold on its cells, the averaging step of (L4) fails with exact
 witnesses, an exact recursion for the window sums is proven and closes
 the window condition two below the target for every law; beyond that the
-mixed-law orderings are finite results.
+mixed-law orderings are finite results (F).
+
+Version 0.6 settles (F) (``gain_support_fixture``, discussion before
+``SINGLE_GAIN_LATTICES``).  For gain laws with ONE positive gain value
+(support in ``{0, g}``, any probability of gain zero) both orderings are a
+theorem (Proposition 10) by a new route: an identity writes every window
+sum as a same-level growth defect, ``[u_{k+1}(c) - F(a) u_k(c)] -
+[u_{k+1}(a) - F(a) u_k(a)]``, a coupling decomposes the same-level gap
+over the first divergence, and the cross gaps grow at rate ``F(a)`` by
+(L1)-(L3) or (M1)-(M2).  For laws with TWO positive gain values both
+orderings fail: ``two_gain_counterexample`` is exact at ``n = 3, K = 1``
+(the gate filters the small gain out and waits for the large one), and
+(L2), (L3) fail with it.  ``integer_iterates`` propagates exact iterates
+as integer numerators, which makes the larger exact screens cheap.
 
 Boundaries
 ----------
@@ -1601,11 +1614,13 @@ def dominance_structure_fixture() -> dict[str, object]:
 # rules but not among all accept/reject policies.  The same-uniform
 # coupling cannot replace the argument: ``quantile_coupling_crossing``
 # exhibits a path on which the gated level passes the naive level while
-# the naive count is still below m.  Mixed gain laws: (L1)-(L3) go through,
-# (L4)'s averaging step does not (the landing level is then not a function
-# of the landing count); see the version 0.5 section before
-# ``MIXED_LATTICES`` for the exact search, the recursion that replaces the
-# averaging step, and what remains finite.
+# the naive count is still below m.  Mixed gain laws: (L1) goes through
+# whenever every gain is >= 0 and H is non-decreasing in the level, (L2)-
+# (L3) for laws with one positive gain value only, and (L4)'s averaging
+# step does not (the landing level is then not a function of the landing
+# count); see the version 0.5 section before ``MIXED_LATTICES`` and the
+# version 0.6 section before ``SINGLE_GAIN_LATTICES``, which replaces the
+# averaging step and settles the mixed laws.
 
 
 LEMMA_HORIZON = 12
@@ -1887,11 +1902,13 @@ def coupling_crossing_fixture() -> dict[str, object]:
 # objective (count, level, hitting and level indicators), constant laws and
 # the decaying schedule.  No violation was found anywhere (finite).
 #
-# Proof status for the count.  (L1)-(L3) hold under mixed laws: (L1) uses
-# only that every landing's death rate H(i + mu) is >= H(i); (L2) is the
-# first divergence plus (L3) at the landing levels; (L3)'s waiting-chain
-# argument needs every landing of the lower chain to be no better than
-# (c, i+1), which holds for laws supported on {0, 1} (finite beyond).
+# Proof status for the count.  (L1) is a theorem for every gain law with
+# gains >= 0 and H non-decreasing in the level (it uses only that every
+# landing's death rate H(i + mu) is >= H(i); Lean: full_window_nonneg);
+# (L2) is the first divergence plus (L3) at the landing levels; (L3)'s
+# waiting-chain argument needs every landing of the lower chain to be no
+# better than (c, i+1), which holds for laws supported on {0, 1} (version
+# 0.5 recorded "finite beyond"; version 0.6 refutes that).
 # (L4)'s averaging step fails: the posterior-averaged landing survival
 # g_k(J) = sum_mu w_mu(J) s_k(J, i+mu), w_mu(J) = q_mu Bin(n, p(i+mu))(J)
 # / mix(J), is not monotone in J (the posterior on the gain shifts upward
@@ -1923,6 +1940,14 @@ def coupling_crossing_fixture() -> dict[str, object]:
 # below the top), and the suppressed-state step pulls landings beyond the
 # window, whose posterior gain is higher, down to a window landing with a
 # lower posterior, which is the wrong direction.
+#
+# Version 0.6 settles both questions (section before
+# ``SINGLE_GAIN_LATTICES``): for laws with ONE positive gain value the
+# window condition is a theorem at every distance, for the count and the
+# level, by a route that bypasses the averaging step; for laws with TWO
+# positive gain values both orderings fail, with an exact counterexample
+# at n = 3, K = 1, and (L2), (L3), (M2) fail with it.  The 0.5 statement
+# "(L2)-(L3) finite beyond {0, 1}" is superseded by those witnesses.
 
 
 MIXED_LATTICES = {"quarter_half_jump": (Q(1, 4), Q(3, 4), Q(1)),
@@ -2345,6 +2370,506 @@ def mixed_gain_dominance_fixture(full=False) -> dict[str, object]:
             "level_structure": {"flags": level_flags, "by_cell": level, "M2_fails_on_laws": sorted(set(m2_fails_on))},
             "witnesses": witnesses, "fixed_gain_averaging_step_fails": averaging_fails,
             "no_violation_anywhere": not (screen_negatives or rule_violations or decay_negatives or decay_violations)}
+
+
+# --------------------------------------------------------------------------
+# Version 0.6: one positive gain value (theorem) versus two (counterexample)
+# --------------------------------------------------------------------------
+#
+# Theorem (Proposition 10).  Hypotheses on the abstract chain: from level i
+# the best candidate is a pair (J, i') with a law pi_i free of the count,
+# and the naive rule moves to (J, i') iff J > c; (A) one positive gain
+# value: i' in {i, min(top, i+1)}; (B), for the count only: for every m the
+# death rate H_m(i) = pi_i(J >= m) is non-decreasing in i.  The drift chain
+# satisfies (A) for every gain law on {0, 1} with any q_0 in [0, 1] (a law
+# on {0, g} is the same chain on each sub-lattice i + g N clamped at the
+# top; q_0 = 0 is Propositions 8-9) and (B) for every non-decreasing level
+# function and every n, K.  Then for every threshold rule (it may depend on
+# the level and on the generation), every state, every horizon k and every
+# non-decreasing psi on counts (needs A, B) or phi on levels (needs A):
+# Q^k f <= P^k f.  The proof bypasses the averaging step of (L4) that fails
+# under mixed laws.
+#   (W, identity, every law and every f)  For c < a write theta = F_i(a)
+#     for the naive self-loop probability at (a, i).  P u_k at (c, i) and at
+#     (a, i) share every landing beyond a, so
+#       W^a_k(c,i) = [u_{k+1}(c,i) - theta u_k(c,i)] - [u_{k+1}(a,i) - theta u_k(a,i)]
+#                  = Gamma_{k+1} - theta Gamma_k,   Gamma_k = u_k(c,i) - u_k(a,i).
+#   (V, divergence decomposition, every law)  Run chains from (c, i) and
+#     (a, i) on the same draws.  They agree on a draw at most the lower
+#     count, merge on a draw above a, move the lower chain inside the window
+#     on a draw in the window that keeps the level, and diverge on a draw
+#     y = (J', i') in the window that raises it, after which the difference
+#     is Y_r(y, a) = u_r(y) - u_r(a, i).  So Gamma_k = sum_{t <= k} sum_y
+#     kappa_t(y) Y_{k-t}(y, a) + sum_r rho_k(r) [f(r,i) - f(a,i)], kappa >= 0
+#     free of k and f, rho_k the law of the lower count if neither event has
+#     happened by k.  The last term is zero for level objectives and for
+#     hitting indicators 1{c >= m} with a < m, and then
+#       Gamma_{k+1} - theta Gamma_k = sum_y kappa_{k+1}(y) Y_0(y, a)
+#                                     + sum_{t <= k} sum_y kappa_t(y) [Y_{k+1-t} - theta Y_{k-t}].
+#     The window condition (WC) therefore follows from Y_0 >= 0 and the
+#     cross-gap growth (CG) Y_{r+1}(y, a) >= theta Y_r(y, a) at every
+#     divergence state; for laws on {0, 1} these are y = (J, i+1), J <= a.
+#   (CG, count)  f = 1{c >= m}, a < m, s = 1 - u: Y_r = s_r(a,i) -
+#     s_r(J,i+1), Y_0 = 0, and
+#       Y_{r+1} - theta Y_r = sum_{a<J'<m} sum_mu pi_i(J',mu) s_r(J',i+mu)
+#                             + theta s_r(J,i+1) - s_{r+1}(J,i+1)
+#                           >= (sigma_i - theta) s_r + theta s_r - sigma_{i+1} s_r
+#                            = (sigma_i - sigma_{i+1}) s_r(J,i+1) >= 0,
+#     sigma_i = 1 - H(i): every landing beyond a is worth at least
+#     s_r(J,i+1) ((L3) at J', then (L2) at level i+1), the landings below m
+#     carry mass sigma_i - theta, and (L1) at (J, i+1).  Windows with a >= m
+#     add non-negative terms to the full window, which is (L1).
+#   (CG, level)  phi non-decreasing on levels: Y_0 = phi(i+1) - phi(i) >= 0;
+#     every landing beyond a is worth at most u_r(J,i+1) ((M2) at J', then
+#     (M1) at level i+1) and carries mass 1 - theta, so Y_{r+1} - theta Y_r
+#     >= u_{r+1}(J,i+1) - u_r(J,i+1) >= 0 (the level never decreases).
+#   (Lemmas, laws on {0, 1})  (L1) whenever every gain is >= 0 and the death
+#     rate H is non-decreasing in the level (every law of this module; the
+#     fixed-gain induction of version 0.4 carries over; Lean:
+#     full_window_nonneg); (L2), (L3) from (A), (B) as in Proposition 9,
+#     every landing of the lower chain being at level i or i+1; (M1) by first
+#     divergence: the chains from (c,i) and (c+1,i) differ only after a
+#     gain-1 draw equal to c+1, worth u(c+1,i+1) - u(c+1,i) >= 0 by (M2);
+#     (M2) by the waiting chain: every landing of (c,i) is worth at most
+#     v_r = u_r(c,i+1) ((M2), then (M1) at level i+1), so u_k(c,i) <=
+#     A u_{k-1}(c,i) + (1 - A) v_{k-1} <= v_{k-1} <= v_k, A = F_i(c).  All by
+#     joint induction on k.
+#   Then (P f - Q f)(c, i) = W^{a(c,i)}(c, i) >= 0 for the iterates of every
+#   indicator, so Q P^k f <= P^{k+1} f and Q_1 ... Q_k f <= P^k f.  For the
+#   fixed law this is a second proof of Propositions 8 and 9.
+#
+# Two positive gain values.  (CG) needs every landing beyond the window to
+# be no better than the divergence state; with two positive gains a
+# landing two or more levels up is not, and (L2), (L3), (M2) themselves
+# fail.  ``two_gain_counterexample`` is exact: n = 3, K = 1, levels
+# (0, 1/4, 1/4, 3/4), gains {0, 1, 3} w.p. (3/5, 1/5, 1/5); the rule
+# t = (1, 0, 0, 0), which rejects a count of one at count zero, is ahead of
+# the naive rule from (0, 0) in P(c_k = 3), in E[c_k] and in E[p(i_k)] on
+# long ranges of horizons.  Mechanism: gain-0 candidates score 0 at p = 0,
+# a single unit of gain is worth nothing on the plateau 1/4 = p(1) = p(2),
+# and a count of one comes mostly from gain-1 candidates (27/320 against
+# 9/320), a count of two mostly from gain-3 ones (27/320 against 9/320):
+# the gate filters the small gain out and keeps the chain open for the
+# large one, which a locked-in count of one would block.  Gain 0 is not
+# needed (a {1, 3} witness), nor is the plateau (n = 4, levels
+# (0, 1/4, 3/4), gains {0, 1, 2} w.p. (3/7, 1/7, 3/7), the same rule),
+# and the level ordering fails also in the
+# limit (2909/3968 against 8058689/11073200 on the same cell; 17/18
+# against 139/150 on a three-level cell).  The time-varying
+# (decaying) single-gain schedule is not covered by the proof (the
+# divergence weights then depend on the generation); it stays finite.
+
+
+SINGLE_GAIN_LATTICES = {"quarter_half_jump": (Q(1, 4), Q(3, 4), Q(1)),
+                        "eighth_seven_eighths": (Q(1, 8), Q(7, 8)),
+                        "quarter_steps": (Q(1, 4), Q(1, 2), Q(3, 4), Q(1)),
+                        "std_eighth": drift_levels(Q(1, 4), Q(1, 8)),
+                        "zero_plateau": (Q(0), Q(1, 4), Q(1, 4), Q(3, 4)),
+                        "nonuniform": (Q(1, 32), Q(5, 32), Q(9, 16), Q(23, 32), Q(15, 16)),
+                        "zero_to_one": (Q(0), Q(1, 2), Q(1))}
+SINGLE_GAIN_LAWS = {"q=1/16": {0: Q(15, 16), 1: Q(1, 16)}, "q=1/4": {0: Q(3, 4), 1: Q(1, 4)},
+                    "q=1/2": {0: Q(1, 2), 1: Q(1, 2)}, "q=15/16": {0: Q(1, 16), 1: Q(15, 16)},
+                    "fixed": {1: Q(1)}, "zero_or_two_q=1/2": {0: Q(1, 2), 2: Q(1, 2)},
+                    "zero_or_three_q=1/4": {0: Q(3, 4), 3: Q(1, 4)}}
+TWO_GAIN_LAWS = {"0|1|3": {0: Q(3, 5), 1: Q(1, 5), 3: Q(1, 5)}, "0|1|2": {0: Q(1, 2), 1: Q(1, 4), 2: Q(1, 4)},
+                 "0|1|2_skew": {0: Q(7, 8), 1: Q(1, 16), 2: Q(1, 16)}, "1|3": {1: Q(1, 2), 3: Q(1, 2)},
+                 "1|2": {1: Q(1, 2), 2: Q(1, 2)}, "0|2|3": {0: Q(1, 2), 2: Q(1, 4), 3: Q(1, 4)}}
+SINGLE_GAIN_GRID = {"items": (3, 4, 5), "candidates": (1, 2), "horizon": 8,
+                    "lattices": ("quarter_half_jump", "zero_plateau", "nonuniform"),
+                    "laws": ("q=1/16", "q=1/2", "fixed", "zero_or_two_q=1/2")}
+SINGLE_GAIN_GRID_FULL = {"items": (3, 4, 5, 6, 7, 8, 9, 10), "candidates": (1, 2, 4), "horizon": 16,
+                         "lattices": tuple(SINGLE_GAIN_LATTICES), "laws": tuple(SINGLE_GAIN_LAWS)}
+SUPPORT_SCREEN = {"items": (3, 4, 5), "candidates": (1, 2), "horizon": 30,
+                  "lattices": ("zero_plateau", "nonuniform"), "laws": ("q=1/4", "zero_or_two_q=1/2", "0|1|3", "1|3")}
+SUPPORT_SCREEN_FULL = {"items": (3, 4, 5, 6, 7, 8), "candidates": (1, 2, 4), "horizon": 40,
+                       "lattices": tuple(SINGLE_GAIN_LATTICES),
+                       "laws": tuple(SINGLE_GAIN_LAWS) + tuple(TWO_GAIN_LAWS)}
+SINGLE_GAIN_RULES = {"items": (2, 3, 4), "candidates": (1,), "horizon": 12,
+                     "lattices": ("zero_plateau",), "laws": ("q=1/4", "zero_or_two_q=1/2")}
+SINGLE_GAIN_RULES_FULL = {"items": (2, 3, 4), "candidates": (1, 2), "horizon": 24,
+                          "lattices": tuple(SINGLE_GAIN_LATTICES), "laws": tuple(SINGLE_GAIN_LAWS)}
+TWO_GAIN_CELL = {"items": 3, "candidates": 1, "levels": (Q(0), Q(1, 4), Q(1, 4), Q(3, 4)),
+                 "law": {0: Q(3, 5), 1: Q(1, 5), 3: Q(1, 5)}, "threshold": (1, 0, 0, 0), "start": (0, 0),
+                 "horizon": 80}
+TWO_GAIN_LEVEL_CELL = {"items": 3, "candidates": 1, "levels": (Q(0), Q(1, 2), Q(1)),
+                       "law": {0: Q(2, 3), 1: Q(1, 6), 2: Q(1, 6)}, "threshold": (2, 0, 0, 0), "start": (0, 0),
+                       "horizon": 40}
+TWO_GAIN_NO_PLATEAU_CELL = {"items": 4, "candidates": 1, "levels": (Q(0), Q(1, 4), Q(3, 4)),
+                            "law": {0: Q(3, 7), 1: Q(1, 7), 2: Q(3, 7)}, "threshold": (1, 0, 0, 0, 0),
+                            "start": (0, 0), "horizon": 80}
+TWO_GAIN_NO_ZERO_CELL = {"items": 7, "candidates": 2, "levels": SINGLE_GAIN_LATTICES["nonuniform"],
+                         "law": {1: Q(1, 2), 3: Q(1, 2)}, "threshold": (1, 0, 0, 0, 0, 0, 0, 0), "start": (0, 0),
+                         "horizon": 12}
+
+
+def integer_iterates(kernel, f, horizon) -> dict[str, object]:
+    """``P^k f`` for ``k = 0..horizon`` as integer numerators over one
+    denominator: ``P^k f(x) = numerators[k][x] / (base * D**k)``, ``D`` the
+    lcm of the kernel's denominators and ``base`` that of ``f``'s values.
+    Equal to ``kernel_iterates`` (test); no gcd is taken, so long horizons
+    on large cells stay cheap."""
+
+    _check_generations(horizon)
+    values = {x: Q(f(x)) for x in kernel}
+    base = lcm(*[v.denominator for v in values.values()])
+    D = lcm(*[p.denominator for entries in kernel.values() for _, p in entries])
+    weights = {x: [(y, int(p * D)) for y, p in entries if p] for x, entries in kernel.items()}
+    current = {x: int(v * base) for x, v in values.items()}
+    numerators = [current]
+    for _ in range(horizon):
+        current = {x: sum(w * current[y] for y, w in row) for x, row in weights.items()}
+        numerators.append(current)
+    return {"D": D, "base": base, "numerators": numerators,
+            "self_loop": {x: int(entries[0][1] * D) for x, entries in kernel.items()}}
+
+
+def iterate_fraction(iterates, k, x) -> Q:
+    """``P^k f(x)`` as a fraction from ``integer_iterates``."""
+
+    return Q(iterates["numerators"][k][x], iterates["base"] * iterates["D"]**k)
+
+
+def _window_numerator(iterates, k, c, a, i):
+    """``W^a_k(c, i) * base * D^(k+1)`` by identity (W); needs the naive
+    kernel's iterates up to ``k + 1``."""
+
+    N, theta = iterates["numerators"], iterates["self_loop"][(a, i)]
+    return (N[k + 1][(c, i)] - theta * N[k][(c, i)]) - (N[k + 1][(a, i)] - theta * N[k][(a, i)])
+
+
+def same_level_window(iterates, k, c, a, i) -> Q:
+    """``W^a_k(c, i)``, the window sum of ``mixed_window_sums``, computed by
+    identity (W) from two consecutive naive iterates at the same level:
+    ``[u_{k+1}(c,i) - F_i(a) u_k(c,i)] - [u_{k+1}(a,i) - F_i(a) u_k(a,i)]``.
+    Every gain law, every objective (test)."""
+
+    return Q(_window_numerator(iterates, k, c, a, i), iterates["base"] * iterates["D"]**(k + 1))
+
+
+def divergence_decomposition(kernel, iterate_list, c, a, i) -> dict[str, object]:
+    """Identity (V) on one same-level pair ``c < a`` at level ``i``: the
+    weights ``kappa_t(y)`` of the first divergence at generation ``t`` into
+    ``y = (J, i')``, ``c < J <= a``, ``i' != i``, the law ``rho_k`` of the
+    lower count when neither divergence nor merger has happened by ``k``,
+    and the check ``u_k(c,i) - u_k(a,i) = sum_{t<=k} sum_y kappa_t(y)
+    [u_{k-t}(y) - u_{k-t}(a,i)] + sum_r rho_k(r) [f(r,i) - f(a,i)]`` for
+    every ``k`` of ``iterate_list`` (exact naive iterates, ``f`` their
+    entry 0).  The last term vanishes when ``f`` does not separate the
+    counts ``c..a`` at level ``i`` (level objectives; hitting indicators
+    ``1{c >= m}`` with ``a < m``)."""
+
+    if not 0 <= c < a:
+        raise ValueError("need 0 <= c < a")
+    horizon = len(iterate_list) - 1
+    f = iterate_list[0]
+    pre, kappa, residual = {c: Q(1)}, [], [f[(c, i)] - f[(a, i)]]
+    for _ in range(horizon):
+        step, following = {}, {}
+        for r, mass in pre.items():
+            for y, p in kernel[(r, i)]:
+                if y == (r, i) or (y[0] <= a and y[1] == i):
+                    following[y[0]] = following.get(y[0], Q(0)) + mass * p
+                elif y[0] <= a:
+                    step[y] = step.get(y, Q(0)) + mass * p
+        kappa.append(step)
+        pre = {r: mass for r, mass in following.items() if mass}
+        residual.append(sum((mass * (f[(r, i)] - f[(a, i)]) for r, mass in pre.items()), Q(0)))
+    holds = True
+    for k, u in enumerate(iterate_list):
+        rhs = sum((weight * (iterate_list[k - t][y] - iterate_list[k - t][(a, i)])
+                   for t in range(1, k + 1) for y, weight in kappa[t - 1].items()), residual[k])
+        holds &= u[(c, i)] - u[(a, i)] == rhs
+    return {"kappa": kappa, "residual": residual, "identity_holds": holds,
+            "kappa_nonnegative": all(w >= 0 for step in kappa for w in step.values())}
+
+
+def _single_gain_step(law, top):
+    gains = sorted(g for g, q in law.items() if g > 0 and q)
+    if len(gains) > 1:
+        raise ValueError("law has more than one positive gain value")
+    g = gains[0] if gains else 0
+    return lambda i: min(top, i + g)
+
+
+def single_gain_structure(items, candidates, levels, law, horizon) -> dict[str, object]:
+    """Every step of Proposition 10 on one cell, exactly, at every state and
+    horizon ``<= horizon``: (L1)-(L3) and (CG) for every hitting indicator,
+    (M1), (M2), time monotonicity and (CG) for every level indicator and
+    for the level value, and the window condition (WC) for all of them
+    (identity (W)).  ``law`` must have at most one positive gain value
+    ``g``; level comparisons are between ``i`` and ``min(top, i + g)``."""
+
+    levels = _check_levels(levels)
+    top = len(levels) - 1
+    up = _single_gain_step(_check_gain(law), top)
+    kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    names = ("L1", "L2", "L3", "CG_count", "WC_count", "M1", "M2", "time", "CG_level", "WC_level")
+    flags, checks = {k: True for k in names}, {k: 0 for k in names}
+
+    def record(name, ok):
+        flags[name] &= ok
+        checks[name] += 1
+
+    def cross_gap(N, theta, a, i, objective):
+        if up(i) == i:
+            return
+        for J in range(1, a + 1):
+            for r in range(horizon + 1):
+                y1 = N[r + 1][(J, up(i))] - N[r + 1][(a, i)]
+                y0 = N[r][(J, up(i))] - N[r][(a, i)]
+                record(objective, y1 - theta * y0 >= 0)
+
+    def windows(it, objective):
+        for (c, i) in kernel:
+            for a in range(c + 1, items + 1):
+                for k in range(horizon + 1):
+                    record(objective, _window_numerator(it, k, c, a, i) >= 0)
+
+    for m in range(1, items + 1):
+        it = integer_iterates(kernel, lambda x, m=m: Q(int(x[0] >= m)), horizon + 1)
+        D, N, loop = it["D"], it["numerators"], it["self_loop"]
+        S = [{x: D**k - N[k][x] for x in kernel} for k in range(horizon + 2)]
+        for (c, i) in kernel:
+            if c >= m:
+                continue
+            for k in range(horizon + 1):
+                record("L1", S[k + 1][(c, i)] <= loop[(m - 1, i)] * S[k][(c, i)])
+                if c + 1 < m:
+                    record("L2", S[k][(c, i)] <= S[k][(c + 1, i)])
+                if up(i) != i:
+                    record("L3", S[k][(c, up(i))] <= S[k][(c, i)])
+            cross_gap(N, loop[(c, i)], c, i, "CG_count")
+        windows(it, "WC_count")
+    objectives = {f"level>={e}": (lambda x, e=e: Q(int(x[1] >= e))) for e in range(1, top + 1)}
+    objectives["level"] = lambda x: levels[x[1]]
+    for f in objectives.values():
+        it = integer_iterates(kernel, f, horizon + 1)
+        D, N, loop = it["D"], it["numerators"], it["self_loop"]
+        for (c, i) in kernel:
+            for k in range(horizon + 1):
+                if c < items:
+                    record("M1", N[k][(c, i)] >= N[k][(c + 1, i)])
+                if up(i) != i:
+                    record("M2", N[k][(c, up(i))] >= N[k][(c, i)])
+                record("time", N[k + 1][(c, i)] >= D * N[k][(c, i)])
+            cross_gap(N, loop[(c, i)], c, i, "CG_level")
+        windows(it, "WC_level")
+    return {"flags": flags, "checks": checks}
+
+
+def support_window_screen(items, candidates, levels, law, horizon) -> dict[str, object]:
+    """The window condition for every hitting indicator and every level
+    indicator, every state, window and ``k <= horizon``, by identity (W) in
+    integers (the screen of ``mixed_window_screen``, fast).  Returns the
+    number of negative windows by objective class and the first one."""
+
+    levels = _check_levels(levels)
+    kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    objectives = {f"hit>={m}": (lambda x, m=m: Q(int(x[0] >= m))) for m in range(1, items + 1)}
+    objectives.update({f"level>={e}": (lambda x, e=e: Q(int(x[1] >= e))) for e in range(1, len(levels))})
+    negatives, first, windows = {"count": 0, "level": 0}, None, 0
+    for name, f in objectives.items():
+        it = integer_iterates(kernel, f, horizon + 1)
+        cls = "count" if name.startswith("hit") else "level"
+        for k in range(horizon + 1):
+            for (c, i) in kernel:
+                for a in range(c + 1, items + 1):
+                    windows += 1
+                    if _window_numerator(it, k, c, a, i) < 0:
+                        negatives[cls] += 1
+                        if first is None:
+                            first = {"objective": name, "horizon": k, "state": (c, i), "window_top": a,
+                                     "window_sum": same_level_window(it, k, c, a, i)}
+    return {"windows_checked": windows, "negatives": negatives, "first_negative": first}
+
+
+def rule_dominance_integer(items, candidates, levels, law, rules, horizon) -> dict[str, object]:
+    """``rule_dominance_check`` with integer iterates: ``Q_t^k f <= P^k f``
+    for every rule, objective, state and ``k <= horizon``, compared by
+    cross-multiplication; the first violation or ``None``."""
+
+    levels = _check_levels(levels)
+    naive = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+    objectives = mixed_objectives(items, levels)
+    reference = {name: integer_iterates(naive, f, horizon) for name, f in objectives.items()}
+    violation, compared, checked = None, 0, 0
+    for rule in rules:
+        if not any(rule):
+            continue
+        checked += 1
+        gated = drift_kernel(items, candidates, levels, law, rule)
+        for name, f in objectives.items():
+            w, u = integer_iterates(gated, f, horizon), reference[name]
+            for k in range(horizon + 1):
+                scale_w, scale_u = u["D"]**k, w["D"]**k
+                for x in naive:
+                    compared += 1
+                    if violation is None and w["numerators"][k][x] * scale_w > u["numerators"][k][x] * scale_u:
+                        violation = {"rule": rule, "objective": name, "horizon": k, "state": x,
+                                     "gated": iterate_fraction(w, k, x), "naive": iterate_fraction(u, k, x)}
+    return {"rules_checked": checked, "comparisons": compared, "first_violation": violation}
+
+
+def _rule_versus_naive(cell, objective):
+    items, levels = cell["items"], cell["levels"]
+    f = {"count": lambda x: Q(x[0]), "top_count": lambda x: Q(int(x[0] >= items)),
+         "level": lambda x: levels[x[1]]}[objective]
+    naive = drift_kernel(items, cell["candidates"], levels, cell["law"], naive_threshold(items))
+    gated = drift_kernel(items, cell["candidates"], levels, cell["law"], cell["threshold"])
+    u, w = integer_iterates(naive, f, cell["horizon"]), integer_iterates(gated, f, cell["horizon"])
+    x = cell["start"]
+    rows = [(iterate_fraction(w, k, x), iterate_fraction(u, k, x)) for k in range(cell["horizon"] + 1)]
+    ahead = [k for k, (gv, nv) in enumerate(rows) if gv > nv]
+    best = max(ahead, key=lambda k: rows[k][0] - rows[k][1]) if ahead else None
+    return {"horizons_gate_ahead": ahead,
+            "first": None if not ahead else {"horizon": ahead[0], "gated": rows[ahead[0]][0],
+                                             "naive": rows[ahead[0]][1]},
+            "largest": None if best is None else {"horizon": best, "gated": rows[best][0], "naive": rows[best][1],
+                                                  "difference": rows[best][0] - rows[best][1]}}
+
+
+def two_gain_counterexample() -> dict[str, object]:
+    """Exact witnesses that dominance fails with two positive gain values:
+    the three-objective cell ``TWO_GAIN_CELL`` (count tail, mean count and
+    true value, plus the failing window, (L3) and (L2) steps), the level
+    cell ``TWO_GAIN_LEVEL_CELL`` (finite horizons and the exact limit), and
+    the plateau-free cell ``TWO_GAIN_NO_PLATEAU_CELL`` and the {1, 3} cell
+    ``TWO_GAIN_NO_ZERO_CELL`` (neither a plateau nor gain 0 is needed)."""
+
+    cell = TWO_GAIN_CELL
+    items, levels, law = cell["items"], cell["levels"], cell["law"]
+    naive = drift_kernel(items, cell["candidates"], levels, law, naive_threshold(items))
+    out = {"cell": {k: v for k, v in cell.items()},
+           "draws_from_start": {"naive": naive[cell["start"]],
+                                "gated": drift_kernel(items, cell["candidates"], levels, law,
+                                                      cell["threshold"])[cell["start"]]}}
+    for objective in ("top_count", "count", "level"):
+        out[objective] = _rule_versus_naive(cell, objective)
+    hit = integer_iterates(naive, lambda x: Q(int(x[0] >= items)), cell["horizon"] + 1)
+    window = next(({"horizon": k, "window_sum": same_level_window(hit, k, 0, 1, 0)}
+                   for k in range(cell["horizon"] + 1) if _window_numerator(hit, k, 0, 1, 0) < 0), None)
+    survival = lambda k, x: 1 - iterate_fraction(hit, k, x)
+    l3 = next(({"horizon": k, "state": (c, i), "survival": survival(k, (c, i)),
+                "survival_one_level_up": survival(k, (c, i + 1))}
+               for k in range(cell["horizon"] + 1) for c in range(items) for i in range(len(levels) - 1)
+               if survival(k, (c, i + 1)) > survival(k, (c, i))), None)
+    l2 = next(({"horizon": k, "state": (c, i), "survival": survival(k, (c, i)),
+                "survival_one_count_up": survival(k, (c + 1, i))}
+               for k in range(cell["horizon"] + 1) for c in range(items - 1) for i in range(len(levels))
+               if survival(k, (c, i)) > survival(k, (c + 1, i))), None)
+    out["first_negative_window_m3_state00_top1"] = window
+    out["L3_fails"], out["L2_fails"] = l3, l2
+
+    def limits(c):
+        return {name: drift_limit(c["items"], c["candidates"], c["levels"], c["law"], rule)["by_state"][c["start"]][1]
+                for name, rule in (("naive", naive_threshold(c["items"])), ("gated", c["threshold"]))}
+
+    out["limit_true_value"] = limits(cell)
+    level_cell = TWO_GAIN_LEVEL_CELL
+    out["level_cell"] = {"cell": dict(level_cell), "level": _rule_versus_naive(level_cell, "level"),
+                         "limit_true_value": limits(level_cell)}
+    no_zero = TWO_GAIN_NO_ZERO_CELL
+    out["no_zero_cell"] = {"cell": dict(no_zero), "count": _rule_versus_naive(no_zero, "count"),
+                           "top_count": _rule_versus_naive(no_zero, "top_count")}
+    plateau_free = TWO_GAIN_NO_PLATEAU_CELL
+    out["no_plateau_cell"] = {"cell": dict(plateau_free)}
+    out["no_plateau_cell"].update({objective: _rule_versus_naive(plateau_free, objective)
+                                   for objective in ("top_count", "count", "level")})
+    out["count_dominance_fails"] = bool(out["top_count"]["horizons_gate_ahead"] and out["count"]["horizons_gate_ahead"])
+    out["level_dominance_fails"] = (bool(out["level"]["horizons_gate_ahead"])
+                                    and out["limit_true_value"]["gated"] > out["limit_true_value"]["naive"]
+                                    and out["level_cell"]["limit_true_value"]["gated"]
+                                    > out["level_cell"]["limit_true_value"]["naive"])
+    out["no_zero_gain_needed"] = bool(out["no_zero_cell"]["count"]["horizons_gate_ahead"])
+    out["no_plateau_needed"] = all(out["no_plateau_cell"][objective]["horizons_gate_ahead"]
+                                   for objective in ("top_count", "count", "level"))
+    return out
+
+
+def gain_support_fixture(full=False) -> dict[str, object]:
+    """Version 0.6 evidence: every step of Proposition 10 on a grid of
+    single-gain cells, direct dominance over every rule at small ``n``,
+    the identity checks (W) and (V) on mixed cells, the window screen by
+    gain support (zero negatives for one positive gain, negatives for two),
+    and the exact counterexample.  ``full`` enlarges the grids."""
+
+    grid = SINGLE_GAIN_GRID_FULL if full else SINGLE_GAIN_GRID
+    structure, flags, checks = {}, {}, {}
+    for items in grid["items"]:
+        for candidates in grid["candidates"]:
+            for lname in grid["lattices"]:
+                for law_name in grid["laws"]:
+                    out = single_gain_structure(items, candidates, SINGLE_GAIN_LATTICES[lname],
+                                                SINGLE_GAIN_LAWS[law_name], grid["horizon"])
+                    structure[f"n={items},K={candidates},lattice={lname},law={law_name}"] = all(out["flags"].values())
+                    for name, value in out["flags"].items():
+                        flags[name] = flags.get(name, True) and value
+                        checks[name] = checks.get(name, 0) + out["checks"][name]
+    rules_grid = SINGLE_GAIN_RULES_FULL if full else SINGLE_GAIN_RULES
+    rules, rule_violations, rules_checked, comparisons = {}, [], 0, 0
+    for items in rules_grid["items"]:
+        rule_set = threshold_rules(items)
+        for candidates in rules_grid["candidates"]:
+            for lname in rules_grid["lattices"]:
+                for law_name in rules_grid["laws"]:
+                    out = rule_dominance_integer(items, candidates, SINGLE_GAIN_LATTICES[lname],
+                                                 SINGLE_GAIN_LAWS[law_name], rule_set, rules_grid["horizon"])
+                    key = f"n={items},K={candidates},lattice={lname},law={law_name}"
+                    rules[key] = out["first_violation"] is None
+                    rules_checked += out["rules_checked"]
+                    comparisons += out["comparisons"]
+                    if out["first_violation"]:
+                        rule_violations.append({"cell": key, **out["first_violation"]})
+    identities = {"W": True, "V": True, "V_kappa_nonnegative": True}
+    for items, candidates, levels, law in ((4, 2, SINGLE_GAIN_LATTICES["quarter_steps"], MIXED_LAWS["three_point"]),
+                                           (3, 1, TWO_GAIN_CELL["levels"], TWO_GAIN_CELL["law"]),
+                                           (4, 1, SINGLE_GAIN_LATTICES["quarter_half_jump"], SINGLE_GAIN_LAWS["q=1/4"])):
+        kernel = drift_kernel(items, candidates, levels, law, naive_threshold(items))
+        for f in mixed_objectives(items, levels).values():
+            exact = kernel_iterates(kernel, f, 5)
+            it = integer_iterates(kernel, f, 5)
+            identities["W"] &= all(iterate_fraction(it, k, x) == exact[k][x] for k in range(6) for x in kernel)
+            for k in range(5):
+                for (c, i), sums in mixed_window_sums(kernel, exact[k], items).items():
+                    identities["W"] &= all(same_level_window(it, k, c, c + 1 + idx, i) == w for idx, w in enumerate(sums))
+            for (c, i) in kernel:
+                for a in range(c + 1, items + 1):
+                    out = divergence_decomposition(kernel, exact, c, a, i)
+                    identities["V"] &= out["identity_holds"]
+                    identities["V_kappa_nonnegative"] &= out["kappa_nonnegative"]
+    screen_grid = SUPPORT_SCREEN_FULL if full else SUPPORT_SCREEN
+    screen, by_support = {}, {}
+    for items in screen_grid["items"]:
+        for candidates in screen_grid["candidates"]:
+            for lname in screen_grid["lattices"]:
+                for law_name in screen_grid["laws"]:
+                    law = SINGLE_GAIN_LAWS.get(law_name) or TWO_GAIN_LAWS[law_name]
+                    out = support_window_screen(items, candidates, SINGLE_GAIN_LATTICES[lname], law,
+                                                screen_grid["horizon"])
+                    key = f"n={items},K={candidates},lattice={lname},law={law_name}"
+                    positive = len([g for g, q in law.items() if g > 0 and q])
+                    kind = "single_gain" if positive <= 1 else "two_gains"
+                    entry = by_support.setdefault(kind, {"cells": 0, "windows_checked": 0, "cells_with_negative_count": 0,
+                                                         "cells_with_negative_level": 0, "first": None})
+                    entry["cells"] += 1
+                    entry["windows_checked"] += out["windows_checked"]
+                    entry["cells_with_negative_count"] += out["negatives"]["count"] > 0
+                    entry["cells_with_negative_level"] += out["negatives"]["level"] > 0
+                    if entry["first"] is None and out["first_negative"] is not None:
+                        entry["first"] = {"cell": key, **out["first_negative"]}
+                    screen[key] = out["negatives"]
+    single = by_support.get("single_gain", {})
+    return {"full": full,
+            "structure": {"cells": len(structure), "flags": flags, "checks": checks, "horizon": grid["horizon"],
+                          "all_cells_pass": all(structure.values())},
+            "rules": {"cells": len(rules), "rules_checked": rules_checked, "comparisons": comparisons,
+                      "violations": rule_violations, "horizon": rules_grid["horizon"]},
+            "identities": identities,
+            "support_screen": {"cells": len(screen), "horizon": screen_grid["horizon"], "by_support": by_support,
+                               "single_gain_clean": single.get("cells_with_negative_count", 1) == 0
+                               and single.get("cells_with_negative_level", 1) == 0,
+                               "by_cell": screen},
+            "counterexample": two_gain_counterexample()}
 
 
 # --------------------------------------------------------------------------
@@ -2908,6 +3433,7 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
     consistency, structure = consistency_fixture(), dominance_structure_fixture()
     lemmas, crossing = count_dominance_lemma_fixture(), coupling_crossing_fixture()
     mixed = mixed_gain_dominance_fixture(full_sweep)
+    gain = gain_support_fixture(full_sweep)
     sweep = dominance_sweep_fixture(full_sweep)
     naive_8_2 = naive["cells"][_cell(8, 2, Q(1, 2))]["readout_gap_by_generation"]
     gated_16_4 = gated["cells"][f"{_cell(16, 4, Q(1, 2))},z=3"]
@@ -3067,18 +3593,38 @@ def verify(full_sweep: bool = False) -> dict[str, object]:
             all(mixed["level_structure"]["flags"][name] for name in ("M1", "D", "S_posterior", "S_per_gain"))
             and not mixed["level_structure"]["flags"]["M2"]
             and mixed["level_structure"]["M2_fails_on_laws"] == ["zero_or_two_q=1/2"],
+        # Part G: one positive gain value (Proposition 10) versus two (version 0.6)
+        "window_sum_identity_and_divergence_decomposition_exact": all(gain["identities"].values()),
+        "single_gain_lemmas_L1_L3_M1_M2_and_cross_gap_growth_every_state":
+            gain["structure"]["all_cells_pass"] and all(gain["structure"]["flags"][name] for name in (
+                "L1", "L2", "L3", "M1", "M2", "time", "CG_count", "CG_level")),
+        "single_gain_window_condition_count_and_level_every_window":
+            gain["structure"]["flags"]["WC_count"] and gain["structure"]["flags"]["WC_level"],
+        "single_gain_every_threshold_rule_dominated_small_n":
+            not gain["rules"]["violations"] and gain["rules"]["rules_checked"] > 0,
+        "support_screen_single_gain_clean_two_gains_negative":
+            gain["support_screen"]["single_gain_clean"]
+            and gain["support_screen"]["by_support"]["two_gains"]["cells_with_negative_count"] > 0
+            and gain["support_screen"]["by_support"]["two_gains"]["cells_with_negative_level"] > 0,
+        "two_gain_count_dominance_fails_exact_n3_k1": gain["counterexample"]["count_dominance_fails"],
+        "two_gain_level_dominance_fails_exact_including_limit": gain["counterexample"]["level_dominance_fails"],
+        "two_gain_lemmas_L2_L3_fail_and_window_negative":
+            all(gain["counterexample"][key] is not None for key in (
+                "L2_fails", "L3_fails", "first_negative_window_m3_state00_top1")),
+        "two_gain_failure_needs_neither_gain_zero_nor_a_plateau":
+            gain["counterexample"]["no_zero_gain_needed"] and gain["counterexample"]["no_plateau_needed"],
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
             "headline": _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
-                                  lemmas, crossing, mixed),
+                                  lemmas, crossing, mixed, gain),
             "naive": naive, "gated": gated, "fresh": fresh, "drift": drift,
             "brute_force": brute, "divergence": divergence,
             "bounds": bounds, "mutation": mutation, "one_step": one_step,
             "gate_order": gate_order, "dominance_consistency": consistency,
             "dominance_structure": structure, "dominance_sweep": sweep,
             "count_dominance_lemmas": lemmas, "coupling_crossing": crossing,
-            "mixed_gain_laws": mixed}
+            "mixed_gain_laws": mixed, "gain_support": gain}
 
 
 def _approx(value):
@@ -3086,7 +3632,7 @@ def _approx(value):
 
 
 def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep, structure,
-              lemmas, crossing, mixed) -> dict[str, object]:
+              lemmas, crossing, mixed, gain) -> dict[str, object]:
     """Named cells with a float rendering beside the exact value."""
 
     def sweep_row(law, key):
@@ -3113,6 +3659,39 @@ def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep
         "M2_fails_on_laws": mixed["level_structure"]["M2_fails_on_laws"],
         "fixed_gain_averaging_step_fails": mixed["fixed_gain_averaging_step_fails"],
         "witnesses": {name: render(value) for name, value in mixed["witnesses"].items()},
+    }
+    cex = gain["counterexample"]
+
+    def witness_row(row):
+        return {key: (_approx(value) if isinstance(value, Q) else value) for key, value in (row or {}).items()}
+
+    gain_support = {
+        "full_grids": gain["full"],
+        "single_gain_structure": {k: gain["structure"][k] for k in ("cells", "flags", "checks", "horizon")},
+        "single_gain_rules": {k: gain["rules"][k] for k in ("cells", "rules_checked", "comparisons", "horizon")},
+        "single_gain_rule_violations": len(gain["rules"]["violations"]),
+        "identities": gain["identities"],
+        "support_screen": {"cells": gain["support_screen"]["cells"], "horizon": gain["support_screen"]["horizon"],
+                           "by_support": {kind: {k: v for k, v in entry.items() if k != "first"}
+                                          for kind, entry in gain["support_screen"]["by_support"].items()}},
+        "two_gain_cell": {"items": cex["cell"]["items"], "candidates": cex["cell"]["candidates"],
+                          "levels": cex["cell"]["levels"], "law": cex["cell"]["law"],
+                          "threshold": cex["cell"]["threshold"], "start": cex["cell"]["start"],
+                          "horizon": cex["cell"]["horizon"]},
+        "two_gain_ahead": {objective: {"first_horizon": cex[objective]["first"]["horizon"],
+                                       "horizons_ahead": len(cex[objective]["horizons_gate_ahead"]),
+                                       "largest": witness_row(cex[objective]["largest"])}
+                           for objective in ("top_count", "count", "level")},
+        "two_gain_limit_true_value": {k: _approx(v) for k, v in cex["limit_true_value"].items()},
+        "two_gain_first_negative_window": witness_row(cex["first_negative_window_m3_state00_top1"]),
+        "two_gain_L3_fails": witness_row(cex["L3_fails"]), "two_gain_L2_fails": witness_row(cex["L2_fails"]),
+        "level_cell_limit_true_value": {k: _approx(v) for k, v in cex["level_cell"]["limit_true_value"].items()},
+        "no_zero_cell_count_horizons_ahead": cex["no_zero_cell"]["count"]["horizons_gate_ahead"],
+        "no_plateau_cell": {objective: {"first_horizon": cex["no_plateau_cell"][objective]["first"]["horizon"],
+                                        "horizons_ahead": len(cex["no_plateau_cell"][objective]["horizons_gate_ahead"]),
+                                        "largest_difference": _approx(
+                                            cex["no_plateau_cell"][objective]["largest"]["difference"])}
+                            for objective in ("top_count", "count", "level")},
     }
     count_dominance = {
         "lemma_flags": lemmas["flags"], "lemma_horizon": lemmas["horizon"],
@@ -3214,4 +3793,5 @@ def _headline(naive, gated, drift, bounds, mutation, one_step, gate_order, sweep
         "dominance": dominance,
         "count_dominance": count_dominance,
         "mixed_gain_laws": mixed_laws,
+        "gain_support": gain_support,
     }
