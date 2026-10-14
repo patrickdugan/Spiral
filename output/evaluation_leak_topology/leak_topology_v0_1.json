@@ -1,0 +1,1315 @@
+{
+  "schema_version": "0.1",
+  "generated_at_utc": "2026-10-14T04:27:04.932966+00:00",
+  "evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
+  "checks": {
+    "bareiss_rank_agrees_with_fraction_elimination": true,
+    "fibre_dimension_equals_cycle_rank_all_pairs_up_to_six_items": true,
+    "fundamental_cycles_are_an_integral_kernel_basis": true,
+    "integer_fibres_attain_affine_dimension_cycle_rank": true,
+    "integer_fibres_connected_by_single_cycle_swaps": true,
+    "margins_and_cells_reproduce_lattice_channels": true,
+    "completion_by_cell_counts_iff_remaining_cells_form_a_forest": true,
+    "minimum_completion_size_is_cycle_rank": true,
+    "minimum_completions_are_maximal_spanning_forests": true,
+    "confusion_is_a_sum_over_the_integer_cycle_lattice": true,
+    "confusion_excess_positive_iff_a_cycle": true,
+    "dimension_completion_size_lattice_rank_depend_only_on_cycle_rank": true,
+    "confusion_guessing_and_completion_counts_depend_on_more_than_cycle_rank": true,
+    "collision_ratio_closed_form_on_cycles_and_multiplicative_over_blocks": true,
+    "cotree_determinant_identity_all_pairs": true,
+    "collision_ratio_normalized_decreases_to_pi_power_on_trend": true,
+    "fibre_count_polynomial_of_degree_cycle_rank": true,
+    "full_support_fibre_is_anova_count_and_join_homology": true,
+    "single_nonface_patterns_are_link_homology_after_reduction": true,
+    "every_three_map_pattern_but_separate_is_homological": true,
+    "projection_sequence_formula_exact": true,
+    "separate_fibre_not_a_function_of_natural_homotopy_types": true,
+    "separate_fibre_has_vectors_outside_every_homological_subkernel": true,
+    "three_map_strictness_depends_on_cell_sizes_not_support": true,
+    "rp2_cone_fibre_is_homological_but_integral_generator_has_a_two": true,
+    "separate_fibre_is_corank_of_uncoloured_nerve_incidence": true
+  },
+  "all_passed": true,
+  "rank_cross_check": {
+    "matrices": 400,
+    "agree": 400
+  },
+  "two_maps": {
+    "3": {
+      "ordered_pairs": 25,
+      "dimension_equals_cycle_rank": 25,
+      "signed_rank_is_vertices_minus_components": 25,
+      "fundamental_cycles_integral_kernel_basis": 25,
+      "max_fibre_affine_dimension_equals_cycle_rank": 25,
+      "fibre_differences_span_kernel": 25,
+      "fibres_connected_by_simple_cycle_swaps": 25,
+      "separate_partition_is_join_of_channels": 25,
+      "joint_partition_is_refined_channel": 25,
+      "class_counts_and_multiplicities_match": 25,
+      "pairs_by_cycle_rank": {
+        "0": 25
+      }
+    },
+    "4": {
+      "ordered_pairs": 225,
+      "dimension_equals_cycle_rank": 225,
+      "signed_rank_is_vertices_minus_components": 225,
+      "fundamental_cycles_integral_kernel_basis": 225,
+      "max_fibre_affine_dimension_equals_cycle_rank": 225,
+      "fibre_differences_span_kernel": 225,
+      "fibres_connected_by_simple_cycle_swaps": 225,
+      "separate_partition_is_join_of_channels": 225,
+      "joint_partition_is_refined_channel": 225,
+      "class_counts_and_multiplicities_match": 225,
+      "pairs_by_cycle_rank": {
+        "0": 219,
+        "1": 6
+      }
+    },
+    "5": {
+      "ordered_pairs": 2704,
+      "dimension_equals_cycle_rank": 2704,
+      "signed_rank_is_vertices_minus_components": 2704,
+      "fundamental_cycles_integral_kernel_basis": 2704,
+      "max_fibre_affine_dimension_equals_cycle_rank": 2704,
+      "fibre_differences_span_kernel": 2704,
+      "fibres_connected_by_simple_cycle_swaps": 2704,
+      "separate_partition_is_join_of_channels": 2704,
+      "joint_partition_is_refined_channel": 2704,
+      "class_counts_and_multiplicities_match": 2704,
+      "pairs_by_cycle_rank": {
+        "0": 2494,
+        "1": 210
+      }
+    },
+    "6": {
+      "ordered_pairs": 41209,
+      "dimension_equals_cycle_rank": 41209,
+      "signed_rank_is_vertices_minus_components": 41209,
+      "fundamental_cycles_integral_kernel_basis": 41209,
+      "pairs_by_cycle_rank": {
+        "0": 35179,
+        "1": 5910,
+        "2": 120
+      }
+    }
+  },
+  "cost": {
+    "identities": {
+      "pairs": 2954,
+      "lattice_sum_equals_direct_uniform": 2954,
+      "lattice_sum_equals_direct_one_third": 2954,
+      "zero_term_is_joint": 2954,
+      "vandermonde_pair_counts": 2954,
+      "excess_positive_iff_cycle": 2954,
+      "completion_iff_forest": 2954,
+      "minimum_completion_is_cycle_rank": 2954,
+      "minimum_completions_are_maximal_forests": 2954,
+      "matrix_tree_count_matches": 2954,
+      "cotree_identity_unit_and_size_weights": 2954
+    },
+    "distinct_values_by_cycle_rank_up_to_five_items": {
+      "0": {
+        "fibre_dimension": 1,
+        "minimum_completion_size": 1,
+        "lattice_rank": 1,
+        "confusion_excess": 1,
+        "collision_ratio": 1,
+        "minimum_completions": 1,
+        "record_guess_gap": 1,
+        "cell_guess_error": 1
+      },
+      "1": {
+        "fibre_dimension": 1,
+        "minimum_completion_size": 1,
+        "lattice_rank": 1,
+        "confusion_excess": 2,
+        "collision_ratio": 2,
+        "minimum_completions": 1,
+        "record_guess_gap": 1,
+        "cell_guess_error": 1
+      }
+    },
+    "witnesses": {
+      "C4_unit_four_items": {
+        "items": 4,
+        "sizes": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 16,
+        "separate_classes": 15,
+        "merged_classes": 1,
+        "confusion_excess": "1/128",
+        "collision_ratio": "9/8",
+        "cell_guess_error": "1/16",
+        "record_guess_gap": "1/16",
+        "minimum_completion_size": 1,
+        "minimum_completions": 4,
+        "largest_fibre": 2
+      },
+      "C6_unit": {
+        "items": 6,
+        "sizes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 64,
+        "separate_classes": 63,
+        "merged_classes": 1,
+        "confusion_excess": "1/2048",
+        "collision_ratio": "33/32",
+        "cell_guess_error": "1/64",
+        "record_guess_gap": "1/64",
+        "minimum_completion_size": 1,
+        "minimum_completions": 6,
+        "largest_fibre": 2
+      },
+      "C4_sizes_3111": {
+        "items": 6,
+        "sizes": [
+          3,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 32,
+        "separate_classes": 29,
+        "merged_classes": 3,
+        "confusion_excess": "15/2048",
+        "collision_ratio": "19/16",
+        "cell_guess_error": "5/64",
+        "record_guess_gap": "3/64",
+        "minimum_completion_size": 1,
+        "minimum_completions": 4,
+        "largest_fibre": 2
+      },
+      "C4_sizes_2211_same_row": {
+        "items": 6,
+        "sizes": [
+          2,
+          2,
+          1,
+          1
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 36,
+        "separate_classes": 32,
+        "merged_classes": 4,
+        "confusion_excess": "1/128",
+        "collision_ratio": "11/9",
+        "cell_guess_error": "3/32",
+        "record_guess_gap": "1/16",
+        "minimum_completion_size": 1,
+        "minimum_completions": 4,
+        "largest_fibre": 2
+      },
+      "C4_sizes_2112_diagonal": {
+        "items": 6,
+        "sizes": [
+          2,
+          1,
+          1,
+          2
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 36,
+        "separate_classes": 32,
+        "merged_classes": 4,
+        "confusion_excess": "1/128",
+        "collision_ratio": "11/9",
+        "cell_guess_error": "3/32",
+        "record_guess_gap": "1/16",
+        "minimum_completion_size": 1,
+        "minimum_completions": 4,
+        "largest_fibre": 2
+      },
+      "C4_unit_with_pendant_path": {
+        "items": 6,
+        "sizes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 1,
+        "fibre_dimension": 1,
+        "joint_classes": 64,
+        "separate_classes": 60,
+        "merged_classes": 4,
+        "confusion_excess": "1/512",
+        "collision_ratio": "9/8",
+        "cell_guess_error": "1/16",
+        "record_guess_gap": "1/16",
+        "minimum_completion_size": 1,
+        "minimum_completions": 4,
+        "largest_fibre": 2
+      },
+      "K23_unit_cycle_rank_2": {
+        "items": 6,
+        "sizes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 2,
+        "fibre_dimension": 2,
+        "joint_classes": 64,
+        "separate_classes": 54,
+        "merged_classes": 10,
+        "confusion_excess": "3/512",
+        "collision_ratio": "11/8",
+        "cell_guess_error": "5/32",
+        "record_guess_gap": "5/32",
+        "minimum_completion_size": 2,
+        "minimum_completions": 12,
+        "largest_fibre": 3
+      },
+      "two_C4_sharing_a_vertex_cycle_rank_2": {
+        "items": 8,
+        "sizes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 2,
+        "fibre_dimension": 2,
+        "joint_classes": 256,
+        "separate_classes": 225,
+        "merged_classes": 31,
+        "confusion_excess": "17/16384",
+        "collision_ratio": "81/64",
+        "cell_guess_error": "31/256",
+        "record_guess_gap": "31/256",
+        "minimum_completion_size": 2,
+        "minimum_completions": 16,
+        "largest_fibre": 4
+      },
+      "two_disjoint_C4_cycle_rank_2": {
+        "items": 8,
+        "sizes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cycle_rank": 2,
+        "fibre_dimension": 2,
+        "joint_classes": 256,
+        "separate_classes": 225,
+        "merged_classes": 31,
+        "confusion_excess": "17/16384",
+        "collision_ratio": "81/64",
+        "cell_guess_error": "31/256",
+        "record_guess_gap": "31/256",
+        "minimum_completion_size": 2,
+        "minimum_completions": 16,
+        "largest_fibre": 4
+      }
+    }
+  },
+  "asymptotic": {
+    "C4_unit": {
+      "cycle_rank": 1,
+      "weighted_forest_count": "4",
+      "scales": [
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "limit_constant": "pi^1 = lim R_N^2 * 4 / N^1",
+      "normalized_values_decimal": [
+        "3.49967291",
+        "3.31716762",
+        "3.22845844",
+        "3.18478734",
+        "3.16312949"
+      ],
+      "pi_power_decimal": "3.14159265",
+      "decreasing": true,
+      "above_pi_power": true,
+      "relative_excess_at_largest_scale_below_one_tenth": true,
+      "scaled_excess_decimal": [
+        "1.4323",
+        "1.4045",
+        "1.3898",
+        "1.3822",
+        "1.3783"
+      ],
+      "determinant_identity": true
+    },
+    "C4_sigma_1212": {
+      "cycle_rank": 1,
+      "weighted_forest_count": "12",
+      "scales": [
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "limit_constant": "pi^1 = lim R_N^2 * 3 / N^1",
+      "normalized_values_decimal": [
+        "3.73407407",
+        "3.42913786",
+        "3.28313261",
+        "3.21176163",
+        "3.17652169"
+      ],
+      "pi_power_decimal": "3.14159265",
+      "decreasing": true,
+      "above_pi_power": true,
+      "relative_excess_at_largest_scale_below_one_tenth": true,
+      "scaled_excess_decimal": [
+        "1.1849",
+        "1.1501",
+        "1.1323",
+        "1.1227",
+        "1.1177"
+      ],
+      "determinant_identity": true
+    },
+    "K23_unit": {
+      "cycle_rank": 2,
+      "weighted_forest_count": "12",
+      "scales": [
+        2,
+        4,
+        8,
+        16
+      ],
+      "limit_constant": "pi^2 = lim R_N^2 * 12 / N^2",
+      "normalized_values_decimal": [
+        "14.82167431",
+        "12.12959566",
+        "10.94839660",
+        "10.39628087"
+      ],
+      "pi_power_decimal": "9.86960440",
+      "decreasing": true,
+      "above_pi_power": true,
+      "relative_excess_at_largest_scale_below_one_tenth": true,
+      "scaled_excess_decimal": [
+        "9.9041",
+        "9.0399",
+        "8.6303",
+        "8.4268"
+      ],
+      "determinant_identity": true
+    }
+  },
+  "ehrhart": {
+    "C4": {
+      "cycle_rank": 1,
+      "counts": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "degree_is_cycle_rank": true,
+      "leading_difference": 2
+    },
+    "C6": {
+      "cycle_rank": 1,
+      "counts": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "degree_is_cycle_rank": true,
+      "leading_difference": 2
+    },
+    "K23": {
+      "cycle_rank": 2,
+      "counts": [
+        1,
+        7,
+        19,
+        37,
+        61
+      ],
+      "degree_is_cycle_rank": true,
+      "leading_difference": 6
+    },
+    "bowtie": {
+      "cycle_rank": 2,
+      "counts": [
+        1,
+        9,
+        25,
+        49,
+        81
+      ],
+      "degree_is_cycle_rank": true,
+      "leading_difference": 8
+    },
+    "K33": {
+      "cycle_rank": 4,
+      "counts": [
+        1,
+        31,
+        217,
+        811,
+        2191,
+        4861,
+        9451
+      ],
+      "degree_is_cycle_rank": true,
+      "leading_difference": 126
+    }
+  },
+  "full_support": {
+    "2x2x2": {
+      "patterns": 19,
+      "formula_matches": 19,
+      "top_betti_of_rank_selected_joins": true
+    },
+    "2x3x4": {
+      "patterns": 19,
+      "formula_matches": 19,
+      "top_betti_of_rank_selected_joins": true
+    },
+    "3x3x3": {
+      "patterns": 19,
+      "formula_matches": 19,
+      "top_betti_of_rank_selected_joins": true
+    },
+    "2x2x2x2": {
+      "patterns": 167,
+      "formula_matches": 167,
+      "top_betti_of_rank_selected_joins": true
+    },
+    "2x3x2x2": {
+      "patterns": 167,
+      "formula_matches": 167,
+      "top_betti_of_rank_selected_joins": true
+    }
+  },
+  "patterns": {
+    "classification": {
+      "2": {
+        "patterns": 5,
+        "kinds": {
+          "full": 4,
+          "single_nonface": 1
+        },
+        "uncovered": []
+      },
+      "3": {
+        "patterns": 19,
+        "kinds": {
+          "full": 8,
+          "single_nonface": 10,
+          "other": 1
+        },
+        "uncovered": [
+          [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ]
+          ]
+        ]
+      },
+      "4": {
+        "patterns": 167,
+        "kinds": {
+          "full": 16,
+          "single_nonface": 70,
+          "other": 81
+        },
+        "uncovered": 81
+      }
+    },
+    "checks": {
+      "2x2x2": {
+        "supports": 193,
+        "patterns": 18,
+        "comparisons": 3474,
+        "mismatches": 0,
+        "direct_link_formula_comparisons": 1351,
+        "direct_link_formula_mismatches": 0,
+        "sampling": "exhaustive"
+      },
+      "2x2x3": {
+        "supports": 3271,
+        "patterns": 18,
+        "comparisons": 58878,
+        "mismatches": 0,
+        "direct_link_formula_comparisons": 22897,
+        "direct_link_formula_mismatches": 0,
+        "sampling": "exhaustive"
+      },
+      "3x3x3": {
+        "supports": 120,
+        "patterns": 18,
+        "comparisons": 2160,
+        "mismatches": 0,
+        "direct_link_formula_comparisons": 840,
+        "direct_link_formula_mismatches": 0,
+        "sampling": "random_120_seed_7"
+      },
+      "2x2x2x2": {
+        "supports": 120,
+        "patterns": 86,
+        "comparisons": 10320,
+        "mismatches": 0,
+        "direct_link_formula_comparisons": 1800,
+        "direct_link_formula_mismatches": 0,
+        "sampling": "random_120_seed_8"
+      },
+      "2x3x2x3": {
+        "supports": 60,
+        "patterns": 86,
+        "comparisons": 5160,
+        "mismatches": 0,
+        "direct_link_formula_comparisons": 900,
+        "direct_link_formula_mismatches": 0,
+        "sampling": "random_60_seed_9"
+      }
+    }
+  },
+  "projection_sequence": {
+    "2x2x2": {
+      "supports": 193,
+      "orders": 579,
+      "formula_holds": 579,
+      "psi_rank_positive": 30,
+      "psi_rank_within_bounds": 579,
+      "sampling": "exhaustive"
+    },
+    "2x2x3": {
+      "supports": 3271,
+      "orders": 9813,
+      "formula_holds": 9813,
+      "psi_rank_positive": 654,
+      "psi_rank_within_bounds": 9813,
+      "sampling": "exhaustive"
+    },
+    "3x3x3": {
+      "supports": 200,
+      "orders": 600,
+      "formula_holds": 600,
+      "psi_rank_positive": 31,
+      "psi_rank_within_bounds": 600,
+      "sampling": "random_200_seed_11"
+    },
+    "2x2x2x2": {
+      "supports": 200,
+      "orders": 800,
+      "formula_holds": 800,
+      "psi_rank_positive": 33,
+      "psi_rank_within_bounds": 800,
+      "sampling": "random_200_seed_12"
+    },
+    "3x2x2x3": {
+      "supports": 80,
+      "orders": 320,
+      "formula_holds": 320,
+      "psi_rank_positive": 15,
+      "psi_rank_within_bounds": 320,
+      "sampling": "random_80_seed_13"
+    }
+  },
+  "counterexample": {
+    "zero_separate_observation_is_item_level": true,
+    "one_witness_records": [
+      "101001",
+      "010110"
+    ],
+    "one_witness_confused_by_separate_observation": true,
+    "supports": [
+      [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          2,
+          2
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          2
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          1
+        ]
+      ]
+    ],
+    "category_maps": [
+      [
+        [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            4,
+            5
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            4
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      ],
+      [
+        [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            4,
+            5
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            5
+          ]
+        ],
+        [
+          [
+            0,
+            4
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      ]
+    ],
+    "items": [
+      6,
+      6
+    ],
+    "separate_fibres": [
+      0,
+      1
+    ],
+    "families_equal": true,
+    "family": {
+      "restriction_0": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "faces_0": 2,
+      "restriction_1": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "faces_1": 3,
+      "restriction_2": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "faces_2": 3,
+      "restriction_01": [
+        [
+          1,
+          1
+        ]
+      ],
+      "faces_01": 5,
+      "restriction_02": [
+        [
+          1,
+          1
+        ]
+      ],
+      "faces_02": 5,
+      "restriction_12": [
+        [
+          1,
+          1
+        ]
+      ],
+      "faces_12": 6,
+      "restriction_012": [
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "faces_012": 6,
+      "links_0": [
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      ],
+      "links_1": [
+        [
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      ],
+      "links_2": [
+        [
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      ],
+      "links_01": [
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ]
+      ],
+      "links_02": [
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ]
+      ],
+      "links_12": [
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ],
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "merged_12_with_0": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "merged_02_with_1": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "merged_01_with_2": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "nerve_collapses_to_dimension": 1
+    },
+    "differing_keys": [],
+    "projection_sequences": [
+      {
+        "graph_cycle_rank": 0,
+        "graph_components": 2,
+        "previous": 1,
+        "psi_rank": 1,
+        "formula": 0,
+        "fibre": 0
+      },
+      {
+        "graph_cycle_rank": 0,
+        "graph_components": 2,
+        "previous": 1,
+        "psi_rank": 0,
+        "formula": 1,
+        "fibre": 1
+      }
+    ],
+    "fibre_basis_one": [
+      [
+        1,
+        -1,
+        1,
+        -1,
+        -1,
+        1
+      ]
+    ],
+    "nerve_incidence_coranks": [
+      0,
+      1
+    ],
+    "two_way_fibres": [
+      0,
+      0
+    ],
+    "nerve_reduced_betti": [
+      [
+        0,
+        3,
+        0
+      ],
+      [
+        0,
+        3,
+        0
+      ]
+    ]
+  },
+  "nonlocal": {
+    "witness": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0
+      ]
+    ],
+    "witness_span": {
+      "span": 0,
+      "fibre": 1,
+      "top": 0,
+      "links_0": 0,
+      "merged_12": 0,
+      "links_1": 0,
+      "merged_02": 0,
+      "links_2": 0,
+      "merged_01": 0
+    },
+    "2x2x2": {
+      "supports": 193,
+      "fibre_exceeds_homological_span": 8,
+      "smallest_such_support": 5
+    },
+    "2x2x3": {
+      "supports": 3271,
+      "fibre_exceeds_homological_span": 240,
+      "smallest_such_support": 6
+    }
+  },
+  "integrality": {
+    "support": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0
+      ]
+    ],
+    "fibre_dimension": 1,
+    "kernel_generator": [
+      1,
+      -2,
+      1,
+      1,
+      -1
+    ],
+    "unit_cells_items": 5,
+    "unit_cells_separate_equals_item_level": true,
+    "doubled_sizes": [
+      1,
+      2,
+      1,
+      1,
+      1
+    ],
+    "doubled_items": 6,
+    "doubled_separate_strictly_coarser": true,
+    "witness_records": [
+      "100110",
+      "011001"
+    ],
+    "witness_confused_by_separate": true,
+    "witness_separated_by_joint": true,
+    "grid_222_positive_fibre_supports": 99,
+    "grid_222_unit_cells_strict": 91,
+    "grid_222_unit_cells_not_strict": 8
+  },
+  "rp2_cone": {
+    "line": [
+      1,
+      2,
+      5
+    ],
+    "cells": 78,
+    "items_with_doubled_cone": 96,
+    "blocks_per_map": [
+      7,
+      18,
+      13
+    ],
+    "complex_reduced_betti": [
+      0,
+      0,
+      1
+    ],
+    "nerve_reduced_betti": [
+      0,
+      0,
+      1
+    ],
+    "pairwise_fibre_dimension": 1,
+    "link_formula_value": 1,
+    "generator_max_on_cone": 2,
+    "generator_min_on_cone": 2,
+    "generator_values_off_cone": [
+      1
+    ],
+    "unit_cells_pairwise_observation_is_item_level": true,
+    "doubled_cone_witness_same_pairwise_margins": true,
+    "doubled_cone_witness_different_cells": true
+  },
+  "collision_blocks": {
+    "unit_cycle_ratios": {
+      "4": "9/8",
+      "6": "33/32",
+      "8": "129/128",
+      "10": "513/512"
+    },
+    "unit_cycle_closed_form_one_plus_two_to_one_minus_length": true,
+    "sized_C4_ratios": {
+      "2211": "11/9",
+      "2112": "11/9",
+      "1221": "11/9",
+      "3111": "19/16",
+      "1113": "19/16"
+    },
+    "single_cycle_depends_on_size_multiset_only": true,
+    "single_cycle_sum_formula": true,
+    "bridges_do_not_change_the_ratio": true,
+    "vertex_joined_blocks_multiply": true,
+    "disjoint_blocks_multiply": true,
+    "same_cycle_rank_different_ratio": true,
+    "witness_ratios": {
+      "C4_unit_with_pendant_path": "9/8",
+      "two_C4_sharing_a_vertex_cycle_rank_2": "81/64",
+      "two_disjoint_C4_cycle_rank_2": "81/64",
+      "K23_unit_cycle_rank_2": "11/8"
+    }
+  },
+  "nerve_incidence_identity": {
+    "supports_2x2x3": 3271,
+    "agree": 3271
+  },
+  "source_sha256": {
+    "scripts/verify_evaluation_leak_topology.py": "9d3f644d3025ef4c194f05b500b0e3df6e1e934acf17477abaaebc288fb52121",
+    "src/spiral_ln/evaluation_leak_topology.py": "2f32ce39f9748a7573ad92bd9245eaf6b645a3477817ce92d8656702fd2413ff",
+    "src/spiral_ln/evaluation_feedback_lattice.py": "0d0dc58cecb37139a012f41832833b3efe02e439a6129a81d728a6f5ea65d4fb",
+    "src/spiral_ln/evaluation_game_feedback.py": "39bc7dfdeb6bdb34646acb9a177a8f6be8c9526bde01ba03f681843cf8844fc4",
+    "src/spiral_ln/evaluation_game_testbed.py": "6c681810694a9837ec61ca49bec423bbd8673e02a4f4a73e85e2bb4b5706ae36"
+  }
+}
