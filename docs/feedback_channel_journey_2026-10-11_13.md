@@ -207,8 +207,9 @@ sizes before anything is called a proof.
   without memorization iff ε₁ ≥ 1/2.
 - The mutation-model finding (multigen 0.2): correlation with the incumbent
   lowers first-generation inflation and raises the accumulated gap.
-- The corollary in gold calibration 0.1: noisy gold makes an independent
-  judge look correlated by exactly η(1−η)(2a−1)(1−2ε).
+- The corollary in the judge measurement note: with gold wrong at rate η,
+  an independent judge shows a measured shared-error excess
+  (ε₁′ − ε′)(1 − a′) of exactly η(1−η)(2a−1)(1−2ε).
 - Proposition 6 (gold calibration 0.3): four raters give exactly six
   equalities, via a lower-triangular minor with determinant −c₁₂⁴c₁₃². A
   grader copying the gold grader with probability ρ leaves the residual

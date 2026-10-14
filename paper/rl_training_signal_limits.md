@@ -74,7 +74,7 @@ the observation that would falsify it.
 | | Axiom | Falsified by |
 |---|---|---|
 | A1 | The loop reads \(J\) only through the declared channel at the declared access class. | A ledger breach; or item-level knowledge shown with fewer score queries than L2 allows. |
-| A2 | The judge's errors are independent of the controller's. | Observed accuracy at or above the noise ceiling with patch share below the L3 threshold; or \(\varepsilon_1>\varepsilon\) measured on a sealed gold-labelled sample by the exact test of the [measurement note](judge_shared_error_measurement.md), with the gold's own error rate declared, since noisy gold makes an independent judge look correlated by exactly \(\eta(1-\eta)(2a-1)(1-2\varepsilon)\). |
+| A2 | The judge's errors are independent of the controller's. | Observed accuracy at or above the noise ceiling with patch share below the L3 threshold; or \(\varepsilon_1>\varepsilon\) measured on a sealed gold-labelled sample by the exact test of the [measurement note](judge_shared_error_measurement.md), with the gold's own error rate declared, since with gold wrong at rate \(\eta\) an independent judge shows a measured shared-error excess \((\varepsilon_1'-\varepsilon')(1-a')\) of exactly \(\eta(1-\eta)(2a-1)(1-2\varepsilon)\). |
 | A3 | The readout set never feeds the loop. | A ledger breach on the readout set. |
 | A4 | A patch changes one item's outcome and no other. | Collateral outcome changes on unpatched items (the nearest-neighbour simulation in `output/eval_reuse_toys/` showed them). |
 | A5 | Candidates have equal true value (the null for selection inflation). | A measured gain on a sealed readout. |
@@ -90,8 +90,9 @@ has \(m=2\); partial credit and first-failure have \(m=T+1\); process reward
 has \(m=2^T\). To distinguish \(H\) hypotheses the loop needs at least
 \(\lceil\log H/\log m\rceil\) episodes of that channel. For \(T=3\) steps,
 identifying which steps fail (eight hypotheses) takes at least three
-outcome-reward episodes and one process-reward episode. Partial credit and
-first-failure are incomparable: neither factors through the other. Proof:
+outcome-reward episodes and one process-reward episode. For \(T\ge2\), partial
+credit and first-failure are incomparable: neither factors through the other (at
+\(T=1\) they coincide). Proof:
 counting; `refines` checks factorization. *Finite verified example* for
 \(T\le5\); the counting bound is an *algebraic identity*.
 
@@ -140,10 +141,12 @@ a(1-\varepsilon_0)+(1-a)\varepsilon_1
 \]
 which exceeds the independent-judge value by exactly
 \(2(1-a)(\varepsilon_1-\varepsilon)\), and reaches the ceiling
-\(1-\varepsilon\) exactly when \(\varepsilon_1\ge\tfrac12\), whatever
-\(a\) and \(\varepsilon\). Feasibility caps \(\varepsilon_1\) at
+\(1-\varepsilon\) exactly when \(\varepsilon_1\ge\tfrac12\), for every
+\(a<1\) and every \(\varepsilon\) (at \(a=1\) the observed accuracy is the ceiling
+regardless). Feasibility caps \(\varepsilon_1\) at
 \(\varepsilon/(1-a)\), so the ceiling is reachable without memorization iff
-\(\varepsilon\ge(1-a)/2\): the judge must be wrong at least half as often
+\((1-a)/2\le\varepsilon\le1\) (above \((1+a)/2\) the choice \(\varepsilon_1=\tfrac12\)
+is infeasible, but then every feasible judge has \(\varepsilon_1>\tfrac12\)): the judge must be wrong at least half as often
 as the controller. In the fixture (\(a=\tfrac45\), \(\varepsilon=\tfrac1{10}\))
 the independent judge reports \(\tfrac{37}{50}\); the most correlated
 feasible judge reports \(\tfrac9{10}\), the ceiling, an inflation of

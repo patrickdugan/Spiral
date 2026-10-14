@@ -103,8 +103,9 @@ and \(\varepsilon<\tfrac12\) (`independent_judge_measured_excess`): a flipped go
 and judge look wrong together, the enrichment of `failed_item_noise_share` now on the judge. Noisy
 gold therefore mimics a violation of A2, and test (a) on measured counts over-rejects unless they
 are first inverted at a known \(\eta\). Fixture, \(\eta=\tfrac1{20}\): \(a'=\tfrac{77}{100}\),
-\(\varepsilon'=\tfrac7{50}\); the independent judge measures \(\varepsilon_1'=\tfrac{11}{46}\), excess
-\(\tfrac{57}{575}\approx0.099\); inversion returns \(\tfrac1{10}\), and \(\tfrac12\) for the shared judge,
+\(\varepsilon'=\tfrac7{50}\); the independent judge measures \(\varepsilon_1'=\tfrac{11}{46}\), so
+\(\varepsilon_1'-\varepsilon'=\tfrac{57}{575}\approx0.099\) and the Corollary's quantity
+\((\varepsilon_1'-\varepsilon')(1-a')=\tfrac{57}{2500}=\eta(1-\eta)(2a-1)(1-2\varepsilon)\); inversion returns \(\tfrac1{10}\), and \(\tfrac12\) for the shared judge,
 exactly. Boundary: \(\eta\) must be known; [gold_calibration_second_grader.md](gold_calibration_second_grader.md)
 estimates it from a second independent grader by the three-rater identity
 \((1-2\eta_1)^2=\kappa_{12}\kappa_{1C}/\kappa_{2C}\), with \(d\varepsilon_1/d\eta=-4\) at this fixture.
