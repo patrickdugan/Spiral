@@ -143,3 +143,92 @@ JM = `paper/judge_shared_error_measurement.md`; GC = `paper/gold_calibration_sec
 | GC | Proposition 6(b): the `6 × 6` minor on `(c₂₄, c₃₄, k₁₂₄, k₁₃₄, k₂₃₄, k₁₂₃₄)` is lower triangular | `FeedbackChannel.RatersJacobian.minor_eq` | FeedbackChannel/RatersJacobian.lean:47 | full | Entries are Lean's partial derivatives (`deriv` along coordinate lines) of the residual map, not entered by hand. Residuals are "left side minus right side" of the note's equalities; lower-triangular row order puts `c₁₃c₂₄ - c₁₄c₂₃` first. |
 | GC | Proposition 6(b): determinant `-c₁₂⁴c₁₃²` | `FeedbackChannel.RatersJacobian.minor_det` | FeedbackChannel/RatersJacobian.lean:60 | full | At every point. The sign depends on the row order and residual orientation above; with the other tetrad first the determinant is `+c₁₂⁴c₁₃²`. |
 | GC | Proposition 6(b): the `6 × 15` Jacobian has rank 6 wherever `c₁₂c₁₃ ≠ 0`, model or not | `FeedbackChannel.RatersJacobian.jac_rank` | FeedbackChannel/RatersJacobian.lean:70 | full | The 15 centred moments are taken as free real coordinates; that they are coordinates on the simplex is not formalized. Proposition 6(a) (parameter Jacobian rank 9) and the "zero set of six independent functions" conclusion are not formalized. |
+
+## The selection-law and multi-generation notes
+
+
+Lean formalizations of results in `paper/evaluation_feedback_multigen.md` (draft 0.5, "multigen")
+and `paper/selection_law_kl_containment.md` (draft 0.3, "selection-KL"). Nine modules under
+`FeedbackChannel/`, built in this order (each imports only narrow Mathlib modules):
+
+`MultigenRunningMax MultigenHoeffding MultigenGate MultigenMixed MultigenCountDominance
+SelectionKTwo SelectionContainment SelectionTieRules SelectionTieFree`
+
+`axioms_selection.lean` prints the axioms of every theorem below. All of them depend on at most
+`propext`, `Classical.choice`, `Quot.sound`. The files contain no `sorry`, `admit`, `native_decide` or new axioms.
+
+Fidelity: **full** = the note's claim with its quantifiers and hypotheses; **special case** = a
+restriction, named in Remarks; **supporting lemma** = a step of the note's proof, with what remains.
+Probabilities and expectations are finite sums against product weights (i.i.d. draws). Where a
+statement is about an abstract chain, Remarks says which property of the binomial instance is
+taken as a hypothesis rather than derived.
+
+| Note | Claim (label as in the note) | Lean theorem (fully qualified) | File:line | Fidelity | Remarks |
+|---|---|---|---|---|---|
+| multigen | Prop. 1, update rule: with `t ≡ 0`, `c_G = max(c_0, M_1, …, M_G)` | `FeedbackChannel.MultigenRunningMax.chain_naive` | `FeedbackChannel/MultigenRunningMax.lean:66` | full | `step`/`chain` encode §1's policy "accept iff `M > c + t(c)`" for any `t`. |
+| multigen | Prop. 1: the reported count is the maximum of the `GK + 1` draws | `FeedbackChannel.MultigenRunningMax.naive_reported_eq_max` | `FeedbackChannel/MultigenRunningMax.lean:102` | full | Draws indexed by `Option (Fin G × Fin K)`; `none` is the initial incumbent; `M_g` is the max of generation `g`'s `K` candidates. |
+| multigen | Prop. 1, law: `c_G` is distributed as the max of `GK + 1` i.i.d. draws | `FeedbackChannel.MultigenRunningMax.prob_reported_le` | `FeedbackChannel/MultigenRunningMax.lean:229` | full | `P(c_G ≤ j) = F(j)^{GK+1}` for i.i.d. draws with any law on `{0..n}` (`Bin(n, p)` included). |
+| multigen | Prop. 1: `ρ_G = selection_inflation(n, GK+1, p).readout_gap` | `FeedbackChannel.MultigenRunningMax.expect_reported_eq_expect_max` | `FeedbackChannel/MultigenRunningMax.lean:248` | full | `E[c_G] = E[max of GK + 1 i.i.d. draws]`; with `expect_reported` (`:240`) and `expect_max` (`:198`) both equal `∑_{j<n} (1 - F(j)^{GK+1})`. |
+| multigen | Prop. 1, max of i.i.d. draws: `P(max ≤ j) = F(j)^m` | `FeedbackChannel.MultigenRunningMax.prob_all_le` | `FeedbackChannel/MultigenRunningMax.lean:160` | supporting lemma | Product-law computation behind the two rows above. |
+| multigen | Prop. 1 (i): `ρ_G` non-decreasing in `G` | `FeedbackChannel.MultigenRunningMax.expect_reported_mono` | `FeedbackChannel/MultigenRunningMax.lean:321` | full | Via `aSeq_mono` (`:274`): a maximum over more draws. |
+| multigen | Prop. 1 (ii): increments non-increasing | `FeedbackChannel.MultigenRunningMax.aSeq_increment_antitone` | `FeedbackChannel/MultigenRunningMax.lean:283` | full | In `m`; increment written in tail form `∑_j F(j)^m (1 - F(j))` (`aSeq_succ_sub`, `:265`) rather than `E[(X - M_m)^+]` (equal, not proved equal here). Per-generation form: `expect_reported_increment_antitone` (`:328`). |
+| multigen | Prop. 1 (iii): `P(c_G = n) = 1 - (1 - p^n)^{GK+1}` | `FeedbackChannel.MultigenRunningMax.binomial_prob_reported_eq_top` | `FeedbackChannel/MultigenRunningMax.lean:385` | full | General law: `prob_reported_eq_top` (`:343`), `1 - F(n-1)^{GK+1}`. |
+| multigen | Prop. 1 (iii): for fixed `n` and `0 < p < 1`, `ρ_G ↑ 1 - p` | `FeedbackChannel.MultigenRunningMax.tendsto_gap` | `FeedbackChannel/MultigenRunningMax.lean:393` | full | `n ≥ 1`, `K ≥ 1`, `0 < p ≤ 1`; monotonicity is (i). |
+| multigen | Prop. 4 (null, coupling): `c^t_G ≤ c^0_G` pointwise | `FeedbackChannel.MultigenRunningMax.chain_le_chain_naive` | `FeedbackChannel/MultigenRunningMax.lean:76` | special case | Pointwise ordering on the same draws only; `ρ^t ≤ ρ^0` and `α^t ≤ α^0` follow by taking expectations, not stated. |
+| multigen | Prop. 5, first bound: `ρ_G ≤ √(ln(GK + 1)/(2n))` | `FeedbackChannel.MultigenHoeffding.prop5_hoeffding` | `FeedbackChannel/MultigenHoeffding.lean:260` | full | Every `n ≥ 1`, `K`, `G`, `p ∈ [0, 1]`. For any `m ≥ 1` i.i.d. draws: `max_gap_le_hoeffding` (`:189`). |
+| multigen | Prop. 5 proof: Hoeffding's lemma for one Bernoulli | `FeedbackChannel.MultigenHoeffding.bernoulli_hoeffding` | `FeedbackChannel/MultigenHoeffding.lean:34` | supporting lemma | From Mathlib's `ProbabilityTheory.hasSubgaussianMGF_of_mem_Icc` on the two-point law. Uses the deprecated `PMF.bernoulli` (warning only). |
+| multigen | Prop. 5 proof: `E e^{λ(X - np)} ≤ e^{λ²n/8}` | `FeedbackChannel.MultigenHoeffding.binomial_mgf_le` | `FeedbackChannel/MultigenHoeffding.lean:83` | supporting lemma | Closed form of the binomial mgf: `binomial_mgf` (`:67`). |
+| multigen | Prop. 5 proof: maximal inequality (Jensen, then `max ≤ ∑`) | `FeedbackChannel.MultigenHoeffding.maximal_inequality` | `FeedbackChannel/MultigenHoeffding.lean:124` | supporting lemma | `λ(E max - c) ≤ ln m + ln E e^{λ(X - c)}` for every real `λ`. |
+| multigen | Prop. 7: one generation changes the gap by `E[((M - c)/n - δ) 1_accept]` | `FeedbackChannel.MultigenGate.gapChange_eq` | `FeedbackChannel/MultigenGate.lean:41` | full | Any finite law of `M` (the note's is the max of `K` `Bin(n, p_inc + δ)`); gap = count/n − true value. |
+| multigen | Prop. 7: `Δρ_naive - Δρ_gate = E[((M - c)/n - δ) 1{c < M ≤ c + t(c)}]` | `FeedbackChannel.MultigenGate.naive_sub_gate` | `FeedbackChannel/MultigenGate.lean:56` | full | |
+| multigen | Prop. 7 (i): `δ ≤ 1/n` ⇒ difference `≥ 0` | `FeedbackChannel.MultigenGate.naive_sub_gate_nonneg` | `FeedbackChannel/MultigenGate.lean:70` | full | `n ≥ 1`, law non-negative with mass one. |
+| multigen | Prop. 7 (ii): `δ ≥ t(c)/n` ⇒ difference `≤ 0` | `FeedbackChannel.MultigenGate.naive_sub_gate_nonpos` | `FeedbackChannel/MultigenGate.lean:90` | full | |
+| multigen | Prop. 7: both (i) and (ii) ⇒ difference zero | `FeedbackChannel.MultigenGate.naive_sub_gate_eq_zero` | `FeedbackChannel/MultigenGate.lean:110` | full | The `n = 8, z = 1` cells. |
+| multigen | Prop. 7 (iii): otherwise the sign depends on the law of `M` | `FeedbackChannel.MultigenGate.sign_undetermined` | `FeedbackChannel/MultigenGate.lean:119` | special case | For `1/n < δ < t/n`, point masses at `c + 1` and `c + t` give both signs (arbitrary finite laws). The note's binomial-max example (`n = 16, K = 2, c = 8`) is a finite check, not formalized. |
+| multigen | §6 mixed laws: `W^a_k = (P u_k - Q u_k)` for the rule with `a(c) = a` | `FeedbackChannel.MultigenMixed.kernel_sub_u` | `FeedbackChannel/MultigenMixed.lean:197` | supporting lemma | |
+| multigen | §6 mixed laws: one naive step `s_{k+1} = (1 - H) s_k - W^{m-1}_k` | `FeedbackChannel.MultigenMixed.s_succ` | `FeedbackChannel/MultigenMixed.lean:207` | supporting lemma | |
+| multigen | §6 mixed laws: window-sum recursion `W^a_k = (1-H)W^a_{k-1} + E^a_{k-1} + ∑ρ W^{m-1}_{k-1}(y) - B_a W^{m-1}_{k-1}(x)` | `FeedbackChannel.MultigenMixed.window_recursion` | `FeedbackChannel/MultigenMixed.lean:241` | full | `a < m`. Chain abstracted as an arbitrary finite joint law `ρ(i, J, ℓ)` of (best count, landing level), mass one per level; covers `drift_kernel`'s `q_μ Bin(n, p(i+μ))(J) S_J` for every gain law. |
+| multigen | §6 mixed laws: `E^a ≥ 0` | `FeedbackChannel.MultigenMixed.E_nonneg` | `FeedbackChannel/MultigenMixed.lean:264` | full | Hypotheses as the note uses them: gains `≥ 0` (`ρ ≠ 0 ⇒ ℓ ≥ i`) and `H` non-decreasing in the level. The latter is assumed, not derived from the binomial levels. |
+| multigen | §6 mixed laws: "(L1) holds for every law"; full-window slacks `W^{m-1} ≥ 0` | `FeedbackChannel.MultigenMixed.full_window_nonneg` | `FeedbackChannel/MultigenMixed.lean:329` | full | Same hypotheses. Standard form `s_{k+1} ≤ (1 - H) s_k`: `MultigenMixed.L1` (`:335`). Weaker hypothesis (landing levels have `H(ℓ) ≥ H(i)`): `full_window_nonneg_of_landing` (`:279`). |
+| multigen | §6 mixed laws: at `c = m - 2`, `W_k = A W_{k-1} + E_{k-1}` | `FeedbackChannel.MultigenMixed.distance_two_closure` | `FeedbackChannel/MultigenMixed.lean:359` | full | Exact identity, every gain law. |
+| multigen | §6 mixed laws: `W_k ≥ 0` at `c = m - 2`, "a theorem two below the target for every gain law" | `FeedbackChannel.MultigenMixed.distance_two_nonneg` | `FeedbackChannel/MultigenMixed.lean:369` | full | Hypotheses as for `E_nonneg`. |
+| multigen | §6 / overview: count ordering proved from states two steps below the target | `FeedbackChannel.MultigenMixed.gated_le_naive_near_target` | `FeedbackChannel/MultigenMixed.lean:392` | full | `(Q u_k)(x) ≤ (P u_k)(x)` for every threshold rule at every state with `c ≥ m - 2`, objective `1{c ≥ m}`. |
+| multigen | Prop. 9: `E^t_x[ψ(c_g)] ≤ E^0_x[ψ(c_g)]` for non-decreasing `ψ`, every rule, state, `g` | `FeedbackChannel.MultigenCountDominance.gated_expect_le` | `FeedbackChannel/MultigenCountDominance.lean:468` | full | Fixed-gain chain abstracted: draw law `π_i` per level, acceptance moves the level to `nx i < L` (a top level may absorb). The proof's one property of the binomial, "best of `K` stochastically non-decreasing in the level", is the hypothesis `hstoch : P(M_i ≥ m) ≤ P(M_{nx i} ≥ m)`; it is not derived from `Bin(n, p)` here. `ψ` enters as `ψ(min c n)`, which equals `ψ(c)` on counts. |
+| multigen | Prop. 9: stochastic dominance of the count (hitting form) | `FeedbackChannel.MultigenCountDominance.gated_hit_le` | `FeedbackChannel/MultigenCountDominance.lean:378` | full | `P^t_x(c_g ≥ m) ≤ P^0_x(c_g ≥ m)`; same hypothesis. |
+| multigen | Prop. 9: one gated step then naive steps is dominated, `QP^kψ ≤ P^{k+1}ψ` | `FeedbackChannel.MultigenCountDominance.one_gated_step_le` | `FeedbackChannel/MultigenCountDominance.lean:357` | special case | For the hitting indicators `ψ = 1{c ≥ m}`. The general `ψ` follows by linearity but is not stated. |
+| multigen | Prop. 9 proof: (L1), (L2), (L3), (L4) | `FeedbackChannel.MultigenCountDominance.L1`, `FeedbackChannel.MultigenCountDominance.L2`, `FeedbackChannel.MultigenCountDominance.L3`, `FeedbackChannel.MultigenCountDominance.L4` | `FeedbackChannel/MultigenCountDominance.lean:159`, `:230`, `:262`, `:269` | supporting lemma | (L3) through the note's comparison sequence `R` (`R_le_s`, `s_le_R`); (L4) for every window `a`. |
+| selection-KL | D.5 (`K = 2`): `M_n(2) = ½ E|S - n|`, `S ~ Bin(2n, ½)` | `FeedbackChannel.SelectionKTwo.M2_eq_half_meanAbsDev` | `FeedbackChannel/SelectionKTwo.lean:195` | full | `M_n(2)` is the double binomial sum `E max(Y₁, Y₂)`. |
+| selection-KL | D.5: de Moivre `E|S - n| = n C(2n, n)/4ⁿ` | `FeedbackChannel.SelectionKTwo.meanAbsDev_eq` | `FeedbackChannel/SelectionKTwo.lean:123` | full | Integer form `∑ C(2n, s)|s - n| = n C(2n, n)`: `sum_choose_abs` (`:80`). |
+| selection-KL | D.5: `a_n(2)² = n C(2n, n)²/(4·16ⁿ)` | `FeedbackChannel.SelectionKTwo.aSq_eq` | `FeedbackChannel/SelectionKTwo.lean:272` | full | `a_n = M_n/√n`. |
+| selection-KL | D.5: `a_{n+1}²/a_n² = (2n + 1)²/(4n(n + 1)) = 1 + 1/(4n(n + 1)) > 1` | `FeedbackChannel.SelectionKTwo.aSq_succ_div` | `FeedbackChannel/SelectionKTwo.lean:291` | full | `n ≥ 1`; with `step_ratio_eq` (`:310`) and `step_ratio_gt_one` (`:316`). |
+| selection-KL | D.5: `a_n(2)` strictly increasing | `FeedbackChannel.SelectionKTwo.a_strictMonoOn` | `FeedbackChannel/SelectionKTwo.lean:340` | full | On `n ≥ 1`. |
+| selection-KL | D.5: `a_n(2) ↑ 1/(2√π)` (Wallis) | `FeedbackChannel.SelectionKTwo.tendsto_a` | `FeedbackChannel/SelectionKTwo.lean:390` | full | `a_n² = n/(4(2n + 1)W_n)` with Mathlib's Wallis product (`aSq_eq_wallis`, `:350`); `a_n² → 1/(4π)` (`tendsto_aSq`, `:366`). |
+| selection-KL | D.5: `r(n, 2, ½)` increases strictly to `c₂`, `sup_n = c₂` | `FeedbackChannel.SelectionKTwo.r_strictMonoOn`, `FeedbackChannel.SelectionKTwo.tendsto_r`, `FeedbackChannel.SelectionKTwo.r_lt_lim` | `FeedbackChannel/SelectionKTwo.lean:413`, `:422`, `:432` | special case | `r = 2a_n/√(2λ₂)`; the limit is stated as `1/(√π √(2λ₂))` and is never attained. Equating it with `c₂ = E[M₂]/√(2λ₂)` needs the Gaussian value `E[M₂] = 1/√π`, which is not formalized. |
+| selection-KL | Theorem A: for every tie rule, `π_K(ω) = p₀(ω) m_K(S ω)/q(S ω)` | `FeedbackChannel.SelectionTieRules.keptLaw_eq` | `FeedbackChannel/SelectionTieRules.lean:163` | full | Tie rule: a function of the score vector and of independent randomness on a finite type, with the kept index in the argmax set. This covers the first-index and uniform rules. Proved by a weight-preserving swap of the kept record (`swap_sum`, `:89`), the combinatorial form of the conditioning argument. `P(max score = s) = F(s)^K - F(s-)^K`: `prob_max_score_eq` (`:55`). |
+| selection-KL | Theorem A: `KL(π_K ‖ p₀) = KL(m_K ‖ q)` | `FeedbackChannel.SelectionContainment.kl_record_eq_kl_scores` | `FeedbackChannel/SelectionContainment.lean:428` | full | `kl μ ν = ∑ μ log(μ/ν)`, the KL divergence for `μ ≪ ν` (true for `π_K ≪ p₀`). |
+| selection-KL | Theorem B: for every finite `p₀`, score, `K` and tie rule, `KL(π_K ‖ p₀) ≤ ln K - (K - 1)/K` | `FeedbackChannel.SelectionTieRules.theoremB_every_tie_rule` | `FeedbackChannel/SelectionTieRules.lean:188` | full | `K ≥ 1`, `p₀ ≥ 0` with mass one, real-valued score; tie randomness on a finite type. Formula form: `SelectionContainment.theoremB` (`:457`). |
+| selection-KL | Theorem B: equality iff `K = 1` | `FeedbackChannel.SelectionTieRules.theoremB_every_tie_rule_eq_iff` | `FeedbackChannel/SelectionTieRules.lean:197` | full | Strict for `K ≥ 2`: `SelectionContainment.theoremB_strict` (`:465`); formula form `theoremB_eq_iff` (`:473`). |
+| selection-KL | Theorem B, score form: `KL(m_K ‖ q) ≤ λ_K` (`< λ_K` for `K ≥ 2`) | `FeedbackChannel.SelectionContainment.kl_scores_le` | `FeedbackChannel/SelectionContainment.lean:295` | full | Every finite score law (atoms `T`, masses `q`). Strict form: `kl_scores_lt` (`:311`). |
+| selection-KL | Theorem B proof, steps (ii)–(iii): Jensen removes the jitter | `FeedbackChannel.SelectionContainment.atom_le` | `FeedbackChannel/SelectionContainment.lean:183` | supporting lemma | Replaces the jitter with an atom-wise tangent-line Jensen: `(b^K - a^K) ln((b^K - a^K)/(b - a)) ≤ G(b) - G(a)`, `G' = h ln h` (`hasDerivAt_G`, `:76`). The sum telescopes (`telescope`, `:247`) to `G(1) - G(0) = λ_K` (`G_one`, `:58`). Strict for `K ≥ 2`: `atom_lt` (`:195`). |
+| selection-KL | Theorem B, step (ii): tie-free value `∫₀¹ K u^{K-1} ln(K u^{K-1}) du = ln K - (K - 1)/K` | `FeedbackChannel.SelectionTieFree.tieFree_integral` | `FeedbackChannel/SelectionTieFree.lean:31` | supporting lemma | The integral identity only. The claim that every atomless score law attains `λ_K` (the density computation) is not formalized. |
+
+## Not formalized
+
+- multigen Prop. 5, second (Bernstein) bound.
+- multigen Prop. 8 (dominance in true value). Props. 2, 3 and 6, and the finite surveys, were outside the assignment.
+- multigen Prop. 7 (iii) for binomial-max laws specifically; Prop. 9 with the binomial stochastic
+  monotonicity derived rather than assumed. The analogous `H`-monotonicity hypothesis in §6 is also assumed.
+- selection-KL Theorem B supremum (uniform laws on `N` atoms tend to `λ_K`) and attainment by atomless laws; D.5 for
+  `K = 3` and the `K ≥ 4` material; Theorems C and D.1–D.4.
+
+## Notes on the sources found while formalizing
+
+- selection-KL D.5: the telescoped form `a_n(2)² = (1/16) ∏_{j<n} (2j+1)²/((2j)(2j+2))` has a
+  zero denominator at `j = 0`; the product must run over `1 ≤ j < n` (from `a_1(2)² = 1/16`).
+- multigen §6 (0.5): "(L1) holds for every law" is a theorem, not only a finite check. Under
+  gains `≥ 0` and `H` non-decreasing in the level, the fixed-gain induction carries over unchanged
+  (`full_window_nonneg`).
+- multigen Prop. 1 (ii) states the increment as `E[(X - M_m)^+]`; the formalization uses the
+  equivalent tail form `∑_j F(j)^m (1 - F(j))`.
+- multigen Prop. 5: the maximal-inequality step needs no `λ > 0` once it is written as
+  `λ(E max - c) ≤ ln m + ln E e^{λ(X - c)}`. Positivity is needed only to divide by `λ`.

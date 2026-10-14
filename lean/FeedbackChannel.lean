@@ -10,3 +10,12 @@ import FeedbackChannel.Signal
 import FeedbackChannel.Judge
 import FeedbackChannel.Raters
 import FeedbackChannel.RatersJacobian
+import FeedbackChannel.MultigenRunningMax
+import FeedbackChannel.MultigenHoeffding
+import FeedbackChannel.MultigenGate
+import FeedbackChannel.MultigenMixed
+import FeedbackChannel.MultigenCountDominance
+import FeedbackChannel.SelectionKTwo
+import FeedbackChannel.SelectionContainment
+import FeedbackChannel.SelectionTieRules
+import FeedbackChannel.SelectionTieFree
