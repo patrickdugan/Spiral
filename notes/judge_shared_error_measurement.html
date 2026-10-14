@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Measuring the judge&#x27;s shared error on a sealed sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../index.html">Feedback-channel findings</a>
+  <a href="../notes/index.html">Notes</a>
+  <a href="../lean/index.html">Lean proofs</a>
+  <a href="../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<p class="meta">Source: <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/paper/judge_shared_error_measurement.md">paper/judge_shared_error_measurement.md</a></p>
+<h1>Measuring the judge's shared error on a sealed sample</h1>
+<p>Draft 0.1 — 2026-10-13. Delivers the last bullet of <a href="../notes/rl_training_signal_limits.html">rl_training_signal_limits.md</a>
+§6: a measurement procedure for \(\varepsilon_1\), the judge's error rate on items the controller gets
+wrong, with exact inference. Axiom A2 there is falsified by a measured \(\varepsilon_1&gt;\varepsilon\); L4
+says the ceiling \(1-\varepsilon\) is reached without memorization exactly when \(\varepsilon_1\ge\tfrac12\).
+Files: <code>src/spiral_ln/evaluation_judge_measurement.py</code>, <code>tests/test_evaluation_judge_measurement.py</code>
+(58 tests), <code>output/evaluation_judge_measurement/judge_v0_1.json</code> (19 checks, source hashes, exact
+fractions, floats under <code>headline</code>). No model was called; nothing here is evidence about any judge or
+controller. Every number is a <code>Fraction</code>; binomial and hypergeometric tails are finite sums, so every
+p-value and power figure is exact. Evidence levels follow the calculus card (§11).</p>
+<pre><code class="language-powershell">$env:PYTHONPATH = &quot;src&quot;
+python scripts/verify_evaluation_judge_measurement.py --output output/evaluation_judge_measurement/judge_v0_1.json
+python -m pytest tests/test_evaluation_judge_measurement.py -q
+</code></pre>
+<h2>1. Procedure</h2>
+<ol>
+<li>Draw \(m\) items with gold labels from a source independent of both controller and judge
+(ground truth, or a third grader); declare the sample a sealed readout set in the feedback
+ledger (<code>EvalSet(role=&quot;readout&quot;, access=&quot;sealed&quot;)</code>), readout budget one.</li>
+<li>Run controller and judge on it; read it once (<code>LoopEvent(&quot;readout&quot;)</code>).</li>
+<li>Tabulate (controller right/wrong against gold) \(\times\) (judge right/wrong against gold):
+counts \(R_0,R_1,W_0,W_1\) (<code>JudgeTable</code>); \(W=W_0+W_1\).</li>
+<li>Estimate \(\hat a=(R_0+R_1)/m\), \(\hat\varepsilon=(R_1+W_1)/m\), \(\hat\varepsilon_0=R_1/(R_0+R_1)\),
+\(\hat\varepsilon_1=W_1/W\) (<code>table_estimates</code>); run the exact tests of §3 on \((W,W_1)\).</li>
+<li>Publish the card item of §8. <code>audit_ledger</code> withholds the measurement (<code>not_evaluated</code>) if the
+sample was read twice or any score or item from it reached the loop.</li>
+</ol>
+<h2>2. Bookkeeping identity</h2>
+<p>With binary labels a judge wrong about a wrong answer marks it correct and agrees with the controller; the agreement rate is \((R_0+W_1)/m\).</p>
+<p><strong>Proposition 1.</strong> \((R_0+W_1)/m=\hat a-\hat\varepsilon+2(1-\hat a)\hat\varepsilon_1\) for every table.
+<em>Proof.</em> \(\hat a-\hat\varepsilon=(R_0+R_1-R_1-W_1)/m=(R_0-W_1)/m\) and \(2(1-\hat a)\hat\varepsilon_1
+=2(W/m)(W_1/W)=2W_1/m\); add. For \(W=0\) the last term is \(2W_1/m=0\). \(\square\) <em>Evidence status:
+algebraic identity</em>, checked on all \(5^4-1\) tables with cells in \(0..4\). At expected counts it is
+L4's \(a-\varepsilon+2(1-a)\varepsilon_1\) (<code>observed_accuracy_shared</code>), and
+\(2(1-\hat a)(\hat\varepsilon_1-\hat\varepsilon)\) is the plug-in inflation (<code>judge_correlation_inflation</code>).</p>
+<h2>3. Exact inference on the conditional count</h2>
+<p>Given \(W\), \(W_1\sim\mathrm{Bin}(W,\varepsilon_1)\). Tails are exact rationals (<code>binomial_upper_tail</code>,
+<code>binomial_lower_tail</code>; cross-checked against enumeration of all \(2^W\) outcomes for \(W\le6\)).</p>
+<ul>
+<li><strong>(a) Independence</strong>, \(H_0:\varepsilon_1=\varepsilon\) against \(\varepsilon_1&gt;\varepsilon\):
+\(p=\Pr[\mathrm{Bin}(W,\varepsilon)\ge W_1]\) (<code>independence_p_value</code>), with \(\varepsilon\) declared
+from a source other than this table. With \(\hat\varepsilon\) from the same table it is a plug-in;
+then use <strong>Fisher's conditional test</strong> (<code>fisher_p_value</code>): under \(\varepsilon_1=\varepsilon_0\) the
+\(W\) controller-wrong items are an exchangeable draw from the \(m\), of which \(E=R_1+W_1\) are
+judge-wrong, so \(W_1\) is hypergeometric and \(p=\Pr[X\ge W_1]\); exact, no declared \(\varepsilon\).</li>
+<li><strong>(b) Ceiling</strong>, \(H_0:\varepsilon_1\ge\tfrac12\) against \(&lt;\tfrac12\):
+\(p=\Pr[\mathrm{Bin}(W,\tfrac12)\le W_1]\) (<code>ceiling_p_value</code>). The lower tail is non-increasing in
+the success probability, so the supremum over the composite null is at \(\tfrac12\) (checked).</li>
+<li><strong>Interval.</strong> A Clopper–Pearson endpoint solves \(\Pr[\mathrm{Bin}(W,L)\ge W_1]=\alpha/2\), a beta
+quantile, algebraic and in general irrational, so no exact rational interval exists. Exact instead:
+membership of any rational (<code>clopper_pearson_contains</code>, both tails \(\ge\alpha/2\)) and brackets of
+width \(2^{-16}\) around each endpoint by bisection on exact tails (<code>clopper_pearson_bracket</code>).</li>
+</ul>
+<p><em>Evidence status: algebraic identity</em> for the tests; the sawtooth facts of §4 are <em>finite verified examples</em>.</p>
+<h2>4. Planning</h2>
+<p>The level-\(\alpha\) test rejects at \(W_1\ge c(W)\), \(c\) the smallest cutoff with
+\(\Pr[\mathrm{Bin}(W,\varepsilon)\ge c]\le\alpha\); power at \(\varepsilon_1=\tfrac12\) is the mass of
+\(\mathrm{Bin}(W,\tfrac12)\) on \(\{W_1\ge c\}\). \(W^\*\) is the smallest \(W\) with power \(\ge1-\beta\); exact
+power is a sawtooth in \(W\), so the table also gives the \(W\) from which it stays there (checked to
+200). \(m\approx W/(1-a)\) is an expectation: the realised \(W\) is \(\mathrm{Bin}(m,1-a)\), and the
+procedure's unconditional power \(\sum_w\Pr[W=w]\,\mathrm{power}(w)\) at that \(m\) falls short of \(1-\beta\)
+in every cell; \(m_{\text{guar}}\) is the smallest \(m\) at which it does not (<code>smallest_sample_size</code>,
+re-checked on the next 25 sizes). \(\alpha=\tfrac1{20}\) throughout.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>\(\varepsilon\)</th>
+<th>\(\beta\)</th>
+<th>\(W^\*\)</th>
+<th>\(c\)</th>
+<th>power</th>
+<th>stable from</th>
+<th>\(m\) (a=4/5, 9/10)</th>
+<th>uncond. power</th>
+<th>\(m_{\text{guar}}\) (4/5, 9/10)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1/20</td>
+<td>1/5</td>
+<td>5</td>
+<td>2</td>
+<td>13/16</td>
+<td>5</td>
+<td>25, 50</td>
+<td>0.731, 0.725</td>
+<td>30, 61</td>
+</tr>
+<tr>
+<td>1/20</td>
+<td>1/10</td>
+<td>7</td>
+<td>2</td>
+<td>15/16</td>
+<td>9</td>
+<td>35, 70</td>
+<td>0.851, 0.846</td>
+<td>43, 87</td>
+</tr>
+<tr>
+<td>1/10</td>
+<td>1/5</td>
+<td>8</td>
+<td>3</td>
+<td>219/256</td>
+<td>10</td>
+<td>40, 80</td>
+<td>0.741, 0.737</td>
+<td>47, 94</td>
+</tr>
+<tr>
+<td>1/10</td>
+<td>1/10</td>
+<td>12</td>
+<td>4</td>
+<td>0.9270</td>
+<td>12</td>
+<td>60, 120</td>
+<td>0.889, 0.887</td>
+<td>63, 126</td>
+</tr>
+<tr>
+<td>1/5</td>
+<td>1/5</td>
+<td>17</td>
+<td>7</td>
+<td>0.8338</td>
+<td>19</td>
+<td>85, 170</td>
+<td>0.778, 0.776</td>
+<td>90, 181</td>
+</tr>
+<tr>
+<td>1/5</td>
+<td>1/10</td>
+<td>21</td>
+<td>8</td>
+<td>0.9054</td>
+<td>24</td>
+<td>105, 210</td>
+<td>0.858, 0.856</td>
+<td>120, 242</td>
+</tr>
+</tbody>
+</table></div>
+<p>Exact rationals for every entry are in the receipt. A judge at \(\varepsilon=\tfrac15\) against a controller
+at \(a=\tfrac9{10}\) needs about 240 gold items to separate independence from the ceiling at power 0.9.</p>
+<h2>5. Gold noise</h2>
+<p>Let gold flip (\(F\)) independently at rate \(\eta&lt;\tfrac12\), independent of the controller's correctness
+\(C\) and the judge's \(J\); measured controller-right is \(C\oplus F\), measured judge-right \(J\oplus F\).</p>
+<p><strong>Proposition 2.</strong> \(a'=\eta+a(1-2\eta)\), \(\varepsilon'=\eta+\varepsilon(1-2\eta)\),
+\(W_1'/m=(1-a)\varepsilon_1+\eta(a-\varepsilon)\), \(\varepsilon_1'=(W_1'/m)/(1-a')\); inverted by
+\(a=(a'-\eta)/(1-2\eta)\), \(\varepsilon=(\varepsilon'-\eta)/(1-2\eta)\),
+\(\varepsilon_1=\big(\varepsilon_1'(1-a')-\eta(a-\varepsilon)\big)/(1-a)\) for \(a&lt;1\); the agreement rate
+is invariant, since \(C\oplus F=J\oplus F\) iff \(C=J\). <em>Proof.</em> \(W_1'/m=\Pr[C=0,F=0,J=0]+\Pr[C=1,F=1,J=1]
+=(1-\eta)(1-a)\varepsilon_1+\eta a(1-\varepsilon_0)\) and \(a\varepsilon_0=\varepsilon-(1-a)\varepsilon_1\). \(\square\)
+<em>Evidence status: algebraic identity</em>, cross-checked against enumeration of the eight \((C,J,F)\) cells.</p>
+<p><strong>Corollary.</strong> An independent judge (\(\varepsilon_1=\varepsilon\)) measures
+\((\varepsilon_1'-\varepsilon')(1-a')=\eta(1-\eta)(2a-1)(1-2\varepsilon)\), positive whenever \(a&gt;\tfrac12\)
+and \(\varepsilon&lt;\tfrac12\) (<code>independent_judge_measured_excess</code>): a flipped gold label makes controller
+and judge look wrong together, the enrichment of <code>failed_item_noise_share</code> now on the judge. Noisy
+gold therefore mimics a violation of A2, and test (a) on measured counts over-rejects unless they
+are first inverted at a known \(\eta\). Fixture, \(\eta=\tfrac1{20}\): \(a'=\tfrac{77}{100}\),
+\(\varepsilon'=\tfrac7{50}\); the independent judge measures \(\varepsilon_1'=\tfrac{11}{46}\), excess
+\(\tfrac{57}{575}\approx0.099\); inversion returns \(\tfrac1{10}\), and \(\tfrac12\) for the shared judge,
+exactly. Boundary: \(\eta\) must be known; <a href="../notes/gold_calibration_second_grader.html">gold_calibration_second_grader.md</a>
+estimates it from a second independent grader by the three-rater identity
+\((1-2\eta_1)^2=\kappa_{12}\kappa_{1C}/\kappa_{2C}\), with \(d\varepsilon_1/d\eta=-4\) at this fixture.</p>
+<h2>6. Falsifiers of the design</h2>
+<ul>
+<li><strong>Gold shares a source with the judge</strong> (the judge wrote or graded the reference, as in the
+atlas's shadow evaluation): \(W_1\) is not a draw from \(\mathrm{Bin}(W,\varepsilon_1)\); the tests say nothing.</li>
+<li><strong>The sample was touched by the loop</strong>: a second readout, score query or item fed back is a ledger breach; the measurement is withheld.</li>
+<li><strong>The judge was trained on the controller's outputs</strong>: declare it. It does not invalidate the
+measurement; it is the case the measurement exists for.</li>
+<li><strong>Noisy gold without a declared \(\eta\)</strong>: the excess of §5 is then confounded.</li>
+</ul>
+<h2>7. Fixture</h2>
+<p>\(m=200\), \(a=\tfrac45\), \(\varepsilon=\tfrac1{10}\). Expected counts are integers; rounding (half-up per cell) changes nothing.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>judge</th>
+<th>\(\varepsilon_1\)</th>
+<th>\((R_0,R_1,W_0,W_1)\)</th>
+<th>agreement</th>
+<th>(a) \(p\)</th>
+<th>Fisher \(p\)</th>
+<th>(b) \(p\)</th>
+<th>95% CP for \(\varepsilon_1\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>independent</td>
+<td>1/10</td>
+<td>(144, 16, 36, 4)</td>
+<td>148/200 = 37/50</td>
+<td>0.5769</td>
+<td>0.5978</td>
+<td>\(102091/2^{40}\approx9.3\times10^{-8}\)</td>
+<td>[0.0279, 0.2366]</td>
+</tr>
+<tr>
+<td>maximally shared</td>
+<td>1/2</td>
+<td>(160, 0, 20, 20)</td>
+<td>180/200 = 9/10</td>
+<td>\(1.9\times10^{-10}\)</td>
+<td>\(8.5\times10^{-17}\)</td>
+<td>\(309339539149/2^{39}\approx0.563\)</td>
+<td>[0.338, 0.662]</td>
+</tr>
+</tbody>
+</table></div>
+<p>The agreement rates are L4's \(\tfrac{37}{50}\) and the ceiling \(\tfrac9{10}\); plug-in inflation \(0\)
+and \(\tfrac4{25}\). Test (a) keeps the independent judge and rejects the shared one; test (b) does the
+reverse; the interval contains \(\varepsilon\) and excludes \(\tfrac12\) for the first, the reverse for
+the second. The (a) p-value for the independent judge has denominator \(10^{40}\); the receipt has it in full.</p>
+<h2>8. Card item</h2>
+<p>Text for §11 of the calculus (after the insertions' feedback-ledger item 10) and the atlas's \(J\) field; <code>render_card_item</code> renders it:</p>
+<blockquote>
+<ol start="11">
+<li><strong>Judge shared error:</strong> sample size \(m\) and gold source, with its independence from judge
+and from controller stated; the ledger set holding the sample and its status; \(W\), \(W_1\);
+\(\varepsilon\) as declared and as measured; \(\hat\varepsilon_1\); the exact test of
+\(\varepsilon_1=\varepsilon\) against \(\varepsilon_1&gt;\varepsilon\) with its p-value (binomial with
+declared \(\varepsilon\), or Fisher's conditional test); the ceiling test \(\varepsilon_1\ge\tfrac12\)
+with its p-value; whether the judge was trained on the controller's outputs.</li>
+</ol>
+</blockquote>
+<p>The receipt's <code>card.rendered</code> holds both judges' renderings; <code>card.withheld_after_breach</code> the item after a breach (<code>measurement_valid: false</code>).</p>
+<h2>9. Not delivered</h2>
+<ul>
+<li>No observed judge; the fixture tables are expectations, not data. Binary labels only. \(\eta\) is taken
+as known here; its estimation (and the dependent-grader falsifier) is in the gold-calibration note.</li>
+<li>The sawtooth and guaranteed-\(m\) figures are checked on the listed cells and horizons, not
+proved monotone beyond them. Items are treated as independent draws; clustered items shrink \(W\).</li>
+</ul>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The feedback-channel programme: a journey log for auditors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../index.html">Feedback-channel findings</a>
+  <a href="../notes/index.html">Notes</a>
+  <a href="../lean/index.html">Lean proofs</a>
+  <a href="../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<p class="meta">Source: <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/docs/feedback_channel_journey_2026-10-11_13.md">docs/feedback_channel_journey_2026-10-11_13.md</a></p>
+<h1>The feedback-channel programme: a journey log for auditors</h1>
+<p>Written 2026-10-13 by the Claude Code session that produced the branch
+<code>feedback-channel-and-rsi-atlas</code>. This document is the map; the territory is
+the session log under <code>docs/session_logs/2026-10-11_feedback_channel/</code>
+(conversation transcript, sixteen subagent transcripts, tool results),
+narrowed to this investigation and redacted as its README describes. Every claim below can be
+checked against a commit on the branch and a receipt under <code>output/</code>.</p>
+<h2>1. What was asked</h2>
+<ol>
+<li><strong>2026-10-11.</strong> Patrick forwarded a patch produced by a separate cloud
+session: a <code>Feedback</code> operator for the evaluation design calculus, an
+atlas applying it to five published takeoff claims, and two seeded toy
+simulations. He asked whether it could be pushed to the public repository.</li>
+<li><strong>2026-10-12.</strong> He asked whether the work had drifted from his aim, the
+<em>mathematics of evaluation notation</em>, and then set the research question:
+whether Will Brown's reinforcement-learning paradigm is overestimated,
+approached through the training signal as a declared feedback channel,
+with topology, decision theory, graph theory on Markov decision chains,
+complexity, and the white-boxing of evaluation design as falsifiable axioms.
+He asked for subagents on the open problems.</li>
+<li><strong>&quot;lattice and push&quot;</strong>, then <strong>&quot;proceed in that order&quot;</strong> (five items), then
+<strong>&quot;proceed&quot;</strong> (four items), then <strong>&quot;proceed, don't worry about Will&quot;</strong> (five
+items), then <strong>&quot;proceed, also upload the log&quot;</strong> (this document and the raw
+export), then <strong>&quot;cont&quot;</strong> after Patrick switched the session's model from
+<code>claude-fable-5-1</code> to <code>claude-opus-5-5</code> when the Fable usage limit had
+stopped two subagents (§3).</li>
+</ol>
+<p>Will Brown's posts of 2026-10-12 were never read: X walls the profile, the
+Nitter mirrors are shut down, and the syndication endpoint rate-limits
+anonymous requests. The signal note cites his July 2026 post and a 2025
+interview instead and says so.</p>
+<h2>2. The commits, in order</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Commit</th>
+<th>Date</th>
+<th>What it did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a9b9a91</code></td>
+<td>10-12</td>
+<td>The forwarded patch, applied unchanged after verification (hashes, 128 tests, receipts, simulations reproduced; one simulation differs in the last float digit on this machine).</td>
+</tr>
+<tr>
+<td><code>662557c</code></td>
+<td>10-12</td>
+<td>Atlas draft 0.2 after a line-level check of every source in the browser pane, replacing a summarizer and a screenshot. Six figures corrected (see §4). Ceiling law extended to failure-targeted patching: 4/25 of the set, not 8/13.</td>
+</tr>
+<tr>
+<td><code>b7b3ee1</code></td>
+<td>10-12</td>
+<td>Four exact modules from the first round of delegation: training-signal limits (axioms A1–A5, limits L1–L6), the leak lattice, the multi-generation chain, the composition laws. 382 tests.</td>
+</tr>
+<tr>
+<td><code>3ff5b09</code></td>
+<td>10-13</td>
+<td>Lattice 0.2: meets preserved, joins preserved iff the intersection graph is a forest, optimal adaptive schedule monotone; greedy suboptimal. Pushed to the public origin at Patrick's word.</td>
+</tr>
+<tr>
+<td><code>d988c99</code></td>
+<td>10-13</td>
+<td>Lattice 0.3: no index rule is optimal (preference reversals); the optimal first patch can have a lower rate.</td>
+</tr>
+<tr>
+<td><code>a004d89</code></td>
+<td>10-13</td>
+<td>Judge shared-error measurement procedure; crosswalk to the RSITopology problem set (no exact instance in either direction).</td>
+</tr>
+<tr>
+<td><code>4401d78</code></td>
+<td>10-13</td>
+<td>Multigen 0.2: Hoeffding bound on the running maximum; correlated candidates raise the accumulated gap; the one-generation gate theorem.</td>
+</tr>
+<tr>
+<td><code>fc62b75</code></td>
+<td>10-13</td>
+<td>Lattice 0.4: pair-commutation lemma; survey of what structure the optimal patch lacks.</td>
+</tr>
+<tr>
+<td><code>8ddec92</code></td>
+<td>10-13</td>
+<td>Selection law inside the KL slice for every parameter: tie rules, containment (Beirami's radius derived, tied case covered), DV bound, sup of the ratio is 1.</td>
+</tr>
+<tr>
+<td><code>413f815</code></td>
+<td>10-13</td>
+<td>Gold calibration from a second independent grader: three-rater identities, constraints, the copy-grader false finding.</td>
+</tr>
+<tr>
+<td><code>3ec8bab</code></td>
+<td>10-13</td>
+<td>Multigen 0.3: gate dominance proven for the true value; count finite.</td>
+</tr>
+<tr>
+<td><code>a5ab4ff</code></td>
+<td>10-13</td>
+<td>Lattice 0.5: one hit in closed form (Theorem 10); two grid regularities refuted; a prior claim corrected (§4).</td>
+</tr>
+<tr>
+<td><code>70f6f27</code></td>
+<td>10-13</td>
+<td>Selection KL 0.2: the approach to c_K monotone for K = 2, 3; finite beyond.</td>
+</tr>
+<tr>
+<td><code>0f583ee</code></td>
+<td>10-13</td>
+<td>Multigen 0.4: count dominance proven for every threshold rule.</td>
+</tr>
+<tr>
+<td><code>f1b9dad</code></td>
+<td>10-13</td>
+<td>Gold calibration 0.2: exact sampling law of the gold-error estimate; the asymmetric three-rater model and its absence of any independence test.</td>
+</tr>
+<tr>
+<td><code>6518851</code></td>
+<td>10-13</td>
+<td>Lattice 0.6: committing to a category until it hits is suboptimal beyond one hit, by at most one part in 1,526 on the grid.</td>
+</tr>
+<tr>
+<td><code>ca6ba24</code></td>
+<td>10-13</td>
+<td>Selection KL 0.3: the approach to c_K for K ≥ 4 is still not a theorem. The obstruction is located (no de Moivre identity for the K = 4 overlap sum; an order-4 recurrence instead of a telescoping ratio), and the asymptotic margin c(K) = (E[M_K³] − (5/2)·E[M_K])/(6·E[M_K]) is zero at K = 2, 3 and positive beyond, from a cited expansion. Exact sweeps to K = 100, n = 400.</td>
+</tr>
+<tr>
+<td><code>fe9d51c</code></td>
+<td>10-13</td>
+<td>Multigen 0.5: gate dominance under mixed gain laws (an accepted candidate may gain nothing). No counterexample in an exact search over every rule; proven two below the target for every law by an exact window recursion; finite beyond.</td>
+</tr>
+<tr>
+<td><code>988efa5</code></td>
+<td>10-13</td>
+<td>Gold calibration 0.3: a fourth rater gives exactly six testable equalities and detects a copying grader that three raters absorb; a joint statement for (η₁, ε₁) whose coverage holds given two plug-ins.</td>
+</tr>
+<tr>
+<td>the commit adding this file</td>
+<td>10-14</td>
+<td>This map and the session log.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every module has a verifier script whose receipt under <code>output/</code> records
+the SHA-256 of its sources; <code>PYTHONPATH=src .venv/Scripts/python.exe -m pytest tests -q</code> runs the whole suite (705 tests at <code>6518851</code>, 774 at
+<code>988efa5</code>). The log beside this map ends with the round-4 wrap-up.</p>
+<p><strong>History rewrite.</strong> On 2026-10-14, at the author's request, the branch was
+rebuilt from <code>6518851</code> so that no earlier version of the log remains on it
+(§4, items 13–15). The three round-4 commits were replayed unchanged under
+new IDs, which this map and the log use throughout: <code>ca6ba24</code>, <code>fe9d51c</code> and
+<code>988efa5</code>. The IDs of the removed log commits read <code>[removed-commit]</code> in the
+log.</p>
+<h2>3. How the work was organised</h2>
+<p>The session acted as lead. Mathematical problems that were independent of
+each other were delegated to subagents, one per problem, each in its own
+detached git worktree at the branch head, with instructions to create or
+extend only its own files, never to commit, and to report what was proven
+in general versus checked on enumerated cases. The lead then reran the
+agent's tests, inspected its receipt and git status, read its note, and in
+several cases its proof line by line, before copying the files into the
+branch worktree, running the full suite, committing and pushing. The
+subagent transcripts in the export are the primary record of each
+delegation; the lead's verification of each is in the main transcript
+immediately after the agent's report.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Subagent transcript</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Partial-leakage lattice (round 1)</td>
+<td><code>agent-ab43631a2b331546e</code></td>
+</tr>
+<tr>
+<td>Multi-generation chain (round 1)</td>
+<td><code>agent-a8f70008319d14008</code></td>
+</tr>
+<tr>
+<td>Composition laws (round 1)</td>
+<td><code>agent-afe28ab653cb4d8f7</code></td>
+</tr>
+<tr>
+<td>Multigen 0.2: bound, correlation, gate theorem</td>
+<td><code>agent-a8f175b3b81d6fbfc</code></td>
+</tr>
+<tr>
+<td>Judge shared-error measurement</td>
+<td><code>agent-a7a5fb6b63b2d5a45</code></td>
+</tr>
+<tr>
+<td>RSITopology crosswalk</td>
+<td><code>agent-a8dccf5456eb3fcb3</code></td>
+</tr>
+<tr>
+<td>Selection law KL containment</td>
+<td><code>agent-aaaa7bc0ef80b0eb3</code></td>
+</tr>
+<tr>
+<td>Gate dominance (multigen 0.3)</td>
+<td><code>agent-a58295504f13fcadd</code></td>
+</tr>
+<tr>
+<td>Gold calibration, second grader</td>
+<td><code>agent-a88021944d49cc33a</code></td>
+</tr>
+<tr>
+<td>Count dominance (multigen 0.4)</td>
+<td><code>agent-a2720158120a14204</code></td>
+</tr>
+<tr>
+<td>Monotone approach to c_K</td>
+<td><code>agent-a0a48c70545f74f7e</code></td>
+</tr>
+<tr>
+<td>Sampling law and Dawid–Skene</td>
+<td><code>agent-af4031af24ee0c5b0</code></td>
+</tr>
+<tr>
+<td>c_K for K ≥ 4 (selection KL 0.3)</td>
+<td><code>agent-a4078b66ab04b87ab</code></td>
+</tr>
+<tr>
+<td>Mixed gain laws (multigen 0.5)</td>
+<td><code>agent-a8e6a31053670dded</code></td>
+</tr>
+<tr>
+<td>Fourth rater and joint statement, first attempt</td>
+<td><code>agent-a992e8ad543fe5899</code></td>
+</tr>
+<tr>
+<td>Fourth rater and joint statement, completion</td>
+<td><code>agent-a714182c964e5a809</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Interruptions in round 4.</strong> The mixed-gain and fourth-rater agents both
+lost their API connection early and were resumed from their transcripts.
+Both then stopped on the usage limit of <code>claude-fable-5-1</code>, and Patrick
+switched the session to <code>claude-opus-5-5</code>. The mixed-gain agent had
+already written its module, tests, receipt and note, and stopped before
+reporting; the lead verified that work as it stood. The fourth-rater
+agent had written most of the module but no tests, verifier, receipt or
+note. A new agent on <code>claude-opus-5-5</code> recovered the original brief from
+the first agent's transcript, checked the code it found, and finished it.</p>
+<p>The lead kept for itself the source check of the atlas, the training-signal
+module, the lattice's policy-structure work, and all integration.</p>
+<h2>4. Errors found and corrected, in the order they were found</h2>
+<p>An auditor should weigh these more than the theorems.</p>
+<ol>
+<li><strong>The forwarded atlas (draft 0.1)</strong> had been written from a summarizing
+fetch tool. The line-level check found: OpenAI's Lean share was 42%
+(300/719), not 162/722, and three manuscripts had been withdrawn the day
+after release; the OpenAI run had within-run feedback and a mid-run model
+swap the atlas called &quot;not stated&quot;; Anthropic's index weights split each
+sampled person-week evenly across tasks, so the atlas's &quot;fast tasks weigh
+less&quot; mechanism did not follow; METR's own doubling time was 128.7 days,
+the atlas's 131/89 came from a prediction-market page; the AIDE² contrast
+of 1.90 standard errors was cross-model, while the fixed-model gains were
+2.6–7.4. Commit <code>662557c</code>.</li>
+<li><strong>The toy-simulation README</strong> claimed byte-for-byte reproduction; on this
+machine one of three result files differs in the last digit of 24
+floats. Recorded as such.</li>
+<li><strong>Multigen 0.1's boundary remark</strong> said correlated candidates lower every
+per-generation inflation. The exact mutation model showed the opposite for
+the accumulated gap. Commit <code>4401d78</code>.</li>
+<li><strong>A reading of the gate-vs-naive cells</strong> attributed the &quot;gate above naive&quot;
+ordering at n = 8 to the one-step theorem; the one-step difference is
+identically zero there and the ordering is a timing effect. Commit <code>4401d78</code>.</li>
+<li><strong>Lattice 0.2's claim that greedy-by-rate is optimal at one hit</strong>, with an
+exchange-argument proof, was false: the argument never considered staying
+in a category whose rate rose after a miss, and the claim fails at size 7,
+one past the exhaustive grid that had &quot;verified&quot; it. The correct statement
+is Theorem 10 (the best finisher, in closed form). The lead had repeated
+the false claim in its own summaries. Commit <code>a5ab4ff</code>.</li>
+<li><strong>Two regularities that held on the exhaustive grid</strong> (equal rates favour
+the larger category; the lowest of three rates is never uniquely optimal)
+failed just beyond it. Commit <code>a5ab4ff</code>.</li>
+<li><strong>A formula the lead supplied to a subagent</strong> (de Moivre's mean absolute
+deviation) was off by a factor of two; the subagent caught it by
+enumeration before using it. Commit <code>70f6f27</code>.</li>
+<li><strong>A claim in a subagent brief</strong> that the controller–judge agreement rate
+stops being invariant under label-dependent gold flips was wrong; the
+agent showed C⊕F = J⊕F iff C = J for any flip law. Commit <code>f1b9dad</code>.</li>
+<li><strong>Two citations in the crosswalk</strong> were taken from memory and are marked
+unverified in the note rather than presented as checked.</li>
+<li><strong>The mixed-gain agent's note</strong> said lemmas L1–L3 hold under every mixed
+gain law. Its own module proves L2–L3 only for gains in {0, 1}. The lead
+narrowed the sentence before committing. Commit <code>fe9d51c</code>.</li>
+<li><strong>The interrupted fourth-rater code</strong> had six defects, found by the agent
+that finished it. It rounded the three agreement counts separately,
+giving counts no item table can produce. It expected the parameter
+Jacobian's rank to drop with a chance rater, which it does not. It
+misoriented an anti-informative second grader. It did not withhold the
+joint statement when the constraint check failed, as its docstring said
+it would. It asserted disjoint ε₁ ranges at m = 742, which is false.
+It had an off-by-one in a tail law. Commit <code>988efa5</code>.</li>
+<li><strong>The lead's brief for the completion agent</strong> named the wrong note file.
+The agent found the right one from the original brief.</li>
+<li><strong>The first version of the session log</strong>, published on 2026-10-13, left 25 JSON records
+unparseable. Its memory-line rule ran on raw text, and where a private
+review's line ended a string, the rule ran past the closing quote and
+deleted the rest of the record. Its README said every line parsed and
+nothing else changed, which was false for those records. The lead found
+this while refreshing the log and rewrote the redaction to work on
+decoded strings.</li>
+<li><strong>The same first version missed one private audit's working-tree folder
+name</strong>, which appears 24 times in it. The refreshed log removes it, and
+the history rewrite removed that version from the branch.</li>
+<li><strong>Both earlier versions of the log carried the author's other work.</strong>
+Every turn's context held the full memory index, with a line for each of
+the author's other projects, and a git-status snapshot of the whole
+working tree. The lead had redacted only the private-review lines and
+published the rest. The author pointed out that the log was meant to
+cover this investigation only. The current version withholds every
+memory-index line except this investigation's own notes, the git-status
+snapshots, other projects' file names, five memory notes read from other
+work, and the app's configuration files. The author then had the branch
+history rewritten so that neither earlier version remains on it.</li>
+</ol>
+<p>The lesson recorded in the lead's memory: small exhaustive grids let two
+false theorems through; a regularity observed on a grid is stressed at larger
+sizes before anything is called a proof.</p>
+<h2>5. The results an auditor should test first</h2>
+<ul>
+<li>Theorem 10 (lattice): one-hit optimum = min_c (n_c+1)/(F_c+1). Witness
+that rate-greedy fails: {(2,1),(16,9)}, 3/2 against 53/32.</li>
+<li>Proposition 7 (lattice): no index rule; witness {(2,1),(4,2)} with and
+without a (1,1) category at two hits.</li>
+<li>Theorem B (selection KL): KL(π_K‖p₀) ≤ ln K − (K−1)/K for every finite
+law and tie rule, via jitter and Jensen.</li>
+<li>Propositions 8 and 9 (multigen): the gate lowers the true value and the
+count in stochastic order, for every threshold rule, under fixed gains.</li>
+<li>L4 (signal): observed accuracy = a − ε + 2(1−a)ε₁; the ceiling is reached
+without memorization iff ε₁ ≥ 1/2.</li>
+<li>The mutation-model finding (multigen 0.2): correlation with the incumbent
+lowers first-generation inflation and raises the accumulated gap.</li>
+<li>The corollary in gold calibration 0.1: noisy gold makes an independent
+judge look correlated by exactly η(1−η)(2a−1)(1−2ε).</li>
+<li>Proposition 6 (gold calibration 0.3): four raters give exactly six
+equalities, via a lower-triangular minor with determinant −c₁₂⁴c₁₃². A
+grader copying the gold grader with probability ρ leaves the residual
+ρV₁c₃₄ on one tetrad. The lead re-derived both by hand and checked the
+fixture, the six residuals and the copy residual on 200 random model
+points each, with a script independent of the module.</li>
+<li>The distance-two closure (multigen 0.5): at count m − 2 the window sums
+obey W_k = A·W_{k−1} + E_{k−1} with E ≥ 0, for every gain law.</li>
+<li>The margin c(K) (selection KL 0.3): exactly zero at K = 2 and 3, as the
+K = 2 and K = 3 theorems require, and 0.020561 at K = 4.</li>
+</ul>
+<h2>6. What the session did not do</h2>
+<p>No model, policy, environment, judge or grader was ever run; every result
+is exact arithmetic on declared quantities, with the evidence level stated
+per proposition. The session did not read Will Brown's posts of 12 October.
+It did not open a pull request against <code>main</code>; the branch is public and the
+link to open one is in the push output in the transcript.</p>
+<h2>7. How to read the raw log</h2>
+<p><code>transcript.jsonl</code> is one JSON object per line in conversation order; tool
+calls and their results are interleaved with the assistant's text. Each
+subagent file under <code>subagents/</code> is the same format for one delegation; its
+<code>.prefix.json</code> holds the context it started with. <code>tool-results/</code> holds
+tool outputs too large to inline. <code>REDACTIONS.json</code> lists, per file, how
+many replacements the redaction made; the rules are in the README beside it.
+A line reading <code>[... the author's other work: withheld]</code> held context from
+the author's other projects. A line or string reading
+<code>[withheld by redaction: ...]</code> named one of the private review terms; nearly
+all such lines are in the stretch where the redaction itself was built.</p>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Composition laws for Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../index.html">Feedback-channel findings</a>
+  <a href="../notes/index.html">Notes</a>
+  <a href="../lean/index.html">Lean proofs</a>
+  <a href="../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<p class="meta">Source: <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/paper/evaluation_feedback_composition.md">paper/evaluation_feedback_composition.md</a></p>
+<h1>Composition laws for Feedback</h1>
+<p>Version 0.1 — 2026-10-12. Companion to <a href="../notes/evaluation_design_calculus.html">evaluation_design_calculus.md</a>
+(§3 footprints, §4 Repeat, §5 disjoint-update law, §7 order effects) and
+<a href="../notes/evaluation_feedback_insertions.html">evaluation_feedback_insertions.md</a> (\(\operatorname{Feedback}_{s,q}\),
+the ledger). Nothing here calls a model or observes a controller. Each statement is an algebraic
+identity with a proof or an exhaustive check on an enumerated finite model; its evidence line says which.</p>
+<pre><code class="language-powershell">$env:PYTHONPATH = &quot;src&quot;
+python scripts/verify_evaluation_feedback_composition.py --output output/evaluation_feedback_composition/composition_v0_1.json
+python -m pytest tests/test_evaluation_feedback_composition.py -q
+</code></pre>
+<p>Receipt: <code>output/evaluation_feedback_composition/composition_v0_1.json</code> (22 checks, <code>all_passed: true</code>,
+source hashes). Tests: 99. Notation: \(a;b\) applies \(a\) first.</p>
+<h2>1. The executable record</h2>
+<p><code>src/spiral_ln/evaluation_feedback_composition.py</code> implements \(\mathcal E\) as a frozen record: six
+<code>game.*</code> fields (\(G\): legal actions, revealed-or-hidden resource, utility, budget, horizon, carry map,
+for the two-location game played once per item); <code>pi</code> (\(\Pi\): observation-to-action lookup plus
+per-item overrides, so a patch memorizes an item identifier); <code>items</code> (\(D\): <code>s0,s1</code> in selection set
+<code>S</code>, <code>r0,r1</code> in readout set <code>R</code>); <code>acquisition</code> (\(Z\): privileged record, action redacted on named
+sets); <code>judgment</code> (\(J\): one for the resource, inverted on flipped items, less a cost for choosing
+right; undefined on a redacted record); <code>generation</code> (\(g\)); <code>declarations</code> (role and access class
+per set). \(\mathcal A\) enters only in Proposition 4; \(C\) is not modeled.</p>
+<p>Each operator is a pure function with a declared footprint. Restrict, Grant, Cap, Hide (player-facing),
+Observe (observation-only), Controller, Rescore, Payoff (optionally also installing the utility as the
+judgment) and Repeat write the fields their names suggest and read at most what they write.
+\(\operatorname{Feedback}_{S,q}\) reads <code>game.legal</code>, <code>game.revealed</code>, <code>pi</code>, <code>items</code>, <code>acquisition</code>,
+<code>judgment</code>, <code>declarations</code>, <code>generation</code> and writes <code>pi</code>, <code>generation</code>: item-level access returns the
+per-item vector and overrides each item judged nonpositive with the other action; score-only returns
+the sum for the incumbent and three fixed candidates and keeps the first maximizer; sealed returns
+nothing and only advances \(g\). Feedback on a set whose declaration forbids it raises: ill-typed, not a breach.</p>
+<h2>2. The disjoint-update law and its witnesses</h2>
+<p><strong>Proposition 1 (disjoint-update law).</strong> Call a footprint <em>sound</em> if the operator changes no field
+outside \(W\) and the new values of \(W\) are a function of the old values of \(R\). If \(a,b\) have sound
+footprints with \(W_a\cap(R_b\cup W_b)=\emptyset\) and \(W_b\cap(R_a\cup W_a)=\emptyset\), then \(a;b=b;a\) on every record.</p>
+<p><em>Proof.</em> Fix \(x\). Fields outside \(W_a\cup W_b\) are untouched in both orders. For \(f\in W_a\): in
+\(a;b\), \(a\) writes \(f\) from \(x|_{R_a}\) and \(b\) leaves it (\(f\notin W_b\)); in \(b;a\), \(b\)
+leaves \(R_a\) unchanged (\(W_b\cap R_a=\emptyset\)), so \(a\) writes the same value. Likewise \(W_b\). \(\square\)</p>
+<p>Boundary: sufficient only, and about the record, not about additivity of behavioural effects (calculus
+§5). Fixture: <code>footprint_audit</code> checks soundness of all 13 footprints on the 384 enumerated records
+(write side per record; read side by grouping records with equal \(R\)-projection and requiring equal
+\(W\)-images); <code>commutation_audit</code> checks every disjoint pair on every record. Evidence: algebraic
+identity (the proposition); finite verified example (the model's footprints are sound; the instances hold).</p>
+<p><strong>Proposition 2 (commutation table).</strong> On the 384 records, of the 78 off-diagonal unordered pairs of
+the 13 operators, 60 have disjoint footprints and commute, 15 do not commute, and 3 commute despite
+overlapping footprints. The non-commuting pairs, with the field in which the two orders differ:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Differ in</th>
+<th>First witness (receipt)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grant\(_2\), Cap\(_5\)</td>
+<td><code>game.budget</code></td>
+<td>budget 4: grant-then-cap 5, cap-then-grant 6 (calculus §5)</td>
+</tr>
+<tr>
+<td>Rescore\(_j\), Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>always-left, flip <code>s1</code>: rescore-then-feedback learns nothing; feedback-then-rescore memorizes <code>s1</code></td>
+</tr>
+<tr>
+<td>Observe (redact <code>S</code>), Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>observe-then-feedback learns nothing; feedback-then-observe memorizes <code>s1</code></td>
+</tr>
+<tr>
+<td>Controller\(_\pi\), Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>both write \(\Pi\); the second write determines it</td>
+</tr>
+<tr>
+<td>Hide (player), Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>follow: hide-then-feedback memorizes <code>s1</code>; the other order does not</td>
+</tr>
+<tr>
+<td>Restrict\(_{\{\text{left}\}}\), Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>always-left memorizing <code>s0</code>→right: Restrict first makes that override illegal and <code>s0</code> passes, so only <code>s1</code> is patched; Feedback first repatches <code>s0</code> too</td>
+</tr>
+<tr>
+<td>Payoff with training, Feedback (item, score)</td>
+<td><code>pi</code> only</td>
+<td>the installed judgment changes what is selected or patched</td>
+</tr>
+<tr>
+<td>Rescore\(_j\), Payoff with training</td>
+<td><code>judgment</code></td>
+<td>both write \(J\); the second write wins</td>
+</tr>
+<tr>
+<td>Feedback (item), Feedback (score)</td>
+<td><code>pi</code> only</td>
+<td>the two update rules do not commute</td>
+</tr>
+</tbody>
+</table></div>
+<p>Payoff without training commutes with Feedback (it writes only <code>game.utility</code>), as do Grant, Cap and
+Repeat; Repeat commuting at design time says nothing about the aggregation unit (Proposition 4).
+Commuting despite overlap: sealed Feedback with either other Feedback (both write <code>generation</code>;
+\(g+1+1\) is order-free) and the two Payoffs (same utility). Rescore before Feedback changes what the
+loop learns; after, only the readout: the final \(J\) agrees, \(\Pi\) differs, and \(V^S\) is 1 against
+1/2 in the hand-computed test. Evidence: finite verified example, for these records and update rules only.</p>
+<h2>3. Typing as ledger audit</h2>
+<p><code>compile_ledger</code> maps a design expression with declarations to the <code>(sets, events)</code> input of
+<code>audit_ledger</code>: item-level Feedback records one <code>item_feedback</code> naming every item of the set (the vector
+reached the loop, whatever the rule did with it); score-only records one <code>score_query</code> per policy
+scored; sealed records nothing; Readout\(_t\) records one <code>readout</code>; other operators are outside the
+channel. \(\Gamma\) carries declarations, cumulative patches, retirement and readouts per set:</p>
+<ul>
+<li>(F-SEL) \(\Gamma\vdash\operatorname{Feedback}_{s,q}\), \(q&gt;\)sealed, iff \(s\) is declared selection,
+access\((s)\ge q\), and \(s\) not retired; item-level adds \(|s|\) to patches\((s)\), and \(s\) retires
+once patches\(/|s|\) exceeds the bound (the crossing step is itself typed).</li>
+<li>(F-SEALED) \(\operatorname{Feedback}_{s,\text{sealed}}\) is typed, \(\Gamma'=\Gamma\); likewise (NEUTRAL) every other operator.</li>
+<li>(RO) \(\operatorname{Readout}_t\) iff role\((t)=\)readout (hence sealed) and the count stays within the readout budget.</li>
+</ul>
+<p><strong>Proposition 3.</strong> Over all 22,143 sequences of length \(\le4\) from the nine-symbol alphabet
+{Feedback\(_{S,q}\), Feedback\(_{R,q}\) for the three access classes, Readout\(_R\), Readout\(_S\),
+Rescore} under three declaration contexts (<code>S</code> declared item-level, score-only or sealed; <code>R</code> sealed;
+budget 2; bound 1 with \(|S|=2\)), a sequence is well-typed iff <code>audit_ledger</code> returns
+<code>declarations_respected = True</code> (2,581 respected, 11,462 breached, 8,100 raise). Evidence: finite verified example.</p>
+<p>Two findings. (i) The ledger has two rejection modes: every sequence containing Readout\(_S\) makes
+<code>audit_ledger</code> raise (&quot;readout events apply to readout sets only&quot;) rather than record a breach, so that
+run gets no report, unlike the other breaches, which its docstring says should survive into the report;
+the equivalence counts a raise as not respected. (ii) The literal rule &quot;Feedback\(_{s,q}\) requires role
+selection and access \(\ge q\)&quot; is too strict at \(q=\)sealed: a sealed read has no event, so
+Feedback\(_{R,\text{sealed}}\) is invisible to the ledger; with the literal premise the equivalence fails
+on exactly 1,414 sequences, all respected runs containing it and nothing else ill-typed. (F-SEALED)
+drops the premise; <code>audit_ledger</code> is not patched.</p>
+<h2>4. Repeat with a carry map</h2>
+<p><strong>Proposition 4 (generations joined by Feedback are not blocks).</strong> Let \(K\ge2\) candidates each
+succeed independently with probability \(p\in(0,1)\) on each of \(n\) items of \(s\); generation 1
+keeps the best by score (\(S_1\)); the carry map of \(\operatorname{Repeat}_{2,m}\) carries \(\Pi_2\)
+into generation 2's pool with \(K-1\) fresh candidates (\(S_2\)). Then \(S_2\) is the maximum of
+\(2K-1\) i.i.d. scores, so \(\mathbb E S_2=p+\gamma(n,2K-1,p)&gt;p+\gamma(n,K,p)=\mathbb E S_1\) with
+\(\gamma\) the gap of <code>selection_inflation</code>; \(S_2\ge S_1\) pointwise with
+\(\Pr[S_2&gt;S_1]\ge(1-p)^{nK}\bigl(1-(1-p)^{n(K-1)}\bigr)&gt;0\); hence \((S_1,S_2)\) is not exchangeable,
+and the mean over generations exceeds what the same \(\mathcal A\) reports over independent blocks by
+\((\gamma(n,2K-1,p)-\gamma(n,K,p))/2&gt;0\), while the sealed readout stays at \(p\): the whole expected
+gain \(\mathbb E[S_2-S_1]\) is a change in \(\rho\). Under the reset map \(S_1,S_2\) are i.i.d. and
+the two aggregations agree.</p>
+<p><em>Proof.</em> The kept candidate's realized outcomes on \(s\) are fixed, so its generation-2 score is
+\(S_1\), and the pool maximum is the maximum of the original \(K\) and the fresh \(K-1\) i.i.d. scores.
+Monotonicity gives \(S_2\ge S_1\); &quot;all \(nK\) generation-1 outcomes fail and some fresh outcome
+succeeds&quot; has the stated probability and forces \(S_2&gt;S_1\); unequal means rule out exchangeability. \(\square\)</p>
+<p>Fixture: <code>repeat_carry_fixture</code> enumerates every outcome matrix. At \(n=1,K=2,p=1/2\):
+\(\mathbb ES_1=3/4\), \(\mathbb ES_2=7/8\), generation mean \(13/16\) under carry against \(3/4\) over
+independent blocks, \(\Pr[S_2&gt;S_1]=1/8\), \(\Pr[S_1&gt;S_2]=0\), \(\rho=1/4\) then \(3/8\); three further
+cells agree with <code>selection_inflation</code> at \(2K-1\). Evidence: algebraic identity under the stated
+model; finite verified example for the numbers. Boundary: two generations, equal candidates, independent
+items, a carry map re-scoring the incumbent on the same items; the multi-generation chain is built elsewhere.</p>
+<h2>5. Readout gap under Rescore</h2>
+<p><strong>Proposition 5.</strong> \(\rho=V^s-V^r\) is a function of \((G,\Pi,D,Z,J)\); \(\operatorname{Rescore}_j\)
+writes \(J\) only, \(\operatorname{Feedback}\) writes \(\Pi\) and \(g\). So \(\rho\) can change with
+\(\Pi\), \(g\) fixed and no ledger event, and a change in \(\rho\) alone does not identify feedback.
+Fixture (<code>readout_gap_rescore_fixture</code>, always-left controller, \(\rho=0\)): rescoring <code>r1</code> moves
+\(\rho\) to \(-1/2\); rescoring <code>s1</code> moves it to \(+1/2\), exactly the \(\rho\) that
+\(\operatorname{Feedback}_{S,\text{item}}\) produces by memorizing <code>s1</code>. The ledger separates the two
+(0 against 2 patches on <code>S</code>); \(\rho\) does not. Evidence: algebraic identity (footprints); finite verified example (values).</p>
+<h2>6. What is general and what is enumerated</h2>
+<p>Proven in general: Propositions 1, 4 and 5 as stated. Checked only on enumerated cases: footprint
+soundness (384 records), the commutation table (13 operators, 384 records), the typing/ledger
+equivalence (22,143 sequences, three contexts), and every number above. The witnesses concern one pair
+of update rules on one tiny game; another patch or selection rule needs the audit rerun. All laws are
+design-time transformations of the record, not what a learned controller does with what the channel
+transmits. No model was run.</p>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

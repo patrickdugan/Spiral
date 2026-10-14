@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lean/axioms_check.lean</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../index.html">Feedback-channel findings</a>
+  <a href="../notes/index.html">Notes</a>
+  <a href="../lean/index.html">Lean proofs</a>
+  <a href="../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<link rel="stylesheet" href="pygments.css">
+<h1>lean/axioms_check.lean</h1>
+<p class="meta"><a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/lean/axioms_check.lean">View on GitHub</a></p>
+<div class="lean-src"><div class="highlight"><pre><span></span><a id="L-1" name="L-1"></a><a href="#L-1"><span class="linenos">1</span></a><span class="kn">import</span><span class="w"> </span><span class="n">FeedbackChannel</span>
+<a id="L-2" name="L-2"></a><a href="#L-2"><span class="linenos">2</span></a>
+<a id="L-3" name="L-3"></a><a href="#L-3"><span class="linenos">3</span></a><span class="c">/-</span><span class="cm">! Prints the axioms each published theorem depends on. Every theorem the notes link to is listed</span>
+<a id="L-4" name="L-4"></a><a href="#L-4"><span class="linenos">4</span></a><span class="cm">here; the expected output is only `propext`, `Classical.choice` and `Quot.sound`. -/</span>
+<a id="L-5" name="L-5"></a><a href="#L-5"><span class="linenos">5</span></a>
+<a id="L-6" name="L-6"></a><a href="#L-6"><span class="linenos">6</span></a><span class="bp">#</span><span class="n">print</span><span class="w"> </span><span class="n">axioms</span><span class="w"> </span><span class="n">FeedbackChannel</span><span class="bp">.</span><span class="n">Smoke</span><span class="bp">.</span><span class="n">judge_identity</span>
+</pre></div>
+</div>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

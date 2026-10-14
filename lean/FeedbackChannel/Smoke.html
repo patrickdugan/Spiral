@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lean/FeedbackChannel/Smoke.lean</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../../index.html">Feedback-channel findings</a>
+  <a href="../../notes/index.html">Notes</a>
+  <a href="../../lean/index.html">Lean proofs</a>
+  <a href="../../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<link rel="stylesheet" href="../pygments.css">
+<h1>lean/FeedbackChannel/Smoke.lean</h1>
+<p class="meta"><a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/lean/FeedbackChannel/Smoke.lean">View on GitHub</a></p>
+<div class="lean-src"><div class="highlight"><pre><span></span><a id="L-1" name="L-1"></a><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">import</span><span class="w"> </span><span class="n">Mathlib</span><span class="bp">.</span><span class="n">Tactic</span>
+<a id="L-2" name="L-2"></a><a href="#L-2"><span class="linenos"> 2</span></a>
+<a id="L-3" name="L-3"></a><a href="#L-3"><span class="linenos"> 3</span></a><span class="c">/-</span><span class="cm">!</span>
+<a id="L-4" name="L-4"></a><a href="#L-4"><span class="linenos"> 4</span></a><span class="cm"># Smoke test</span>
+<a id="L-5" name="L-5"></a><a href="#L-5"><span class="linenos"> 5</span></a>
+<a id="L-6" name="L-6"></a><a href="#L-6"><span class="linenos"> 6</span></a><span class="cm">Checks that the toolchain and the prebuilt Mathlib load. It also states the simplest result of the</span>
+<a id="L-7" name="L-7"></a><a href="#L-7"><span class="linenos"> 7</span></a><span class="cm">programme, the shared-error judge identity (training-signal note, L4), so the build exercises `ring`</span>
+<a id="L-8" name="L-8"></a><a href="#L-8"><span class="linenos"> 8</span></a><span class="cm">and `nlinarith` on rationals.</span>
+<a id="L-9" name="L-9"></a><a href="#L-9"><span class="linenos"> 9</span></a><span class="cm">-/</span>
+<a id="L-10" name="L-10"></a><a href="#L-10"><span class="linenos">10</span></a>
+<a id="L-11" name="L-11"></a><a href="#L-11"><span class="linenos">11</span></a><span class="kn">namespace</span><span class="w"> </span><span class="n">FeedbackChannel</span><span class="bp">.</span><span class="n">Smoke</span>
+<a id="L-12" name="L-12"></a><a href="#L-12"><span class="linenos">12</span></a>
+<a id="L-13" name="L-13"></a><a href="#L-13"><span class="linenos">13</span></a><span class="sd">/-- Observed accuracy with a judge wrong at rate `e0` on items the controller gets right and `e1` on</span>
+<a id="L-14" name="L-14"></a><a href="#L-14"><span class="linenos">14</span></a><span class="sd">items it gets wrong equals `a - e + 2(1-a) e1`, where `e = a e0 + (1-a) e1`. -/</span>
+<a id="L-15" name="L-15"></a><a href="#L-15"><span class="linenos">15</span></a><span class="kn">theorem</span><span class="w"> </span><span class="n">judge_identity</span><span class="w"> </span><span class="o">(</span><span class="n">a</span><span class="w"> </span><span class="n">e0</span><span class="w"> </span><span class="n">e1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ℚ</span><span class="o">)</span><span class="w"> </span><span class="o">:</span>
+<a id="L-16" name="L-16"></a><a href="#L-16"><span class="linenos">16</span></a><span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="o">(</span><span class="mi">1</span><span class="w"> </span><span class="bp">-</span><span class="w"> </span><span class="n">e0</span><span class="o">)</span><span class="w"> </span><span class="bp">+</span><span class="w"> </span><span class="o">(</span><span class="mi">1</span><span class="w"> </span><span class="bp">-</span><span class="w"> </span><span class="n">a</span><span class="o">)</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="n">e1</span><span class="w"> </span><span class="bp">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="bp">-</span><span class="w"> </span><span class="o">(</span><span class="n">a</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="n">e0</span><span class="w"> </span><span class="bp">+</span><span class="w"> </span><span class="o">(</span><span class="mi">1</span><span class="w"> </span><span class="bp">-</span><span class="w"> </span><span class="n">a</span><span class="o">)</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="n">e1</span><span class="o">)</span><span class="w"> </span><span class="bp">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="o">(</span><span class="mi">1</span><span class="w"> </span><span class="bp">-</span><span class="w"> </span><span class="n">a</span><span class="o">)</span><span class="w"> </span><span class="bp">*</span><span class="w"> </span><span class="n">e1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">by</span>
+<a id="L-17" name="L-17"></a><a href="#L-17"><span class="linenos">17</span></a><span class="w">  </span><span class="n">ring</span>
+<a id="L-18" name="L-18"></a><a href="#L-18"><span class="linenos">18</span></a>
+<a id="L-19" name="L-19"></a><a href="#L-19"><span class="linenos">19</span></a><span class="kn">end</span><span class="w"> </span><span class="n">FeedbackChannel</span><span class="bp">.</span><span class="n">Smoke</span>
+</pre></div>
+</div>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

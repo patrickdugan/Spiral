@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback-Channel Findings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="index.html">Feedback-channel findings</a>
+  <a href="notes/index.html">Notes</a>
+  <a href="lean/index.html">Lean proofs</a>
+  <a href="notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<h1>What the feedback-channel programme has established</h1>
+<p>Draft 0.1 — 2026-10-14. A synthesis of the exact modules on this branch, written so a reader can see
+the whole picture before opening any one note. Every statement below points to the note that proves or
+checks it, and carries that note's evidence level: <em>algebraic identity</em> (proved for every parameter),
+<em>finite verified example</em> (checked on enumerated cases only), or <em>synthetic mechanism result</em> (a property
+of a toy chain). No model, policy, judge or grader was ever run. Every number is exact arithmetic on
+declared quantities.</p>
+<h2>1. The frame</h2>
+<p>The <a href="notes/evaluation_design_calculus.html">evaluation design calculus</a> writes an evaluation as a game, a policy
+class, data, a scoring rule, a judge, an access regime and a compute budget. The
+<a href="notes/evaluation_feedback_insertions.html">feedback insertions</a> add one operator, <code>Feedback</code>, which lets a loop
+read the judge's verdicts at one of three access classes: <em>sealed</em>, <em>score-only</em> (the aggregate score of
+a set) or <em>item-level</em> (which items passed).</p>
+<p>In that notation, reinforcement learning on environments is <code>Feedback</code> at item level, repeated over
+generations. The question &quot;does the RL paradigm keep yielding gains?&quot; becomes two questions about that
+channel. How much information does each round carry? And how much of the reported improvement is the
+loop fitting the evaluation rather than getting better? The
+<a href="notes/rl_training_signal_limits.html">training-signal note</a> states the conditions the paradigm's reported gains
+rest on as five falsifiable axioms, A1 to A5, and derives a limit from each.</p>
+<h2>2. What a feedback channel can carry</h2>
+<ul>
+<li><strong>Bits per episode.</strong> A deterministic reward channel with <em>m</em> possible values gives at most log₂ <em>m</em>
+bits per episode. Outcome reward gives one bit; process reward on <em>T</em> steps gives up to <em>T</em>.
+<em>Algebraic identity</em> (<a href="notes/rl_training_signal_limits.html">signal note</a>, L1).</li>
+<li><strong>Score-only is not sealed.</strong> A loop that can score patches on chosen subsets recovers which items
+failed from aggregate scores alone, by group testing, in at most <em>f</em>⌈log₂ <em>n</em>⌉ + 1 queries for <em>f</em>
+failures among <em>n</em> items. So the number of score queries must be recorded, not only the access class.
+<em>Algebraic identity</em> for the bounds, <em>finite verified example</em> for the exact minimum (L2).</li>
+<li><strong>Finer feedback is never worth less.</strong> For the loop's choice of which candidate to keep, a channel is
+worth at least as much as any channel that factors through it, for every prior and utility: the
+garbling direction of Blackwell's ordering. <em>Algebraic identity</em> (L6).</li>
+</ul>
+<h2>3. When a reported score separates from the true one</h2>
+<ul>
+<li><strong>A judge that shares the controller's errors.</strong> Let the judge err with rate ε₁ on items the
+controller gets wrong and ε overall. Observed accuracy is a − ε + 2(1 − a)ε₁ for true accuracy <em>a</em>.
+It reaches the ceiling 1 − ε with no memorization at all exactly when ε₁ ≥ ½. A learned judge trained
+on the controller's outputs is where independence is least plausible. <em>Algebraic identity</em> (L4).</li>
+<li><strong>How much patching a ceiling check misses.</strong> With clean accuracy 4/5 and judge error 1/10, a check for
+scores above the ceiling stays silent until 8/13 of the set is memorized blind, but only until 4/25 is
+patched when the loop knows which items failed. Between the two, the cost falls monotonically as the
+failure categories it can see get finer. <em>Algebraic identity</em>
+(<a href="notes/evaluation_feedback_insertions.html">insertions</a>; <a href="notes/evaluation_feedback_lattice.html">lattice</a>, Props 4–5).</li>
+<li><strong>Reuse inflates like a running maximum.</strong> Keeping the best of <em>K</em> candidates for <em>G</em> generations on
+one reused set of <em>n</em> items, with no true differences between candidates, reports the maximum of
+<em>GK</em> + 1 draws. The phantom gain grows with <em>G</em>, with diminishing increments, and is bounded by
+√(ln(<em>GK</em> + 1)/(2<em>n</em>)). <em>Algebraic identity</em> (<a href="notes/evaluation_feedback_multigen.html">multigen</a>; L5).</li>
+<li><strong>Perturbative candidates make it worse.</strong> When each candidate is a small perturbation of the current
+incumbent, as a policy update is, first-generation inflation is lower, but the accumulated gap is
+higher: the loop hill-climbs the fixed items. At <em>n</em> = 8, <em>K</em> = 2 after 20 generations the gap is
+0.455 for strongly correlated candidates against 0.365 for independent ones. <em>Synthetic mechanism
+result</em> (multigen §5).</li>
+<li><strong>A threshold gate does not speed real progress.</strong> When each accepted candidate is truly better by a
+fixed step, accepting any improvement is ahead of every threshold rule, in stochastic order, both in
+true level and in accepted count (multigen Props 8–9). What a gate does to the phantom gap depends on
+how true gains are distributed. A one-generation identity gives its sign (Prop 7). Over 20 generations
+the gate's gap is above the ungated one on every enumerated cell with fixed gains, and below it with
+decaying gains. So a gate is not a general remedy for reuse inflation. When an accepted candidate may
+gain nothing, the count ordering is proved only from states two steps below the target; further away,
+exact search found no counterexample. <em>Algebraic identity</em> for Props 7–9 and the two-step case;
+<em>synthetic mechanism result</em> for the gap orderings (§6).</li>
+</ul>
+<h2>4. Selection inside a divergence budget</h2>
+<p>Best-of-<em>K</em> selection is a point of the KL ball that alignment bounds use. For every finite score law and
+every tie rule, KL(best-of-<em>K</em> ‖ base) ≤ ln <em>K</em> − (<em>K</em> − 1)/<em>K</em>. The KL bound this gives on the
+selection gap is tight in the limit: the ratio of gap to bound has supremum one. <em>Algebraic identity</em>
+(<a href="notes/selection_law_kl_containment.html">selection KL</a>, Theorems A–C). Whether that ratio approaches its limit
+monotonically in <em>n</em> is proved for <em>K</em> = 2 and 3. For <em>K</em> ≥ 4 it holds on every case checked, up to
+<em>K</em> = 100 and <em>n</em> = 400, and the limiting margin is positive by a cited expansion; why the <em>K</em> = 2 proof
+fails there is located exactly.</p>
+<h2>5. Disclosure has structure</h2>
+<ul>
+<li><strong>Leaks form a lattice.</strong> Feedback channels are partitions of the records the judge could return,
+ordered by refinement. Two category leaks observed separately reveal exactly what one joint leak does
+if and only if the bipartite graph of overlapping categories is a forest. A cycle is precisely where
+the separate leaks hide what the joint leak shows. So a ledger must record what the loop saw jointly.
+<em>Algebraic identity</em> (<a href="notes/evaluation_feedback_lattice.html">lattice</a>, Prop 2c).</li>
+<li><strong>Patching failures needs a search, not a rule.</strong> Filling categories in order of failure rate
+maximizes expected hits at every patch count (Prop 3). But for the expected number of patches to reach
+a target, no index rule is optimal: the better of two categories can flip with the rest of the state
+(Prop 7). With one hit needed the optimum has a closed form, min over categories of
+(<em>n</em>ᶜ + 1)/(<em>F</em>ᶜ + 1) (Theorem 10). Beyond one hit, committing to a category until it hits is
+suboptimal, though by at most one part in 1,526 on the grid. The general optimum is a dynamic
+programme. <em>Algebraic identity</em> for Props 3, 7 and Theorem 10; <em>finite verified example</em> for the rest.</li>
+<li><strong>The ledger is the type system.</strong> Over all 22,143 operator sequences of length at most four, a
+design is well typed exactly when its feedback ledger passes the audit. An offline
+rescoring of the readout set moves the readout gap like a memorizing feedback step and leaves no other
+trace. <em>Finite verified example</em> (<a href="notes/evaluation_feedback_composition.html">composition</a>).</li>
+</ul>
+<h2>6. Measuring the judge</h2>
+<ul>
+<li><strong>The shared error is measurable.</strong> A sealed gold-labelled sample, one read, a 2 × 2 table and exact
+binomial and Fisher tests estimate ε₁ with exact p-values and power
+(<a href="notes/judge_shared_error_measurement.html">judge measurement</a>).</li>
+<li><strong>Gold noise is a confound.</strong> If the gold labels are themselves wrong at rate η, an independent judge
+looks correlated by exactly η(1 − η)(2a − 1)(1 − 2ε). So the gold's error rate must be declared.
+<em>Algebraic identity</em>.</li>
+<li><strong>Three raters identify that rate but cannot test independence.</strong> In the symmetric model, a second
+independent grader beside the gold grader and the controller gives the gold's error rate from the
+three pairwise agreements. In the asymmetric model the three-rater fit is exactly identified and has
+no test of independence, so a grader that copies the gold grader is absorbed into the fit: at full
+copying it returns two perfect graders. <em>Algebraic identity</em>
+(<a href="notes/gold_calibration_second_grader.html">gold calibration</a>, §§3–7).</li>
+<li><strong>A fourth grader makes it testable.</strong> Four raters give exactly six testable equalities. A copying
+grader leaves a residual of ρ·V₁·c₃₄ on one of them, detectable even at a balanced prior where the
+three-rater check has no power. <em>Algebraic identity</em>; finite-sample tests of the six equalities are not
+derived (§8).</li>
+<li><strong>A joint statement for the gold error and ε₁.</strong> Coverage 1 − 2α holds given two plug-ins, when the
+gold error is a grid point. At 742
+items an independent and a shared judge are told apart by the tests but their ε₁ ranges overlap; at
+4,000 the ranges are disjoint. <em>Finite verified example</em> (§9).</li>
+</ul>
+<h2>7. What this says about the RL-scaling question</h2>
+<p>None of these limits bounds the true gain available from fresh environments with exact verifiers. What
+they do is locate every route by which a reported gain can appear without a true one, and price each
+route from quantities an evaluator can declare:</p>
+<ul>
+<li>the size of each scored set and how often it was reused (<em>n</em>, <em>G</em>, <em>K</em>);</li>
+<li>the access class, the number of score queries and patches, and the joint channel of any category-level
+signal;</li>
+<li>the judge's error and shared error rates, measured against gold whose own error rate is declared,
+with a fourth independent grader if independence is to be tested;</li>
+<li>a readout set that never fed the loop.</li>
+</ul>
+<p>Given those, the largest phantom gain is computable, and anything above it is real. That is the
+falsifiable form of the question: publish the ledger, and the bound either explains the reported gain or
+it does not. Of the five published claims in the <a href="notes/rsi_claims_atlas.html">atlas</a>, none supplies a
+generation-over-generation gain for model weights on a sealed readout, and none publishes these counts.</p>
+<h2>8. What is open</h2>
+<ol>
+<li><strong>The optimal patch policy beyond one hit.</strong> It has no known structure. Whether computing it is hard is
+the natural complexity question; no reduction has been attempted.</li>
+<li><strong>The approach to the best-of-<em>K</em> limit for <em>K</em> ≥ 4</strong> needs a uniform proof for small <em>n</em>.</li>
+<li><strong>Gate dominance when gains can be zero</strong>, more than two steps below the target.</li>
+<li><strong>Finite-sample tests</strong> of the four-rater equalities, and the sampling law of the ε₁ estimate.</li>
+<li><strong>Topology.</strong> The one invariant genuinely shared with the RSITopology programme is the cycle rank of a
+graph, which here counts what separate category leaks cannot fix. The broader use of the word is
+nominal so far (<a href="notes/feedback_channel_rsitopology_crosswalk.html">crosswalk</a> §6).</li>
+</ol>
+<h2>9. Where to check</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Note</th>
+<th>Module</th>
+<th>Receipt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="notes/rl_training_signal_limits.html">training-signal limits</a></td>
+<td><code>evaluation_feedback_signal</code></td>
+<td><code>signal_v0_1.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/evaluation_feedback_lattice.html">lattice</a></td>
+<td><code>evaluation_feedback_lattice</code></td>
+<td><code>lattice_v0_6.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/evaluation_feedback_multigen.html">multigen</a></td>
+<td><code>evaluation_feedback_multigen</code></td>
+<td><code>multigen_v0_5.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/evaluation_feedback_composition.html">composition</a></td>
+<td><code>evaluation_feedback_composition</code></td>
+<td><code>composition_v0_1.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/selection_law_kl_containment.html">selection KL</a></td>
+<td><code>evaluation_selection_kl</code></td>
+<td><code>selection_kl_v0_3.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/judge_shared_error_measurement.html">judge measurement</a></td>
+<td><code>evaluation_judge_measurement</code></td>
+<td><code>judge_v0_1.json</code></td>
+</tr>
+<tr>
+<td><a href="notes/gold_calibration_second_grader.html">gold calibration</a></td>
+<td><code>evaluation_gold_calibration</code></td>
+<td><code>gold_v0_3.json</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Modules are under <code>src/spiral_ln/</code>, receipts under <code>output/&lt;module&gt;/</code>. Each verifier script under <code>scripts/</code> regenerates its receipt, which
+records the SHA-256 of its sources. The whole suite runs with
+<code>PYTHONPATH=src .venv/Scripts/python.exe -m pytest tests -q</code> (774 tests). The
+<a href="notes/feedback_channel_journey_2026-10-11_13.html">journey map</a> records how each result was reached,
+including the false claims that were found and corrected along the way.</p>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A calculus of evaluation design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+                   options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+</head>
+<body>
+<nav class="top" aria-label="Site">
+  <a class="site" href="../index.html">Feedback-channel findings</a>
+  <a href="../notes/index.html">Notes</a>
+  <a href="../lean/index.html">Lean proofs</a>
+  <a href="../notes/feedback_channel_journey_2026-10-11_13.html">Journey</a>
+  <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">Source</a>
+</nav>
+<main>
+<p class="meta">Source: <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/paper/evaluation_design_calculus.md">paper/evaluation_design_calculus.md</a></p>
+<h1>A calculus of evaluation design</h1>
+<p>Version 0.1 — 2026-09-11. A proposed synthesis for Spiral.</p>
+<p><strong>An evaluation is a designed game, a population of controllers, and an evidence-producing experiment.</strong> Its notation should expose what can be composed, what a transformation preserves, and what the observations support. This document connects game-design concepts to a small mathematical core. It does not claim a universal algebra of games or a validated measure of general intelligence.</p>
+<p>The accompanying exact examples are in <code>configs/evaluation_design_calculus_examples.json</code>; <code>scripts/verify_evaluation_design_calculus.py</code> checks their arithmetic and selected finite instances of the laws. These are mathematical fixtures, not model evaluations. Existing Spiral campaigns remain unchanged.</p>
+<p>For applications to published environments, see the <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/paper/prime_intellect_eval_atlas.md">Prime Intellect example atlas</a>, including proof feedback, 2048 interfaces, simulated users, poker, and learned judges.</p>
+<h2>1. What the literature contributes</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Foundation</th>
+<th>Established contribution</th>
+<th>Our adaptation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.cs.northwestern.edu/~hunicke/MDA.pdf">Hunicke, LeBlanc, and Zubek, MDA (2004)</a></td>
+<td>Distinguishes mechanics, their runtime dynamics, and players' aesthetic experience.</td>
+<td>Separate specified mechanisms from observed behavior and the capability claim. This is an adaptation; evidence is not a replacement definition of MDA's aesthetics.</td>
+</tr>
+<tr>
+<td><a href="https://jesperjuul.net/text/openandtheclosed.html">Juul, emergence and progression (2002)</a></td>
+<td>Distinguishes interacting rules that generate varied play from prescribed sequences of challenges.</td>
+<td>Record whether success requires particular steps or allows alternative successful strategies.</td>
+</tr>
+<tr>
+<td><a href="https://www.gamestudies.org/0802/articles/sicart">Sicart, game mechanics (2008)</a></td>
+<td>Analyzes mechanics as methods by which agents interact with a game world.</td>
+<td>Give mechanics action types, legal preconditions, and state effects.</td>
+</tr>
+<tr>
+<td><a href="https://pure.hva.nl/ws/portalfiles/portal/141880/556168_dormans_simulating_mechanics.pdf">Dormans, Machinations (2011)</a></td>
+<td>Represents resource flows and feedback structures in game economies.</td>
+<td>Use explicit resource ledgers, flow constraints, and local response analysis.</td>
+</tr>
+<tr>
+<td><a href="https://eis.ucsc.edu/analyses-and-approaches/operational-logics/">Operational logics, UCSC research group</a></td>
+<td>Connects abstract computational operations with their communicative role.</td>
+<td>Keep state semantics and their presentation to the participant separately inspectable.</td>
+</tr>
+<tr>
+<td><a href="https://arxiv.org/abs/1905.05013">Piette et al., Ludii (2020)</a></td>
+<td>Describes games through composable, understandable game concepts called ludemes.</td>
+<td>Define reusable evaluation primitives such as inspection, commitment, resource transfer, and termination. These are our primitives, not a claimed Ludii extension.</td>
+</tr>
+<tr>
+<td><a href="https://cgi.cse.unsw.edu.au/~mit/Papers/AAAI10a.pdf">Thielscher, GDL-II (2010)</a></td>
+<td>Extends formal game descriptions to nondeterminism and restricted information.</td>
+<td>Specify legal actions, transitions, private observations, and termination independently.</td>
+</tr>
+<tr>
+<td><a href="https://arxiv.org/abs/1603.04641">Ghani et al., compositional game theory (2018)</a></td>
+<td>Uses open games with sequential and parallel composition, including strategic context.</td>
+<td>Borrow the insistence on typed interfaces; distinguish execution composition from composition of strategic incentives.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1073/pnas.36.1.48">Nash (1950)</a>, <a href="https://pubsonline.informs.org/doi/abs/10.1287/mnsc.14.3.159">Harsanyi (1967)</a></td>
+<td>Equilibrium under unilateral deviations; games with private types and beliefs.</td>
+<td>State a strategic reference model and measure deviation opportunities without assuming observed agents optimize the assigned payoff.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The tuple, operator names, effect annotations, design derivatives, and project mappings below are our proposed synthesis. The linear algebra, probability composition, inclusion–exclusion identities, and elementary equilibrium calculations are standard mathematical constructions applied here. Their general applicability does not follow merely from their game-design inspiration.</p>
+<h2>2. Three objects, three kinds of claim</h2>
+<p>Write an evaluation as</p>
+<p>\[
+\mathcal E=\langle G,\Pi,D,Z,J,\mathcal A,C\rangle.
+\]</p>
+<ul>
+<li>\(G\): game specification.</li>
+<li>\(\Pi\): the controller roster and execution protocol, including model or policy, instructions, memory, tools, decoding, retries, and resource budgets.</li>
+<li>\(D\): sampling and assignment of game instances, counterparts, conditions, and independent run blocks.</li>
+<li>\(Z\): evidence acquisition; what the evaluator observes and records.</li>
+<li>\(J\): judgment of an acquired trace.</li>
+<li>\(\mathcal A\): aggregation and uncertainty procedure.</li>
+<li>\(C\): claim, target population, and assumptions required for interpretation.</li>
+</ul>
+<p>One run produces a full trajectory \(\tau\), an acquired record \(z\), and a judgment \(y\):</p>
+<p>\[
+\tau\sim P_{G,\Pi,D},\qquad z\sim Z(\cdot\mid\tau),\qquad y=J(z).
+\]</p>
+<p>Aggregation operates across declared independent blocks, not automatically across every action or message. The claim is an interpretation of the experiment, not another deterministic output of the state machine.</p>
+<p>Use this game record:</p>
+<p>\[
+G=\langle N,X,\Theta,p_0,\{A_i,O_i\}_{i\in N},T,U,H,F\rangle.
+\]</p>
+<p>Here \(N\) is the player set, \(X\) the world state, \(\Theta\) private types, \(p_0\) their joint initial distribution with the state, \(A_i\) legal moves, \(O_i\) observation channels, \(T\) transitions, \(U\) assigned trajectory utilities, \(H\) the stopping rule, and \(F\) the presentation layer. A turn scheduler can be encoded in the state, with inactive players given a no-op. Information includes any feedback from legality checks, errors, timing, and rewards.</p>
+<p>A controller acts from its accessible history: \(\pi_i(a_i\mid h_i)\). A privileged experiment recorder may inspect the full trajectory; a player must not receive that trajectory accidentally through its integration wrapper. A fixed scripted counterparty is part of the environment from the focal player's perspective. Merely naming it a second agent does not make the run evidence of mutual strategic adaptation.</p>
+<p>Maintain three distinctions:</p>
+<ol>
+<li>Assigned utility \(U_i\) specifies a game-theoretic objective; a controller's actual optimization of it is an empirical question.</li>
+<li>Judgment \(J\) can measure welfare, accuracy, or cost separately from that utility. If judgment is shown during play or used for learning, it also enters observations or controller updates.</li>
+<li>Claim \(C\) can concern mechanism feasibility, a particular controller, or a target population. These require different evidence.</li>
+</ol>
+<h2>3. A design grammar with effect annotations</h2>
+<p>Give each transformation a signature, preconditions, scope, and read/write footprint. Denote a valid application by</p>
+<p>\[
+\Gamma\vdash d:\mathcal E\longrightarrow\mathcal E'
+\quad [\operatorname{read}(d);\operatorname{write}(d)].
+\]</p>
+<p>\(\Gamma\) records facts such as the existence of an inspection action, the absence of leaked private information, or the availability of an external resource account.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Proposed operator</th>
+<th>Primary effect</th>
+<th>Required detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\operatorname{Restrict}_B\)</td>
+<td>Legal actions</td>
+<td>What actions remain; empty action sets require a defined fallback.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Budget}_{b,c}\)</td>
+<td>State, legality, and resource costs</td>
+<td>Initial budget, cost schedule, replenishment, and who sees spending.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Hide}_{i,q}\)</td>
+<td>Player \(i\)'s observations</td>
+<td>A specified projection or stochastic channel; include indirect disclosures.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Observe}_{q}\)</td>
+<td>Evaluator acquisition \(Z\)</td>
+<td>Sampling and attribution process; whether participants learn the setting.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Message}_{c}\)</td>
+<td>Actions, observations, and possibly costs</td>
+<td>Sender, receiver, timing, alphabet, cost, and whether messages bind.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Commit}_{k}\)</td>
+<td>Legal future actions or payoffs</td>
+<td>Acceptance, enforcement, default, expiry, and within-round or episode scope.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Repeat}_{H,m}\)</td>
+<td>Horizon, state, and controller memory</td>
+<td>Identity persistence, reset map, termination knowledge, and payoff discounting.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Payoff}_{u}\)</td>
+<td>Assigned utility</td>
+<td>Whether implementation also changes resources, displayed feedback, or training.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Reframe}_{f}\)</td>
+<td>Presentation</td>
+<td>A bijective semantic mapping, or an explicit admission that task meaning changed.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Controller}_{\pi}\)</td>
+<td>Controller roster/protocol</td>
+<td>Which players change, with what information and budget.</td>
+</tr>
+<tr>
+<td>\(\operatorname{Rescore}_{j}\)</td>
+<td>Judgment</td>
+<td>Only offline rescoring is automatically outside the game.</td>
+</tr>
+</tbody>
+</table></div>
+<p>These are distinct types of operation. A resource injection is not just a reward edit. Giving an evaluator access to hidden state does not give a player that access. A message channel is not a signal-count variable unless it actually carries content that another controller can interpret.</p>
+<p>Mechanics form a feasible design space constrained by \(\Gamma\), not an unrestricted Cartesian product. A commitment to unavailable actions or a private message without a recipient channel is ill-typed. Record rejected combinations rather than silently dropping them from a factorial study.</p>
+<h2>4. Composition: execution first, strategic context second</h2>
+<p>For finite state interfaces, an executed fragment with fixed controllers can be represented by a stochastic kernel \(K:X\rightsquigarrow Y\). Carry relevant history and accumulated payoff in the interfaces. Define</p>
+<p>\[
+(K;L)(z\mid x)=\sum_y K(y\mid x)L(z\mid y).
+\]</p>
+<p>The interface types must match. Finite summation proves</p>
+<p>\[
+(K;L);M=K;(L;M),\qquad \mathrm{id};K=K=K;\mathrm{id}.
+\]</p>
+<p>Parallel independent execution has</p>
+<p>\[
+(K\otimes L)(y_1,y_2\mid x_1,x_2)
+=K(y_1\mid x_1)L(y_2\mid x_2).
+\]</p>
+<p>With matching interfaces and independent factors,</p>
+<p>\[
+(K_1\otimes K_2);(L_1\otimes L_2)
+=(K_1;L_1)\otimes(K_2;L_2).
+\]</p>
+<p>Shared capital, shared randomness, or controllers coordinating across fragments violate that factorization unless explicitly represented in the interface. Repeating a kernel also requires a declared reset/carry map; independent episodes and a repeated strategic relationship have different semantics.</p>
+<p>These laws describe execution distributions. An equilibrium of each isolated fragment need not remain an equilibrium when downstream incentives are introduced. Open-game theory supplies richer strategic interfaces, including continuation utility; this document does not implement that formalism or prove an embedding into it. <a href="https://arxiv.org/abs/1603.04641">Ghani et al.</a></p>
+<h2>5. Laws, counterexamples, and preservation levels</h2>
+<p>Use a preservation annotation \(d:G\xrightarrow{P}G'\). Useful predicates \(P\) include conservation, legal-trace correspondence, information correspondence, payoff correspondence, and best-response correspondence. Measurement validity is a separate obligation.</p>
+<p><strong>Projection law.</strong> A deterministic deletion of a fixed set of visible fields is idempotent: \(H(H(o))=H(o)\). Two fresh independent sampling passes with retention \(q\), however, retain with probability \(q^2\). Reapplying random observation loss is not idempotent.</p>
+<p><strong>Disjoint-update law.</strong> Two pure, deterministic transformations commute if neither writes anything the other reads or writes, including implicit dependencies, metadata, and randomness. This is a sufficient condition, not a necessary one. The claim is about transformations applied at design time; it does not say their effects on behavior are additive.</p>
+<p><strong>Order effect.</strong> Granting two budget units and capping the balance at five do not commute. Starting at four, cap-after-grant yields five; grant-after-cap yields six. Thus an expression's order belongs in its saved design record.</p>
+<p><strong>Renaming law.</strong> A bijection on states, actions, observations, and payoffs preserves corresponding strategic possibilities when policies and measurements are transported through the same bijection. An unchanged language model receiving new prose is not a transported policy. Its sensitivity is a result to measure, not a contradiction of game isomorphism.</p>
+<p><strong>Utility law.</strong> For expected-utility comparisons, replacing each player's total trajectory utility by \(a_iU_i+b_i\), \(a_i&gt;0\), preserves that player's best responses and therefore Nash equilibria. A per-step constant can change preferences when episode lengths differ. An arbitrary increasing nonlinear transformation need not preserve preferences over lotteries: a fair lottery paying zero or four has mean two, below a sure 2.1; squaring outcomes reverses the ordering, giving eight versus 4.41. This says nothing about whether a prompted model is invariant to rescaling.</p>
+<p><strong>Mixture law.</strong> For a fixed controller and compatible scalar measurement, expectation under a mixture is the corresponding weighted expectation. Optimizing after revealing which component was selected is a different experiment. In general \(\max_\pi\sum_i w_iV_i(\pi)\leq\sum_iw_i\max_\pi V_i(\pi)\). Averaging separately optimal scores can overstate achievable performance in a hidden mixture.</p>
+<p>No unconditional claim is made that hiding information lowers observed performance, that additional tools raise it, or that repetition produces cooperation.</p>
+<h2>6. A resource-flow calculus</h2>
+<p>Following Machinations' emphasis on stocks, flows, and feedback, represent stocks of one declared resource type by \(x_t\), flows by \(f_t\), and net incidence by \(B\):</p>
+<p>\[
+x_{t+1}=x_t+Bf_t+s_t-d_t.
+\]</p>
+<p>Here \(s_t,d_t\) are external sources and drains. Admissibility requires nonnegative balances, capacities, action authorization, and sufficient resources at the moment each transfer fires. A feasible final balance alone does not guarantee a sequential execution exists.</p>
+<p>If \(w^TB=0\), then</p>
+<p>\[
+w^Tx_{t+1}-w^Tx_t=w^T(s_t-d_t).
+\]</p>
+<p>This is a direct conservation proof. Transfers cancel; external creation and destruction remain explicit. Separate resource types need separate ledgers or justified conversion rates. One cannot add money, privacy, and success percentages into a conservation equation.</p>
+<p>A simple three-account example starts at \((10,0,0)\). Transfer three from account one to two and two from account two to three. The final stock is \((7,1,2)\), with total ten. An explicit source of four changes the total to fourteen. In Spiral, a coordination-income bonus must appear as such a source; its configured contribution is not evidence of discovered productivity.</p>
+<p>For a smooth deterministic approximation \(x_{t+1}=F(x_t,a_t;\lambda)\), a differentiable fixed feedback policy \(a_t=\pi(x_t)\) gives the local state Jacobian</p>
+<p>\[
+J_x=\frac{\partial F}{\partial x}
++\frac{\partial F}{\partial a}\frac{\partial\pi}{\partial x}.
+\]</p>
+<p>At a fixed point, spectral radius below one is a sufficient local stability condition for this differentiable discrete-time system. Discrete actions, thresholds, stochastic controllers, and changes of equilibrium require separate treatment. This is an optional approximation for feedback analysis, not an established stability result for the existing simulator.</p>
+<h2>7. A calculus of design effects</h2>
+<p>Let \(V_\pi(d)\) be the expected scalar measurement for a frozen controller protocol, target sampling law, and design \(d\). Define a design difference</p>
+<p>\[
+\Delta_aV_\pi(d)=V_\pi(a(d))-V_\pi(d).
+\]</p>
+<p>For two independent binary settings, define their interaction on a chosen outcome scale:</p>
+<p>\[
+\Delta_{ab}V=V_{11}-V_{10}-V_{01}+V_{00}.
+\]</p>
+<p>This asks whether the combined effect exceeds the sum of the individual effects. It differs from an order effect,</p>
+<p>\[
+\Omega_{a,b}V(d)=V(a(b(d)))-V(b(a(d))).
+\]</p>
+<p>Two commuting configuration switches can have a large interaction. Noncommuting transformations require the order to be specified before constructing the four cells.</p>
+<p>For a fully feasible set of binary mechanics \(M\), use the subset lattice:</p>
+<p>\[
+\beta_S=\sum_{T\subseteq S}(-1)^{|S|-|T|}V(T),
+\qquad
+V(S)=\sum_{T\subseteq S}\beta_T.
+\]</p>
+<p>This inclusion–exclusion expansion separates baseline, individual contributions, and higher-order interactions relative to the all-off design. It is an exact representation of the cell means, not a proof of causality. It requires all relevant subset cells; nested ablations alone cannot identify every interaction. Effects depend on the chosen measurement scale.</p>
+<p>For a continuous parameter, a finite difference</p>
+<p>\[
+D_hV(\lambda)=\frac{V(\lambda+h)-V(\lambda)}{h}
+\]</p>
+<p>can approximate a derivative where smoothness is justified. Preserve it as a finite difference around discontinuities. Always distinguish frozen-controller sensitivity from sensitivity after retraining, selecting another controller, or selecting another equilibrium.</p>
+<p>Estimate paired differences within independent run blocks, using matched exogenous cases and separate random streams for independent mechanisms. A common seed alone is insufficient when conditions consume different random draws. Freeze sampling, outcome scale, counterpart roster, multiplicity handling, and stopping before confirmation. A notation does not repair a confounded design.</p>
+<h2>8. Exact example: information and usable alternatives</h2>
+<p>There are two locations, left and right. Exactly one contains a unit-valued resource, each with probability one half. A single player chooses a location once.</p>
+<ul>
+<li>\(I=0\): the player cannot see which location contains the resource.</li>
+<li>\(I=1\): the location is revealed before action.</li>
+<li>\(B=0\): only the left action is legal.</li>
+<li>\(B=1\): either action is legal.</li>
+</ul>
+<p>Use the optimal admissible decision rule in each cell, explicitly marking this as an analytical ceiling \(V^*\), not a model score.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:right">Left only</th>
+<th style="text-align:right">Either location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hidden resource</td>
+<td style="text-align:right">0.5</td>
+<td style="text-align:right">0.5</td>
+</tr>
+<tr>
+<td>Revealed resource</td>
+<td style="text-align:right">0.5</td>
+<td style="text-align:right">1.0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Thus \(\Delta_{IB}V^*=0.5\). Information has zero value with no usable alternative, but value 0.5 when choice is available. The subset coefficients are baseline 0.5, information 0, alternative action 0, and interaction 0.5.</p>
+<p>The verifier enumerates every deterministic observation-respecting policy. Randomization cannot improve this finite single-player optimum because expected reward is linear in the policy. This is a finite proof by exhaustion for this fixture only.</p>
+<p>The same fixture tests mixture disclosure: separately solving each known resource location yields one; mixing the locations without disclosing which was selected yields 0.5 even when both actions are available.</p>
+<h2>9. Exact example: cooperation and strategic stability</h2>
+<p>Use the two-action social dilemma discussed in the conversation:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>A / B</th>
+<th style="text-align:right">Share</th>
+<th style="text-align:right">Take</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Share</td>
+<td style="text-align:right">3, 3</td>
+<td style="text-align:right">0, 5</td>
+</tr>
+<tr>
+<td>Take</td>
+<td style="text-align:right">5, 0</td>
+<td style="text-align:right">1, 1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Taking is strictly dominant for each player. The unique Nash equilibrium is mutual taking; mutual sharing has higher total welfare. This follows directly from the four payoff comparisons.</p>
+<p>For a strategy profile \(\pi\), record each player's best unilateral improvement:</p>
+<p>\[
+r_i(\pi)=\sup_{\pi_i'}\mathbb E[U_i(\pi_i',\pi_{-i})]
+-\mathbb E[U_i(\pi)].
+\]</p>
+<p>With exact optimization, all gaps at most \(\epsilon\) define an \(\epsilon\)-Nash profile. Restricted deviation searches give lower bounds on the true gap. Estimated payoffs also require uncertainty. For a pure profile in this two-action game, enumerating pure deviations suffices because expected utility is linear in mixed deviations. Mutual sharing has gap two for each player; mutual taking has gap zero and total welfare two. <a href="https://doi.org/10.1073/pnas.36.1.48">Nash's definition</a></p>
+<p>An externally imposed levy of three utility units on taking changes the table to \((3,3),(0,2),(2,0),(-2,-2)\). Sharing becomes strictly dominant. That is a change of incentives, not evidence that the controller acquired cooperation skills. The levy is burned, not transferred to the other player. It is not an opt-in commitment mechanism; modeling opt-in would require an additional decision stage.</p>
+<p>For the original table in a commonly known finite repetition with no cross-round contracts, additive utilities, and payoff-maximizing players, backward induction yields taking in every round in the subgame-perfect equilibrium. For an indefinitely repeated game with common discount \(\delta\), perfect public monitoring, and grim-trigger strategies, cooperation is sustainable when</p>
+<p>\[
+\frac{3}{1-\delta}\geq5+\frac{\delta}{1-\delta}
+\quad\Longleftrightarrow\quad \delta\geq\frac12.
+\]</p>
+<p>Punishment is credible because mutual taking is a stage equilibrium. This is an exact derivation under the stated assumptions; it does not predict that real controllers will discover or select that equilibrium. The verifier checks discounted values below, at, and above the threshold.</p>
+<p>For private-type games, specify the prior, what each player observes, and beliefs needed by the reference model. Bayesian equilibrium addresses type uncertainty; sequential rationality matters for threats and commitments. Equilibrium selection, population performance, welfare, and deviation resistance should remain separate measurements. <a href="https://pubsonline.informs.org/doi/abs/10.1287/mnsc.14.3.159">Harsanyi</a></p>
+<h2>10. Application to Spiral's existing designs</h2>
+<p>These mappings are based on the current source and protocol, not a new experimental run.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Existing element</th>
+<th>Calculus interpretation</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DesignTropes.private_relationships</code></td>
+<td>Relationship state, action legality, private designation, observer attribution, and displayed configuration</td>
+<td>It is not simply an information-hiding operator. Economic equivalence requires the other dependent mechanisms to be controlled.</td>
+</tr>
+<tr>
+<td><code>repeat_counterparties</code></td>
+<td>Built-in counterparty-selection policy</td>
+<td>With externally supplied <code>AgentAction</code> choices, the internal selector is bypassed. Toggling it is not automatically an intervention on an external model's strategy.</td>
+</tr>
+<tr>
+<td><code>abstract_signaling</code></td>
+<td>A bounded counter and associated legality/metadata</td>
+<td>No message content or receiver decoding exists. It cannot support a claim about language communication.</td>
+</tr>
+<tr>
+<td><code>coordination_bonus</code></td>
+<td>External source conditioned on coalition classification</td>
+<td>Added productivity is an explicit mechanism assumption.</td>
+</tr>
+<tr>
+<td><code>liquidity_reinvestment</code></td>
+<td>Resource transfer into connector capacity, selected by an environment rule</td>
+<td>Distinguish that allocation heuristic from an agent choosing an investment.</td>
+</tr>
+<tr>
+<td><code>partial_observer</code></td>
+<td>Observer acquisition plus visible configuration metadata</td>
+<td><code>false</code> currently disables observer events; it does not grant complete observation. Because enabled tropes appear in <code>agent_view</code>, an external policy could also respond to this setting.</td>
+</tr>
+<tr>
+<td><code>hive_min_reciprocity</code></td>
+<td>Coalition classification, and potentially income/investment eligibility</td>
+<td>A threshold sweep can change both measurement and world dynamics when dependent mechanisms are enabled. An offline classification sweep would be a different operation.</td>
+</tr>
+<tr>
+<td><code>agent_view</code>, <code>observer_view</code>, <code>observation</code></td>
+<td>Player channel, sampled observer channel, privileged experiment record</td>
+<td><code>step()</code> returns the privileged record. An external-policy adapter must deliberately use the player channel to uphold an information restriction.</td>
+</tr>
+<tr>
+<td>Sandbagging v3 matched conditions</td>
+<td>Controller/presentation intervention with blocked evidence acquisition</td>
+<td>A condition-dependent score difference is not by itself proof of strategic intent or a verified game isomorphism.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Source anchors: <code>src/spiral_ln/hive_lab.py</code> (<code>DesignTropes</code>, <code>_counterparty</code>, <code>_observer_flags</code>, <code>_attempt_purchase</code>, <code>hives</code>, <code>_earn_external_income</code>, <code>_maybe_invest_connector</code>, <code>agent_view</code>, <code>step</code>); <code>src/spiral_ln/hive_design_experiment.py</code>; <code>paper/sandbagging_v3_protocol.md</code>.</p>
+<p>The existing nested trope ablations show increments along one chosen path. They do not supply all subset cells for the full interaction expansion. The existing phase sweep mixes a policy parameter with a coalition threshold; its interpretation must name which dependent rules are enabled.</p>
+<h2>11. A reusable evaluation card</h2>
+<p>Every design should declare:</p>
+<ol>
+<li><strong>Claim and population:</strong> the behavior being tested and where the conclusion is intended to apply.</li>
+<li><strong>Game and primitives:</strong> state, legal actions, transitions, resource ledgers, observation channels, utilities, stopping, and presentation.</li>
+<li><strong>Controllers:</strong> focal policy, counterparts, memory, prompts, tools, budgets, and any learning or selection between episodes.</li>
+<li><strong>Design expression:</strong> ordered, scoped operators with preconditions, footprints, and preservation obligations.</li>
+<li><strong>Reference model:</strong> fixed-policy baseline, optimal decision rule, Nash/Bayesian/sequential reference, or an explicitly heuristic comparator.</li>
+<li><strong>Acquisition and judgment:</strong> privileged versus accessible data, blind scoring where relevant, and whether any score feeds back into play.</li>
+<li><strong>Estimand:</strong> main effect, interaction, order effect, frontier, calibration error, welfare, or unilateral-improvement gap.</li>
+<li><strong>Inference:</strong> assignment, independent blocks, frozen selection/confirmation boundary, uncertainty, and multiplicity.</li>
+<li><strong>Evidence status:</strong> algebraic identity, finite verified example, synthetic mechanism result, observed-controller result, or externally validated claim.</li>
+</ol>
+<p>The first implementation priority would be compiling these cards against real adapters and checking observation boundaries. A full game-language compiler, open-game strategic semantics, and real-model campaigns are subsequent goals, not results delivered by this document.</p>
+<h2>12. Exact follow-up: estimands, Hide, and incentive response</h2>
+<p>The companion <a href="https://github.com/patrickdugan/Spiral/blob/7949e4c1d7d509c62bb3745a9feef3072066959f/paper/evaluation_game_testbed.md">evaluation-game testbed</a> makes four
+non-interchangeable estimands executable in small rational fixtures: baseline
+gain, robust regret, acquired-record discrimination gap, and exploitability.
+It types observation-only <code>Hide</code> as one common post-play Markov kernel and
+checks the resulting loss of measurement discrimination. It separately verifies
+that hiding information from a player before action changes the game and can
+change optimal value. The testbed also records equilibrium sets and selected
+outcomes under a declared adaptation rule, marks restricted best response as a
+lower bound, includes a tiny zero-sum primal/dual witness, and documents a
+difficulty-matched, grader-severity-stratified held-out incentive interaction.
+These are exact synthetic design checks, not model or multi-agent results.</p>
+</main>
+<footer>
+  Built from <a href="https://github.com/patrickdugan/Spiral/tree/7949e4c1d7d509c62bb3745a9feef3072066959f">patrickdugan/Spiral@7949e4c</a>. Every number in these notes is exact
+  arithmetic on declared quantities; no model, judge or grader was run. Each module's verifier regenerates
+  its receipt with the SHA-256 of its sources.
+</footer>
+</body>
+</html>
