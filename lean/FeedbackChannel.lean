@@ -6,3 +6,7 @@ import FeedbackChannel.PatchWitness
 import FeedbackChannel.PatchWitness3
 import FeedbackChannel.LatticeJoin
 import FeedbackChannel.LatticeOrder
+import FeedbackChannel.Signal
+import FeedbackChannel.Judge
+import FeedbackChannel.Raters
+import FeedbackChannel.RatersJacobian

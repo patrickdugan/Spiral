@@ -69,3 +69,77 @@ witness state.
 connected graph" argument), Proposition 6 (the optimal adaptive schedule is monotone; it needs a
 model of policies under coarser information), the commit-until-hit witness, the claim that greedy
 is optimal when every failure must be hit, the lattice fixtures, and every enumeration count.
+
+## The training-signal, judge-measurement and gold-calibration notes
+
+
+Modules `FeedbackChannel/Signal.lean`, `Judge.lean`, `Raters.lean`, `RatersJacobian.lean` (no
+dependencies between them; build order as listed). `axioms_algebra.lean` prints the axioms of every
+theorem below; all 75 report exactly `[propext, Classical.choice, Quot.sound]`. No `sorry`,
+`admit`, `native_decide` or added axioms. Fresh build of the four modules: 26 s.
+
+Fidelity: **full** = the note's claim with its quantifiers and hypotheses (sometimes stronger);
+**special case** = a restricted instance (stated which); **supporting** = a lemma the claim rests
+on (stated what remains). Paths are relative to `lean/`.
+
+Notes: TS = `paper/rl_training_signal_limits.md`; INS = `paper/evaluation_feedback_insertions.md`;
+JM = `paper/judge_shared_error_measurement.md`; GC = `paper/gold_calibration_second_grader.md`.
+
+| Note | Claim (label as in the note) | Lean theorem (fully qualified) | File:line | Fidelity | Remarks |
+|---|---|---|---|---|---|
+| TS | L1/L2 counting core | `FeedbackChannel.Signal.Strategy.card_le_pow` | FeedbackChannel/Signal.lean:69 | supporting | Adaptive strategies are depth-`q` decision trees (`Strategy`); if every candidate's answers lie in a set of `m` values and the output separates candidates, `#cands ≤ m^q`. L1 and L2 are instances. |
+| TS | L1: a deterministic channel with `m` images separates at most `m^q` hypotheses in `q` episodes | `FeedbackChannel.Signal.L1_card_le` | FeedbackChannel/Signal.lean:112 | full | Episodes may be chosen adaptively; hypothesis `h` and action `x` give the step record `record h x`, the loop sees `ch (record h x)`; `m = #(image of ch)`. |
+| TS | L1: at least `⌈log H / log m⌉` episodes | `FeedbackChannel.Signal.L1_episodes` | FeedbackChannel/Signal.lean:122 | full | Real-log ceiling form, and `Nat.clog m H ≤ q` for `m ≥ 2`. Uses `ceil_log_div_le_of_le_pow` (Signal.lean:85). For `m ≤ 1` the real-log form holds by Lean's `log 1 = 0`, `x/0 = 0`. |
+| TS | L1 example: `T = 3`, eight hypotheses: ≥ 3 outcome-reward episodes | `FeedbackChannel.Signal.L1_example_outcome` | FeedbackChannel/Signal.lean:135 | full | Lower bound only, as the note claims. |
+| TS | L1 example: ≥ 1 process-reward episode | `FeedbackChannel.Signal.L1_example_process` | FeedbackChannel/Signal.lean:151 | full | |
+| TS | L1: partial credit and first-failure are incomparable (neither factors through the other) | `FeedbackChannel.Signal.L1_incomparable` | FeedbackChannel/Signal.lean:183 | full | Proved for every `T ≥ 2` (the note checks `T ≤ 5`). For `T ≤ 1` the two channels coincide, so `T ≥ 2` is necessary. `m = T + 1` for these channels is not formalized. |
+| TS | L2: each score query returns one of `f + 1` values | `FeedbackChannel.Signal.patchedScore_mem` | FeedbackChannel/Signal.lean:236 | supporting | Query = patch a subset `Q`, read the number of passing items; with `|S| = f` the score lies in `[n - f, n]`. |
+| TS | L2 lower bound: `(f+1)^q ≥ C(n, f)` | `FeedbackChannel.Signal.L2_lower_bound` | FeedbackChannel/Signal.lean:253 | full | Any adaptive strategy of `q` score queries whose output separates the failure sets of size `f`. |
+| TS | L2: `q_min(n,f) ≥ ⌈log C(n,f) / log(f+1)⌉` | `FeedbackChannel.Signal.L2_qmin` | FeedbackChannel/Signal.lean:269 | full | For strategies whose output is the failure set; also `Nat.clog (f+1) C(n,f) ≤ q` for `f ≥ 1`. The halving upper bound `f⌈log₂ n⌉ + 1` and the exact minimax values are not formalized. |
+| TS / INS | Ceiling law: a predictor blind to flips at rate `ε < 1/2` does not exceed `1 - ε` | `FeedbackChannel.Signal.L3_ceiling` | FeedbackChannel/Signal.lean:288 | special case | Per item: right on the true label with probability `c ≤ 1` gives observed accuracy `≤ 1 - ε` (for `ε ≤ 1/2`). Averaging over items is not stated. |
+| TS / INS | L3, blind memorization: crosses the ceiling iff share `> (1 - ε - v)/(1 - v)` | `FeedbackChannel.Signal.L3_blind` | FeedbackChannel/Signal.lean:302 | full | From the insertions note's score `m/n + (1 - m/n) v` (`blindScore`), `v < 1`. |
+| TS / INS | L3, patching failures: crosses iff share `> 1 - ε - v` | `FeedbackChannel.Signal.L3_patch` | FeedbackChannel/Signal.lean:310 | full | From the note's score `v + m/n` (`patchScore`). |
+| INS | Patching failures: same threshold `(1 - ε - v)/(1 - v)` as a share of the failed items | `FeedbackChannel.Signal.L3_patch_share_of_failed` | FeedbackChannel/Signal.lean:316 | full | `v < 1`. |
+| INS | Score after patching failed items is `v + m/n` | `FeedbackChannel.Signal.L3_patch_count` | FeedbackChannel/Signal.lean:324 | supporting | Item-level derivation of the formula the note states: `|P ∪ M|/n = |P|/n + |M|/n` for `M` inside the failures. Assumes, as the note does, that a patch changes only its own item. |
+| INS | Score after blind memorization is `m/n + (1 - m/n) v` | `FeedbackChannel.Signal.L3_blind_average` | FeedbackChannel/Signal.lean:337 | supporting | Item-level derivation: averaged over all `C(n, m)` memorized sets of size `m`, `|P ∪ M|/n = m/n + (1 - m/n)|P|/n` ("chosen without regard to outcomes" read as uniformly at random). |
+| TS / INS | L3 fixture: `v = 37/50`; thresholds `8/13` (blind) and `4/25` (patching), `= 8/13` of failed items | `FeedbackChannel.Signal.L3_fixture`, `FeedbackChannel.Signal.L3_fixture_thresholds` | FeedbackChannel/Signal.lean:382, :392 | full | `v` computed from clean accuracy `4/5` and judge error `1/10`; the second theorem states the fixture as the three crossing equivalences. |
+| TS | L4 identity `a(1-ε₀) + (1-a)ε₁ = a - ε + 2(1-a)ε₁` | `FeedbackChannel.Signal.L4_identity` | FeedbackChannel/Signal.lean:411 | full | `ring` identity. |
+| TS | L4: excess over the independent judge is `2(1-a)(ε₁ - ε)` | `FeedbackChannel.Signal.L4_excess` | FeedbackChannel/Signal.lean:417 | full | Independent judge = same marginal `ε` on both kinds of item. |
+| TS | L4: reaches the ceiling `1 - ε` iff `ε₁ ≥ 1/2` | `FeedbackChannel.Signal.L4_ceiling_iff` | FeedbackChannel/Signal.lean:424 | full | Needs `a < 1` (stated for `a < 1`, so `a = 0` is included). At `a = 1` the observed accuracy is always `1 - ε`, so "whatever `a`" needs that exclusion. |
+| TS | L4: feasibility caps `ε₁` at `ε/(1-a)` | `FeedbackChannel.Signal.L4_cap` | FeedbackChannel/Signal.lean:433 | full | Stated multiplied out: `(1-a)ε₁ ≤ ε` from `a, ε₀ ≥ 0`. |
+| TS | L4: ceiling reachable without memorization iff `ε ≥ (1-a)/2` | `FeedbackChannel.Signal.L4_reachable_iff` | FeedbackChannel/Signal.lean:438 | full | `0 < a < 1`, `ε ≤ 1`; feasible = `ε₀, ε₁ ∈ [0,1]` with marginal `ε`. For `ε > (1+a)/2` the witness must take `ε₀ = 1`, `ε₁ > 1/2`; `ε₁ = 1/2` alone does not work there. |
+| TS | L4: most correlated feasible judge reports `a + ε` at most | `FeedbackChannel.Signal.L4_observed_le` | FeedbackChannel/Signal.lean:474 | full | |
+| TS | L4 fixture: `37/50`, `9/10` (the ceiling), inflation `4/25` | `FeedbackChannel.Signal.L4_fixture` | FeedbackChannel/Signal.lean:482 | full | Most correlated judge `(ε₀, ε₁) = (0, 1/2)` has marginal `1/10`. |
+| TS | L6: Bayes value under `g` ≥ value under any `f` that factors through `g` | `FeedbackChannel.Signal.L6_garbling` | FeedbackChannel/Signal.lean:517 | full | Finite types; arbitrary real prior, likelihood of records given types, and utility (no sign condition needed); value = max over all decision rules. |
+| TS | L6, garbling direction of Blackwell's order (stochastic) | `FeedbackChannel.Signal.L6_garbling_stochastic` | FeedbackChannel/Signal.lean:545 | full (strengthening) | Stochastic channel `G`, Markov kernel `K` (non-negative, rows sum to 1): value of `K ∘ G` ≤ value of `G`. The strict cases of L6 are not formalized. |
+| JM | Proposition 1 (bookkeeping identity) | `FeedbackChannel.Judge.prop1_bookkeeping` | FeedbackChannel/Judge.lean:25 | full | Every table `(R₀,R₁,W₀,W₁)` with `m > 0`, including `W = 0` (Lean's `x/0 = 0` is the note's convention). |
+| JM | Model of §5 (gold flips independent of `C, J`) | `FeedbackChannel.Judge.model_params` | FeedbackChannel/Judge.lean:84 | supporting | The eight-cell law has `Pr[C] = a`, `Pr[¬J] = aε₀ + (1-a)ε₁`. |
+| JM | Proposition 2: `a'`, `ε'`, `W₁'/m`; agreement invariant | `FeedbackChannel.Judge.prop2` | FeedbackChannel/Judge.lean:91 | full | Each measured rate is a sum over the eight latent cells `(C, J, F)`. |
+| JM | Proposition 2, inversion | `FeedbackChannel.Judge.prop2_inverse` | FeedbackChannel/Judge.lean:102 | full | `η ≠ 1/2`; `a ≠ 1` for `ε₁`. |
+| JM / TS A2 | Corollary (gold-noise identity): `(ε₁' - ε')(1 - a') = η(1-η)(2a-1)(1-2ε)` | `FeedbackChannel.Judge.gold_noise_excess` | FeedbackChannel/Judge.lean:118 | full | Independent judge in the note's sense `ε₁ = ε`; stated as `W₁'/m - ε'(1-a')`, the measured covariance of the two errors. |
+| JM | Corollary with `ε₁' = (W₁'/m)/(1 - a')` | `FeedbackChannel.Judge.gold_noise_excess_rate` | FeedbackChannel/Judge.lean:127 | full | `a' ≠ 1`. |
+| JM | Excess positive when `a > 1/2`, `ε < 1/2` | `FeedbackChannel.Judge.gold_noise_excess_pos` | FeedbackChannel/Judge.lean:137 | full | Also needs `0 < η < 1`. |
+| JM | Fixture `η = 1/20`: `a' = 77/100`, `ε' = 7/50`, `ε₁' = 11/46`, excess `57/575`; shared judge inverts to `1/2` | `FeedbackChannel.Judge.fixture` | FeedbackChannel/Judge.lean:144 | full | "Excess `57/575`" is `ε₁' - ε'`; the Corollary's quantity there is `57/2500`. |
+| GC | Model: conditional independence multiplies | `FeedbackChannel.Raters.expect_prod_on` | FeedbackChannel/Raters.lean:53 | supporting | Two-class model on `n` raters; every moment below is a sum over the `2^n` report vectors. `mass_one` (:75): the table sums to 1. |
+| GC | Proposition 1 (Walsh coefficients `p̂_S = τ^{[|S| odd]} ∏ d_i`) | `FeedbackChannel.Raters.prop1_walsh` | FeedbackChannel/Raters.lean:93 | full | For any number of raters (the note uses three). |
+| GC | `κ_ij = 2A_ij - 1 = (1-2e_i)(1-2e_j)` | `FeedbackChannel.Raters.kappa_eq` | FeedbackChannel/Raters.lean:113 | full | `A_ij` is the agreement probability computed from the table; `agree_eq` (:127) gives `A_ij = 1 - e_i - e_j + 2e_ie_j`. |
+| GC | Proposition 2: `(1-2e_i)² = κ_ij κ_ik / κ_jk` if `κ_jk ≠ 0` | `FeedbackChannel.Raters.prop2_three_rater` | FeedbackChannel/Raters.lean:136 | full | Any three distinct raters among `n`. |
+| GC / JM | `(1-2η₁)² = κ₁₂ κ₁C / κ₂C` | `FeedbackChannel.Raters.prop2_gold` | FeedbackChannel/Raters.lean:146 | full | Raters `(G₁, G₂, C)` = indices `(0, 1, 2)`. |
+| GC | Proposition 3: `M₁κ₂₃ = M₂κ₁₃ = M₃κ₁₂ = P` | `FeedbackChannel.Raters.prop3_constraints` | FeedbackChannel/Raters.lean:152 | full | Forward direction. The converse (a table satisfying the constraints comes from exactly one parameter point) is not formalized; nor is the three-rater copying residual of §3. |
+| GC | §7 label switching | `FeedbackChannel.Raters.label_switch` | FeedbackChannel/Raters.lean:81 | full | `(π, α, β)` and `(1-π, 1-β, 1-α)` give the same table. |
+| GC | Proposition 4: `c_ij = uδ_iδ_j` | `FeedbackChannel.Raters.prop4_cov` | FeedbackChannel/Raters.lean:291 | full | `c_ij = p_ij - p_ip_j` with the raw moments of the table (`pm_eq`, :267). |
+| GC | Proposition 4: `k₃ = u(1-2π)δ₁δ₂δ₃` | `FeedbackChannel.Raters.prop4_k3` | FeedbackChannel/Raters.lean:297 | full | `k₃` in the note's raw form `p₁₂₃ - Σp_ip_jk + 2p₁p₂p₃`. |
+| GC | Proposition 4: `R² = k₃² + 4c₁₂c₁₃c₂₃ = u²δ₁²δ₂²δ₃²` | `FeedbackChannel.Raters.prop4_R2` | FeedbackChannel/Raters.lean:306 | full | |
+| GC | Proposition 4: `π = (R-k₃)/(2R)`, `s_i = p_i + (R+k₃)/(2c_jk)`, `t_i = p_i - (R-k₃)/(2c_jk)` | `FeedbackChannel.Raters.prop4_solution` | FeedbackChannel/Raters.lean:329 | full | Hypotheses `δ₁δ₂δ₃ > 0` and `0 < π < 1` (the latter is part of the note's identifiability condition, needed for `R > 0`); `R = √(k₃² + 4c₁₂c₁₃c₂₃)` from the table. All three raters. Core algebra in `solve_rater` (:314). |
+| GC | §7 asymmetric inversion: measured `a'`, `ε'`, `w`; agreement invariant | `FeedbackChannel.Raters.asym_measured` | FeedbackChannel/Raters.lean:537 | full | Derived from the sixteen latent cells `(Y, C, J, F)` with class-dependent controller accuracy and gold flip rate. |
+| GC | §7 asymmetric inversion: `ε₁ = (E_a(w-G_a) + G_a(ε'-F))/Δ`, `ε₀ = (G_b(ε'-F) - E_b(w-G_a))/Δ` | `FeedbackChannel.Raters.asym_inversion` | FeedbackChannel/Raters.lean:563 | full | `Δ ≠ 0`. |
+| GC | §7: symmetric case `Δ = a(1-a)(1-2η)` | `FeedbackChannel.Raters.asym_delta_symm` | FeedbackChannel/Raters.lean:577 | full | Reduction to the judge note's inversion beyond `Δ` is not separately stated. |
+| GC | Proposition 5: `k_S = μ_{|S|} ∏_{i∈S} δ_i` | `FeedbackChannel.Raters.prop5` | FeedbackChannel/Raters.lean:192 | full | Any number of raters and any `S` (the note: four raters); `k_S` are central moments of the table, `p_i` from `mean_eq` (:169). |
+| GC | `μ₂ = u`, `μ₃ = u(1-2π)`, `μ₄ = u(1-3u)` | `FeedbackChannel.Raters.mu_two`, `.mu_three`, `.mu_four` | FeedbackChannel/Raters.lean:182–184 | full | `μ_k = π(1-π)^k + (1-π)(-π)^k`. |
+| GC | §8, the six equalities | `FeedbackChannel.Raters.six_equalities` | FeedbackChannel/Raters.lean:235 | full | Hold identically on the four-rater model; built from `cmom_pair` (:204), `cmom_triple` (:208), `k1234_eq` (:227). |
+| GC | §8 copying grader: `c₁₂ = uδ₁δ̃₂ + ρV₁`, other covariances product form | `FeedbackChannel.Raters.covCopy_eq` | FeedbackChannel/Raters.lean:458 | full | Model `probCopy`: rater 2 copies rater 1 with probability `ρ`, else grades independently. Moments are sums over the 16 cells (`meanCopy_0..3` :410–426, `massCopy` :439, `covCopy_raw` :445). |
+| GC | §8 copying grader: `c₁₂c₃₄ - c₁₃c₂₄ = ρV₁c₃₄` and `c₁₃c₂₄ = c₁₄c₂₃` | `FeedbackChannel.Raters.copy_grader_residual` | FeedbackChannel/Raters.lean:473 | full | |
+| GC | §8: any `ρ > 0` detected when `V₁ > 0`, `0 < π < 1`, `δ₃δ₄ ≠ 0`, at `π = 1/2` too | `FeedbackChannel.Raters.copy_grader_detected` | FeedbackChannel/Raters.lean:483 | full | Stated with `ρ ≠ 0`, `V₁ ≠ 0`. |
+| GC | Proposition 6(b): the `6 × 6` minor on `(c₂₄, c₃₄, k₁₂₄, k₁₃₄, k₂₃₄, k₁₂₃₄)` is lower triangular | `FeedbackChannel.RatersJacobian.minor_eq` | FeedbackChannel/RatersJacobian.lean:47 | full | Entries are Lean's partial derivatives (`deriv` along coordinate lines) of the residual map, not entered by hand. Residuals are "left side minus right side" of the note's equalities; lower-triangular row order puts `c₁₃c₂₄ - c₁₄c₂₃` first. |
+| GC | Proposition 6(b): determinant `-c₁₂⁴c₁₃²` | `FeedbackChannel.RatersJacobian.minor_det` | FeedbackChannel/RatersJacobian.lean:60 | full | At every point. The sign depends on the row order and residual orientation above; with the other tetrad first the determinant is `+c₁₂⁴c₁₃²`. |
+| GC | Proposition 6(b): the `6 × 15` Jacobian has rank 6 wherever `c₁₂c₁₃ ≠ 0`, model or not | `FeedbackChannel.RatersJacobian.jac_rank` | FeedbackChannel/RatersJacobian.lean:70 | full | The 15 centred moments are taken as free real coordinates; that they are coordinates on the simplex is not formalized. Proposition 6(a) (parameter Jacobian rank 9) and the "zero set of six independent functions" conclusion are not formalized. |
