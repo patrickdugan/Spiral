@@ -1,0 +1,71 @@
+# Lean claims
+
+Each row links a result in the notes to the Lean theorem that proves it. Fidelity says how the Lean
+statement relates to the note: *full* (the claim as the note states it), *special case* (which one),
+or *supporting lemma* (what remains). Every theorem here is listed in `axioms_check.lean`, whose
+output is only `propext`, `Classical.choice` and `Quot.sound`: no `sorry`, no added axioms, no
+compiled-code evaluation. Line numbers refer to this commit.
+
+## The lattice note (`paper/evaluation_feedback_lattice.md`, version 0.6)
+
+Every theorem below is listed in `axioms_lattice.lean`. `#print axioms` gives
+`[propext, Classical.choice, Quot.sound]` for 49 of them and `[propext, Quot.sound]` for
+`prop7_context_pair`. The files contain no `sorry`, no new axioms and no compiled-code
+evaluation. Concrete values come from `decide` (multisets, finite sets) and `norm_num` (rationals).
+
+**Programme model (`FeedbackChannel.PatchDP`).** A state is a multiset of pairs `(n, F)` with
+`F ≤ n` (`Valid`). A patch picks a category with `n ≥ 1`. It hits with probability `F/n`, leaving
+`(n-1, F-1)`, and otherwise leaves `(n-1, F)`. `val H s` is the Bellman minimum of the expected
+patches to `H` hits, computed with fuel equal to the items left (`dp`, `val_succ`). It differs
+from the Python `_optimal_value` in two ways, and neither changes a value on a feasible state:
+(i) categories with `F = 0` stay in the state and may be patched, a wasted patch, which the note's
+policy class allows; (ii) an infeasible state (more hits needed than failures left) has the junk
+value 0, and every theorem assumes feasibility. `val_le_pval` shows that no legal stationary
+policy (a function of hits needed and state) does better than `val`. Randomised and
+history-dependent policies are not modelled. The values agree with the Python programme on every
+witness state.
+
+| Note | Claim (label as in the note) | Lean theorem (fully qualified) | File:line | Fidelity | Remarks |
+|---|---|---|---|---|---|
+| §3 | Theorem 10: one hit, optimum `min_c (n_c+1)/(F_c+1)` | `FeedbackChannel.PatchDP.theorem10` | FeedbackChannel/PatchDP.lean:299 | full | `IsLeast` over the categories with `F_c ≥ 1`, for a valid state with at least one failure. Proved by the note's induction on items (`val_one_le_finisher`:192, `le_val_one`:233). **Underspecified in the note:** the minimum has to be restricted to `F_c ≥ 1`. Python does this (`one_hit_value`); read literally the formula is wrong, e.g. `{(1,0),(10,1)}` gives 2 instead of 11/2. The note's "any other `c′`" step also leaves out `F_{c′} = 0` (it divides by `F_{c′}`), and the proof handles that case separately. |
+| §3 | Theorem 10: optimum in evaluation form | `FeedbackChannel.PatchDP.val_one_eq` | FeedbackChannel/PatchDP.lean:316 | supporting lemma | Used for every one-hit value of a concrete state. |
+| §3 | Theorem 10: "attained by patching a category of minimal (n+1)/(F+1) until it hits and never switching" | `FeedbackChannel.PatchDP.theorem10_attained` | FeedbackChannel/PatchDP.lean:351 | full | For a best finisher: patching it first is optimal; after a miss it stays a best finisher; the never-switching cost `stick n F` equals the optimum. |
+| §3 | "Sticking with c costs 1+(1−F/n) n/(F+1) = (n+1)/(F+1)" | `FeedbackChannel.PatchDP.stick_eq` | FeedbackChannel/PatchDP.lean:328 | full | |
+| §3 | Theorem 10 witness: in `{(2,1),(16,9)}` the rates are 1/2 < 9/16, yet (2,1) first costs 3/2 against 53/32 | `FeedbackChannel.PatchDP.one_hit_rate_witness` | FeedbackChannel/PatchDP.lean:399 | full | Finite. |
+| §3 | Bellman equation of `optimal_adaptive_value` | `FeedbackChannel.PatchDP.val_succ`, `FeedbackChannel.PatchDP.val_eq_of_cert` | FeedbackChannel/PatchDP.lean:112, 139 | supporting lemma | Definition of the programme; certificate form for exact evaluation. |
+| §3 | The programme is a lower bound for every policy | `FeedbackChannel.PatchDP.val_le_pval` | FeedbackChannel/PatchDP.lean:551 | supporting lemma | Stationary deterministic legal policies only. A policy's cost is also at least the continuation value of its own first patch. |
+| §3 | Prop 4, one category: `E[T] = H(n+1)/(F+1)` (negative-hypergeometric mean) | `FeedbackChannel.PatchDP.val_single` | FeedbackChannel/PatchDP.lean:439 | full | For `H ≤ F ≤ n`. With one category the programme has a single choice, so `val` is the expected stopping time of patching uniformly at random without replacement (first-step analysis). A combinatorial statement over random `F`-subsets is not formalized. |
+| §3 | Prop 4: `E[T] = N_{<j} + H_j(n_j+1)/(F_j+1)` for the static schedule | `FeedbackChannel.PatchStatic.prop4_staticT` | FeedbackChannel/PatchStatic.lean:207 | full | Holds for every fixed order, the greedy order included. `staticT` is the expected stopping time by first-step analysis (`sdp`), with earlier categories patched completely (`staticT_skip`:164, `staticT_within`:136). The split `pre ++ c :: post` with `F(pre) < H ≤ F(pre)+F_j` is the note's `j`. |
+| §3 | Prop 4: the expected score reaches the ceiling at `m* = N_{<j} + H_j n_j/F_j` | `FeedbackChannel.PatchStatic.prop4_crossing` | FeedbackChannel/PatchStatic.lean:254 | full | `curve` is the piecewise-linear fill curve (`expected_hits_after`): it equals `H` at `m*` and is below `H` at every earlier count. At whole counts inside a category it is the hypergeometric mean (`curve_single`:240, from Prop 3). |
+| §3 | Prop 4: `m* − E[T] = H_j(n_j−F_j)/(F_j(F_j+1)) ∈ [0, m*/(F_j+1))` | `FeedbackChannel.PatchStatic.prop4_gap` | FeedbackChannel/PatchStatic.lean:328 | full | |
+| §3 | Prop 4 numbers: one category, `m*/n = (1−ε−v)/(1−v) = 8/13`, `E[T] = 204/7` | `FeedbackChannel.PatchStatic.prop4_one_category` | FeedbackChannel/PatchStatic.lean:361 | full | `n=50, F=13, H=8, ε=1/10, v=37/50`. Also checks that `val 8 {(50,13)} = 204/7`. Deriving `H = 8` from the noise ceiling (insertions note) is not formalized. |
+| §3 | Prop 4 numbers: singleton categories, both equal `H`, share 4/25 | `FeedbackChannel.PatchStatic.prop4_singletons` | FeedbackChannel/PatchStatic.lean:370 | full | 13 failing and 37 passing singletons, failures first. |
+| §3 | Prop 3: the j-th patch hits with unconditional probability `F_c/n_c` for every j | `FeedbackChannel.PatchStatic.prop3_hitProb` | FeedbackChannel/PatchStatic.lean:32 | full | The conditional probability `(F_c−h)/(n_c−j+1)` is the model's transition (`rate` of the remaining pair). |
+| §3 | Prop 3: `m_c` patches hit `m_c F_c/n_c` in expectation (hypergeometric mean) | `FeedbackChannel.PatchStatic.prop3_expHits` | FeedbackChannel/PatchStatic.lean:65 | full | |
+| §3 | Prop 3: filling categories in decreasing order of `F_c/n_c` maximizes expected hits at every patch count | `FeedbackChannel.PatchGreedy.prop3_greedy` | FeedbackChannel/PatchGreedy.lean:218 | full | `IsGreatest` over all allocations of total `M`, fractional ones included, at every `0 ≤ M ≤ n`. The value of an allocation is `Σ m_c F_c/n_c`, which by Prop 3 does not depend on the order of the patches. The proof uses a Lagrangian bound (`curve_le_dual`:57, `curve_eq_dual`:85, `alloc_le_dual`:142), not the note's exchange argument. |
+| §3 | Prop 5: if `γ′` refines `γ` then `m*(γ′) ≤ m*(γ)` for every failure pattern | `FeedbackChannel.PatchGreedy.prop5` | FeedbackChannel/PatchGreedy.lean:336 | full | Slightly stronger than stated: the coarse schedule may use any order. A category map is given as its list of `(n_c, F_c)`. `Refines` groups the fine categories into one part per coarse category, whose counts add up. The key step is `curve_mono_refine`:298 (the coarse curve lies below the fine greedy curve), which plays the role of the note's proportional allocation. |
+| §3 | "The stopping time under the static schedule is not monotone": `(4,2)`, H=2 gives 10/3; `(2,1),(2,1)` gives 7/2 | `FeedbackChannel.PatchStatic.static_not_monotone` | FeedbackChannel/PatchStatic.lean:391 | full | Finite. The six-item example (record `001101`) is not formalized. |
+| §3 | Lemma 9 (pair commutation) | `FeedbackChannel.PatchDP.lemma9` | FeedbackChannel/PatchDP.lean:493 | full | `twoPatch` is `two_patch_value`. The hypothesis `H ≥ 2` is not needed for the algebraic identity; it is kept because `twoPatch` models the two-patch run only when `H ≥ 2`. |
+| §3 | Prop 7 values: H=2, (2,1) before (4,2) is 5/2 against 8/3 in `{(1,1),(2,1),(4,2)}` and 19/6 against 37/12 in `{(2,1),(4,2)}` | `FeedbackChannel.PatchWitness.prop7_note_values` | FeedbackChannel/PatchWitness.lean:2148 | full | The values are computed from the programme's definition. 325 generated lemmas evaluate every reachable state. |
+| §3 | Prop 7 values, second witness (H=3, ten items, five failures, four categories) | `FeedbackChannel.PatchWitness3.prop7_note_context_values` | FeedbackChannel/PatchWitness3.lean:1913 | full | 9/2 against 55/12, and 25/6 against 49/12. Also checks the totals. |
+| §3 | Prop 7: "No such rule is optimal": the note's proof | `FeedbackChannel.PatchWitness.prop7_note_pair_insufficient` | FeedbackChannel/PatchWitness.lean:2159 | supporting lemma | **Gap in the note's proof.** In `{(1,1),(2,1),(4,2)}` the category `(1,1)` is also optimal (5/2). So the ranking `(1,1)` over `(4,2)` over `(2,1)` makes an optimal first patch in both of the note's states. The same holds for the second witness, where `(1,1)` ties `(4,2)` at 49/12. A reversal refutes an index rule only when the preferred category is the unique optimum. |
+| §3 | Prop 7 (own counts), corrected witness pair | `FeedbackChannel.PatchWitness.prop7_own_counts` | FeedbackChannel/PatchWitness.lean:2178 | full | `{(2,1),(2,1),(4,2)}` (3 against 37/12) and `{(2,1),(4,2)}`, H=2, both with unique optima. Holds for every strict index (`key (2,1) ≠ key (4,2)`), i.e. a fixed tie-break, which the note's "ranks the same way" presupposes. With state-dependent tie-breaking no index rule can be refuted. |
+| §3 | Prop 7 (own counts), policy form: the rule's expected cost exceeds the optimum | `FeedbackChannel.PatchWitness.prop7_own_counts_policy` | FeedbackChannel/PatchWitness.lean:2199 | full | Via `val_le_pval`. |
+| §3 | Prop 7 with totals and category count, corrected witness pair | `FeedbackChannel.PatchWitness.prop7_with_context` | FeedbackChannel/PatchWitness.lean:2226 | full | `{(2,1),(2,1),(4,1),(4,2)}` and `{(2,1),(3,1),(3,1),(4,2)}`, H=2. They agree on items (12), failures (5) and categories (4) (`prop7_context_pair`:2213), so this covers both richer contexts. The enumeration counts (30/125/120 reversals) are not formalized; they count reversals, not refuting pairs. |
+| §3 | Prop 8 witness: `{(2,1),(5,2)}`, H=2, (5,2) first 69/20, (2,1) first 7/2 | `FeedbackChannel.PatchWitness.prop8_witness` | FeedbackChannel/PatchWitness.lean:2252 | full | Finite; 69/20 is the optimum. The counts (82, 131) are not formalized. |
+| §3 | "Greedy is not optimal": `(4,2),(2,1)`, H=2, greedy 19/6 against 37/12 | `FeedbackChannel.PatchWitness.greedy_not_optimal` | FeedbackChannel/PatchWitness.lean:2263 | special case | Every legal policy that patches `(2,1)` first, as greedy does when rates tie, costs at least 19/6, more than 37/12. Greedy's exact value 19/6 is not proved. |
+| §2 | Prop 2c: `Φ(γ)∨Φ(γ′) = Φ(γ∨γ′)` iff `I(γ,γ′)` is acyclic | `FeedbackChannel.LatticeJoin.prop2c` | FeedbackChannel/LatticeJoin.lean:476 | full | Category maps are labelings `ι → R`, `ι → C`. Records are `ι → Bool`. "Equal row and column counts iff equal cell counts, for all records" iff Mathlib's `SimpleGraph.IsAcyclic` holds for the bipartite intersection graph on `R ⊕ C`. |
+| §2 | Prop 2c in lattice form (Setoid kernels; the note's `∨` is Mathlib's `⊓`) | `FeedbackChannel.LatticeJoin.prop2c_setoid` | FeedbackChannel/LatticeJoin.lean:501 | full | |
+| §2 | Prop 2c core: on the box `0 ≤ w ≤ |cell|`, margins determine the cell weights iff the graph is acyclic | `FeedbackChannel.LatticeJoin.margins_determine_iff_acyclic` | FeedbackChannel/LatticeJoin.lean:317 | full | Forest direction: a cut across a bridge (`acyclic_margins_zero`:63). Cycle direction: a `±1` alternating weight along a path that closes a non-bridge edge (`not_acyclic_witness`:253). The note peels leaves and uses an explicit cycle instead; the statements are the same. |
+| §2 | Prop 2c core, integer weights (no box) | `FeedbackChannel.LatticeJoin.margins_determine_int_iff` | FeedbackChannel/LatticeJoin.lean:301 | full | |
+| §2 | Prop 2c: "cell counts determine margins, so the refined channel is always at least as fine" | `FeedbackChannel.LatticeJoin.cells_determine_margins` | FeedbackChannel/LatticeJoin.lean:467 | full | |
+| §2 | Prop 2c witness: rows `{0,1}|{2,3}`, columns `{0,2}|{1,3}`, records `1001`, `0110` | `FeedbackChannel.LatticeJoin.prop2c_four_cycle_witness` | FeedbackChannel/LatticeJoin.lean:511 | full | Finite; also derives that the 4-cycle graph is not acyclic. |
+| §1 | Prop 1: `p ≤ q` implies `TV(p#P,p#Q) ≤ TV(q#P,q#Q)` | `FeedbackChannel.LatticeOrder.prop1_mono` | FeedbackChannel/LatticeOrder.lean:35 | full | Records are any finite type and channels are functions; `TV` is `max_U |P(U)−Q(U)|` over unions of blocks, as in the note's proof. `P, Q` are arbitrary rational weights, so all distributions are included. |
+| §1 | Prop 1 converse: if `p ≰ q`, point masses give TV 1 through `p` and 0 through `q` | `FeedbackChannel.LatticeOrder.prop1_converse` | FeedbackChannel/LatticeOrder.lean:62 | full | |
+| §2 | Prop 2: `Φ(γ) ≤ Φ(γ′)` iff `γ ≤ γ′` (order embedding) | `FeedbackChannel.LatticeOrder.prop2` | FeedbackChannel/LatticeOrder.lean:126 | full | Labelings; `Φ` is the per-block pass counts. |
+| §2 | Prop 2 endpoint: `Φ(singletons)` = item-level | `FeedbackChannel.LatticeOrder.prop2_item_level` | FeedbackChannel/LatticeOrder.lean:156 | full | The `score_only` endpoint holds by definition (one block gives the total pass count) and is not stated separately. |
+
+**Not formalized:** Proposition 2b (meets are preserved; it needs the "transpositions along a
+connected graph" argument), Proposition 6 (the optimal adaptive schedule is monotone; it needs a
+model of policies under coarser information), the commit-until-hit witness, the claim that greedy
+is optimal when every failure must be hit, the lattice fixtures, and every enumeration count.
