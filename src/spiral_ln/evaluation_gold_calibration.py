@@ -51,6 +51,23 @@ A2 already holds.
    fixed-point integer brackets with the exact law as fallback), the
    inversion and the exact judge tests at every retained ``eta_0``, and the
    Bonferroni union at level ``1 - 2 alpha``.
+8. Level-alpha tests of the tetrad ``c_12 c_34 = c_13 c_24`` on ``m`` items:
+   the symmetric kernel of the tetrad as an integer table on four items, the
+   exact U-statistic from counts and its exact variance (Hoeffding's
+   ``zeta_c`` by marginalising the kernel), the influence function's
+   factorisation under the model into two latent-free contrasts, a variance
+   bound over every four-rater model (and over a stated region), the
+   Cantelli/Chebyshev tests it calibrates, and an exact randomized block sign
+   test valid for every distribution satisfying the tetrad; sizes and powers
+   are finite sums or rigorous integer brackets.
+9. A confidence interval for ``eps_1`` with no plug-in: six conditionally
+   binomial counts, exact Clopper-Pearson intervals, a union bound, and the
+   coordinatewise monotone maps to ``eta_1`` and ``eps_1``; the delta
+   variance of ``eps1_hat`` with ``eta_1`` estimated.
+10. The asymmetric inversion as a rational function of the Dawid-Skene root
+   ``R``: Sturm counts certify (or refute) monotonicity on a bracket, a
+   Lipschitz enclosure covers the rest, and an exact witness shows the
+   bracket ends need not bracket ``eps1_hat``.
 
 Nothing here calls a model.  Every quantity is a ``fractions.Fraction``; floats
 are rejected at the boundary.
@@ -60,6 +77,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from fractions import Fraction as Q
+from functools import lru_cache
 from itertools import product
 from math import comb, factorial, gcd, isqrt
 
@@ -1256,8 +1274,9 @@ def calibrate_asymmetric(record: RecordTable, declared_judge_error=None, alpha=Q
     table, the asymmetric inversion at the fitted rates, corrected counts and
     the judge module's tests.  When the fit is bracketed the inversion is
     evaluated at both ends of the root's bracket; those are the ends of the
-    ``eps1`` bracket only if the inversion is monotone in the root, which is
-    not checked here."""
+    ``eps1`` bracket only if the inversion is monotone in the root, which need
+    not hold (``monotonicity_fixture``), so the output also carries the
+    certified ``eps1_enclosure`` of ``asymmetric_eps1_enclosure``."""
 
     alpha = _probability(alpha, "alpha")
     declared = None if declared_judge_error is None else _probability(declared_judge_error, "declared_judge_error")
@@ -1291,6 +1310,11 @@ def calibrate_asymmetric(record: RecordTable, declared_judge_error=None, alpha=Q
                            "tests": _judge_tests(table, error, alpha, declared is None)})
     out.update({"status": fit["status"], "inversions": inversions,
                 "bracket_ends_are_a_bracket_only_if_monotone": fit["status"] == "bracketed"})
+    if fit["status"] == "bracketed":
+        sigma = 1 if fit["moments"]["covariances"][(2, 3)] > 0 else -1
+        out["eps1_enclosure"] = asymmetric_eps1_enclosure(
+            fit["moments"], measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"],
+            fit["root_bracket"][0], fit["root_bracket"][1], sigma)
     return out
 
 
@@ -2204,6 +2228,1016 @@ def judges_separated(independent: dict, shared: dict) -> bool:
     return a is not None and b is not None and (a[1] < b[0] or b[1] < a[0])
 
 
+# --- 8. level-alpha tests of the four-rater tetrad (0.4) ----------------------
+
+TETRAD = "tetrad_12_34_vs_13_24"
+TETRAD_SIDES = ("greater", "two_sided")
+TETRAD_KERNEL_BOUND = 4       # max |K| over all 16^4 cell quadruples (exhaustive; checked in verify)
+UNIVERSAL_REGION = (Q(1, 4), Q(2), Q(2))
+FIXTURE_REGION = (Q(3, 16), Q(17, 20), Q(13, 20))
+TETRAD_ROOT_BITS = 32
+
+
+def _split_term(x, y, z, w) -> int:
+    """``Delta_14 Delta_23`` for the split ``{x, y | z, w}`` of four items, with
+    ``D_a(P)`` rater ``a``'s difference across a pair and ``Delta_ab = D_a(xy)
+    D_b(zw) - D_a(zw) D_b(xy)`` (raters 1..4 at positions 0..3)."""
+
+    d = [x[a] - y[a] for a in range(4)]
+    e = [z[a] - w[a] for a in range(4)]
+    return (d[0] * e[3] - e[0] * d[3]) * (d[1] * e[2] - e[1] * d[2])
+
+
+@lru_cache(maxsize=1)
+def tetrad_kernel() -> tuple[int, ...]:
+    """The integer kernel ``K`` on four items, flat in the order of
+    ``product(CELLS4, repeat=4)``: ``K = sum over the three splits of
+    Delta_14 Delta_23``.
+
+    ``K / 24`` is the symmetric kernel of the tetrad ``c_12 c_34 - c_13 c_24``:
+    with ``g_ab(x, y) = (x_a - y_a)(x_b - y_b) / 2`` (unbiased for ``c_ab`` on
+    two items), averaging ``g_12 g_34 - g_13 g_24`` over the eight orderings
+    that keep a split gives ``Delta_14 Delta_23 / 8`` (expand the product of
+    the two determinants), so ``E K = 24 (c_12 c_34 - c_13 c_24)`` for every
+    distribution.  Under the four-rater model, given the four latent classes
+    ``E[D_a(ij) | Y] = delta_a (Y_i - Y_j)``, so each determinant has
+    conditional mean ``delta_a delta_b ((Y_i - Y_j)(Y_k - Y_l) - (Y_k - Y_l)(Y_i
+    - Y_j)) = 0``, and the two determinants involve disjoint raters: each
+    split term is a product of two conditionally independent mean-zero
+    factors."""
+
+    return tuple(_split_term(x, y, z, w) + _split_term(x, z, y, w) + _split_term(x, w, y, z)
+                 for x, y, z, w in product(CELLS4, repeat=4))
+
+
+def _integer_weights4(table: FourRaterTable) -> tuple[list[int], int]:
+    probs = [table.probability(c) for c in CELLS4]
+    den = 1
+    for p in probs:
+        den = den * p.denominator // gcd(den, p.denominator)
+    return [int(p * den) for p in probs], den
+
+
+def tetrad_moments(table: FourRaterTable) -> dict[str, object]:
+    """The tetrad ``theta = c_12 c_34 - c_13 c_24`` and Hoeffding's ``zeta_c =
+    Var E[h | X_1..X_c]`` of its symmetric kernel ``h = K / 24``, exactly, by
+    marginalising the kernel one item at a time (integer arithmetic over a
+    common denominator).  ``theta`` is cross-checked against the moment
+    residual of ``four_rater_residuals``."""
+
+    n, den = _integer_weights4(table)
+    kernel = tetrad_kernel()
+    k3 = [sum(n[w] * kernel[i * 16 + w] for w in range(16) if n[w]) for i in range(4096)]
+    k2 = [sum(n[z] * k3[i * 16 + z] for z in range(16) if n[z]) for i in range(256)]
+    k1 = [sum(n[y] * k2[x * 16 + y] for y in range(16) if n[y]) for x in range(16)]
+    k0 = sum(n[x] * k1[x] for x in range(16))
+    s = {1: sum(n[x] * k1[x] ** 2 for x in range(16)),
+         2: sum(n[i >> 4] * n[i & 15] * k2[i] ** 2 for i in range(256)),
+         3: sum(n[i >> 8] * n[(i >> 4) & 15] * n[i & 15] * k3[i] ** 2 for i in range(4096)),
+         4: sum(n[i >> 12] * n[(i >> 8) & 15] * n[(i >> 4) & 15] * n[i & 15] * kernel[i] ** 2
+                for i in range(65536) if kernel[i])}
+    theta = Q(k0, 24 * den ** 4)
+    zeta = {c: Q(s[c], 576 * den ** (8 - c)) - theta ** 2 for c in (1, 2, 3, 4)}
+    residual = four_rater_residuals(four_rater_moments(table))[TETRAD]
+    if residual != theta:
+        raise AssertionError("the kernel's mean disagrees with the tetrad residual")
+    return {"tetrad": theta, "zeta": zeta}
+
+
+def _tetrad_weights(size: int) -> dict[int, Q]:
+    m = _size(size)
+    if m < 4:
+        raise ValueError("the tetrad U-statistic needs at least four items")
+    total = comb(m, 4)
+    return {c: Q(comb(4, c) * comb(m - 4, 4 - c), total) for c in (1, 2, 3, 4)}
+
+
+def tetrad_u_variance(zeta: dict, size) -> Q:
+    """``Var U_m = sum_c C(4, c) C(m - 4, 4 - c) / C(m, 4) zeta_c`` (Hoeffding
+    1948; Serfling 1980, 5.2.1), exact."""
+
+    weights = _tetrad_weights(size)
+    return sum((weights[c] * zeta[c] for c in (1, 2, 3, 4)), Q(0))
+
+
+def _variance_cap(delta: Q) -> Q:
+    """``g(delta) >= v_a(y) = mu(1 - mu)`` for both classes: ``1/4``, and when
+    ``|delta| > 1/2`` the two class means are pinned on either side of one half
+    (``s >= |delta|``, ``t <= 1 - |delta|`` or the mirror), so ``|delta| (1 -
+    |delta|)``."""
+
+    d = abs(delta)
+    return Q(1, 4) if d <= HALF else d * (1 - d)
+
+
+def tetrad_influence_variance(prior, false_negatives, false_positives) -> dict[str, object]:
+    """Under the four-rater model the influence function of the tetrad
+    factorises: with ``Y_a = x_a - p_a`` and ``c_ab = u delta_a delta_b``,
+    ``c_34 phi_12 + c_12 phi_34 - c_24 phi_13 - c_13 phi_24 = u (delta_4 Y_1 -
+    delta_1 Y_4)(delta_3 Y_2 - delta_2 Y_3)`` (group the four products; the
+    constants cancel because the tetrad vanishes), and ``delta_4 Y_1 - delta_1
+    Y_4 = delta_4 eps_1 - delta_1 eps_4`` with ``eps_a = x_a - E[x_a | Y]`` (the
+    latent terms cancel).  The two factors are conditionally independent with
+    mean zero, so ``Var IF = 16 zeta_1 = u^2 E[(delta_4^2 v_1 + delta_1^2
+    v_4)(delta_3^2 v_2 + delta_2^2 v_3)]`` with ``v_a = v_a(Y)`` the
+    conditional variances.  Also returns the point's region coordinates
+    ``(u, A, B)``, ``A = delta_1^2 + delta_4^2``, ``B = delta_2^2 + delta_3^2``, and
+    the caps ``h_14 = delta_4^2 g_1 + delta_1^2 g_4``, ``h_23`` likewise."""
+
+    prior = _probability(prior, "prior")
+    alphas, betas = _four(false_negatives, "false_negatives"), _four(false_positives, "false_positives")
+    sens = [1 - a for a in alphas]
+    delta = [s - b for s, b in zip(sens, betas)]
+    u = prior * (1 - prior)
+    var = {1: [s * (1 - s) for s in sens], 0: [b * (1 - b) for b in betas]}
+
+    def factor(v: list) -> Q:
+        return (delta[3] ** 2 * v[0] + delta[0] ** 2 * v[3]) * (delta[2] ** 2 * v[1] + delta[1] ** 2 * v[2])
+
+    value = u * u * (prior * factor(var[1]) + (1 - prior) * factor(var[0]))
+    caps = [_variance_cap(d) for d in delta]
+    return {"influence_variance": value, "zeta1": value / 16, "u": u, "deltas": delta,
+            "a": delta[0] ** 2 + delta[3] ** 2, "b": delta[1] ** 2 + delta[2] ** 2,
+            "h14": delta[3] ** 2 * caps[0] + delta[0] ** 2 * caps[3],
+            "h23": delta[2] ** 2 * caps[1] + delta[1] ** 2 * caps[2]}
+
+
+def _region(region) -> tuple[Q, Q, Q]:
+    if not isinstance(region, (tuple, list)) or len(region) != 3:
+        raise ValueError("region must be (u_max, a_max, b_max)")
+    u, a, b = (_as_q(v, "region bound") for v in region)
+    if not (0 < u <= Q(1, 4) and 0 <= a <= 2 and 0 <= b <= 2):
+        raise ValueError("region needs 0 < u_max <= 1/4 and 0 <= a_max, b_max <= 2")
+    return u, a, b
+
+
+def _zeta_bounds(u: Q, h14: Q, h23: Q) -> tuple[Q, Q]:
+    """``zeta_1 <= u^2 h_14 h_23 / 16`` and ``zeta_4 <= (1/4 + 4u (h_14 + h_23) +
+    16 h_14 h_23 (u + 2u^2)) / 64``.  The second: ``zeta_4 = E h^2 <= E H^2`` for a
+    single split (``h`` averages three identically distributed split terms);
+    ``E[Delta_14^2 | Y] = V_1(ij) V_4(kl) + V_1(kl) V_4(ij) + delta_4^2 (V_1(ij) e_kl
+    + V_1(kl) e_ij) + delta_1^2 (V_4(kl) e_ij + V_4(ij) e_kl)`` with ``V_a(ij) =
+    v_a(Y_i) + v_a(Y_j) <= 2 g_a`` and ``e_ij = [Y_i != Y_j]``, so it is at most
+    ``1/2 + 2 h_14 e`` with ``e = e_ij + e_kl``; the two determinants are
+    conditionally independent; ``E e = 4u`` and ``E e^2 = 4u + 8u^2``."""
+
+    z1 = u * u * h14 * h23 / 16
+    z4 = (Q(1, 4) + 4 * u * (h14 + h23) + 16 * h14 * h23 * (u + 2 * u * u)) / 64
+    return z1, z4
+
+
+def tetrad_variance_bound(size, region=UNIVERSAL_REGION) -> dict[str, object]:
+    """An upper bound on ``Var U_m`` valid at every null point of the region
+    ``{pi (1 - pi) <= u_max, delta_1^2 + delta_4^2 <= a_max, delta_2^2 + delta_3^2
+    <= b_max}`` of the four-rater model.  ``h_14 <= min(a_max / 4, 1/4)``: the
+    first because ``g <= 1/4``; the second because ``sup (y^2 g(x) + x^2 g(y)) =
+    1/4`` over ``[0, 1]^2`` (both at most 1/2: at most ``(x^2 + y^2)/4 <= 1/8``;
+    ``x > 1/2 >= y``: at most ``x(1 - x)/4 + x^2/4 = x/4``; both above 1/2: it is
+    ``p (s - 2p)`` with ``p = xy``, ``s = x + y <= 1 + p``, so at most ``p (1 - p)``).
+    With ``zeta_c / c`` non-decreasing (Hoeffding 1948; Serfling 1980, Lemma
+    5.2.1A), ``Var U_m <= w_1 zeta_1 + (w_2 / 2 + 3 w_3 / 4 + w_4) zeta_4`` and the
+    bounds of ``_zeta_bounds`` increase in ``u, h_14, h_23``.  The default region
+    is every four-rater model."""
+
+    u, a, b = _region(region)
+    weights = _tetrad_weights(size)
+    h14, h23 = min(a / 4, Q(1, 4)), min(b / 4, Q(1, 4))
+    z1, z4 = _zeta_bounds(u, h14, h23)
+    tail = weights[2] / 2 + 3 * weights[3] / 4 + weights[4]
+    return {"size": _size(size), "region": (u, a, b), "h14": h14, "h23": h23, "zeta1_bound": z1,
+            "zeta4_bound": z4, "first_order_weight": weights[1], "higher_order_weight": tail,
+            "variance_bound": weights[1] * z1 + tail * z4}
+
+
+def tetrad_point_variance_bound(size, prior, false_negatives, false_positives) -> Q:
+    """The same bound with the point's own ``u, h_14, h_23`` (tighter than any
+    region containing it)."""
+
+    point = tetrad_influence_variance(prior, false_negatives, false_positives)
+    weights = _tetrad_weights(size)
+    z1, z4 = _zeta_bounds(point["u"], point["h14"], point["h23"])
+    return weights[1] * z1 + (weights[2] / 2 + 3 * weights[3] / 4 + weights[4]) * z4
+
+
+@lru_cache(maxsize=1)
+def _pair_products() -> dict[tuple[int, int], tuple[tuple[int, ...], ...]]:
+    """``gamma_ab(x, y) = (x_a - y_a)(x_b - y_b)`` on cell indices, for the four
+    pairs the tetrad uses (0-based raters)."""
+
+    out = {}
+    for a, b in ((0, 1), (2, 3), (0, 2), (1, 3)):
+        out[(a, b)] = tuple(tuple((x[a] - y[a]) * (x[b] - y[b]) for y in CELLS4) for x in CELLS4)
+    return out
+
+
+def _tetrad_u_from_counts(counts) -> Q:
+    """``U_m`` from the sixteen cell counts in ``O(16^2)``: with ``gamma = 2 g``,
+    the sum of ``gamma_ab(i, j) gamma_cd(k, l)`` over ordered distinct
+    ``(i, j, k, l)`` is ``Gamma_ab Gamma_cd + 2 T - 4 sum_x n_x r_ab(x) r_cd(x)``,
+    where ``Gamma_ab = sum n_x n_y gamma_ab``, ``T = sum n_x n_y gamma_ab gamma_cd``
+    (``{k, l} = {i, j}``) and ``r_ab(x) = sum_y n_y gamma_ab(x, y)`` (one shared
+    item, four ways); ``U = (S_12,34 - S_13,24) / (4 m (m-1) (m-2) (m-3))``."""
+
+    nz = [(i, c) for i, c in enumerate(counts) if c]
+    m = sum(c for _, c in nz)
+    gam = _pair_products()
+
+    def ordered_sum(p: tuple, q: tuple) -> int:
+        gp, gq = gam[p], gam[q]
+        big_p = big_q = cross = shared = 0
+        for x, nx in nz:
+            rp = rq = 0
+            row_p, row_q = gp[x], gq[x]
+            for y, ny in nz:
+                rp += ny * row_p[y]
+                rq += ny * row_q[y]
+                cross += nx * ny * row_p[y] * row_q[y]
+            big_p += nx * rp
+            big_q += nx * rq
+            shared += nx * rp * rq
+        return big_p * big_q + 2 * cross - 4 * shared
+
+    return Q(ordered_sum((0, 1), (2, 3)) - ordered_sum((0, 2), (1, 3)), 4 * m * (m - 1) * (m - 2) * (m - 3))
+
+
+def _integer_counts4(table: FourRaterTable) -> list[int]:
+    counts = [table.cells[c] for c in CELLS4]
+    if any(c.denominator != 1 for c in counts) or sum(counts) < 4:
+        raise ValueError("the tetrad tests need integer counts on at least four items")
+    return [int(c) for c in counts]
+
+
+def tetrad_u_statistic(table: FourRaterTable) -> Q:
+    """The unbiased U-statistic of ``c_12 c_34 - c_13 c_24`` on the observed
+    counts, exactly."""
+
+    return _tetrad_u_from_counts(_integer_counts4(table))
+
+
+def _side(side: str) -> str:
+    if side not in TETRAD_SIDES:
+        raise ValueError(f"side must be one of {TETRAD_SIDES}")
+    return side
+
+
+def _tetrad_critical_value(size: int, region, alpha: Q, side: str) -> tuple[Q, dict]:
+    bound = tetrad_variance_bound(size, region)
+    v = bound["variance_bound"]
+    square = v * (1 - alpha) / alpha if side == "greater" else v / alpha
+    return root_bracket(square, TETRAD_ROOT_BITS)["upper"], bound
+
+
+def tetrad_cantelli_test(table: FourRaterTable, region=UNIVERSAL_REGION, alpha=Q(1, 20),
+                         side: str = "greater") -> dict[str, object]:
+    """Reject conditional independence when ``U_m >= t`` (``side="greater"``,
+    the copying direction when ``c_34 > 0``) or ``|U_m| >= t``.  ``t`` is a
+    rational upper bound on ``sqrt(V (1 - alpha) / alpha)`` (Cantelli) or
+    ``sqrt(V / alpha)`` (Chebyshev), ``V`` the region's variance bound.  Under
+    every null point of the region ``E U_m = 0`` and ``Var U_m <= V``, so the size
+    is at most ``alpha``: a theorem, for every four-rater model with the default
+    region."""
+
+    alpha, side = _probability(alpha, "alpha"), _side(side)
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must lie strictly inside (0, 1)")
+    counts = _integer_counts4(table)
+    m = sum(counts)
+    t, bound = _tetrad_critical_value(m, region, alpha, side)
+    u_stat = _tetrad_u_from_counts(counts)
+    reject = u_stat >= t if side == "greater" else abs(u_stat) >= t
+    return {"size": m, "u_statistic": u_stat, "critical_value": t, "variance_bound": bound["variance_bound"],
+            "region": bound["region"], "alpha": alpha, "side": side, "reject": reject}
+
+
+def tetrad_cantelli_power_bound(alternative: FourRaterTable, size, region=UNIVERSAL_REGION,
+                                alpha=Q(1, 20), side: str = "greater") -> dict[str, object]:
+    """A rigorous lower bound on the power at a distribution with tetrad
+    ``tau``: with the exact ``Var U_m`` there, Cantelli gives ``P(U_m < t) <= Var
+    / (Var + (tau - t)^2)`` when ``tau > t`` (for the two-sided test ``|tau| > t``
+    and the same bound on the matching tail).  Zero when the margin is not
+    positive.  Also the exact null-free ingredients: ``tau``, ``Var U_m`` and the
+    squared standardized margin."""
+
+    alpha, side = _probability(alpha, "alpha"), _side(side)
+    m = _size(size)
+    t, bound = _tetrad_critical_value(m, region, alpha, side)
+    moments = tetrad_moments(alternative)
+    tau, var = moments["tetrad"], tetrad_u_variance(moments["zeta"], m)
+    margin = tau - t if side == "greater" else abs(tau) - t
+    lower = 1 - var / (var + margin ** 2) if margin > 0 else Q(0)
+    return {"size": m, "tetrad": tau, "variance": var, "critical_value": t,
+            "variance_bound": bound["variance_bound"], "margin": margin,
+            "standardized_margin_squared": margin * abs(margin) / var if var else None,
+            "power_lower_bound": lower, "region": bound["region"], "side": side, "alpha": alpha}
+
+
+def tetrad_sign_block_law(table: FourRaterTable) -> dict[str, Q]:
+    """Per block of four items, ``Z = sign(K)`` with probability ``|K| / 4``
+    (``max |K| = 4`` over all ``16^4`` quadruples; an independent uniform ``U``
+    in ``0..3``: ``Z = sign(K)`` iff ``U < |K|``), else ``0``.  ``E Z = E K / 4
+    = 6 tau``; so whenever the tetrad
+    vanishes -- every four-rater model, informative or not -- ``P(Z = 1) =
+    P(Z = -1)``.  Exact, by enumerating the ``16^4`` cell quadruples."""
+
+    n, den = _integer_weights4(table)
+    kernel = tetrad_kernel()
+    plus = minus = 0
+    for i in range(65536):
+        k = kernel[i]
+        if not k:
+            continue
+        w = n[i >> 12] * n[(i >> 8) & 15] * n[(i >> 4) & 15] * n[i & 15]
+        if not w:
+            continue
+        if k > 0:
+            plus += w * k
+        else:
+            minus -= w * k
+    scale = TETRAD_KERNEL_BOUND * den ** 4
+    return {"p_plus": Q(plus, scale), "p_minus": Q(minus, scale), "p_nonzero": Q(plus + minus, scale),
+            "mean": Q(plus - minus, scale)}
+
+
+def sign_test_critical_value(trials: int, alpha, side: str = "greater") -> int:
+    """Smallest ``c`` with ``P(Bin(N, 1/2) >= c) <= alpha`` (``alpha / 2`` for the
+    two-sided test, which rejects at ``N_+ >= c`` or ``N_- >= c``); ``N + 1``
+    when no ``c`` qualifies.  Exact integer comparison against ``2^N``."""
+
+    if type(trials) is not int or trials < 0:
+        raise ValueError("trials must be a nonnegative integer")
+    alpha, side = _probability(alpha, "alpha"), _side(side)
+    level = alpha if side == "greater" else alpha / 2
+    limit = level.numerator << trials
+    acc, term, c = 0, 1, trials + 1
+    for k in range(trials, -1, -1):
+        if (acc + term) * level.denominator > limit:
+            break
+        acc += term
+        c = k
+        if k:
+            term = term * k // (trials - k + 1)
+    return c
+
+
+def _sign_rejects(n_plus: int, trials: int, c: int, side: str) -> bool:
+    return n_plus >= c or (side == "two_sided" and trials - n_plus >= c)
+
+
+def _rates_over_common_denominator(p_plus: Q, p_minus: Q) -> tuple[int, int, int, int]:
+    p_zero = 1 - p_plus - p_minus
+    if p_plus < 0 or p_minus < 0 or p_zero < 0:
+        raise ValueError("the block law must be a probability vector")
+    den = 1
+    for p in (p_plus, p_minus, p_zero):
+        den = den * p.denominator // gcd(den, p.denominator)
+    return int(p_plus * den), int(p_minus * den), int(p_zero * den), den
+
+
+SIGN_EXACT_BLOCKS = 300
+
+
+def sign_test_rejection_probability(blocks: int, p_plus, p_minus, alpha=Q(1, 20),
+                                    side: str = "greater") -> dict[str, object]:
+    """``P(reject)`` of the block sign test on ``n`` iid blocks with
+    ``P(Z = 1) = p_plus``, ``P(Z = -1) = p_minus``: ``sum_N P(N) P(reject | N)``,
+    ``N ~ Bin(n, q)``, ``q = p_plus + p_minus``, ``N_+ | N ~ Bin(N, p_plus / q)``.
+    Exact for ``n <= 300``; above, a rigorous bracket from ``_binomial_window``
+    (fixed-point integer bounds on both binomials, mass outside the windows
+    charged to the upper end).  Under the null (``p_plus = p_minus``) it is the
+    exact size, at most ``alpha`` by construction of the critical values."""
+
+    if type(blocks) is not int or blocks < 0:
+        raise ValueError("blocks must be a nonnegative integer")
+    alpha, side = _probability(alpha, "alpha"), _side(side)
+    a, b, c, den = _rates_over_common_denominator(_as_q(p_plus, "p_plus"), _as_q(p_minus, "p_minus"))
+    out = {"blocks": blocks, "p_plus": Q(a, den), "p_minus": Q(b, den), "alpha": alpha, "side": side}
+    if blocks <= SIGN_EXACT_BLOCKS:
+        total = 0
+        for n_nonzero in range(blocks + 1):
+            crit = sign_test_critical_value(n_nonzero, alpha, side)
+            if crit > n_nonzero:
+                continue
+            inner = sum(comb(n_nonzero, k) * a ** k * b ** (n_nonzero - k) for k in range(n_nonzero + 1)
+                        if _sign_rejects(k, n_nonzero, crit, side))
+            total += comb(blocks, n_nonzero) * c ** (blocks - n_nonzero) * inner
+        value = Q(total, den ** blocks)
+        out.update({"exact": value, "bracket": (value, value)})
+        return out
+    one = 1 << TAIL_BITS
+    outer = _binomial_window(blocks, a + b, den)
+    low = high = 0
+    for offset, (o_lo, o_hi) in enumerate(zip(outer["lo"], outer["hi"])):
+        n_nonzero = outer["start"] + offset
+        crit = sign_test_critical_value(n_nonzero, alpha, side)
+        if crit > n_nonzero:
+            continue
+        inner = _binomial_window(n_nonzero, a, a + b)
+        t_lo = t_hi = 0
+        for off, (i_lo, i_hi) in enumerate(zip(inner["lo"], inner["hi"])):
+            if _sign_rejects(inner["start"] + off, n_nonzero, crit, side):
+                t_lo += i_lo
+                t_hi += i_hi
+        low += o_lo * t_lo
+        high += o_hi * min(t_hi + inner["outside"], one)
+    high += outer["outside"] * one
+    scale = one * one
+    out.update({"exact": None, "bracket": (Q(low, scale), min(Q(high, scale), Q(1)))})
+    return out
+
+
+def tetrad_sign_test(items, uniforms, alpha=Q(1, 20), side: str = "greater") -> dict[str, object]:
+    """The exact block sign test on item-level labels.  Items ``4b..4b+3`` form
+    block ``b``; ``Z_b = sign(K_b)`` if ``uniforms[b] < |K_b|``, else ``0``, the
+    uniforms drawn in ``0..3`` independently of the labels.  Given ``N``
+    nonzero blocks, ``N_+ ~ Bin(N, 1/2)`` under every distribution with a
+    vanishing tetrad, so rejecting at ``N_+ >= c(N)`` has size at most
+    ``alpha`` for every parameter of the four-rater model: no nuisance, no
+    region.  The price is efficiency (blocks of four, rounding to signs)."""
+
+    alpha, side = _probability(alpha, "alpha"), _side(side)
+    if not isinstance(items, (list, tuple)) or any(cell not in CELLS4 for cell in items):
+        raise ValueError("items must be a sequence of cells in {0,1}^4")
+    blocks = len(items) // 4
+    if not isinstance(uniforms, (list, tuple)) or len(uniforms) < blocks \
+            or any(type(v) is not int or not 0 <= v < TETRAD_KERNEL_BOUND for v in uniforms):
+        raise ValueError("uniforms must give one integer in 0..3 per block")
+    kernel, index = tetrad_kernel(), {cell: i for i, cell in enumerate(CELLS4)}
+    n_plus = n_minus = 0
+    for b in range(blocks):
+        i, j, k, l = (index[items[4 * b + r]] for r in range(4))
+        value = kernel[((i * 16 + j) * 16 + k) * 16 + l]
+        if uniforms[b] < abs(value):
+            n_plus += value > 0
+            n_minus += value < 0
+    trials = n_plus + n_minus
+    crit = sign_test_critical_value(trials, alpha, side)
+    upper = _binomial_upper_tail(trials, HALF, n_plus)
+    lower = _binomial_upper_tail(trials, HALF, n_minus)
+    p_value = upper if side == "greater" else min(Q(1), 2 * min(upper, lower))
+    return {"blocks": blocks, "n_plus": n_plus, "n_minus": n_minus, "critical_value": crit,
+            "p_value": p_value, "reject": _sign_rejects(n_plus, trials, crit, side), "alpha": alpha, "side": side}
+
+
+def _compositions(total: int, parts: int):
+    if parts == 1:
+        yield (total,)
+        return
+    for first in range(total + 1):
+        for rest in _compositions(total - first, parts - 1):
+            yield (first,) + rest
+
+
+def tetrad_by_enumeration(size, table: FourRaterTable, alpha=Q(1, 20),
+                          regions=(UNIVERSAL_REGION, FIXTURE_REGION)) -> dict[str, object]:
+    """Every count table on ``m`` items (``C(m + 15, 15)`` of them) with its exact
+    multinomial weight: ``E U_m``, ``Var U_m`` and the exact rejection
+    probability of each Cantelli/Chebyshev test, for the cross-checks of the
+    unbiasedness, of the variance formula and of the size bound at small ``m``."""
+
+    m = _size(size)
+    if m < 4:
+        raise ValueError("the tetrad U-statistic needs at least four items")
+    alpha = _probability(alpha, "alpha")
+    n, den = _integer_weights4(table)
+    tests = {}
+    for region in regions:
+        for side in TETRAD_SIDES:
+            key = "region " + ",".join(str(v) for v in _region(region)) + " " + side
+            tests[key] = (side, _tetrad_critical_value(m, region, alpha, side)[0])
+    fact = [factorial(k) for k in range(m + 1)]
+    total = first = second = 0
+    rejected = {key: 0 for key in tests}
+    for counts in _compositions(m, 16):
+        weight = fact[m]
+        for i, c in enumerate(counts):
+            if c:
+                weight = weight // fact[c] * n[i] ** c
+        if not weight:
+            continue
+        total += weight
+        u_stat = _tetrad_u_from_counts(counts)
+        first += weight * u_stat
+        second += weight * u_stat * u_stat
+        for key, (side, t) in tests.items():
+            if (u_stat >= t) if side == "greater" else (abs(u_stat) >= t):
+                rejected[key] += weight
+    if total != den ** m:
+        raise AssertionError("the multinomial weights do not sum to D^m")
+    mean = first / total
+    return {"size": m, "tables": comb(m + 15, 15), "mean": mean, "variance": second / total - mean * mean,
+            "rejection": {key: Q(v, total) for key, v in rejected.items()},
+            "critical_values": {key: t for key, (_side, t) in tests.items()}}
+
+
+# --- 9. a confidence interval for eps_1 with no plug-in (0.4) ------------------
+
+INTERVAL_PARTS = ("disagreement_g2_c", "split_given_disagreement", "unanimous_given_agreement",
+                  "measured_accuracy", "measured_eps0", "measured_eps1")
+
+
+def _cp_interval(trials: int, successes: int, level: Q, resolution=RESOLUTION) -> tuple[Q, Q]:
+    """Outer rational ends of the two-sided level-``level`` Clopper-Pearson
+    interval: the lower end of the lower endpoint's bisection bracket and the
+    upper end of the upper endpoint's, on the exact integer tail.  The same
+    brackets as the judge module's ``clopper_pearson_bracket``; ``(0, 1)`` on no
+    trials."""
+
+    if trials == 0:
+        return Q(0), Q(1)
+    half = level / 2
+    low_end = Q(0)
+    if successes > 0:
+        low, high = Q(0), Q(1)
+        while high - low > resolution:
+            mid = (low + high) / 2
+            if _binomial_upper_tail(trials, mid, successes) < half:
+                low = mid
+            else:
+                high = mid
+        low_end = low
+    high_end = Q(1)
+    if successes < trials:
+        low, high = Q(0), Q(1)
+        while high - low > resolution:
+            mid = (low + high) / 2
+            if 1 - _binomial_upper_tail(trials, mid, successes + 1) >= half:
+                low = mid
+            else:
+                high = mid
+        high_end = high
+    return low_end, high_end
+
+
+def interval_counts(record: RecordTable) -> dict[str, int]:
+    """The integer counts the interval uses: ``rest = m - N_23`` (G2 and C
+    disagree), ``k_12`` (only G1 and G2 agree), ``k_all``, ``right = N_13``
+    (controller right against G1), ``right_wrong`` (judge wrong on those) and
+    ``wrong_wrong`` (judge says correct on a measured-wrong answer)."""
+
+    if any(v.denominator != 1 for v in record.cells.values()):
+        raise ValueError("the interval needs an integer count table")
+    out = {"size": int(record.total), "rest": 0, "k12": 0, "k_all": 0, "right": 0, "right_wrong": 0,
+           "wrong_wrong": 0}
+    for (x, v, g1, g2), weight in record.cells.items():
+        n = int(weight)
+        if g1 == g2 == x:
+            out["k_all"] += n
+        elif g1 == g2:
+            out["k12"] += n
+            out["rest"] += n
+        elif g1 == x:
+            out["rest"] += n
+        right = x == g1
+        out["right"] += n * right
+        out["right_wrong"] += n * (right and v == 0)
+        out["wrong_wrong"] += n * (not right and v == 1)
+    return out
+
+
+def _levels(alpha: Q, allocation) -> dict[str, Q]:
+    if allocation is None:
+        return {name: alpha / len(INTERVAL_PARTS) for name in INTERVAL_PARTS}
+    if not isinstance(allocation, dict) or set(allocation) != set(INTERVAL_PARTS):
+        raise ValueError(f"allocation must give a level to each of {INTERVAL_PARTS}")
+    levels = {name: _probability(allocation[name], name) for name in INTERVAL_PARTS}
+    if any(v <= 0 for v in levels.values()) or sum(levels.values()) != alpha:
+        raise ValueError("the allocated levels must be positive and sum to alpha")
+    return levels
+
+
+def _eps1_corner(eta: Q, accuracy: Q, eps0: Q, eps1: Q) -> Q:
+    return ((1 - accuracy) * eps1 * (1 - eta) - eta * accuracy * (1 - eps0)) / (1 - accuracy - eta)
+
+
+def _interval_from_counts(c: dict, levels: dict, resolution, cp=_cp_interval) -> dict[str, object]:
+    m, rest = c["size"], c["rest"]
+    th1 = cp(m, rest, levels["disagreement_g2_c"], resolution)
+    th2 = cp(rest, c["k12"], levels["split_given_disagreement"], resolution)
+    th3 = cp(m - rest, c["k_all"], levels["unanimous_given_agreement"], resolution)
+    acc = cp(m, c["right"], levels["measured_accuracy"], resolution)
+    e0 = cp(c["right"], c["right_wrong"], levels["measured_eps0"], resolution)
+    e1 = cp(m - c["right"], c["wrong_wrong"], levels["measured_eps1"], resolution)
+    out = {"intervals": {"disagreement_g2_c": th1, "split_given_disagreement": th2,
+                         "unanimous_given_agreement": th3, "measured_accuracy": acc,
+                         "measured_eps0": e0, "measured_eps1": e1}}
+    kappa = (1 - 2 * th1[1], 1 - 2 * th1[0])
+    if kappa[0] <= 0 or th3[0] <= HALF:
+        out.update({"status": "eta_unbounded", "eta_range": (Q(0), HALF), "eps1_range": (Q(0), Q(1))})
+        return out
+    a_sq = ((2 * th3[0] - 1) ** 2, (2 * th3[1] - 1) ** 2)
+    x_lo, x_hi = 2 * th2[0] - 1, 2 * th2[1] - 1
+    b_sq = (Q(0), max(x_lo ** 2, x_hi ** 2)) if x_lo <= 0 <= x_hi else (min(x_lo ** 2, x_hi ** 2),
+                                                                      max(x_lo ** 2, x_hi ** 2))
+    squares = [(a - b) * (k + 1 / k) / 4 + (a + b) / 2 for a in a_sq for b in b_sq for k in kappa]
+    s_lo, s_hi = min(squares), max(squares)
+    out.update({"kappa23_range": kappa, "square_range": (s_lo, s_hi)})
+    if s_lo <= 0:
+        out.update({"status": "eta_unbounded", "eta_range": (Q(0), HALF), "eps1_range": (Q(0), Q(1))})
+        return out
+    eta_hi = (1 - root_bracket(min(s_lo, Q(1)))["lower"]) / 2
+    eta_lo = Q(0) if s_hi >= 1 else max(Q(0), (1 - root_bracket(s_hi)["upper"]) / 2)
+    out["eta_range"] = (eta_lo, eta_hi)
+    if not 1 - acc[1] - eta_hi > 0:
+        out.update({"status": "eps1_undetermined", "eps1_range": (Q(0), Q(1))})
+        return out
+    corners = [_eps1_corner(eta, a, z0, z1) for eta in (eta_lo, eta_hi) for a in acc for z0 in e0 for z1 in e1]
+    out.update({"status": "stated", "raw_range": (min(corners), max(corners)),
+                "eps1_range": (max(Q(0), min(corners)), min(Q(1), max(corners)))})
+    return out
+
+
+def eps1_confidence_interval(record: RecordTable, alpha=Q(1, 20), allocation=None,
+                             resolution=RESOLUTION) -> dict[str, object]:
+    """A confidence interval for ``eps_1`` with coverage at least ``1 - alpha``
+    at every parameter of the symmetric model (graders and controller
+    conditionally independent and better than chance, gold flips independent
+    of controller and judge), with no plug-in and no grid.
+
+    Six counts are binomial given others: ``rest ~ Bin(m, theta_1)``, ``theta_1
+    = (1 - kappa_23)/2``; ``k_12 | rest ~ Bin(rest, theta_2)``, ``2 theta_2 - 1 =
+    (kappa_12 - kappa_13) / (1 - kappa_23)``; ``k_all | rest ~ Bin(m - rest,
+    theta_3)``, ``2 theta_3 - 1 = (kappa_12 + kappa_13) / (1 + kappa_23)`` (the
+    four-pattern multinomial factorised); ``right ~ Bin(m, a')``; ``right_wrong
+    | right ~ Bin(right, eps_0')``; ``wrong_wrong | right ~ Bin(m - right,
+    eps_1')``.  Exact Clopper-Pearson intervals at the allocated levels cover
+    all six with probability ``>= 1 - alpha`` (union bound).  On that event:
+    ``S = d_1^2 = ((A - B)(kappa + 1/kappa))/4 + (A + B)/2`` with ``A = (kappa_12 +
+    kappa_13)^2 / (1 + kappa)^2``, ``B = (kappa_12 - kappa_13)^2 / (1 - kappa)^2``,
+    ``kappa = kappa_23``, is monotone in each of ``A, B, kappa`` on ``(0, 1)`` (the
+    ``kappa``-derivative is ``(A - B)(1 - 1/kappa^2)/4``), so ``S`` lies between its
+    corner values and ``eta_1 = (1 - sqrt S)/2`` in the root-bracketed range;
+    ``eps_1 = ((1 - a') eps_1' (1 - eta) - eta a' (1 - eps_0')) / (1 - a' - eta)``
+    is a Moebius function of ``eta`` and of ``a'`` and affine with nonnegative
+    coefficients in ``eps_0', eps_1'``, so on a box where ``1 - a' - eta > 0`` it
+    lies between its sixteen corner values (clipped to ``[0, 1]``)."""
+
+    alpha = _probability(alpha, "alpha")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must lie strictly inside (0, 1)")
+    if not isinstance(record, RecordTable):
+        raise ValueError("record must be a RecordTable")
+    levels = _levels(alpha, allocation)
+    counts = interval_counts(record)
+    out = _interval_from_counts(counts, levels, resolution)
+    out.update({"counts": counts, "alpha": alpha, "levels": levels, "coverage": 1 - alpha,
+                "assumes": ("conditionally independent symmetric raters better than chance",
+                            "gold flips independent of controller and judge (judge note, section 5)"),
+                "plug_ins": ()})
+    return out
+
+
+def _eight_category_law(record: RecordTable) -> tuple[dict, int]:
+    """The record's law on (agreement pattern, judge wrong against G1):
+    everything the interval reads."""
+
+    law = {}
+    for (x, v, g1, g2), weight in record.cells.items():
+        key = "all" if g1 == g2 == x else (1, 2) if g1 == g2 else (1, 3) if g1 == x else (2, 3)
+        right = x == g1
+        wrong = int(v != right)
+        law[(key, wrong)] = law.get((key, wrong), Q(0)) + weight / record.total
+    den = 1
+    for p in law.values():
+        den = den * p.denominator // gcd(den, p.denominator)
+    return {k: int(p * den) for k, p in law.items()}, den
+
+
+def eps1_interval_coverage(size, prior, accuracy, judge_error, eps1, eta1, eta2, alpha=Q(1, 20),
+                           resolution=RESOLUTION) -> dict[str, object]:
+    """Exact coverage of ``eps1_confidence_interval`` on ``m`` items, by
+    enumerating the ``C(m + 7, 7)`` tables of the eight categories (agreement
+    pattern by judge-wrong) that determine it: ``P(eps_1 in interval)`` and
+    ``P(all six intervals cover)``; Clopper-Pearson ends cached."""
+
+    m = _size(size)
+    record = expected_record_table(1, prior, accuracy, judge_error, eps1, eta1, eta2)
+    law, den = _eight_category_law(record)
+    keys = [(key, wrong) for key in PATTERNS for wrong in (0, 1)]
+    weights = [law.get(k, 0) for k in keys]
+    probs = {k: Q(law.get(k, 0), den) for k in keys}
+    q = {key: probs[(key, 0)] + probs[(key, 1)] for key in PATTERNS}
+    right_mass = q["all"] + q[(1, 3)]
+    truth = {"disagreement_g2_c": q[(1, 2)] + q[(1, 3)],
+             "split_given_disagreement": q[(1, 2)] / (q[(1, 2)] + q[(1, 3)]),
+             "unanimous_given_agreement": q["all"] / (q["all"] + q[(2, 3)]),
+             "measured_accuracy": right_mass,
+             "measured_eps0": (probs[("all", 1)] + probs[((1, 3), 1)]) / right_mass,
+             "measured_eps1": (probs[((1, 2), 1)] + probs[((2, 3), 1)]) / (1 - right_mass)}
+    levels = _levels(_probability(alpha, "alpha"), None)
+    cache: dict = {}
+
+    def cp(n, k, level, res):
+        key = (n, k, level)
+        if key not in cache:
+            cache[key] = _cp_interval(n, k, level, res)
+        return cache[key]
+
+    fact = [factorial(k) for k in range(m + 1)]
+    total = covered = box = 0
+    for counts in _compositions(m, 8):
+        weight = fact[m]
+        for w, c in zip(weights, counts):
+            if c:
+                weight = weight // fact[c] * w ** c
+        if not weight:
+            continue
+        n = dict(zip(keys, counts))
+        k = {key: n[(key, 0)] + n[(key, 1)] for key in PATTERNS}
+        c = {"size": m, "rest": k[(1, 2)] + k[(1, 3)], "k12": k[(1, 2)], "k_all": k["all"],
+             "right": k["all"] + k[(1, 3)], "right_wrong": n[("all", 1)] + n[((1, 3), 1)],
+             "wrong_wrong": n[((1, 2), 1)] + n[((2, 3), 1)]}
+        result = _interval_from_counts(c, levels, resolution, cp)
+        total += weight
+        low, high = result["eps1_range"]
+        covered += weight * (low <= eps1 <= high)
+        box += weight * all(lo <= truth[name] <= hi for name, (lo, hi) in result["intervals"].items())
+    if total != den ** m:
+        raise AssertionError("the multinomial weights do not sum to D^m")
+    return {"size": m, "tables": comb(m + 7, 7), "coverage": Q(covered, total), "box_coverage": Q(box, total),
+            "nominal": 1 - _probability(alpha, "alpha"), "truth": truth}
+
+
+def eps1_delta_variance(prior, accuracy, judge_error, eps1, eta1, eta2) -> dict[str, Q]:
+    """First-order ``m Var(eps1_hat)`` with ``eta_1`` estimated from the same
+    record: ``eps1_hat = f(eta1_hat, a', eps', w)`` with ``eta1_hat`` from the
+    three agreement rates (``a' = A_13`` enters twice), gradient ``g`` per record
+    cell, ``g^T (diag p - p p^T) g``.  Exact when ``d_1`` is rational.  Split
+    into the judge-only part (``eta`` known, what the section 4 and 9 binomial
+    tests assume), the ``eta``-only part and their covariance."""
+
+    record = expected_record_table(1, prior, accuracy, judge_error, eps1, eta1, eta2)
+    kappas = pairwise_kappas(record.label_table())
+    gradient = eta_gradient(kappas, 1)
+    if gradient is None:
+        raise ValueError("the delta variance is exact only when d_1 is rational")
+    eta = (1 - gradient["polarity"]) / 2
+    measured = measured_judge_rates(record, 1)
+    a, e, w = measured["accuracy"], measured["judge_error"], measured["wrong_wrong_rate"]
+    den = 1 - a - eta
+    num = w * (1 - 2 * eta) - eta * (a - e)
+    f_eta = eps1_sensitivity(a, e, w, eta)
+    f_w, f_e, f_a = (1 - 2 * eta) / den, eta / den, (num - eta * den) / den ** 2
+    per_rate = gradient["per_agreement_rate"]
+    parts = {"judge": [], "eta": []}
+    weights = []
+    for (x, v, g1, g2), p in record.cells.items():
+        agree = {(1, 2): g1 == g2, (1, 3): g1 == x, (2, 3): g2 == x}
+        right = x == g1
+        parts["eta"].append(f_eta * sum((per_rate[pair] * agree[pair] for pair in PAIRS), Q(0)))
+        parts["judge"].append(f_a * right + f_e * (v != right) + f_w * (not right and v == 1))
+        weights.append(p)
+
+    def cov(f, g) -> Q:
+        mf = sum((p * x for p, x in zip(weights, f)), Q(0))
+        mg = sum((p * x for p, x in zip(weights, g)), Q(0))
+        return sum((p * x * y for p, x, y in zip(weights, f, g)), Q(0)) - mf * mg
+
+    judge, eta_part, cross = cov(parts["judge"], parts["judge"]), cov(parts["eta"], parts["eta"]), \
+        cov(parts["judge"], parts["eta"])
+    return {"total": judge + eta_part + 2 * cross, "judge_only": judge, "eta_only": eta_part, "cross": cross,
+            "binomial_plug_in": eps1 * (1 - eps1) / (1 - accuracy), "d_eps1_d_eta": f_eta}
+
+
+# --- 10. the asymmetric inversion as a function of the root (0.4) --------------
+
+def _poly(coefficients) -> tuple:
+    out = [Q(c) for c in coefficients]
+    while out and out[-1] == 0:
+        out.pop()
+    return tuple(out)
+
+
+def _poly_add(a: tuple, b: tuple) -> tuple:
+    n = max(len(a), len(b))
+    return _poly([(a[i] if i < len(a) else 0) + (b[i] if i < len(b) else 0) for i in range(n)])
+
+
+def _poly_scale(a: tuple, c) -> tuple:
+    return _poly([c * x for x in a])
+
+
+def _poly_mul(a: tuple, b: tuple) -> tuple:
+    if not a or not b:
+        return ()
+    out = [Q(0)] * (len(a) + len(b) - 1)
+    for i, x in enumerate(a):
+        for j, y in enumerate(b):
+            out[i + j] += x * y
+    return _poly(out)
+
+
+def _poly_der(a: tuple) -> tuple:
+    return _poly([i * a[i] for i in range(1, len(a))])
+
+
+def _poly_eval(a: tuple, x) -> Q:
+    value = Q(0)
+    for c in reversed(a):
+        value = value * x + c
+    return value
+
+
+def _poly_rem(a: tuple, b: tuple) -> tuple:
+    a = list(a)
+    while len(a) >= len(b) and a:
+        c, shift = a[-1] / b[-1], len(a) - len(b)
+        for i, y in enumerate(b):
+            a[i + shift] -= c * y
+        a = list(_poly(a))
+    return _poly(a)
+
+
+def sturm_root_count(poly, low, high) -> int:
+    """Number of distinct real roots of ``poly`` in ``(low, high]`` (Sturm's
+    theorem: sign changes of the Sturm sequence at ``low`` minus at ``high``),
+    exactly in rationals.  ``low`` must not be a root."""
+
+    p = _poly(poly)
+    low, high = _as_q(low, "low"), _as_q(high, "high")
+    if not low < high:
+        raise ValueError("need low < high")
+    if not p:
+        raise ValueError("the zero polynomial has no finite root count")
+    if _poly_eval(p, low) == 0:
+        raise ValueError("low is a root; move it")
+    seq = _sturm_sequence(p)
+    return _sturm_changes(seq, low) - _sturm_changes(seq, high)
+
+
+def _sturm_sequence(p: tuple) -> list[tuple]:
+    seq = [p, _poly_der(p)]
+    while seq[-1] and len(seq[-1]) > 1:
+        r = _poly_rem(seq[-2], seq[-1])
+        if not r:
+            break
+        seq.append(_poly_scale(r, -1))
+    return [s for s in seq if s]
+
+
+def _sturm_changes(seq: list[tuple], x: Q) -> int:
+    values = [v for v in (_poly_eval(s, x) for s in seq) if v != 0]
+    return sum(1 for u, v in zip(values, values[1:]) if (u > 0) != (v > 0))
+
+
+def sign_at_square_root(poly, radicand) -> int:
+    """The exact sign of ``poly(sqrt(r))``: reduce modulo ``R^2 = r`` to ``A + B
+    sqrt(r)``; the sign is that of ``A`` and ``B`` when they agree, else decided
+    by ``A^2`` against ``B^2 r``."""
+
+    r = _as_q(radicand, "radicand")
+    if r < 0:
+        raise ValueError("radicand must be nonnegative")
+    a = b = Q(0)
+    power_a, power_b = Q(1), Q(0)            # R^k = power_a + power_b sqrt(r)
+    for c in _poly(poly):
+        a += c * power_a
+        b += c * power_b
+        power_a, power_b = power_b * r, power_a
+    sa, sb = (a > 0) - (a < 0), (b > 0) - (b < 0)
+    if sb == 0 or sa == sb:
+        return sa if sa else sb
+    if sa == 0:
+        return sb
+    lhs, rhs = a * a, b * b * r
+    return sa if lhs > rhs else sb if lhs < rhs else 0
+
+
+def asymmetric_eps1_rational(moments: dict, measured_accuracy, measured_error, wrong_wrong_rate,
+                             sigma: int = 1) -> dict[str, tuple]:
+    """``eps_1`` of ``asymmetric_gold_noise_inverse`` as a rational function of
+    the Dawid-Skene root ``R``, the table's other moments fixed.  With ``P_1 = R
+    - sigma k_3 = 2R pi`` and ``P_0 = R + sigma k_3 = 2R (1 - pi)``, every fitted
+    rate is affine in ``R`` (``(1 - pi) delta_i`` and ``pi delta_i`` are), so each
+    class-weighted sum ``F, E_a, E_b, G_a, G_b`` is ``(cubic in R) / (2R)`` and
+    ``eps_1 = (e_a (2R w - g_a) + g_a (2R eps' - f)) / (e_a g_b + e_b g_a)``:
+    numerator degree at most 6, denominator at most 6, so the derivative's
+    numerator has degree at most 10."""
+
+    if sigma not in (1, -1):
+        raise ValueError("sigma must be +1 or -1")
+    a_m, e_m, w = (_probability(measured_accuracy, "measured_accuracy"),
+                   _probability(measured_error, "measured_error"),
+                   _probability(wrong_wrong_rate, "wrong_wrong_rate"))
+    p, cov, k3 = moments["marginals"], moments["covariances"], moments["third_cumulant"]
+    p1, p0 = _poly([-sigma * k3, 1]), _poly([sigma * k3, 1])
+    coefficient = {1: 1 / abs(cov[(2, 3)]), 3: sigma / cov[(1, 2)]}
+    sens = {i: _poly_add(_poly([p[i]]), _poly_scale(p0, coefficient[i] / 2)) for i in (1, 3)}
+    false_pos = {i: _poly_add(_poly([p[i]]), _poly_scale(p1, -coefficient[i] / 2)) for i in (1, 3)}
+    one = _poly([1])
+    flip = {1: _poly_add(one, _poly_scale(sens[1], -1)), 0: false_pos[1]}
+    acc = {1: sens[3], 0: _poly_add(one, _poly_scale(false_pos[3], -1))}
+    weight = {1: p1, 0: p0}
+
+    def weighted(term) -> tuple:
+        return _poly_add(_poly_mul(weight[1], term(1)), _poly_mul(weight[0], term(0)))
+
+    f = weighted(lambda y: flip[y])
+    e_a = weighted(lambda y: _poly_mul(_poly_add(one, _poly_scale(flip[y], -2)), acc[y]))
+    e_b = weighted(lambda y: _poly_mul(_poly_add(one, _poly_scale(flip[y], -2)), _poly_add(one, _poly_scale(acc[y], -1))))
+    g_a = weighted(lambda y: _poly_mul(acc[y], flip[y]))
+    g_b = weighted(lambda y: _poly_mul(_poly_add(one, _poly_scale(acc[y], -1)), _poly_add(one, _poly_scale(flip[y], -1))))
+    two_r = _poly([0, 2])
+    numerator = _poly_add(_poly_mul(e_a, _poly_add(_poly_scale(two_r, w), _poly_scale(g_a, -1))),
+                          _poly_mul(g_a, _poly_add(_poly_scale(two_r, e_m), _poly_scale(f, -1))))
+    denominator = _poly_add(_poly_mul(e_a, g_b), _poly_mul(e_b, g_a))
+    derivative = _poly_add(_poly_mul(_poly_der(numerator), denominator),
+                           _poly_scale(_poly_mul(numerator, _poly_der(denominator)), -1))
+    return {"numerator": numerator, "denominator": denominator, "derivative_numerator": derivative}
+
+
+def root_in_range_interval(moments: dict, sigma: int = 1) -> tuple[Q, Q] | None:
+    """The ``R`` with every fitted parameter in ``[0, 1]``: ``R >= |k_3|`` (the
+    prior) and, for each rater, ``1 - alpha_i`` and ``beta_i`` affine in ``R``;
+    an interval (possibly empty: ``None``)."""
+
+    p, cov, k3 = moments["marginals"], moments["covariances"], moments["third_cumulant"]
+    coefficient = {1: 1 / abs(cov[(2, 3)]), 2: sigma / cov[(1, 3)], 3: sigma / cov[(1, 2)]}
+    low, high = abs(k3), None
+    for i in (1, 2, 3):
+        rates =((p[i] + sigma * k3 * coefficient[i] / 2, coefficient[i] / 2),     # 1 - alpha_i
+                 (p[i] + sigma * k3 * coefficient[i] / 2, -coefficient[i] / 2))    # beta_i
+        for const, slope in rates:
+            if slope == 0:
+                if not 0 <= const <= 1:
+                    return None
+                continue
+            ends = sorted(((0 - const) / slope, (1 - const) / slope))
+            low = max(low, ends[0])
+            high = ends[1] if high is None else min(high, ends[1])
+    if high is None or low > high:
+        return None
+    return low, high
+
+
+ENCLOSURE_DEPTH = 60
+
+
+def asymmetric_eps1_enclosure(moments: dict, measured_accuracy, measured_error, wrong_wrong_rate,
+                              low, high, sigma: int = 1, depth: int = ENCLOSURE_DEPTH) -> dict[str, object]:
+    """A certified enclosure of ``eps_1(R)`` over ``R`` in ``[low, high]`` (a root
+    bracket), so of ``eps1_hat`` at the unknown root inside it.
+
+    If the derivative's numerator ``D = N' Q - N Q'`` has no root in the
+    bracket (Sturm), ``eps_1`` is monotone there and the end values bracket it
+    exactly (``status="monotone"``).  Otherwise the bracket is bisected on
+    Sturm counts: pieces free of critical points contribute their end values;
+    a piece still holding one after ``depth`` halvings contributes ``[max(ends)
+    - L w, min(ends) + L w]`` with ``L >= max|D| / min Q^2`` (``|D|``, ``|Q'|``
+    bounded by absolute coefficients at the piece's largest ``|R|``, ``min |Q| >=
+    |Q(a)| - max|Q'| w``).  The hull of the contributions contains every value of
+    ``eps_1`` on the bracket (``status="certified"``)."""
+
+    low, high = _as_q(low, "low"), _as_q(high, "high")
+    if not low < high:
+        raise ValueError("need low < high")
+    rational = asymmetric_eps1_rational(moments, measured_accuracy, measured_error, wrong_wrong_rate, sigma)
+    num, den, der = rational["numerator"], rational["denominator"], rational["derivative_numerator"]
+    if not den or _poly_eval(den, low) == 0 or sturm_root_count(den, low, high):
+        return {"status": "pole_in_bracket", "enclosure": None, "monotone": None}
+
+    def value(r: Q) -> Q:
+        return _poly_eval(num, r) / _poly_eval(den, r)
+
+    ends = (value(low), value(high))
+    seq = _sturm_sequence(der) if der else []
+
+    def has_critical(a: Q, b: Q) -> bool:
+        if not seq:
+            return False
+        if _poly_eval(der, a) == 0 or _poly_eval(der, b) == 0:
+            return True
+        return _sturm_changes(seq, a) - _sturm_changes(seq, b) > 0
+
+    if not has_critical(low, high):
+        return {"status": "monotone", "monotone": True, "critical_pieces": 0, "end_values": ends,
+                "enclosure": (min(ends), max(ends))}
+    der_prime_q = _poly_der(den)
+    lo_acc = hi_acc = None
+    pieces = 0
+    stack = [(low, high, 0)]
+    while stack:
+        a, b, level = stack.pop()
+        if level < depth and has_critical(a, b):
+            mid = (a + b) / 2
+            stack.extend(((a, mid, level + 1), (mid, b, level + 1)))
+            continue
+        va, vb = value(a), value(b)
+        piece_lo, piece_hi = min(va, vb), max(va, vb)
+        if has_critical(a, b):
+            pieces += 1
+            at, width = max(abs(a), abs(b)), b - a
+            der_max = sum((abs(c) * at ** k for k, c in enumerate(der)), Q(0))
+            den_min = abs(_poly_eval(den, a)) - sum((abs(c) * at ** k for k, c in enumerate(der_prime_q)), Q(0)) * width
+            if den_min <= 0:
+                return {"status": "not_certified", "monotone": False, "end_values": ends, "enclosure": None}
+            slack = der_max / den_min ** 2 * width
+            piece_lo, piece_hi = piece_hi - slack, piece_lo + slack
+        lo_acc = piece_lo if lo_acc is None else min(lo_acc, piece_lo)
+        hi_acc = piece_hi if hi_acc is None else max(hi_acc, piece_hi)
+    return {"status": "certified", "monotone": False, "critical_pieces": pieces, "end_values": ends,
+            "enclosure": (lo_acc, hi_acc), "depth": depth}
+
+
 # --- fixtures and verification ------------------------------------------------
 
 FIXTURE_SIZE, FIXTURE_PRIOR = 10000, Q(1, 4)
@@ -2241,6 +3275,24 @@ BRACKET_CASES = ((16, (Q(1, 10), Q(1, 5), Q(1, 5)), Q(16, 25)), (16, (Q(1, 10), 
                  (100, (Q(1, 10), Q(1, 5), Q(1, 5)), Q(16, 25)), (100, (Q(0), Q(1, 5), Q(1, 5)), Q(9, 10)),
                  (200, (Q(3, 20), Q(1, 5), Q(1, 5)), Q(16, 25)), (200, (Q(1, 20), Q(1, 10), Q(1, 10)), Q(4, 5)),
                  (742, (Q(13, 100), Q(1, 5), Q(1, 5)), Q(31684, 49343)))
+# 0.4
+TETRAD_SIZES = (742, 4000, 10000)
+TETRAD_COPY_RATES = (Q(1, 4), HALF, Q(3, 4), Q(1))
+TETRAD_ENUMERATION_SIZE = 6
+TETRAD_GRID_PRIORS = (Q(1, 4), HALF, Q(9, 10))
+TETRAD_GRID_PAIRS = ((Q(1, 10), Q(1, 5)), (Q(3, 10), Q(1, 20)))
+TETRAD_SPECIAL_POINTS = (   # (prior, false negatives, false positives): chance, anti-informative, perfect, sharp raters
+    (Q(1, 4), (Q(1, 10), HALF, Q(1, 5), Q(1, 10)), (Q(1, 5), HALF, Q(2, 5), Q(3, 10))),
+    (Q(1, 4), (Q(1, 10), Q(3, 5), Q(1, 5), Q(1, 10)), (Q(1, 5), Q(3, 5), Q(2, 5), Q(3, 10))),
+    (Q(1, 3), (Q(0), Q(0), Q(1, 20), Q(0)), (Q(0), Q(1, 20), Q(0), Q(1, 10))),
+    (HALF, (Q(1, 20), Q(1, 10), Q(1, 20), Q(1, 10)), (Q(1, 10), Q(1, 20), Q(1, 10), Q(1, 20))))
+INTERVAL_SIZES = (742, 4000, 10000)
+COVERAGE_SIZES = (8, 12)
+WITNESS_PRIOR = Q(19, 50)
+WITNESS_FALSE_NEGATIVES, WITNESS_FALSE_POSITIVES = (Q(3, 10), Q(3, 25), Q(1, 50)), (Q(29, 100), Q(1, 10), Q(2, 25))
+WITNESS_MOVE = ((0, 0, 0), (0, 0, 1), Q(1, 200))      # mass moved from the first label cell to the second
+WITNESS_JUDGE_ERROR, WITNESS_WRONG_WRONG = Q(47, 100), Q(28287, 187598)
+WITNESS_SCALE = 1000
 
 
 def four_rater_fixture() -> dict[str, object]:
@@ -2606,7 +3658,237 @@ def asymmetric_pipeline_fixture() -> dict[str, object]:
     return {"judges": judges, "reduces_to_symmetric_inversion": reduces, "size": DS_SIZE}
 
 
-def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int = 1) -> dict[str, object]:
+def rounded_record(record: RecordTable) -> RecordTable:
+    """Expected counts rounded to an integer record by largest remainder
+    (ties in cell order), keeping the total: a realisable table."""
+
+    if record.total.denominator != 1:
+        raise ValueError("rounding needs an integer total")
+    floors = {c: int(v.__floor__()) for c, v in record.cells.items()}
+    deficit = int(record.total) - sum(floors.values())
+    order = sorted(CELLS4, key=lambda c: (-(record.cells[c] - floors[c]), CELLS4.index(c)))
+    return RecordTable({c: floors[c] + (1 if c in order[:deficit] else 0) for c in CELLS4})
+
+
+def _tetrad_grid() -> list[tuple]:
+    points = []
+    for prior in TETRAD_GRID_PRIORS:
+        for pairs in product(TETRAD_GRID_PAIRS, repeat=4):
+            points.append((prior, tuple(p[0] for p in pairs), tuple(p[1] for p in pairs)))
+    return points + list(TETRAD_SPECIAL_POINTS)
+
+
+def tetrad_fixture(sizes=TETRAD_SIZES, enumeration_size: int = TETRAD_ENUMERATION_SIZE) -> dict[str, object]:
+    """The tetrad tests at the section 8 fixture: exact moments, variances and
+    bounds under the null, the grid checks of the closed form and the bound,
+    exact sizes, the copying grader's powers (sign test exact or bracketed;
+    Cantelli lower bounds), the enumeration cross-checks at small ``m`` and
+    the tests run on the integral count tables at ``m = 10000``."""
+
+    sizes = tuple(sorted(set(sizes)))
+    null = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    null_moments = tetrad_moments(null)
+    closed = tetrad_influence_variance(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    null_law = tetrad_sign_block_law(null)
+    check_sizes = tuple(sorted({enumeration_size, *sizes}))
+    variances = {m: {"exact": tetrad_u_variance(null_moments["zeta"], m),
+                     "point_bound": tetrad_point_variance_bound(m, FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES),
+                     "fixture_region_bound": tetrad_variance_bound(m, FIXTURE_REGION)["variance_bound"],
+                     "universal_bound": tetrad_variance_bound(m)["variance_bound"]} for m in check_sizes}
+    grid_ok = {"null_tetrad": True, "closed_form": True, "zeta_ratio": True, "bound": True, "sign_symmetric": True,
+               "region": True}
+    points = 0
+    for prior, fn, fp in _tetrad_grid():
+        table = four_rater_model(prior, fn, fp)
+        mom = tetrad_moments(table)
+        form = tetrad_influence_variance(prior, fn, fp)
+        zeta = mom["zeta"]
+        grid_ok["null_tetrad"] &= mom["tetrad"] == 0
+        grid_ok["closed_form"] &= 16 * zeta[1] == form["influence_variance"]
+        grid_ok["zeta_ratio"] &= zeta[1] <= zeta[2] / 2 <= zeta[3] / 3 <= zeta[4] / 4
+        for m in (enumeration_size, PLANNING_SIZE, 4000):
+            v, point = tetrad_u_variance(zeta, m), tetrad_point_variance_bound(m, prior, fn, fp)
+            grid_ok["bound"] &= v <= point <= tetrad_variance_bound(m)["variance_bound"]
+            inside = form["u"] <= FIXTURE_REGION[0] and form["a"] <= FIXTURE_REGION[1] and form["b"] <= FIXTURE_REGION[2]
+            grid_ok["region"] &= not inside or point <= tetrad_variance_bound(m, FIXTURE_REGION)["variance_bound"]
+        law = tetrad_sign_block_law(table)
+        grid_ok["sign_symmetric"] &= law["p_plus"] == law["p_minus"]
+        points += 1
+    null_size = {m: {side: sign_test_rejection_probability(m // 4, null_law["p_plus"], null_law["p_minus"],
+                                                          FIXTURE_ALPHA, side) for side in TETRAD_SIDES}
+                 for m in sizes}
+    critical = {m: {name: {side: _tetrad_critical_value(m, region, FIXTURE_ALPHA, side)[0] for side in TETRAD_SIDES}
+                    for name, region in (("universal", UNIVERSAL_REGION), ("fixture_region", FIXTURE_REGION))}
+                for m in sizes}
+    alternatives = {}
+    for rho in TETRAD_COPY_RATES:
+        table = copy_grader_table4(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, rho)
+        mom = tetrad_moments(table)
+        law = tetrad_sign_block_law(table)
+        rows = {}
+        for m in sizes:
+            sign = {side: sign_test_rejection_probability(m // 4, law["p_plus"], law["p_minus"], FIXTURE_ALPHA, side)
+                    for side in TETRAD_SIDES}
+            cantelli = {name: {side: tetrad_cantelli_power_bound(table, m, region, FIXTURE_ALPHA, side)
+                               for side in TETRAD_SIDES}
+                        for name, region in (("universal", UNIVERSAL_REGION), ("fixture_region", FIXTURE_REGION))}
+            rows[m] = {"sign_test_power": sign, "cantelli_power_lower_bound": cantelli,
+                       "asymptotic_noncentrality_squared": m * mom["tetrad"] ** 2 / (16 * null_moments["zeta"][1])}
+        alternatives[str(rho)] = {"copy_rate": rho, "tetrad": mom["tetrad"], "zeta": mom["zeta"],
+                                  "closed_form": copy_grader_tetrad_residual(FOUR_PRIOR, FOUR_FALSE_NEGATIVES,
+                                                                             FOUR_FALSE_POSITIVES, rho),
+                                  "sign_law": law, "by_size": rows}
+    witness = copy_grader_table4(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, Q(1))
+    enumeration = {"null": tetrad_by_enumeration(enumeration_size, null),
+                   "copy_1": tetrad_by_enumeration(enumeration_size, witness)}
+    counts_null = FourRaterTable({c: FOUR_SIZE * w for c, w in null.cells.items()})
+    counts_copy = FourRaterTable({c: FOUR_SIZE * w for c, w in witness.cells.items()})
+    on_counts = {name: {region_name: {side: tetrad_cantelli_test(table, region, FIXTURE_ALPHA, side)
+                                      for side in TETRAD_SIDES}
+                        for region_name, region in (("universal", UNIVERSAL_REGION), ("fixture_region", FIXTURE_REGION))}
+                 for name, table in (("null", counts_null), ("copy_1", counts_copy))}
+    return {"sizes": sizes, "null_moments": null_moments, "influence_closed_form": closed,
+            "variances": variances, "grid_points": points, "grid": grid_ok, "null_sign_law": null_law,
+            "null_size_sign_test": null_size, "critical_values": critical, "alternatives": alternatives,
+            "enumeration": enumeration, "enumeration_size": enumeration_size,
+            "copy_1_tetrad": alternatives["1"]["tetrad"] if "1" in alternatives else None,
+            "efficiency_ratio": 144 * null_moments["zeta"][1] / null_law["p_nonzero"],
+            "sign_bracket_max_width": max(
+                [r["bracket"][1] - r["bracket"][0] for d in null_size.values() for r in d.values()]
+                + [r["bracket"][1] - r["bracket"][0] for a in alternatives.values() for row in a["by_size"].values()
+                   for r in row["sign_test_power"].values()]),
+            "on_counts": on_counts, "regions": {"universal": UNIVERSAL_REGION, "fixture_region": FIXTURE_REGION}}
+
+
+def interval_fixture(sizes=INTERVAL_SIZES, coverage_sizes=COVERAGE_SIZES) -> dict[str, object]:
+    """The plug-in-free interval for ``eps_1`` on the section 5 records
+    (rounded to integer counts by largest remainder), both judges; the delta
+    variance with ``eta_1`` estimated; exact coverage by enumeration."""
+
+    by_size = {}
+    for m in sorted(set(sizes)):
+        judges = {}
+        for name, eps1 in JUDGES.items():
+            record = rounded_record(expected_record_table(m, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, eps1,
+                                                          FIXTURE_ETA1, FIXTURE_ETA2))
+            judges[name] = {"eps1": eps1, "interval": eps1_confidence_interval(record, FIXTURE_ALPHA)}
+        a, b = judges["independent"]["interval"]["eps1_range"], judges["maximally_shared"]["interval"]["eps1_range"]
+        by_size[m] = {"judges": judges, "ranges_disjoint": a[1] < b[0] or b[1] < a[0],
+                      "both_cover_truth": all(j["interval"]["eps1_range"][0] <= j["eps1"] <= j["interval"]["eps1_range"][1]
+                                              for j in judges.values())}
+    delta = {name: eps1_delta_variance(FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, eps1, FIXTURE_ETA1, FIXTURE_ETA2)
+             for name, eps1 in JUDGES.items()}
+    coverage = {m: {name: eps1_interval_coverage(m, FIXTURE_PRIOR, FIXTURE_ACCURACY, FIXTURE_ERROR, eps1,
+                                                 FIXTURE_ETA1, FIXTURE_ETA2, FIXTURE_ALPHA)
+                    for name, eps1 in JUDGES.items()} for m in sorted(set(coverage_sizes))}
+    eta_delta = delta_variance((FIXTURE_ETA1, FIXTURE_ETA2, 1 - FIXTURE_ACCURACY))["eta"]
+    return {"sizes": tuple(sorted(set(sizes))), "by_size": by_size, "delta_variance": delta,
+            "eta_delta_variance": eta_delta, "coverage": coverage, "coverage_sizes": tuple(sorted(set(coverage_sizes)))}
+
+
+def witness_record() -> RecordTable:
+    """The monotonicity witness: the Dawid-Skene table at ``WITNESS_*`` with
+    ``1/200`` of mass moved between two label cells (irrational root, fit in
+    range), and a judge whose verdict depends on measured correctness only,
+    tuned so that ``eps_1'(R)`` vanishes inside the root's ``2^-16`` bracket:
+    ``w`` is the exact root of the derivative at the bracket's midpoint
+    (linear in ``w``), rounded to denominator at most ``10^6``."""
+
+    cells = dict(dawid_skene_model(WITNESS_PRIOR, WITNESS_FALSE_NEGATIVES, WITNESS_FALSE_POSITIVES).cells)
+    source, target, amount = WITNESS_MOVE
+    cells[source] -= amount
+    cells[target] += amount
+    labels = LabelTable(cells)
+    accuracy = sum((labels.probability(c) for c in CELLS3 if c[0] == c[2]), Q(0))
+    says_correct_when_wrong = WITNESS_WRONG_WRONG / (1 - accuracy)
+    says_wrong_when_right = (WITNESS_JUDGE_ERROR - WITNESS_WRONG_WRONG) / accuracy
+    record = {}
+    for (g1, g2, x), weight in labels.cells.items():
+        correct = (1 - says_wrong_when_right) if x == g1 else says_correct_when_wrong
+        record[(x, 1, g1, g2)] = WITNESS_SCALE * weight * correct
+        record[(x, 0, g1, g2)] = WITNESS_SCALE * weight * (1 - correct)
+    return RecordTable(record)
+
+
+def _value_minus(rational: dict, value: Q, radicand: Q) -> int:
+    """Sign of ``eps_1(sqrt r) - value`` (denominator sign folded in)."""
+
+    shifted = _poly_add(rational["numerator"], _poly_scale(rational["denominator"], -value))
+    return sign_at_square_root(shifted, radicand) * sign_at_square_root(rational["denominator"], radicand)
+
+
+def monotonicity_fixture() -> dict[str, object]:
+    """Monotonicity of the asymmetric inversion in the root: the rational form
+    against the module's inversion; the section 7 records (Sturm: no critical
+    point anywhere on the in-range root interval); the section 7 records
+    rounded at ``m = 742`` (bracketed fits, certified monotone on the
+    bracket); and the exact witness where the bracket ends miss ``eps1_hat``."""
+
+    controller = (DS_FALSE_NEGATIVES[2], DS_FALSE_POSITIVES[2])
+    gold, second = (DS_FALSE_NEGATIVES[0], DS_FALSE_POSITIVES[0]), (DS_FALSE_NEGATIVES[1], DS_FALSE_POSITIVES[1])
+    fixture_records = {}
+    for name, eps1 in DS_JUDGES.items():
+        record = expected_record_table_asymmetric(DS_SIZE, DS_PRIOR, controller, FIXTURE_ERROR, eps1, gold, second)
+        fit = dawid_skene_three_raters(record.label_table())
+        measured = measured_judge_rates(record, 1)
+        rational = asymmetric_eps1_rational(fit["moments"], measured["accuracy"], measured["judge_error"],
+                                            measured["wrong_wrong_rate"])
+        interval = root_in_range_interval(fit["moments"])
+        agree = True
+        for scale in (Q(9, 10), Q(1), Q(11, 10)):
+            r = fit["root"] * scale
+            params = _ds_parameters(fit["moments"], r, 1)
+            inverse = asymmetric_gold_noise_inverse(
+                params["prior"], (params["false_negatives"][3], params["false_positives"][3]),
+                (params["false_negatives"][1], params["false_positives"][1]), measured["accuracy"],
+                measured["judge_error"], measured["wrong_wrong_rate"])
+            agree &= inverse["eps1"] == _poly_eval(rational["numerator"], r) / _poly_eval(rational["denominator"], r)
+        rounded = rounded_record(expected_record_table_asymmetric(PLANNING_SIZE, DS_PRIOR, controller, FIXTURE_ERROR,
+                                                                  eps1, gold, second))
+        rounded_fit = dawid_skene_three_raters(rounded.label_table())
+        rounded_measured = measured_judge_rates(rounded, 1)
+        rounded_entry = {"fit_status": rounded_fit["status"], "in_range": rounded_fit.get("in_range")}
+        if rounded_fit["status"] == "bracketed":
+            rounded_entry["enclosure"] = asymmetric_eps1_enclosure(
+                rounded_fit["moments"], rounded_measured["accuracy"], rounded_measured["judge_error"],
+                rounded_measured["wrong_wrong_rate"], *rounded_fit["root_bracket"])
+        fixture_records[name] = {
+            "root": fit["root"], "in_range_interval": interval,
+            "degrees": (len(rational["numerator"]) - 1, len(rational["denominator"]) - 1,
+                        len(rational["derivative_numerator"]) - 1),
+            "rational_matches_inverse": agree,
+            "critical_points_in_range": sturm_root_count(rational["derivative_numerator"], *interval),
+            "poles_in_range": sturm_root_count(rational["denominator"], *interval),
+            "rounded_742": rounded_entry}
+    record = witness_record()
+    result = calibrate_asymmetric(record, FIXTURE_ERROR, FIXTURE_ALPHA)
+    fit, measured = result["fit"], result["measured"]
+    rational = asymmetric_eps1_rational(fit["moments"], measured["accuracy"], measured["judge_error"],
+                                        measured["wrong_wrong_rate"])
+    low, high = fit["root_bracket"]
+    ends = [inv["recovered"]["eps1"] for inv in result["inversions"]]
+    radicand = fit["radicand"]
+    enclosure = result["eps1_enclosure"]
+    interval = root_in_range_interval(fit["moments"])
+    witness = {"record": record, "fit_status": fit["status"], "in_range": fit["in_range"], "radicand": radicand,
+               "root_bracket": (low, high), "in_range_interval": interval,
+               "critical_points_in_bracket": sturm_root_count(rational["derivative_numerator"], low, high),
+               "critical_points_in_range": sturm_root_count(rational["derivative_numerator"], *interval),
+               "end_values": ends,
+               "true_minus_end_signs": [_value_minus(rational, v, radicand) for v in ends],
+               "judge_rates_at_ends": [(inv["recovered"]["eps0"], inv["recovered"]["eps1"]) for inv in result["inversions"]],
+               "measured": {"accuracy": measured["accuracy"], "judge_error": measured["judge_error"],
+                            "wrong_wrong_rate": measured["wrong_wrong_rate"]},
+               "enclosure": enclosure,
+               "enclosure_contains_true": enclosure["enclosure"] is not None
+               and _value_minus(rational, enclosure["enclosure"][0], radicand) >= 0
+               and _value_minus(rational, enclosure["enclosure"][1], radicand) <= 0}
+    return {"fixture_records": fixture_records, "witness": witness}
+
+
+def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int = 1,
+           tetrad_sizes=TETRAD_SIZES, interval_sizes=INTERVAL_SIZES,
+           coverage_sizes=COVERAGE_SIZES) -> dict[str, object]:
     """Run all exact fixtures and return machine-readable checks."""
 
     raters, pipeline, dependent, ledgers = (three_rater_fixture(), pipeline_fixture(),
@@ -2614,6 +3896,10 @@ def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int 
     sampling, ds, asym = sampling_fixture(sampling_sizes), dawid_skene_fixture(), asymmetric_pipeline_fixture()
     joint_sizes = tuple(sorted(set(joint_sizes) | {PLANNING_SIZE}))
     four, joint = four_rater_fixture(), joint_fixture(joint_sizes, JOINT_GRID, workers)
+    tetrad_sizes = tuple(sorted(set(tetrad_sizes) | {PLANNING_SIZE, 4000}))
+    interval_sizes = tuple(sorted(set(interval_sizes) | {PLANNING_SIZE, 4000}))
+    tetrad, interval, monotone = (tetrad_fixture(tetrad_sizes), interval_fixture(interval_sizes, coverage_sizes),
+                                  monotonicity_fixture())
     copy4 = four["copy_grader"]
     small = joint["by_size"][PLANNING_SIZE]
     small_ind, small_shared = (small["judges"]["independent"]["statement"],
@@ -2872,6 +4158,83 @@ def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int 
         "asymmetric_record_withholds_the_joint_statement":
             joint["asymmetric_record"]["status"] == "withheld_constraints_fail"
             and not joint["asymmetric_record"]["constraints_pass"] and joint["asymmetric_record"]["eta_set"] is None,
+        # --- 0.4: a level-alpha test of the four-rater equalities ---
+        "tetrad_kernel_mean_is_the_tetrad_and_vanishes_on_the_null_grid":
+            tetrad["null_moments"]["tetrad"] == 0 and tetrad["grid"]["null_tetrad"] and tetrad["grid_points"] == 52
+            and all(row["tetrad"] == row["closed_form"] == row["copy_rate"] * Q(513, 80000)
+                    for row in tetrad["alternatives"].values())
+            and max(abs(k) for k in tetrad_kernel()) == TETRAD_KERNEL_BOUND,
+        "enumeration_at_m_6_confirms_unbiasedness_and_hoeffding_variance":
+            tetrad["enumeration"]["null"]["mean"] == 0
+            and tetrad["enumeration"]["copy_1"]["mean"] == tetrad["copy_1_tetrad"]
+            and tetrad["enumeration"]["null"]["variance"] == tetrad["variances"][tetrad["enumeration_size"]]["exact"]
+            and tetrad["enumeration"]["copy_1"]["variance"]
+            == tetrad_u_variance(tetrad["alternatives"]["1"]["zeta"], tetrad["enumeration_size"])
+            and tetrad["enumeration"]["null"]["tables"] == comb(tetrad["enumeration_size"] + 15, 15),
+        "influence_function_factorises_so_zeta1_has_a_closed_form_on_the_grid":
+            tetrad["grid"]["closed_form"]
+            and 16 * tetrad["null_moments"]["zeta"][1] == tetrad["influence_closed_form"]["influence_variance"],
+        "variance_bound_holds_on_the_grid_and_zeta_c_over_c_is_nondecreasing":
+            tetrad["grid"]["bound"] and tetrad["grid"]["region"] and tetrad["grid"]["zeta_ratio"]
+            and all(v["exact"] <= v["point_bound"] <= v["fixture_region_bound"] <= v["universal_bound"]
+                    for v in tetrad["variances"].values()),
+        "exact_variance_at_planning_size_within_2_percent_of_first_order":
+            abs(PLANNING_SIZE * tetrad["variances"][PLANNING_SIZE]["exact"] - 16 * tetrad["null_moments"]["zeta"][1])
+            <= Q(2, 100) * 16 * tetrad["null_moments"]["zeta"][1],
+        "cantelli_tests_have_exact_size_zero_at_m_6_and_bounded_size_everywhere":
+            all(p == 0 for p in tetrad["enumeration"]["null"]["rejection"].values())
+            and all(not t["reject"] for d in tetrad["on_counts"]["null"].values() for t in d.values())
+            and all(t["reject"] for d in tetrad["on_counts"]["copy_1"].values() for t in d.values()),
+        "sign_block_law_is_symmetric_at_every_null_grid_point_and_has_mean_six_tau":
+            tetrad["grid"]["sign_symmetric"] and tetrad["null_sign_law"]["p_plus"] == tetrad["null_sign_law"]["p_minus"]
+            and all(row["sign_law"]["mean"] == 6 * row["tetrad"] for row in tetrad["alternatives"].values()),
+        "sign_test_size_at_most_alpha_exactly_and_power_grows_with_rho_and_m":
+            all(r["bracket"][1] <= FIXTURE_ALPHA for d in tetrad["null_size_sign_test"].values() for r in d.values())
+            and tetrad["null_size_sign_test"][PLANNING_SIZE]["greater"]["exact"] is not None
+            and all(a["by_size"][m]["sign_test_power"]["greater"]["bracket"][0]
+                    < b["by_size"][m]["sign_test_power"]["greater"]["bracket"][0]
+                    for m in tetrad["sizes"] for a, b in zip(list(tetrad["alternatives"].values()),
+                                                             list(tetrad["alternatives"].values())[1:]))
+            and tetrad["alternatives"]["1"]["by_size"][4000]["sign_test_power"]["greater"]["bracket"][0] > Q(9, 10)
+            and tetrad["sign_bracket_max_width"] < Q(1, 10 ** 20),
+        "cantelli_power_bounds_against_the_copying_grader":
+            tetrad["alternatives"]["1"]["by_size"][4000]["cantelli_power_lower_bound"]["universal"]["greater"]["power_lower_bound"] > Q(4, 5)
+            and tetrad["alternatives"]["1"]["by_size"][4000]["cantelli_power_lower_bound"]["fixture_region"]["greater"]["power_lower_bound"] > Q(9, 10)
+            and all(a["by_size"][PLANNING_SIZE]["cantelli_power_lower_bound"][name][side]["power_lower_bound"] == 0
+                    for a in tetrad["alternatives"].values() for name in ("universal", "fixture_region") for side in TETRAD_SIDES),
+        "exact_sign_test_needs_about_sixteen_times_the_items_of_the_asymptotic_test":
+            Q(1, 20) < tetrad["efficiency_ratio"] < Q(1, 12),
+        # --- 0.4: eps_1 without plug-ins ---
+        "eps1_interval_covers_the_truth_and_separates_the_judges_from_4000_items":
+            all(entry["both_cover_truth"] for entry in interval["by_size"].values())
+            and not interval["by_size"][PLANNING_SIZE]["ranges_disjoint"] and interval["by_size"][4000]["ranges_disjoint"]
+            and all(j["interval"]["status"] == "stated" for e in interval["by_size"].values() for j in e["judges"].values())
+            and all(j["interval"]["plug_ins"] == () and j["interval"]["coverage"] == 1 - FIXTURE_ALPHA
+                    for e in interval["by_size"].values() for j in e["judges"].values()),
+        "eps1_interval_coverage_is_exact_and_at_least_nominal_on_enumerated_small_m":
+            all(c["coverage"] >= 1 - FIXTURE_ALPHA and c["box_coverage"] >= 1 - FIXTURE_ALPHA
+                for d in interval["coverage"].values() for c in d.values()),
+        "delta_variance_shows_the_plug_ins_understate_the_variance_of_eps1_hat":
+            interval["delta_variance"]["independent"]["eta_only"]
+            == interval["delta_variance"]["independent"]["d_eps1_d_eta"] ** 2 * interval["eta_delta_variance"]
+            and all(d["total"] == d["judge_only"] + d["eta_only"] + 2 * d["cross"]
+                    and d["total"] > d["judge_only"] > d["binomial_plug_in"] for d in interval["delta_variance"].values())
+            and interval["delta_variance"]["independent"]["total"] > 7 * interval["delta_variance"]["independent"]["binomial_plug_in"],
+        # --- 0.4: monotonicity of the asymmetric inversion in the root ---
+        "asymmetric_inversion_is_a_rational_function_of_the_root":
+            all(r["rational_matches_inverse"] and r["degrees"][0] <= 6 and r["degrees"][1] <= 6 and r["degrees"][2] <= 10
+                for r in monotone["fixture_records"].values()),
+        "section_7_records_are_monotone_in_the_root_over_the_whole_in_range_interval":
+            all(r["critical_points_in_range"] == 0 and r["poles_in_range"] == 0
+                and r["rounded_742"]["fit_status"] == "bracketed" and r["rounded_742"]["enclosure"]["status"] == "monotone"
+                for r in monotone["fixture_records"].values()),
+        "bracket_ends_miss_eps1_hat_in_an_exact_witness":
+            monotone["witness"]["fit_status"] == "bracketed" and monotone["witness"]["in_range"]
+            and monotone["witness"]["critical_points_in_bracket"] >= 1
+            and monotone["witness"]["true_minus_end_signs"] == [-1, -1]
+            and all(0 <= e0 < HALF and 0 <= e1 < HALF for e0, e1 in monotone["witness"]["judge_rates_at_ends"]),
+        "certified_enclosure_contains_eps1_hat_in_the_witness":
+            monotone["witness"]["enclosure_contains_true"] and monotone["witness"]["enclosure"]["status"] == "certified",
     }
     return {"evidence_status": "exact_synthetic_fixtures_not_model_or_agent_evidence",
             "checks": checks, "all_passed": all(checks.values()),
@@ -2882,7 +4245,10 @@ def verify(sampling_sizes=SAMPLING_SIZES, joint_sizes=JOINT_SIZES, workers: int 
                         "asymmetric": {"size": DS_SIZE, "prior": DS_PRIOR, "false_negatives": DS_FALSE_NEGATIVES,
                                        "false_positives": DS_FALSE_POSITIVES, "judges": DS_JUDGES},
                         "four_raters": {"size": FOUR_SIZE, "prior": FOUR_PRIOR, "false_negatives": FOUR_FALSE_NEGATIVES,
-                                        "false_positives": FOUR_FALSE_POSITIVES}},
+                                        "false_positives": FOUR_FALSE_POSITIVES},
+                        "tetrad_sizes": tetrad_sizes, "interval_sizes": interval_sizes,
+                        "coverage_sizes": tuple(sorted(set(coverage_sizes))),
+                        "regions": {"universal": UNIVERSAL_REGION, "fixture_region": FIXTURE_REGION}},
             "three_raters": raters, "pipeline": pipeline, "dependent_grader": dependent, "ledger": ledgers,
             "sampling": sampling, "dawid_skene": ds, "asymmetric_pipeline": asym,
-            "four_raters": four, "joint": joint}
+            "four_raters": four, "joint": joint, "tetrad": tetrad, "interval": interval, "monotonicity": monotone}

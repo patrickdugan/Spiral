@@ -1,5 +1,6 @@
+import random
 from fractions import Fraction as Q
-from itertools import product
+from itertools import permutations, product
 from math import comb
 
 import pytest
@@ -24,9 +25,20 @@ from spiral_ln.evaluation_gold_calibration import (
     root_bracket, sampling_law, sampling_law_by_tables, square_tail_bracket, square_tail_law,
     square_test, three_rater_model, verify, walsh_coefficients,
 )
+from spiral_ln.evaluation_gold_calibration import (
+    FIXTURE_REGION, TETRAD_KERNEL_BOUND, TETRAD_SIDES, UNIVERSAL_REGION, _cp_interval, _eps1_corner,
+    _tetrad_u_from_counts, _variance_cap, asymmetric_eps1_enclosure, asymmetric_eps1_rational,
+    eps1_confidence_interval, eps1_delta_variance, eps1_interval_coverage, interval_counts,
+    monotonicity_fixture, root_in_range_interval, rounded_record, sign_at_square_root,
+    sign_test_critical_value, sign_test_rejection_probability, sturm_root_count, tetrad_by_enumeration,
+    tetrad_cantelli_power_bound, tetrad_cantelli_test, tetrad_influence_variance, tetrad_kernel,
+    tetrad_moments, tetrad_point_variance_bound, tetrad_sign_block_law, tetrad_sign_test,
+    tetrad_u_statistic, tetrad_u_variance, tetrad_variance_bound, witness_record,
+)
 from spiral_ln.evaluation_game_feedback import LoopEvent
 from spiral_ln.evaluation_judge_measurement import (
-    JudgeTable, binomial_upper_tail, gold_noise_forward, gold_noise_inverse, measurement_ledger,
+    JudgeTable, binomial_upper_tail, clopper_pearson_bracket, gold_noise_forward, gold_noise_inverse,
+    measurement_ledger,
 )
 
 PRIORS = (Q(0), Q(1, 4), Q(1, 3), Q(1, 2), Q(7, 10), Q(1))
@@ -834,6 +846,324 @@ def test_eta_confidence_set_and_joint_statement_structure():
                         dict(eta_set, counts={(1, 2): 1, (1, 3): 1, (2, 3): 1}))
 
 
+# --- 0.4: the tetrad tests -----------------------------------------------------
+
+def _g(x, y, a, b):
+    return Q((x[a] - y[a]) * (x[b] - y[b]), 2)
+
+
+def _k(x, y, z, w):
+    """The unsymmetrised kernel g_12(x, y) g_34(z, w) - g_13(x, y) g_24(z, w)."""
+
+    return _g(x, y, 0, 1) * _g(z, w, 2, 3) - _g(x, y, 0, 2) * _g(z, w, 1, 3)
+
+
+def _random_table(seed, low=1, high=9):
+    rng = random.Random(seed)
+    return FourRaterTable({cell: rng.randint(low, high) for cell in CELLS4})
+
+
+def test_tetrad_kernel_is_the_symmetric_unbiased_kernel():
+    kernel = tetrad_kernel()
+    assert len(kernel) == 65536 and max(abs(k) for k in kernel) == TETRAD_KERNEL_BOUND
+    index = {cell: i for i, cell in enumerate(CELLS4)}
+    rng = random.Random(4)
+    for _ in range(40):
+        quad = [rng.choice(CELLS4) for _ in range(4)]
+        values = {kernel[((index[a] * 16 + index[b]) * 16 + index[c]) * 16 + index[d]]
+                  for a, b, c, d in permutations(quad)}
+        assert len(values) == 1
+        assert Q(values.pop(), 24) == sum(_k(*p) for p in permutations(quad)) / 24
+    for seed in range(4):
+        table = _random_table(seed)
+        theta = tetrad_moments(table)["tetrad"]
+        assert theta == four_rater_residuals(four_rater_moments(table))["tetrad_12_34_vs_13_24"]
+
+
+def test_u_statistic_from_counts_matches_the_ordered_tuple_average():
+    rng = random.Random(11)
+    for _ in range(12):
+        m = rng.randint(4, 7)
+        items = [rng.choice(CELLS4) for _ in range(m)]
+        ordered = [p for p in permutations(range(m), 4)]
+        brute = sum(_k(*(items[i] for i in p)) for p in ordered) / len(ordered)
+        table = FourRaterTable({cell: items.count(cell) for cell in CELLS4})
+        assert tetrad_u_statistic(table) == brute == _tetrad_u_from_counts([items.count(c) for c in CELLS4])
+
+
+def test_hoeffding_variance_matches_enumeration_for_any_table():
+    table = _random_table(7, 1, 3)                 # not a four-rater model
+    moments = tetrad_moments(table)
+    assert moments["tetrad"] != 0
+    for m in (4, 5):
+        enum = tetrad_by_enumeration(m, table)
+        assert enum["mean"] == moments["tetrad"]
+        assert enum["variance"] == tetrad_u_variance(moments["zeta"], m)
+    assert tetrad_u_variance(moments["zeta"], 4) == moments["zeta"][4]
+
+
+def test_influence_function_factorises_into_two_latent_free_contrasts():
+    points = [(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES),
+              (Q(1, 3), (Q(1, 5), Q(3, 5), Q(0), Q(1, 10)), (Q(1, 10), Q(3, 5), Q(1, 4), Q(1, 20)))]
+    for prior, fn, fp in points:
+        table = four_rater_model(prior, fn, fp)
+        mom = four_rater_moments(table)
+        p, c = mom["marginals"], mom["covariances"]
+        u = prior * (1 - prior)
+        d = [1 - a - b for a, b in zip(fn, fp)]
+        total = Q(0)
+        for cell in CELLS4:
+            y = [cell[i] - p[i + 1] for i in range(4)]
+            phi = {pair: y[pair[0] - 1] * y[pair[1] - 1] - c[pair] for pair in PAIRS4}
+            influence = c[(3, 4)] * phi[(1, 2)] + c[(1, 2)] * phi[(3, 4)] - c[(2, 4)] * phi[(1, 3)] - c[(1, 3)] * phi[(2, 4)]
+            assert influence == u * (d[3] * y[0] - d[0] * y[3]) * (d[2] * y[1] - d[1] * y[2])
+            total += table.probability(cell) * influence ** 2
+        closed = tetrad_influence_variance(prior, fn, fp)
+        assert total == closed["influence_variance"] == 16 * tetrad_moments(table)["zeta"][1]
+
+
+def test_variance_caps_and_the_universal_supremum():
+    for s in range(21):
+        for t in range(21):
+            hit, false = Q(s, 20), Q(t, 20)
+            cap = _variance_cap(hit - false)
+            assert hit * (1 - hit) <= cap and false * (1 - false) <= cap
+    best = Q(0)
+    for i in range(41):
+        for j in range(41):
+            x, y = Q(i, 40), Q(j, 40)
+            best = max(best, y * y * _variance_cap(x) + x * x * _variance_cap(y))
+    assert best == Q(1, 4) == HALF ** 2 * _variance_cap(Q(1)) + _variance_cap(HALF)   # at x = 1, y = 1/2
+    for m in (6, 742, 4000):
+        fixture, universal = tetrad_variance_bound(m, FIXTURE_REGION), tetrad_variance_bound(m)
+        assert fixture["variance_bound"] < universal["variance_bound"]
+        assert tetrad_point_variance_bound(m, FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES) <= fixture["variance_bound"]
+        bigger = tetrad_variance_bound(m, (Q(1, 4), Q(1), Q(1)))["variance_bound"]
+        assert fixture["variance_bound"] <= bigger <= universal["variance_bound"]
+
+
+def test_cantelli_tests_on_count_tables_and_power_bound():
+    null = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    copy = copy_grader_table4(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES, Q(1))
+    for region in (UNIVERSAL_REGION, FIXTURE_REGION):
+        for side in TETRAD_SIDES:
+            accept = tetrad_cantelli_test(FourRaterTable({c: 10000 * w for c, w in null.cells.items()}), region, Q(1, 20), side)
+            reject = tetrad_cantelli_test(FourRaterTable({c: 10000 * w for c, w in copy.cells.items()}), region, Q(1, 20), side)
+            assert not accept["reject"] and reject["reject"]
+            factor = (1 - Q(1, 20)) / Q(1, 20) if side == "greater" else 1 / Q(1, 20)
+            assert reject["critical_value"] ** 2 >= reject["variance_bound"] * factor
+    bound = tetrad_cantelli_power_bound(copy, 4000)
+    assert bound["tetrad"] == Q(513, 80000) and bound["power_lower_bound"] > Q(4, 5)
+    assert tetrad_cantelli_power_bound(copy, 742)["power_lower_bound"] == 0
+    assert tetrad_cantelli_power_bound(null, 4000)["power_lower_bound"] == 0
+
+
+def test_sign_block_law_critical_values_and_rejection_probabilities():
+    null = tetrad_sign_block_law(four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES))
+    assert null["p_plus"] == null["p_minus"] and null["mean"] == 0
+    independent = four_rater_model(Q(0), (Q(1, 10), Q(1, 5), Q(1, 2), Q(1, 3)), (Q(1, 4), Q(1, 5), Q(1, 2), Q(1, 7)))
+    assert tetrad_sign_block_law(independent)["mean"] == 0          # independent raters: every covariance is zero
+    table = _random_table(3)
+    assert tetrad_sign_block_law(table)["mean"] == 6 * tetrad_moments(table)["tetrad"] != 0
+    for n in range(0, 31):
+        for alpha, side in ((Q(1, 20), "greater"), (Q(1, 20), "two_sided"), (Q(1, 10), "greater")):
+            level = alpha if side == "greater" else alpha / 2
+            tails = [sum(comb(n, k) for k in range(c, n + 1)) for c in range(n + 2)]
+            expected = min(c for c in range(n + 2) if Q(tails[c], 2 ** n) <= level)
+            assert sign_test_critical_value(n, alpha, side) == expected
+    p_plus, p_minus = Q(1, 7), Q(1, 11)
+    for n in range(0, 7):
+        for side in TETRAD_SIDES:
+            brute = Q(0)
+            for outcome in product((1, -1, 0), repeat=n):
+                prob = Q(1)
+                for z in outcome:
+                    prob *= p_plus if z == 1 else p_minus if z == -1 else 1 - p_plus - p_minus
+                plus, minus = outcome.count(1), outcome.count(-1)
+                crit = sign_test_critical_value(plus + minus, Q(1, 20), side)
+                if plus >= crit or (side == "two_sided" and minus >= crit):
+                    brute += prob
+            assert sign_test_rejection_probability(n, p_plus, p_minus, Q(1, 20), side)["exact"] == brute
+    n = 320
+    a, b = Q(3, 100), Q(2, 100)
+    exact = Q(0)
+    for trials in range(n + 1):
+        crit = sign_test_critical_value(trials, Q(1, 20))
+        if crit > trials:
+            continue
+        inner = sum(comb(trials, k) * a ** k * b ** (trials - k) for k in range(crit, trials + 1))
+        exact += comb(n, trials) * (1 - a - b) ** (n - trials) * inner
+    bracket = sign_test_rejection_probability(n, a, b)["bracket"]
+    assert bracket[0] <= exact <= bracket[1] and bracket[1] - bracket[0] < Q(1, 10 ** 20)
+    size = sign_test_rejection_probability(1000, null["p_plus"], null["p_minus"])["bracket"]
+    assert size[1] <= Q(1, 20)
+
+
+def test_tetrad_sign_test_on_items():
+    rng = random.Random(5)
+    items = [rng.choice(CELLS4) for _ in range(203)]
+    uniforms = [rng.randrange(4) for _ in range(50)]
+    kernel, index = tetrad_kernel(), {cell: i for i, cell in enumerate(CELLS4)}
+    plus = minus = 0
+    for b in range(50):
+        quad = [index[c] for c in items[4 * b:4 * b + 4]]
+        value = kernel[((quad[0] * 16 + quad[1]) * 16 + quad[2]) * 16 + quad[3]]
+        if uniforms[b] < abs(value):
+            plus, minus = plus + (value > 0), minus + (value < 0)
+    for side in TETRAD_SIDES:
+        result = tetrad_sign_test(items, uniforms, Q(1, 20), side)
+        assert (result["blocks"], result["n_plus"], result["n_minus"]) == (50, plus, minus)
+        upper = binomial_upper_tail(plus + minus, HALF, plus)
+        assert result["p_value"] == (upper if side == "greater" else min(Q(1), 2 * min(
+            upper, binomial_upper_tail(plus + minus, HALF, minus))))
+        assert result["reject"] == (result["p_value"] <= Q(1, 20))
+
+
+def test_cp_interval_matches_the_judge_module_brackets():
+    for n, k in ((1, 0), (1, 1), (10, 3), (25, 0), (25, 25), (40, 17), (90, 2)):
+        for level in (Q(1, 20), Q(1, 120)):
+            bracket = clopper_pearson_bracket(n, k, level)
+            assert _cp_interval(n, k, level) == (bracket["lower"][0], bracket["upper"][1])
+    assert _cp_interval(0, 0, Q(1, 20)) == (Q(0), Q(1))
+
+
+def test_eps1_interval_counts_corners_and_truth():
+    record = rounded_record(expected_record_table(4000, Q(1, 4), Q(4, 5), Q(1, 10), HALF, Q(1, 10), Q(1, 5)))
+    counts = interval_counts(record)
+    labels = record.label_table()
+    agree = {pair: sum(w for cell, w in labels.cells.items() if cell[pair[0] - 1] == cell[pair[1] - 1]) for pair in PAIRS}
+    assert counts["rest"] == 4000 - agree[(2, 3)] and counts["right"] == agree[(1, 3)]
+    assert counts["k_all"] + counts["k12"] == agree[(1, 2)]
+    result = eps1_confidence_interval(record)
+    assert result["status"] == "stated" and result["eps1_range"][0] <= HALF <= result["eps1_range"][1]
+    assert result["eta_range"][0] <= Q(1, 10) <= result["eta_range"][1]
+    rng = random.Random(9)
+    ints = result["intervals"]
+    for _ in range(200):
+        pick = {name: lo + (hi - lo) * Q(rng.randint(0, 100), 100) for name, (lo, hi) in ints.items()}
+        eta = result["eta_range"][0] + (result["eta_range"][1] - result["eta_range"][0]) * Q(rng.randint(0, 100), 100)
+        value = _eps1_corner(eta, pick["measured_accuracy"], pick["measured_eps0"], pick["measured_eps1"])
+        assert result["raw_range"][0] <= value <= result["raw_range"][1]
+        kappa = 1 - 2 * pick["disagreement_g2_c"]
+        k12_plus_k13 = (2 * pick["unanimous_given_agreement"] - 1) * (1 + kappa)
+        k12_minus_k13 = (2 * pick["split_given_disagreement"] - 1) * (1 - kappa)
+        square = (k12_plus_k13 ** 2 - k12_minus_k13 ** 2) / (4 * kappa)
+        assert result["square_range"][0] <= square <= result["square_range"][1]
+    small = eps1_confidence_interval(rounded_record(expected_record_table(100, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10),
+                                                                        Q(1, 10), Q(1, 5))))
+    assert small["status"] in ("eta_unbounded", "eps1_undetermined") and small["eps1_range"] == (Q(0), Q(1))
+    custom = eps1_confidence_interval(record, Q(1, 20), {name: Q(1, 120) for name in result["levels"]})
+    assert custom["eps1_range"] == result["eps1_range"]
+
+
+def test_eps1_interval_coverage_and_delta_variance():
+    for eps1 in (Q(1, 10), HALF):
+        coverage = eps1_interval_coverage(6, Q(1, 4), Q(4, 5), Q(1, 10), eps1, Q(1, 10), Q(1, 5))
+        assert coverage["coverage"] >= Q(19, 20) and coverage["box_coverage"] >= Q(19, 20)
+        assert coverage["tables"] == comb(13, 7)
+    delta = eps1_delta_variance(Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5))
+    assert delta["d_eps1_d_eta"] == -4 and delta["eta_only"] == 16 * Q(2401, 8100)
+    assert delta["total"] == delta["judge_only"] + delta["eta_only"] + 2 * delta["cross"]
+    assert delta["binomial_plug_in"] == Q(9, 20) < delta["judge_only"] < delta["total"]
+
+
+def test_sturm_counts_and_square_root_signs():
+    cubic = (Q(-6), Q(11), Q(-6), Q(1))                       # (x - 1)(x - 2)(x - 3)
+    assert sturm_root_count(cubic, 0, Q(5, 2)) == 2 and sturm_root_count(cubic, Q(3, 2), 4) == 2
+    assert sturm_root_count(cubic, 0, HALF) == 0 and sturm_root_count(cubic, Q(5, 2), 3) == 1
+    double = (Q(-2), Q(5), Q(-4), Q(1))                      # (x - 1)^2 (x - 2)
+    assert sturm_root_count(double, 0, 3) == 2
+    assert sign_at_square_root((Q(-2), 0, 1), 2) == 0 and sign_at_square_root((Q(-1), 1), 2) == 1
+    assert sign_at_square_root((Q(3), -2), 2) == 1 and sign_at_square_root((Q(-3), 2), 2) == -1
+    assert sign_at_square_root((0, Q(-2), 0, 1), 2) == 0 and sign_at_square_root((Q(-7), 0, 0, 1), 4) == 1
+
+
+def test_asymmetric_inversion_in_the_root_and_the_witness():
+    controller, gold, second = (Q(1, 10), Q(3, 10)), (Q(1, 10), Q(1, 5)), (Q(1, 5), Q(1, 10))
+    record = expected_record_table_asymmetric(4000, Q(1, 4), controller, Q(1, 10), Q(2, 5), gold, second)
+    fit = dawid_skene_three_raters(record.label_table())
+    measured = measured_judge_rates(record, 1)
+    rational = asymmetric_eps1_rational(fit["moments"], measured["accuracy"], measured["judge_error"],
+                                        measured["wrong_wrong_rate"])
+    low, high = root_in_range_interval(fit["moments"])
+    for k in range(1, 10):
+        r = low + (high - low) * Q(k, 10)
+        exact = asymmetric_eps1_enclosure(fit["moments"], measured["accuracy"], measured["judge_error"],
+                                          measured["wrong_wrong_rate"], r - Q(1, 10 ** 6), r + Q(1, 10 ** 6))
+        assert exact["status"] == "monotone"
+        value = (sum(c * r ** i for i, c in enumerate(rational["numerator"]))
+                 / sum(c * r ** i for i, c in enumerate(rational["denominator"])))
+        assert exact["enclosure"][0] <= value <= exact["enclosure"][1]
+    result = monotonicity_fixture()
+    witness = result["witness"]
+    assert witness["true_minus_end_signs"] == [-1, -1] and witness["enclosure_contains_true"]
+    assert witness["critical_points_in_bracket"] == 1 and witness["critical_points_in_range"] == 2
+    calibration = calibrate_asymmetric(witness_record(), Q(1, 10))
+    assert calibration["status"] == "bracketed" and calibration["eps1_enclosure"]["status"] == "certified"
+    assert [inv["recovered"]["eps1"] for inv in calibration["inversions"]] == witness["end_values"]
+    assert all(r["critical_points_in_range"] == 0 for r in result["fixture_records"].values())
+
+
+def test_tetrad_enumeration_size_and_rounded_record():
+    null = four_rater_model(FOUR_PRIOR, FOUR_FALSE_NEGATIVES, FOUR_FALSE_POSITIVES)
+    enum = tetrad_by_enumeration(4, null)
+    assert enum["tables"] == comb(19, 15) and enum["mean"] == 0
+    assert all(p <= Q(1, 20) for p in enum["rejection"].values())
+    record = rounded_record(expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5)))
+    assert record.total == 742 and all(v.denominator == 1 for v in record.cells.values())
+
+
+@pytest.mark.parametrize("call", [
+    lambda: tetrad_variance_bound(3),
+    lambda: tetrad_variance_bound(10, (Q(0), Q(1), Q(1))),
+    lambda: tetrad_variance_bound(10, (Q(1, 3), Q(1), Q(1))),
+    lambda: tetrad_variance_bound(10, (Q(1, 4), Q(3), Q(1))),
+    lambda: tetrad_variance_bound(10, (Q(1, 4), Q(1))),
+    lambda: tetrad_variance_bound(10, (0.25, Q(1), Q(1))),
+    lambda: tetrad_u_statistic(FourRaterTable({CELLS4[0]: 3})),
+    lambda: tetrad_u_statistic(FourRaterTable({CELLS4[0]: Q(9, 2)})),
+    lambda: tetrad_cantelli_test(FourRaterTable({CELLS4[0]: 10}), UNIVERSAL_REGION, Q(1, 20), "less"),
+    lambda: tetrad_cantelli_test(FourRaterTable({CELLS4[0]: 10}), UNIVERSAL_REGION, Q(0)),
+    lambda: tetrad_u_variance({1: Q(0), 2: Q(0), 3: Q(0), 4: Q(0)}, 3),
+    lambda: tetrad_influence_variance(Q(1, 4), (Q(1, 10),) * 3, (Q(1, 10),) * 4),
+    lambda: sign_test_critical_value(-1, Q(1, 20)),
+    lambda: sign_test_critical_value(5, Q(1, 20), "left"),
+    lambda: sign_test_rejection_probability(10, Q(1, 2), Q(2, 3)),
+    lambda: sign_test_rejection_probability(-1, Q(1, 4), Q(1, 4)),
+    lambda: sign_test_rejection_probability(10, 0.25, Q(1, 4)),
+    lambda: tetrad_sign_test([(0, 0, 0)] * 4, [0]),
+    lambda: tetrad_sign_test([CELLS4[0]] * 8, [0]),
+    lambda: tetrad_sign_test([CELLS4[0]] * 4, [4]),
+    lambda: tetrad_by_enumeration(3, FourRaterTable({CELLS4[0]: 1})),
+    lambda: eps1_confidence_interval(expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10), Q(1, 10), Q(1, 5))),
+    lambda: eps1_confidence_interval(rounded_record(expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10),
+                                                                         Q(1, 10), Q(1, 5))), Q(0)),
+    lambda: eps1_confidence_interval(rounded_record(expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10),
+                                                                         Q(1, 10), Q(1, 5))), Q(1, 20), {"x": Q(1, 20)}),
+    lambda: eps1_confidence_interval(rounded_record(expected_record_table(742, Q(1, 4), Q(4, 5), Q(1, 10), Q(1, 10),
+                                                                         Q(1, 10), Q(1, 5))), Q(1, 20),
+                                     {name: Q(1, 100) for name in ("disagreement_g2_c", "split_given_disagreement",
+                                                                   "unanimous_given_agreement", "measured_accuracy",
+                                                                   "measured_eps0", "measured_eps1")}),
+    lambda: eps1_confidence_interval(three_rater_model(Q(1, 4), (Q(1, 10), Q(1, 5), Q(1, 5)))),
+    lambda: interval_counts(RecordTable({(0, 0, 0, 0): Q(1, 2), (1, 1, 1, 1): Q(1, 2)})),
+    lambda: rounded_record(RecordTable({(0, 0, 0, 0): Q(1, 2), (1, 1, 1, 1): Q(1, 3)})),
+    lambda: sturm_root_count((Q(1), Q(1)), 1, 0),
+    lambda: sturm_root_count((), 0, 1),
+    lambda: sturm_root_count((Q(-1), Q(1)), 1, 2),
+    lambda: sign_at_square_root((Q(1),), -1),
+    lambda: asymmetric_eps1_rational(dawid_skene_three_raters(dawid_skene_model(Q(1, 4), (Q(1, 10),) * 3,
+                                                                               (Q(1, 5),) * 3))["moments"],
+                                     Q(1, 2), Q(1, 5), Q(1, 10), 2),
+    lambda: asymmetric_eps1_enclosure(dawid_skene_three_raters(dawid_skene_model(Q(1, 4), (Q(1, 10),) * 3,
+                                                                                (Q(1, 5),) * 3))["moments"],
+                                      Q(1, 2), Q(1, 5), Q(1, 10), Q(1, 10), Q(1, 20)),
+])
+def test_rejects_malformed_v04(call):
+    with pytest.raises(ValueError):
+        call()
+
+
 # --- malformed inputs --------------------------------------------------------
 
 @pytest.mark.parametrize("call", [
@@ -955,7 +1285,16 @@ def test_rejects_malformed(call):
 
 def test_fixture_values_and_verify():
     report = verify()
-    assert report["all_passed"] and len(report["checks"]) == 58
+    assert report["all_passed"] and len(report["checks"]) == 75
+    tetrad = report["tetrad"]
+    assert tetrad["null_moments"]["zeta"][1] * 16 == Q(321813, 512000000)
+    assert tetrad["alternatives"]["1"]["by_size"][4000]["sign_test_power"]["greater"]["bracket"][0] > Q(9, 10)
+    assert Q(1, 17) < tetrad["efficiency_ratio"] < Q(1, 16)
+    interval = report["interval"]["by_size"]
+    assert interval[4000]["judges"]["independent"]["interval"]["eps1_range"][1] \
+        < interval[4000]["judges"]["maximally_shared"]["interval"]["eps1_range"][0]
+    witness = report["monotonicity"]["witness"]
+    assert witness["true_minus_end_signs"] == [-1, -1]
     assert report["evidence_status"].startswith("exact_synthetic")
     sampling = report["sampling"]
     assert sampling["delta"]["eta"] == Q(2401, 8100) and sampling["planning_size"] == 742

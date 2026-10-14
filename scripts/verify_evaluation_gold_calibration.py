@@ -1,5 +1,6 @@
 """Run exact gold-calibration checks (second-grader estimate of eta, its sampling law, the asymmetric
-Dawid-Skene model, four raters, the joint statement for (eta_1, eps_1)); no model, judge or grader is run."""
+Dawid-Skene model, four raters, the joint statement for (eta_1, eps_1), the level-alpha tetrad tests, the
+plug-in-free interval for eps_1, monotonicity in the Dawid-Skene root); no model, judge or grader is run."""
 
 from __future__ import annotations
 
@@ -10,7 +11,9 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 
-from spiral_ln.evaluation_gold_calibration import CELLS4, JOINT_SIZES, SAMPLING_SIZES, verify
+from spiral_ln.evaluation_gold_calibration import (
+    CELLS4, COVERAGE_SIZES, INTERVAL_SIZES, JOINT_SIZES, SAMPLING_SIZES, TETRAD_SIZES, verify,
+)
 
 
 def _encode(value):
@@ -164,13 +167,46 @@ def _headline(report: dict) -> dict:
                                        else _f(row["triple_123"]["solution"]["prior"])}
                                  for rho, row in four["copy_grader"].items()},
                  "copy_witness_counts": [int(four["copy_witness_counts"][c]) for c in CELLS4]}
+    tetrad = report["tetrad"]
+    tetrad_head = {
+        "null_zeta": {str(c): _f(z) for c, z in tetrad["null_moments"]["zeta"].items()},
+        "scaled_variance": {str(m): {k: _f(m * x) for k, x in v.items()} for m, v in tetrad["variances"].items()},
+        "critical_values": {str(m): {name: {side: _f(t) for side, t in d.items()} for name, d in row.items()}
+                            for m, row in tetrad["critical_values"].items()},
+        "sign_test_null_size": {str(m): {side: _pair(r["bracket"]) for side, r in d.items()}
+                                for m, d in tetrad["null_size_sign_test"].items()},
+        "efficiency_ratio": _f(tetrad["efficiency_ratio"]),
+        "copy_grader": {rho: {"tetrad": _f(row["tetrad"]), "by_size": {
+            str(m): {"sign_test_power": {side: _pair(r["bracket"]) for side, r in entry["sign_test_power"].items()},
+                     "cantelli_power_lower_bound": {name: {side: _f(r["power_lower_bound"]) for side, r in d.items()}
+                                                    for name, d in entry["cantelli_power_lower_bound"].items()},
+                     "asymptotic_noncentrality_squared": _f(entry["asymptotic_noncentrality_squared"])}
+            for m, entry in row["by_size"].items()}} for rho, row in tetrad["alternatives"].items()}}
+    interval = report["interval"]
+    interval_head = {
+        "by_size": {str(m): {"ranges_disjoint": e["ranges_disjoint"],
+                             "judges": {name: {"status": j["interval"]["status"], "eta_range": _pair(j["interval"]["eta_range"]),
+                                               "eps1_range": _pair(j["interval"]["eps1_range"])}
+                                        for name, j in e["judges"].items()}}
+                    for m, e in interval["by_size"].items()},
+        "delta_variance": {name: {k: _f(v) for k, v in d.items()} for name, d in interval["delta_variance"].items()},
+        "coverage": {str(m): {name: {"coverage": _f(c["coverage"]), "box_coverage": _f(c["box_coverage"])}
+                              for name, c in d.items()} for m, d in interval["coverage"].items()}}
+    witness = report["monotonicity"]["witness"]
+    monotone_head = {"witness_end_values": [_f(v) for v in witness["end_values"]],
+                     "witness_enclosure": _pair(witness["enclosure"]["enclosure"]),
+                     "witness_true_minus_end_signs": witness["true_minus_end_signs"],
+                     "witness_judge_rates_at_ends": [[_f(a), _f(b)] for a, b in witness["judge_rates_at_ends"]],
+                     "fixture_records_critical_points_in_range": {
+                         name: r["critical_points_in_range"] for name, r in report["monotonicity"]["fixture_records"].items()}}
     return {"kappas": {",".join(map(str, k)): _f(v) for k, v in raters["kappas"].items()},
             "squares": {str(k): _f(v) for k, v in raters["squares"].items()},
             "recovered": {"eta1": _f(raters["recovered_eta1"]), "eta2": _f(raters["recovered_eta2"]),
                           "accuracy": _f(raters["recovered_accuracy"])},
             "pipeline": pipeline, "dependent_grader": dependent, "sampling": sampling_head,
             "dawid_skene": ds_head, "asymmetric_pipeline": asym_head,
-            "four_raters": four_head, "joint": _joint(report["joint"])}
+            "four_raters": four_head, "joint": _joint(report["joint"]),
+            "tetrad": tetrad_head, "interval": interval_head, "monotonicity": monotone_head}
 
 
 def main() -> int:
@@ -180,15 +216,26 @@ def main() -> int:
                         help="add an item count to the enumerated sampling-law ladder (default %s)" % (SAMPLING_SIZES,))
     parser.add_argument("--joint-size", type=int, action="append", default=[],
                         help="add an item count for the joint statement (default %s)" % (JOINT_SIZES,))
+    parser.add_argument("--tetrad-size", type=int, action="append", default=[],
+                        help="add an item count for the tetrad tests' sizes and powers (default %s)" % (TETRAD_SIZES,))
+    parser.add_argument("--interval-size", type=int, action="append", default=[],
+                        help="add an item count for the eps_1 interval (default %s)" % (INTERVAL_SIZES,))
+    parser.add_argument("--coverage-size", type=int, action="append", default=[],
+                        help="add an item count for the interval's exact coverage enumeration (default %s)" % (COVERAGE_SIZES,))
     parser.add_argument("--workers", type=int, default=1,
                         help="processes for the square tests of the eta set (results do not depend on it)")
     args = parser.parse_args()
     sizes = tuple(sorted(set(SAMPLING_SIZES) | set(args.sampling_size)))
     joint_sizes = tuple(sorted(set(JOINT_SIZES) | set(args.joint_size)))
-    verified = verify(sizes, joint_sizes, args.workers)
-    report = {"schema_version": "0.3",
+    tetrad_sizes = tuple(sorted(set(TETRAD_SIZES) | set(args.tetrad_size)))
+    interval_sizes = tuple(sorted(set(INTERVAL_SIZES) | set(args.interval_size)))
+    coverage_sizes = tuple(sorted(set(COVERAGE_SIZES) | set(args.coverage_size)))
+    verified = verify(sizes, joint_sizes, args.workers, tetrad_sizes, interval_sizes, coverage_sizes)
+    report = {"schema_version": "0.4",
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
               "sampling_sizes": list(sizes), "joint_sizes": list(joint_sizes),
+              "tetrad_sizes": list(tetrad_sizes), "interval_sizes": list(interval_sizes),
+              "coverage_sizes": list(coverage_sizes),
               **_stringify_keys(verified), "headline": _headline(verified)}
     root = Path(__file__).resolve().parents[1]
     sources = ("scripts/verify_evaluation_gold_calibration.py",

@@ -1,13 +1,15 @@
 # Estimating the gold grader's error with a second grader
 
-Draft 0.3 — 2026-10-13. Closes the boundary of [judge_shared_error_measurement.md](judge_shared_error_measurement.md) §5: Proposition 2 inverts
+Draft 0.4 — 2026-10-14. Closes the boundary of [judge_shared_error_measurement.md](judge_shared_error_measurement.md) §5: Proposition 2 inverts
 gold noise at a *known* flip rate \(\eta\); here \(\eta\) is estimated from a second independent grader, exactly. 0.2 added the sampling law of \(\hat\eta_1\) (§6) and the asymmetric
-Dawid–Skene model (§7); 0.3 adds a fourth rater, which makes that model testable (§8), and a joint statement for \((\eta_1,\varepsilon_1)\) (§9). Files: `src/spiral_ln/evaluation_gold_calibration.py`,
-`tests/test_evaluation_gold_calibration.py` (126 tests), `output/evaluation_gold_calibration/gold_v0_3.json` (58 checks, source hashes, exact fractions, floats under `headline`).
-No model, judge or grader was called; every number is a `Fraction` (or an integer bound, §9); the judge module's tails and maps are reused.
+Dawid–Skene model (§7); 0.3 a fourth rater, which makes that model testable (§8), and a joint statement for \((\eta_1,\varepsilon_1)\) (§9). 0.4 takes three items off 0.3's list of what
+was not delivered: level-\(\alpha\) tests of the four-rater tetrad on \(m\) items (§10), a confidence interval for \(\varepsilon_1\) with no plug-in (§11), and the monotonicity question for
+bracketed Dawid–Skene fits, refuted with an exact witness and replaced by a certified enclosure (§12). Files: `src/spiral_ln/evaluation_gold_calibration.py`,
+`tests/test_evaluation_gold_calibration.py` (174 tests), `output/evaluation_gold_calibration/gold_v0_4.json` (75 checks, source hashes, exact fractions, floats under `headline`).
+No model, judge or grader was called; every number is a `Fraction` (or an integer bound, §9–§10); the judge module's tails and maps are reused.
 
 ```powershell
-$env:PYTHONPATH = "src"; python scripts/verify_evaluation_gold_calibration.py --sampling-size 400 --sampling-size 742 --joint-size 4000 --workers 4 --output output/evaluation_gold_calibration/gold_v0_3.json
+$env:PYTHONPATH = "src"; python scripts/verify_evaluation_gold_calibration.py --sampling-size 400 --sampling-size 742 --joint-size 4000 --coverage-size 16 --workers 4 --output output/evaluation_gold_calibration/gold_v0_4.json
 python -m pytest tests/test_evaluation_gold_calibration.py -q
 ```
 
@@ -119,7 +121,7 @@ one pair — with probabilities \(q_{\text{all}}=p(000)+p(111)=\tfrac14(1+\sum\k
 over a common denominator \(D^m\), the square's class by integer comparison, its moments grouped by \(\hat\kappa_{23}\), the moments of \(\hat\eta_1\) bracketed
 through \(\lfloor2^{16}\sqrt{\hat S}\rfloor\) per outcome). Enumerating all \(\binom{m+7}{7}\) label tables instead (`sampling_law_by_tables`; 245,157 at \(m=16\), 0.7 s)
 gives every class probability and moment identically; the reduction reaches \(m=742\) in the receipt (68,638,340 terms; the whole receipt run, with
-\(m=400\) and §9 at 4000, takes about 8 minutes, most of it there). Moments are conditional on the defined event; "within" is
+\(m=400\), §9 at 4000 and §10–§12, takes about 10 minutes, most of it there). Moments are conditional on the defined event; "within" is
 \(\Pr[\text{defined},\ |\hat\eta_1-\eta_1|\le\tfrac1{50}]\). Truth: \(S=\tfrac{16}{25}\), \(\eta_1=\tfrac1{10}\), \(d=(\tfrac45,\tfrac35,\tfrac35)\).
 
 | \(m\) | undefined (sign + range) | \(\hat S\) perfect | within \(\pm0.02\) | \(E\hat S\) | \(m\,\mathrm{Var}\hat S\) | \(E\hat\eta_1\) | \(m\,\mathrm{Var}\hat\eta_1\) |
@@ -156,7 +158,8 @@ Rater \(i\): false-negative \(\alpha_i=\Pr[X_i=0\mid Y=1]\), false-positive \(\b
 (`dawid_skene_model`). Write \(s_i=1-\alpha_i\), \(t_i=\beta_i\), \(\delta_i=1-\alpha_i-\beta_i\), \(u=\pi(1-\pi)\); from the table \(p_i=\Pr[X_i=1]\), \(c_{ij}=p_{ij}-p_ip_j\),
 \(k_3=E\prod(X_i-p_i)=p_{123}-\sum_ip_ip_{jk}+2p_1p_2p_3\).
 
-**Proposition 4.** \(c_{ij}=u\delta_i\delta_j\), \(k_3=u(1-2\pi)\delta_1\delta_2\delta_3\), so \(R^2:=k_3^2+4c_{12}c_{13}c_{23}=u^2\delta_1^2\delta_2^2\delta_3^2\) and, under \(\delta_1\delta_2\delta_3>0\), with \(\{i,j,k\}=\{1,2,3\}\):
+**Proposition 4.** \(c_{ij}=u\delta_i\delta_j\), \(k_3=u(1-2\pi)\delta_1\delta_2\delta_3\), so \(R^2:=k_3^2+4c_{12}c_{13}c_{23}=u^2\delta_1^2\delta_2^2\delta_3^2\) and, under \(0<\pi<1\) and \(\delta_1\delta_2\delta_3>0\) (the first is
+implied by the identifiability condition below but is a hypothesis here: it makes \(u>0\) and \(R>0\)), with \(\{i,j,k\}=\{1,2,3\}\):
 \[\pi=\frac{R-k_3}{2R},\qquad s_i=p_i+\frac{R+k_3}{2c_{jk}},\qquad t_i=p_i-\frac{R-k_3}{2c_{jk}}.\]
 *Proof.* \(s_i-p_i=(1-\pi)\delta_i\) and \(t_i-p_i=-\pi\delta_i\) have product \(-u\delta_i^2=-c_{ij}c_{ik}/c_{jk}\) and sum \((1-2\pi)\delta_i=k_3/c_{jk}\): the roots of
 \(z^2-(k_3/c_{jk})z-c_{ij}c_{ik}/c_{jk}\), discriminant \(R^2/c_{jk}^2\); and \(u=c_{12}c_{13}c_{23}/R^2\) gives \(1-2\pi=k_3/R\). \(\square\) One root for everything: \(\pi\) is monotone
@@ -199,7 +202,9 @@ Hence six equalities (`four_rater_residuals`): tetrads \(c_{12}c_{34}=c_{13}c_{2
 (both sides \(u^2(1-2\pi)\delta_p^2\prod_{q\ne p}\delta_q\), \(p\) the pivot); and \((k_{1234}-c_{12}c_{34})c_{12}=k_{123}k_{124}\), as \(\mu_4-u^2=u(1-2\pi)^2\). The other nine ratio relations follow (`ratio_relations`).
 **Proposition 6 (exactly six).** (a) The \(16\times9\) parameter Jacobian has rank 9 wherever \(0<\pi<1\) and three \(\delta_i\ne0\): Proposition 4 on that triple with \(\delta_4=c_{14}/(u\delta_1)\),
 \(1-\alpha_4=p_4+(1-\pi)\delta_4\), \(\beta_4=p_4-\pi\delta_4\) is a smooth left inverse. (b) The residuals' \(6\times15\) Jacobian in the centred moments (coordinates on the simplex) has rank 6
-wherever \(c_{12}c_{13}\ne0\), model or not: on \((c_{24},c_{34},k_{124},k_{134},k_{234},k_{1234})\) the minor is lower triangular with determinant \(-c_{12}^4c_{13}^2\). So near an identified model
+wherever \(c_{12}c_{13}\ne0\), model or not: with each equality written as left minus right and the rows in the order (\(c_{13}c_{24}-c_{14}c_{23}\), \(c_{12}c_{34}-c_{13}c_{24}\),
+the three ratios as listed, the fourth-moment relation), the minor on \((c_{24},c_{34},k_{124},k_{134},k_{234},k_{1234})\) is lower triangular with diagonal \((c_{13},c_{12},-c_{13},-c_{12},-c_{12},c_{12})\) and
+determinant \(-c_{12}^4c_{13}^2\) (with the two tetrads swapped it is \(+c_{12}^4c_{13}^2\); the rank is the same). So near an identified model
 point the nine-dimensional image is the zero set of six independent functions. \(\square\) Both ranks are also computed exactly on 243 grid points; moments match the \(2^5\) latent
 enumeration on 1024. **Test** (`four_rater_constraints`): with every \(c_{ij}\ne0\), a table is in the model iff the residuals vanish and the triple fits exist with all nine rates in
 \([0,1]\) (triple \((1,2,3)\) fixes \(\pi\) and three raters, \(c_{14},p_4\) rater 4, the equalities the remaining six moments; the four fits must agree; exact fits are rebuilt cell by cell).
@@ -213,7 +218,7 @@ residuals zero, ranks 6 and 9, all nine parameters recovered exactly on every tr
 \((G_1,G_2,G_3)\) fits exactly and in range (\(\pi=\tfrac38\), two perfect graders: §7's absorption), four raters reject it (residual \(\tfrac{513}{80000}\), triple fits inconsistent). Any \(\rho>0\) is
 detected when \(V_1>0\), \(0<\pi<1\), \(\delta_3\delta_4\ne0\), **at \(\pi=\tfrac12\) too**, where §3's check is vacuous. The odd product names the split \(\{1,2\mid3,4\}\), not the dependent side.
 *Evidence status.* Propositions 5–6, the converse, the residual: *algebraic identities*, enumeration-checked; fixtures: *finite verified examples*. All are population identities:
-on observed counts the residuals never vanish exactly, and their sampling law is not derived.
+on observed counts the residuals never vanish exactly; §10 tests the first tetrad at level \(\alpha\) on \(m\) items.
 
 ## 9. A joint statement for \((\eta_1,\varepsilon_1)\)
 
@@ -239,11 +244,141 @@ on nine cases up to \(m=742\), is narrower than \(10^{-34}\), takes 3 s a point 
 while neither is rejected under its own hypothesis everywhere (at 742: independence at 0.06–0.08, ceiling at 0.13–0.14). **At the planning size the judges separate jointly by the
 tests but not by the \(\varepsilon_1\) ranges**; at 4000 by both. The overlap comes from the ends of \(H\) (\(\hat\varepsilon_1=\tfrac13\) for the shared judge at 0.14, 0.228 for the independent one
 at 0.06). With the disagreement bound alone (\(\eta_0\le0.288\) at level \(\alpha\)) the set passes \(1-a'=0.26\), where the inversion implies a perfect controller: \(\varepsilon_1\) undetermined. §7's
-asymmetric record is withheld. *Evidence status:* coverage is a theorem given the plug-ins; the sets, ranges and p-values are *finite verified examples*.
+asymmetric record is withheld. *Evidence status:* coverage is a theorem given the plug-ins; the sets, ranges and p-values are *finite verified examples*. §11 shows the second
+plug-in is far from harmless (the binomial on corrected counts understates the first-order variance of \(\hat\varepsilon_1\) 7.7-fold for the independent judge) and gives an interval
+that needs neither.
 
-## 10. Not delivered
+## 10. Level-\(\alpha\) tests of the tetrad on \(m\) items
 
-- No observed graders; binary labels only. Real counts give brackets, and §8's residuals never vanish on them: no level-\(\alpha\) test of the six equalities on \(m\) items.
-- §6's law is conditional on the defined event. §9 holds given its plug-ins, on the grid, in the symmetric model; no sampling law for \(\hat\varepsilon_1\) or the three- or four-rater fits.
-- A bracketed Dawid–Skene fit brackets \(\hat\varepsilon_1\) only if the inversion is monotone in \(R\) (not checked). The four-rater test refuses a chance rater though the model stays
-  locally identified; three raters cannot test conditional independence; §3's check has no power at \(\pi=\tfrac12\).
+The first tetrad of §8, \(\tau=c_{12}c_{34}-c_{13}c_{24}\), is the one copying breaks. On four items \(i,j,k,l\) write \(D_a(ij)=x_{ai}-x_{aj}\) and, for the split \(\{ij\mid kl\}\),
+\(\Delta_{ab}=D_a(ij)D_b(kl)-D_a(kl)D_b(ij)\). The integer kernel \(K=\sum_{\text{3 splits}}\Delta_{14}\Delta_{23}\) (`tetrad_kernel`, all \(16^4\) quadruples) is the symmetrised
+\(g_{12}g_{34}-g_{13}g_{24}\), \(g_{ab}(x,y)=(x_a-y_a)(x_b-y_b)/2\), times 24: expanding the two determinants gives the eight orderings of a split, so \(E K=24\tau\) for *every* law.
+By exhaustion \(\max|K|=4\). Under the model, given the four latent classes, \(E[D_a(ij)\mid Y]=\delta_a(Y_i-Y_j)\), so each determinant has conditional mean
+\(\delta_a\delta_b\big((Y_i-Y_j)(Y_k-Y_l)-(Y_k-Y_l)(Y_i-Y_j)\big)=0\), and the two involve disjoint raters: every split term is a product of two conditionally independent
+mean-zero factors. The unbiased U-statistic \(U_m\) is computed from the sixteen counts in \(O(16^2)\) (`tetrad_u_statistic`; equal to the average over ordered 4-tuples on random
+item lists); \(\mathrm{Var}\,U_m=\sum_c\binom4c\binom{m-4}{4-c}\binom m4^{-1}\zeta_c\) (Hoeffding 1948, *cited*), with the \(\zeta_c\) exact by marginalising \(K\) item by item
+(`tetrad_moments`; enumeration of all \(\binom{m+15}{15}\) tables reproduces \(E U_m\) and \(\mathrm{Var}\,U_m\) exactly at \(m=4,5\) for a non-model table and at \(m=6\), 54,264 tables,
+for the fixture and its \(\rho=1\) copy).
+
+**Proposition 7 (the influence function factorises).** Under the four-rater model, with \(Y_a=x_a-p_a\),
+\(c_{34}\varphi_{12}+c_{12}\varphi_{34}-c_{24}\varphi_{13}-c_{13}\varphi_{24}=u(\delta_4Y_1-\delta_1Y_4)(\delta_3Y_2-\delta_2Y_3)\), \(\varphi_{ab}=Y_aY_b-c_{ab}\), and
+\(\delta_4Y_1-\delta_1Y_4=\delta_4\varepsilon_1-\delta_1\varepsilon_4\) with \(\varepsilon_a=x_a-E[x_a\mid Y]\). Hence
+\(16\zeta_1=\mathrm{Var\,IF}=u^2E\big[(\delta_4^2v_1+\delta_1^2v_4)(\delta_3^2v_2+\delta_2^2v_3)\big]\), \(v_a=\mathrm{Var}(x_a\mid Y)\). *Proof.* Group the four products as
+\(Y_1(\cdot)+Y_4(\cdot)\); the constants cancel because \(\tau=0\); the latent part \(\delta_a(Y-\pi)\) cancels in each factor; the factors are conditionally independent with mean
+zero. \(\square\) (`tetrad_influence_variance`; cell by cell at two points, and \(16\zeta_1\) equal to it on 52 grid points including a chance, an anti-informative, a near-perfect and
+a balanced-prior point.) Fixture: \(16\zeta_1=\tfrac{321813}{512000000}\approx6.285\times10^{-4}\); \(m\,\mathrm{Var}\,U_m=6.356\times10^{-4}\) at 742 (1.1% above first order),
+\(6.299\times10^{-4}\) at 4000.
+
+**Proposition 8 (a variance bound for every null point of a region).** Let \(g(\delta)=\tfrac14\) for \(|\delta|\le\tfrac12\), else \(|\delta|(1-|\delta|)\); then \(v_a(y)\le g(\delta_a)\).
+With \(h_{14}=\delta_4^2g(\delta_1)+\delta_1^2g(\delta_4)\le\min(A/4,\tfrac14)\), \(A=\delta_1^2+\delta_4^2\), likewise \(h_{23}\) with \(B=\delta_2^2+\delta_3^2\), and \(w_c\) Hoeffding's weights,
+\[\mathrm{Var}\,U_m\le w_1\frac{u^2h_{14}h_{23}}{16}+\Big(\frac{w_2}2+\frac{3w_3}4+w_4\Big)\frac{\tfrac14+4u(h_{14}+h_{23})+16h_{14}h_{23}(u+2u^2)}{64}.\]
+*Proof.* The first term is Proposition 7 with \(v\le g\). \(\zeta_c/c\) is non-decreasing (Hoeffding 1948; Serfling 1980, Lemma 5.2.1A: *cited*), so \(\zeta_2,\zeta_3\le\tfrac24\zeta_4,\tfrac34\zeta_4\).
+\(\zeta_4=E h^2\le E H^2\) for one split term \(H=\Delta_{14}\Delta_{23}/8\) (Cauchy–Schwarz over the three); given the classes the determinants are independent and
+\(E[\Delta_{14}^2\mid Y]=V_1(ij)V_4(kl)+V_1(kl)V_4(ij)+\delta_4^2(V_1(ij)e_{kl}+V_1(kl)e_{ij})+\delta_1^2(V_4(kl)e_{ij}+V_4(ij)e_{kl})\le\tfrac12+2h_{14}e\), with \(V_a(ij)=v_a(Y_i)+v_a(Y_j)\),
+\(e_{ij}=[Y_i\ne Y_j]\), \(e=e_{ij}+e_{kl}\), \(Ee=4u\), \(Ee^2=4u+8u^2\). \(\sup_{[0,1]^2}y^2g(x)+x^2g(y)=\tfrac14\) (three cases; the last is \(p(s-2p)\le p(1-p)\) with \(p=xy\), \(s\le1+p\)).
+The bound increases in \(u,h_{14},h_{23}\). \(\square\) (`tetrad_variance_bound`; exact \(\mathrm{Var}\,U_m\) below the point bound below the region bounds on all 52 grid points at
+\(m=6,742,4000\).) **Every four-rater model** is the region \((u,A,B)\le(\tfrac14,2,2)\): \(\zeta_1\le\tfrac1{4096}\), \(\zeta_4\le\tfrac9{512}\). The fixture region
+\((u,A,B)\le(\tfrac3{16},\tfrac{17}{20},\tfrac{13}{20})\) — prior at least \(\tfrac14\) from \(\tfrac12\), the two sums of squared discriminations no larger than the fixture's — gives \(\tfrac{1989}{26214400}\) and \(\tfrac{34493}{3276800}\).
+\(m\) times the bounds: universal 0.00471 / 0.00406 / 0.00397 at 742 / 4000 / 10000; fixture region 0.00171 / 0.00131 / 0.00125; exact 0.00064 / 0.00063 / 0.00063.
+
+**Test A** (`tetrad_cantelli_test`). Reject when \(U_m\ge t\), \(t\ge\sqrt{\bar V(1-\alpha)/\alpha}\) (Cantelli; the copying direction when \(c_{34}>0\)), or \(|U_m|\ge t\), \(t\ge\sqrt{\bar V/\alpha}\)
+(Chebyshev); \(\bar V\) the region's bound, \(t\) rounded up to \(2^{-32}\). **Size \(\le\alpha\) at every null point of the region — a theorem; with the universal region, at every
+parameter of the four-rater model**, informative or not, any prior. One-sided \(t\) at \(\alpha=\tfrac1{20}\): universal 0.01098 / 0.00439 / 0.00275, fixture region 0.00662 / 0.00249 / 0.00154.
+Exactly at \(m=6\) the rejection probability of all four variants is 0 (the bound is far from tight). On the integral \(m=10^4\) tables: \(U=0\) for the fixture (accepted),
+\(U=\tfrac{35625}{5553889}\approx0.00641\) for the \(\rho=1\) witness of §8 (rejected by all four). Power is bounded below by Cantelli at the alternative with the exact
+\(\mathrm{Var}\,U_m\) there (`tetrad_cantelli_power_bound`), zero when \(\tau\le t\).
+
+**Test B** (`tetrad_sign_test`), exact and nuisance-free. Blocks of four consecutive items; \(Z=\mathrm{sign}(K)\) when an independent uniform \(U\in\{0,1,2,3\}\) is below \(|K|\), else 0.
+Then \(EZ=EK/4=6\tau\): whenever the tetrad vanishes, \(P(Z=1)=P(Z=-1)\) (`tetrad_sign_block_law`, exact over the \(16^4\) quadruples; symmetric on all 52 grid points), so given
+\(N\) nonzero blocks \(N_+\sim\mathrm{Bin}(N,\tfrac12)\) and rejecting at \(N_+\ge c(N)\), \(c(N)\) the smallest cut with \(P(\mathrm{Bin}(N,\tfrac12)\ge c)\le\alpha\) (`sign_test_critical_value`, exact),
+has **size \(\le\alpha\) for every law with \(\tau=0\): every four-rater parameter, no region, no plug-in — a theorem**, randomized only through the external uniforms. Exact attained
+size at the fixture (`sign_test_rejection_probability`: a finite sum to 300 blocks, a fixed-point bracket narrower than \(10^{-35}\) above): 0.0312 / 0.0398 / 0.0437 (one-sided).
+
+Power against the copying grader at the §8 fixture, \(\alpha=\tfrac1{20}\), one-sided (sign test exact; Cantelli rigorous lower bounds; last column \(m\tau^2/16\zeta_1\), the squared
+noncentrality of the efficient but only asymptotically valid studentised test):
+
+| \(m\) | \(\rho\) | \(\tau\) | sign test | Test A universal \(\ge\) | Test A fixture region \(\ge\) | \(m\tau^2/16\zeta_1\) |
+|---|---|---|---|---|---|---|
+| 742 | 1/4, 1/2, 3/4, 1 | \(\tfrac{513}{80000}\rho\) | 0.074, 0.140, 0.227, 0.326 | 0, 0, 0, 0 | 0, 0, 0, 0 | 3.0, 12.1, 27.3, 48.5 |
+| 4000 | same | | 0.212, 0.519, 0.788, 0.930 | 0, 0, 0.242, 0.844 | 0, 0.570, 0.907, 0.953 | 16.4, 65.4, 147, 262 |
+| 10000 | same | | 0.417, 0.869, 0.990, 0.9996 | 0, 0.579, 0.951, 0.978 | 0.036, 0.947, 0.980, 0.987 | 40.9, 164, 368, 654 |
+
+Two-sided sign test at 4000: 0.134, 0.394, 0.687, 0.877. Per item the sign test's noncentrality is \(9\tau^2/P_0(Z\ne0)\) against the U-statistic's \(\tau^2/16\zeta_1\):
+the ratio \(144\zeta_1/P_0(Z\ne0)=\tfrac{558703125}{9045033248}\approx\tfrac1{16.2}\) — **the exact test needs about sixteen times the items of the asymptotic one**; Test A
+pays instead through the slack of \(\bar V\) and of Cantelli's inequality. Of the two tests valid at every parameter the sign test is the stronger in every cell; the
+region-restricted Test A's lower bound beats it at 4000 for \(\rho\ge\tfrac12\) and at 10000 for \(\rho=\tfrac12\). At the planning
+size 742 no test here has useful power against copying; at 4000 the exact sign test has 0.93 at \(\rho=1\) and 0.52 at \(\rho=\tfrac12\). Not attempted: a likelihood-ratio test
+calibrated by enumeration — its size is a supremum over a nine-dimensional nuisance, and enumeration gives it only at points. *Evidence status.* Propositions 7–8, the kernel's
+unbiasedness and the sign-test symmetry: *algebraic identities* (with the cited U-statistic facts); \(\max|K|=4\): exhaustive; sizes and powers: *finite verified examples*;
+size control: proven for every parameter (Test B; Test A universal) or every point of the stated region (Test A), not checked on a grid.
+
+## 11. \(\varepsilon_1\) with no plug-in
+
+§9's statement fixes \(\eta_2\) and \(a\) at estimates in (1b) and treats the corrected counts as a binomial sample in (2). **The second is badly anti-conservative.** With
+\(\hat\varepsilon_1=f(\hat\eta_1,\hat a',\hat\varepsilon',\hat w)\) and \(\hat\eta_1\) from the same record (\(a'=A_{13}\) enters twice), the first-order variance over the sixteen record
+cells (`eps1_delta_variance`, exact since \(d_1\) is rational) is, per item, at the §5 fixture:
+
+| judge | \(m\,\mathrm{Var}\,\hat\varepsilon_1\) | \(\eta\) known | \(\eta\)-only \(=(d\varepsilon_1/d\eta)^2V\) | \(2\,\)cov | binomial on corrected counts, \(\varepsilon_1(1-\varepsilon_1)/(1-a)\) |
+|---|---|---|---|---|---|
+| independent | \(\tfrac{1798393}{518400}\approx3.47\) | \(\tfrac{657}{256}\approx2.57\) | \(16\cdot\tfrac{2401}{8100}\approx4.74\) | \(-3.84\) | \(\tfrac9{20}=0.45\) |
+| maximally shared | \(\tfrac{51457}{20736}\approx2.48\) | \(\tfrac{545}{256}\approx2.13\) | \(\tfrac{2401}{1296}\approx1.85\) | \(-1.5\) | \(\tfrac54\) |
+
+The binomial understates by 7.7× and 2.0×; even with \(\eta\) known the measured counts' noise, amplified by the inversion (\(\partial\varepsilon_1/\partial w=(1-2\eta)/(1-a'-\eta)=5\)), is 5.7× and 1.7×.
+
+**Proposition 9 (an interval with proven coverage).** Six counts are binomial given others: \(\mathrm{rest}=m-N_{23}\sim\mathrm{Bin}(m,\theta_1)\), \(\theta_1=(1-\kappa_{23})/2\);
+\(k_{12}\mid\mathrm{rest}\sim\mathrm{Bin}(\mathrm{rest},\theta_2)\), \(2\theta_2-1=(\kappa_{12}-\kappa_{13})/(1-\kappa_{23})\); \(k_{\rm all}\mid\mathrm{rest}\sim\mathrm{Bin}(m-\mathrm{rest},\theta_3)\),
+\(2\theta_3-1=(\kappa_{12}+\kappa_{13})/(1+\kappa_{23})\) (§6's four-pattern multinomial, factorised); \(N_{13}\sim\mathrm{Bin}(m,a')\); and the judge's errors on the measured-right and
+measured-wrong items, binomial given \(N_{13}\) at \(\varepsilon_0',\varepsilon_1'\). Clopper–Pearson intervals at levels summing to \(\alpha\) (Clopper–Pearson 1934, *cited*; brackets rounded
+outward) cover all six with probability \(\ge1-\alpha\). On that event, with \(A=(2\theta_3-1)^2\), \(B=(2\theta_2-1)^2\), \(\kappa=\kappa_{23}\in(0,1)\):
+\(S=d_1^2=\tfrac14(A-B)(\kappa+\kappa^{-1})+\tfrac12(A+B)\) is monotone in each of \(A,B,\kappa\) (\(\partial_\kappa S=\tfrac14(A-B)(1-\kappa^{-2})\)), so it lies between its eight corner values
+and \(\eta_1=(1-\sqrt S)/2\) in the root-bracketed range; and
+\(\varepsilon_1=\dfrac{(1-a')\varepsilon_1'(1-\eta)-\eta a'(1-\varepsilon_0')}{1-a'-\eta}\) is Möbius in \(\eta\) and in \(a'\) and affine with nonnegative coefficients in \(\varepsilon_0',\varepsilon_1'\), hence
+monotone in each coordinate where \(1-a'-\eta>0\): it lies between its sixteen corner values. **Coverage \(\ge1-\alpha\) at every parameter of the symmetric model** (raters
+conditionally independent and better than chance, gold flips independent of controller and judge) — a theorem; no plug-in, no grid, and \(1-\alpha\) rather than §9's \(1-2\alpha\).
+(`eps1_confidence_interval`; random points of the box stay inside the corner ranges. When \(\kappa_{23}\) or \(2\theta_3-1\) can reach 0, or the box reaches \(1-a'-\eta\le0\), it
+returns \([0,1]\).) Exact coverage by enumerating the \(\binom{m+7}{7}\) tables of (agreement pattern, judge wrong) that determine it (`eps1_interval_coverage`): at \(m=8,12,16\)
+the interval covers with probability 1 (it is \([0,1]\) or nearly) and all six intervals jointly with 0.9952 / 0.9908 / 0.9889 (independent judge) and 0.9943 / 0.9920 / 0.9906 (shared).
+
+Fixture, \(\alpha=\tfrac1{20}\) split equally, records rounded to counts by largest remainder (`rounded_record`):
+
+| \(m\) | \(\eta_1\in\) | independent judge \(\varepsilon_1\in\) | shared judge \(\varepsilon_1\in\) | §9 (coverage 0.9, plug-ins) |
+|---|---|---|---|---|
+| 742 | [0.018, 0.170] | [0, 0.432] | [0, 0.734] | [0, 0.297] / [0.251, 0.655] |
+| 4000 | [0.068, 0.130] | [0, 0.2756] | [0.2794, 0.6256] | [0.003, 0.163] / [0.393, 0.558] |
+| 10000 | [0.080, 0.119] | [0, 0.220] | [0.379, 0.586] | — |
+
+**The judges separate by the plug-in-free intervals from 4000 items** (by a margin of 0.004), not at 742. The interval is wider than §9's because §9's second plug-in was
+too narrow, not only because of the union bound. *Evidence status.* Proposition 9 and the delta variance: *algebraic identity* plus the cited exactness of Clopper–Pearson; the
+intervals, coverages and variances: *finite verified examples*. The sampling law of \(\hat\varepsilon_1\) itself is still not derived; the interval does not need it.
+
+## 12. Monotonicity of the asymmetric inversion in the Dawid–Skene root
+
+Every fitted rate is affine in \(R\) and \(\pi=(R-\sigma k_3)/2R\), so with \(P_1=2R\pi\), \(P_0=2R(1-\pi)\) the class-weighted sums of §7 are cubics over \(2R\) and
+\(\varepsilon_1(R)=\dfrac{e_a(2Rw-g_a)+g_a(2R\varepsilon'-f)}{e_ag_b+e_bg_a}\), a ratio of polynomials of degree at most six; at the §7 records the degrees are (6, 5), the derivative's
+numerator \(D=N'Q-NQ'\) degree 10 (`asymmetric_eps1_rational`; equal to `asymmetric_gold_noise_inverse` at \(0.9R^*,R^*,1.1R^*\)). Sturm sequences in exact rationals count \(D\)'s
+roots on any interval (`sturm_root_count`), and the sign of a polynomial at \(\sqrt r\) is decided exactly by reducing to \(A+B\sqrt r\) (`sign_at_square_root`).
+
+- **Where it holds.** At both §7 records \(D\) has no root on the whole in-range interval \(R\in[\tfrac{441}{16000},\tfrac{567}{8000}]\) (\(R^*=\tfrac{441}{8000}\)): monotone there. The same
+  records rounded at \(m=742\) give bracketed fits, certified monotone on their brackets.
+- **Refuted in general** (`witness_record`). Dawid–Skene table \(\pi=\tfrac{19}{50}\), \(\alpha=(\tfrac3{10},\tfrac3{25},\tfrac1{50})\), \(\beta=(\tfrac{29}{100},\tfrac1{10},\tfrac2{25})\), with \(\tfrac1{200}\)
+  moved from cell \((0,0,0)\) to \((0,0,1)\): \(R^{*2}=\tfrac{278331210135729}{62500000000000000}\), irrational root, fit in range, bracket \([\tfrac{4373}{65536},\tfrac{2187}{32768}]\). A judge whose
+  verdict depends on measured correctness only, \(\varepsilon'=\tfrac{47}{100}\), \(w=\tfrac{28287}{187598}\) (the exact zero of \(D\) at the bracket's midpoint, linear in \(w\), rounded to
+  denominator \(\le10^6\)). \(D\) has one root inside the bracket (two on the in-range interval); the inversions at the bracket ends, 0.0202800657139 and 0.0202800657332, are
+  **both above** \(\hat\varepsilon_1=\varepsilon_1(R^*)\) (exact signs). The judge is informative: \((\varepsilon_0,\varepsilon_1)\approx(0.456,0.020)\) at both ends. The miss is about \(10^{-8}\), second order in the
+  bracket width — immaterial numerically, but the claimed bracket is false.
+- **The fix** (`asymmetric_eps1_enclosure`, now in `calibrate_asymmetric` as `eps1_enclosure`). No root of \(D\) in the bracket: the end values bracket \(\hat\varepsilon_1\) (status
+  `monotone`). Otherwise bisect on Sturm counts: root-free pieces contribute their end values; a piece still holding a root after 60 halvings contributes its end values widened by
+  \(Lw\), \(L\ge\max|D|/\min Q^2\) from absolute coefficients. The witness's certified enclosure \([0.02028005419,0.02028006573]\) contains \(\hat\varepsilon_1\) (exact signs).
+
+*Evidence status.* The rational form and the enclosure's validity: *algebraic identity* (Sturm's theorem *cited*); monotonicity at the §7 records and its failure at the witness:
+*finite verified examples*. Whether a critical point inside a bracket needs an implausible judge is open; the witness's judge rejects 46% of right answers.
+
+## 13. Not delivered
+
+- No observed graders; binary labels only.
+- §10's tests are valid but weak at the planning size: none has useful power against copying at 742 items. Test A's size bound is far from tight (exact size 0 at \(m=6\)); the
+  efficient studentised tetrad test is only asymptotically valid and its exact size at planning sizes is not computed. Only the first tetrad is tested; the other five equalities
+  of §8 and a joint test of all six are not.
+- The sampling law of \(\hat\varepsilon_1\) and of the three- or four-rater fits is not derived (§11 gives a first-order variance and an interval that does not need the law). §6's
+  law is conditional on the defined event. §11 is for the symmetric model; the asymmetric analogue would propagate a confidence set for \(R\) through a non-monotone map (§12).
+- The four-rater test refuses a chance rater though the model stays locally identified; three raters cannot test conditional independence; §3's check has no power at \(\pi=\tfrac12\).
