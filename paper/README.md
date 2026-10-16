@@ -24,6 +24,10 @@ node --experimental-strip-types model/grid.ts > paper/tex/grid.tex
 tectonic paper/tex/main.tex
 ```
 
+- `layertree_insertions.md` — proposed insertions that would add LayerTree as a
+  fourth settlement object, with the recomputed bound; a proposal, not yet in
+  the paper. `model/layertree.ts` holds its cost tables.
+
 ## Connector Calculus and its audit
 
 - `manuscript.md` — the first manuscript, frozen at baseline `a0a3140` and
