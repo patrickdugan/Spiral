@@ -245,3 +245,24 @@ export function exitVb(tier: Tier, depth: number): number {
 
 /** MIN has no vouchers and no channel leaves, so no credit-leaf receive; the proposal's receive term does not exist there. */
 export const tierHostsVouchers = (tier: Tier): boolean => tier !== "MIN";
+
+/** Blocks in a year at ten minutes each: 365 * 144. */
+export const BLOCKS_PER_YEAR = 52_560;
+
+/** Annual cost in sat of a member's recurring on-chain bytes at a fee rate in sat/vB. */
+export function annualByteCostSat(bytesPerMemberPerBlock: number, feeSatPerVb: number): number {
+  return bytesPerMemberPerBlock * BLOCKS_PER_YEAR * feeSatPerVb;
+}
+
+/**
+ * The receipt rate (sat per round) at which the carry of the capital a credit leaf saves equals the leaf's
+ * annual byte cost. The saving scales with receipts: `savedCapitalPerUnitReceipt` is (channel stock - P_a)
+ * per sat-per-round of receipts, read off a grid cell (the zero-drift cell at 100 sat a round gives
+ * (104,094 - 3,000) / 100 under the oracle rule and (38,112 - 3,000) / 100 under the trailing rule).
+ * Below the break-even the bytes cost more than the capital they free; above it the leaf pays.
+ */
+export function breakEvenReceiptRate(
+  bytesPerMemberPerBlock: number, feeSatPerVb: number, costOfCapitalPerYear: number, savedCapitalPerUnitReceipt: number,
+): number {
+  return annualByteCostSat(bytesPerMemberPerBlock, feeSatPerVb) / (costOfCapitalPerYear * savedCapitalPerUnitReceipt);
+}

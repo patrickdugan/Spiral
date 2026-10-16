@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   table5, table10, operationVb, txVb, WITNESS_WU, confirmationBlocks, drainBlocks, channelLeavesPerWindow,
   contentionCost, minimumLeafSat, feeCoinTable, lockedPerMember, bytesPerMemberPerBlock, exitVb, tierHostsVouchers,
-  KAPPA, type LayerTreeParams,
+  KAPPA, annualByteCostSat, breakEvenReceiptRate, type LayerTreeParams,
 } from "./layertree.ts";
 
 test("LayerTree cost tables: the draft's Table 5 and Table 10 are reproduced from the measured witness weights and the stated skeleton", () => {
@@ -106,4 +106,16 @@ test("LayerTree [C], fees and the proposal's capital terms: the draft's worked f
   assert.equal(exitVb("CCV", 16), 908);
   assert.equal(tierHostsVouchers("MIN"), false);
   assert.throws(() => exitVb("MID", 8));
+  // Pricing the bytes (Section 4.4, preregistration): 0.88 vB per member per block is about 46,500 vB a year,
+  // 93,000 sat at 2 sat/vB, against a carry of about 10,100 sat a year on the oracle saving at 10 percent.
+  const b = bytesPerMemberPerBlock(p);
+  assert.equal(Math.round(annualByteCostSat(b, 1) / 100) * 100, 46_500);
+  assert.equal(Math.round(annualByteCostSat(b, 2) / 1000) * 1000, 93_000);
+  const savedOracle = (104_094 - 3000) / 100, savedTrailing = (38_112 - 3000) / 100;
+  assert.ok(annualByteCostSat(b, 2) / (0.1 * savedOracle * 100) > 9 && annualByteCostSat(b, 2) / (0.1 * savedOracle * 100) < 9.5);
+  assert.equal(Math.round(breakEvenReceiptRate(b, 2, 0.1, savedOracle) / 10) * 10, 920);
+  assert.equal(Math.round(breakEvenReceiptRate(b, 10, 0.1, savedOracle) / 100) * 100, 4_600);
+  assert.equal(Math.round(breakEvenReceiptRate(b, 50, 0.1, savedOracle) / 1000) * 1000, 23_000);
+  const ratio = breakEvenReceiptRate(b, 10, 0.1, savedTrailing) / breakEvenReceiptRate(b, 10, 0.1, savedOracle);
+  assert.ok(ratio > 2.8 && ratio < 3.0);
 });
