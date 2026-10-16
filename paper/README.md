@@ -25,8 +25,9 @@ tectonic paper/tex/main.tex
 ```
 
 - `layertree_insertions.md` — proposed insertions that would add LayerTree as a
-  fourth settlement object, with the recomputed bound; a proposal, not yet in
-  the paper. `model/layertree.ts` holds its cost tables.
+  fourth settlement object, with the recomputed bound; adopted into the paper
+  on 2026-10-16 and kept as the sourcing record. `model/layertree.ts` holds its
+  cost tables.
 
 ## Connector Calculus and its audit
 

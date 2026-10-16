@@ -1,6 +1,6 @@
 # LayerTree as a fourth settlement object: proposed insertions for *Where the Capital Bound Moves*
 
-Status: a proposal. Nothing in `paper/tex/main.tex` is changed by this file. Where a passage below is
+Status: adopted into `paper/tex/main.tex` on 2026-10-16. This file remains as the sourcing record (Part 9) and the derivations behind the inserted passages. Where a passage below is
 written out, it is written so that it can be pasted in; where it is a suggestion, it says so.
 
 **Source.** Osuntokun, *LayerTree: A Shared Bitcoin UTXO with an O(1) Unilateral Exit*, draft dated
