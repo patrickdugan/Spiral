@@ -2,8 +2,8 @@
   "node": "v24.19.0",
   "test_command": "node --experimental-strip-types --test --test-reporter=tap model/*.test.ts",
   "test_exit_code": 0,
-  "tests": 76,
-  "passes": 76,
+  "tests": 92,
+  "passes": 92,
   "failures": 0,
   "typecheck": {
     "status": 0,
@@ -40,6 +40,11 @@
   "source_sha256": {
     "model/capital-adapter.test.ts": "409fb58bf0719ef354dc9b093201f0f6a1a9af0ec97e2e3bd8195c9bb7ca02ac",
     "model/capital-adapter.ts": "7a0e0b35c8d25f5be48dd2d1eec600bd562f5d2f7eb176c558592c67c2eaf9d2",
+    "model/capital-fees.test.ts": "49af6e95d53b29f35e00706c2c3cadc61e7686475261470056f62d35d6358884",
+    "model/capital-fees.ts": "26ecfec961147b91931c5cf1346777279596ee09a6aa4009cbc6975e0ab52500",
+    "model/capital-fixed-budget.test.ts": "ee2ec9923ab9657298f32b43f0fba3ba5588a9972bac39b8121508bbb11e781b",
+    "model/capital-forecast.test.ts": "3babe0fc107db7ca5b00a2dcc43791ead1f8beacd43e236c21938329f88e2db8",
+    "model/capital-forecast.ts": "21d139ca68cd568d4dc03f312be9c773ab5335e5aa7c08ac608208a6cc3cbd20",
     "model/capital-observed-adapter.ts": "b26af581ce49b17efcd638a2cc5019dcc5508df420d0656aa6026cceadeab2d0",
     "model/capital-schema.ts": "50dc7e582f2e8192ff8c2940af9d71937a72deade21d493b9f9dc336c5180ad8",
     "model/capital.fixtures.ts": "ec9f9aa1e907983c6f5dd27fe3aed87da628e9063e81385f89dc096b82f39927",
@@ -52,8 +57,9 @@
     "model/server.ts": "1f28d92f99d0adf70a8bc025b002aa003c950cff98c5cc41d576c43b24ba559d",
     "model/server.retained.test.ts": "9a2ee4dbc8420565e971fccc926e622f74912ce57a8d445085dba98ba5e77eee",
     "audit/peer_review/capital_comparison.ts": "0f5d86cc0c2d389d41c4b8c61364d394d0ba13f40e424d4ed3a5d5e63f9b50dc",
+    "audit/peer_review/capital_fixed_budget.ts": "56c38e6d57e6e0ef1715baeed4d0b8840b13cdc04fb32f3c5d0722e0bca81089",
     "audit/peer_review/capital_artifacts.ts": "bd3c629fb9ddc1905585fd5dc3b1442841aa72ffc33c2a70c22de2feca5790ef",
-    "audit/peer_review/verify_capital.ts": "01e498b042927a3c3c3ce60c4c1489d56b53c4f9eb4371ac2942723540dcc332",
+    "audit/peer_review/verify_capital.ts": "0be598c7ac36262311596139e8c7f2f8058fddc9f47c63d99c8ed4f16f6967d2",
     "audit/peer_review/regtest/normalize.ts": "4dab85451257975f69d4c3c219976b05b316d59b307395d9ff654b2697639a2e"
   }
 }
