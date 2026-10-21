@@ -1,0 +1,347 @@
+{
+  "evidence_class": "empty_testnet4_peer_provisioning",
+  "genesis": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043",
+  "core_source_revision": "9be056a8a72b624dae9623b2f7bded92c2a21c91",
+  "core_binary_sha256": "f79eeb94e1379986df9f7be4c78c8fc8e18dc9be64a31cbaa8acad249d3db77a",
+  "cln_source_revision": "8684c68dffb04ab606e526b64d7d60390d1fe7ed",
+  "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+  "cln_image": "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4",
+  "backend_cli_version": "v31.0.0",
+  "backend_cli_source_revision": "6574cb40869b96b9ffc79c19dc8f4e467d60f321",
+  "backend_cli_sha256": "3e92883f97850bc445ac033d26d55902dcb035fdf64f78c2c03c83216f083c5d",
+  "backend_cli_source_image": "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792",
+  "bridge_broadcast_enabled": false,
+  "nodes": {
+    "a": {
+      "getinfo": {
+        "id": "027497c7378b72bf9c5d9a0044e2a196a95a9c140b5eabbcf8b6be132a1c8dc193",
+        "alias": "spiral-clock-a",
+        "color": "027497",
+        "num_peers": 2,
+        "num_pending_channels": 0,
+        "num_active_channels": 0,
+        "num_inactive_channels": 0,
+        "address": [],
+        "binding": [
+          {
+            "type": "ipv4",
+            "address": "127.0.0.1",
+            "port": 21935
+          }
+        ],
+        "version": "v26.06.7",
+        "blockheight": 157211,
+        "network": "testnet4",
+        "fees_collected_msat": 0,
+        "lightning-dir": "/data/testnet4",
+        "our_features": {
+          "init": "800898880a8a59a1",
+          "node": "808898880a8a59a1",
+          "channel": "",
+          "invoice": "02000002024100"
+        }
+      },
+      "public_configuration": [
+        "network=testnet4",
+        "alias=spiral-clock-a",
+        "bind-addr=127.0.0.1:21935",
+        "autolisten=false",
+        "announce-addr-discovered=false",
+        "disable-dns",
+        "autoconnect-seeker-peers=0",
+        "grpc-port=21936",
+        "grpc-host=127.0.0.1",
+        "bitcoin-cli=/data/backend-bitcoin-cli",
+        "bitcoin-rpcconnect=127.0.0.1",
+        "bitcoin-rpcport=48333",
+        "bitcoin-rpcuser=spiral-testnet4",
+        "funding-confirms=3",
+        "log-level=info",
+        "log-file=/data/daemon.log"
+      ],
+      "binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "listpeers": {
+        "peers": [
+          {
+            "id": "03c87d695048ab26b6b76b5e03b22cdf0401c67f5d38b926f18be9d32862270b03",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:23935"
+            ],
+            "features": "800898880a8a59a1"
+          },
+          {
+            "id": "02bcd8bfbf880332044074b09e73662aa716c537876cd8c2e31f5d740c35daaead",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:22935"
+            ],
+            "features": "800898880a8a59a1"
+          }
+        ]
+      },
+      "listfunds": {
+        "outputs": [],
+        "channels": []
+      },
+      "listpeerchannels": {
+        "channels": []
+      }
+    },
+    "b": {
+      "getinfo": {
+        "id": "02bcd8bfbf880332044074b09e73662aa716c537876cd8c2e31f5d740c35daaead",
+        "alias": "spiral-clock-b",
+        "color": "02bcd8",
+        "num_peers": 2,
+        "num_pending_channels": 0,
+        "num_active_channels": 0,
+        "num_inactive_channels": 0,
+        "address": [],
+        "binding": [
+          {
+            "type": "ipv4",
+            "address": "127.0.0.1",
+            "port": 22935
+          }
+        ],
+        "version": "v26.06.7",
+        "blockheight": 157211,
+        "network": "testnet4",
+        "fees_collected_msat": 0,
+        "lightning-dir": "/data/testnet4",
+        "our_features": {
+          "init": "800898880a8a59a1",
+          "node": "808898880a8a59a1",
+          "channel": "",
+          "invoice": "02000002024100"
+        }
+      },
+      "public_configuration": [
+        "network=testnet4",
+        "alias=spiral-clock-b",
+        "bind-addr=127.0.0.1:22935",
+        "autolisten=false",
+        "announce-addr-discovered=false",
+        "disable-dns",
+        "autoconnect-seeker-peers=0",
+        "grpc-port=22936",
+        "grpc-host=127.0.0.1",
+        "bitcoin-cli=/data/backend-bitcoin-cli",
+        "bitcoin-rpcconnect=127.0.0.1",
+        "bitcoin-rpcport=48333",
+        "bitcoin-rpcuser=spiral-testnet4",
+        "funding-confirms=3",
+        "log-level=info",
+        "log-file=/data/daemon.log"
+      ],
+      "binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "listpeers": {
+        "peers": [
+          {
+            "id": "03faae056da960e38adf89689c92b460e291720f507ea51f1a0b77cae29f350436",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:24935"
+            ],
+            "features": "800898880a8a59a1"
+          },
+          {
+            "id": "027497c7378b72bf9c5d9a0044e2a196a95a9c140b5eabbcf8b6be132a1c8dc193",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:52316"
+            ],
+            "features": "800898880a8a59a1"
+          }
+        ]
+      },
+      "listfunds": {
+        "outputs": [],
+        "channels": []
+      },
+      "listpeerchannels": {
+        "channels": []
+      }
+    },
+    "c": {
+      "getinfo": {
+        "id": "03c87d695048ab26b6b76b5e03b22cdf0401c67f5d38b926f18be9d32862270b03",
+        "alias": "spiral-clock-c",
+        "color": "03c87d",
+        "num_peers": 2,
+        "num_pending_channels": 0,
+        "num_active_channels": 0,
+        "num_inactive_channels": 0,
+        "address": [],
+        "binding": [
+          {
+            "type": "ipv4",
+            "address": "127.0.0.1",
+            "port": 23935
+          }
+        ],
+        "version": "v26.06.7",
+        "blockheight": 157211,
+        "network": "testnet4",
+        "fees_collected_msat": 0,
+        "lightning-dir": "/data/testnet4",
+        "our_features": {
+          "init": "800898880a8a59a1",
+          "node": "808898880a8a59a1",
+          "channel": "",
+          "invoice": "02000002024100"
+        }
+      },
+      "public_configuration": [
+        "network=testnet4",
+        "alias=spiral-clock-c",
+        "bind-addr=127.0.0.1:23935",
+        "autolisten=false",
+        "announce-addr-discovered=false",
+        "disable-dns",
+        "autoconnect-seeker-peers=0",
+        "grpc-port=23936",
+        "grpc-host=127.0.0.1",
+        "bitcoin-cli=/data/backend-bitcoin-cli",
+        "bitcoin-rpcconnect=127.0.0.1",
+        "bitcoin-rpcport=48333",
+        "bitcoin-rpcuser=spiral-testnet4",
+        "funding-confirms=3",
+        "log-level=info",
+        "log-file=/data/daemon.log"
+      ],
+      "binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "listpeers": {
+        "peers": [
+          {
+            "id": "027497c7378b72bf9c5d9a0044e2a196a95a9c140b5eabbcf8b6be132a1c8dc193",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:54776"
+            ],
+            "features": "800898880a8a59a1"
+          },
+          {
+            "id": "03faae056da960e38adf89689c92b460e291720f507ea51f1a0b77cae29f350436",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:24935"
+            ],
+            "features": "800898880a8a59a1"
+          }
+        ]
+      },
+      "listfunds": {
+        "outputs": [],
+        "channels": []
+      },
+      "listpeerchannels": {
+        "channels": []
+      }
+    },
+    "d": {
+      "getinfo": {
+        "id": "03faae056da960e38adf89689c92b460e291720f507ea51f1a0b77cae29f350436",
+        "alias": "spiral-clock-d",
+        "color": "03faae",
+        "num_peers": 2,
+        "num_pending_channels": 0,
+        "num_active_channels": 0,
+        "num_inactive_channels": 0,
+        "address": [],
+        "binding": [
+          {
+            "type": "ipv4",
+            "address": "127.0.0.1",
+            "port": 24935
+          }
+        ],
+        "version": "v26.06.7",
+        "blockheight": 157211,
+        "network": "testnet4",
+        "fees_collected_msat": 0,
+        "lightning-dir": "/data/testnet4",
+        "our_features": {
+          "init": "800898880a8a59a1",
+          "node": "808898880a8a59a1",
+          "channel": "",
+          "invoice": "02000002024100"
+        }
+      },
+      "public_configuration": [
+        "network=testnet4",
+        "alias=spiral-clock-d",
+        "bind-addr=127.0.0.1:24935",
+        "autolisten=false",
+        "announce-addr-discovered=false",
+        "disable-dns",
+        "autoconnect-seeker-peers=0",
+        "grpc-port=24936",
+        "grpc-host=127.0.0.1",
+        "bitcoin-cli=/data/backend-bitcoin-cli",
+        "bitcoin-rpcconnect=127.0.0.1",
+        "bitcoin-rpcport=48333",
+        "bitcoin-rpcuser=spiral-testnet4",
+        "funding-confirms=3",
+        "log-level=info",
+        "log-file=/data/daemon.log"
+      ],
+      "binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "listpeers": {
+        "peers": [
+          {
+            "id": "02bcd8bfbf880332044074b09e73662aa716c537876cd8c2e31f5d740c35daaead",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:45540"
+            ],
+            "features": "800898880a8a59a1"
+          },
+          {
+            "id": "03c87d695048ab26b6b76b5e03b22cdf0401c67f5d38b926f18be9d32862270b03",
+            "connected": true,
+            "num_channels": 0,
+            "netaddr": [
+              "127.0.0.1:45554"
+            ],
+            "features": "800898880a8a59a1"
+          }
+        ]
+      },
+      "listfunds": {
+        "outputs": [],
+        "channels": []
+      },
+      "listpeerchannels": {
+        "channels": []
+      }
+    }
+  },
+  "transaction_broadcast": false,
+  "monotonic_start_ns": "14246275764309",
+  "monotonic_end_ns": "14256568119609",
+  "observed_at_unix_ns": "1792595465237045108",
+  "verification": {
+    "height": 157211,
+    "best_block_hash": "00000000a0d68fa0f036f22b46d871509f76bc2398491f5b8e862f0642574191",
+    "four_empty_synchronized_peers": true,
+    "exact_connected_diamond": true,
+    "monotonic_start_ns": "14323433396484",
+    "monotonic_end_ns": "14328770175909",
+    "observed_at_unix_ns": "1792595539267170750"
+  },
+  "limits": [
+    "Preparation only: no channel funding, activation or payment clocks measured.",
+    "Official source tags and executable associations are operator-attested; this is not a reproducible-build verification.",
+    "CLN bundled bitcoin-cli rejected -testnet4; an independently pinned Core 31.0 CLI is configured explicitly.",
+    "The Windows Core RPC listener and WSL bridge remain loopback-only. Bridge broadcast is disabled."
+  ]
+}

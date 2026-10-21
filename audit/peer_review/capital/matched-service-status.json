@@ -17,7 +17,7 @@
     "Measure operational recovery and HTLC clocks; snapshot detection gaps are not latency distributions",
     "Measure replenishment and batching distributions before making a deployed cost-efficiency claim; one inventory-backed receipt is observed",
     "Validate live timeout/unilateral recovery and reorg paths; cooperative revocation and cooperative exit have observed evidence",
-    "Confirm the observed 510000 test sats and provision four controlled peers on the now-synchronized local testnet4 node",
+    "Confirm the observed 510000 test sats and pass the funding gate; four empty synchronized testnet4 peers now form the controlled diamond",
     "Use a new committed protocol and fresh seeds for any changed transaction policy"
   ]
 }

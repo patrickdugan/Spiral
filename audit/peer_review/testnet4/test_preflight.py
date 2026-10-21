@@ -138,6 +138,16 @@ class PreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'digest mismatch'):
                 p.verify_pins({'core': endpoint})
 
+    def test_public_utxo_observations_exclude_wallet_descriptors(self):
+        cli = p.ReadonlyCLI({'core': {'cli': ['bitcoin-cli']}})
+        row = {'txid': 'a'*64, 'vout': 0, 'amount': '0.005', 'confirmations': 1,
+               'spendable': True, 'safe': True, 'desc': 'PRIVATE-DESCRIPTOR',
+               'parent_descs': ['PRIVATE-XPUB']}
+        with patch.object(p.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, json.dumps([row]), '')):
+            self.assertEqual(cli('core', 'listunspent', 0), [row])
+        self.assertNotIn('PRIVATE', json.dumps(cli.observations))
+        self.assertEqual(cli.observations[0]['result'][0]['amount'], '0.005')
+
     def test_exact_money_rejects_fractional_sat_and_float(self):
         self.assertEqual(p.btc_sat(Decimal('0.00000001')), 1)
         for amount in [0.01, True, '-1', 'NaN', Decimal('Infinity'), Decimal('0.000000001')]:

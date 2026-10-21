@@ -2,9 +2,10 @@
   "inspection_date": "2026-10-21",
   "evidence_class": "observed-regtest",
   "regtest_status": "transaction_lifecycle_and_reducer_economic_replay_verified_timing_interval_censored",
-  "testnet4_status": "local_node_synchronized_510000_test_sats_pending_controlled_peers_not_yet_provisioned",
+  "testnet4_status": "four_empty_synchronized_peers_connected_diamond_510000_test_sats_pending_confirmation",
   "testnet4_funding_observation": "../testnet4/funding-observation-20261021.json",
-  "testnet4_preflight": "../testnet4/README.md (read-only gate with offline adversarial tests; no live testnet execution)",
+  "testnet4_preflight": "../testnet4/preflight-pending-funding-20261021.json (live read-only gate refuses unconfirmed funds)",
+  "testnet4_peer_provisioning": "../testnet4/peer-provisioning-20261021.json (four empty synchronized controlled peers; no channel funding or payment clocks)",
   "actual_genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
   "best_block_hash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
   "binary_digests": [
@@ -109,7 +110,7 @@
     "Instrument exact acceptance/commit timing; whole historical journal seconds remain unknown",
     "Measure inventory replenishment and batching distributions beyond one observed receipt",
     "Live timeout/unilateral recovery, sweep reorg and later compound offboard recovery remain unverified; one controlled exit reorg is reconciled",
-    "Confirm observed testnet4 funding, provision four controlled peers, then execute the bounded operational-clock protocol"
+    "Confirm observed testnet4 funding, pass the full preflight, then execute the bounded operational-clock protocol on the provisioned diamond"
   ],
   "fixed_budget_comparison": "../capital_fixed_budget_results.md (completed conditional single-participant forecast; 384 Ark and 672 channel/group holdouts)",
   "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441",

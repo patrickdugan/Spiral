@@ -75,8 +75,14 @@ class ReadonlyCLI:
             value = raw if method == 'getblockhash' and re.fullmatch(r'[0-9a-f]{64}', raw) else json.loads(raw, parse_float=Decimal)
         except (json.JSONDecodeError, ValueError):
             raise ValueError(f'{node}/{method}: invalid JSON response') from None
+        public = value
+        if node == 'core' and method == 'listunspent':
+            # Core includes wallet descriptors and parent xpubs in this response.
+            # The gate needs outpoints/value/spendability, not derivation material.
+            fields = {'txid', 'vout', 'address', 'amount', 'confirmations', 'spendable', 'safe', 'solvable', 'reused'}
+            public = [{k: v for k, v in row.items() if k in fields} for row in value]
         self.observations.append({'node': node, 'method': method,
-            'monotonic_start_ns': str(started), 'monotonic_end_ns': str(time.monotonic_ns()), 'result': json_safe(value)})
+            'monotonic_start_ns': str(started), 'monotonic_end_ns': str(time.monotonic_ns()), 'result': json_safe(public)})
         return value
 
 

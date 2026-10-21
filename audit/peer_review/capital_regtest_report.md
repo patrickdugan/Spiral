@@ -163,9 +163,11 @@ recorded a missing hold-invoice plugin. The [inbound extension](capital_inbound_
 subsequently installs the pinned upstream plugin and reconciles one receipt,
 including depth-excluded pool change. Exact operational timing, remaining live paths,
 bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments remain
-unfinished. No testnet4 experiment was attempted; a synchronized endpoint and
-dedicated test funding were requested.
+unfinished. The testnet4 setup has since located and synchronized the user's
+local node, observed 510,000 pending test sats, and provisioned four empty
+controlled peers in a diamond. Its live funding gate refuses the unconfirmed
+funds; see the [setup evidence](testnet4/peer-provisioning-20261021.json).
 The [read-only testnet4 preflight](testnet4/README.md) now checks chain identity,
 synchronization, declared executable pins, dedicated wallet accounting and the
-four-peer starting topology. Its offline tests are preparation evidence only;
+four-peer starting topology. Setup and offline tests are preparation evidence only;
 the bounded funding/activation and 200-payment run remains unexecuted.
