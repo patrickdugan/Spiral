@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "ark_runs": 384,
+  "channel_runs": 672,
+  "independently_generated_demands": 96,
+  "result_sha256": {
+    "audit\\peer_review\\capital\\fixed-budget-result-zero.json": "0a01289fcce219ff9e3dc37c4f71e94b31f0d1aeab4089deb680d5817d20bc6b",
+    "audit\\peer_review\\capital\\fixed-budget-result-drain.json": "c08389e8ec9efba6f187b858e0da3f678abe501ce7db9ad8ceecea946c8a7e7d",
+    "audit\\peer_review\\capital\\fixed-budget-result-accumulate.json": "c946af520227b952de541d8f6b9c35982c67eb1b71c5b8e1b8c6e1f686209a8a",
+    "audit\\peer_review\\capital\\fixed-budget-result-steady.json": "c87958ebcf104503c4df272af1ab86ca713310a5cd71d599800a7dd0d1b75b89"
+  },
+  "scope": "Independent published-aggregate and integer capital-time checks; not a substitute for per-event live evidence or operational clocks."
+}

@@ -2,7 +2,7 @@
   "inspection_date": "2026-10-21",
   "evidence_class": "observed-regtest",
   "regtest_status": "transaction_lifecycle_and_reducer_economic_replay_verified_timing_interval_censored",
-  "testnet4_status": "not_attempted_matched_service_calibration_pending",
+  "testnet4_status": "awaiting_synchronized_endpoint_and_dedicated_test_funding",
   "actual_genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
   "best_block_hash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
   "binary_digests": [
@@ -99,14 +99,16 @@
   "economic_reconciliation": "../regtest/evidence/economic-reconciliation.json",
   "machine_reconciliation": "../regtest/evidence/machine-reconciliation.json",
   "machine_state_hash": "a7e6dec9966c44dc8c93ac611d28318eeac77e802d44b3768edd108211859cb6",
-  "structural_sensitivity": "../capital_comparison.md (completed; full fee-aware fixed-budget comparison remains pending)",
+  "structural_sensitivity": "../capital_comparison.md (completed fee-free component sensitivity)",
   "fixture_initial_sat": 2200000,
   "recovered_output_sat": 98705,
   "clock_caveat": "Accelerated blocks and manually triggered sweeps; no production latency inference.",
   "remaining": [
     "Instrument exact acceptance/commit timing; current journal uses snapshot detection heights and unknown seconds",
-    "Complete live failure/timeout/receive/exit/reorg branches",
-    "Rerun matched-service comparisons with normalized observed semantics",
-    "Only then execute the bounded testnet4 operational-clock protocol"
-  ]
+    "Validate live inbound backing and batching; hold plugin is absent from the current fixture",
+    "Complete additional live failure/timeout/exit/reorg branches",
+    "Execute bounded testnet4 operational-clock protocol after receiving synchronized endpoint and test funding"
+  ],
+  "fixed_budget_comparison": "../capital_fixed_budget_results.md (completed conditional single-participant forecast; 384 Ark and 672 channel/group holdouts)",
+  "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441"
 }

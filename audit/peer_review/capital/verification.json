@@ -58,7 +58,7 @@
     "model/server.retained.test.ts": "9a2ee4dbc8420565e971fccc926e622f74912ce57a8d445085dba98ba5e77eee",
     "audit/peer_review/capital_comparison.ts": "0f5d86cc0c2d389d41c4b8c61364d394d0ba13f40e424d4ed3a5d5e63f9b50dc",
     "audit/peer_review/capital_fixed_budget.ts": "56c38e6d57e6e0ef1715baeed4d0b8840b13cdc04fb32f3c5d0722e0bca81089",
-    "audit/peer_review/capital_artifacts.ts": "bd3c629fb9ddc1905585fd5dc3b1442841aa72ffc33c2a70c22de2feca5790ef",
+    "audit/peer_review/capital_artifacts.ts": "e4caf7091f88f5aed3c60b5a8f6b6397e35f3f4589a5ade0a260ace4948ee807",
     "audit/peer_review/verify_capital.ts": "0be598c7ac36262311596139e8c7f2f8058fddc9f47c63d99c8ed4f16f6967d2",
     "audit/peer_review/regtest/normalize.ts": "4dab85451257975f69d4c3c219976b05b316d59b307395d9ff654b2697639a2e"
   }

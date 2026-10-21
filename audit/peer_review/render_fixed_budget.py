@@ -111,6 +111,9 @@ lines += ["", "## Audit interpretation", "",
           "Pooled receipt inventory and batching may produce different results and require their own verified adapter and predeclared campaign.", "",
           "The single-participant miner costs are material. A broader ranking of Ark versus channels is not justified by this cost scenario alone. "
           "The completed live outgoing/recovery/reuse trace supports the capital lock rule; live inbound, failure/revocation, exit, repeated clean restarts and testnet4 clocks remain separate validation work.", ""]
+lines += ["The channel opening cost and directional buffers are held at their observed fixture values. "
+          "They are not a fitted reserve/commitment-fee model for arbitrary channel sizes. "
+          "Meeting the invoice-delivery target also does not imply immediate spendability of every terminal holder claim; expired claims remain disclosed in the result JSON.", ""]
 Path("audit/peer_review/capital_fixed_budget_results.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 plt.rcParams.update({"svg.hashsalt": "spiral-fixed-budget-v1", "font.size": 10})
@@ -132,7 +135,8 @@ axes[1].set_yticks(range(8), labels)
 for i in range(8):
     for j in range(4):
         label = f"{ratios[i,j]:.2f}×\nn={ratio_n[i][j]}" if math.isfinite(ratios[i,j]) else "target\nnot met"
-        axes[1].text(j, i, label, ha="center", va="center", fontsize=9)
+        axes[1].text(j, i, label, ha="center", va="center", fontsize=9,
+                     color="white" if math.isfinite(ratios[i,j]) and ratios[i,j] >= 5 else "black")
 fig.colorbar(im2, ax=axes[1], shrink=.65, label="Both mechanisms meet 99% on retained pairs")
 fig.suptitle("Frozen pilot budgets • single-participant transaction-cost scenario", fontsize=16)
 fig.savefig(root / "fixed-budget-comparison.png", dpi=160)

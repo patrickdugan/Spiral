@@ -2,8 +2,9 @@
 
 The completed transaction-level run is recorded in `evidence/reuse-proof.json`
 and `evidence/economic-reconciliation.json`. It proves original-board recovery
-and exclusive reuse as a new round input. It does not yet prove acceptance of
-that path by `model/capital.ts`, nor supply testnet4 operational clocks.
+and exclusive reuse as a new round input. The normalized 34-event path also
+passes `model/capital.ts` economic replay. It does not supply exact operational
+clocks or live validation of the separate failure, receive, exit and reorg paths.
 
 All participants and keys are owned test fixtures. The logical recipient is
 outside the operator's accounting boundary even though its node is controlled

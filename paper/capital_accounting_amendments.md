@@ -5,7 +5,8 @@ These are proposed edits supported by the
 tests and [pinned source inspection](../audit/peer_review/capital_adapter.md).
 An [owned regtest trace](../audit/peer_review/capital_regtest_report.md) now supplies
 transaction-level evidence and an accepted economic reducer replay. Numerical
-comparison tables remain unchanged pending a rerun with explicit clock uncertainty.
+comparison results now include explicit recovery-clock assumptions and a
+separate frozen-budget, fee-aware campaign.
 
 The [paired structural sensitivity](../audit/peer_review/capital_comparison.md)
 now reruns the four demand families with retained change and explicit recovery
@@ -14,7 +15,21 @@ the old model in all four families. At a 144-block stress delay, the accumulatin
 case instead rises about 24%. Zero initial balances miss the 99% delivery target
 in the balanced and draining families despite oracle capacity. These fee-free
 component results neither include round overhead nor establish an overall
-efficiency ranking; the final fixed-budget comparison remains pending.
+efficiency ranking.
+
+The [fee-aware comparison](../audit/peer_review/capital_fixed_budget_results.md)
+uses committed pilot budgets, fresh holdout seeds, zero/250,000-sat initial
+balances, exact holder-fee arithmetic and a declared single-participant
+transaction-cost policy. Of 384 Ark runs, 148 meet the 99% value-delivery target.
+Balanced pre-funded and both accumulating cells pass on all 24 seeds; the
+pre-funded draining cell passes on only two. Small steady receipts cannot
+support the fee plus a fresh round output under this policy. On eligible pairs,
+Ark's fixed funding per delivered sat is about 3.97–7.16 times the comparator's.
+This result is sensitive to the explicitly unamortized receipt/refresh costs,
+fixed directional buffers and instantaneous settlement assumption. It does
+not establish a general ranking for deployed, batched Ark. Publish the failures,
+conditional sample counts, separate fee spend and terminal expired claims with
+the ratios; do not promote passing a payment target into a redemption guarantee.
 
 1. **Define the economic boundary before adding capital terms.** A VTXO is a
    claim against backing, not an extra asset. A channel funding output and the
@@ -52,7 +67,8 @@ efficiency ranking; the final fixed-budget comparison remains pending.
    synthetic reference-model results. A separate pinned regtest run proves
    original-output recovery and independent round reuse, with every fixture sat
    reconciled. Its blocks were accelerated and sweeps manually triggered. No new
-   Ark-versus-channel efficiency ranking follows until matched-service comparisons are rerun with appropriate clocks. The
+   general Ark-versus-channel efficiency ranking follows from the conditional
+   fixed-budget forecast. The
    observed path now passes economic reducer replay, while its exact acceptance
    and commitment times remain interval-censored.
 8. **Disclose reorg uncertainty.** Replaying a Bitcoin branch must not undo an

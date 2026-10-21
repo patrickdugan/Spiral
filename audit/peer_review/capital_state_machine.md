@@ -221,3 +221,29 @@ HTLC acceptance and earlier round commitment intervals were not sampled;
 seconds are null, and these integrals must not be described as precise
 operational measurements. The full-chain capture permits economic replay and
 synthetic reorg testing, not reconstruction of missing offchain timestamps.
+
+## Fee-aware forecast boundary
+
+The separate [fixed-budget protocol](capital_fixed_budget_protocol.md) uses
+`CapitalForecast` for larger paired simulations. It does not turn modeled
+receipts or instant Lightning settlements into observed journal events.
+The source-pinned fee functions reproduce the executed fee schedule, including
+once-per-calculation rounding, retained subdust change and the fresh-round
+output minimum. Source/configuration bindings are in `capital/fee-source.json`.
+
+The forecast checks economic conservation and funded limits after each accepted
+mutation, periodically audits the full claim/root indexes, and audits them at
+every final report. The reference `CapitalAccountingMachine` remains the
+authoritative event-journal checker with all six invariant checks after each
+accepted event. Forecast rejection tests compare economic hashes; randomized
+forecast tests audit every step. A separate Python aggregate audit regenerates
+the offered demand and checks the published held-out economic and holder sums.
+
+Do not add its fronting or holder overlays to unique capital. Physical resource
+coverage consists of onchain roots, whole channel funding, and idle wallet
+funds. The operator-only economic boundary uses local Lightning share instead
+of the whole channel. Fixed initial funding times horizon is also reported so
+fee expenditure cannot masquerade as reduced capital requirements. Expired
+holder claims, uneconomic standalone sweeps, and exhausted fronting shortfalls
+remain visible at the horizon. A 99% payment-delivery target does not establish
+that every terminal holder claim is immediately spendable.

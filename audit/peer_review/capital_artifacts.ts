@@ -45,15 +45,17 @@ if (args[0] === "check") {
   writeFileSync(resolve(root, "deep-reorg-unresolved.jsonl"), unresolved.m.journal().map(e => JSON.stringify(e)).join("\n") + "\n");
   json(resolve(root, "deep-reorg-status.json"), unresolved.m.report());
   json(resolve(root, "matched-service-status.json"), {
-    status: "structural_sensitivity_complete_full_comparison_pending", evidence_class: "implementation_informed_forecast", reference_trace_hash: digest(events),
-    reason: "Four paired fee-free sensitivities now apply retained change and explicit recovery delays. The full comparison still needs fees, round overhead, deduplicated underlying assets, disjoint pilot budgets and service-target holdouts. Snapshot detection heights are not precise operational clocks.",
+    status: "fixed_budget_conditional_comparison_complete_operational_clocks_pending", evidence_class: "implementation_informed_forecast", reference_trace_hash: digest(events),
+    reason: "The frozen single-participant fee-aware campaign completed 384 Ark and 672 channel/group forecasts on disjoint holdout seeds. It includes fees, round overhead, asset deduplication, two initial-balance factors, target failures and both denominators. Receipt backing, batching, fixed channel buffers and instant settlement remain declared policies, not live measurements.",
     structural_sensitivity: "audit/peer_review/capital_comparison.md",
+    fixed_budget_results: "audit/peer_review/capital_fixed_budget_results.md",
+    frozen_protocol_commit: "ce2d66f0485a8fd6a7d813c28e8b247e595d0441",
     existing_results: "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
     reference_lifecycle: { offered_sat: trace.m.report().totals.offered / 1000, delivered_sat: trace.m.report().totals.delivered / 1000,
       delivery_rate: trace.m.report().delivery_rate, outstanding_fronting_sat: trace.m.report().outstanding_fronting / 1000 },
-    required_before_rerun: ["Verify source/binary/container pins and actual genesis", "Reconcile complete observed lifecycle and independent reuse",
-      "Fit recovery delays per policy, retaining censored cases and recovery fees", "Freeze pilot budgets and service target before holdout seeds",
-      "Apply the same offered trace to all objects; publish failures and both volume denominators", "Deduplicate unique asset coverage; do not sum channel and fronting categories"] });
+    remaining_validation: ["Measure operational recovery and HTLC clocks; snapshot detection gaps are not latency distributions",
+      "Observe inbound backing and batching before making a deployed cost-efficiency claim", "Validate additional live failure, timeout, exit and reorg paths",
+      "Provide a synchronized testnet4 endpoint and dedicated bounded test funding", "Use a new committed protocol and fresh seeds for any changed transaction policy"] });
   console.log(JSON.stringify({ artifacts: root, events: events.length, state_hash: trace.m.stateHash(), evidence_class: fixtureConfig.evidence_class }));
 } else {
   throw new Error("Usage: capital_artifacts.ts build [directory] | check config.json events.jsonl");

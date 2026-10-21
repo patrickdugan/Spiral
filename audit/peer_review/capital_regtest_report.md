@@ -140,10 +140,19 @@ its timestamp was not sampled. All second-based integrals are unavailable.
 
 Complete live failure/timeout/receive/exit/reorg branches and their liability joins.
 
-The [matched-service status artifact](capital/matched-service-status.json) is
-pending a rerun under the now-normalized recovery semantics and explicit clock uncertainty. Existing matched-service
-sensitivity results remain forecasts; they have not been relabeled or replaced
-by synthetic "observations." Re-running the paper comparison under measured
-semantics, bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments
-remain unfinished after economic reducer verification. No testnet4 experiment
-was attempted.
+The [fee-aware fixed-budget comparison](capital_fixed_budget_results.md) now
+reruns all four demand families under retained backing and declared recovery
+delays, with fees, round overhead, disjoint pilot/holdout seeds and both initial
+balance factors. The protocol and budgets were committed before holdout
+evaluation. All 384 Ark and 672 channel/group forecasts are retained, including
+target failures and terminal obligations. This is a conditional single-participant
+transaction-cost scenario, not a measured deployment ranking or batched-receipt
+cost estimate. The [status artifact](capital/matched-service-status.json) keeps
+that distinction explicit.
+
+The [live-branch preflight](regtest/evidence/live-branch-preflight.json) verifies
+that the current owned CLN node lacks the hold-invoice plugin required by the
+pinned inbound path. Exact operational timing, those additional live paths,
+bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments remain
+unfinished. No testnet4 experiment was attempted; a synchronized endpoint and
+dedicated test funding were requested.
