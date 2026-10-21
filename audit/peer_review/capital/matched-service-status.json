@@ -1,8 +1,9 @@
 {
-  "status": "pending_comparison_with_observed_semantics_and_censored_clocks",
-  "evidence_class": "not_executed",
+  "status": "structural_sensitivity_complete_full_comparison_pending",
+  "evidence_class": "implementation_informed_forecast",
   "reference_trace_hash": "857589f0fdf4c9e21d387d97a8c730e53f248ec4c47bd83a42a722277c216211",
-  "reason": "Owned regtest recovery and independent round reuse now pass economic reducer replay. Snapshot detection heights and unsampled acceptance intervals are not precise operational clocks; matched-service forecasts must declare those timing assumptions and retain uncertainty.",
+  "reason": "Four paired fee-free sensitivities now apply retained change and explicit recovery delays. The full comparison still needs fees, round overhead, deduplicated underlying assets, disjoint pilot budgets and service-target holdouts. Snapshot detection heights are not precise operational clocks.",
+  "structural_sensitivity": "audit/peer_review/capital_comparison.md",
   "existing_results": "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
   "reference_lifecycle": {
     "offered_sat": 1600,

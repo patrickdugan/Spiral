@@ -99,6 +99,7 @@
   "economic_reconciliation": "../regtest/evidence/economic-reconciliation.json",
   "machine_reconciliation": "../regtest/evidence/machine-reconciliation.json",
   "machine_state_hash": "a7e6dec9966c44dc8c93ac611d28318eeac77e802d44b3768edd108211859cb6",
+  "structural_sensitivity": "../capital_comparison.md (completed; full fee-aware fixed-budget comparison remains pending)",
   "fixture_initial_sat": 2200000,
   "recovered_output_sat": 98705,
   "clock_caveat": "Accelerated blocks and manually triggered sweeps; no production latency inference.",

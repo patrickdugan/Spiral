@@ -1,0 +1,24 @@
+{
+  "checked_at_utc": "2026-10-21T12:11:30Z",
+  "status": "awaiting_synchronized_rpc_endpoint_and_dedicated_test_funding",
+  "windows_listeners_on_48332_or_48333": [],
+  "wsl_listeners_on_48332_or_48333": [],
+  "workspace_endpoint_configuration_found": false,
+  "testnet4_genesis_observed": null,
+  "testnet4_synchronization_verified": false,
+  "testnet4_funding_verified": false,
+  "testnet4_transaction_broadcast": false,
+  "host_free_bytes_at_check": 3537879040,
+  "owned_regtest_still_running": true,
+  "required_run": {
+    "controlled_lightning_peers": 4,
+    "channels": 4,
+    "channel_value_test_sat": 100000,
+    "total_funding_cap_test_sat": 1000000,
+    "payments": 200,
+    "invoice_values_test_sat": [1000, 2000],
+    "hard_stop_hours": 48
+  },
+  "next_action": "User was asked for a local configuration path or endpoint with credentials stored locally and dedicated test funds. Continue independent comparison work meanwhile.",
+  "limitations": "No listener or workspace configuration does not prove no remote node exists. The protocol requires an already synchronized node; no public-chain synchronization or funding has been fabricated."
+}

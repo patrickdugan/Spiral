@@ -22,6 +22,7 @@ result = {
     'economic_reconciliation': '../regtest/evidence/economic-reconciliation.json',
     'machine_reconciliation': '../regtest/evidence/machine-reconciliation.json',
     'machine_state_hash': machine['report']['state_hash'],
+    'structural_sensitivity': '../capital_comparison.md (completed; full fee-aware fixed-budget comparison remains pending)',
     'fixture_initial_sat': audit['initial_fixture_sat'], 'recovered_output_sat': proof['recovered_output_sat'],
     'clock_caveat': 'Accelerated blocks and manually triggered sweeps; no production latency inference.',
     'remaining': ['Instrument exact acceptance/commit timing; current journal uses snapshot detection heights and unknown seconds',

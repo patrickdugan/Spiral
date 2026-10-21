@@ -2,8 +2,8 @@
   "node": "v24.19.0",
   "test_command": "node --experimental-strip-types --test --test-reporter=tap model/*.test.ts",
   "test_exit_code": 0,
-  "tests": 70,
-  "passes": 70,
+  "tests": 76,
+  "passes": 76,
   "failures": 0,
   "typecheck": {
     "status": 0,
@@ -49,8 +49,11 @@
     "model/capital.round.test.ts": "cc9fb39064fddbd3df6d50adaa101bf50c62fc2d6740ab12bd1a925a14a0becf",
     "model/capital.test.ts": "bd646ff84524f331d1a4e5a2517a9ea45d0d76d6f32a942be11b9b1575f953ed",
     "model/capital.ts": "36ec4fd07b395c5d326e94d7bec37a82a9380c69342865bf547b2bc0baae61d7",
-    "audit/peer_review/capital_artifacts.ts": "01f8bf7522900e2c757e5d2ec2f51e6be2413e391ae12e7dd96a4472d68094e1",
-    "audit/peer_review/verify_capital.ts": "a7edf8bfa34aa0e12944bee3fe8ab601c930e551891bd103a1c61efeb3b95c55",
+    "model/server.ts": "1f28d92f99d0adf70a8bc025b002aa003c950cff98c5cc41d576c43b24ba559d",
+    "model/server.retained.test.ts": "9a2ee4dbc8420565e971fccc926e622f74912ce57a8d445085dba98ba5e77eee",
+    "audit/peer_review/capital_comparison.ts": "0f5d86cc0c2d389d41c4b8c61364d394d0ba13f40e424d4ed3a5d5e63f9b50dc",
+    "audit/peer_review/capital_artifacts.ts": "bd3c629fb9ddc1905585fd5dc3b1442841aa72ffc33c2a70c22de2feca5790ef",
+    "audit/peer_review/verify_capital.ts": "01e498b042927a3c3c3ce60c4c1489d56b53c4f9eb4371ac2942723540dcc332",
     "audit/peer_review/regtest/normalize.ts": "4dab85451257975f69d4c3c219976b05b316d59b307395d9ff654b2697639a2e"
   }
 }

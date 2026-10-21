@@ -7,6 +7,15 @@ An [owned regtest trace](../audit/peer_review/capital_regtest_report.md) now sup
 transaction-level evidence and an accepted economic reducer replay. Numerical
 comparison tables remain unchanged pending a rerun with explicit clock uncertainty.
 
+The [paired structural sensitivity](../audit/peer_review/capital_comparison.md)
+now reruns the four demand families with retained change and explicit recovery
+delays. With a six-block detection-gap assumption, fronting falls relative to
+the old model in all four families. At a 144-block stress delay, the accumulating
+case instead rises about 24%. Zero initial balances miss the 99% delivery target
+in the balanced and draining families despite oracle capacity. These fee-free
+component results neither include round overhead nor establish an overall
+efficiency ranking; the final fixed-budget comparison remains pending.
+
 1. **Define the economic boundary before adding capital terms.** A VTXO is a
    claim against backing, not an extra asset. A channel funding output and the
    operator's attributable share cannot both enter total capital. Report
