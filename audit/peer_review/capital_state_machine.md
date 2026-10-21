@@ -286,3 +286,20 @@ economically while exceeding the implementation's selection-depth cap. The
 observed 8,104-sat change is therefore retained as locked backing, not a free
 asset. Pending inbound acceptance is captured separately; the economic reducer
 uses terminal settlement because the intervening claim preparation was unsampled.
+
+## Observed cooperative exit funded from wallet capital
+
+The [exit report](capital_exit_report.md) adds `EXIT.funding` for a confirmed
+cooperative offboard. The embedded funding transaction spends free pool assets,
+pays the holder, retains wallet change and creates identified connectors.
+The original backing is preserved. An observed server forfeit claim replaces
+the old holder claim's allocations and includes connector value once.
+
+The holder fee and miner fee are separate. Gross new fronting includes the
+payout, miner fee and locked connectors, excluding free wallet change. It
+increments `F` without incrementing `C`. The old root and connectors remain
+committed, and the recovery right is right-censored. Finality, transaction
+provenance, payout value, connector maturity, forfeit parent/allocations and
+budget are checked atomically. The legacy exclusive-backing exit path is
+unchanged. Compound rights with different recovery maturities require further
+observed transitions; this exit does not establish partial recovery.

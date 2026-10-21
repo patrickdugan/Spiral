@@ -1,0 +1,15 @@
+{
+  "action": "offboard-client-sync",
+  "monotonic_start_ns": 9583899353449,
+  "height": 4445,
+  "state": "returned",
+  "monotonic_end_ns": 9584466521208,
+  "result": {
+    "spendable_sat": 21611,
+    "pending_lightning_send_sat": 0,
+    "claimable_lightning_receive_sat": 0,
+    "pending_in_round_sat": 0,
+    "pending_board_sat": 0,
+    "pending_exit_sat": 0
+  }
+}

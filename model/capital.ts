@@ -36,7 +36,7 @@ export interface Operation extends Request {
   gross: number; state: "RESERVED" | "ACCEPTED" | "FAILED" | "SETTLED" | "RESOLVED";
   recovered: number; fee: number; recovery_ids: string[]; last_event_id: string;
   committed_at: number | null; recovered_at: number | null;
-  kind: "payment" | "refresh"; resolution?: "revocation" | "timeout";
+  kind: "payment" | "refresh" | "exit"; resolution?: "revocation" | "timeout";
   recovery_complete?: boolean;
   in_flight_amount?: number;
   capacity_reserved?: number;
@@ -83,7 +83,8 @@ export interface Payloads {
   ONCHAIN_TRANSACTION: OnchainTransaction;
   BACKING_EXPIRED: { input_ids: string[] };
   RECOVERY_SWEEP: { sweep_id: string; operation_ids: string[]; input_ids: string[]; output_id: string; destination: string; fee: number; input_outpoints: string[] };
-  EXIT: { claim_id: string; fee: number; output_id: string; destination: string; mode: "cooperative" | "unilateral"; inclusion_height: number; inclusion_hash: string };
+  EXIT: { claim_id: string; fee: number; output_id: string; destination: string; mode: "cooperative" | "unilateral"; inclusion_height: number; inclusion_hash: string;
+    funding?: { operation_id: string; transaction: OnchainTransaction; connector_ids: string[]; recovery_claim: ClaimSpec } };
   CHAIN: { blocks: Block[] };
   TICK: Record<string, never>;
   REORG: { blocks: Block[] };
@@ -609,6 +610,42 @@ export class CapitalAccountingMachine {
       case "EXIT": {
         const d = e.data, c = this.claim(e, d.claim_id); integer(d.fee); demand(c.state === "ACTIVE" && d.fee < c.amount && e.txid, "invalid exit");
         this.finality(e, d.inclusion_height, d.inclusion_hash);
+        if (d.funding) {
+          const f = d.funding, tx = f.transaction; unique(f.connector_ids);
+          demand(d.mode === "cooperative" && !s.H.operations[f.operation_id] && f.connector_ids.length > 0, "invalid funded cooperative exit");
+          demand(!tx.refresh && !tx.reuse && tx.inclusion_height === d.inclusion_height && tx.inclusion_hash === d.inclusion_hash, "exit funding confirmation mismatch");
+          demand(e.evidence_refs.some(r => r.includes("forfeit")), "cooperative exit forfeit evidence required");
+          demand(c.backing_ids.every(id => !tx.input_ids.includes(id)), "funded exit must retain original backing");
+          demand(tx.input_ids.every(id => this.asset(e, id).pool), "funded exit requires declared pool inputs");
+          demand(d.fee >= tx.fee, "exit fee subsidy requires explicit accounting");
+          this.onchainTransaction(e, tx);
+          const payout = this.asset(e, d.output_id);
+          demand(payout.created_at === e.event_id && free(payout) && payout.amount === c.amount - d.fee, "cooperative payout amount mismatch");
+          demand(!f.connector_ids.includes(d.output_id), "payout cannot be a connector");
+          const connectors = f.connector_ids.map(id => this.asset(e, id));
+          demand(connectors.every(a => a.created_at === e.event_id && a.state === "COMMITTED" && a.release_height !== undefined && a.release_height >= c.expiry_height), "connector provenance or maturity mismatch");
+          demand(tx.outputs.every(o => o.release_height === undefined || f.connector_ids.includes(o.asset_id)), "unclassified exit encumbrance");
+          const connectorValue = sum(connectors.map(a => a.amount));
+          const expectedAllocations = { ...c.allocations, ...Object.fromEntries(connectors.map(a => [a.asset_id, a.amount])) };
+          demand(f.recovery_claim.claimant === this.config.operator && f.recovery_claim.parent_claim_id === c.claim_id &&
+            f.recovery_claim.expiry_height === c.expiry_height && canonicalJSON(f.recovery_claim.allocations) === canonicalJSON(expectedAllocations), "forfeit claim allocation mismatch");
+          const gross = sum([payout.amount, tx.fee, connectorValue]);
+          demand(s.B.F - s.B.C + s.B.reserved + gross <= s.B.budget, "exit fronting budget exhausted");
+          c.state = "FORFEITED"; c.last_event_id = e.event_id;
+          for (const id of c.backing_ids) c.allocations[id] = 0;
+          this.issue(e, f.recovery_claim, c.amount + connectorValue, false);
+          s.K[f.recovery_claim.claim_id].state = "FORFEITED";
+          const paid = payout.amount; payout.owner = c.claimant; payout.location = d.destination;
+          payout.amount = 0; payout.state = "TRANSFERRED_OUT"; payout.last_event_id = e.event_id;
+          s.B.pool.outflows += paid; s.totals.outflows += paid;
+          this.holder(c.claimant).outgoing += paid; this.holder(c.claimant).fees += d.fee;
+          s.totals.service_revenue += d.fee - tx.fee; s.B.F += gross;
+          s.H.operations[f.operation_id] = { operation_id: f.operation_id, holder: c.claimant, input_claim_ids: [c.claim_id],
+            reserve_ids: tx.input_ids, channel_id: "", delivered: paid, max_fee: 0, timeout_height: 0, gross, state: "SETTLED",
+            recovered: 0, fee: tx.fee, recovery_ids: [...c.backing_ids, ...f.connector_ids], last_event_id: e.event_id,
+            committed_at: e.block_height, recovered_at: null, kind: "exit" };
+          break;
+        }
         const assets = c.backing_ids.map(id => this.asset(e, id)); demand(assets.every(a => a.location === "onchain" && a.amount === c.allocations[a.asset_id]), "exit needs exclusive onchain backing");
         // Mixed pool/nonpool exits need explicit fee attribution; reject rather than guess.
         demand(assets.every(a => a.pool === assets[0].pool), "mixed exit pool attribution unsupported");

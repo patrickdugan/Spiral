@@ -13,7 +13,7 @@ const output = testRun.stdout + testRun.stderr;
 writeFileSync("audit/peer_review/capital/tests.tap", output);
 const sourceFiles = [...readdirSync("model").filter(p => p.startsWith("capital") && p.endsWith(".ts")).map(p => `model/${p}`),
   "model/server.ts", "model/server.retained.test.ts", "audit/peer_review/capital_comparison.ts", "audit/peer_review/capital_fixed_budget.ts",
-  "audit/peer_review/capital_artifacts.ts", "audit/peer_review/verify_capital.ts", "audit/peer_review/regtest/normalize.ts", "audit/peer_review/regtest/normalize-failure.ts", "audit/peer_review/regtest/normalize-inbound.ts"];
+  "audit/peer_review/capital_artifacts.ts", "audit/peer_review/verify_capital.ts", "audit/peer_review/regtest/normalize.ts", "audit/peer_review/regtest/normalize-failure.ts", "audit/peer_review/regtest/normalize-inbound.ts", "audit/peer_review/regtest/normalize-offboard.ts"];
 const compiler = process.argv[2], typeRoots = process.argv[3];
 let typecheck: { status: number | null; version?: string; diagnostics?: string } = { status: null };
 if (compiler && typeRoots) {

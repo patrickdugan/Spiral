@@ -54,7 +54,7 @@ if (args[0] === "check") {
     reference_lifecycle: { offered_sat: trace.m.report().totals.offered / 1000, delivered_sat: trace.m.report().totals.delivered / 1000,
       delivery_rate: trace.m.report().delivery_rate, outstanding_fronting_sat: trace.m.report().outstanding_fronting / 1000 },
     remaining_validation: ["Measure operational recovery and HTLC clocks; snapshot detection gaps are not latency distributions",
-      "Measure replenishment and batching distributions before making a deployed cost-efficiency claim; one inventory-backed receipt is observed", "Validate live timeout/unilateral failure recovery, exit and reorg paths; cooperative revocation now has observed evidence",
+      "Measure replenishment and batching distributions before making a deployed cost-efficiency claim; one inventory-backed receipt is observed", "Validate live timeout/unilateral recovery and reorg paths; cooperative revocation and cooperative exit have observed evidence",
       "Provide a synchronized testnet4 endpoint and dedicated bounded test funding", "Use a new committed protocol and fresh seeds for any changed transaction policy"] });
   console.log(JSON.stringify({ artifacts: root, events: events.length, state_hash: trace.m.stateHash(), evidence_class: fixtureConfig.evidence_class }));
 } else {

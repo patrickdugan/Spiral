@@ -12,6 +12,7 @@ import sys
 import time
 
 QUERIES = {
+    "offboards": "SELECT id,txid,encode(signed_tx,'hex') AS signed_tx,wallet_commit,created_at,user_fee_sat FROM offboards ORDER BY id",
     "subscriptions": "SELECT id,lightning_node_id,status,created_at,updated_at,lowest_incoming_htlc_expiry,accepted_at,payment_hash,invoice,final_amount_msat FROM lightning_htlc_subscription ORDER BY id",
     "subscription_vtxos": "SELECT vtxo_id,lightning_htlc_subscription_id FROM vtxo WHERE lightning_htlc_subscription_id IS NOT NULL ORDER BY vtxo_id",
     "vtxos": "SELECT id,vtxo_id,expiry,oor_spent_txid,spent_in_round,offboarded_in,vtxo_txid,exit_delta,policy_type,amount,anchor_point,spend_state,frontier_at,confirmed_height,onchain_spent_height,onchain_spent_txid FROM vtxo ORDER BY id",

@@ -95,3 +95,11 @@ the ratios; do not promote passing a payment target into a redemption guarantee.
     locked until recovery; only the untouched 10,000-sat leaf is immediately
     selectable. Incoming channel liquidity is a contribution, not recovery of
     earlier fronting. See [the inbound report](../audit/peer_review/capital_inbound_report.md).
+11. **Cooperative exit can require additional fronting.** The observed
+    18,632-sat offboard uses server wallet capital to pay 15,732 sats to the
+    client, spend 1,973 sats on a miner fee and lock a 330-sat connector. The
+    original shared backing remains unspent. Its signed 18,962-sat forfeit is
+    a recovery right spanning existing backing and connector value, not a
+    second asset. Record 18,035 sats of additional fronting and no recovery
+    credit at this event; retain both maturities and unclosed obligations.
+    See [the exit report](../audit/peer_review/capital_exit_report.md).

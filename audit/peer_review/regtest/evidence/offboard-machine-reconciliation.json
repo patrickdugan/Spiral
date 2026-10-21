@@ -1,0 +1,178 @@
+{
+  "evidence_class": "observed_regtest_cooperative_exit",
+  "economic_reconciliation": true,
+  "replay_verified": true,
+  "baseline_events": 49,
+  "added_events": 2,
+  "report": {
+    "evidence_class": "regtest",
+    "state_hash": "8dfce8a397e35d9330c05146c062abc1cd70ba445dace868cb3659e04f1b49aa",
+    "totals": {
+      "inflows": 2102000000,
+      "outflows": 75732000,
+      "fees": 15212000,
+      "service_revenue": 2684000,
+      "losses": 0,
+      "offered": 62001000,
+      "delivered": 60000000
+    },
+    "budget": {
+      "budget": 2002000000,
+      "F": 158343000,
+      "C": 101354000,
+      "reserved": 0,
+      "pool": {
+        "funded": 2000000000,
+        "transfers_in": 102000000,
+        "outflows": 75732000,
+        "fees": 15212000
+      }
+    },
+    "reconciliation_required": null,
+    "outstanding_fronting": 56989000,
+    "integrals": {
+      "fronting": {
+        "msat_blocks": "393555876000",
+        "msat_seconds": null
+      },
+      "unique_committed": {
+        "msat_blocks": "727828056000",
+        "msat_seconds": null
+      },
+      "htlc": {
+        "msat_blocks": "0",
+        "msat_seconds": null
+      },
+      "inbound": {
+        "msat_blocks": "259734000000",
+        "msat_seconds": null
+      },
+      "outbound": {
+        "msat_blocks": "1906266000000",
+        "msat_seconds": null
+      },
+      "idle": {
+        "msat_blocks": "8082352520000",
+        "msat_seconds": null
+      }
+    },
+    "stocks": {
+      "fronting": 56989000,
+      "unique_committed": 97989000,
+      "htlc": 0,
+      "inbound": 58000000,
+      "outbound": 442000000,
+      "idle": 1913067000
+    },
+    "free_budget": 1945011000,
+    "pool_inventory": {
+      "TRANSFERRED_OUT": 0,
+      "FREE": 1913067000,
+      "COMMITTED": 97989000
+    },
+    "delivery_rate": 0.9677263269947259,
+    "per_offered_msat": {
+      "fronting": 6347.5730391445295,
+      "unique_committed": 11738.972855276528,
+      "htlc": 0,
+      "inbound": 4189.190496927469,
+      "outbound": 30745.729907582136,
+      "idle": 130358.42196093612
+    },
+    "per_delivered_msat": {
+      "fronting": 6559.2646,
+      "unique_committed": 12130.4676,
+      "htlc": 0,
+      "inbound": 4328.9,
+      "outbound": 31771.1,
+      "idle": 134705.87533333333
+    },
+    "exposures": [
+      {
+        "operation_id": "b5403311e4c6f29c2268ade56e0984df2e78aaafd0c85c3c09315dc714d20377",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 0
+      },
+      {
+        "operation_id": "round:8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+        "outstanding": 277000,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 277000
+      },
+      {
+        "operation_id": "round:09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+        "outstanding": 38677000,
+        "right_censored": true,
+        "recovery_height": null
+      },
+      {
+        "operation_id": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "offboard:2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+        "outstanding": 18035000,
+        "right_censored": true,
+        "recovery_height": null
+      }
+    ]
+  },
+  "source_sha256": {
+    "normalized-config": "139baf1cc13a9613043bff851711fecaaed032e08d26576d430f8e6c11836093",
+    "runtime-identity": "d13a866d44adc9cf84e15acd1d8e89d1529e9c9ea46c618cf6bd6c92b8429a0d",
+    "runtime-source": "ef470d11b03c130e2d8d41ebe3119eb5247a09c2086e57f12860c48acfae392b",
+    "canonical-chain": "508d00e177fb606dc9255b63c54847daaeb0056be67ee723a968b68e3a14347e",
+    "inbound-source-and-chain": "44770b3ddd11fc32c7a50f94f3623e0ba593b65459bc70d013f21d512943187c",
+    "offboard-source-and-chain": "14173980509a3e64d22157ca85a3064a94e0dd68bb9bbf99b1c7ff4c6e13778e",
+    "offboard-before": "33c522ab911c269131fdfde78e5226352ea84861c72408b01141541b6a384708",
+    "offboard-broadcast": "8f37f319eb33b396d0d08f5912e2dc31bbce4c6b93f7989d716b409683c3c441",
+    "offboard-confirmed": "269364387a5cc56e43da16557380b3ce8cfc7c79791ecbc17ec69534ae3c4964",
+    "offboard-owned-output": "3ad8ca8a49b862b1de8a3abe59af07044b67209c69f390ddcfa099b59ea5c9c4",
+    "offboard-intent": "f651d8c6ca8467e64247b463c5761f20bfbd029825a518fcf44303f0f4270df9",
+    "action-offboard-18632": "5a03d9f2f6ab0296f5dd86d20fb9f773a9d96c7bbf53b19e9a4f548f58bbba74",
+    "action-offboard-onchain-sync": "6c3b9cd7881ab60af7863f364e58784e876ff497f564155dfbd4f3ba269bf728"
+  },
+  "exit": {
+    "claim_id": "e59ba9240fb4294d026d9d2d31b965fabcd23632d4a058cf77882ed56044324e:0",
+    "gross_claim_sat": 18632,
+    "payout_sat": 15732,
+    "holder_fee_sat": 2900,
+    "miner_fee_sat": 1973,
+    "retained_fee_sat": 927,
+    "connector_sat": 330,
+    "new_fronting_sat": 18035,
+    "wallet_change_sat": 17519,
+    "connector_expiry": 8900,
+    "original_claim_expiry": 8756,
+    "original_backing": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0",
+    "txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+    "payout_outpoint": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b:0",
+    "forfeit_claim": "4f58df9ad33cde2e9c47a8d94bb10185129c25773d8da5a867b4ea63f13ac46d:0"
+  },
+  "complete_fixture": {
+    "initial_sat": 2200000,
+    "operator_assets_sat": 2011056,
+    "client_onchain_sat": 115577,
+    "peer_channel_sat": 58000,
+    "miner_fees_sat": 15367
+  },
+  "limits": [
+    "The exit is reconstructed at confirmed observation height; preparation and mempool exposure are preserved as snapshots, not exact reducer clocks.",
+    "The old root and connector remain locked. Their later recovery is censored; no recovery credit or independent reuse is inferred.",
+    "The compound forfeit right spans original backing and a connector with different expiry. Separate partial recovery still requires observed evidence.",
+    "No unilateral exit, live reorg or testnet4 timing inference follows from this cooperative exit."
+  ]
+}

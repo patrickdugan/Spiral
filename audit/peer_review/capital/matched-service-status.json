@@ -16,7 +16,7 @@
   "remaining_validation": [
     "Measure operational recovery and HTLC clocks; snapshot detection gaps are not latency distributions",
     "Measure replenishment and batching distributions before making a deployed cost-efficiency claim; one inventory-backed receipt is observed",
-    "Validate live timeout/unilateral failure recovery, exit and reorg paths; cooperative revocation now has observed evidence",
+    "Validate live timeout/unilateral recovery and reorg paths; cooperative revocation and cooperative exit have observed evidence",
     "Provide a synchronized testnet4 endpoint and dedicated bounded test funding",
     "Use a new committed protocol and fresh seeds for any changed transaction policy"
   ]

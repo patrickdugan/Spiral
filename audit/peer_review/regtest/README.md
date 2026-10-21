@@ -124,3 +124,15 @@ from the repository root to reproduce the 49-event journal offline. The live
 fixture now has the loopback hold plugin enabled, automatic pool issuance
 disabled, and no pending HTLC from this experiment. Historical snapshots retain
 their original configuration and chain tip.
+
+## Cooperative exit extension
+
+The [exit report](../capital_exit_report.md) verifies an 18,632-sat claim's
+cooperative offboard to the same client's on-chain wallet. `offboard-observed.py`
+is a one-time action with intent guards. `attest-offboard.py` synchronizes the
+client's on-chain cache and captures public transaction/source/chain evidence.
+Replay the committed evidence with
+`node --experimental-strip-types audit/peer_review/regtest/normalize-offboard.ts`.
+The resulting 51-event journal retains the original backing and 330-sat
+connector; neither is assumed recovered. The captured tip is 4445, and the
+confirmed client payout is 15,732 sats.

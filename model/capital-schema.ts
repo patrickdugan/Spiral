@@ -15,6 +15,9 @@ const request = object({ operation_id: id, holder: id, input_claim_ids: ids, res
 const operation = object({ operation_id: id });
 const blocks: Schema = { type: "array", items: object({ height: integer, hash: id, parent_hash: id }) };
 const roundRefresh = object({ operation_id: id, input_claim_ids: ids, backing_ids: ids, service_fee: integer, replacement: claim });
+const onchainTransaction = object({ input_ids: ids, outputs: { type: "array", items: object({ asset_id: id, amount: integer, output_index: integer, release_height: integer }, ["release_height"]) },
+  fee: integer, inclusion_height: integer, inclusion_hash: id, refresh: roundRefresh,
+  reuse: object({ sweep_id: id, recovery_allocations: { type: "object", additionalProperties: integer } }) }, ["refresh", "reuse"]);
 export const payloadSchemas: Record<string, Schema> = {
   FUND: object({ asset_id: id, owner: id, location: { const: "onchain" }, backing_ref: id, maturity_height: integer, pool: { type: "boolean" } }),
   OPEN_CHANNEL: object({ channel_id: id, asset_id: id, funding_ref: id, remote: integer, spendable: integer, receivable: integer }),
@@ -36,12 +39,11 @@ export const payloadSchemas: Record<string, Schema> = {
   CAPITAL_REUSABLE: object({ sweep_id: id, reuse: request, channel_funding_ref: id, funding_height: integer, funding_hash: id, spendable: integer }),
   MOVE_TO_CHANNEL: object({ asset_id: id, channel_id: id, funding_ref: id, remote: integer, spendable: integer, receivable: integer }),
   SPLIT_MERGE: object({ input_ids: ids, outputs: { type: "array", items: object({ asset_id: id, amount: integer }) } }),
-  ONCHAIN_TRANSACTION: object({ input_ids: ids, outputs: { type: "array", items: object({ asset_id: id, amount: integer, output_index: integer, release_height: integer }, ["release_height"]) },
-    fee: integer, inclusion_height: integer, inclusion_hash: id, refresh: roundRefresh,
-    reuse: object({ sweep_id: id, recovery_allocations: { type: "object", additionalProperties: integer } }) }, ["refresh", "reuse"]),
+  ONCHAIN_TRANSACTION: onchainTransaction,
   BACKING_EXPIRED: object({ input_ids: ids }),
   RECOVERY_SWEEP: object({ sweep_id: id, operation_ids: ids, input_ids: ids, output_id: id, destination: id, fee: integer, input_outpoints: ids }),
-  EXIT: object({ claim_id: id, fee: integer, output_id: id, destination: id, mode: { enum: ["cooperative", "unilateral"] }, inclusion_height: integer, inclusion_hash: id }),
+  EXIT: object({ claim_id: id, fee: integer, output_id: id, destination: id, mode: { enum: ["cooperative", "unilateral"] }, inclusion_height: integer, inclusion_hash: id,
+    funding: object({ operation_id: id, transaction: onchainTransaction, connector_ids: ids, recovery_claim: claim }) }, ["funding"]),
   CHAIN: object({ blocks }), TICK: object({}), REORG: object({ blocks }),
 };
 const envelope = object({ event_id: id, trace_id: id, event_type: { enum: Object.keys(payloadSchemas) }, amount: integer, unit: { const: "msat" },

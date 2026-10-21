@@ -141,8 +141,10 @@ its timestamp was not sampled. All second-based integrals are unavailable.
 The subsequent [failure report](capital_failure_report.md) verifies accepted
 outbound failure and cooperative revocation, including replacement claim
 ancestry and one pending-channel snapshot. Live timeout/unilateral recovery,
-exit and reorg branches remain distinct validation work. A subsequent
+unilateral exit and reorg branches remain distinct validation work. A subsequent
 [inventory-backed receive](capital_inbound_report.md) is now reconciled as well.
+The [cooperative exit extension](capital_exit_report.md) also proves a confirmed
+client payout while retaining original backing and a separately locked connector.
 
 The [fee-aware fixed-budget comparison](capital_fixed_budget_results.md) now
 reruns all four demand families under retained backing and declared recovery

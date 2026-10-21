@@ -106,7 +106,7 @@
   "remaining": [
     "Instrument exact acceptance/commit timing; whole historical journal seconds remain unknown",
     "Measure inventory replenishment and batching distributions beyond one observed receipt",
-    "Complete live timeout/unilateral failure recovery, exit and reorg branches",
+    "Complete live timeout/unilateral recovery and reorg validation; later offboard recovery remains censored",
     "Execute bounded testnet4 operational-clock protocol after receiving synchronized endpoint and test funding"
   ],
   "fixed_budget_comparison": "../capital_fixed_budget_results.md (completed conditional single-participant forecast; 384 Ark and 672 channel/group holdouts)",
@@ -114,5 +114,7 @@
   "cooperative_failure_reconciliation": "../regtest/evidence/failure-machine-reconciliation.json",
   "cooperative_failure_status": "two accepted failed HTLCs revoked; one pending-channel capture; client claims and economic assets conserved",
   "inbound_reconciliation": "../regtest/evidence/inbound-machine-reconciliation.json",
-  "inbound_status": "2000-sat received; 104-sat retained fee; 1896-sat inventory-backed claim; depth-excluded 8104-sat change retained"
+  "inbound_status": "2000-sat received; 104-sat retained fee; 1896-sat inventory-backed claim; depth-excluded 8104-sat change retained",
+  "cooperative_exit_reconciliation": "../regtest/evidence/offboard-machine-reconciliation.json",
+  "cooperative_exit_status": "18632-sat claim offboarded; 15732-sat client payout confirmed; original root and 330-sat connector remain locked; 18035-sat additional fronting"
 }
