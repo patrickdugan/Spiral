@@ -1,0 +1,27 @@
+{
+  "dedicated_wallet": true,
+  "wallet_name": "spiral-clock-testnet4",
+  "fee_reserve_sat": 50000,
+  "endpoints": {
+    "core": {
+      "cli": ["/private/bin/bitcoin-cli", "-testnet4", "-conf=/private/bitcoin.conf", "-rpcwallet=spiral-clock-testnet4"],
+      "pin": {"binary_path": "/private/bin/bitcoind", "source_revision": "REPLACE_WITH_40_HEX_COMMIT", "sha256": "REPLACE_WITH_64_HEX_BINARY_HASH", "rpc_version": "/Satoshi:31.0.0/"}
+    },
+    "a": {
+      "cli": ["/private/bin/lightning-cli", "--network=testnet4", "--lightning-dir=/private/cln-a", "--json", "--notifications=none"],
+      "pin": {"binary_path": "/private/bin/lightningd", "source_revision": "REPLACE_WITH_40_HEX_COMMIT", "sha256": "REPLACE_WITH_64_HEX_BINARY_HASH", "rpc_version": "v26.06.7"}
+    },
+    "b": {
+      "cli": ["/private/bin/lightning-cli", "--network=testnet4", "--lightning-dir=/private/cln-b", "--json", "--notifications=none"],
+      "pin": {"binary_path": "/private/bin/lightningd", "source_revision": "REPLACE_WITH_40_HEX_COMMIT", "sha256": "REPLACE_WITH_64_HEX_BINARY_HASH", "rpc_version": "v26.06.7"}
+    },
+    "c": {
+      "cli": ["/private/bin/lightning-cli", "--network=testnet4", "--lightning-dir=/private/cln-c", "--json", "--notifications=none"],
+      "pin": {"binary_path": "/private/bin/lightningd", "source_revision": "REPLACE_WITH_40_HEX_COMMIT", "sha256": "REPLACE_WITH_64_HEX_BINARY_HASH", "rpc_version": "v26.06.7"}
+    },
+    "d": {
+      "cli": ["/private/bin/lightning-cli", "--network=testnet4", "--lightning-dir=/private/cln-d", "--json", "--notifications=none"],
+      "pin": {"binary_path": "/private/bin/lightningd", "source_revision": "REPLACE_WITH_40_HEX_COMMIT", "sha256": "REPLACE_WITH_64_HEX_BINARY_HASH", "rpc_version": "v26.06.7"}
+    }
+  }
+}

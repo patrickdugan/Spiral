@@ -1,0 +1,182 @@
+{
+  "evidence_class": "observed_regtest_exit_reorg",
+  "economic_reconciliation": true,
+  "replay_verified": true,
+  "original_events_unchanged": true,
+  "pending_check": {
+    "ok": true,
+    "reconciled": false,
+    "events": 52,
+    "state_hash": "943331b2aaeb7475924150a62bddb6859cb7b1f3a4ec4543ab276059b2fdb92e"
+  },
+  "final_check": {
+    "ok": true,
+    "reconciled": true,
+    "events": 53,
+    "state_hash": "a47198789818d3c09b3ca8b74ff52c985c480ed454e866be721613889a7f0bd7"
+  },
+  "original_tip": "785b383dff85f45ba517c6e107aa3b210d9ac16e97dde762921a56f05833a632",
+  "common_height": 4442,
+  "orphaned_depth": 3,
+  "pending_height": 4446,
+  "reconfirmed_inclusion_height": 4447,
+  "final_height": 4449,
+  "same_signed_transaction_sha256": "ae41f357e6a284a3d176c7c76a214ee2d61223879f1f39b3521fbd53a8c35706",
+  "txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+  "client_pending_sat": 15732,
+  "client_final_confirmed_sat": 115577,
+  "report": {
+    "evidence_class": "regtest",
+    "state_hash": "a47198789818d3c09b3ca8b74ff52c985c480ed454e866be721613889a7f0bd7",
+    "totals": {
+      "inflows": 2102000000,
+      "outflows": 75732000,
+      "fees": 15212000,
+      "service_revenue": 2684000,
+      "losses": 0,
+      "offered": 62001000,
+      "delivered": 60000000
+    },
+    "budget": {
+      "budget": 2002000000,
+      "F": 158343000,
+      "C": 101354000,
+      "reserved": 0,
+      "pool": {
+        "funded": 2000000000,
+        "transfers_in": 102000000,
+        "outflows": 75732000,
+        "fees": 15212000
+      }
+    },
+    "reconciliation_required": null,
+    "outstanding_fronting": 56989000,
+    "integrals": {
+      "fronting": {
+        "msat_blocks": "393711692000",
+        "msat_seconds": null
+      },
+      "unique_committed": {
+        "msat_blocks": "728218692000",
+        "msat_seconds": null
+      },
+      "htlc": {
+        "msat_blocks": "0",
+        "msat_seconds": null
+      },
+      "inbound": {
+        "msat_blocks": "259966000000",
+        "msat_seconds": null
+      },
+      "outbound": {
+        "msat_blocks": "1908034000000",
+        "msat_seconds": null
+      },
+      "idle": {
+        "msat_blocks": "8090076928000",
+        "msat_seconds": null
+      }
+    },
+    "stocks": {
+      "fronting": 56989000,
+      "unique_committed": 97989000,
+      "htlc": 0,
+      "inbound": 58000000,
+      "outbound": 442000000,
+      "idle": 1913067000
+    },
+    "free_budget": 1945011000,
+    "pool_inventory": {
+      "TRANSFERRED_OUT": 0,
+      "FREE": 1913067000,
+      "COMMITTED": 97989000
+    },
+    "delivery_rate": 0.9677263269947259,
+    "per_offered_msat": {
+      "fronting": 6350.086159900647,
+      "unique_committed": 11745.27333430106,
+      "htlc": 0,
+      "inbound": 4192.932372058515,
+      "outbound": 30774.245576684247,
+      "idle": 130483.00717730359
+    },
+    "per_delivered_msat": {
+      "fronting": 6561.861533333334,
+      "unique_committed": 12136.9782,
+      "htlc": 0,
+      "inbound": 4332.766666666666,
+      "outbound": 31800.566666666666,
+      "idle": 134834.61546666667
+    },
+    "exposures": [
+      {
+        "operation_id": "b5403311e4c6f29c2268ade56e0984df2e78aaafd0c85c3c09315dc714d20377",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 0
+      },
+      {
+        "operation_id": "round:8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+        "outstanding": 277000,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 277000
+      },
+      {
+        "operation_id": "round:09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+        "outstanding": 38677000,
+        "right_censored": true,
+        "recovery_height": null
+      },
+      {
+        "operation_id": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "offboard:2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+        "outstanding": 18035000,
+        "right_censored": true,
+        "recovery_height": null
+      }
+    ]
+  },
+  "source_sha256": {
+    "normalized-config": "139baf1cc13a9613043bff851711fecaaed032e08d26576d430f8e6c11836093",
+    "canonical-chain": "508d00e177fb606dc9255b63c54847daaeb0056be67ee723a968b68e3a14347e",
+    "inbound-source-and-chain": "44770b3ddd11fc32c7a50f94f3623e0ba593b65459bc70d013f21d512943187c",
+    "offboard-source-and-chain": "14173980509a3e64d22157ca85a3064a94e0dd68bb9bbf99b1c7ff4c6e13778e",
+    "reorg-exit-intent": "7a208d985f95f470007fcb2bd01faf503036eea6a562457891f0bf5cc972f741",
+    "reorg-exit-orphaned-headers": "4134f34389eb6c3dc596d69e6251bb6183cc45bf0f11364a01a30698216da02e",
+    "reorg-exit-final-headers": "546bcdf34f5e5c29077669ce1678c0490ec6183a038ffac5b4a5f76c410f9250",
+    "reorg-exit-before": "b3479afd6ba46d7842e3e54c4da90e9a84d1c38eda81207e2e8fe2d3af83b3ba",
+    "reorg-exit-orphaned": "49ec35cc811b7957789ae9571e9ec36faf3f463a43678a37db2dc450637fafc1",
+    "reorg-exit-reconfirmed": "eed3fbf3ae39b00a0427d5284181e2aba58604806e42bc66d0d294eaff10d62b",
+    "action-reorg-client-pending-sync": "da047aa6db9f018e6d393e38174f6b7a2ebe7ed148a43681b4f8883c067d3bf6",
+    "action-reorg-client-confirmed-sync": "a88bdb70d29cd39cd06c08efad101503d9a82b0bafc553e30725ff4297ecd5fd",
+    "offboard-lifecycle.jsonl": "562a7787f7fc44123c5bd34a5e0f627f3cc60e69b84b738983a89b37b580ef73"
+  },
+  "complete_fixture": {
+    "initial_sat": 2200000,
+    "operator_assets_sat": 2011056,
+    "client_onchain_sat": 115577,
+    "peer_channel_sat": 58000,
+    "miner_fees_sat": 15367
+  },
+  "limits": [
+    "Observers were paused during fork construction and resumed at a higher tip; this is not an uninterrupted propagation-clock experiment.",
+    "During the pending interval the model retains a frozen historical economic checkpoint, not a current spendability assertion.",
+    "Reconfirmed exit replay uses the new confirmed observation anchor; branch-local integrals are not wall-clock exposure across the reorg gap.",
+    "This terminal-exit reconciliation does not generalize to later economic events, replacement transactions, live sweep reorgs or unilateral exits."
+  ]
+}

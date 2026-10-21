@@ -1,0 +1,10 @@
+{
+  "action": "reorg-invalidate-exit",
+  "monotonic_start_ns": 10388953639915,
+  "height": 4445,
+  "state": "returned",
+  "monotonic_end_ns": 10389484779943,
+  "result": {
+    "result": ""
+  }
+}

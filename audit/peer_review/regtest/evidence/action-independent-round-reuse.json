@@ -1,0 +1,10 @@
+{
+  "action": "independent-round-reuse",
+  "monotonic_start_ns": 1343837213032,
+  "height": 4436,
+  "state": "returned",
+  "monotonic_end_ns": 1349971709864,
+  "result": {
+    "stdout": "{\n  \"status\": \"unconfirmed\",\n  \"funding_txid\": \"09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272\"\n}\n"
+  }
+}

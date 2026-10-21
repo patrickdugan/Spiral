@@ -1,0 +1,7 @@
+{
+  "state": "intent",
+  "payment_hash": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+  "amount_sat": 1000,
+  "height": 4439,
+  "monotonic_start_ns": 6918101016658
+}

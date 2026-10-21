@@ -1,0 +1,16 @@
+{
+  "tx": "020000000001015ebc2ea4bf3a58fa0ae26adaf252efe7e4999fa09a617a07d8297f166121ac460100000000fdffffff0220a1070000000000220020550c21bef1d3f9d341f0e7d5267acdc9fa85f4362cedc0ed0ebff081d5703dbf7aa00700000000002251202bc80f2dee132d1bce5d896d30312f66d4f8cf8e5fed6dcefcc8409e31f347ba024730440220365587274809c7921aa254bbfdc1c8841df56bbedfc90dd2e415366896a593dd02202682465b3eac2145e9dd29711a0f2157cf9765a0bd96f171cb7d1a5ccc71d692012103455b986070b9cce9afc711d9f53b70ce05c75a8b0b14da7f6d0df5c2a82eb8356b000000",
+  "txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+  "channel_id": "c5ed80bd3eb37dca589ebdf1dc57e10ffb2ae8137b41ffd8ac7ae03fa4ae49d6",
+  "channel_type": {
+    "bits": [
+      12,
+      22
+    ],
+    "names": [
+      "static_remotekey/even",
+      "anchors/even"
+    ]
+  },
+  "outnum": 0
+}

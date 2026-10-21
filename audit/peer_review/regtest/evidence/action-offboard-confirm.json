@@ -1,0 +1,10 @@
+{
+  "action": "offboard-confirm",
+  "monotonic_start_ns": 9563789342899,
+  "height": 4442,
+  "state": "returned",
+  "monotonic_end_ns": 9583883500019,
+  "result": {
+    "height": 4445
+  }
+}

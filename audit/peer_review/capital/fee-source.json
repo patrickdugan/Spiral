@@ -1,0 +1,123 @@
+{
+  "evidence_class": "source_and_executed_configuration",
+  "revision": "8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+  "files": [
+    {
+      "path": "lib/src/fees.rs",
+      "git_blob": "677b6956beedcf6809ccc37f3d5a81c193122e17",
+      "sha256": "c78e3b90cccb32ba7e60403579e9f252bc928b870c7a59e84387a2a027a0679c",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/lib/src/fees.rs"
+    },
+    {
+      "path": "lib/src/arkoor/package.rs",
+      "git_blob": "d8cbebe5f6dc84c4cf02aa1ca548f842b0c40eaa",
+      "sha256": "ab2db8263e9011fa97e752582697b3368963c64ad7673a2d086d7f3aa9704f52",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/lib/src/arkoor/package.rs"
+    },
+    {
+      "path": "lib/src/arkoor/mod.rs",
+      "git_blob": "9feb9fb46b4db0e1e9f7c341bcc20e4077dfedd1",
+      "sha256": "6492bffb7a4df13ebb0fcad6d8e805864a58f7347f4c95bd708f3b2314b90da1",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/lib/src/arkoor/mod.rs"
+    },
+    {
+      "path": "server/src/round/mod.rs",
+      "git_blob": "503c5979822068780d19050251516169a444ab97",
+      "sha256": "c14b950ec06ca55fa87c54e19d2a331d9426575b1bc0e6752832dcc831061732",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/round/mod.rs"
+    },
+    {
+      "path": "server/src/ln/mod.rs",
+      "git_blob": "6b41663f4fdf02c6d6a893da7d55f9a63a7209db",
+      "sha256": "e10434d1f758f09e39faa01c9a182aa4b5fa2fd2cdb958bd468636dae625f94a",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/ln/mod.rs"
+    },
+    {
+      "path": "server/src/arkoor.rs",
+      "git_blob": "101e284f9fc49a4dceb32c11e5ca6a660c2fe105",
+      "sha256": "dfbd3c840a3756859376e3519e91e8708d05d65d4c986432b5d6882350359619",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/arkoor.rs"
+    }
+  ],
+  "runtime_identity_sha256": "d13a866d44adc9cf84e15acd1d8e89d1529e9c9ea46c618cf6bd6c92b8429a0d",
+  "fees": {
+    "board": {
+      "min_fee_sat": 330,
+      "base_fee_sat": 100,
+      "ppm": 1000
+    },
+    "offboard": {
+      "base_fee_sat": 200,
+      "fixed_additional_vb": 221,
+      "ppm_expiry_table": [
+        {
+          "expiry_blocks_threshold": 0,
+          "ppm": 0
+        },
+        {
+          "expiry_blocks_threshold": 97,
+          "ppm": 1000
+        },
+        {
+          "expiry_blocks_threshold": 199,
+          "ppm": 4000
+        },
+        {
+          "expiry_blocks_threshold": 2161,
+          "ppm": 8000
+        }
+      ]
+    },
+    "refresh": {
+      "base_fee_sat": 150,
+      "ppm_expiry_table": [
+        {
+          "expiry_blocks_threshold": 0,
+          "ppm": 0
+        },
+        {
+          "expiry_blocks_threshold": 97,
+          "ppm": 1000
+        },
+        {
+          "expiry_blocks_threshold": 199,
+          "ppm": 4000
+        },
+        {
+          "expiry_blocks_threshold": 2161,
+          "ppm": 8000
+        }
+      ]
+    },
+    "lightning_receive": {
+      "base_fee_sat": 100,
+      "ppm": 2000
+    },
+    "lightning_send": {
+      "min_fee_sat": 10,
+      "base_fee_sat": 75,
+      "ppm_expiry_table": [
+        {
+          "expiry_blocks_threshold": 0,
+          "ppm": 0
+        },
+        {
+          "expiry_blocks_threshold": 97,
+          "ppm": 1000
+        },
+        {
+          "expiry_blocks_threshold": 199,
+          "ppm": 4000
+        },
+        {
+          "expiry_blocks_threshold": 2161,
+          "ppm": 8000
+        }
+      ]
+    }
+  },
+  "ln_max_fee_ppm": 900000,
+  "max_vtxo_exit_depth": 100,
+  "min_board_amount": "20000 sat",
+  "interpretation": "Pricing arithmetic and limits are source/configuration facts. Receipt backing, refresh scheduling, batching, and constant future miner fees remain forecast policies."
+}

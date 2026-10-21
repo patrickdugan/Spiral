@@ -1,0 +1,182 @@
+{
+  "status": "not_ready",
+  "reason": "wallet has pending or immature funds",
+  "transaction_broadcast": false,
+  "checked_at_unix_ns": "1792595490210627687",
+  "observations": [
+    {
+      "node": "core",
+      "method": "getblockchaininfo",
+      "monotonic_start_ns": "14280130454981",
+      "monotonic_end_ns": "14280208137762",
+      "result": {
+        "chain": "testnet4",
+        "blocks": 157211,
+        "headers": 157211,
+        "bestblockhash": "00000000a0d68fa0f036f22b46d871509f76bc2398491f5b8e862f0642574191",
+        "bits": "1d00ffff",
+        "target": "00000000ffff0000000000000000000000000000000000000000000000000000",
+        "difficulty": 1,
+        "time": 1792602156,
+        "mediantime": 1792596151,
+        "verificationprogress": 1,
+        "initialblockdownload": false,
+        "chainwork": "000000000000000000000000000000000000000000000ee4f5c726f393dbb762",
+        "size_on_disk": 2450761445,
+        "pruned": true,
+        "pruneheight": 108956,
+        "automatic_pruning": true,
+        "prune_target_size": 4294967296,
+        "warnings": []
+      }
+    },
+    {
+      "node": "core",
+      "method": "getblockhash",
+      "monotonic_start_ns": "14280208176818",
+      "monotonic_end_ns": "14280279213012",
+      "result": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043"
+    },
+    {
+      "node": "core",
+      "method": "getnetworkinfo",
+      "monotonic_start_ns": "14280279231277",
+      "monotonic_end_ns": "14280341335549",
+      "result": {
+        "version": 310100,
+        "subversion": "/Satoshi:31.1.0/",
+        "protocolversion": 70016,
+        "localservices": "0000000000000c08",
+        "localservicesnames": [
+          "WITNESS",
+          "NETWORK_LIMITED",
+          "P2P_V2"
+        ],
+        "localrelay": true,
+        "timeoffset": 0,
+        "networkactive": true,
+        "connections": 10,
+        "connections_in": 0,
+        "connections_out": 10,
+        "networks": [
+          {
+            "name": "ipv4",
+            "limited": false,
+            "reachable": true,
+            "proxy": "",
+            "proxy_randomize_credentials": false
+          },
+          {
+            "name": "ipv6",
+            "limited": false,
+            "reachable": true,
+            "proxy": "",
+            "proxy_randomize_credentials": false
+          },
+          {
+            "name": "onion",
+            "limited": true,
+            "reachable": false,
+            "proxy": "",
+            "proxy_randomize_credentials": false
+          },
+          {
+            "name": "i2p",
+            "limited": true,
+            "reachable": false,
+            "proxy": "",
+            "proxy_randomize_credentials": false
+          },
+          {
+            "name": "cjdns",
+            "limited": true,
+            "reachable": false,
+            "proxy": "",
+            "proxy_randomize_credentials": false
+          }
+        ],
+        "relayfee": "0.00000100",
+        "incrementalfee": "0.00000100",
+        "localaddresses": [],
+        "warnings": []
+      }
+    },
+    {
+      "node": "core",
+      "method": "getmempoolinfo",
+      "monotonic_start_ns": "14280341417861",
+      "monotonic_end_ns": "14280416211540",
+      "result": {
+        "loaded": true,
+        "size": 41,
+        "bytes": 40773,
+        "usage": 187792,
+        "total_fee": "0.52337646",
+        "maxmempool": 300000000,
+        "mempoolminfee": "0.00000100",
+        "minrelaytxfee": "0.00000100",
+        "incrementalrelayfee": "0.00000100",
+        "unbroadcastcount": 0,
+        "fullrbf": true,
+        "permitbaremultisig": true,
+        "maxdatacarriersize": 100000,
+        "limitclustercount": 64,
+        "limitclustersize": 101000,
+        "optimal": true
+      }
+    },
+    {
+      "node": "core",
+      "method": "getwalletinfo",
+      "monotonic_start_ns": "14280416233909",
+      "monotonic_end_ns": "14280491361874",
+      "result": {
+        "walletname": "spiral-capital-clock-20261021",
+        "walletversion": 169900,
+        "format": "sqlite",
+        "txcount": 2,
+        "keypoolsize": 4000,
+        "keypoolsize_hd_internal": 4000,
+        "private_keys_enabled": true,
+        "avoid_reuse": false,
+        "scanning": false,
+        "descriptors": true,
+        "external_signer": false,
+        "blank": false,
+        "birthtime": 1792594266,
+        "flags": [
+          "last_hardened_xpub_cached",
+          "descriptor_wallet"
+        ],
+        "lastprocessedblock": {
+          "hash": "00000000a0d68fa0f036f22b46d871509f76bc2398491f5b8e862f0642574191",
+          "height": 157211
+        }
+      }
+    },
+    {
+      "node": "core",
+      "method": "listlockunspent",
+      "monotonic_start_ns": "14280491381075",
+      "monotonic_end_ns": "14280552830501",
+      "result": []
+    },
+    {
+      "node": "core",
+      "method": "getbalances",
+      "monotonic_start_ns": "14280552844576",
+      "monotonic_end_ns": "14280614777961",
+      "result": {
+        "mine": {
+          "trusted": "0E-8",
+          "untrusted_pending": "0.00510000",
+          "immature": "0E-8"
+        },
+        "lastprocessedblock": {
+          "hash": "00000000a0d68fa0f036f22b46d871509f76bc2398491f5b8e862f0642574191",
+          "height": 157211
+        }
+      }
+    }
+  ]
+}

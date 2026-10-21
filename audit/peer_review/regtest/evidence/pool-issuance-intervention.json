@@ -1,0 +1,11 @@
+{
+  "reason": "isolate original board expiry from automatic pool replenishment",
+  "before_sha256": "393b7c64e48b67ca96391b35cffe3fb101204ce91b32b665d1a517b51e884232",
+  "after_sha256": "f788c707432fa15545f0498b843ff2e5c1a763c54b14201774ef25bf394ff3a6",
+  "old_targets": [
+    "1000sat:10",
+    "10000sat:10"
+  ],
+  "new_targets": [],
+  "new_external_funding": 0
+}

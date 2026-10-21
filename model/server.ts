@@ -29,6 +29,9 @@ export interface ServerParams {
    * Which reading matches the implementation is open (see header) and sets the scale of 𝒟_V.
    */
   spendLock: "expiry" | "round";
+  /** Structurally calibrated forecast policy, not a measured latency distribution. */
+  changeBacking?: "fresh" | "retained";
+  recoveryDelayBlocks?: number;
 }
 
 export const DEFAULT_SERVER: ServerParams = { lifetimeBlocks: 4032, roundInterval: 6, refreshLead: 288, spendLock: "expiry" };
@@ -53,7 +56,14 @@ export class ArkServer {
   private lockedIntegral = 0;  // ∫ W_S dt (value·blocks)
   private lastHeight = 0;
   private nextId = 0;
-  /** Live (unforfeited) outputs, insertion-ordered; expiry is monotone in insertion order. */
+  private holderIntegral = 0;
+  private holderStock = 0;
+  private peakFronting = 0;
+  private grossFronting = 0;
+  private recoveredFronting = 0;
+  private peakOnchainBacking = 0;
+  private lateRefresh = false;
+  /** Live claims, insertion-ordered; retained change can preserve an earlier expiry. */
   private readonly live = new Map<string, Vtxo>();
   /** Forfeited outputs bucketed by the height at which the server may sweep them. */
   private readonly sweepAt = new Map<number, Vtxo[]>();
@@ -68,6 +78,8 @@ export class ArkServer {
   private stepOut = 0;
 
   constructor(capital: number, params: ServerParams = DEFAULT_SERVER) {
+    if (!Number.isSafeInteger(params.recoveryDelayBlocks ?? 0) || (params.recoveryDelayBlocks ?? 0) < 0) throw new Error("invalid recovery delay");
+    if (params.changeBacking === "retained" && params.spendLock === "round") throw new Error("retained backing has no proved next-round recovery shortcut");
     this.capital = capital;
     this.params = params;
   }
@@ -89,6 +101,7 @@ export class ArkServer {
     if (!Number.isSafeInteger(blocks) || blocks < 0) throw new Error("blocks must be a nonnegative safe integer");
     // W_S is piecewise constant between events; integrate over the interval before applying sweeps.
     this.lockedIntegral += this.committed * blocks;
+    this.holderIntegral += this.holderStock * blocks;
     const from = this.height;
     this.height += blocks;
     this.lastHeight = this.height;
@@ -99,6 +112,7 @@ export class ArkServer {
       if (!due) continue;
       for (const v of due) {
         this.committed -= v.value; // sweep: fronted value recovered
+        this.recoveredFronting += v.value;
         // A caller may advance past several sweep heights in one step. The upfront integral
         // charged this value to the endpoint; remove the time after its actual recovery.
         this.lockedIntegral -= v.value * (this.height - h);
@@ -106,17 +120,19 @@ export class ArkServer {
       this.sweepAt.delete(h);
     }
     // Holders refresh outputs approaching expiry; a refresh is a forfeit plus a server-funded reissue.
-    // Live outputs are expiry-ordered, so the scan stops at the first output outside the lead window.
+    // Retained change can be inserted after newer claims with later expiry.
     const toRefresh: string[] = [];
     for (const v of this.live.values()) {
-      if (v.expiresAt - this.height > this.params.refreshLead) break;
+      if (v.expiresAt - this.height > this.params.refreshLead) continue;
       toRefresh.push(v.id);
     }
     for (const id of toRefresh) this.refresh(id);
   }
 
-  private newVtxo(holder: string, value: number): Vtxo {
-    const v: Vtxo = { id: `v${this.nextId++}`, holder, value, expiresAt: this.height + this.params.lifetimeBlocks, forfeited: false };
+  private newVtxo(holder: string, value: number, expiry = this.height + this.params.lifetimeBlocks): Vtxo {
+    const v: Vtxo = { id: `v${this.nextId++}`, holder, value, expiresAt: expiry, forfeited: false };
+    this.holderStock += value;
+    this.peakOnchainBacking = Math.max(this.peakOnchainBacking, this.holderStock + this.committed);
     this.live.set(v.id, v);
     if (!this.byHolder.has(holder)) this.byHolder.set(holder, new Set());
     this.byHolder.get(holder)!.add(v.id);
@@ -128,10 +144,12 @@ export class ArkServer {
     if (v.value > this.uncommitted) return false;
     v.forfeited = true;
     this.committed += v.value;
+    this.grossFronting += v.value; this.peakFronting = Math.max(this.peakFronting, this.committed);
+    this.holderStock -= v.value;
     this.live.delete(v.id);
     this.byHolder.get(v.holder)?.delete(v.id);
-    const at = Math.min(sweepHeight, v.expiresAt);
-    if (at <= this.height) { this.committed -= v.value; return true; } // already sweepable
+    const at = Math.min(sweepHeight, v.expiresAt) + (this.params.recoveryDelayBlocks ?? 0);
+    if (at <= this.height) { this.committed -= v.value; this.recoveredFronting += v.value; return true; }
     if (!this.sweepAt.has(at)) this.sweepAt.set(at, []);
     this.sweepAt.get(at)!.push(v);
     return true;
@@ -153,6 +171,7 @@ export class ArkServer {
   refresh(id: string): boolean {
     const old = this.live.get(id);
     if (!old || old.forfeited) return false;
+    if (old.expiresAt <= this.height) this.lateRefresh = true;
     if (!this.forfeit(old)) return false;
     this.newVtxo(old.holder, old.value);
     return true;
@@ -175,11 +194,20 @@ export class ArkServer {
       const v = this.live.get(id)!;
       inputs.push(v); total += v.value;
     }
-    if (total > this.uncommitted) return false; // all-or-nothing check before any mutation
+    const retained = this.params.changeBacking === "retained";
+    if ((retained ? amount : total) > this.uncommitted) return false; // atomic admission
     const sweep = this.params.spendLock === "round" ? this.height + this.params.roundInterval : Number.POSITIVE_INFINITY;
-    for (const v of inputs) this.forfeit(v, sweep);
+    let remaining = amount;
+    for (const v of inputs) {
+      if (retained && v.value > remaining) {
+        const change = v.value - remaining, expiry = v.expiresAt;
+        // Preserve original expiry and commit routed principal. This forecast is fee-free.
+        this.holderStock -= change; v.value = remaining;
+        this.forfeit(v, sweep); this.newVtxo(holder, change, expiry); remaining = 0;
+      } else { remaining -= v.value; this.forfeit(v, sweep); }
+    }
     const change = total - amount;
-    if (change > 0) this.newVtxo(holder, change); // reissued from the fronted value
+    if (!retained && change > 0) this.newVtxo(holder, change); // abstract fresh-backed change
     ArkServer.bump(this.outward, holder, amount);
     ArkServer.bump(this.allocated, holder, amount); // cumulative allocation, which may recycle the same reserve
     this.volumeDelivered += amount;
@@ -191,6 +219,17 @@ export class ArkServer {
   lockedIntegralBlocks(): number {
     this.accrue();
     return this.lockedIntegral;
+  }
+
+  accountingDiagnostics() {
+    const physicalPartitionValid = this.params.changeBacking === "retained" && !this.lateRefresh &&
+      ![...this.live.values()].some(v => v.expiresAt <= this.height);
+    return { F: this.grossFronting, C: this.recoveredFronting, W: this.committed, peakFronting: this.peakFronting,
+      activeHolderBackingIntegral: this.holderIntegral, activeHolderValue: this.holderStock,
+      physicalPartitionValid,
+      feeFreeRetainedOnchainBackingIntegral: physicalPartitionValid ? this.holderIntegral + this.lockedIntegral : null,
+      peakOnchainBacking: this.peakOnchainBacking,
+      unrecovered: [...this.sweepAt.entries()].flatMap(([height, values]) => values.map(v => ({ amount: v.value, recoveryHeight: height }))) };
   }
 
   /** Delivered volume on the chosen basis. The channel replay counts both directions; "both" matches it. */
@@ -390,6 +429,8 @@ export interface CornerParams {
   roundBlocks?: number;
   /** lock rule for Lightning spends; see ServerParams.spendLock */
   spendLock?: "expiry" | "round";
+  changeBacking?: "fresh" | "retained";
+  recoveryDelayBlocks?: number;
   /** multiparty-channel sizes to evaluate on the same demand: agents per hyperedge, hub not counted */
   hyperedgeSizes?: number[];
 }
@@ -402,6 +443,7 @@ export interface CornerResult {
   chLocked: number; serverLocked: number; finalHolderBalance: number;
   /** one entry per requested hyperedge size: 𝒟_H in blocks, failed events, horizon-average locked capital */
   hyperedge: Array<{ k: number; dH: number; failures: number; locked: number }>;
+  accounting?: ReturnType<ArkServer["accountingDiagnostics"]> & { offeredVolume: number; deliveredVolume: number };
 }
 
 export function runCorner(p: CornerParams): CornerResult {
@@ -412,10 +454,12 @@ export function runCorner(p: CornerParams): CornerResult {
   const steps = Math.floor(horizon / roundBlocks);
   const perAgent = new Map<string, Array<{ out: number; in: number }>>();
   for (let a = 0; a < p.agents; a++) perAgent.set(`a${a}`, []);
-  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288, spendLock: p.spendLock ?? "expiry" });
+  const S = new ArkServer(Number.MAX_SAFE_INTEGER / 4, { lifetimeBlocks: lifetime, roundInterval: roundBlocks, refreshLead: 288, spendLock: p.spendLock ?? "expiry",
+    changeBacking: p.changeBacking, recoveryDelayBlocks: p.recoveryDelayBlocks });
   const pOut = p.steady ? 1 : Math.max(0, Math.min(1, (p.burst.pIn * p.burst.vIn - p.driftPerRound) / p.burst.vOut));
   let arkFailures = 0;
   let events = 0;
+  let offeredVolume = 0;
   for (let t = 0; t < steps; t++) {
     for (const [name, arr] of perAgent) {
       let out = 0, inn = 0;
@@ -427,6 +471,7 @@ export function runCorner(p: CornerParams): CornerResult {
         if (r() < pOut) out = p.burst.vOut;
       }
       arr.push({ out, in: inn });
+      offeredVolume += out + (p.volume === "both" ? inn : 0);
       if (inn) { events += 1; S.receive(name, inn); }
       if (out) { events += 1; if (S.holderValue(name) >= out) S.spendLightning(name, out); else arkFailures += 1; }
     }
@@ -447,6 +492,7 @@ export function runCorner(p: CornerParams): CornerResult {
     dC: ch.duration, dV, dVForfeitOnly: vol === 0 ? Infinity : forfeitIntegral / vol, ratio: ch.duration / dV,
     events, chFailures: ch.failures, arkFailures, serverFailures: st.failures,
     chLocked: ch.locked, serverLocked: st.lockedIntegral / horizon, finalHolderBalance, hyperedge,
+    ...(p.changeBacking === "retained" ? { accounting: { ...S.accountingDiagnostics(), offeredVolume, deliveredVolume: vol } } : {}),
   };
 }
 

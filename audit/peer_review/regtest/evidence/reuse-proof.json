@@ -1,0 +1,27 @@
+{
+  "evidence_class": "observed-regtest",
+  "original_board_outpoint": "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5:0",
+  "sweep_txid": "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519",
+  "sweep_input_sat": 100000,
+  "recovered_output_sat": 98705,
+  "sweep_fee_sat": 1295,
+  "recovered_outpoint": "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519:0",
+  "server_wallet_before_reuse": {
+    "address": "bcrt1pedkm8mj70x5lnq6yez6yftjhsx9cnm5kvgln4x8h5t4fq0mktfeqkkk2z4",
+    "confirmed_utxos": [
+      "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519:0"
+    ],
+    "total_balance": 98705,
+    "trusted_balance": 98705,
+    "unconfirmed_utxos": [],
+    "untrusted_balance": 0
+  },
+  "reuse_round_txid": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+  "reuse_inputs": [
+    "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519:0"
+  ],
+  "reuse_confirmations": 3,
+  "reuse_observed_height": 4439,
+  "fresh_external_funding_between_recovery_and_reuse": 0,
+  "note": "Proves transaction-level reuse. Complete state-machine normalization and matched-service analysis are separate checks."
+}

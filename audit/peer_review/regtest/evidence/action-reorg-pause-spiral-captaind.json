@@ -1,0 +1,10 @@
+{
+  "action": "reorg-pause-spiral-captaind",
+  "monotonic_start_ns": 10387123387087,
+  "height": 4445,
+  "state": "returned",
+  "monotonic_end_ns": 10387552253999,
+  "result": {
+    "result": "spiral-captaind"
+  }
+}

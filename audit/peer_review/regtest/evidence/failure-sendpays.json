@@ -1,0 +1,20 @@
+{
+  "payments": [
+    {
+      "created_index": 2,
+      "id": 2,
+      "payment_hash": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+      "groupid": 4528275689559502277,
+      "updated_index": 2,
+      "partid": 1,
+      "destination": "03ddc0ffcf364b3f8be6b9d4d39ab934f02beff7781417b8a9c025c494b3983508",
+      "amount_msat": 1000000,
+      "amount_sent_msat": 1000000,
+      "created_at": 1792587907,
+      "completed_at": 1792587909,
+      "status": "failed",
+      "bolt11": "lnbcrt10u1p4d3wr0sp59vwlrp68w57a7el9qe8s3h8z8xusdkwj97xwtp96t79g0dzfs7xqpp5s2czaqpau8kyrym36qj6luuul970ru4fgp9zyg842hfcwew4nnxqdp5damkuetyypex2em5v4ehggryv4kxjcn9wfshgefqveskjmr4wfjsxqyjw5qcqp29qxpqysgqvac8p4l76hsu4ug99wp367segnv5clw7y0dt22pxwt2nwrwqafw94efw488kpmq6n0mh4gu6rpvtu7v6p8qalxlgut2tuypl837xn0qqxv4vmc",
+      "erroronion": "eb43451d455db87f85a8c107e419b1ac1f0b5a9fe88723b3a641ace2bb9739e3df073fd77e3b32faf5cab666e042170d5fa8b91a60a6cc744a89b86b8f9df8db98b3ab573426ff1f70f0253a5c63e4e0b163129485a9de3b220514ce3c8bc0377f494fb6c25270c7600e91620851cbbb0bda99bfc3b65fbe8565ba9ddca9ce0886da8fa0d0a0b4ec6b59b87853e1078b2dd457161f9643107134e7556f2a985998f34481b78df83cb64f2f7f21a79fca6673085fd2c93bfaa2906c92f1888f07434b1bb9f58c250bb57a068740dde9b8b35ec165654063240741040c233b66554b2c41859c5d57ddda5acaa5657448f4db0e019221064162efcf6be8c1cc845ef253d4dd65980b4dac3e35fea7d2398625d612b15db479523988768e96cffe9c10e037b2"
+    }
+  ]
+}

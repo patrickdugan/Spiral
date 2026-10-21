@@ -1,0 +1,192 @@
+{
+  "source_revision": "8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+  "source_sha256": {
+    "server/src/offboards.rs": "9d3de80cc267683dcaef019ee86f9782aded443070c84414b0ecd29333e5f3dd",
+    "server/src/database/mod.rs": "14ef06b6a3569c5d9a99b862451af07ff7a7fc07d1a7f549b460ef35a1eb4dbb",
+    "lib/src/offboard.rs": "47f1f4a941da82007768f4db6edb74a8ceecc1ed62c205b6958bf1378f35abe3",
+    "bark/src/actions/offboard.rs": "1abbf64a3dc2a56e0e576fe3ee41e40b0870d4743b5bc58bd8f69f2847ea9e7a",
+    "bark-cli/src/bin/bark/main.rs": "17d4f61803c54985d12d51cd1d46088eede74ca79694845e9656af6bb9dd3156",
+    "bark-cli/src/bin/bark/onchain.rs": "bb06e444cbd5ace8a21c6df5f1855d14d0d433c1062dd558bb04fa57624c1378"
+  },
+  "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "headers": [
+    {
+      "hash": "17a9b595df5f712cf5f42b6aebe4bc33b61b760e3f31e1256e2fe94d5f0fa24b",
+      "confirmations": 3,
+      "height": 4443,
+      "version": 536870912,
+      "versionHex": "20000000",
+      "merkleroot": "8087b1bf0d52814988dd3c7e469b07335c4f50758c70e696c2d02cfeea73eb83",
+      "time": 1792590634,
+      "mediantime": 1792582381,
+      "nonce": 0,
+      "bits": "207fffff",
+      "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+      "difficulty": "4.656542373906925e-10",
+      "chainwork": "00000000000000000000000000000000000000000000000000000000000022b8",
+      "nTx": 2,
+      "previousblockhash": "3e8c2ad94731a78c68f2fcfc4b51ae74d4881391e1e9eb37797c67c0ad93333d",
+      "nextblockhash": "1ed7596b03f2fc2d5d5b986443231d602416ca2f7286c0d7b74be6c4f2ca4065"
+    },
+    {
+      "hash": "1ed7596b03f2fc2d5d5b986443231d602416ca2f7286c0d7b74be6c4f2ca4065",
+      "confirmations": 2,
+      "height": 4444,
+      "version": 536870912,
+      "versionHex": "20000000",
+      "merkleroot": "95a97d68bb512ee74c3c12811cd8b2ae5d4d87febc61a1de837ade07c029b646",
+      "time": 1792590634,
+      "mediantime": 1792582381,
+      "nonce": 0,
+      "bits": "207fffff",
+      "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+      "difficulty": "4.656542373906925e-10",
+      "chainwork": "00000000000000000000000000000000000000000000000000000000000022ba",
+      "nTx": 1,
+      "previousblockhash": "17a9b595df5f712cf5f42b6aebe4bc33b61b760e3f31e1256e2fe94d5f0fa24b",
+      "nextblockhash": "785b383dff85f45ba517c6e107aa3b210d9ac16e97dde762921a56f05833a632"
+    },
+    {
+      "hash": "785b383dff85f45ba517c6e107aa3b210d9ac16e97dde762921a56f05833a632",
+      "confirmations": 1,
+      "height": 4445,
+      "version": 536870912,
+      "versionHex": "20000000",
+      "merkleroot": "16368b77715b7d48fbb9c3e04918d7c2de7c9441dc2bd4e475a5e0ac6a5f9deb",
+      "time": 1792590634,
+      "mediantime": 1792589649,
+      "nonce": 7,
+      "bits": "207fffff",
+      "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+      "difficulty": "4.656542373906925e-10",
+      "chainwork": "00000000000000000000000000000000000000000000000000000000000022bc",
+      "nTx": 1,
+      "previousblockhash": "1ed7596b03f2fc2d5d5b986443231d602416ca2f7286c0d7b74be6c4f2ca4065"
+    }
+  ],
+  "transactions": {
+    "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b": {
+      "raw_sha256": "ae41f357e6a284a3d176c7c76a214ee2d61223879f1f39b3521fbd53a8c35706",
+      "transaction": {
+        "txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+        "hash": "93ac1cfecadd2adeab644b2eabc377bd362ee24cbddb972d889ee0cd0785120e",
+        "version": 2,
+        "size": 248,
+        "vsize": 197,
+        "weight": 788,
+        "locktime": 4442,
+        "vin": [
+          {
+            "txid": "1579dc43b9c47805b95472f9a4c2ec802e562c0bea654af71a1d08b4ee92c153",
+            "vout": 0,
+            "scriptSig": {
+              "asm": "",
+              "hex": ""
+            },
+            "txinwitness": [
+              "61ff34bc9bbd32a114bd28c69e63d16c26e51155c99ca86785503727f29f4fb8b6f8d39b0c25a983916acbcbc338ced708872c2e253a0fec60c5a633c1ac53f9"
+            ],
+            "sequence": 4294967293
+          }
+        ],
+        "vout": [
+          {
+            "value": "0.00015732",
+            "n": 0,
+            "scriptPubKey": {
+              "asm": "1 749c804381685a6fb22b28743a989aa6a061f3e66bf30e2dbf1864fe058faf73",
+              "desc": "rawtr(749c804381685a6fb22b28743a989aa6a061f3e66bf30e2dbf1864fe058faf73)#n0fhwmls",
+              "hex": "5120749c804381685a6fb22b28743a989aa6a061f3e66bf30e2dbf1864fe058faf73",
+              "address": "bcrt1pwjwgqsupdpdxlv3t9p6r4xy656sxrulxd0esutdlrpj0upv04aesrpa73l",
+              "type": "witness_v1_taproot"
+            }
+          },
+          {
+            "value": "0.00000330",
+            "n": 1,
+            "scriptPubKey": {
+              "asm": "1 a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e",
+              "desc": "rawtr(a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e)#f45cnka9",
+              "hex": "5120a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e",
+              "address": "bcrt1p5fzghlls4z7tntkps5ys3xzzx0zt4xz2lp83m4s8rx2dk8en3c0q56ql8z",
+              "type": "witness_v1_taproot"
+            }
+          },
+          {
+            "value": "0.00017519",
+            "n": 2,
+            "scriptPubKey": {
+              "asm": "1 e57605ec468e1b4d2ca6c3fc22a8532b02c9bc3c49bfad9672a82560660fd84b",
+              "desc": "rawtr(e57605ec468e1b4d2ca6c3fc22a8532b02c9bc3c49bfad9672a82560660fd84b)#r4xusjk7",
+              "hex": "5120e57605ec468e1b4d2ca6c3fc22a8532b02c9bc3c49bfad9672a82560660fd84b",
+              "address": "bcrt1pu4mqtmzx3cd56t9xc07z92zn9vpvn0pufxl6m9nj4qjkqes0mp9scva5gr",
+              "type": "witness_v1_taproot"
+            }
+          }
+        ]
+      }
+    },
+    "4f58df9ad33cde2e9c47a8d94bb10185129c25773d8da5a867b4ea63f13ac46d": {
+      "raw_sha256": "b59493ba69bcad316f03e342ed7eb520b22e34cb398b4628062ebdd20c263186",
+      "transaction": {
+        "txid": "4f58df9ad33cde2e9c47a8d94bb10185129c25773d8da5a867b4ea63f13ac46d",
+        "hash": "ab280e01094c77044bdba37125bfc52214fb10ef378c79a4c51291f8258dcb12",
+        "version": 3,
+        "size": 282,
+        "vsize": 182,
+        "weight": 726,
+        "locktime": 0,
+        "vin": [
+          {
+            "txid": "e59ba9240fb4294d026d9d2d31b965fabcd23632d4a058cf77882ed56044324e",
+            "vout": 0,
+            "scriptSig": {
+              "asm": "",
+              "hex": ""
+            },
+            "txinwitness": [
+              "3e050bf0ee926d76a453aed40e86c51dc9e1f8ee4d6a5788d105fcadc5623c14d36bfb7557834c801103af7ec18c16bb9656d6f631c53a67b46fc5e87ac7007b"
+            ],
+            "sequence": 4294967295
+          },
+          {
+            "txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+            "vout": 1,
+            "scriptSig": {
+              "asm": "",
+              "hex": ""
+            },
+            "txinwitness": [
+              "30190a7105324b119a1777e98765721568dad683d27f19d0cb6c830c9bf056b074d045bf156717cd63c35375a6b3dfd34b85b42030623e0bfe0aafb6cf8cb651"
+            ],
+            "sequence": 4294967295
+          }
+        ],
+        "vout": [
+          {
+            "value": "0.00018962",
+            "n": 0,
+            "scriptPubKey": {
+              "asm": "1 a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e",
+              "desc": "rawtr(a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e)#f45cnka9",
+              "hex": "5120a2448bfff0a8bcb9aec1850908984233c4ba984af84f1dd6071994db1f338e1e",
+              "address": "bcrt1p5fzghlls4z7tntkps5ys3xzzx0zt4xz2lp83m4s8rx2dk8en3c0q56ql8z",
+              "type": "witness_v1_taproot"
+            }
+          },
+          {
+            "value": "0.00000000",
+            "n": 1,
+            "scriptPubKey": {
+              "asm": "1 29518",
+              "desc": "addr(bcrt1pfeesnyr2tx)#swxgse0y",
+              "hex": "51024e73",
+              "address": "bcrt1pfeesnyr2tx",
+              "type": "anchor"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

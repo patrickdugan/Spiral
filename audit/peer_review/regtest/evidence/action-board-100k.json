@@ -1,0 +1,18 @@
+{
+  "action": "board-100k",
+  "monotonic_start_ns": 440045139202,
+  "height": 113,
+  "state": "returned",
+  "monotonic_end_ns": 440774041586,
+  "result": {
+    "funding_tx": {
+      "txid": "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5",
+      "tx": "02000000015ebc2ea4bf3a58fa0ae26adaf252efe7e4999fa09a617a07d8297f166121ac460300000000fdffffff02a0860100000000002251208fcea31c76e0ca243fd5c447460294693b818d959d0d2754e2ce43e60372a45d0586010000000000225120575593f29b5d6b944c0e810104aec9d586458a9a8f924f89cd4df9029a01f2f071000000"
+    },
+    "vtxos": [
+      "023e7a28b131f24ebc692347d5d533a2ff4473e6aabb22c91ab0f882cce93c7a:0"
+    ],
+    "amount_sat": 99670,
+    "movement_id": 1
+  }
+}

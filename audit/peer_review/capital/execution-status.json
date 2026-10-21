@@ -1,0 +1,127 @@
+{
+  "inspection_date": "2026-10-21",
+  "evidence_class": "observed-regtest",
+  "regtest_status": "transaction_lifecycle_and_reducer_economic_replay_verified_timing_interval_censored",
+  "testnet4_status": "four_empty_synchronized_peers_connected_diamond_510000_test_sats_pending_confirmation",
+  "testnet4_funding_observation": "../testnet4/funding-observation-20261021.json",
+  "testnet4_preflight": "../testnet4/preflight-pending-funding-20261021.json (live read-only gate refuses unconfirmed funds)",
+  "testnet4_peer_provisioning": "../testnet4/peer-provisioning-20261021.json (four empty synchronized controlled peers; no channel funding or payment clocks)",
+  "testnet4_instrumentation": "../testnet4/observer-preparation-20261021.json (passive collectors active; exact runtime dependencies recorded; funds still pending)",
+  "testnet4_operational_protocol": "../testnet4/operational_protocol.md (specified before experiment spending; monetary phases not yet executed)",
+  "actual_genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "best_block_hash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
+  "binary_digests": [
+    {
+      "binary": "bitcoind",
+      "container": "spiral-bitcoin",
+      "path": "/opt/bitcoin-31.0/bin/bitcoind",
+      "version": "Bitcoin Core daemon version v31.0.0 bitcoind",
+      "sha256": "dae69848ae9aaadcc3aa697d1c92b1283273a59c8d87b220b29ddc2813e25eb6"
+    },
+    {
+      "binary": "lightningd",
+      "container": "spiral-cln-server",
+      "path": "/usr/local/bin/lightningd",
+      "version": "v26.06.7",
+      "sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2"
+    },
+    {
+      "binary": "captaind",
+      "container": "spiral-captaind",
+      "path": "/usr/local/bin/captaind",
+      "version": "captaind 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "38881e672f06751180f485e4d927487c4bd90363da69449ffee4ba57fde7212a"
+    },
+    {
+      "binary": "watchmand",
+      "container": "spiral-watchmand",
+      "path": "/usr/local/bin/watchmand",
+      "version": "watchmand 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "aab9ae7d301be8a8a3e2864cce7315ec7644bfae5679915da966543e0e55ed17"
+    },
+    {
+      "binary": "bark",
+      "container": "spiral-bark",
+      "path": "/usr/local/bin/bark",
+      "version": "bark 0.7.1 (8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a)",
+      "sha256": "ce12ba616bdd1a7f97ddcfeb070f44e79308842b529456e5b3947f1332fcdbaf"
+    }
+  ],
+  "container_digests": [
+    {
+      "component": "captain",
+      "reference": "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358"
+      ],
+      "created": "2026-09-11T12:03:23.939148777Z"
+    },
+    {
+      "component": "bark",
+      "reference": "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02",
+      "image_id": "sha256:e575cbfbf790d1d69a538740d33a8c21bd0c74cbc6f3d45ebc9158d2d45b5727",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02"
+      ],
+      "created": "2026-09-11T12:33:36.023820507Z"
+    },
+    {
+      "component": "bitcoin",
+      "reference": "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792",
+      "image_id": "sha256:1aafb9c72e7744929d37b2483c86e0197593992d62e91c1fd0d79eebf9d69453",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792"
+      ],
+      "created": "2026-05-14T13:15:02.695736273Z"
+    },
+    {
+      "component": "cln",
+      "reference": "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4",
+      "image_id": "sha256:0dc257a664587e5e5526d9171cc0fa7a9b16f1d01b62c218cef9bbc9b847f59c",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4"
+      ],
+      "created": "2026-08-28T11:56:45.339588263Z"
+    }
+  ],
+  "effective_configuration": "../regtest/evidence/runtime-identity.json",
+  "initial_state_snapshots": [
+    "../regtest/evidence/initial-funding.json",
+    "../regtest/evidence/initial-funded-state.json"
+  ],
+  "owned_regtest_endpoint": "127.0.0.1:18483 (WSL, regtest only)",
+  "noncoinbase_transactions_in_reconciled_fixture": 10,
+  "exclusive_reuse_proof": "../regtest/evidence/reuse-proof.json",
+  "economic_reconciliation": "../regtest/evidence/economic-reconciliation.json",
+  "machine_reconciliation": "../regtest/evidence/machine-reconciliation.json",
+  "machine_state_hash": "a7e6dec9966c44dc8c93ac611d28318eeac77e802d44b3768edd108211859cb6",
+  "structural_sensitivity": "../capital_comparison.md (completed fee-free component sensitivity)",
+  "fixture_initial_sat": 2200000,
+  "recovered_output_sat": 98705,
+  "clock_caveat": "Accelerated blocks and manually triggered sweeps; no production latency inference.",
+  "remaining": [
+    "Instrument exact acceptance/commit timing; whole historical journal seconds remain unknown",
+    "Measure inventory replenishment and batching distributions beyond one observed receipt",
+    "Live timeout/unilateral recovery, sweep reorg and later compound offboard recovery remain unverified; one controlled exit reorg is reconciled",
+    "Confirm observed testnet4 funding, pass the full preflight, then execute the bounded operational-clock protocol on the provisioned diamond"
+  ],
+  "fixed_budget_comparison": "../capital_fixed_budget_results.md (completed conditional single-participant forecast; 384 Ark and 672 channel/group holdouts)",
+  "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441",
+  "cooperative_failure_reconciliation": "../regtest/evidence/failure-machine-reconciliation.json",
+  "cooperative_failure_status": "two accepted failed HTLCs revoked; one pending-channel capture; client claims and economic assets conserved",
+  "inbound_reconciliation": "../regtest/evidence/inbound-machine-reconciliation.json",
+  "inbound_status": "2000-sat received; 104-sat retained fee; 1896-sat inventory-backed claim; depth-excluded 8104-sat change retained",
+  "cooperative_exit_reconciliation": "../regtest/evidence/offboard-machine-reconciliation.json",
+  "cooperative_exit_status": "18632-sat claim offboarded; 15732-sat client payout confirmed; original root and 330-sat connector remain locked; 18035-sat additional fronting",
+  "exit_reorg_reconciliation": "../regtest/evidence/reorg-exit-machine-reconciliation.json",
+  "exit_reorg_status": "three-block controlled reorg; payout pending at 4446; same signed transaction reconfirmed in 4447 at tip 4449; durable forfeits retained; no duplicate economic entries"
+}

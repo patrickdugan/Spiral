@@ -1,0 +1,876 @@
+{
+  "protocol": {
+    "version": 1,
+    "evidence_class": "single_participant_fee_aware_forecast",
+    "pilot_seeds": [
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208
+    ],
+    "holdout_seeds": [
+      301,
+      302,
+      303,
+      304,
+      305,
+      306,
+      307,
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315,
+      316,
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      323,
+      324
+    ],
+    "cells": [
+      "zero",
+      "drain",
+      "accumulate",
+      "steady"
+    ],
+    "initial_gross_balance_sat": [
+      0,
+      250000
+    ],
+    "delays": [
+      6,
+      144
+    ],
+    "lifetime": 4320,
+    "horizon": 34560,
+    "round": 6,
+    "refresh_lead": 288,
+    "margin": 0.25,
+    "minimum_value_delivery_target": 0.99,
+    "pilot_sizing_rule": "1.25 times maximum pilot cash draw, fronting, and directional requirement; no holdout resizing",
+    "initial_balance_rule": "Each holder starts with the same gross principal in each mechanism; Ark board service fees reduce its claims.",
+    "receipt_policy": "One fresh single-participant round per accepted receipt; net claim plus 330-sat root overhead, 3857-sat miner fee.",
+    "refresh_policy": "Each claim refreshes separately at expiry minus 288 or after 99 retained-change hops; failed maintenance retries every six blocks before expiry.",
+    "sweep_policy": "One transaction per inactive root at expiry plus delay, 1295-sat fee; live claims or net output below 330 prevent recovery.",
+    "dust_policy": "Fresh round outputs require 330 sats. Retained Arkoor change may be subdust. Receipt dust rejection belongs to this fresh-round policy, not a universal inbound protocol restriction.",
+    "routing_policy": "Instantaneous direct settled payments, zero route fee; outbound admissibility reserves 90% of holder fee. No rebalance.",
+    "channel_policy": "One channel per holder or group; group shares directional capacity but cannot spend another holder's balance. No channel rotation or rebalance.",
+    "channel_open_miner_sat": 166,
+    "cpu_cap_seconds": 7200,
+    "limitations": [
+      "Receipt backing policy has not been observed live; it is a declared fresh-root scenario.",
+      "Observed single-participant transaction fees are held constant; pooled tree batching is not estimated.",
+      "Six blocks is the recorded detection gap, not an operational distribution; 144 is stress.",
+      "Successful settlement is instantaneous. HTLC duration and sat-seconds are unavailable, not measured zero.",
+      "Full channel funding includes both parties; operator-only conservation is checked separately.",
+      "Fee spend is reported separately from capital-time. Lower remaining assets after miner fees do not establish funding efficiency.",
+      "Ratios are comparable only when both mechanisms meet the declared delivery target."
+    ]
+  },
+  "protocol_sha256": "eebcd22230fed5d09f4c57348770e8927d7b7e461b6ea4591ac7c527cac57fef",
+  "source_sha256": {
+    "model/capital-fees.ts": "26ecfec961147b91931c5cf1346777279596ee09a6aa4009cbc6975e0ab52500",
+    "model/capital-forecast.ts": "21d139ca68cd568d4dc03f312be9c773ab5335e5aa7c08ac608208a6cc3cbd20",
+    "model/server.ts": "7f6c37648e8d5e20f2b47eb053e9343d3aba22082e2d006e8c1ac58c9eed5ece",
+    "audit/peer_review/capital_fixed_budget.ts": "56c38e6d57e6e0ef1715baeed4d0b8840b13cdc04fb32f3c5d0722e0bca81089"
+  },
+  "rows": [
+    {
+      "cell": "steady",
+      "initial": 0,
+      "ark": [
+        {
+          "delay": 6,
+          "config": {
+            "wallet": 0,
+            "local": 11633,
+            "remote": 6250,
+            "fronting": 0,
+            "lifetime": 4320,
+            "refreshLead": 288,
+            "recoveryDelay": 6
+          }
+        },
+        {
+          "delay": 144,
+          "config": {
+            "wallet": 0,
+            "local": 11633,
+            "remote": 6250,
+            "fronting": 0,
+            "lifetime": 4320,
+            "refreshLead": 288,
+            "recoveryDelay": 144
+          }
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "budget": {
+            "local": [
+              9306,
+              9306,
+              9306
+            ],
+            "remote": [
+              7052,
+              6988,
+              7363
+            ]
+          }
+        },
+        {
+          "group": 3,
+          "budget": {
+            "local": [
+              9306
+            ],
+            "remote": [
+              8210
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "cell": "steady",
+      "initial": 250000,
+      "ark": [
+        {
+          "delay": 6,
+          "config": {
+            "wallet": 4611180,
+            "local": 523299,
+            "remote": 6250,
+            "fronting": 4792274,
+            "lifetime": 4320,
+            "refreshLead": 288,
+            "recoveryDelay": 6
+          }
+        },
+        {
+          "delay": 144,
+          "config": {
+            "wallet": 4611180,
+            "local": 523299,
+            "remote": 6250,
+            "fronting": 4801253,
+            "lifetime": 4320,
+            "refreshLead": 288,
+            "recoveryDelay": 144
+          }
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "budget": {
+            "local": [
+              259306,
+              259306,
+              259306
+            ],
+            "remote": [
+              6787,
+              6743,
+              7228
+            ]
+          }
+        },
+        {
+          "group": 3,
+          "budget": {
+            "local": [
+              759306
+            ],
+            "remote": [
+              7670
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "seed": 201,
+      "initial": 0,
+      "demand_sha256": "4e6585fe603ff407f370c267e6e3dc44bbae204168b37d16cd7703d554f27531",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.999645160888537
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.999645160888537
+        }
+      ]
+    },
+    {
+      "seed": 202,
+      "initial": 0,
+      "demand_sha256": "30928a767a2a0ca3e259e8a6fb6bfa9d86634964b7bb914eb1417adb0928c513",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9997047582119315
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9997047582119315
+        }
+      ]
+    },
+    {
+      "seed": 203,
+      "initial": 0,
+      "demand_sha256": "42c9ac27ae11bc1413b2bac3d54387e950876ef7327801856aef063536b2d592",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9997931779168282
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9997931779168282
+        }
+      ]
+    },
+    {
+      "seed": 204,
+      "initial": 0,
+      "demand_sha256": "49513b4c57300378a1ad83de51cac5b3c1de3497ab7ad7a9923a49979da91bc1",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9995841026419173
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9995841026419173
+        }
+      ]
+    },
+    {
+      "seed": 205,
+      "initial": 0,
+      "demand_sha256": "bf34727f3383188bf1cc38f159795f7f373f86e0b394d53d0a6c1dbed67ed041",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9998803906242861
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9998803906242861
+        }
+      ]
+    },
+    {
+      "seed": 206,
+      "initial": 0,
+      "demand_sha256": "36786e4008f674f8431d15b6230a22cabdc9ba20940dadf6a4b5a038e0cee03b",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.999763543240853
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.999763543240853
+        }
+      ]
+    },
+    {
+      "seed": 207,
+      "initial": 0,
+      "demand_sha256": "49a3cdefc12ff1348703612801b9cf8923e71f76b33b9e903597765925e48569",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9998230732426937
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9998230732426937
+        }
+      ]
+    },
+    {
+      "seed": 208,
+      "initial": 0,
+      "demand_sha256": "633ac9d60b888427e8d8c7637a5060a705ff53178230e34275b1aa7f23f1cb23",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 17280
+          },
+          "peak_cash_draw_sat": 0,
+          "peak_fronting_sat": 0,
+          "local_required": 9306,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 0.9996736141543492
+        },
+        {
+          "group": 3,
+          "delivery_rate": 0.9996736141543492
+        }
+      ]
+    },
+    {
+      "seed": 201,
+      "initial": 250000,
+      "demand_sha256": "4e6585fe603ff407f370c267e6e3dc44bbae204168b37d16cd7703d554f27531",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11327228366093213,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 5860,
+            "expired": 7508
+          },
+          "peak_cash_draw_sat": 3686467,
+          "peak_fronting_sat": 3831783,
+          "local_required": 418616,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11327228366093213,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 5860,
+            "expired": 7508
+          },
+          "peak_cash_draw_sat": 3686467,
+          "peak_fronting_sat": 3838982,
+          "local_required": 418616,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 202,
+      "initial": 250000,
+      "demand_sha256": "30928a767a2a0ca3e259e8a6fb6bfa9d86634964b7bb914eb1417adb0928c513",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11330665263391126,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 12250,
+            "expired": 1115
+          },
+          "peak_cash_draw_sat": 3688157,
+          "peak_fronting_sat": 3833091,
+          "local_required": 418479,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11330665263391126,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 12250,
+            "expired": 1115
+          },
+          "peak_cash_draw_sat": 3688157,
+          "peak_fronting_sat": 3840305,
+          "local_required": 418479,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 203,
+      "initial": 250000,
+      "demand_sha256": "42c9ac27ae11bc1413b2bac3d54387e950876ef7327801856aef063536b2d592",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11331136829281799,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 13366
+          },
+          "peak_cash_draw_sat": 3686060,
+          "peak_fronting_sat": 3831361,
+          "local_required": 418632,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11331136829281799,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 13366
+          },
+          "peak_cash_draw_sat": 3686060,
+          "peak_fronting_sat": 3838588,
+          "local_required": 418632,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 204,
+      "initial": 250000,
+      "demand_sha256": "49513b4c57300378a1ad83de51cac5b3c1de3497ab7ad7a9923a49979da91bc1",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11327803541385387,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 5858,
+            "expired": 7508
+          },
+          "peak_cash_draw_sat": 3687186,
+          "peak_fronting_sat": 3832442,
+          "local_required": 418474,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11327803541385387,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 5858,
+            "expired": 7508
+          },
+          "peak_cash_draw_sat": 3687186,
+          "peak_fronting_sat": 3839664,
+          "local_required": 418474,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 205,
+      "initial": 250000,
+      "demand_sha256": "bf34727f3383188bf1cc38f159795f7f373f86e0b394d53d0a6c1dbed67ed041",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11325485075546333,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9610,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3688944,
+          "peak_fronting_sat": 3833819,
+          "local_required": 418423,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11325485075546333,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9610,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3688944,
+          "peak_fronting_sat": 3841002,
+          "local_required": 418423,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 206,
+      "initial": 250000,
+      "demand_sha256": "36786e4008f674f8431d15b6230a22cabdc9ba20940dadf6a4b5a038e0cee03b",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11326472580153027,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9610,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3688215,
+          "peak_fronting_sat": 3833087,
+          "local_required": 418447,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11326472580153027,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9610,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3688215,
+          "peak_fronting_sat": 3840274,
+          "local_required": 418447,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 207,
+      "initial": 250000,
+      "demand_sha256": "49a3cdefc12ff1348703612801b9cf8923e71f76b33b9e903597765925e48569",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11329763787550558,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9612,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3687423,
+          "peak_fronting_sat": 3832483,
+          "local_required": 418567,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11329763787550558,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 9612,
+            "expired": 3754
+          },
+          "peak_cash_draw_sat": 3687423,
+          "peak_fronting_sat": 3839679,
+          "local_required": 418567,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    },
+    {
+      "seed": 208,
+      "initial": 250000,
+      "demand_sha256": "633ac9d60b888427e8d8c7637a5060a705ff53178230e34275b1aa7f23f1cb23",
+      "ark": [
+        {
+          "delay": 6,
+          "delivery_rate": 0.11329796702312578,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 13365
+          },
+          "peak_cash_draw_sat": 3687088,
+          "peak_fronting_sat": 3832267,
+          "local_required": 418639,
+          "remote_required": 5000
+        },
+        {
+          "delay": 144,
+          "delivery_rate": 0.11329796702312578,
+          "failures": {
+            "dust_or_fee": 17280,
+            "holder": 13365
+          },
+          "peak_cash_draw_sat": 3687088,
+          "peak_fronting_sat": 3839529,
+          "local_required": 418639,
+          "remote_required": 5000
+        }
+      ],
+      "channels": [
+        {
+          "group": 1,
+          "delivery_rate": 1
+        },
+        {
+          "group": 3,
+          "delivery_rate": 1
+        }
+      ]
+    }
+  ]
+}

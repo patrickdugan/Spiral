@@ -1,0 +1,11 @@
+{
+  "action": "before-original-expiry",
+  "monotonic_start_ns": 995676951999,
+  "height": 1009,
+  "state": "returned",
+  "monotonic_end_ns": 1149215710788,
+  "result": {
+    "height": 4432,
+    "clock": "accelerated-owned-regtest"
+  }
+}

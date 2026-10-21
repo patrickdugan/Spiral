@@ -1,0 +1,172 @@
+{
+  "evidence_class": "observed_regtest_inbound_reconstruction",
+  "economic_reconciliation": true,
+  "replay_verified": true,
+  "baseline_events": 46,
+  "added_events": 3,
+  "report": {
+    "evidence_class": "regtest",
+    "state_hash": "459c3166421f6c0deb47009b250e428515415054767dd8a3f86c33f60046e1f8",
+    "totals": {
+      "inflows": 2102000000,
+      "outflows": 60000000,
+      "fees": 13239000,
+      "service_revenue": 1757000,
+      "losses": 0,
+      "offered": 62001000,
+      "delivered": 60000000
+    },
+    "budget": {
+      "budget": 2002000000,
+      "F": 140308000,
+      "C": 101354000,
+      "reserved": 0,
+      "pool": {
+        "funded": 2000000000,
+        "transfers_in": 102000000,
+        "outflows": 60000000,
+        "fees": 13239000
+      }
+    },
+    "reconciliation_required": null,
+    "outstanding_fronting": 38954000,
+    "integrals": {
+      "fronting": {
+        "msat_blocks": "393439014000",
+        "msat_seconds": null
+      },
+      "unique_committed": {
+        "msat_blocks": "727535079000",
+        "msat_seconds": null
+      },
+      "htlc": {
+        "msat_blocks": "0",
+        "msat_seconds": null
+      },
+      "inbound": {
+        "msat_blocks": "259560000000",
+        "msat_seconds": null
+      },
+      "outbound": {
+        "msat_blocks": "1904940000000",
+        "msat_seconds": null
+      },
+      "idle": {
+        "msat_blocks": "8076559214000",
+        "msat_seconds": null
+      }
+    },
+    "stocks": {
+      "fronting": 38954000,
+      "unique_committed": 97659000,
+      "htlc": 0,
+      "inbound": 58000000,
+      "outbound": 442000000,
+      "idle": 1931102000
+    },
+    "free_budget": 1963046000,
+    "pool_inventory": {
+      "TRANSFERRED_OUT": 0,
+      "FREE": 1931102000,
+      "COMMITTED": 97659000
+    },
+    "delivery_rate": 0.9677263269947259,
+    "per_offered_msat": {
+      "fronting": 6345.688198577443,
+      "unique_committed": 11734.247496008129,
+      "htlc": 0,
+      "inbound": 4186.384090579184,
+      "outbound": 30724.343155755552,
+      "idle": 130264.9830486605
+    },
+    "per_delivered_msat": {
+      "fronting": 6557.3169,
+      "unique_committed": 12125.58465,
+      "htlc": 0,
+      "inbound": 4326,
+      "outbound": 31749,
+      "idle": 134609.32023333333
+    },
+    "exposures": [
+      {
+        "operation_id": "b5403311e4c6f29c2268ade56e0984df2e78aaafd0c85c3c09315dc714d20377",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 0
+      },
+      {
+        "operation_id": "round:8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+        "outstanding": 277000,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 277000
+      },
+      {
+        "operation_id": "round:09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+        "outstanding": 38677000,
+        "right_censored": true,
+        "recovery_height": null
+      },
+      {
+        "operation_id": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      }
+    ]
+  },
+  "source_sha256": {
+    "normalized-config": "139baf1cc13a9613043bff851711fecaaed032e08d26576d430f8e6c11836093",
+    "runtime-identity": "d13a866d44adc9cf84e15acd1d8e89d1529e9c9ea46c618cf6bd6c92b8429a0d",
+    "runtime-source": "ef470d11b03c130e2d8d41ebe3119eb5247a09c2086e57f12860c48acfae392b",
+    "canonical-chain": "508d00e177fb606dc9255b63c54847daaeb0056be67ee723a968b68e3a14347e",
+    "inbound-source-and-chain": "44770b3ddd11fc32c7a50f94f3623e0ba593b65459bc70d013f21d512943187c",
+    "inbound-plugin-runtime": "db7e1e9925f3524cf69c18aca5e21b1f0842a3b8f06124a606df40df730f476b",
+    "inbound-pool-before": "cad706a6e29f631689651b35e9f5807369e8b55213506399d37b64ddca7c27e7",
+    "inbound-pool-confirmed": "5dee0f36684c2e87601ab48e49af4b1fd0b199554594b9336281518e6f360727",
+    "inbound-before": "d3e5660219d9c695ce1f8de2340c3d72baa950d592a28c18aa7b6a89961640e4",
+    "inbound-accepted": "147c8913f71bff816710574a3e0697484a9f1b7a22a1cf45f49f11a51ec521e2",
+    "inbound-settled": "8242de1e48b24b2bc310593501455f0b369f589b0ae5ce98c87b2bc803f21121",
+    "inbound-peer-accepted": "24c6fa575eaf0454acde4c20b82e8bafa1160a06c994638ed87afe6df00d0e89",
+    "inbound-peer-settled": "40323fe11cfc75cca08a6f29124ea13e696aa9ec09cef42f48125544b310dc7a",
+    "inbound-peer-sendpays": "c0da948e48a859d4539f92a80903d5aa31a40ba32c11ffc1699ae64d7c76d3e3",
+    "inbound-hold-settled": "63b33d53e41a88d613bb459276fa05821adfdb86b44b77c181d8ee4b185362fc",
+    "inbound-collection-gap": "496c2ac73adbaf285e9515a73212fd87f2c8562386f3c23711bbafd1c46a8344"
+  },
+  "receipt": {
+    "payment_hash": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0",
+    "gross_received_sat": 2000,
+    "routing_fee_sat": 0,
+    "holder_service_fee_sat": 104,
+    "holder_claim_sat": 1896,
+    "pool_funding_fee_sat": 617,
+    "pool_root_sat": 20000,
+    "pool_anchor": "1579dc43b9c47805b95472f9a4c2ec802e562c0bea654af71a1d08b4ee92c153:1",
+    "expiry_height": 4871,
+    "pool_eligible_remaining_sat": 10000,
+    "pool_depth_excluded_change_sat": 8104,
+    "claim_id": "947259f025958e043b451208c4130bf00884cf132d51397538a2ff83fe252edc:0"
+  },
+  "complete_fixture": {
+    "initial_sat": 2200000,
+    "operator_assets_sat": 2028761,
+    "client_onchain_sat": 99845,
+    "peer_channel_sat": 58000,
+    "miner_fees_sat": 13394
+  },
+  "limitations": [
+    "One declared two-leaf inventory configuration; not an empirical batching distribution.",
+    "Claim preparation and settlement occur within an unsampled interval. Receiver acceptance is observed; whole-journal seconds remain unknown.",
+    "Pool change exists economically but its exit depth exceeds the configured selection cap; it is not immediately usable inventory.",
+    "Receipt is additional incoming capital, never recovery of the earlier outstanding fronting."
+  ]
+}

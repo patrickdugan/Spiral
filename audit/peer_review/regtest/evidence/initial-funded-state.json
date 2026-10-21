@@ -1,0 +1,158 @@
+{
+  "height": 113,
+  "server": {
+    "rounds": {
+      "address": "bcrt1p5dzkt58rxq2tjjvklh5wehmgstav5w9dpxrmqanzecqufzm7xp8qwet9x4",
+      "confirmed_utxos": [
+        "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57:1"
+      ],
+      "total_balance": 889383,
+      "trusted_balance": 889383,
+      "unconfirmed_utxos": [],
+      "untrusted_balance": 0
+    }
+  },
+  "cln_funds": {
+    "outputs": [
+      {
+        "txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+        "output": 1,
+        "amount_msat": 499834000,
+        "scriptpubkey": "51202bc80f2dee132d1bce5d896d30312f66d4f8cf8e5fed6dcefcc8409e31f347ba",
+        "address": "bcrt1p90yq7t0wzvk3hnja39knqvf0vm203nuwtlkkmnhuepqfuv0ng7aqn5lyax",
+        "status": "confirmed",
+        "blockheight": 108,
+        "reserved": false
+      }
+    ],
+    "channels": [
+      {
+        "peer_id": "03ddc0ffcf364b3f8be6b9d4d39ab934f02beff7781417b8a9c025c494b3983508",
+        "connected": true,
+        "state": "CHANNELD_NORMAL",
+        "channel_id": "c5ed80bd3eb37dca589ebdf1dc57e10ffb2ae8137b41ffd8ac7ae03fa4ae49d6",
+        "short_channel_id": "108x2x0",
+        "our_amount_msat": 500000000,
+        "amount_msat": 500000000,
+        "funding_txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+        "funding_output": 0
+      }
+    ]
+  },
+  "channels": {
+    "channels": [
+      {
+        "peer_id": "03ddc0ffcf364b3f8be6b9d4d39ab934f02beff7781417b8a9c025c494b3983508",
+        "peer_connected": true,
+        "reestablished": true,
+        "channel_type": {
+          "bits": [
+            12,
+            22
+          ],
+          "names": [
+            "static_remotekey/even",
+            "anchors/even"
+          ]
+        },
+        "ignore_fee_limits": true,
+        "updates": {
+          "local": {
+            "htlc_minimum_msat": 0,
+            "htlc_maximum_msat": 495000000,
+            "cltv_expiry_delta": 6,
+            "fee_base_msat": 1,
+            "fee_proportional_millionths": 10
+          },
+          "remote": {
+            "htlc_minimum_msat": 0,
+            "htlc_maximum_msat": 495000000,
+            "cltv_expiry_delta": 6,
+            "fee_base_msat": 1,
+            "fee_proportional_millionths": 10
+          }
+        },
+        "state": "CHANNELD_NORMAL",
+        "scratch_txid": "bb679bf73043951d019e17847424a69352ee8bfa051d71d78637f86057e83904",
+        "last_tx_fee_msat": 1735000,
+        "lost_state": false,
+        "feerate": {
+          "perkw": 1250,
+          "perkb": 5000
+        },
+        "owner": "channeld",
+        "short_channel_id": "108x2x0",
+        "direction": 0,
+        "channel_id": "c5ed80bd3eb37dca589ebdf1dc57e10ffb2ae8137b41ffd8ac7ae03fa4ae49d6",
+        "funding_txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+        "funding_outnum": 0,
+        "close_to_addr": "bcrt1pqjyak6h7t8e6km4u54xmzlp769vms2es633l9ggz6zefxzuw4d3qgs2pz4",
+        "close_to": "51200489db6afe59f3ab6ebca54db17c3ed159b82b30d463f2a102d0b2930b8eab62",
+        "private": false,
+        "opener": "local",
+        "alias": {
+          "local": "9568606x8292353x1114",
+          "remote": "2976997x6022008x64021"
+        },
+        "features": [
+          "option_static_remotekey",
+          "option_anchors"
+        ],
+        "funding": {
+          "local_funds_msat": 500000000,
+          "remote_funds_msat": 0,
+          "pushed_msat": 0,
+          "psbt": "cHNidP8BAgQCAAAAAQMEawAAAAEEAQEBBQECAQYBAwH7BAIAAAAAAQDTAgAAAAFocsInD1Yd33JXtwVCFxcfKYBMxzdMlJDhnPxXcL8TLAAAAAAA/f///wRAQg8AAAAAACJRIOI3TIw052+QIdqp80UJ7nwFze5Z1auLBt58HNPU2SmKQEIPAAAAAAAWABQgwGaq/rjAwHVKtzXX3poSbDrpT1Ff5CkBAAAAIlEg4v78RC0AlT9ymG3z4MewKEh8KdHKMAXH1AogJJcGuqFADQMAAAAAACJRIGFXzwBzyEdSUI2VoxUBJHsh+1JphreGiLw6Rx9o5eMYZQAAAAEBH0BCDwAAAAAAFgAUIMBmqv64wMB1Src1196aEmw66U8BCGsCRzBEAiA2VYcnSAnHkhqiVLv9wciEHfVrvt/JDdLkFTZolqWT3QIgJoJGWz6sIUXp3SlxGg8hV8+XZaC9lvFxy30aXMxx1pIBIQNFW5hgcLnM6a/HEdn1O3DOBcdaiwsU2n9tDfXCqC64NQEOIF68LqS/Olj6CuJq2vJS7+fkmZ+gmmF6B9gpfxZhIaxGAQ8EAQAAAAEQBP3///8M/AlsaWdodG5pbmcCAgABDPwJbGlnaHRuaW5nAQhDadWdGC/TkAABAwggoQcAAAAAAAEEIgAgVQwhvvHT+dNB8OfVJnrNyfqF9DYs7cDtDr/wgdVwPb8AAQMIeqAHAAAAAAABBCJRICvIDy3uEy0bzl2JbTAxL2bU+M+OX+1tzvzIQJ4x80e6IQclGDrKhS4yK0mVxQgbI7b2NQsRBUFx0vCBXZ0Hgj4OzAkAtdrhJwIAAAAM/AlsaWdodG5pbmcBCDIb/vW6sZSSAA==",
+          "withheld": false
+        },
+        "to_us_msat": 500000000,
+        "min_to_us_msat": 500000000,
+        "max_to_us_msat": 500000000,
+        "total_msat": 500000000,
+        "fee_base_msat": 1,
+        "fee_proportional_millionths": 10,
+        "dust_limit_msat": 546000,
+        "their_max_htlc_value_in_flight_msat": 18446744073709551615,
+        "our_max_htlc_value_in_flight_msat": 18446744073709551615,
+        "their_reserve_msat": 5000000,
+        "our_reserve_msat": 5000000,
+        "spendable_msat": 490709000,
+        "receivable_msat": 0,
+        "minimum_htlc_in_msat": 0,
+        "minimum_htlc_out_msat": 0,
+        "maximum_htlc_out_msat": 495000000,
+        "their_to_self_delay": 6,
+        "our_to_self_delay": 6,
+        "max_accepted_htlcs": 483,
+        "state_changes": [
+          {
+            "timestamp": "2026-10-21T11:03:02.788Z",
+            "old_state": "CHANNELD_AWAITING_LOCKIN",
+            "new_state": "CHANNELD_NORMAL",
+            "cause": "user",
+            "message": "Lockin complete"
+          }
+        ],
+        "status": [
+          "CHANNELD_NORMAL:Channel ready for use."
+        ],
+        "in_payments_offered": 0,
+        "in_offered_msat": 0,
+        "in_payments_fulfilled": 0,
+        "in_fulfilled_msat": 0,
+        "out_payments_offered": 0,
+        "out_offered_msat": 0,
+        "out_payments_fulfilled": 0,
+        "out_fulfilled_msat": 0,
+        "htlcs": []
+      }
+    ]
+  },
+  "bark_onchain": [
+    {
+      "outpoint": "46ac2161167f29d8077a619aa09f99e4e7ef52f2da6ae20afa583abfa42ebc5e:3",
+      "amount_sat": 200000,
+      "confirmation_height": 102
+    }
+  ]
+}

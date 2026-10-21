@@ -1,0 +1,10 @@
+{
+  "action": "offboard-18632",
+  "monotonic_start_ns": 9545241847037,
+  "height": 4442,
+  "state": "returned",
+  "monotonic_end_ns": 9545836613069,
+  "result": {
+    "offboard_txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b"
+  }
+}

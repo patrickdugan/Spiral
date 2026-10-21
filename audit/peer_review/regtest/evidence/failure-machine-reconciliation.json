@@ -1,0 +1,264 @@
+{
+  "evidence_class": "observed_regtest_failure_reconstruction",
+  "economic_reconciliation": true,
+  "replay_verified": true,
+  "baseline_events": 34,
+  "added_events": 12,
+  "report": {
+    "evidence_class": "regtest",
+    "state_hash": "f546fbf0cdb6bac5696d5b9818cf9dd0070a4e113558169fc1468ff63d779702",
+    "totals": {
+      "inflows": 2100000000,
+      "outflows": 60000000,
+      "fees": 12622000,
+      "service_revenue": 1653000,
+      "losses": 0,
+      "offered": 62001000,
+      "delivered": 60000000
+    },
+    "budget": {
+      "budget": 2000000000,
+      "F": 140308000,
+      "C": 101354000,
+      "reserved": 0,
+      "pool": {
+        "funded": 2000000000,
+        "transfers_in": 100000000,
+        "outflows": 60000000,
+        "fees": 12622000
+      }
+    },
+    "reconciliation_required": null,
+    "outstanding_fronting": 38954000,
+    "integrals": {
+      "fronting": {
+        "msat_blocks": "393322152000",
+        "msat_seconds": null
+      },
+      "unique_committed": {
+        "msat_blocks": "727302102000",
+        "msat_seconds": null
+      },
+      "htlc": {
+        "msat_blocks": "0",
+        "msat_seconds": null
+      },
+      "inbound": {
+        "msat_blocks": "259380000000",
+        "msat_seconds": null
+      },
+      "outbound": {
+        "msat_blocks": "1903620000000",
+        "msat_seconds": null
+      },
+      "idle": {
+        "msat_blocks": "8070710057000",
+        "msat_seconds": null
+      }
+    },
+    "stocks": {
+      "fronting": 38954000,
+      "unique_committed": 77659000,
+      "htlc": 0,
+      "inbound": 60000000,
+      "outbound": 440000000,
+      "idle": 1949719000
+    },
+    "free_budget": 1961046000,
+    "pool_inventory": {
+      "TRANSFERRED_OUT": 0,
+      "FREE": 1949719000,
+      "COMMITTED": 77659000
+    },
+    "delivery_rate": 0.9677263269947259,
+    "per_offered_msat": {
+      "fronting": 6343.803358010355,
+      "unique_committed": 11730.489863066725,
+      "htlc": 0,
+      "inbound": 4183.4809115982,
+      "outbound": 30703.05317656167,
+      "idle": 130170.64332833342
+    },
+    "per_delivered_msat": {
+      "fronting": 6555.3692,
+      "unique_committed": 12121.7017,
+      "htlc": 0,
+      "inbound": 4323,
+      "outbound": 31727,
+      "idle": 134511.83428333333
+    },
+    "exposures": [
+      {
+        "operation_id": "b5403311e4c6f29c2268ade56e0984df2e78aaafd0c85c3c09315dc714d20377",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 0
+      },
+      {
+        "operation_id": "round:8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+        "outstanding": 277000,
+        "right_censored": false,
+        "recovery_height": 4439,
+        "recovery_complete": true,
+        "unrecovered_after_exhausted_backing": 277000
+      },
+      {
+        "operation_id": "round:09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+        "outstanding": 38677000,
+        "right_censored": true,
+        "recovery_height": null
+      },
+      {
+        "operation_id": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      },
+      {
+        "operation_id": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+        "outstanding": 0,
+        "right_censored": false,
+        "recovery_height": 4439
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "payment_hash": "82b02e803de1ec419371d025aff39cf97cf1f2a9404a2220f555d38765d59ccc",
+      "amount_sat": 1000,
+      "fee_ceiling_sat": 83,
+      "charged_fee_sat": 0,
+      "routing_limit_sat": 74,
+      "measured_in_flight_sat": 1000,
+      "measured_spendable_reduction_sat": null,
+      "receiver_held_nanoseconds": "2164484015",
+      "receiver_held_sat_seconds_lower_bound": 2164.484015,
+      "clock_boot_id": "69f59641-c24d-43e0-a651-6e8ca3be102a",
+      "input_claim_ids": [
+        "9243abf02ee9a811fdad9c71af68d5f2906c8ce99d3f59dd001b5cee6bd49742:0"
+      ],
+      "replacements": [
+        {
+          "claim_id": "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 18632000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9243abf02ee9a811fdad9c71af68d5f2906c8ce99d3f59dd001b5cee6bd49742:0"
+        },
+        {
+          "claim_id": "e59ba9240fb4294d026d9d2d31b965fabcd23632d4a058cf77882ed56044324e:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 18632000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9243abf02ee9a811fdad9c71af68d5f2906c8ce99d3f59dd001b5cee6bd49742:0"
+        },
+        {
+          "claim_id": "a2d0f5b242a69ec7f96e9b3ddf9ea1b46782a3b8798387a5f79c49e8259f8a6f:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 1083000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9243abf02ee9a811fdad9c71af68d5f2906c8ce99d3f59dd001b5cee6bd49742:0"
+        }
+      ],
+      "note": "The deliberate receiver hold is a lower bound on HTLC exposure, not a natural latency sample; first attempt lacks the pending channel snapshot. Claim identities are reconciled at resolution, not asserted for unobserved client intermediate states."
+    },
+    {
+      "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+      "amount_sat": 1001,
+      "fee_ceiling_sat": 84,
+      "charged_fee_sat": 0,
+      "routing_limit_sat": 75,
+      "measured_in_flight_sat": 1001,
+      "measured_spendable_reduction_sat": 1428,
+      "receiver_held_nanoseconds": "14511083908",
+      "receiver_held_sat_seconds_lower_bound": 14525.594991908,
+      "clock_boot_id": "69f59641-c24d-43e0-a651-6e8ca3be102a",
+      "input_claim_ids": [
+        "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0",
+        "a2d0f5b242a69ec7f96e9b3ddf9ea1b46782a3b8798387a5f79c49e8259f8a6f:0"
+      ],
+      "replacements": [
+        {
+          "claim_id": "6a3f44442d81d5757140236ab8738f577d3cc1da745939d0ed1b131c09de6696:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 9315000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0"
+        },
+        {
+          "claim_id": "18a816855c8a7ca7b613d547c0cf8aeb1783bc1c1b9bafd0d119203f22baafc9:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 8987000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0"
+        },
+        {
+          "claim_id": "8e08c3fca02476ad5c9399be319d5b9a151c40a7d1e4757a23fa5589e5848c7a:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 1083000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "a2d0f5b242a69ec7f96e9b3ddf9ea1b46782a3b8798387a5f79c49e8259f8a6f:0"
+        },
+        {
+          "claim_id": "e99a7b0ba3421a1196affe1a6c0df0b195308621290d03eae5a1d7d1c237ea38:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 328000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0"
+        },
+        {
+          "claim_id": "8f41c3ba4dd24108abc8f84869a3bf5fc266cc8ba70be4cbc4d39369191396d9:0",
+          "claimant": "client",
+          "allocations": {
+            "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": 2000
+          },
+          "expiry_height": 8756,
+          "parent_claim_id": "9d8ffd299290a0d6298a49efefe98848957a301e0d8e3c3d407b0ed2bf14f2d2:0"
+        }
+      ],
+      "note": "The deliberate receiver hold is a lower bound on HTLC exposure, not a natural latency sample; first attempt lacks the pending channel snapshot. Claim identities are reconciled at resolution, not asserted for unobserved client intermediate states."
+    }
+  ],
+  "source_sha256": {
+    "normalized-config": "139baf1cc13a9613043bff851711fecaaed032e08d26576d430f8e6c11836093",
+    "runtime-identity": "d13a866d44adc9cf84e15acd1d8e89d1529e9c9ea46c618cf6bd6c92b8429a0d",
+    "runtime-source": "ef470d11b03c130e2d8d41ebe3119eb5247a09c2086e57f12860c48acfae392b",
+    "canonical-chain": "508d00e177fb606dc9255b63c54847daaeb0056be67ee723a968b68e3a14347e",
+    "failure-source": "812ad7039f284c687594429c9ac92d5880f61f00a1647c091fcb4a3482228ef5",
+    "failure-runtime-verification": "4a91d0e164a81f671cbb3983d4e8cf0b3df9a0d63df4cc2db05dcf2197f4d4b1",
+    "failure-virtual-transactions": "825b2b2eb77691c42809fb89f2eae5448302ee8c4877f5c7f26cac770d1edbb0",
+    "failure-before": "8658c9461dd5bfc4bbaa9c56f05176757baa0b78dea4a971797e83ac4ecab808",
+    "failure-resolved": "042e4ca706abfca81ba32f59b1018d6b3f2d3c9549915f2d5dd7dad2faa448cd",
+    "failure-hook-events": "ce08229d9b569ed2d81ffc4c36939708aa5904b21e382124226083f42ed916dd",
+    "failure-sendpays": "8d8cd0fd9489c2fbe1c92c537dc1dcc8b86bc3444a94744e615bad98e4ec0f34",
+    "failure-instrument": "37fd0178ed2e738685e215c994b70a1dea72fa1cfd657b70e61779e18206d449",
+    "failure-captured-before": "d156ca05f76d7f144359e646dbe3c5e5df5211d3e43c494fa742607ee3825e16",
+    "failure-captured-resolved": "fd303af19c08c16ace071d7d54efe41e9c7b65d9c461e2280d2515945753c39f",
+    "failure-captured-hook-events": "0f393f7ea7cafa13896723f7f393e4fcc20e6f65affc37d26cc81e42bc5c4be2",
+    "failure-captured-sendpays": "d3b44f665bb9b2ad3c76607473d511e62a94c253c12d0df1363b06ecd580681d",
+    "failure-captured-instrument": "37fd0178ed2e738685e215c994b70a1dea72fa1cfd657b70e61779e18206d449",
+    "failure-captured-in-flight": "fc705f5fcc670df7c6b8d37f4697b50fa352766b94b9bbe63bcdfb2883f361e2",
+    "failure-captured-peer-in-flight": "9f3eb41e44215059846322e75fd350e41cb557aa563fb4c9a0009804a3b009bc"
+  },
+  "limitations": [
+    "Deliberate fault injection; no production latency inference.",
+    "Historical unknown timestamps keep whole-journal seconds null; instrumented held-window bounds are reported separately.",
+    "Client input claims are aggregate reservations until terminal replacement reconciliation; intermediate client CLI reads were unavailable while send held the wallet."
+  ]
+}

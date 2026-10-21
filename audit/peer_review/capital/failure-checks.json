@@ -1,0 +1,202 @@
+[
+  {
+    "path": "revocation",
+    "check": {
+      "ok": true,
+      "reconciled": true,
+      "events": 9,
+      "state_hash": "58d4e441ac0c4055624e3182bff9c63f85a5cffddc59b01e285a48f577e66c0c"
+    },
+    "report": {
+      "evidence_class": "reference-model",
+      "state_hash": "58d4e441ac0c4055624e3182bff9c63f85a5cffddc59b01e285a48f577e66c0c",
+      "totals": {
+        "inflows": 2000000,
+        "outflows": 0,
+        "fees": 0,
+        "service_revenue": 0,
+        "losses": 0,
+        "offered": 600000,
+        "delivered": 0
+      },
+      "budget": {
+        "budget": 1000000,
+        "F": 1000000,
+        "C": 1000000,
+        "reserved": 0,
+        "pool": {
+          "funded": 1000000,
+          "transfers_in": 0,
+          "outflows": 0,
+          "fees": 0
+        }
+      },
+      "reconciliation_required": null,
+      "outstanding_fronting": 0,
+      "integrals": {
+        "fronting": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "unique_committed": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "htlc": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "inbound": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "outbound": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "idle": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        }
+      },
+      "stocks": {
+        "fronting": 0,
+        "unique_committed": 1000000,
+        "htlc": 0,
+        "inbound": 0,
+        "outbound": 1000000,
+        "idle": 1000000
+      },
+      "free_budget": 1000000,
+      "pool_inventory": {
+        "COMMITTED": 0,
+        "FREE": 1000000
+      },
+      "delivery_rate": 0,
+      "per_offered_msat": {
+        "fronting": 0,
+        "unique_committed": 0,
+        "htlc": 0,
+        "inbound": 0,
+        "outbound": 0,
+        "idle": 0
+      },
+      "per_delivered_msat": {
+        "fronting": null,
+        "unique_committed": null,
+        "htlc": null,
+        "inbound": null,
+        "outbound": null,
+        "idle": null
+      },
+      "exposures": [
+        {
+          "operation_id": "pay-1",
+          "outstanding": 0,
+          "right_censored": false,
+          "recovery_height": 0
+        }
+      ]
+    }
+  },
+  {
+    "path": "timeout",
+    "check": {
+      "ok": true,
+      "reconciled": true,
+      "events": 10,
+      "state_hash": "e287dc0359436a003a5e5145e1ee839179e61591049c68c31ef053144bf2b26e"
+    },
+    "report": {
+      "evidence_class": "reference-model",
+      "state_hash": "e287dc0359436a003a5e5145e1ee839179e61591049c68c31ef053144bf2b26e",
+      "totals": {
+        "inflows": 2000000,
+        "outflows": 0,
+        "fees": 0,
+        "service_revenue": 0,
+        "losses": 0,
+        "offered": 600000,
+        "delivered": 0
+      },
+      "budget": {
+        "budget": 1000000,
+        "F": 1000000,
+        "C": 1000000,
+        "reserved": 0,
+        "pool": {
+          "funded": 1000000,
+          "transfers_in": 0,
+          "outflows": 0,
+          "fees": 0
+        }
+      },
+      "reconciliation_required": null,
+      "outstanding_fronting": 0,
+      "integrals": {
+        "fronting": {
+          "msat_blocks": "5000000",
+          "msat_seconds": "3000000000"
+        },
+        "unique_committed": {
+          "msat_blocks": "10000000",
+          "msat_seconds": "6000000000"
+        },
+        "htlc": {
+          "msat_blocks": "3000000",
+          "msat_seconds": "1800000000"
+        },
+        "inbound": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        },
+        "outbound": {
+          "msat_blocks": "5000000",
+          "msat_seconds": "3000000000"
+        },
+        "idle": {
+          "msat_blocks": "0",
+          "msat_seconds": "0"
+        }
+      },
+      "stocks": {
+        "fronting": 0,
+        "unique_committed": 1000000,
+        "htlc": 0,
+        "inbound": 0,
+        "outbound": 1000000,
+        "idle": 1000000
+      },
+      "free_budget": 1000000,
+      "pool_inventory": {
+        "COMMITTED": 0,
+        "FREE": 1000000
+      },
+      "delivery_rate": 0,
+      "per_offered_msat": {
+        "fronting": 8.333333333333334,
+        "unique_committed": 16.666666666666668,
+        "htlc": 5,
+        "inbound": 0,
+        "outbound": 8.333333333333334,
+        "idle": 0
+      },
+      "per_delivered_msat": {
+        "fronting": null,
+        "unique_committed": null,
+        "htlc": null,
+        "inbound": null,
+        "outbound": null,
+        "idle": null
+      },
+      "exposures": [
+        {
+          "operation_id": "pay-1",
+          "outstanding": 0,
+          "right_censored": false,
+          "recovery_height": 5
+        }
+      ]
+    }
+  }
+]

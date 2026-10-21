@@ -1,0 +1,23 @@
+{
+  "status": "fixed_budget_conditional_comparison_complete_operational_clocks_pending",
+  "evidence_class": "implementation_informed_forecast",
+  "reference_trace_hash": "857589f0fdf4c9e21d387d97a8c730e53f248ec4c47bd83a42a722277c216211",
+  "reason": "The frozen single-participant fee-aware campaign completed 384 Ark and 672 channel/group forecasts on disjoint holdout seeds. It includes fees, round overhead, asset deduplication, two initial-balance factors, target failures and both denominators. Receipt backing, batching, fixed channel buffers and instant settlement remain declared policies, not live measurements.",
+  "structural_sensitivity": "audit/peer_review/capital_comparison.md",
+  "fixed_budget_results": "audit/peer_review/capital_fixed_budget_results.md",
+  "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441",
+  "existing_results": "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
+  "reference_lifecycle": {
+    "offered_sat": 1600,
+    "delivered_sat": 1600,
+    "delivery_rate": 1,
+    "outstanding_fronting_sat": 1000
+  },
+  "remaining_validation": [
+    "Measure operational recovery and HTLC clocks; snapshot detection gaps are not latency distributions",
+    "Measure replenishment and batching distributions before making a deployed cost-efficiency claim; one inventory-backed receipt is observed",
+    "Validate live timeout/unilateral recovery and reorg paths; cooperative revocation and cooperative exit have observed evidence",
+    "Confirm the observed 510000 test sats and pass the funding gate; four empty synchronized testnet4 peers now form the controlled diamond",
+    "Use a new committed protocol and fresh seeds for any changed transaction policy"
+  ]
+}

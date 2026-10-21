@@ -1,0 +1,10 @@
+{
+  "action": "inbound-claim-2000",
+  "monotonic_start_ns": 8726423859736,
+  "height": 4442,
+  "state": "returned",
+  "monotonic_end_ns": 8727142508282,
+  "result": {
+    "exit_code": 0
+  }
+}

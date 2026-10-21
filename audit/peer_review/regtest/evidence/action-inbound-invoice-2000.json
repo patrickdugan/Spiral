@@ -1,0 +1,10 @@
+{
+  "action": "inbound-invoice-2000",
+  "monotonic_start_ns": 8707235648839,
+  "height": 4442,
+  "state": "returned",
+  "monotonic_end_ns": 8707866136570,
+  "result": {
+    "invoice": "lnbcrt20u1p4d30aksp5c5zt5pqt2p3med9hvvkqsatgfy6me3rh2lc2wdzkcu5c8a64lvjqpp53p032ymdh239ehgrkcdcc9ef3f285qrp8cg6690qagksty0068cqdqqxqy9gcqcqzgq9qyysgqec2na66vj6udf2xknygxgm3j592kaqs28en25ju98lal0ma37e7rfr9dmd88sep3qg39grtqjq5vawa3mh0xnvu5vt4uw9434ql9x6cqrjd9ts"
+  }
+}

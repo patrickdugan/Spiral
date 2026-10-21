@@ -1,0 +1,17 @@
+{
+  "evidence_class": "collector_gap",
+  "captured_monotonic_ns": 7035413487402,
+  "failed_command": "bark balance --no-sync while original send --wait was active",
+  "observed_exit_status": 1,
+  "raw_stderr_available": false,
+  "interpretation": "Concurrent wallet access failed; wallet locking is a source-supported explanation, not a preserved error-string observation.",
+  "original_send_exit_status_available": false,
+  "original_send_process_terminal": true,
+  "repeated_payment": false,
+  "pending_snapshot_available": false,
+  "resolution_evidence": [
+    "failure-sendpays.json",
+    "failure-resolved.json",
+    "failure-hook-events.json"
+  ]
+}
