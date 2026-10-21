@@ -45,11 +45,29 @@ It refuses stopped or mismatched existing containers instead of discarding
 wallets. Existing peer state is preserved; the separate preflight checks that
 the wallets and channels are still empty before the first funding cycle.
 
-The 16 offline tests cover the preflight, descriptor redaction, bridge method
+The 27 offline tests cover the preflight, descriptor redaction, bridge method
 and CLI-option restrictions, exact decimal transport, and uncertain broadcast
-handling. The live setup checkpoint verifies four distinct synchronized empty
+handling, durable action intents, dual-clock deadlines, explicit routes,
+bilateral fee conservation, and observer journal integrity. The live setup checkpoint verifies four distinct synchronized empty
 peers and both directions of every diamond connection. None of these checks
 constitutes a completed funding/activation or payment-clock experiment.
+
+The [operational protocol](operational_protocol.md) now fixes the exact
+510,000-sat budget, four private channel openings, balanced 200-invoice workload,
+two-second minimum spacing, 48-hour stop and observation/censoring rules before
+any experiment spending. `experiment.py` implements explicit phases with
+exclusive durable intent records. An uncertain action is inspected through
+authoritative state, never blindly retried. Its monetary phases have not yet
+been validated live.
+
+The passive `clock_observer.py` collector is installed and answering on all four
+peers. It subscribes to notifications without registering hooks. The
+[instrumentation checkpoint](observer-preparation-20261021.json) records its
+hash, health replies, unchanged CLN executable hashes and the separately added
+Debian Python 3.11.2 runtime/standard-library package versions. Both deposits
+remain in the mempool at height 157212; that observed tip contains only its
+coinbase transaction. The 500,000-sat deposit has an unconfirmed parent. No
+experiment run manifest or 48-hour deadline has been started yet.
 
 ## Private configuration and invocation
 

@@ -6,6 +6,8 @@
   "testnet4_funding_observation": "../testnet4/funding-observation-20261021.json",
   "testnet4_preflight": "../testnet4/preflight-pending-funding-20261021.json (live read-only gate refuses unconfirmed funds)",
   "testnet4_peer_provisioning": "../testnet4/peer-provisioning-20261021.json (four empty synchronized controlled peers; no channel funding or payment clocks)",
+  "testnet4_instrumentation": "../testnet4/observer-preparation-20261021.json (passive collectors active; exact runtime dependencies recorded; funds still pending)",
+  "testnet4_operational_protocol": "../testnet4/operational_protocol.md (specified before experiment spending; monetary phases not yet executed)",
   "actual_genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
   "best_block_hash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
   "binary_digests": [

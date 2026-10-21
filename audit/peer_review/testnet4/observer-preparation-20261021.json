@@ -1,0 +1,365 @@
+{
+  "evidence_class": "passive_instrumentation_preparation",
+  "observed_at_unix_ns": "1792596814016386542",
+  "observer": {
+    "observer_sha256": "68fc9c497389d646ba9e7063c45224e20d8ceb5124f98886d213120e6e832c58",
+    "statuses": {
+      "a": {
+        "sequence": 1,
+        "last_sha256": "c66b2ac9c2526c5d361b5a58b318f442a8df9f59a28833c2a94c8c78d519a19f",
+        "monotonic_ns": "15561396390303",
+        "passive": true
+      },
+      "b": {
+        "sequence": 1,
+        "last_sha256": "e679bf03fd4218b8575d1b3c08b6409c6c2b1f69cff4bc8ddda76f12c5da7b15",
+        "monotonic_ns": "15561398972073",
+        "passive": true
+      },
+      "c": {
+        "sequence": 1,
+        "last_sha256": "8c4841ef507e8106ff8a55edeaee31a11bf78fe53a46896a326308b4dba4476d",
+        "monotonic_ns": "15561402256491",
+        "passive": true
+      },
+      "d": {
+        "sequence": 1,
+        "last_sha256": "b9f1549b7d45920f2fed5b84de60577e5210e2f9d5917786df72f7a0a1512516",
+        "monotonic_ns": "15561405084948",
+        "passive": true
+      }
+    },
+    "monetary_action": false
+  },
+  "runtime_dependencies": {
+    "a": {
+      "version": "Python 3.11.2",
+      "executable_sha256": "9bee109da0dce17a7c9eeaca9f420cc6770a9fe143b9382d73bd22fe59b21a5f",
+      "packages": "libpython3.11-minimal:amd64\t3.11.2-6+deb12u9\nlibpython3.11-stdlib:amd64\t3.11.2-6+deb12u9\npython3\t3.11.2-1+b1\npython3.11\t3.11.2-6+deb12u9\n",
+      "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "verified_journal_sequence": 1
+    },
+    "b": {
+      "version": "Python 3.11.2",
+      "executable_sha256": "9bee109da0dce17a7c9eeaca9f420cc6770a9fe143b9382d73bd22fe59b21a5f",
+      "packages": "libpython3.11-minimal:amd64\t3.11.2-6+deb12u9\nlibpython3.11-stdlib:amd64\t3.11.2-6+deb12u9\npython3\t3.11.2-1+b1\npython3.11\t3.11.2-6+deb12u9\n",
+      "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "verified_journal_sequence": 1
+    },
+    "c": {
+      "version": "Python 3.11.2",
+      "executable_sha256": "9bee109da0dce17a7c9eeaca9f420cc6770a9fe143b9382d73bd22fe59b21a5f",
+      "packages": "libpython3.11-minimal:amd64\t3.11.2-6+deb12u9\nlibpython3.11-stdlib:amd64\t3.11.2-6+deb12u9\npython3\t3.11.2-1+b1\npython3.11\t3.11.2-6+deb12u9\n",
+      "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "verified_journal_sequence": 1
+    },
+    "d": {
+      "version": "Python 3.11.2",
+      "executable_sha256": "9bee109da0dce17a7c9eeaca9f420cc6770a9fe143b9382d73bd22fe59b21a5f",
+      "packages": "libpython3.11-minimal:amd64\t3.11.2-6+deb12u9\nlibpython3.11-stdlib:amd64\t3.11.2-6+deb12u9\npython3\t3.11.2-1+b1\npython3.11\t3.11.2-6+deb12u9\n",
+      "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+      "verified_journal_sequence": 1
+    }
+  },
+  "initial_empty_snapshot": {
+    "start_monotonic_ns": "15561405708039",
+    "end_monotonic_ns": "15561585365461",
+    "unix_ns": "1792596805746212691",
+    "core_before": {
+      "chain": "testnet4",
+      "blocks": 157212,
+      "headers": 157212,
+      "bestblockhash": "00000000aecf1be377c5bbcf654082d1d4388ea6c3974a1a54b3577aee298538",
+      "bits": "1d00ffff",
+      "target": "00000000ffff0000000000000000000000000000000000000000000000000000",
+      "difficulty": 1,
+      "time": 1792603357,
+      "mediantime": 1792597352,
+      "verificationprogress": 1,
+      "initialblockdownload": false,
+      "chainwork": "000000000000000000000000000000000000000000000ee4f5c726f493dcb763",
+      "size_on_disk": 2450761958,
+      "pruned": true,
+      "pruneheight": 108956,
+      "automatic_pruning": true,
+      "prune_target_size": 4294967296,
+      "warnings": []
+    },
+    "core_after": {
+      "chain": "testnet4",
+      "blocks": 157212,
+      "headers": 157212,
+      "bestblockhash": "00000000aecf1be377c5bbcf654082d1d4388ea6c3974a1a54b3577aee298538",
+      "bits": "1d00ffff",
+      "target": "00000000ffff0000000000000000000000000000000000000000000000000000",
+      "difficulty": 1,
+      "time": 1792603357,
+      "mediantime": 1792597352,
+      "verificationprogress": 1,
+      "initialblockdownload": false,
+      "chainwork": "000000000000000000000000000000000000000000000ee4f5c726f493dcb763",
+      "size_on_disk": 2450761958,
+      "pruned": true,
+      "pruneheight": 108956,
+      "automatic_pruning": true,
+      "prune_target_size": 4294967296,
+      "warnings": []
+    },
+    "stable_tip": true,
+    "peers": {
+      "a": {
+        "getinfo": {
+          "id": "027497c7378b72bf9c5d9a0044e2a196a95a9c140b5eabbcf8b6be132a1c8dc193",
+          "alias": "spiral-clock-a",
+          "color": "027497",
+          "num_peers": 2,
+          "num_pending_channels": 0,
+          "num_active_channels": 0,
+          "num_inactive_channels": 0,
+          "address": [],
+          "binding": [
+            {
+              "type": "ipv4",
+              "address": "127.0.0.1",
+              "port": 21935
+            }
+          ],
+          "version": "v26.06.7",
+          "blockheight": 157212,
+          "network": "testnet4",
+          "fees_collected_msat": 0,
+          "lightning-dir": "/data/testnet4",
+          "our_features": {
+            "init": "800898880a8a59a1",
+            "node": "808898880a8a59a1",
+            "channel": "",
+            "invoice": "02000002024100"
+          }
+        },
+        "listpeerchannels": {
+          "channels": []
+        },
+        "listfunds": {
+          "outputs": [],
+          "channels": []
+        },
+        "spiral-clock-status": {
+          "sequence": 1,
+          "last_sha256": "c66b2ac9c2526c5d361b5a58b318f442a8df9f59a28833c2a94c8c78d519a19f",
+          "monotonic_ns": "15561514006706",
+          "passive": true
+        }
+      },
+      "b": {
+        "getinfo": {
+          "id": "02bcd8bfbf880332044074b09e73662aa716c537876cd8c2e31f5d740c35daaead",
+          "alias": "spiral-clock-b",
+          "color": "02bcd8",
+          "num_peers": 2,
+          "num_pending_channels": 0,
+          "num_active_channels": 0,
+          "num_inactive_channels": 0,
+          "address": [],
+          "binding": [
+            {
+              "type": "ipv4",
+              "address": "127.0.0.1",
+              "port": 22935
+            }
+          ],
+          "version": "v26.06.7",
+          "blockheight": 157212,
+          "network": "testnet4",
+          "fees_collected_msat": 0,
+          "lightning-dir": "/data/testnet4",
+          "our_features": {
+            "init": "800898880a8a59a1",
+            "node": "808898880a8a59a1",
+            "channel": "",
+            "invoice": "02000002024100"
+          }
+        },
+        "listpeerchannels": {
+          "channels": []
+        },
+        "listfunds": {
+          "outputs": [],
+          "channels": []
+        },
+        "spiral-clock-status": {
+          "sequence": 1,
+          "last_sha256": "e679bf03fd4218b8575d1b3c08b6409c6c2b1f69cff4bc8ddda76f12c5da7b15",
+          "monotonic_ns": "15561516081830",
+          "passive": true
+        }
+      },
+      "c": {
+        "getinfo": {
+          "id": "03c87d695048ab26b6b76b5e03b22cdf0401c67f5d38b926f18be9d32862270b03",
+          "alias": "spiral-clock-c",
+          "color": "03c87d",
+          "num_peers": 2,
+          "num_pending_channels": 0,
+          "num_active_channels": 0,
+          "num_inactive_channels": 0,
+          "address": [],
+          "binding": [
+            {
+              "type": "ipv4",
+              "address": "127.0.0.1",
+              "port": 23935
+            }
+          ],
+          "version": "v26.06.7",
+          "blockheight": 157212,
+          "network": "testnet4",
+          "fees_collected_msat": 0,
+          "lightning-dir": "/data/testnet4",
+          "our_features": {
+            "init": "800898880a8a59a1",
+            "node": "808898880a8a59a1",
+            "channel": "",
+            "invoice": "02000002024100"
+          }
+        },
+        "listpeerchannels": {
+          "channels": []
+        },
+        "listfunds": {
+          "outputs": [],
+          "channels": []
+        },
+        "spiral-clock-status": {
+          "sequence": 1,
+          "last_sha256": "8c4841ef507e8106ff8a55edeaee31a11bf78fe53a46896a326308b4dba4476d",
+          "monotonic_ns": "15561518121081",
+          "passive": true
+        }
+      },
+      "d": {
+        "getinfo": {
+          "id": "03faae056da960e38adf89689c92b460e291720f507ea51f1a0b77cae29f350436",
+          "alias": "spiral-clock-d",
+          "color": "03faae",
+          "num_peers": 2,
+          "num_pending_channels": 0,
+          "num_active_channels": 0,
+          "num_inactive_channels": 0,
+          "address": [],
+          "binding": [
+            {
+              "type": "ipv4",
+              "address": "127.0.0.1",
+              "port": 24935
+            }
+          ],
+          "version": "v26.06.7",
+          "blockheight": 157212,
+          "network": "testnet4",
+          "fees_collected_msat": 0,
+          "lightning-dir": "/data/testnet4",
+          "our_features": {
+            "init": "800898880a8a59a1",
+            "node": "808898880a8a59a1",
+            "channel": "",
+            "invoice": "02000002024100"
+          }
+        },
+        "listpeerchannels": {
+          "channels": []
+        },
+        "listfunds": {
+          "outputs": [],
+          "channels": []
+        },
+        "spiral-clock-status": {
+          "sequence": 1,
+          "last_sha256": "b9f1549b7d45920f2fed5b84de60577e5210e2f9d5917786df72f7a0a1512516",
+          "monotonic_ns": "15561519986287",
+          "passive": true
+        }
+      }
+    },
+    "funding_outputs": {},
+    "dedicated_wallet_balances": {
+      "mine": {
+        "trusted": "0E-8",
+        "untrusted_pending": "0.00510000",
+        "immature": "0E-8"
+      },
+      "lastprocessedblock": {
+        "hash": "00000000aecf1be377c5bbcf654082d1d4388ea6c3974a1a54b3577aee298538",
+        "height": 157212
+      }
+    }
+  },
+  "funding_gate": {
+    "status": "not_ready",
+    "reason": "wallet has pending or immature funds"
+  },
+  "deposit_mempool_entries": {
+    "92b09e339585a0601ea25941dc8270483b81d5eb61ec7161b17ad94981cd5a3a": {
+      "vsize": 141,
+      "weight": 561,
+      "time": 1792594311,
+      "height": 157210,
+      "descendantcount": 3,
+      "descendantsize": 423,
+      "ancestorcount": 3,
+      "ancestorsize": 423,
+      "wtxid": "bcdde3f64551274bbe0c679d547a2489f3410d2b0594633d45bee73aa0fd28e3",
+      "chunkweight": 561,
+      "fees": {
+        "base": "0.00000141",
+        "modified": "0.00000141",
+        "ancestor": "0.00000423",
+        "descendant": "0.00000423",
+        "chunk": "0.00000141"
+      },
+      "depends": [
+        "daf61bac4450da8d290cd774519131f324d165adf8f3fea5ee8731e108b77e09"
+      ],
+      "spentby": [
+        "d88a56d47bc4671b7da72c6b917ebbb3ae0ee87d44958891689d6f362619ce44"
+      ],
+      "bip125-replaceable": true,
+      "unbroadcast": false
+    },
+    "d248746992dd458e9b4efecc2241c36130daa74525131909328d7c12649815e4": {
+      "vsize": 141,
+      "weight": 561,
+      "time": 1792594319,
+      "height": 157210,
+      "descendantcount": 1,
+      "descendantsize": 141,
+      "ancestorcount": 1,
+      "ancestorsize": 141,
+      "wtxid": "58432059d9c334df64a95c108a7d954f0100facc03de79f04f76e2c8a07881b4",
+      "chunkweight": 561,
+      "fees": {
+        "base": "0.00000282",
+        "modified": "0.00000282",
+        "ancestor": "0.00000282",
+        "descendant": "0.00000282",
+        "chunk": "0.00000282"
+      },
+      "depends": [],
+      "spentby": [],
+      "bip125-replaceable": true,
+      "unbroadcast": false
+    }
+  },
+  "latest_block": {
+    "hash": "00000000aecf1be377c5bbcf654082d1d4388ea6c3974a1a54b3577aee298538",
+    "height": 157212,
+    "nTx": 1,
+    "time": 1792603357
+  },
+  "transaction_broadcast": false,
+  "run_manifest_exists": false,
+  "limits": [
+    "No experiment allocation, channel opening or payment has occurred.",
+    "Notification receipt is an observer clock, not the internal commit time.",
+    "No hooks are registered; collector only observes selected public notification fields."
+  ]
+}
