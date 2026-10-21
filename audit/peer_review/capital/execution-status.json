@@ -1,0 +1,39 @@
+{
+  "inspection_date": "2026-10-21",
+  "evidence_class": "environment_observation",
+  "regtest_status": "not_executed",
+  "testnet4_status": "not_attempted_regtest_prerequisite_unsatisfied",
+  "observations": [
+    {
+      "surface": "Windows PowerShell",
+      "check": "Get-Command docker,bitcoin-cli,captaind,lightning-cli -ErrorAction SilentlyContinue",
+      "result": "No matching executables on PATH"
+    },
+    {
+      "surface": "WSL outside sandbox",
+      "check": "wsl --list --quiet",
+      "result": "Ubuntu-24.04"
+    },
+    {
+      "surface": "Ubuntu-24.04",
+      "check": "command -v docker; command -v bitcoind; command -v lightningd; command -v captaind; command -v cargo; ls /var/run/docker.sock",
+      "result": "Only /root/.cargo/bin/cargo was found; Docker socket absent"
+    }
+  ],
+  "actual_genesis_hash": null,
+  "best_block_hash": null,
+  "binary_digests": null,
+  "container_digests": null,
+  "effective_configuration": null,
+  "initial_state_snapshots": null,
+  "owned_regtest_endpoint": null,
+  "transactions_signed_or_broadcast": 0,
+  "remaining": [
+    "Provision and attest an owned pinned regtest stack",
+    "Capture backing/claim/change joins and all fees/reserves",
+    "Execute and reconcile an independent recovered-asset reuse",
+    "Resolve unsupported adapter shapes and irreversible deep-reorg liabilities",
+    "Rerun matched-service comparisons using observed clocks",
+    "Only then perform the bounded testnet4 protocol"
+  ]
+}

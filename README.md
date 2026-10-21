@@ -4,12 +4,14 @@ Bitcoin payment liquidity as a capital-accounting problem for populations of sof
 
 The October 21, 2026 review corrects the reference model and narrows claims to the evidence available. See the [review changes](paper/peer_review_changes.md), [reproduction and verification record](audit/peer_review/README.md), and [regtest/testnet4 plan](audit/peer_review/testnet4_plan.md). The review includes archived simulator reanalysis, 96 additional model cell/seed combinations, and an offline audit of 512 historical testnet4 headers. It contains no live payment, recovery-latency, zero-knowledge proof or deployed-covenant measurement.
 
+The [capital-accounting state machine](audit/peer_review/capital_state_machine.md) adds separate economic-asset and claim ledgers, evidence-gated recovery, gross fronting and deterministic journals. Its [lifecycle report](audit/peer_review/capital_regtest_report.md) demonstrates synthetic recovered-asset reuse and explicitly records the unexecuted regtest lane. Existing efficiency tables remain reference-model forecasts until that lane supplies observed recovery semantics.
+
 ## What is here
 
 | Path | Contents |
 |---|---|
 | `paper/tex/` | The current paper, *Where the Capital Bound Moves* (`main.tex`, compiled `main.pdf`). `grid.tex` is generated from the reference model. |
-| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger with documented expiry recovery and a counterfactual next-round scenario, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. Thirty named tests check finite cases, validation and accounting regressions. |
+| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger with documented expiry recovery and a counterfactual next-round scenario, the capital-accounting machine, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. Named tests check finite cases, validation and accounting regressions. |
 | `src/spiral_ln/` | Python simulator: directional balance algebra, typed connectors, routing and placement campaigns on sampled public topology, coalition fixtures. |
 | `paper/` | Earlier manuscripts and their audit, plus design documents from other programs; [`paper/README.md`](paper/README.md) says which is which. |
 | `audit/` | Reproducible adversarial audit of the first manuscript; start from [`audit/README.md`](audit/README.md). |

@@ -1,0 +1,21 @@
+{
+  "status": "blocked_before_observed_semantics",
+  "evidence_class": "not_executed",
+  "reference_trace_hash": "857589f0fdf4c9e21d387d97a8c730e53f248ec4c47bd83a42a722277c216211",
+  "reason": "No owned Bark/Core/CLN regtest trace or execution manifest exists. Synthetic finality/reuse heights cannot calibrate implementation-grounded comparisons.",
+  "existing_results": "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
+  "reference_lifecycle": {
+    "offered_sat": 1600,
+    "delivered_sat": 1600,
+    "delivery_rate": 1,
+    "outstanding_fronting_sat": 1000
+  },
+  "required_before_rerun": [
+    "Verify source/binary/container pins and actual genesis",
+    "Reconcile complete observed lifecycle and independent reuse",
+    "Fit recovery delays per policy, retaining censored cases and recovery fees",
+    "Freeze pilot budgets and service target before holdout seeds",
+    "Apply the same offered trace to all objects; publish failures and both volume denominators",
+    "Deduplicate unique asset coverage; do not sum channel and fronting categories"
+  ]
+}

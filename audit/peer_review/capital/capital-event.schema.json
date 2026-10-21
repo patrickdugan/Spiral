@@ -1,0 +1,1149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spiral capital event v1",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "enum": [
+        "FUND",
+        "OPEN_CHANNEL",
+        "ISSUE_VTXO",
+        "RECEIVE_LIGHTNING",
+        "PAYMENT_OFFERED",
+        "REQUEST_OUTGOING",
+        "CANCEL_REQUEST",
+        "HTLC_ACCEPTED",
+        "HTLC_SETTLED",
+        "HTLC_FAILED",
+        "RESOLVE_FAILED",
+        "REFRESH",
+        "EXPIRY_REACHED",
+        "SWEEP_BROADCAST",
+        "SWEEP_CONFIRMED",
+        "CAPITAL_REUSABLE",
+        "MOVE_TO_CHANNEL",
+        "SPLIT_MERGE",
+        "EXIT",
+        "CHAIN",
+        "TICK",
+        "REORG"
+      ]
+    },
+    "amount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "unit": {
+      "const": "msat"
+    },
+    "asset_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "claim_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "causal_parent_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "block_height": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "block_hash": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "monotonic_timestamp": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "txid": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_id",
+    "trace_id",
+    "event_type",
+    "amount",
+    "unit",
+    "asset_ids",
+    "claim_ids",
+    "causal_parent_ids",
+    "block_height",
+    "block_hash",
+    "monotonic_timestamp",
+    "txid",
+    "evidence_refs",
+    "data"
+  ],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "event_type": {
+          "const": "FUND"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "location": {
+              "const": "onchain"
+            },
+            "backing_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maturity_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "pool": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "asset_id",
+            "owner",
+            "location",
+            "backing_ref",
+            "maturity_height",
+            "pool"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "OPEN_CHANNEL"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "asset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "funding_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "remote": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "spendable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "receivable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "channel_id",
+            "asset_id",
+            "funding_ref",
+            "remote",
+            "spendable",
+            "receivable"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "ISSUE_VTXO"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "claim": {
+              "type": "object",
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claimant": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "allocations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "expiry_height": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "parent_claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "claim_id",
+                "claimant",
+                "allocations",
+                "expiry_height"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "claim"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "RECEIVE_LIGHTNING"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "asset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "claim": {
+              "type": "object",
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claimant": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "allocations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "expiry_height": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "parent_claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "claim_id",
+                "claimant",
+                "allocations",
+                "expiry_height"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "channel_id",
+            "asset_id",
+            "fee",
+            "claim"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "PAYMENT_OFFERED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "holder": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id",
+            "holder"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "REQUEST_OUTGOING"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "holder": {
+              "type": "string",
+              "minLength": 1
+            },
+            "input_claim_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "reserve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "channel_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "delivered": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "max_fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "timeout_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "operation_id",
+            "holder",
+            "input_claim_ids",
+            "reserve_ids",
+            "channel_id",
+            "delivered",
+            "max_fee",
+            "timeout_height"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "CANCEL_REQUEST"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "HTLC_ACCEPTED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "HTLC_SETTLED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "service_fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "preimage_evidence_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "change": {
+              "type": "object",
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claimant": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "allocations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "expiry_height": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "parent_claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "claim_id",
+                "claimant",
+                "allocations",
+                "expiry_height"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation_id",
+            "fee",
+            "preimage_evidence_ref"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "HTLC_FAILED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "RESOLVE_FAILED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "path": {
+              "enum": [
+                "revocation",
+                "timeout"
+              ]
+            },
+            "resolution_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "resolution_hash": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id",
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "REFRESH"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "input_claim_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "reserve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "replacement": {
+              "type": "object",
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claimant": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "allocations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "expiry_height": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "parent_claim_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "claim_id",
+                "claimant",
+                "allocations",
+                "expiry_height"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation_id",
+            "input_claim_ids",
+            "reserve_ids",
+            "fee",
+            "replacement"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "EXPIRY_REACHED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "operation_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "SWEEP_BROADCAST"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sweep_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "destination": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "input_outpoints": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "sweep_id",
+            "operation_id",
+            "output_id",
+            "destination",
+            "fee",
+            "input_outpoints"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "SWEEP_CONFIRMED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sweep_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "inclusion_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "inclusion_hash": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "sweep_id",
+            "inclusion_height",
+            "inclusion_hash"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "CAPITAL_REUSABLE"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sweep_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reuse": {
+              "type": "object",
+              "properties": {
+                "operation_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "holder": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "input_claim_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "reserve_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "channel_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "delivered": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "max_fee": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "timeout_height": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "operation_id",
+                "holder",
+                "input_claim_ids",
+                "reserve_ids",
+                "channel_id",
+                "delivered",
+                "max_fee",
+                "timeout_height"
+              ],
+              "additionalProperties": false
+            },
+            "channel_funding_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "funding_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "funding_hash": {
+              "type": "string",
+              "minLength": 1
+            },
+            "spendable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "sweep_id",
+            "reuse",
+            "channel_funding_ref",
+            "funding_height",
+            "funding_hash",
+            "spendable"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "MOVE_TO_CHANNEL"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "channel_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "funding_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "remote": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "spendable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "receivable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "asset_id",
+            "channel_id",
+            "funding_ref",
+            "remote",
+            "spendable",
+            "receivable"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "SPLIT_MERGE"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "input_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "asset_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "asset_id",
+                  "amount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "input_ids",
+            "outputs"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "EXIT"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "claim_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "output_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "destination": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mode": {
+              "enum": [
+                "cooperative",
+                "unilateral"
+              ]
+            },
+            "inclusion_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "inclusion_hash": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "claim_id",
+            "fee",
+            "output_id",
+            "destination",
+            "mode",
+            "inclusion_height",
+            "inclusion_hash"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "CHAIN"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "hash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "parent_hash": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "height",
+                  "hash",
+                  "parent_hash"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "blocks"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "TICK"
+        },
+        "data": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "REORG"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "hash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "parent_hash": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "height",
+                  "hash",
+                  "parent_hash"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "blocks"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

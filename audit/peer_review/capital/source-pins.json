@@ -1,0 +1,124 @@
+{
+  "evidence_class": "source_inspection",
+  "inspection_date": "2026-10-21",
+  "spiral_base": "23155003010310c3a5c41b9ab8f3db910e69bc3e",
+  "files": [
+    {
+      "component": "bark",
+      "path": "server/src/database/ln/model.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "db40b092ae3689abfb8c413d39cb4ae7c2188e5b",
+      "sha256": "6246b3751338add96a1ac8385d6ed11c855403531b01d5d4c063d2743192657d",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/src/database/ln/model.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server/schema.sql",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "c4e9cd75b9a6e680575c142178de91877d81a7c6",
+      "sha256": "a1c9f833b4e56ea1dd5e510b0345506061f0f90f82f59b72dd9f49e4354ce9f8",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/schema.sql"
+    },
+    {
+      "component": "bark",
+      "path": "server/src/ln/cln/xpay.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "24198f977bbb4c846adf3b2087120b68cf2730e2",
+      "sha256": "ca51e08fa07a9e84d03b6879ae3c90b3cc96dcd560d2ae293a2e72de1652139c",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/src/ln/cln/xpay.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server/src/watchman/policy.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "ef93b6cf242444b2411c10269252f5ff88355cc9",
+      "sha256": "e91a088aa9539371d63f0f166dd223d61c347989438b8d7cb4591cdffc14f540",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/src/watchman/policy.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server/src/watchman/config.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "b5633652f0fe44b8bf1106afbe131be05c16558c",
+      "sha256": "a02fc094d16640fe81b0ca6697179bf305453f6f540a1e4aa8a74980afe96b00",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/src/watchman/config.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server/src/watchman/frontier.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "a5dc02502ac87f9bdccaf3853caa8f37069a1e59",
+      "sha256": "40dcfabf08301a8b5cb91215d809a7ec74efb5f90428122675a220ad02d9b2d7",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server/src/watchman/frontier.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server-log/src/msgs/lightning.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "9de13e6100aaab03121014c1b178c1c644d2a932",
+      "sha256": "7d4c23c1ae18ab1440fe1afc94c8975e012069e52cd72455d0fb1065f3e37d1d",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server-log/src/msgs/lightning.rs"
+    },
+    {
+      "component": "bark",
+      "path": "server-log/src/msgs/watchman.rs",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "84347fca7c467cfbd6da0c86adf0740d67a47c28",
+      "sha256": "e8275b50deeffc94bb8811530bb0e09a2ef77dfa918f042c8b6d62a0bd7f6d43",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/server-log/src/msgs/watchman.rs"
+    },
+    {
+      "component": "bark",
+      "path": "contrib/docker/docker-compose.yml",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "1fb4123fe9da751908e8cba9c6d19c24ddd350ed",
+      "sha256": "2903a90abab1de4513674a8c8c67df39dbd009cc344232eb63f94629f2782b9b",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/contrib/docker/docker-compose.yml"
+    },
+    {
+      "component": "bark",
+      "path": "contrib/docker/cln.Dockerfile",
+      "revision": "683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f",
+      "git_blob": "1886430f09d26232b6ee3cc9bae2b1a69d81cbef",
+      "sha256": "d7a4acf7c2f2493339fbfb1dc3975d371aac6965c7e115d8c49964e40171e086",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f/contrib/docker/cln.Dockerfile"
+    },
+    {
+      "component": "cln",
+      "path": "doc/schemas/listpays.json",
+      "revision": "8684c68dffb04ab606e526b64d7d60390d1fe7ed",
+      "sha256_normalized_text": "d957a2005a9007eff5da9305d2b861787ccca395b1f1c760eaa0fe425214e852",
+      "url": "https://github.com/ElementsProject/lightning/blob/8684c68dffb04ab606e526b64d7d60390d1fe7ed/doc/schemas/listpays.json"
+    },
+    {
+      "component": "cln",
+      "path": "doc/schemas/listpeerchannels.json",
+      "revision": "8684c68dffb04ab606e526b64d7d60390d1fe7ed",
+      "sha256_normalized_text": "f51030f9ba2780c5f35c6cbce3b937951887826d83f300f0c2c6fba0fd6ca420",
+      "url": "https://github.com/ElementsProject/lightning/blob/8684c68dffb04ab606e526b64d7d60390d1fe7ed/doc/schemas/listpeerchannels.json"
+    },
+    {
+      "component": "bitcoin",
+      "path": "src/rpc/blockchain.cpp",
+      "revision": "d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3",
+      "sha256_normalized_text": "c9fb90b56d2cde31d2630bad5f9d8516ddd24105d4d091a66f6d9c3aab1fa02f",
+      "url": "https://github.com/bitcoin/bitcoin/blob/d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3/src/rpc/blockchain.cpp"
+    },
+    {
+      "component": "bitcoin",
+      "path": "src/rpc/rawtransaction.cpp",
+      "revision": "d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3",
+      "sha256_normalized_text": "3ac9af532b868ec5a9f59d522a501c0cc45a5d1a18bc30559b8ed8dd7c1b2670",
+      "url": "https://github.com/bitcoin/bitcoin/blob/d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3/src/rpc/rawtransaction.cpp"
+    }
+  ],
+  "runtime": {
+    "status": "not_executed",
+    "genesis_hash": null,
+    "best_block_hash": null,
+    "binary_digests": null,
+    "container_digests": null,
+    "effective_configuration": null,
+    "initial_state_snapshots": null
+  }
+}

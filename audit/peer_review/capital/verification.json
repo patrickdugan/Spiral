@@ -1,0 +1,51 @@
+{
+  "node": "v24.19.0",
+  "test_command": "node --experimental-strip-types --test --test-reporter=tap model/*.test.ts",
+  "test_exit_code": 0,
+  "tests": 55,
+  "passes": 55,
+  "failures": 0,
+  "typecheck": {
+    "status": 0,
+    "version": "Version 5.9.3",
+    "diagnostics": ""
+  },
+  "journal_check": {
+    "ok": true,
+    "reconciled": true,
+    "events": 21,
+    "state_hash": "dc693abdd01143985f46b8b4eb141fdd954326f2bbad6d6d948a385736191b84"
+  },
+  "replay_state_hash": "dc693abdd01143985f46b8b4eb141fdd954326f2bbad6d6d948a385736191b84",
+  "randomized": {
+    "seeds": 128,
+    "commands_per_seed": 32,
+    "shrinking": "deletion to 1-minimal command sequence on failure"
+  },
+  "unresolved_reorg": {
+    "check": {
+      "ok": true,
+      "reconciled": false,
+      "events": 22,
+      "state_hash": "675f0651a61ecf547592b896dadf84f430df5f45e3b0e162539f7c698c0296ec"
+    },
+    "reconciliation_required": {
+      "reorg_event_id": "e22",
+      "irreversible_event_ids": [
+        "e20"
+      ],
+      "observed_tip": "fork-15"
+    }
+  },
+  "source_sha256": {
+    "model/capital-adapter.test.ts": "409fb58bf0719ef354dc9b093201f0f6a1a9af0ec97e2e3bd8195c9bb7ca02ac",
+    "model/capital-adapter.ts": "7a0e0b35c8d25f5be48dd2d1eec600bd562f5d2f7eb176c558592c67c2eaf9d2",
+    "model/capital-schema.ts": "ab6d9710e1f276c123fdf1e89750e459a323cf62a32285a7a3761c276d80f87a",
+    "model/capital.fixtures.ts": "ec9f9aa1e907983c6f5dd27fe3aed87da628e9063e81385f89dc096b82f39927",
+    "model/capital.properties.test.ts": "e64f706068bb23aa02cfb36b5eb2bfd07323bca8f6cbdcaa8ba253ca8d8c7a9e",
+    "model/capital.test.ts": "bd646ff84524f331d1a4e5a2517a9ea45d0d76d6f32a942be11b9b1575f953ed",
+    "model/capital.ts": "58ff49ebfebd5fce5e428ad95e51e76341535755261755da0fd8ee9cf7a8f62d",
+    "audit/peer_review/capital_artifacts.ts": "4a8c475c0689e83e921be8d42f7bf69a38ba35e7b53b885cb833f7a3b771edbe",
+    "audit/peer_review/verify_capital.ts": "9f3829815eb4200a8da0d2e60772e466124f6856e1ed4a00d3f29d88d44f0896"
+  }
+}

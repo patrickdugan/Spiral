@@ -1,0 +1,97 @@
+{
+  "evidence_class": "reference-model",
+  "state_hash": "dc693abdd01143985f46b8b4eb141fdd954326f2bbad6d6d948a385736191b84",
+  "totals": {
+    "inflows": 3000000,
+    "outflows": 1600000,
+    "fees": 0,
+    "service_revenue": 0,
+    "losses": 0,
+    "offered": 1600000,
+    "delivered": 1600000
+  },
+  "budget": {
+    "budget": 1000000,
+    "F": 2000000,
+    "C": 1000000,
+    "reserved": 0,
+    "pool": {
+      "funded": 1000000,
+      "transfers_in": 1000000,
+      "outflows": 1600000,
+      "fees": 0
+    }
+  },
+  "reconciliation_required": null,
+  "outstanding_fronting": 1000000,
+  "integrals": {
+    "fronting": {
+      "msat_blocks": "15000000",
+      "msat_seconds": "9000000000"
+    },
+    "unique_committed": {
+      "msat_blocks": "34000000",
+      "msat_seconds": "20400000000"
+    },
+    "htlc": {
+      "msat_blocks": "0",
+      "msat_seconds": "0"
+    },
+    "inbound": {
+      "msat_blocks": "11000000",
+      "msat_seconds": "6600000000"
+    },
+    "outbound": {
+      "msat_blocks": "6000000",
+      "msat_seconds": "3600000000"
+    },
+    "idle": {
+      "msat_blocks": "0",
+      "msat_seconds": "0"
+    }
+  },
+  "stocks": {
+    "fronting": 1000000,
+    "unique_committed": 1400000,
+    "htlc": 0,
+    "inbound": 1600000,
+    "outbound": 400000,
+    "idle": 0
+  },
+  "free_budget": 0,
+  "pool_inventory": {
+    "TRANSFERRED_OUT": 0,
+    "COMMITTED": 400000
+  },
+  "delivery_rate": 1,
+  "per_offered_msat": {
+    "fronting": 9.375,
+    "unique_committed": 21.25,
+    "htlc": 0,
+    "inbound": 6.875,
+    "outbound": 3.75,
+    "idle": 0
+  },
+  "per_delivered_msat": {
+    "fronting": 9.375,
+    "unique_committed": 21.25,
+    "htlc": 0,
+    "inbound": 6.875,
+    "outbound": 3.75,
+    "idle": 0
+  },
+  "exposures": [
+    {
+      "operation_id": "pay-1",
+      "outstanding": 0,
+      "right_censored": false,
+      "recovery_height": 13
+    },
+    {
+      "operation_id": "pay-2",
+      "outstanding": 1000000,
+      "right_censored": true,
+      "recovery_height": null
+    }
+  ]
+}

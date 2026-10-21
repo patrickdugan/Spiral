@@ -1,0 +1,6 @@
+{
+  "operator": "server",
+  "genesis_hash": "model-genesis",
+  "confirmations": 2,
+  "evidence_class": "reference-model"
+}
