@@ -5,9 +5,14 @@
 it has **not** passed against a live testnet4 deployment. No funding,
 activation or payment-clock observation is produced by a successful preflight.
 
-The required synchronized Core endpoint and dedicated test funds remain
-unavailable in this chat. Four dedicated CLN peers must be provisioned against
-that endpoint and connected in a diamond before opening channels. This script
+The user identified an existing local testnet4 installation on 2026-10-21.
+It was stopped; it has now been started and caught up at height 157210.
+A separate experiment wallet observes 500,000 test sats supplied by the user
+and 10,000 test sats from a faucet, both unconfirmed at the captured checkpoint.
+See [the public funding observation](funding-observation-20261021.json).
+The earlier absent-endpoint preflight is historical and did not discover this
+stopped installation. Four dedicated CLN peers still need provisioning against
+the endpoint and connections in a diamond before opening channels. This script
 checks that starting condition; it does not start services, connect peers,
 create wallets, open channels or send payments.
 
