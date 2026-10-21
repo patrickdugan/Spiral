@@ -59,6 +59,9 @@ export interface OnchainTransaction {
   refresh?: RoundRefresh;
   reuse?: { sweep_id: string; recovery_allocations: Record<string, number> };
 }
+export interface ExitReconfirmation {
+  event_id: string; txid: string; inclusion_height: number; inclusion_hash: string; evidence_ref: string;
+}
 export interface Payloads {
   FUND: { asset_id: string; owner: string; location: string; backing_ref: string; maturity_height: number; pool: boolean };
   OPEN_CHANNEL: { channel_id: string; asset_id: string; funding_ref: string; remote: number; spendable: number; receivable: number };
@@ -87,7 +90,7 @@ export interface Payloads {
     funding?: { operation_id: string; transaction: OnchainTransaction; connector_ids: string[]; recovery_claim: ClaimSpec } };
   CHAIN: { blocks: Block[] };
   TICK: Record<string, never>;
-  REORG: { blocks: Block[] };
+  REORG: { blocks: Block[]; reconfirmed_exits?: ExitReconfirmation[] };
 }
 export interface Envelope {
   event_id: string; trace_id: string; amount: number; unit: "msat";
@@ -104,7 +107,8 @@ export interface AccountingState {
   H: { channels: Record<string, Channel>; operations: Record<string, Operation> };
   B: { budget: number; F: number; C: number; reserved: number; pool: { funded: number; transfers_in: number; outflows: number; fees: number } };
   J: { chain: Record<string, string>; funding_refs: string[]; offers: Record<string, { amount: number; holder: string; event_id: string }>; canonical: string[]; orphaned: Record<string, string>; height: number; timestamp: number | null;
-    reconciliation_required: null | { reorg_event_id: string; irreversible_event_ids: string[]; observed_tip: string } };
+    reconciliation_required: null | { reorg_event_id: string; irreversible_event_ids: string[]; observed_tip: string };
+    reconfirmed_exits?: Record<string, ExitReconfirmation & { reorg_event_id: string; observed_height: number; observed_hash: string; observed_timestamp: number | null }> };
   sweeps: Record<string, Sweep>;
   holders: Record<string, { received: number; outgoing: number; fees: number }>;
   totals: { inflows: number; outflows: number; fees: number; service_revenue: number; losses: number; offered: number; delivered: number };
@@ -154,7 +158,7 @@ export class CapitalAccountingMachine {
     const e = structuredClone(event);
     const previous = this.events.find(x => x.event_id === e.event_id);
     if (previous) { demand(canonicalJSON(previous) === canonicalJSON(e), "event ID collision"); return this.stateHash(); }
-    demand(!this.state.J.reconciliation_required || e.event_type === "REORG", "accounting halted: reconcile irreversible orphaned settlement");
+    demand(!this.state.J.reconciliation_required || e.event_type === "REORG", "accounting halted: reconcile irreversible orphaned outcome");
     this.validateEnvelope(e);
     // Copy-on-write: even a late invariant failure has zero observable effect.
     const draft = new CapitalAccountingMachine(this.config);
@@ -675,19 +679,52 @@ export class CapitalAccountingMachine {
     const chain: Record<string, string> = { 0: this.config.genesis_hash };
     for (const b of e.data.blocks) { demand(b.height > 0 && chain[b.height - 1] === b.parent_hash && !chain[b.height], "invalid replacement chain"); chain[b.height] = b.hash; }
     demand(chain[e.block_height] === e.block_hash, "replacement tip mismatch");
-    const old = this.state.J, prior = this.events.filter(x => old.canonical.includes(x.event_id));
+    const old = this.state.J, originals = this.events.filter(x => old.canonical.includes(x.event_id));
     demand(e.monotonic_timestamp === null || old.timestamp === null || e.monotonic_timestamp >= old.timestamp, "reorg timestamp reversal");
+    const reconfirmed = structuredClone(old.reconfirmed_exits ?? {});
+    unique((e.data.reconfirmed_exits ?? []).map(r => r.event_id));
+    for (const r of e.data.reconfirmed_exits ?? []) {
+      const index = originals.findIndex(ev => ev.event_id === r.event_id), original = originals[index];
+      demand(original?.event_type === "EXIT" && original.data.funding && original.txid === r.txid, "reconfirmation must identify the same funded exit transaction");
+      // Re-anchoring an earlier transaction cannot silently move subsequent
+      // economic events through time. Such a trace requires fuller observation.
+      demand(originals.slice(index + 1).every(ev => ev.event_type === "REORG" ||
+        (ev.event_type === "CHAIN" && chain[ev.block_height] !== ev.block_hash)), "exit reconfirmation needs a terminal economic checkpoint");
+      const previous = reconfirmed[r.event_id];
+      demand(chain[previous?.observed_height ?? original.block_height] !== (previous?.observed_hash ?? original.block_hash), "exit checkpoint is still canonical");
+      demand(r.evidence_ref && e.evidence_refs.includes(r.evidence_ref), "exit reconfirmation evidence missing");
+      demand(chain[r.inclusion_height] === r.inclusion_hash && e.block_height - r.inclusion_height + 1 >= this.config.confirmations, "exit reconfirmation lacks canonical finality");
+      reconfirmed[r.event_id] = { ...r, reorg_event_id: e.event_id, observed_height: e.block_height,
+        observed_hash: e.block_hash!, observed_timestamp: e.monotonic_timestamp };
+    }
+    const prior = originals.map(original => {
+      // Reducers may retain nested payload objects in mutable state. Never
+      // replay directly from journal storage, even for unchanged events.
+      const r = reconfirmed[original.event_id]; if (!r) return structuredClone(original);
+      demand(original.event_type === "EXIT" && original.data.funding && original.txid === r.txid, "invalid persisted exit reconfirmation");
+      // The append-only source event remains untouched. This effective replay
+      // view changes only its observed anchor and transaction confirmation.
+      const effective = structuredClone(original);
+      if (effective.event_type !== "EXIT" || !effective.data.funding) throw new Error("exit reconfirmation type mismatch");
+      effective.block_height = r.observed_height; effective.block_hash = r.observed_hash; effective.monotonic_timestamp = r.observed_timestamp;
+      effective.data.inclusion_height = r.inclusion_height; effective.data.inclusion_hash = r.inclusion_hash;
+      effective.data.funding.transaction.inclusion_height = r.inclusion_height; effective.data.funding.transaction.inclusion_hash = r.inclusion_hash;
+      effective.evidence_refs = [...new Set([...effective.evidence_refs, r.evidence_ref])];
+      return effective;
+    });
     const invalid = new Set<string>();
     for (const ev of prior) if ((ev.block_hash !== null && chain[ev.block_height] !== ev.block_hash) || ev.causal_parent_ids.some(p => invalid.has(p))) invalid.add(ev.event_id);
-    const irreversible = prior.filter(ev => invalid.has(ev.event_id) && (ev.event_type === "HTLC_SETTLED" || ev.event_type === "RECEIVE_LIGHTNING"));
+    const irreversible = prior.filter(ev => invalid.has(ev.event_id) && (ev.event_type === "HTLC_SETTLED" || ev.event_type === "RECEIVE_LIGHTNING" || (ev.event_type === "EXIT" && ev.data.funding)));
     if (irreversible.length) {
-      // Offchain payment outcomes cannot be rolled back with a Bitcoin branch.
+      // Offchain payment outcomes and durable cooperative forfeits cannot be
+      // undone just because their observation/confirmation block was orphaned.
       // Retain the last reconciled economic checkpoint and append the observation,
       // but freeze all spending. A new canonical trace or explicit liability
       // instrumentation is needed; inventing a debit would be worse than stopping.
       this.state.J.reconciliation_required = { reorg_event_id: e.event_id, irreversible_event_ids: irreversible.map(x => x.event_id), observed_tip: e.block_hash! }; return;
     }
     this.state = empty(this.config); this.state.J.chain = chain; this.state.J.orphaned = { ...old.orphaned };
+    if (Object.keys(reconfirmed).length) this.state.J.reconfirmed_exits = reconfirmed;
     for (const ev of prior) {
       const reason = ev.block_hash !== null && chain[ev.block_height] !== ev.block_hash ? "orphaned block" :
         ev.causal_parent_ids.some(p => this.state.J.orphaned[p]) ? "orphaned causal ancestor" : null;

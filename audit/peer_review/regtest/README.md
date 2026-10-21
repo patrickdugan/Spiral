@@ -136,3 +136,16 @@ Replay the committed evidence with
 The resulting 51-event journal retains the original backing and 330-sat
 connector; neither is assumed recovered. The captured tip is 4445, and the
 confirmed client payout is 15,732 sats.
+
+## Exit reorg extension
+
+The [reorg report](../capital_reorg_report.md) records a controlled three-block
+reorg of that exit. Observers were paused during empty-block fork construction
+and resumed at the higher replacement tip. The identical transaction was
+observed pending at 4446, then reconfirmed in 4447 with a final tip of 4449.
+`reorg-exit.py` is a guarded one-time action; do not rerun it against the
+completed fixture. Reproduce the 53-event journal offline with
+`node --experimental-strip-types audit/peer_review/regtest/normalize-reorg.ts`.
+The pending checkpoint is explicitly unreconciled and cannot authorize
+spending. Final reconciliation retains the spent claim, forfeit and all
+earlier journal evidence without charging another payout or fee.

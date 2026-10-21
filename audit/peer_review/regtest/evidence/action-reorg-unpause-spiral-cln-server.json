@@ -1,0 +1,10 @@
+{
+  "action": "reorg-unpause-spiral-cln-server",
+  "monotonic_start_ns": 10396534445380,
+  "height": 4446,
+  "state": "returned",
+  "monotonic_end_ns": 10396986559820,
+  "result": {
+    "result": "spiral-cln-server"
+  }
+}

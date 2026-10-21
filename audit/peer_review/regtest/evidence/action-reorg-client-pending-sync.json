@@ -1,0 +1,15 @@
+{
+  "action": "reorg-client-pending-sync",
+  "monotonic_start_ns": 10398410554652,
+  "height": 4446,
+  "state": "returned",
+  "monotonic_end_ns": 10398897217181,
+  "result": {
+    "total_sat": 115577,
+    "trusted_spendable_sat": 99845,
+    "immature_sat": 0,
+    "trusted_pending_sat": 0,
+    "untrusted_pending_sat": 15732,
+    "confirmed_sat": 99845
+  }
+}

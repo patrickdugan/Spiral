@@ -103,3 +103,11 @@ the ratios; do not promote passing a payment target into a redemption guarantee.
     second asset. Record 18,035 sats of additional fronting and no recovery
     credit at this event; retain both maturities and unclosed obligations.
     See [the exit report](../audit/peer_review/capital_exit_report.md).
+12. **Reorgs do not resurrect durable offboard claims.** In the controlled
+    live exit reorg, the 15,732-sat payout became unconfirmed while Bark kept
+    the original holder claim spent and the offboard committed. Freeze
+    accounting until surviving obligations are reconciled. The same signed
+    transaction's later confirmation restores the terminal checkpoint without
+    a second payout, fee or recovery credit. Preserve both branch observations;
+    branch-local integrals cannot substitute for wall-clock exposure through
+    the gap. See [the reorg report](../audit/peer_review/capital_reorg_report.md).

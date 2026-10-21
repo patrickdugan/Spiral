@@ -1,0 +1,27 @@
+{
+  "old_tip": {
+    "chain": "regtest",
+    "blocks": 4445,
+    "headers": 4445,
+    "bestblockhash": "785b383dff85f45ba517c6e107aa3b210d9ac16e97dde762921a56f05833a632",
+    "bits": "207fffff",
+    "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+    "difficulty": "4.656542373906925e-10",
+    "time": 1792590634,
+    "mediantime": 1792589649,
+    "verificationprogress": 1,
+    "initialblockdownload": false,
+    "chainwork": "00000000000000000000000000000000000000000000000000000000000022bc",
+    "size_on_disk": 1332709,
+    "pruned": false,
+    "warnings": []
+  },
+  "orphan_root": "17a9b595df5f712cf5f42b6aebe4bc33b61b760e3f31e1256e2fe94d5f0fa24b",
+  "txid": "2b693c30887a8de3a4bc601460b5dde3f88fa2895aa0ed2363908a6133e8812b",
+  "common_height": 4442,
+  "replacement_height": 4446,
+  "final_height": 4449,
+  "intervention": "Pause observers during explicit-empty-block fork construction; resume at a higher tip.",
+  "payment_resent": false,
+  "new_fixture_funding_sat": 0
+}

@@ -1,0 +1,10 @@
+{
+  "action": "reorg-pause-spiral-watchmand",
+  "monotonic_start_ns": 10387568306857,
+  "height": 4445,
+  "state": "returned",
+  "monotonic_end_ns": 10388022065052,
+  "result": {
+    "result": "spiral-watchmand"
+  }
+}

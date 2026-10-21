@@ -1,0 +1,10 @@
+{
+  "action": "reorg-empty-block-4446",
+  "monotonic_start_ns": 10391743598013,
+  "height": 4445,
+  "state": "returned",
+  "monotonic_end_ns": 10392286186973,
+  "result": {
+    "hash": "42a994e8041bbb2d26da1e6d9899fdc0aba8e8070dcdcd30a6c9c83fc2e3d7ed"
+  }
+}

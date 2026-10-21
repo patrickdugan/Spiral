@@ -162,6 +162,15 @@ replacement debit. This is a documented unsupported insolvency/contingent-credit
 case; the next observer must expose the surviving liabilities and assets. Tests
 prove that the external payment remains recorded and spending is blocked.
 
+A funded cooperative `EXIT` has the same conservative treatment: orphaning
+its confirmation does not undo a durable forfeit. For a terminal exit only,
+`REORG.reconfirmed_exits` can cite canonical reconfirmation of the **same**
+transaction. It records a separate effective anchor in `J.reconfirmed_exits`
+while preserving the source event unchanged. Intervening economic events or
+surviving observations require fuller reconciliation and are rejected. See
+the [observed exit reorg](capital_reorg_report.md) for the live witness and
+the limits of branch-local capital-time reconstruction.
+
 ## Capital-time and experiment denominators
 
 Each event accrues the old stock up to its observed height/time before changing

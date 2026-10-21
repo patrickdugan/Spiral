@@ -1,0 +1,10 @@
+{
+  "action": "reorg-unpause-spiral-cln-peer",
+  "monotonic_start_ns": 10396066276611,
+  "height": 4446,
+  "state": "returned",
+  "monotonic_end_ns": 10396517423974,
+  "result": {
+    "result": "spiral-cln-peer"
+  }
+}

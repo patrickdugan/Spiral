@@ -1755,6 +1755,43 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "reconfirmed_exits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "txid": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "inclusion_height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "inclusion_hash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "evidence_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "txid",
+                  "inclusion_height",
+                  "inclusion_hash",
+                  "evidence_ref"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [

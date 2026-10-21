@@ -44,7 +44,8 @@ export const payloadSchemas: Record<string, Schema> = {
   RECOVERY_SWEEP: object({ sweep_id: id, operation_ids: ids, input_ids: ids, output_id: id, destination: id, fee: integer, input_outpoints: ids }),
   EXIT: object({ claim_id: id, fee: integer, output_id: id, destination: id, mode: { enum: ["cooperative", "unilateral"] }, inclusion_height: integer, inclusion_hash: id,
     funding: object({ operation_id: id, transaction: onchainTransaction, connector_ids: ids, recovery_claim: claim }) }, ["funding"]),
-  CHAIN: object({ blocks }), TICK: object({}), REORG: object({ blocks }),
+  CHAIN: object({ blocks }), TICK: object({}), REORG: object({ blocks, reconfirmed_exits: { type: "array", items: object({
+    event_id: id, txid: id, inclusion_height: integer, inclusion_hash: id, evidence_ref: id }) } }, ["reconfirmed_exits"]),
 };
 const envelope = object({ event_id: id, trace_id: id, event_type: { enum: Object.keys(payloadSchemas) }, amount: integer, unit: { const: "msat" },
   asset_ids: ids, claim_ids: ids, causal_parent_ids: ids, block_height: integer, block_hash: nullable(id), monotonic_timestamp: nullable(integer), txid: nullable(id), evidence_refs: ids, data: { type: "object" } });
