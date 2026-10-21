@@ -113,6 +113,7 @@ python3 audit/peer_review/testnet4/experiment.py channels
 python3 audit/peer_review/testnet4/experiment.py observe
 python3 audit/peer_review/testnet4/experiment.py payments --count 1
 # Inspect the first live accounting checkpoint before larger bounded batches.
+python3 audit/peer_review/testnet4/capture.py /private/new-capture-directory
 ```
 
 Instrumenting empty peers does not start the 48-hour run. CLN's pinned image
@@ -121,6 +122,19 @@ collector; installed package versions and executable hashes are separately
 attested. Do not replace daemon binaries. The runner's pure accounting and
 safety tests are not a substitute for validating its first live opening and
 payment; those phases remain pending until funded execution actually occurs.
+
+The read-only capture writes private source evidence before running independent
+verification, preserving that evidence even when a discrepancy is found. A
+successful check emits a sanitized public capture and a separate report. The
+verifier rebuilds the funding UTXO graph from the initial preflight outpoints;
+wallet leaf ownership is checked against the captured wallet responses, and
+channel leaves are counted once after matching both endpoint references. It
+does not import the runner's accounting implementation. Payment proofs are
+checked before preimages are removed from the public export. Exact integer
+`msat × ns` numerators and their conversion denominator are retained for
+reservation capital-time; normalized values report offered and delivered
+denominators separately. Its arithmetic status does not replace the separate
+inspection of activation notifications, confirmation thresholds and coverage.
 
 ## Exact interface sources
 

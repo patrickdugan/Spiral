@@ -192,12 +192,15 @@ def begin():
         'source_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
             for p in [Path(__file__), Path(__file__).with_name('clock_observer.py')]}}
     write_once(RUN / 'manifest.json', value)
+    write_once(RUN / 'initial-preflight.json', {'gate': gate, 'observations': reads.observations})
     write_once(RUN / 'initial.json', snapshot())
     return {'status': 'begun', 'deadline_unix_ns': value['deadline_unix_ns'], 'transaction_broadcast': False}
 
 
 def allocate():
     m = manifest()
+    if not (RUN / 'initial-preflight.json').exists() or not (RUN / 'initial.json').exists():
+        raise RuntimeError('initial provenance checkpoint incomplete; reconcile before funding')
     # Funding must still satisfy the entire empty-wallet gate immediately before
     # the first outgoing transaction; creating receive addresses does not fund.
     config = json.loads((RUNTIME / 'preflight-config.json').read_text())
@@ -358,8 +361,18 @@ def payments(count):
             invoice = action(f'invoice-{index:03}', 'invoice', lambda: rpc(job['destination'], 'invoice',
                 {'amount_msat': job['amount_msat'], 'label': label, 'description': 'controlled testnet4 clock', 'expiry': 3600}))
         decoded = rpc(job['source'], 'decodepay', {'bolt11': invoice['bolt11']})
-        delta = rpc(job['middle'], 'listconfigs', {'config': 'cltv-delta'})['configs']['cltv-delta']['value_int']
-        route, fee = make_route(job, channels_before, ids, decoded['min_final_cltv_expiry'], delta)
+        route_file = RUN / f'route-{index:03}.json'
+        if route_file.exists():
+            selected = json.loads(route_file.read_text())
+            if selected['payment_hash'] != invoice['payment_hash']:
+                raise RuntimeError('saved route belongs to another invoice')
+        else:
+            delta = rpc(job['middle'], 'listconfigs', {'config': 'cltv-delta'})['configs']['cltv-delta']['value_int']
+            route, fee = make_route(job, channels_before, ids, decoded['min_final_cltv_expiry'], delta)
+            selected = {'payment_hash': invoice['payment_hash'], 'route': route, 'fee_msat': fee,
+                'cltv_policy': {'invoice_min_final': decoded['min_final_cltv_expiry'], 'middle_delta': delta}}
+            write_once(route_file, selected)
+        route, fee = selected['route'], selected['fee_msat']
         start = time.monotonic_ns()
         sample_file = RUN / f'samples-{index:03}-{start}.jsonl'
         with sample_file.open('x'):
@@ -419,6 +432,7 @@ def payments(count):
             write_once(RUN/'halted.json', {'index': index, 'reason': 'balance/quiescence discrepancy', 'after': after})
             raise RuntimeError('payment accounting did not reconcile; halted')
         write_once(RUN/f'payment-{index:03}.json', {'index': index, 'job': job, 'route': route,
+            'cltv_policy': selected['cltv_policy'],
             'payment_hash': invoice['payment_hash'], 'collection_start_ns': str(start),
             'wait_response_observed_ns': str(wait_response_observed_ns),
             'terminal_status_read_end_ns': str(terminal_status_read_end_ns),

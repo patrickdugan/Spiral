@@ -45,7 +45,7 @@ It refuses stopped or mismatched existing containers instead of discarding
 wallets. Existing peer state is preserved; the separate preflight checks that
 the wallets and channels are still empty before the first funding cycle.
 
-The 27 offline tests cover the preflight, descriptor redaction, bridge method
+The 44 offline tests cover the preflight, descriptor redaction, bridge method
 and CLI-option restrictions, exact decimal transport, and uncertain broadcast
 handling, durable action intents, dual-clock deadlines, explicit routes,
 bilateral fee conservation, and observer journal integrity. The live setup checkpoint verifies four distinct synchronized empty
@@ -68,6 +68,25 @@ Debian Python 3.11.2 runtime/standard-library package versions. Both deposits
 remain in the mempool at height 157212; that observed tip contains only its
 coinbase transaction. The 500,000-sat deposit has an unconfirmed parent. No
 experiment run manifest or 48-hour deadline has been started yet.
+
+`capture.py` reads an existing run without restarting or repeating any action.
+`analyze.py` independently reconstructs the funding transaction graph, verifies
+each wallet/channel output's ownership evidence, checks both ends of each
+terminal payment, and bounds sampled sender reservations. It rejects extra
+financing, duplicate representations, altered routes, lost value, invalid
+preimages, clock-epoch changes and submission times beyond the hard stop. The
+initial preflight outpoints and exact pre-send routes are saved durably for
+this reconstruction and for observing a resumed attempt without changing it.
+
+The offline report separates attempted offered value, delivered value and
+unattempted planned demand. Zero denominators are null. Unresolved reservation
+upper bounds stay null; missed active samples never become zero-duration claims.
+`terminal_workload_reconciled` describes the arithmetic checkpoint only:
+notification coverage and activation-threshold timing still require inspection
+of the captured event traces. These offline checks have not yet validated a
+funded testnet4 run.
+The full 200-payment report path is exercised only with an explicitly synthetic
+fixture; it is a verifier test, not an observed operational result.
 
 ## Private configuration and invocation
 
