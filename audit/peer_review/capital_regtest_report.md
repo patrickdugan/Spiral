@@ -1,9 +1,9 @@
 # Capital lifecycle execution report
 
 Date: 2026-10-21. **An owned regtest payment-to-recovery-to-independent-round
-lifecycle has now run.** Its full transaction graph balances. The live retained-
-backing path is not yet accepted by the reference reducer, so the complete task
-and implementation-grounded comparison remain unfinished.
+lifecycle has now run.** Its full transaction graph balances, and its retained-backing path now passes
+34 reducer events with deterministic replay. Precise timing instrumentation and
+the implementation-grounded comparison remain unfinished.
 
 ## Observed lifecycle
 
@@ -124,15 +124,26 @@ record is preserved alongside the authoritative observation.
 
 ## Remaining acceptance work
 
-Extend the reducer and adapter for retained backing, actual gross reserve,
-additional round backing, miner/service fee separation, batch recovery allocation
-and independent round reuse. Replay this observed journal through those rules.
+The [accepted journal](regtest/evidence/lifecycle-observed.jsonl) and
+[machine reconciliation](regtest/evidence/machine-reconciliation.json) preserve
+all final economic assets and the 38,347-sat active claim. F=138,158, C=99,204,
+W=38,954 sats: 38,677 sats of new round fronting plus a 277-sat exhausted-backing
+shortfall. C includes the 499-sat unused routing limit and 98,705-sat recovered
+board. This explicitly counts full round roots, including their 330-sat overhead.
+
+Capture exact acceptance and commitment times before interpreting the
+detection-height capital-time trace as a latency measurement. The recorded
+HTLC acceptance is reconstructed from proved settlement and pinned control flow;
+its timestamp was not sampled. All second-based integrals are unavailable.
+
+![Reconstructed detection-height capital trace; exact timing remains censored](regtest/evidence/machine-trace.png)
+
 Complete live failure/timeout/receive/exit/reorg branches and their liability joins.
 
 The [matched-service status artifact](capital/matched-service-status.json) is
-blocked before observed recovery calibration. Existing matched-service
+pending a rerun under the now-normalized recovery semantics and explicit clock uncertainty. Existing matched-service
 sensitivity results remain forecasts; they have not been relabeled or replaced
 by synthetic "observations." Re-running the paper comparison under measured
 semantics, bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments
-all remain downstream of complete reducer-level regtest verification. No testnet4 experiment
+remain unfinished after economic reducer verification. No testnet4 experiment
 was attempted.

@@ -78,3 +78,19 @@ and operator delays are not production latency measurements.
 The first payment CLI returned empty stdout despite success. Its uncertain local
 parser record is retained; `payment-result-reconciliation.json` proves settlement
 without a duplicate send. Later code handles that CLI behavior explicitly.
+
+## Economic reducer replay
+
+From the repository root, run `node --experimental-strip-types audit/peer_review/regtest/normalize.ts`.
+This reads only committed observations and validates the executed binary/source
+pins. It writes the 34-event journal, config, per-event trace and economic
+reconciliation. `capture-chain.py` supplies canonical headers using read-only
+local RPC if recollection is required. No secrets or running services are needed
+for normalization or replay.
+
+The runtime manifest predates normalization and retains its historical
+`reference_reducer_acceptance: false`; current acceptance is in
+`machine-reconciliation.json` and `../capital/execution-status.json`.
+Exact HTLC acceptance and round commitment times were not sampled. The journal
+uses confirmed snapshot detection heights and null seconds; it cannot support
+a precise operational latency claim.

@@ -2,339 +2,429 @@ TAP version 13
 # Subtest: pinned Bark settlement proof overrides stale status and preserves fractional-sat routing fees
 ok 1 - pinned Bark settlement proof overrides stale status and preserves fractional-sat routing fees
   ---
-  duration_ms: 10.7765
+  duration_ms: 11.0632
   type: 'test'
   ...
 # Subtest: read-only adapter rejects unknown revisions and unsafe unit conversions
 ok 2 - read-only adapter rejects unknown revisions and unsafe unit conversions
   ---
-  duration_ms: 0.6107
+  duration_ms: 0.7315
   type: 'test'
   ...
 # Subtest: channel snapshots distinguish economic share, HTLCs and usable capacity
 ok 3 - channel snapshots distinguish economic share, HTLCs and usable capacity
   ---
-  duration_ms: 0.6018
+  duration_ms: 0.3904
   type: 'test'
   ...
 # Subtest: Core adapter verifies canonical inclusion and fails closed on unsupported output shapes
 ok 4 - Core adapter verifies canonical inclusion and fails closed on unsupported output shapes
   ---
-  duration_ms: 3.2751
+  duration_ms: 7.9674
+  type: 'test'
+  ...
+# Subtest: observed 34-event regtest replay matches independent graph conservation and retained obligations
+ok 5 - observed 34-event regtest replay matches independent graph conservation and retained obligations
+  ---
+  duration_ms: 327.5934
+  type: 'test'
+  ...
+# Subtest: observed sweep reorg rolls back recovery credit and reuse without erasing earlier Lightning delivery
+ok 6 - observed sweep reorg rolls back recovery credit and reuse without erasing earlier Lightning delivery
+  ---
+  duration_ms: 204.9923
+  type: 'test'
+  ...
+# Subtest: observed checker identifies tampered round fee at the first violating event
+ok 7 - observed checker identifies tampered round fee at the first violating event
+  ---
+  duration_ms: 19.3873
+  type: 'test'
+  ...
+# Subtest: executed adapter rejects wrong binary pin, chain ancestry and settlement attestation
+ok 8 - executed adapter rejects wrong binary pin, chain ancestry and settlement attestation
+  ---
+  duration_ms: 32.1938
   type: 'test'
   ...
 # Subtest: stateful properties: 128 seeds x 32 randomized commands, with deletion-shrunk counterexamples
-ok 5 - stateful properties: 128 seeds x 32 randomized commands, with deletion-shrunk counterexamples
+ok 9 - stateful properties: 128 seeds x 32 randomized commands, with deletion-shrunk counterexamples
   ---
-  duration_ms: 6192.0239
+  duration_ms: 6370.5507
   type: 'test'
   ...
 # Subtest: counterexample shrinker removes irrelevant commands
-ok 6 - counterexample shrinker removes irrelevant commands
+ok 10 - counterexample shrinker removes irrelevant commands
   ---
-  duration_ms: 0.6975
+  duration_ms: 0.4211
+  type: 'test'
+  ...
+# Subtest: retained change: observed 99,670 input, 60,499 routing limit, 60,000 paid, 555 fee, 39,115 change
+ok 11 - retained change: observed 99,670 input, 60,499 routing limit, 60,000 paid, 555 fee, 39,115 change
+  ---
+  duration_ms: 26.7214
+  type: 'test'
+  ...
+# Subtest: retained holder fee limit includes routing rather than charging the routing limit twice
+ok 12 - retained holder fee limit includes routing rather than charging the routing limit twice
+  ---
+  duration_ms: 7.5978
+  type: 'test'
+  ...
+# Subtest: retained change cannot move to fresh reserve or extend original expiry
+ok 13 - retained change cannot move to fresh reserve or extend original expiry
+  ---
+  duration_ms: 9.5261
+  type: 'test'
+  ...
+# Subtest: retained routing and holder fee limits are checked independently and atomically
+ok 14 - retained routing and holder fee limits are checked independently and atomically
+  ---
+  duration_ms: 7.4059
+  type: 'test'
+  ...
+# Subtest: retained cancellation and failed resolution release only the actual reservation
+ok 15 - retained cancellation and failed resolution release only the actual reservation
+  ---
+  duration_ms: 15.0606
+  type: 'test'
+  ...
+# Subtest: round transaction separates holder fee, whole backing root, wallet change, and miner fee
+ok 16 - round transaction separates holder fee, whole backing root, wallet change, and miner fee
+  ---
+  duration_ms: 37.6494
+  type: 'test'
+  ...
+# Subtest: shared original backing recovery is credited once and exclusively reused by independent round
+ok 17 - shared original backing recovery is credited once and exclusively reused by independent round
+  ---
+  duration_ms: 25.3766
+  type: 'test'
+  ...
+# Subtest: shared recovery rejects overcredit, undercredit, omission, and unrelated fresh input
+ok 18 - shared recovery rejects overcredit, undercredit, omission, and unrelated fresh input
+  ---
+  duration_ms: 50.942
+  type: 'test'
+  ...
+# Subtest: shared sweep must include every linked fronting operation
+ok 19 - shared sweep must include every linked fronting operation
+  ---
+  duration_ms: 9.7517
+  type: 'test'
+  ...
+# Subtest: round recovery does not consume live or unexpired obligations
+ok 20 - round recovery does not consume live or unexpired obligations
+  ---
+  duration_ms: 8.3939
+  type: 'test'
+  ...
+# Subtest: transaction value creation, forged inputs, premature confirmation and sliced outputs fail atomically
+ok 21 - transaction value creation, forged inputs, premature confirmation and sliced outputs fail atomically
+  ---
+  duration_ms: 3.919
   type: 'test'
   ...
 # Subtest: 1: 1000-sat gross input delivers 600 and reissues 400 backed by fresh reserve
-ok 7 - 1: 1000-sat gross input delivers 600 and reissues 400 backed by fresh reserve
+ok 22 - 1: 1000-sat gross input delivers 600 and reissues 400 backed by fresh reserve
   ---
-  duration_ms: 21.9954
+  duration_ms: 38.4115
   type: 'test'
   ...
 # Subtest: 2: accepted failure retains risk until verified revocation or confirmed timeout
-ok 8 - 2: accepted failure retains risk until verified revocation or confirmed timeout
+ok 23 - 2: accepted failure retains risk until verified revocation or confirmed timeout
   ---
-  duration_ms: 20.4264
+  duration_ms: 32.9391
   type: 'test'
   ...
 # Subtest: 3: immediate settlement and expiry eligibility do not free backing
-ok 9 - 3: immediate settlement and expiry eligibility do not free backing
+ok 24 - 3: immediate settlement and expiry eligibility do not free backing
   ---
-  duration_ms: 8.2401
+  duration_ms: 9.6473
   type: 'test'
   ...
 # Subtest: 4: coarse and fine integration agree across an observed mid-interval recovery
-ok 10 - 4: coarse and fine integration agree across an observed mid-interval recovery
+ok 25 - 4: coarse and fine integration agree across an observed mid-interval recovery
   ---
-  duration_ms: 40.5936
+  duration_ms: 41.1183
   type: 'test'
   ...
 # Subtest: 5: competing active claims cannot overallocate the same collateral
-ok 11 - 5: competing active claims cannot overallocate the same collateral
+ok 26 - 5: competing active claims cannot overallocate the same collateral
   ---
-  duration_ms: 2.8826
+  duration_ms: 2.1653
   type: 'test'
   ...
 # Subtest: 6: refresh uses fresh backing while the original gross encumbrance persists
-ok 12 - 6: refresh uses fresh backing while the original gross encumbrance persists
+ok 27 - 6: refresh uses fresh backing while the original gross encumbrance persists
   ---
-  duration_ms: 2.1121
+  duration_ms: 2.8382
   type: 'test'
   ...
 # Subtest: 7: reorganization invalidates confirmation and transitively rolls back reuse reservation
-ok 13 - 7: reorganization invalidates confirmation and transitively rolls back reuse reservation
+ok 28 - 7: reorganization invalidates confirmation and transitively rolls back reuse reservation
   ---
-  duration_ms: 31.1033
+  duration_ms: 22.4308
   type: 'test'
   ...
 # Subtest: deep reorg preserves irreversible payment evidence and freezes further spending
-ok 14 - deep reorg preserves irreversible payment evidence and freezes further spending
+ok 29 - deep reorg preserves irreversible payment evidence and freezes further spending
   ---
-  duration_ms: 25.0158
+  duration_ms: 19.2815
   type: 'test'
   ...
 # Subtest: offered demand includes unaffordable rejected requests without changing their economic state
-ok 15 - offered demand includes unaffordable rejected requests without changing their economic state
+ok 30 - offered demand includes unaffordable rejected requests without changing their economic state
   ---
-  duration_ms: 7.9559
+  duration_ms: 3.6668
   type: 'test'
   ...
 # Subtest: 8: recovered provenance funds a second settled payment; cumulative F exceeds B
-ok 16 - 8: recovered provenance funds a second settled payment; cumulative F exceeds B
+ok 31 - 8: recovered provenance funds a second settled payment; cumulative F exceeds B
   ---
-  duration_ms: 10.7865
+  duration_ms: 12.2816
   type: 'test'
   ...
 # Subtest: 9: reuse before canonical finality, forged source, and absent evidence are atomic failures
-ok 17 - 9: reuse before canonical finality, forged source, and absent evidence are atomic failures
+ok 32 - 9: reuse before canonical finality, forged source, and absent evidence are atomic failures
   ---
-  duration_ms: 12.3632
+  duration_ms: 17.6259
   type: 'test'
   ...
 # Subtest: 10: independently funded second payment adds fronting, never recovers the first
-ok 18 - 10: independently funded second payment adds fronting, never recovers the first
+ok 33 - 10: independently funded second payment adds fronting, never recovers the first
   ---
-  duration_ms: 7.6439
+  duration_ms: 7.5603
   type: 'test'
   ...
 # Subtest: idempotence, ID collision, unknown types, budget and malformed amounts
-ok 19 - idempotence, ID collision, unknown types, budget and malformed amounts
+ok 34 - idempotence, ID collision, unknown types, budget and malformed amounts
   ---
-  duration_ms: 14.5806
+  duration_ms: 13.9584
   type: 'test'
   ...
 # Subtest: receipt conserves channel shares, charges fee, and cannot count channel funding twice
-ok 20 - receipt conserves channel shares, charges fee, and cannot count channel funding twice
+ok 35 - receipt conserves channel shares, charges fee, and cannot count channel funding twice
   ---
-  duration_ms: 1.5969
+  duration_ms: 2.8298
   type: 'test'
   ...
 # Subtest: split and merge retain provenance and value; exit output is outside operator boundary
-ok 21 - split and merge retain provenance and value; exit output is outside operator boundary
+ok 36 - split and merge retain provenance and value; exit output is outside operator boundary
   ---
-  duration_ms: 2.7838
+  duration_ms: 3.2644
   type: 'test'
   ...
 # Subtest: SettlementLedger checkpoint reconciles claims only; invariant CLI identifies first violating event
-ok 22 - SettlementLedger checkpoint reconciles claims only; invariant CLI identifies first violating event
+ok 37 - SettlementLedger checkpoint reconciles claims only; invariant CLI identifies first violating event
   ---
-  duration_ms: 4.9824
+  duration_ms: 5.5057
   type: 'test'
   ...
 # Subtest: unknown timestamps right-censor seconds; pending recovery survives evaluation horizon
-ok 23 - unknown timestamps right-censor seconds; pending recovery survives evaluation horizon
+ok 38 - unknown timestamps right-censor seconds; pending recovery survives evaluation horizon
   ---
-  duration_ms: 3.5503
+  duration_ms: 5.3745
   type: 'test'
   ...
 # Subtest: outbound reserve floors reject a request even when local economic ownership is sufficient
-ok 24 - outbound reserve floors reject a request even when local economic ownership is sufficient
+ok 39 - outbound reserve floors reject a request even when local economic ownership is sufficient
   ---
-  duration_ms: 1.2783
+  duration_ms: 2.6201
   type: 'test'
   ...
 # Subtest: a failed HTLC can later settle with evidence; onchain amounts cannot contain fractional sats
-ok 25 - a failed HTLC can later settle with evidence; onchain amounts cannot contain fractional sats
+ok 40 - a failed HTLC can later settle with evidence; onchain amounts cannot contain fractional sats
   ---
-  duration_ms: 4.0559
+  duration_ms: 4.6203
   type: 'test'
   ...
 # Subtest: S4: a false assertion is slashed by one honest challenger at a cost independent of the bond
-ok 26 - S4: a false assertion is slashed by one honest challenger at a cost independent of the bond
+ok 41 - S4: a false assertion is slashed by one honest challenger at a cost independent of the bond
   ---
-  duration_ms: 1.4864
+  duration_ms: 1.1881
   type: 'test'
   ...
 # Subtest: S4: a true assertion cannot be disproved and releases only after Δ; operator pays Assert and capital lockup
-ok 27 - S4: a true assertion cannot be disproved and releases only after Δ; operator pays Assert and capital lockup
+ok 42 - S4: a true assertion cannot be disproved and releases only after Δ; operator pays Assert and capital lockup
   ---
-  duration_ms: 0.333
+  duration_ms: 0.2226
   type: 'test'
   ...
 # Subtest: S4: the audit's negative-slash and over-release defects cannot arise; the bond is an object with fixed transitions
-ok 28 - S4: the audit's negative-slash and over-release defects cannot arise; the bond is an object with fixed transitions
+ok 43 - S4: the audit's negative-slash and over-release defects cannot arise; the bond is an object with fixed transitions
   ---
-  duration_ms: 0.3747
+  duration_ms: 1.4924
   type: 'test'
   ...
 # Subtest: S5 statistics on fixtures: naive churn has no stable direction; direct-attester netting saturates on dense benign trade and misses a 4-relay; repeated-cycle share separates
-ok 29 - S5 statistics on fixtures: naive churn has no stable direction; direct-attester netting saturates on dense benign trade and misses a 4-relay; repeated-cycle share separates
+ok 44 - S5 statistics on fixtures: naive churn has no stable direction; direct-attester netting saturates on dense benign trade and misses a 4-relay; repeated-cycle share separates
   ---
-  duration_ms: 33.7579
+  duration_ms: 29.6462
   type: 'test'
   ...
 # Subtest: Appendix on designed topologies: on three cubic bipartite polyhedral graphs a Hamiltonian cycle avoiding each edge exists, and a unit circulation round it nets to zero at every participant and moves one unit on every cycle channel and nothing elsewhere
-ok 30 - Appendix on designed topologies: on three cubic bipartite polyhedral graphs a Hamiltonian cycle avoiding each edge exists, and a unit circulation round it nets to zero at every participant and moves one unit on every cycle channel and nothing elsewhere
+ok 45 - Appendix on designed topologies: on three cubic bipartite polyhedral graphs a Hamiltonian cycle avoiding each edge exists, and a unit circulation round it nets to zero at every participant and moves one unit on every cycle channel and nothing elsewhere
   ---
-  duration_ms: 17.4946
+  duration_ms: 23.6566
   type: 'test'
   ...
 # Subtest: LayerTree cost tables: the draft's Table 5 and Table 10 are reproduced from the measured witness weights and the stated skeleton
-ok 31 - LayerTree cost tables: the draft's Table 5 and Table 10 are reproduced from the measured witness weights and the stated skeleton
+ok 46 - LayerTree cost tables: the draft's Table 5 and Table 10 are reproduced from the measured witness weights and the stated skeleton
   ---
-  duration_ms: 3.8796
+  duration_ms: 1.7352
   type: 'test'
   ...
 # Subtest: LayerTree service scenarios, fees and capital terms: worked figures are conditional on the stated parameters
-ok 32 - LayerTree service scenarios, fees and capital terms: worked figures are conditional on the stated parameters
+ok 47 - LayerTree service scenarios, fees and capital terms: worked figures are conditional on the stated parameters
   ---
-  duration_ms: 2.8543
+  duration_ms: 0.8187
   type: 'test'
   ...
 # Subtest: S1: cross-class conservation holds at every settled state and with holds during pending intervals
-ok 33 - S1: cross-class conservation holds at every settled state and with holds during pending intervals
+ok 48 - S1: cross-class conservation holds at every settled state and with holds during pending intervals
   ---
-  duration_ms: 1.8641
+  duration_ms: 2.4115
   type: 'test'
   ...
 # Subtest: S1/L3: a rejected initiation is the identity on ledger state
-ok 34 - S1/L3: a rejected initiation is the identity on ledger state
+ok 49 - S1/L3: a rejected initiation is the identity on ledger state
   ---
-  duration_ms: 0.4015
+  duration_ms: 0.3717
   type: 'test'
   ...
 # Subtest: S3: weight attributed to any settled object is at most its value regardless of identity count
-ok 35 - S3: weight attributed to any settled object is at most its value regardless of identity count
+ok 50 - S3: weight attributed to any settled object is at most its value regardless of identity count
   ---
-  duration_ms: 3.2722
+  duration_ms: 5.5755
   type: 'test'
   ...
 # Subtest: S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not
-ok 36 - S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not
+ok 51 - S3: a nullifier keyed to a claimant secret would permit splitting; keying to the authority does not
   ---
-  duration_ms: 0.3979
+  duration_ms: 0.6601
   type: 'test'
   ...
 # Subtest: S3: overclaiming value, stale roots, and unsettled objects are rejected
-ok 37 - S3: overclaiming value, stale roots, and unsettled objects are rejected
+ok 52 - S3: overclaiming value, stale roots, and unsettled objects are rejected
   ---
-  duration_ms: 0.3487
+  duration_ms: 1.149
   type: 'test'
   ...
 # Subtest: S3 churn: without the epoch rule one object re-claims under every fresh id; with it, one unit of capital counts once per epoch
-ok 38 - S3 churn: without the epoch rule one object re-claims under every fresh id; with it, one unit of capital counts once per epoch
+ok 53 - S3 churn: without the epoch rule one object re-claims under every fresh id; with it, one unit of capital counts once per epoch
   ---
-  duration_ms: 0.8685
+  duration_ms: 3.0247
   type: 'test'
   ...
 # Subtest: S3 refresh: an attested successor (Ark refresh, same key) keeps a claim; a transfer to another key does not
-ok 39 - S3 refresh: an attested successor (Ark refresh, same key) keeps a claim; a transfer to another key does not
+ok 54 - S3 refresh: an attested successor (Ark refresh, same key) keeps a claim; a transfer to another key does not
   ---
-  duration_ms: 0.3227
+  duration_ms: 0.4602
   type: 'test'
   ...
 # Subtest: L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
-ok 40 - L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
+ok 55 - L4 with S3: identity splitting leaves coalition payout invariant and integer pool conserved up to floor
   ---
-  duration_ms: 1.9767
+  duration_ms: 3.6757
   type: 'test'
   ...
 # Subtest: S3: malformed claim weights cannot consume a nullifier or alter reward weight
-ok 41 - S3: malformed claim weights cannot consume a nullifier or alter reward weight
+ok 56 - S3: malformed claim weights cannot consume a nullifier or alter reward weight
   ---
-  duration_ms: 0.3856
+  duration_ms: 0.9843
   type: 'test'
   ...
 # Subtest: S3: settled values are valid satoshi amounts and callers cannot mutate validated objects
-ok 42 - S3: settled values are valid satoshi amounts and callers cannot mutate validated objects
+ok 57 - S3: settled values are valid satoshi amounts and callers cannot mutate validated objects
   ---
-  duration_ms: 0.6589
+  duration_ms: 1.6552
   type: 'test'
   ...
 # Subtest: S3: add, refresh and transfer reject live and previously spent identifiers atomically
-ok 43 - S3: add, refresh and transfer reject live and previously spent identifiers atomically
+ok 58 - S3: add, refresh and transfer reject live and previously spent identifiers atomically
   ---
-  duration_ms: 1.0819
+  duration_ms: 3.8232
   type: 'test'
   ...
 # Subtest: S3: snapshots preserve spent identifiers and attested lineage independently of later transfers
-ok 44 - S3: snapshots preserve spent identifiers and attested lineage independently of later transfers
+ok 59 - S3: snapshots preserve spent identifiers and attested lineage independently of later transfers
   ---
-  duration_ms: 0.2759
+  duration_ms: 0.4644
   type: 'test'
   ...
 # Subtest: L4: reward pools reject invalid amounts, including when there are no claims
-ok 45 - L4: reward pools reject invalid amounts, including when there are no claims
+ok 60 - L4: reward pools reject invalid amounts, including when there are no claims
   ---
-  duration_ms: 1.5174
+  duration_ms: 0.7041
   type: 'test'
   ...
 # Subtest: L4: floor allocation is exact at the safe-integer boundary and aggregate weight cannot overflow
-ok 46 - L4: floor allocation is exact at the safe-integer boundary and aggregate weight cannot overflow
+ok 61 - L4: floor allocation is exact at the safe-integer boundary and aggregate weight cannot overflow
   ---
-  duration_ms: 0.4668
+  duration_ms: 0.3996
   type: 'test'
   ...
 # Subtest: oracle provisioning covers receipt-first peaks and preserves a rejected spend's balance
-ok 47 - oracle provisioning covers receipt-first peaks and preserves a rejected spend's balance
+ok 62 - oracle provisioning covers receipt-first peaks and preserves a rejected spend's balance
   ---
-  duration_ms: 2.682
+  duration_ms: 3.3427
   type: 'test'
   ...
 # Subtest: oracle forecasts add no receipt failures on exhaustive small demand paths
-ok 48 - oracle forecasts add no receipt failures on exhaustive small demand paths
+ok 63 - oracle forecasts add no receipt failures on exhaustive small demand paths
   ---
-  duration_ms: 7.5683
+  duration_ms: 7.0248
   type: 'test'
   ...
 # Subtest: fronted capital recycles and lock integration is invariant to sweep-step size
-ok 49 - fronted capital recycles and lock integration is invariant to sweep-step size
+ok 64 - fronted capital recycles and lock integration is invariant to sweep-step size
   ---
-  duration_ms: 0.8018
+  duration_ms: 0.8282
   type: 'test'
   ...
 # Subtest: S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
-ok 50 - S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
+ok 65 - S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating
   ---
-  duration_ms: 0.6373
+  duration_ms: 0.646
   type: 'test'
   ...
 # Subtest: S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
-ok 51 - S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
+ok 66 - S2 witness: forfeit locks the fronted value for the residual lifetime; refresh renews the lock
   ---
-  duration_ms: 0.313
+  duration_ms: 0.2706
   type: 'test'
   ...
 # Subtest: §3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell
-ok 52 - §3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell
+ok 67 - §3.3 direction under the expiry lock: with the server-tier term charged, the VTXO is not favored on any tested cell
   ---
-  duration_ms: 750.2673
+  duration_ms: 746.8649
   type: 'test'
   ...
 # Subtest: §3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady
-ok 53 - §3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady
+ok 68 - §3.3 direction under the round lock: VTXO favored on many-bursty with uncorrelated imbalance, not on correlated drift, not on few-steady
   ---
-  duration_ms: 527.8758
+  duration_ms: 504.6862
   type: 'test'
   ...
 # Subtest: §3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner
-ok 54 - §3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner
+ok 69 - §3.3 accounting: dropping the server-tier term or counting only outbound volume manufactures a large ratio on the drift corner
   ---
-  duration_ms: 472.548
+  duration_ms: 426.5199
   type: 'test'
   ...
 # Subtest: hyperedge (BIP 448 multiparty channel): k = 1 is the channel; the gain grows with group size, saturates near π/2 at zero drift, vanishes under shared drift, and carries no forfeit lock
-ok 55 - hyperedge (BIP 448 multiparty channel): k = 1 is the channel; the gain grows with group size, saturates near π/2 at zero drift, vanishes under shared drift, and carries no forfeit lock
+ok 70 - hyperedge (BIP 448 multiparty channel): k = 1 is the channel; the gain grows with group size, saturates near π/2 at zero drift, vanishes under shared drift, and carries no forfeit lock
   ---
-  duration_ms: 671.3249
+  duration_ms: 707.6751
   type: 'test'
   ...
-1..55
-# tests 55
+1..70
+# tests 70
 # suites 0
-# pass 55
+# pass 70
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 6444.7429
+# duration_ms 6591.2855

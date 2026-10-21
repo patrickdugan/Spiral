@@ -45,8 +45,8 @@ if (args[0] === "check") {
   writeFileSync(resolve(root, "deep-reorg-unresolved.jsonl"), unresolved.m.journal().map(e => JSON.stringify(e)).join("\n") + "\n");
   json(resolve(root, "deep-reorg-status.json"), unresolved.m.report());
   json(resolve(root, "matched-service-status.json"), {
-    status: "blocked_before_observed_semantics", evidence_class: "not_executed", reference_trace_hash: digest(events),
-    reason: "Owned regtest transactions now prove recovery and independent round reuse, but retained backing and actual round overhead are not yet normalized through the reference reducer. Accelerated blocks and manual sweeps cannot calibrate operational clocks.",
+    status: "pending_comparison_with_observed_semantics_and_censored_clocks", evidence_class: "not_executed", reference_trace_hash: digest(events),
+    reason: "Owned regtest recovery and independent round reuse now pass economic reducer replay. Snapshot detection heights and unsampled acceptance intervals are not precise operational clocks; matched-service forecasts must declare those timing assumptions and retain uncertainty.",
     existing_results: "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
     reference_lifecycle: { offered_sat: trace.m.report().totals.offered / 1000, delivered_sat: trace.m.report().totals.delivered / 1000,
       delivery_rate: trace.m.report().delivery_rate, outstanding_fronting_sat: trace.m.report().outstanding_fronting / 1000 },

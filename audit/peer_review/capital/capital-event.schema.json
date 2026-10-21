@@ -15,6 +15,7 @@
       "enum": [
         "FUND",
         "OPEN_CHANNEL",
+        "CHANNEL_CAPACITY",
         "ISSUE_VTXO",
         "RECEIVE_LIGHTNING",
         "PAYMENT_OFFERED",
@@ -31,6 +32,9 @@
         "CAPITAL_REUSABLE",
         "MOVE_TO_CHANNEL",
         "SPLIT_MERGE",
+        "ONCHAIN_TRANSACTION",
+        "BACKING_EXPIRED",
+        "RECOVERY_SWEEP",
         "EXIT",
         "CHAIN",
         "TICK",
@@ -233,6 +237,50 @@
     {
       "properties": {
         "event_type": {
+          "const": "CHANNEL_CAPACITY"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "local": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "remote": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "spendable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "receivable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "channel_id",
+            "local",
+            "remote",
+            "spendable",
+            "receivable"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
           "const": "ISSUE_VTXO"
         },
         "data": {
@@ -274,6 +322,11 @@
                 "expiry_height"
               ],
               "additionalProperties": false
+            },
+            "service_fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -424,6 +477,14 @@
               "maximum": 9007199254740991
             },
             "timeout_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "change_backing": {
+              "const": "retained"
+            },
+            "max_holder_fee": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -852,6 +913,14 @@
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 9007199254740991
+                },
+                "change_backing": {
+                  "const": "retained"
+                },
+                "max_holder_fee": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
                 }
               },
               "required": [
@@ -987,6 +1056,265 @@
           "required": [
             "input_ids",
             "outputs"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "ONCHAIN_TRANSACTION"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "input_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "asset_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "output_index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "release_height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "asset_id",
+                  "amount",
+                  "output_index"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "inclusion_height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "inclusion_hash": {
+              "type": "string",
+              "minLength": 1
+            },
+            "refresh": {
+              "type": "object",
+              "properties": {
+                "operation_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "input_claim_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "backing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "service_fee": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "replacement": {
+                  "type": "object",
+                  "properties": {
+                    "claim_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "claimant": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "allocations": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "expiry_height": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "parent_claim_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "claim_id",
+                    "claimant",
+                    "allocations",
+                    "expiry_height"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "operation_id",
+                "input_claim_ids",
+                "backing_ids",
+                "service_fee",
+                "replacement"
+              ],
+              "additionalProperties": false
+            },
+            "reuse": {
+              "type": "object",
+              "properties": {
+                "sweep_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "recovery_allocations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              },
+              "required": [
+                "sweep_id",
+                "recovery_allocations"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "input_ids",
+            "outputs",
+            "fee",
+            "inclusion_height",
+            "inclusion_hash"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "BACKING_EXPIRED"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "input_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "input_ids"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "event_type": {
+          "const": "RECOVERY_SWEEP"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sweep_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "input_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "output_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "destination": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "input_outpoints": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "sweep_id",
+            "operation_ids",
+            "input_ids",
+            "output_id",
+            "destination",
+            "fee",
+            "input_outpoints"
           ],
           "additionalProperties": false
         }

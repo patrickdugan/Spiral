@@ -1,8 +1,8 @@
 {
-  "status": "blocked_before_observed_semantics",
+  "status": "pending_comparison_with_observed_semantics_and_censored_clocks",
   "evidence_class": "not_executed",
   "reference_trace_hash": "857589f0fdf4c9e21d387d97a8c730e53f248ec4c47bd83a42a722277c216211",
-  "reason": "Owned regtest transactions now prove recovery and independent round reuse, but retained backing and actual round overhead are not yet normalized through the reference reducer. Accelerated blocks and manual sweeps cannot calibrate operational clocks.",
+  "reason": "Owned regtest recovery and independent round reuse now pass economic reducer replay. Snapshot detection heights and unsampled acceptance intervals are not precise operational clocks; matched-service forecasts must declare those timing assumptions and retain uncertainty.",
   "existing_results": "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
   "reference_lifecycle": {
     "offered_sat": 1600,

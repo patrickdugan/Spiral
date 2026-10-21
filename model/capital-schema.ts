@@ -10,13 +10,16 @@ const nullable = (s: Schema): Schema => ({ anyOf: [s, { type: "null" }] });
 const object = (properties: Record<string, Schema>, optional: string[] = []): Schema => ({ type: "object", properties,
   required: Object.keys(properties).filter(k => !optional.includes(k)), additionalProperties: false });
 const claim = object({ claim_id: id, claimant: id, allocations: { type: "object", additionalProperties: integer }, expiry_height: integer, parent_claim_id: id }, ["parent_claim_id"]);
-const request = object({ operation_id: id, holder: id, input_claim_ids: ids, reserve_ids: ids, channel_id: id, delivered: integer, max_fee: integer, timeout_height: integer });
+const request = object({ operation_id: id, holder: id, input_claim_ids: ids, reserve_ids: ids, channel_id: id, delivered: integer, max_fee: integer, timeout_height: integer,
+  change_backing: { const: "retained" }, max_holder_fee: integer }, ["change_backing", "max_holder_fee"]);
 const operation = object({ operation_id: id });
 const blocks: Schema = { type: "array", items: object({ height: integer, hash: id, parent_hash: id }) };
+const roundRefresh = object({ operation_id: id, input_claim_ids: ids, backing_ids: ids, service_fee: integer, replacement: claim });
 export const payloadSchemas: Record<string, Schema> = {
   FUND: object({ asset_id: id, owner: id, location: { const: "onchain" }, backing_ref: id, maturity_height: integer, pool: { type: "boolean" } }),
   OPEN_CHANNEL: object({ channel_id: id, asset_id: id, funding_ref: id, remote: integer, spendable: integer, receivable: integer }),
-  ISSUE_VTXO: object({ claim }), RECEIVE_LIGHTNING: object({ channel_id: id, asset_id: id, fee: integer, claim }),
+  CHANNEL_CAPACITY: object({ channel_id: id, local: integer, remote: integer, spendable: integer, receivable: integer }),
+  ISSUE_VTXO: object({ claim, service_fee: integer }, ["service_fee"]), RECEIVE_LIGHTNING: object({ channel_id: id, asset_id: id, fee: integer, claim }),
   PAYMENT_OFFERED: object({ operation_id: id, holder: id }),
   REQUEST_OUTGOING: request, CANCEL_REQUEST: operation, HTLC_ACCEPTED: operation,
   HTLC_SETTLED: object({ operation_id: id, fee: integer, service_fee: integer, preimage_evidence_ref: id, change: claim }, ["change", "service_fee"]),
@@ -29,6 +32,11 @@ export const payloadSchemas: Record<string, Schema> = {
   CAPITAL_REUSABLE: object({ sweep_id: id, reuse: request, channel_funding_ref: id, funding_height: integer, funding_hash: id, spendable: integer }),
   MOVE_TO_CHANNEL: object({ asset_id: id, channel_id: id, funding_ref: id, remote: integer, spendable: integer, receivable: integer }),
   SPLIT_MERGE: object({ input_ids: ids, outputs: { type: "array", items: object({ asset_id: id, amount: integer }) } }),
+  ONCHAIN_TRANSACTION: object({ input_ids: ids, outputs: { type: "array", items: object({ asset_id: id, amount: integer, output_index: integer, release_height: integer }, ["release_height"]) },
+    fee: integer, inclusion_height: integer, inclusion_hash: id, refresh: roundRefresh,
+    reuse: object({ sweep_id: id, recovery_allocations: { type: "object", additionalProperties: integer } }) }, ["refresh", "reuse"]),
+  BACKING_EXPIRED: object({ input_ids: ids }),
+  RECOVERY_SWEEP: object({ sweep_id: id, operation_ids: ids, input_ids: ids, output_id: id, destination: id, fee: integer, input_outpoints: ids }),
   EXIT: object({ claim_id: id, fee: integer, output_id: id, destination: id, mode: { enum: ["cooperative", "unilateral"] }, inclusion_height: integer, inclusion_hash: id }),
   CHAIN: object({ blocks }), TICK: object({}), REORG: object({ blocks }),
 };

@@ -10,6 +10,7 @@ export interface AssetLot {
   asset_id: string; amount: number; owner: string; location: string; backing_ref: string;
   state: CapitalState; created_at: string; last_event_id: string;
   parent_ids: string[]; original_amount: number; maturity_height: number; pool: boolean;
+  release_height?: number;
 }
 export interface Claim {
   claim_id: string; amount: number; claimant: string; backing_ids: string[];
@@ -29,23 +30,38 @@ export interface Channel {
 export interface Request {
   operation_id: string; holder: string; input_claim_ids: string[]; reserve_ids: string[];
   channel_id: string; delivered: number; max_fee: number; timeout_height: number;
+  change_backing?: "retained"; max_holder_fee?: number;
 }
 export interface Operation extends Request {
   gross: number; state: "RESERVED" | "ACCEPTED" | "FAILED" | "SETTLED" | "RESOLVED";
   recovered: number; fee: number; recovery_ids: string[]; last_event_id: string;
   committed_at: number | null; recovered_at: number | null;
   kind: "payment" | "refresh"; resolution?: "revocation" | "timeout";
+  recovery_complete?: boolean;
 }
 export interface Block { height: number; hash: string; parent_hash: string }
 export interface Sweep {
   sweep_id: string; operation_id: string; input_ids: string[]; output_id: string;
   destination: string; fee: number; txid: string; state: "BROADCAST" | "CONFIRMED" | "REUSED";
   inclusion_height: number | null; inclusion_hash: string | null; last_event_id: string;
+  operation_ids?: string[];
+}
+export interface RoundRefresh {
+  operation_id: string; input_claim_ids: string[]; backing_ids: string[];
+  service_fee: number; replacement: ClaimSpec;
+}
+export interface OnchainTransaction {
+  input_ids: string[];
+  outputs: { asset_id: string; amount: number; output_index: number; release_height?: number }[];
+  fee: number; inclusion_height: number; inclusion_hash: string;
+  refresh?: RoundRefresh;
+  reuse?: { sweep_id: string; recovery_allocations: Record<string, number> };
 }
 export interface Payloads {
   FUND: { asset_id: string; owner: string; location: string; backing_ref: string; maturity_height: number; pool: boolean };
   OPEN_CHANNEL: { channel_id: string; asset_id: string; funding_ref: string; remote: number; spendable: number; receivable: number };
-  ISSUE_VTXO: { claim: ClaimSpec };
+  CHANNEL_CAPACITY: { channel_id: string; local: number; remote: number; spendable: number; receivable: number };
+  ISSUE_VTXO: { claim: ClaimSpec; service_fee?: number };
   RECEIVE_LIGHTNING: { channel_id: string; asset_id: string; fee: number; claim: ClaimSpec };
   PAYMENT_OFFERED: { operation_id: string; holder: string };
   REQUEST_OUTGOING: Request;
@@ -61,6 +77,9 @@ export interface Payloads {
   CAPITAL_REUSABLE: { sweep_id: string; reuse: Request; channel_funding_ref: string; funding_height: number; funding_hash: string; spendable: number };
   MOVE_TO_CHANNEL: { asset_id: string; channel_id: string; funding_ref: string; remote: number; spendable: number; receivable: number };
   SPLIT_MERGE: { input_ids: string[]; outputs: { asset_id: string; amount: number }[] };
+  ONCHAIN_TRANSACTION: OnchainTransaction;
+  BACKING_EXPIRED: { input_ids: string[] };
+  RECOVERY_SWEEP: { sweep_id: string; operation_ids: string[]; input_ids: string[]; output_id: string; destination: string; fee: number; input_outpoints: string[] };
   EXIT: { claim_id: string; fee: number; output_id: string; destination: string; mode: "cooperative" | "unilateral"; inclusion_height: number; inclusion_hash: string };
   CHAIN: { blocks: Block[] };
   TICK: Record<string, never>;
@@ -215,12 +234,17 @@ export class CapitalAccountingMachine {
     unique(r.input_claim_ids); unique(r.reserve_ids); demand(r.input_claim_ids.length && r.reserve_ids.length, "empty inputs");
     const claims = r.input_claim_ids.map(id => this.claim(e, id));
     demand(claims.every(c => c.claimant === r.holder && c.state === "ACTIVE" && c.expiry_height > e.block_height), "client inputs unavailable");
-    const gross = sum(claims.map(c => c.amount)); integer(r.max_fee); demand(integer(r.delivered) > 0 && r.delivered + r.max_fee <= gross, "unaffordable payment");
+    const inputValue = sum(claims.map(c => c.amount)); integer(r.max_fee);
+    const holderLimit = integer(r.max_holder_fee ?? r.max_fee);
+    demand(r.change_backing === "retained" || r.max_holder_fee === undefined, "separate holder fee limit requires retained backing");
+    demand(holderLimit >= r.max_fee, "routing subsidy requires explicit accounting");
+    demand(integer(r.delivered) > 0 && sum([r.delivered, holderLimit]) <= inputValue, "unaffordable payment");
+    const gross = r.change_backing === "retained" ? sum([r.delivered, r.max_fee]) : inputValue;
     demand(integer(r.timeout_height) > e.block_height, "invalid HTLC timeout");
     demand(s.B.F - s.B.C + s.B.reserved + gross <= s.B.budget, "fronting budget exhausted");
     const assets = r.reserve_ids.map(id => this.asset(e, id));
     demand(assets.every(a => a.owner === this.config.operator && a.pool && free(a) && a.maturity_height <= e.block_height && a.location === `ln:${r.channel_id}`), "reserve not spendable on requested channel");
-    demand(sum(assets.map(a => a.amount)) === gross, "gross reserve must equal full forfeited inputs; split first");
+    demand(sum(assets.map(a => a.amount)) === gross, "gross reserve does not match declared backing policy; split first");
     const channel = this.channel(e, r.channel_id);
     demand(channel.spendable >= r.delivered + r.max_fee, "insufficient outbound channel capacity");
     channel.spendable -= r.delivered + r.max_fee; channel.last_event_id = e.event_id;
@@ -236,6 +260,76 @@ export class CapitalAccountingMachine {
       demand(a.location !== "onchain" || take % 1000 === 0, "onchain debit requires whole satoshis"); a.amount -= take; remaining -= take;
       a.last_event_id = e.event_id; a.state = a.amount ? "FREE" : "TRANSFERRED_OUT"; }
     demand(remaining === 0, "insufficient debit assets");
+  }
+  private roundRefresh(e: CapitalEvent, d: RoundRefresh): void {
+    const s = this.state;
+    unique(d.input_claim_ids); unique(d.backing_ids);
+    demand(!s.H.operations[d.operation_id] && d.input_claim_ids.length && d.backing_ids.length, "invalid round refresh");
+    const claims = d.input_claim_ids.map(id => this.claim(e, id));
+    const assets = d.backing_ids.map(id => this.asset(e, id));
+    demand(claims.every(c => c.state === "ACTIVE" && c.claimant === d.replacement.claimant && c.expiry_height > e.block_height), "round inputs unavailable");
+    demand(assets.every(a => a.pool && free(a) && a.location === "onchain" && a.created_at === e.event_id), "round requires new transaction backing");
+    const value = sum(claims.map(c => c.amount)), gross = sum(assets.map(a => a.amount));
+    demand(value > d.service_fee && Object.keys(d.replacement.allocations).every(id => d.backing_ids.includes(id)), "invalid round replacement");
+    demand(s.B.F - s.B.C + s.B.reserved + gross <= s.B.budget, "round budget exhausted");
+    for (const c of claims) { c.state = "FORFEITED"; c.last_event_id = e.event_id; }
+    this.issue(e, d.replacement, value - d.service_fee, false);
+    // Entire fresh root is committed, including value above the holder claim.
+    for (const a of assets) { a.state = "COMMITTED"; a.last_event_id = e.event_id; }
+    this.holder(d.replacement.claimant).fees += d.service_fee; s.totals.service_revenue += d.service_fee; s.B.F += gross;
+    s.H.operations[d.operation_id] = { operation_id: d.operation_id, holder: d.replacement.claimant,
+      input_claim_ids: d.input_claim_ids, reserve_ids: d.backing_ids, channel_id: "", delivered: 0, max_fee: 0, timeout_height: 0,
+      gross, state: "SETTLED", recovered: 0, fee: 0, recovery_ids: [...new Set(claims.flatMap(c => c.backing_ids))],
+      last_event_id: e.event_id, committed_at: e.block_height, recovered_at: null, kind: "refresh" };
+  }
+  private onchainTransaction(e: CapitalEvent, d: OnchainTransaction): void {
+    const s = this.state; unique(d.input_ids); unique(d.outputs.map(o => o.asset_id)); unique(d.outputs.map(o => String(o.output_index)));
+    demand(e.txid && d.input_ids.length && d.outputs.length, "onchain transaction missing inputs/outputs");
+    this.finality(e, d.inclusion_height, d.inclusion_hash);
+    const inputs = d.input_ids.map(id => this.asset(e, id));
+    demand(inputs.every(a => a.location === "onchain" && a.pool === inputs[0].pool && a.maturity_height <= d.inclusion_height && e.evidence_refs.includes(`spends:${a.backing_ref}`)), "onchain input provenance mismatch");
+    demand(new Set(inputs.map(a => a.backing_ref)).size === inputs.length, "transaction cannot spend partial slices twice");
+    demand(inputs.every(a => !Object.values(s.A).some(other => other.asset_id !== a.asset_id && other.amount > 0 && other.backing_ref === a.backing_ref)), "transaction requires whole underlying outputs");
+    demand(sum(inputs.map(a => a.amount)) === sum(d.outputs.map(o => o.amount)) + d.fee, "onchain transaction value/fee mismatch");
+    if (d.reuse) {
+      const sw = s.sweeps[d.reuse.sweep_id]; demand(sw && sw.state === "CONFIRMED" && sw.operation_ids !== undefined, "reuse needs generalized confirmed sweep");
+      this.depends(e, sw.last_event_id); this.finality(e, sw.inclusion_height!, sw.inclusion_hash!);
+      const recovered = inputs.find(a => a.asset_id === sw.output_id);
+      demand(recovered && recovered.state === "CONFIRMING" && d.inclusion_height >= sw.inclusion_height!, "reuse does not spend confirmed recovery");
+      demand(sw.operation_ids.length === 0 || (inputs.length === 1 && d.refresh), "fronting reuse must exclusively spend recovered output in independent round");
+      const allocations = d.reuse.recovery_allocations;
+      demand(Object.keys(allocations).length === sw.operation_ids.length && sw.operation_ids.every(id => Object.hasOwn(allocations, id)), "recovery allocation operation mismatch");
+      const outstanding = sum(sw.operation_ids.map(id => s.H.operations[id].gross - s.H.operations[id].recovered));
+      demand(sum(Object.values(allocations)) === Math.min(outstanding, recovered.amount), "recovery must credit available value exactly once");
+      for (const id of sw.operation_ids) {
+        const op = this.operation(e, id), amount = allocations[id];
+        demand(integer(amount) <= op.gross - op.recovered && op.recovery_ids.every(a => sw.input_ids.includes(a)), "recovery overcredits commitment or omits backing");
+        op.recovered += amount; s.B.C += amount; op.recovered_at = e.block_height; op.recovery_complete = true; op.last_event_id = e.event_id;
+      }
+      recovered.state = "FREE_AGAIN"; sw.state = "REUSED"; sw.last_event_id = e.event_id;
+    }
+    demand(inputs.every(a => free(a)), "onchain inputs not spendable");
+    for (const a of inputs) { a.amount = 0; a.state = "TRANSFERRED_OUT"; a.last_event_id = e.event_id; }
+    for (const o of d.outputs) {
+      const ref = `${e.txid}:${o.output_index}`; demand(!s.J.funding_refs.includes(ref), "duplicate transaction output"); s.J.funding_refs.push(ref);
+      const a = this.newAsset(e, o.asset_id, o.amount, "onchain", ref, d.input_ids, inputs[0].pool);
+      if (o.release_height !== undefined) {
+        demand(o.release_height > e.block_height, "pool backing expiry must be future"); a.release_height = o.release_height; a.state = "COMMITTED";
+      }
+    }
+    s.totals.fees += d.fee; if (inputs[0].pool) s.B.pool.fees += d.fee;
+    if (d.refresh) this.roundRefresh(e, d.refresh);
+  }
+  private backingExpired(e: CapitalEvent, ids: string[]): void {
+    const s = this.state; unique(ids); demand(ids.length, "empty expiry inputs");
+    for (const id of ids) {
+      const a = this.asset(e, id); demand(a.state === "COMMITTED" && a.location === "onchain", "backing not committed onchain");
+      const claims = Object.values(s.K).filter(c => c.state !== "RECOVERED" && c.state !== "EXITED" && (c.allocations[id] ?? 0) > 0);
+      demand(claims.length || a.release_height !== undefined, "backing release conditions unknown");
+      demand(a.release_height === undefined || e.block_height >= a.release_height, "pool backing not expired");
+      for (const c of claims) { this.claim(e, c.claim_id); demand(c.state === "FORFEITED" && e.block_height >= c.expiry_height, "backing has outstanding holder claim or unexpired right"); }
+      a.state = "RECOVERY_DUE"; a.last_event_id = e.event_id;
+    }
   }
   private reduce(e: CapitalEvent): void {
     const s = this.state; this.accrue(e);
@@ -254,11 +348,43 @@ export class CapitalAccountingMachine {
         demand(!s.H.channels[d.channel_id] && !Object.values(s.H.channels).some(c => c.funding_ref === d.funding_ref), "duplicate channel funding");
         demand(e.txid && e.block_hash && d.funding_ref.startsWith(`${e.txid}:`), "channel funding transaction required");
         demand(integer(d.spendable) <= a.amount && integer(d.receivable) <= d.remote, "invalid directional capacity");
-        demand(!s.J.funding_refs.includes(d.funding_ref), "duplicate underlying representation"); s.J.funding_refs.push(d.funding_ref);
+        demand(d.funding_ref === a.backing_ref || !s.J.funding_refs.includes(d.funding_ref), "duplicate underlying representation");
+        if (!s.J.funding_refs.includes(d.funding_ref)) s.J.funding_refs.push(d.funding_ref);
         a.location = `ln:${d.channel_id}`; a.backing_ref = d.funding_ref; a.last_event_id = e.event_id;
         s.H.channels[d.channel_id] = { channel_id: d.channel_id, funding_ref: d.funding_ref, capacity: sum([a.amount, d.remote]), remote: d.remote, spendable: d.spendable, receivable: d.receivable, last_event_id: e.event_id }; break;
       }
-      case "ISSUE_VTXO": this.issue(e, e.data.claim, e.amount, true); break;
+      case "ISSUE_VTXO": {
+        const fee = integer(e.data.service_fee ?? 0); demand(e.amount > fee, "issuance fee exceeds value");
+        this.issue(e, e.data.claim, e.amount - fee, true);
+        this.holder(e.data.claim.claimant).received += fee; this.holder(e.data.claim.claimant).fees += fee; s.totals.service_revenue += fee; break;
+      }
+      case "CHANNEL_CAPACITY": {
+        const d = e.data, ch = this.channel(e, d.channel_id);
+        demand(!Object.values(s.H.operations).some(o => o.channel_id === d.channel_id && ["RESERVED", "ACCEPTED", "FAILED"].includes(o.state)), "capacity observation requires quiescent channel");
+        demand(d.local === sum(Object.values(s.A).filter(a => a.location === `ln:${d.channel_id}`).map(a => a.amount)) && d.remote === ch.remote, "capacity observation ownership mismatch");
+        demand(d.spendable <= d.local && d.receivable <= d.remote, "invalid observed capacity");
+        ch.spendable = d.spendable; ch.receivable = d.receivable; ch.last_event_id = e.event_id; break;
+      }
+      case "ONCHAIN_TRANSACTION": this.onchainTransaction(e, e.data); break;
+      case "BACKING_EXPIRED": this.backingExpired(e, e.data.input_ids); break;
+      case "RECOVERY_SWEEP": {
+        const d = e.data; unique(d.input_ids); unique(d.operation_ids); unique(d.input_outpoints);
+        demand(e.txid && !s.sweeps[d.sweep_id] && d.input_ids.length, "invalid recovery sweep");
+        const assets = d.input_ids.map(id => this.asset(e, id));
+        demand(assets.every(a => a.state === "RECOVERY_DUE" && a.location === "onchain"), "recovery inputs not eligible");
+        demand(canonicalJSON(assets.map(a => a.backing_ref).sort()) === canonicalJSON([...d.input_outpoints].sort()), "recovery input outpoint mismatch");
+        demand(d.fee < sum(assets.map(a => a.amount)), "recovery fee exceeds inputs");
+        for (const op of Object.values(s.H.operations).filter(o => !o.recovery_complete && o.committed_at !== null && o.recovered < o.gross && o.recovery_ids.some(id => d.input_ids.includes(id))))
+          demand(d.operation_ids.includes(op.operation_id), "recovery omits linked commitment");
+        for (const id of d.operation_ids) {
+          const op = this.operation(e, id); demand(op.state === "SETTLED" && !op.recovery_complete && op.recovered < op.gross && op.recovery_ids.every(a => d.input_ids.includes(a)), "recovery commitment mismatch");
+        }
+        for (const c of Object.values(s.K).filter(c => c.state !== "RECOVERED" && c.state !== "EXITED" && c.backing_ids.some(id => d.input_ids.includes(id)))) {
+          this.claim(e, c.claim_id); demand(c.state === "FORFEITED" && c.expiry_height <= e.block_height && c.backing_ids.every(id => d.input_ids.includes(id)), "sweep violates claim");
+        }
+        for (const a of assets) { a.state = "RECOVERING"; a.last_event_id = e.event_id; }
+        s.sweeps[d.sweep_id] = { ...d, operation_id: d.operation_ids[0] ?? "", txid: e.txid, state: "BROADCAST", inclusion_height: null, inclusion_hash: null, last_event_id: e.event_id }; break;
+      }
       case "RECEIVE_LIGHTNING": {
         const d = e.data, ch = this.channel(e, d.channel_id); integer(d.fee);
         demand(ch.receivable >= e.amount && e.amount > d.fee, "insufficient inbound capacity");
@@ -302,16 +428,42 @@ export class CapitalAccountingMachine {
       case "HTLC_SETTLED": {
         const d = e.data, op = this.operation(e, d.operation_id);
         demand(op.state === "ACCEPTED" || op.state === "FAILED", "HTLC not in flight"); integer(d.fee); const serviceFee = integer(d.service_fee ?? 0);
-        demand(d.fee + serviceFee <= op.max_fee && e.evidence_refs.includes(d.preimage_evidence_ref), "fee/preimage evidence mismatch");
+        demand((op.change_backing === "retained" ? d.fee <= op.max_fee && d.fee + serviceFee <= (op.max_holder_fee ?? op.max_fee) :
+          d.fee + serviceFee <= op.max_fee) && e.evidence_refs.includes(d.preimage_evidence_ref), "fee/preimage evidence mismatch");
         demand(e.amount === op.delivered, "settled amount mismatch");
         const ch = this.channel(e, op.channel_id);
         for (const id of op.reserve_ids) this.asset(e, id);
         this.debit(e, op.reserve_ids, op.delivered + d.fee); ch.remote += op.delivered + d.fee;
         ch.receivable += op.delivered + d.fee; ch.spendable += op.max_fee - d.fee; ch.last_event_id = e.event_id;
-        for (const id of op.input_claim_ids) { const c = this.claim(e, id); c.state = "FORFEITED"; c.last_event_id = e.event_id; }
-        const change = op.gross - op.delivered - d.fee - serviceFee;
-        if (change) { demand(d.change && d.change.claimant === op.holder && Object.keys(d.change.allocations).every(id => op.reserve_ids.includes(id)), "change requires fresh reserve backing"); this.issue(e, d.change, change, false); }
+        const inputs = op.input_claim_ids.map(id => this.claim(e, id));
+        for (const c of inputs) { c.state = "FORFEITED"; c.last_event_id = e.event_id; }
+        const change = sum(inputs.map(c => c.amount)) - op.delivered - d.fee - serviceFee;
+        if (change) {
+          const allowed = op.change_backing === "retained" ? op.recovery_ids : op.reserve_ids;
+          demand(d.change && d.change.claimant === op.holder && Object.keys(d.change.allocations).every(id => allowed.includes(id)), "change backing policy mismatch");
+          if (op.change_backing === "retained") {
+            demand(d.change.expiry_height <= Math.min(...inputs.map(c => c.expiry_height)), "retained change cannot extend backing expiry");
+            // Reassign an existing backing allocation, never add a second claim
+            // over the same value. FORFEITED amounts retain historical input
+            // value; their residual allocations are recovery encumbrances.
+            for (const [id, amount] of Object.entries(d.change.allocations)) {
+              let remaining = amount;
+              for (const c of inputs) {
+                const take = Math.min(c.allocations[id] ?? 0, remaining);
+                if (take) { c.allocations[id] -= take; remaining -= take; }
+              }
+              demand(remaining === 0, "retained change exceeds input allocation");
+            }
+          }
+          this.issue(e, d.change, change, false);
+        }
         else demand(!d.change, "unexpected change");
+        if (op.change_backing === "retained") {
+          // The unused routing limit remains on the same, now spendable channel.
+          // Only that released slice is recovered here; the paid amount stays W.
+          const released = op.max_fee - d.fee;
+          op.recovered += released; s.B.C += released;
+        }
         s.totals.outflows += op.delivered; s.totals.fees += d.fee; s.totals.service_revenue += serviceFee; s.totals.delivered += op.delivered;
         s.B.pool.outflows += op.delivered; s.B.pool.fees += d.fee;
         this.holder(op.holder).outgoing += op.delivered; this.holder(op.holder).fees += d.fee + serviceFee;
@@ -366,8 +518,9 @@ export class CapitalAccountingMachine {
         this.newAsset(e, sw.output_id, amount, "onchain", `${sw.txid}:0`, sw.input_ids, true, "CONFIRMING");
         demand(!s.J.funding_refs.includes(`${sw.txid}:0`), "duplicate sweep outpoint"); s.J.funding_refs.push(`${sw.txid}:0`);
         s.totals.fees += sw.fee; sw.state = "CONFIRMED"; sw.inclusion_height = d.inclusion_height; sw.inclusion_hash = d.inclusion_hash; sw.last_event_id = e.event_id;
-        const op = s.H.operations[sw.operation_id];
-        for (const id of op.input_claim_ids) { const c = this.claim(e, id); c.state = "RECOVERED"; c.last_event_id = e.event_id; } break;
+        const claimIds = sw.operation_ids === undefined ? s.H.operations[sw.operation_id].input_claim_ids :
+          Object.values(s.K).filter(c => c.state !== "RECOVERED" && c.state !== "EXITED" && c.backing_ids.some(id => sw.input_ids.includes(id))).map(c => c.claim_id);
+        for (const id of claimIds) { const c = this.claim(e, id); c.state = "RECOVERED"; c.last_event_id = e.event_id; } break;
       }
       case "CAPITAL_REUSABLE": {
         const d = e.data, sw = s.sweeps[d.sweep_id]; demand(sw && sw.state === "CONFIRMED", "no confirmed recovery"); this.depends(e, sw.last_event_id);
@@ -496,14 +649,17 @@ export class CapitalAccountingMachine {
       per_offered_msat: Object.fromEntries(categories.map(k => [k, s.totals.offered ? Number(s.integrals[k].msat_blocks) / s.totals.offered : null])),
       per_delivered_msat: Object.fromEntries(categories.map(k => [k, s.totals.delivered ? Number(s.integrals[k].msat_blocks) / s.totals.delivered : null])),
       exposures: Object.values(s.H.operations).filter(o => o.committed_at !== null).map(o => ({ operation_id: o.operation_id,
-        outstanding: o.gross - o.recovered, right_censored: o.recovered_at === null, recovery_height: o.recovered_at })) };
+        outstanding: o.gross - o.recovered, right_censored: o.recovered_at === null, recovery_height: o.recovered_at,
+        ...(o.recovery_complete ? { recovery_complete: true, unrecovered_after_exhausted_backing: o.gross - o.recovered } : {}) })) };
   }
 }
 export const eventTypes: Record<keyof Payloads, true> = { FUND: true, OPEN_CHANNEL: true, ISSUE_VTXO: true, RECEIVE_LIGHTNING: true,
+  CHANNEL_CAPACITY: true,
   PAYMENT_OFFERED: true,
   REQUEST_OUTGOING: true, CANCEL_REQUEST: true, HTLC_ACCEPTED: true, HTLC_SETTLED: true, HTLC_FAILED: true, RESOLVE_FAILED: true,
   REFRESH: true, EXPIRY_REACHED: true, SWEEP_BROADCAST: true, SWEEP_CONFIRMED: true, CAPITAL_REUSABLE: true,
-  MOVE_TO_CHANNEL: true, SPLIT_MERGE: true, EXIT: true, CHAIN: true, TICK: true, REORG: true };
+  MOVE_TO_CHANNEL: true, SPLIT_MERGE: true, ONCHAIN_TRANSACTION: true, BACKING_EXPIRED: true, RECOVERY_SWEEP: true,
+  EXIT: true, CHAIN: true, TICK: true, REORG: true };
 
 export function checkJournal(config: MachineConfig, events: CapitalEvent[]) {
   const m = new CapitalAccountingMachine(config);

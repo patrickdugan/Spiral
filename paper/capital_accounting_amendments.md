@@ -4,8 +4,8 @@ These are proposed edits supported by the
 [reference machine](../audit/peer_review/capital_state_machine.md), its falsification
 tests and [pinned source inspection](../audit/peer_review/capital_adapter.md).
 An [owned regtest trace](../audit/peer_review/capital_regtest_report.md) now supplies
-transaction-level evidence. Numerical comparison tables remain unchanged pending
-complete normalization and operational-clock measurements.
+transaction-level evidence and an accepted economic reducer replay. Numerical
+comparison tables remain unchanged pending a rerun with explicit clock uncertainty.
 
 1. **Define the economic boundary before adding capital terms.** A VTXO is a
    claim against backing, not an extra asset. A channel funding output and the
@@ -43,8 +43,9 @@ complete normalization and operational-clock measurements.
    synthetic reference-model results. A separate pinned regtest run proves
    original-output recovery and independent round reuse, with every fixture sat
    reconciled. Its blocks were accelerated and sweeps manually triggered. No new
-   Ark-versus-channel efficiency ranking follows until the observed path passes
-   the reducer and matched-service comparisons are rerun with appropriate clocks.
+   Ark-versus-channel efficiency ranking follows until matched-service comparisons are rerun with appropriate clocks. The
+   observed path now passes economic reducer replay, while its exact acceptance
+   and commitment times remain interval-censored.
 8. **Disclose reorg uncertainty.** Replaying a Bitcoin branch must not undo an
    already executed Lightning payment. Where surviving contingent liabilities
    cannot be reconstructed, publish the unresolved evidence and halt spending;

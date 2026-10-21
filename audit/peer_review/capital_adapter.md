@@ -7,9 +7,15 @@ are in [source-pins.json](capital/source-pins.json).
 
 The separate [read-only collector](regtest/observe.py) has now captured an owned
 regtest at Bark `8f5d8c4...` and Core 31; see the [execution report](capital_regtest_report.md).
-The adapter below still rejects that different pin set. Its existing event
-mapping must be extended for observed retained backing and round overhead before
-the live snapshots can be described as accepted reducer events.
+The older adapter below still rejects that different pin set. A separate
+`ObservedRegtestAdapter` in `model/capital-observed-adapter.ts` validates the
+executed binary hashes and source revision, canonical headers, exact transaction
+inputs/outputs, and the collector-attested settlement proof. `regtest/normalize.ts`
+now produces a 34-event accepted reconstruction with retained change, shared-root
+recovery, round overhead, miner fees, and independent round reuse. It reconciles
+against the independent transaction graph. Acceptance timing is inferred from
+completion, not sampled; detection-height integrals and null seconds disclose
+that limitation. The collector remains the authenticity trust boundary.
 
 | Component | Source revision inspected | Execution identity |
 |---|---|---|
