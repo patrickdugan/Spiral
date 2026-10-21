@@ -1,8 +1,11 @@
 # Capital accounting state machine v1
 
 Status: implemented reference accounting plus a source-pinned, 34-event
-reconstruction of the executed Bark regtest lifecycle. Economic invariants and
-replay pass; precise transition clocks and matched-service comparisons remain open. See [execution report](capital_regtest_report.md)
+reconstruction of the executed Bark regtest lifecycle, extended to 53 events
+with observed failures, inbound receipt, cooperative exit and exit reorg.
+Economic invariants and replay pass. The [fixed-budget comparison](capital_fixed_budget_results.md)
+is complete under its declared conditional transaction policy; precise
+operational clocks and testnet4 execution remain open. See [execution report](capital_regtest_report.md)
 and [source mapping](capital_adapter.md). Existing `ArkServer` forecasts and
 `SettlementLedger` are preserved.
 
