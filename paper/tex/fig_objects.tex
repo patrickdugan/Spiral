@@ -45,12 +45,12 @@
   \draw[stockB] (-0.2,1.05) -- (2.2,1.05);
   \foreach \x in {0,1,2,3} \draw[stockA] ({2.27+\x*0.25},1.05) -- ({2.45+\x*0.25},1.05);
   \node[lab, below] at (1.0,0.93) {$\ell_i(h)=\hat f_{A_i}$: one stock};
-  \node[lab, below] at (2.75,0.93) {own};
+  \node[lab, above] at (2.75,1.15) {own};
   \foreach \x in {0,1,2,3} \node[vtx] at (a\x) {$a_\x$};
   \node[vtx] at (h) {$h$};
   \node[lab, align=center] at (1.5,-0.95) {(c) multiparty channel $C_k$\\ one stock, $\hat f_{A_i}$, nothing fronted};
 \end{scope}
 \end{tikzpicture}
-\caption{Where the forecast lives, for the same $k$ agents and a hub. Light segments are stock placed by forecast before demand is known; dark segments are the agents' own balances. (a) Per-agent channels: the hub holds a separate stock on every edge, and the total is a sum of $k$ forecast peaks. (b) An Ark: outputs have no direction at the holder tier, the server co-signs every transfer, its stock is forecast once for all holders, and value fronted at spends and refreshes waits unswept as $W_S$ (Proposition~\ref{prop:relocation}). (c) A multiparty channel: one shared output whose hub part is the single stock for the group, forecast once, with nothing fronted and every update signed by all $k+1$ members (Proposition~\ref{prop:hyperpool}). The channel from $h$ or $S$ to the rest of the network carries a tier common to the three objects and is drawn without a stock.}
+\caption{Where the forecast lives, for the same $k$ agents and a hub. Light segments are stock placed by forecast before demand is known; dark segments are the agents' own balances. (a) Per-agent channels: the hub holds a separate stock on every edge, and the total is a sum of $k$ forecast peaks. (b) An Ark: outputs have no direction at the holder tier, the server co-signs every transfer, its stock is forecast once for all holders, and value fronted at spends and refreshes waits unswept as $W_S$ (Proposition~\ref{prop:relocation}). (c) A multiparty channel: one shared output whose hub part is the single stock for the group, forecast once, with nothing fronted and every update signed by all $k+1$ members (Proposition~\ref{prop:hyperpool}). The gateway channel from $h$ or $S$ is drawn without a stock. Its capital is excluded by the stated operator-stock convention; equal gateway cost across mechanisms is an assumption requiring verification.}
 \label{fig:objects}
 \end{figure}

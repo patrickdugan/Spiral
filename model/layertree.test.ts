@@ -58,17 +58,17 @@ test("LayerTree cost tables: the draft's Table 5 and Table 10 are reproduced fro
   });
 });
 
-test("LayerTree [C], fees and the proposal's capital terms: the draft's worked figures and the floors follow from the stated parameters", () => {
-  // [C]: 10,000 cooperating exits take 400 blocks at κ = 25 and 157 at 64; the last of q queued confirms within Δ(q).
+test("LayerTree service scenarios, fees and capital terms: worked figures are conditional on the stated parameters", () => {
+  // Assumed service rates of 25 and 64 give these illustrative queue times; policy limits do not guarantee service.
   assert.equal(drainBlocks(10_000, KAPPA.preCore31ChainLimits), 400);
   assert.equal(drainBlocks(10_000, KAPPA.clusterMempool), 157);
   assert.equal(confirmationBlocks(0, 0, 25), 1);
   assert.equal(confirmationBlocks(24, 0, 25), 2);
   assert.equal(confirmationBlocks(25, 0, 25), 2);
   assert.equal(confirmationBlocks(0, 50, 25), 3);
-  // About 1,775 channel leaves may close in one window with G_exit = 72, κ = 25, β = 0.
+  // A 1,775-leaf scenario budget with G_exit = 72, κ = 25, β = 0 under the same service assumptions.
   assert.equal(channelLeavesPerWindow(72, 25, 0), 1775);
-  // Contention: holding an honest 1,020 vB exit out of one block costs the attacker κ carves at the honest bid.
+  // Scenario cost for filling κ service slots with equal-feerate carves ahead of a 1,020 vB exit.
   const c25 = contentionCost(25, operationVb().SPLIT!, 1020);
   assert.equal(c25.attackerVbPerBlock, 39_650);
   assert.ok(c25.ratioToHonest > 38 && c25.ratioToHonest < 40);
@@ -97,8 +97,9 @@ test("LayerTree [C], fees and the proposal's capital terms: the draft's worked f
   const locked = lockedPerMember(p, 8 * 4032);
   assert.ok(Math.abs(locked.creditLeaf - 3000) < 1e-9);
   assert.equal(locked.graft, 0);
-  // Against the oracle channel stock of the same cell (20,818,750 sat over 200 agents), about 35 times less capital...
-  assert.ok(20_818_750 / 200 / locked.total > 30);
+  // Corrected oracle stock after the immediate-next-epoch settlement fix: 21,182,500 sat over 200 agents.
+  const oracleStockPerMember = 105_912.5, trailingStockPerMember = 38_654.6875;
+  assert.ok(oracleStockPerMember / locked.total > 35 && oracleStockPerMember / locked.total < 36);
   // ...bought with about 0.88 vB per member per block on chain, which the paper's duration does not price.
   assert.ok(Math.abs(bytesPerMemberPerBlock(p) - (122 / 144 + 151 / 4032)) < 1e-12);
   // Exit bytes by tier; MIN hosts no vouchers, so the receive term does not exist there.
@@ -108,16 +109,17 @@ test("LayerTree [C], fees and the proposal's capital terms: the draft's worked f
   assert.throws(() => exitVb("MID", 8));
   // Pricing the bytes (Section 4.4, preregistration): 0.88 vB per member per block is about 46,500 vB a year,
   // 93,000 sat at 2 sat/vB, against a carry of about 2,000 sat a year on the oracle saving at 2 percent in bitcoin
-  // terms (a liquidity-lease rate; Bhatia's LNRR examples, 0.18 to 0.25 percent, are an order lower).
+  // terms; the 0.25 percent case below is an illustrative sensitivity.
   const b = bytesPerMemberPerBlock(p);
   assert.equal(Math.round(annualByteCostSat(b, 1) / 100) * 100, 46_500);
   assert.equal(Math.round(annualByteCostSat(b, 2) / 1000) * 1000, 93_000);
-  const savedOracle = (104_094 - 3000) / 100, savedTrailing = (38_112 - 3000) / 100;
+  const savedOracle = (oracleStockPerMember - 3000) / 100, savedTrailing = (trailingStockPerMember - 3000) / 100;
   assert.ok(annualByteCostSat(b, 2) / (0.02 * savedOracle * 100) > 45 && annualByteCostSat(b, 2) / (0.02 * savedOracle * 100) < 47);
-  assert.equal(Math.round(breakEvenReceiptRate(b, 2, 0.02, savedOracle) / 100) * 100, 4_600);
+  // Recomputed rates: 4518.2454, 22591.2269 and 112956.1347 sat per round under the oracle scenario.
+  assert.equal(Math.round(breakEvenReceiptRate(b, 2, 0.02, savedOracle) / 100) * 100, 4_500);
   assert.equal(Math.round(breakEvenReceiptRate(b, 10, 0.02, savedOracle) / 1000) * 1000, 23_000);
-  assert.equal(Math.round(breakEvenReceiptRate(b, 50, 0.02, savedOracle) / 1000) * 1000, 115_000);
-  // At an LNRR-scale floor of a quarter of a percent the break-even is eight times higher.
+  assert.equal(Math.round(breakEvenReceiptRate(b, 50, 0.02, savedOracle) / 1000) * 1000, 113_000);
+  // The quarter-percent sensitivity gives a break-even eight times higher.
   assert.ok(Math.abs(breakEvenReceiptRate(b, 10, 0.0025, savedOracle) / breakEvenReceiptRate(b, 10, 0.02, savedOracle) - 8) < 1e-9);
   const ratio = breakEvenReceiptRate(b, 10, 0.02, savedTrailing) / breakEvenReceiptRate(b, 10, 0.02, savedOracle);
   assert.ok(ratio > 2.8 && ratio < 3.0);

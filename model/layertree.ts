@@ -1,4 +1,4 @@
-// LayerTree as a settlement object: cost tables, the throughput assumption [C], and the capital terms the
+// LayerTree as a settlement object: cost tables, illustrative service scenarios, and the capital terms the
 // paper's proposal (paper/layertree_insertions.md) adds. Cost tables only; no predicate is implemented.
 //
 // Source: Osuntokun, "LayerTree: A Shared Bitcoin UTXO with an O(1) Unilateral Exit", draft dated
@@ -135,30 +135,34 @@ export function table10(): Record<string, { never: number; batch: number; alone:
   };
 }
 
-// ---- Assumption [C]: contention on the one output ------------------------------------------------------
+// ---- Illustrative service scenarios for the one output ------------------------------------------------
 
-/** κ, spends of one output that confirm per block, as the draft states it: policy, not consensus. */
+/**
+ * Assumed service rates in transitions per block. The historical property names are retained for API
+ * compatibility: chain/cluster admission limits do not establish these rates or a confirmation guarantee.
+ */
 export const KAPPA = { preCore31ChainLimits: 25, clusterMempool: 64, descendantAttached: 1 } as const;
 
-/** Δ(q) = Δ_L (⌈(β + q) / κ⌉ + 1): blocks until an honest spend with q queued ahead confirms, under [C]. */
+/**
+ * Conditional queue bound Δ_L (⌈(β + q) / κ⌉ + 1). Assumes at least κ eligible transitions are served
+ * per Δ_L-block interval while backlogged, and at most β adversarial transitions precede this spend.
+ * An upper bound on admitted transactions supplies neither premise; this is not a network prediction.
+ */
 export function confirmationBlocks(q: number, beta: number, kappa: number, deltaL = 1): number {
   if (kappa < 1) throw new Error("kappa >= 1");
   return deltaL * (Math.ceil((beta + q) / kappa) + 1);
 }
 
-/** Blocks for n cooperating single exits to drain through one output at κ per block. */
+/** Illustrative drain time for n cooperating single exits at an assumed constant service rate κ per block. */
 export const drainBlocks = (n: number, kappa: number): number => Math.ceil(n / kappa);
 
-/** Channel leaves that may close in one window: β + q ≤ (G_exit − 1) κ with Δ_L = 1 (the draft's budget). */
+/** Conditional window budget β + q ≤ (G_exit − 1) κ with Δ_L = 1 under the service assumptions above. */
 export const channelLeavesPerWindow = (gExit: number, kappa: number, beta: number): number => (gExit - 1) * kappa - beta;
 
 /**
- * Contention attack for the warden model: a corrupt member carves its own balance back and forth, each
- * carve one spend of the tree output that conserves value and costs only its fee. To hold an honest spend
- * out of a block the attacker must have κ spends confirm ahead of it at no less than the honest bid, so the
- * attacker's bytes per block of delay are κ × carve vB; divided by the honest exit's vB this is the price
- * ratio β buys. SPLIT (owner alone, 1,586 vB) is the cheapest carve that needs no operator; CLAIM on a
- * self-issued voucher is 1,618 vB.
+ * Illustrative contention cost when an attacker fills κ service slots with equal-feerate carves ahead
+ * of an honest exit. This scenario does not establish a lower bound on attack cost under actual relay,
+ * replacement, pinning or miner-selection rules. SPLIT is 1,586 model vB; a self-issued CLAIM is 1,618.
  */
 export function contentionCost(kappa: number, carveVb: number, honestVb: number): { attackerVbPerBlock: number; ratioToHonest: number } {
   const attackerVbPerBlock = kappa * carveVb;
@@ -175,12 +179,12 @@ export function minimumLeafSat(vb: number, feeRateSatPerVb: number, endogenous: 
   return endogenous ? fee + P2TR_DUST_SAT + 1 : Math.max(fee, P2TR_DUST_SAT) + 1;
 }
 
-/** The unilateral paths and whether each needs a confirmed fee coin of the member's own (draft Table E.4). */
+/** FULL at D = 16: unilateral paths and external fee-coin requirements (draft Table E.4). */
 export function feeCoinTable(feeRates: number[]): Array<{ path: string; feeCoin: boolean; vb: number; fees: number[] }> {
   const op = operationVb();
   const rows: Array<[string, boolean, number]> = [
     ["EXIT_1, fee from the payout (FULL only)", false, table5()["FULL, fee taken from the payout"]!],
-    ["EXIT_1 or exact exit, fee input", true, op.EXIT_1!],
+    ["EXIT_1 or exact exit, fee input (FULL)", true, op.EXIT_1!],
     ["channel-leaf force close", true, 1681],   // the draft's figure; its components (exit, update, settlement, two anchor children) are not in sizes.md
     ["CLAIM^x then exact exit", true, op["CLAIM^x then exact exit (credit-leaf fallback)"]!],
   ];
@@ -207,7 +211,9 @@ export interface LayerTreeParams {
   graftOutstandingBlocks: number;
   /** value grafted per member, sat (only matters when funding is "operator") */
   graftValuePerMember: number;
+  /** assumed service rate, not a rate guaranteed by mempool policy */
   kappa: number;
+  /** assumed maximum adversarial transitions ahead of an honest transition */
   beta: number;
 }
 
@@ -258,7 +264,7 @@ export function annualByteCostSat(bytesPerMemberPerBlock: number, feeSatPerVb: n
  * The receipt rate (sat per round) at which the carry of the capital a credit leaf saves equals the leaf's
  * annual byte cost. The saving scales with receipts: `savedCapitalPerUnitReceipt` is (channel stock - P_a)
  * per sat-per-round of receipts, read off a grid cell (the zero-drift cell at 100 sat a round gives
- * (104,094 - 3,000) / 100 under the oracle rule and (38,112 - 3,000) / 100 under the trailing rule).
+ * (105,912.5 - 3,000) / 100 under the oracle rule and (38,654.6875 - 3,000) / 100 under the trailing rule).
  * Below the break-even the bytes cost more than the capital they free; above it the leaf pays.
  */
 export function breakEvenReceiptRate(
