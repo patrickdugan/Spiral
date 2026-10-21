@@ -1,0 +1,132 @@
+{
+  "action": "inbound-plugin-start",
+  "monotonic_start_ns": 8491434823689,
+  "height": 4439,
+  "state": "returned",
+  "monotonic_end_ns": 8492049370053,
+  "result": {
+    "command": "start",
+    "plugins": [
+      {
+        "name": "/usr/libexec/c-lightning/plugins/autoclean",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/chanbackup",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/bcli",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-bwatch",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/commando",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/funder",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/topology",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/exposesecret",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/keysend",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/offers",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/pay",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/recklessrpc",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/recover",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/txprepare",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-renepay",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-xpay",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/spenderp",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-askrene",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/sql",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-grpc",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-bip353",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/cln-currencyrate",
+        "active": true,
+        "dynamic": true
+      },
+      {
+        "name": "/usr/libexec/c-lightning/plugins/bookkeeper",
+        "active": true,
+        "dynamic": false
+      },
+      {
+        "name": "/data/hold",
+        "active": true,
+        "dynamic": true
+      }
+    ]
+  }
+}

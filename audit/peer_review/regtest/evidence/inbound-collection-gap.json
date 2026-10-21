@@ -1,0 +1,7 @@
+{
+  "payment_hash": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0",
+  "original_payment_retried": false,
+  "gap": "Bark claim returned zero. Peer pay process terminated, but its stdout failed JSON decoding; unretained notification output may have preceded the JSON; original exit/result were not saved.",
+  "reconciliation": "Read-only listsendpays proves one completed attempt and its preimage hash; hold plugin, server DB and both channel sides independently confirm settlement.",
+  "fix": "Future collector explicitly requests lightning-cli --json --notifications=none output."
+}

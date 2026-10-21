@@ -1,0 +1,22 @@
+{
+  "evidence_class": "owned_regtest_runtime_change",
+  "source_repository": "https://github.com/BoltzExchange/hold",
+  "source_tag": "v0.3.3",
+  "source_commit": "af0055b132f3b9f24d0b1d478a15005fcf8f014f",
+  "release_url": "https://github.com/BoltzExchange/hold/releases/download/v0.3.3/hold-linux-amd64.tar.gz",
+  "archive_sha256": "f9d916430fb70a3d75089f2d1b88d5d71d4987ef79933035978c1f44aab84be5",
+  "binary_sha256": "f98cd795e68a214b11fe168cc08690a50837dcefc93be6b885cb69d74ef1c1a4",
+  "activation": "dynamic plugin in existing pinned CLN container; no CLN restart",
+  "endpoint": "https://localhost:9292",
+  "bind_host": "127.0.0.1",
+  "captain_config_before_sha256": "f788c707432fa15545f0498b843ff2e5c1a763c54b14201774ef25bf394ff3a6",
+  "captain_config_after_sha256": "c50ddc4a37bc75818fe26bb45f9cd5d9f02205b572e8024c7d2fdd5500a29658",
+  "configuration_addition": "\n[cln_array.hold_invoice]\nuri = \"https://localhost:9292\"\nserver_cert_path = \"/data/cln-server/regtest/hold/ca.pem\"\nclient_cert_path = \"/data/cln-server/regtest/hold/client.pem\"\nclient_key_path = \"/data/cln-server/regtest/hold/client-key.pem\"\n",
+  "private_keys_exported": false,
+  "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "height": 4439,
+  "cln_binary_sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2",
+  "hold_invoices": {
+    "holdinvoices": []
+  }
+}

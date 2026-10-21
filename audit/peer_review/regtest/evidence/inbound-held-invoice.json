@@ -1,0 +1,16 @@
+{
+  "monotonic_observed_ns": 8708900837766,
+  "hold": {
+    "holdinvoices": [
+      {
+        "id": 1,
+        "payment_hash": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0",
+        "invoice": "lnbcrt20u1p4d30aksp5c5zt5pqt2p3med9hvvkqsatgfy6me3rh2lc2wdzkcu5c8a64lvjqpp53p032ymdh239ehgrkcdcc9ef3f285qrp8cg6690qagksty0068cqdqqxqy9gcqcqzgq9qyysgqec2na66vj6udf2xknygxgm3j592kaqs28en25ju98lal0ma37e7rfr9dmd88sep3qg39grtqjq5vawa3mh0xnvu5vt4uw9434ql9x6cqrjd9ts",
+        "state": "unpaid",
+        "min_cltv": 256,
+        "created_at": "2026-10-21T13:35:50",
+        "htlcs": []
+      }
+    ]
+  }
+}

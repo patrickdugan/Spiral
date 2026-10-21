@@ -393,6 +393,21 @@
                 "expiry_height"
               ],
               "additionalProperties": false
+            },
+            "backing_mode": {
+              "const": "inventory"
+            },
+            "service_fee": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "pool": {
+              "type": "boolean"
+            },
+            "settlement_evidence_ref": {
+              "type": "string",
+              "minLength": 1
             }
           },
           "required": [

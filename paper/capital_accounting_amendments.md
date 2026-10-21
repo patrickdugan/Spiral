@@ -81,3 +81,17 @@ the ratios; do not promote passing a payment target into a redemption guarantee.
    already executed Lightning payment. Where surviving contingent liabilities
    cannot be reconstructed, publish the unresolved evidence and halt spending;
    do not silently remove outflows to restore a conservation identity.
+
+9. **Distinguish receipt liquidity from pool-backed claims.** The subsequent
+   observed inbound path receives 2,000 sats into the server's channel, retains
+   a 104-sat service fee, and issues a 1,896-sat holder claim against an existing
+   20,000-sat pool root. Its two-leaf funding transaction costs 617 sats and has
+   no extra 330-sat root surplus. This differs from the frozen forecast's
+   single-participant fresh-round-per-receipt assumption. Do not generalize
+   that conditional ranking to inventory-based receives.
+10. **Distinguish economic pool change from selectable inventory.** The same
+    receive creates 8,104 sats of change that the pinned implementation excludes
+    because exit depth 4 exceeds the configured cap of 3. It remains backed and
+    locked until recovery; only the untouched 10,000-sat leaf is immediately
+    selectable. Incoming channel liquidity is a contribution, not recovery of
+    earlier fronting. See [the inbound report](../audit/peer_review/capital_inbound_report.md).

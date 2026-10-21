@@ -1,0 +1,15 @@
+{
+  "type": "bolt11 invoice",
+  "currency": "bcrt",
+  "created_at": 1792589750,
+  "expiry": 172800,
+  "payee": "0292c703491a311923395c9925b387f08577b98c83b074bdbf8c126a0c12515db7",
+  "amount_msat": 2000000,
+  "description": "",
+  "min_final_cltv_expiry": 256,
+  "payment_secret": "c504ba040b5063bcb4b7632c0875684935bcc47757f0a73456c72983f755fb24",
+  "features": "024100",
+  "payment_hash": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0",
+  "signature": "3045022100ce153eeb4c96b8d4a8d69910646e32a1556e820a3e66aa4b853ffbf7efb1f67c0220348caddb4e7864310222540d609028cebbb1ddde69b39462ebc716b1a83e536b",
+  "valid": true
+}

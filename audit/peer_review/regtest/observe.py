@@ -12,6 +12,8 @@ import sys
 import time
 
 QUERIES = {
+    "subscriptions": "SELECT id,lightning_node_id,status,created_at,updated_at,lowest_incoming_htlc_expiry,accepted_at,payment_hash,invoice,final_amount_msat FROM lightning_htlc_subscription ORDER BY id",
+    "subscription_vtxos": "SELECT vtxo_id,lightning_htlc_subscription_id FROM vtxo WHERE lightning_htlc_subscription_id IS NOT NULL ORDER BY vtxo_id",
     "vtxos": "SELECT id,vtxo_id,expiry,oor_spent_txid,spent_in_round,offboarded_in,vtxo_txid,exit_delta,policy_type,amount,anchor_point,spend_state,frontier_at,confirmed_height,onchain_spent_height,onchain_spent_txid FROM vtxo ORDER BY id",
     "pool": "SELECT id,vtxo_id,expiry_height,amount,created_at,spent_at FROM vtxo_pool ORDER BY id",
     "attempts": "SELECT id,payment_hash,amount_msat,final_amount_msat,status,user_fee_sat,lightning_htlc_subscription_id,block_height,created_at,updated_at FROM lightning_payment_attempt ORDER BY id",

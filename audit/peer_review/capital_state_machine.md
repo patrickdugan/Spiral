@@ -82,7 +82,7 @@ or wallet secrets in the trace.
 | `FUND` | Unique, owned, mature onchain outpoint; adds economic assets and external inflow. Pool funding increases budget. |
 | `OPEN_CHANNEL` / `MOVE_TO_CHANNEL` | Free onchain lot, unique funding reference, transaction evidence and explicit directional capacities; changes representation without adding value. Observed opening uses a preceding fee-paying `ONCHAIN_TRANSACTION`; the legacy abstract lane assumes zero opening fees. |
 | `ISSUE_VTXO` | Future expiry and exact allocations within backing capacity; creates a liability and encumbers its backing. It does not mint economic capital. |
-| `RECEIVE_LIGHTNING` | Confirmed receipt evidence, sufficient inbound capacity, exact net new backing; increases local share and creates the matching claim. `fee` is an external receipt cost. Ark receive service fees need further instrumentation. |
+| `RECEIVE_LIGHTNING` | Confirmed receipt evidence and sufficient inbound capacity; increases local share and creates the net holder claim. Direct-liquidity backing and observed pre-funded inventory backing are explicit modes. `fee` is an external receipt cost; `service_fee` is retained revenue. |
 | `PAYMENT_OFFERED` | Records offered demand before admission. This observation persists even if the following request is unaffordable. |
 | `REQUEST_OUTGOING` | Valid holder inputs, prior offer, unallocated pool assets on the requested channel, actual outbound capacity, and `W + reserved + gross <= budget`; atomically reserves the declared gross policy: full input for abstract fresh change, or invoice plus routing limit for `change_backing: retained`. `max_holder_fee` separately bounds total holder fees, including routing. |
 | `CANCEL_REQUEST` | Verified cancellation before acceptance; restores claims, reservations and capacity. |
@@ -268,3 +268,21 @@ The failure journal reconciles actual terminal identities but uses aggregate
 input reservations for unsampled intermediate client states. Historical missing
 timestamps still prevent whole-journal second integrals; the measured receiver
 hold intervals are separate lower bounds, not production latency samples.
+
+## Observed inventory-backed receive lane
+
+The [inbound report](capital_inbound_report.md) reconciles a 2,000-sat receipt
+against pre-funded inventory. `RECEIVE_LIGHTNING.backing_mode="inventory"`
+requires settlement evidence and committed on-chain pool backing with sufficient
+value and expiry. The received channel asset is separate from that backing.
+`service_fee` stays within operator assets and is charged to the holder;
+`fee` represents external receipt costs. An explicit `pool` flag attributes the
+new liquidity to the funded pool, increasing its contributions and budget but
+never recovering earlier fronting `C`. Legacy direct-liquidity receipt events
+remain supported without relabeling their evidence.
+
+The whole pool root remains committed. A server-owned change VTXO can exist
+economically while exceeding the implementation's selection-depth cap. The
+observed 8,104-sat change is therefore retained as locked backing, not a free
+asset. Pending inbound acceptance is captured separately; the economic reducer
+uses terminal settlement because the intervening claim preparation was unsampled.

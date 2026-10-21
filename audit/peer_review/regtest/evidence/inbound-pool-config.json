@@ -1,0 +1,7 @@
+{
+  "before_sha256": "c50ddc4a37bc75818fe26bb45f9cd5d9f02205b572e8024c7d2fdd5500a29658",
+  "temporary_sha256": "ba5cb70d9887b22922eaadaff461649366487ea41f28d4820996bc6024950a1d",
+  "target": "10000sat:2",
+  "external_funding": 0,
+  "rule": "restore disabled pool configuration before mining or receiving"
+}

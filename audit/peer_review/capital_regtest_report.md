@@ -141,7 +141,8 @@ its timestamp was not sampled. All second-based integrals are unavailable.
 The subsequent [failure report](capital_failure_report.md) verifies accepted
 outbound failure and cooperative revocation, including replacement claim
 ancestry and one pending-channel snapshot. Live timeout/unilateral recovery,
-receive, exit and reorg branches remain distinct validation work.
+exit and reorg branches remain distinct validation work. A subsequent
+[inventory-backed receive](capital_inbound_report.md) is now reconciled as well.
 
 The [fee-aware fixed-budget comparison](capital_fixed_budget_results.md) now
 reruns all four demand families under retained backing and declared recovery
@@ -153,9 +154,10 @@ transaction-cost scenario, not a measured deployment ranking or batched-receipt
 cost estimate. The [status artifact](capital/matched-service-status.json) keeps
 that distinction explicit.
 
-The [live-branch preflight](regtest/evidence/live-branch-preflight.json) verifies
-that the current owned CLN node lacks the hold-invoice plugin required by the
-pinned inbound path. Exact operational timing, those additional live paths,
+The historical [live-branch preflight](regtest/evidence/live-branch-preflight.json)
+recorded a missing hold-invoice plugin. The [inbound extension](capital_inbound_report.md)
+subsequently installs the pinned upstream plugin and reconciles one receipt,
+including depth-excluded pool change. Exact operational timing, remaining live paths,
 bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments remain
 unfinished. No testnet4 experiment was attempted; a synchronized endpoint and
 dedicated test funding were requested.

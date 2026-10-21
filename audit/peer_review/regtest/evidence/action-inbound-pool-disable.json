@@ -1,0 +1,10 @@
+{
+  "action": "inbound-pool-disable",
+  "monotonic_start_ns": 8591730256326,
+  "height": 4439,
+  "state": "returned",
+  "monotonic_end_ns": 8592543151152,
+  "result": {
+    "ready": true
+  }
+}

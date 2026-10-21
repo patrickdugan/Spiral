@@ -64,7 +64,8 @@ export interface Payloads {
   OPEN_CHANNEL: { channel_id: string; asset_id: string; funding_ref: string; remote: number; spendable: number; receivable: number };
   CHANNEL_CAPACITY: { channel_id: string; local: number; remote: number; spendable: number; receivable: number };
   ISSUE_VTXO: { claim: ClaimSpec; service_fee?: number };
-  RECEIVE_LIGHTNING: { channel_id: string; asset_id: string; fee: number; claim: ClaimSpec };
+  RECEIVE_LIGHTNING: { channel_id: string; asset_id: string; fee: number; claim: ClaimSpec;
+    backing_mode?: "inventory"; service_fee?: number; pool?: boolean; settlement_evidence_ref?: string };
   PAYMENT_OFFERED: { operation_id: string; holder: string };
   REQUEST_OUTGOING: Request;
   CANCEL_REQUEST: { operation_id: string };
@@ -388,13 +389,27 @@ export class CapitalAccountingMachine {
         s.sweeps[d.sweep_id] = { ...d, operation_id: d.operation_ids[0] ?? "", txid: e.txid, state: "BROADCAST", inclusion_height: null, inclusion_hash: null, last_event_id: e.event_id }; break;
       }
       case "RECEIVE_LIGHTNING": {
-        const d = e.data, ch = this.channel(e, d.channel_id); integer(d.fee);
-        demand(ch.receivable >= e.amount && e.amount > d.fee, "insufficient inbound capacity");
-        demand(sum(Object.values(d.claim.allocations)) === e.amount - d.fee && Object.keys(d.claim.allocations).length === 1 && d.claim.allocations[d.asset_id] === e.amount - d.fee, "receipt backing mismatch");
-        this.newAsset(e, d.asset_id, e.amount - d.fee, `ln:${d.channel_id}`, ch.funding_ref, [], false);
-        ch.remote -= e.amount - d.fee; ch.receivable -= e.amount - d.fee; ch.spendable += e.amount - d.fee; ch.last_event_id = e.event_id;
+        const d = e.data, ch = this.channel(e, d.channel_id), serviceFee = integer(d.service_fee ?? 0); integer(d.fee);
+        demand(ch.receivable >= e.amount && e.amount > sum([d.fee, serviceFee]), "insufficient inbound capacity or value");
+        const received = e.amount - d.fee, claimValue = received - serviceFee;
+        if (d.backing_mode === "inventory") {
+          demand(d.settlement_evidence_ref && e.evidence_refs.includes(d.settlement_evidence_ref), "inventory receipt requires settlement evidence");
+          demand(!Object.hasOwn(d.claim.allocations, d.asset_id), "inventory receipt cannot count received liquidity as pool backing");
+          for (const id of Object.keys(d.claim.allocations)) {
+            const a = this.asset(e, id);
+            demand(a.pool && a.location === "onchain" && a.state === "COMMITTED" && a.release_height !== undefined &&
+              d.claim.expiry_height <= a.release_height, "receipt inventory is not mature recorded pool backing");
+          }
+        } else {
+          demand(Object.keys(d.claim.allocations).length === 1 && d.claim.allocations[d.asset_id] === claimValue, "receipt backing mismatch");
+        }
+        this.newAsset(e, d.asset_id, received, `ln:${d.channel_id}`, ch.funding_ref, [], d.pool ?? false);
+        if (d.pool) { s.B.budget += received; s.B.pool.transfers_in += received; }
+        ch.remote -= received; ch.receivable -= received; ch.spendable += received; ch.last_event_id = e.event_id;
         s.totals.inflows += e.amount; s.totals.fees += d.fee;
-        this.issue(e, d.claim, e.amount - d.fee, true); break;
+        this.issue(e, d.claim, claimValue, true);
+        this.holder(d.claim.claimant).received += serviceFee; this.holder(d.claim.claimant).fees += serviceFee;
+        s.totals.service_revenue += serviceFee; break;
       }
       case "PAYMENT_OFFERED": {
         demand(e.amount > 0 && !s.J.offers[e.data.operation_id], "invalid/duplicate offered demand");

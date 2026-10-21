@@ -1,0 +1,10 @@
+{
+  "action": "inbound-captain-restart",
+  "monotonic_start_ns": 8492068790169,
+  "height": 4439,
+  "state": "returned",
+  "monotonic_end_ns": 8494856704890,
+  "result": {
+    "result": "spiral-captaind"
+  }
+}

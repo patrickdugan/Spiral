@@ -106,3 +106,21 @@ The runtime manifest predates normalization and retains its historical
 Exact HTLC acceptance and round commitment times were not sampled. The journal
 uses confirmed snapshot detection heights and null seconds; it cannot support
 a precise operational latency claim.
+
+## Inventory-backed receive extension
+
+See [the inbound report](../capital_inbound_report.md) for the verified 2,000-sat
+receipt, the 104-sat service fee, pre-funded pool ancestry and depth-excluded
+change. `enable-inbound.py` records the pinned hold-plugin addition;
+`prepare-inbound-pool.py` issues one two-leaf pool and disables replenishment;
+`receive-inbound.py` attempts one payment. These action scripts refuse existing
+intent labels. Do not rerun them to resolve an uncertain payment.
+
+The first receipt completed but its CLI result did not parse. The committed
+`reconcile-inbound.py` reads that existing attempt; it never pays again.
+`attest-inbound.py` records public source, chain and transaction pins. Run
+`node --experimental-strip-types audit/peer_review/regtest/normalize-inbound.ts`
+from the repository root to reproduce the 49-event journal offline. The live
+fixture now has the loopback hold plugin enabled, automatic pool issuance
+disabled, and no pending HTLC from this experiment. Historical snapshots retain
+their original configuration and chain tip.

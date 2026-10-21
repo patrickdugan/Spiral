@@ -1,0 +1,20 @@
+{
+  "payments": [
+    {
+      "created_index": 1,
+      "id": 1,
+      "payment_hash": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0",
+      "groupid": 968252345084909073,
+      "updated_index": 1,
+      "partid": 1,
+      "destination": "0292c703491a311923395c9925b387f08577b98c83b074bdbf8c126a0c12515db7",
+      "amount_msat": 2000000,
+      "amount_sent_msat": 2000000,
+      "created_at": 1792589751,
+      "completed_at": 1792589771,
+      "status": "complete",
+      "bolt11": "lnbcrt20u1p4d30aksp5c5zt5pqt2p3med9hvvkqsatgfy6me3rh2lc2wdzkcu5c8a64lvjqpp53p032ymdh239ehgrkcdcc9ef3f285qrp8cg6690qagksty0068cqdqqxqy9gcqcqzgq9qyysgqec2na66vj6udf2xknygxgm3j592kaqs28en25ju98lal0ma37e7rfr9dmd88sep3qg39grtqjq5vawa3mh0xnvu5vt4uw9434ql9x6cqrjd9ts"
+    }
+  ],
+  "payment_preimage_sha256_verified": "885f15136dbaa25cdd03b61b8c17298a547a00613e11ad15e0ea2d0591efd1f0"
+}
