@@ -1,39 +1,110 @@
 {
   "inspection_date": "2026-10-21",
-  "evidence_class": "environment_observation",
-  "regtest_status": "not_executed",
-  "testnet4_status": "not_attempted_regtest_prerequisite_unsatisfied",
-  "observations": [
+  "evidence_class": "observed-regtest",
+  "regtest_status": "transaction_lifecycle_verified_reducer_normalization_pending",
+  "testnet4_status": "not_attempted_reducer_prerequisite_unsatisfied",
+  "actual_genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "best_block_hash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
+  "binary_digests": [
     {
-      "surface": "Windows PowerShell",
-      "check": "Get-Command docker,bitcoin-cli,captaind,lightning-cli -ErrorAction SilentlyContinue",
-      "result": "No matching executables on PATH"
+      "binary": "bitcoind",
+      "container": "spiral-bitcoin",
+      "path": "/opt/bitcoin-31.0/bin/bitcoind",
+      "version": "Bitcoin Core daemon version v31.0.0 bitcoind",
+      "sha256": "dae69848ae9aaadcc3aa697d1c92b1283273a59c8d87b220b29ddc2813e25eb6"
     },
     {
-      "surface": "WSL outside sandbox",
-      "check": "wsl --list --quiet",
-      "result": "Ubuntu-24.04"
+      "binary": "lightningd",
+      "container": "spiral-cln-server",
+      "path": "/usr/local/bin/lightningd",
+      "version": "v26.06.7",
+      "sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2"
     },
     {
-      "surface": "Ubuntu-24.04",
-      "check": "command -v docker; command -v bitcoind; command -v lightningd; command -v captaind; command -v cargo; ls /var/run/docker.sock",
-      "result": "Only /root/.cargo/bin/cargo was found; Docker socket absent"
+      "binary": "captaind",
+      "container": "spiral-captaind",
+      "path": "/usr/local/bin/captaind",
+      "version": "captaind 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "38881e672f06751180f485e4d927487c4bd90363da69449ffee4ba57fde7212a"
+    },
+    {
+      "binary": "watchmand",
+      "container": "spiral-watchmand",
+      "path": "/usr/local/bin/watchmand",
+      "version": "watchmand 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "aab9ae7d301be8a8a3e2864cce7315ec7644bfae5679915da966543e0e55ed17"
+    },
+    {
+      "binary": "bark",
+      "container": "spiral-bark",
+      "path": "/usr/local/bin/bark",
+      "version": "bark 0.7.1 (8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a)",
+      "sha256": "ce12ba616bdd1a7f97ddcfeb070f44e79308842b529456e5b3947f1332fcdbaf"
     }
   ],
-  "actual_genesis_hash": null,
-  "best_block_hash": null,
-  "binary_digests": null,
-  "container_digests": null,
-  "effective_configuration": null,
-  "initial_state_snapshots": null,
-  "owned_regtest_endpoint": null,
-  "transactions_signed_or_broadcast": 0,
+  "container_digests": [
+    {
+      "component": "captain",
+      "reference": "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358"
+      ],
+      "created": "2026-09-11T12:03:23.939148777Z"
+    },
+    {
+      "component": "bark",
+      "reference": "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02",
+      "image_id": "sha256:e575cbfbf790d1d69a538740d33a8c21bd0c74cbc6f3d45ebc9158d2d45b5727",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02"
+      ],
+      "created": "2026-09-11T12:33:36.023820507Z"
+    },
+    {
+      "component": "bitcoin",
+      "reference": "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792",
+      "image_id": "sha256:1aafb9c72e7744929d37b2483c86e0197593992d62e91c1fd0d79eebf9d69453",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792"
+      ],
+      "created": "2026-05-14T13:15:02.695736273Z"
+    },
+    {
+      "component": "cln",
+      "reference": "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4",
+      "image_id": "sha256:0dc257a664587e5e5526d9171cc0fa7a9b16f1d01b62c218cef9bbc9b847f59c",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4"
+      ],
+      "created": "2026-08-28T11:56:45.339588263Z"
+    }
+  ],
+  "effective_configuration": "../regtest/evidence/runtime-identity.json",
+  "initial_state_snapshots": [
+    "../regtest/evidence/initial-funding.json",
+    "../regtest/evidence/initial-funded-state.json"
+  ],
+  "owned_regtest_endpoint": "127.0.0.1:18483 (WSL, regtest only)",
+  "noncoinbase_transactions_in_reconciled_fixture": 10,
+  "exclusive_reuse_proof": "../regtest/evidence/reuse-proof.json",
+  "economic_reconciliation": "../regtest/evidence/economic-reconciliation.json",
+  "fixture_initial_sat": 2200000,
+  "recovered_output_sat": 98705,
+  "clock_caveat": "Accelerated blocks and manually triggered sweeps; no production latency inference.",
   "remaining": [
-    "Provision and attest an owned pinned regtest stack",
-    "Capture backing/claim/change joins and all fees/reserves",
-    "Execute and reconcile an independent recovered-asset reuse",
-    "Resolve unsupported adapter shapes and irreversible deep-reorg liabilities",
-    "Rerun matched-service comparisons using observed clocks",
-    "Only then perform the bounded testnet4 protocol"
+    "Extend reducer and adapter for retained backing, actual gross reserve, round overhead and fees",
+    "Replay observed events through all machine invariants",
+    "Complete live failure/timeout/receive/exit/reorg branches",
+    "Rerun matched-service comparisons with normalized observed semantics",
+    "Only then execute the bounded testnet4 operational-clock protocol"
   ]
 }

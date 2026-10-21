@@ -45,7 +45,7 @@
     "model/capital.properties.test.ts": "e64f706068bb23aa02cfb36b5eb2bfd07323bca8f6cbdcaa8ba253ca8d8c7a9e",
     "model/capital.test.ts": "bd646ff84524f331d1a4e5a2517a9ea45d0d76d6f32a942be11b9b1575f953ed",
     "model/capital.ts": "58ff49ebfebd5fce5e428ad95e51e76341535755261755da0fd8ee9cf7a8f62d",
-    "audit/peer_review/capital_artifacts.ts": "4a8c475c0689e83e921be8d42f7bf69a38ba35e7b53b885cb833f7a3b771edbe",
+    "audit/peer_review/capital_artifacts.ts": "91c828869bbe471342a0ac402b4970f6ddb6b1866ec8ba4beeb4354606277582",
     "audit/peer_review/verify_capital.ts": "9f3829815eb4200a8da0d2e60772e466124f6856e1ed4a00d3f29d88d44f0896"
   }
 }

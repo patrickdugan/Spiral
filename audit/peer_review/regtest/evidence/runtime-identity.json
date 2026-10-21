@@ -1,0 +1,254 @@
+{
+  "evidence_class": "partial-regtest-execution",
+  "captured_unix_ns": 1792582545995967776,
+  "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "chain": {
+    "chain": "regtest",
+    "blocks": 4439,
+    "headers": 4439,
+    "bestblockhash": "539054983ed8d68d4f950077e61ab64fd1bb0fefcb356b43dbffa0a025200d13",
+    "bits": "207fffff",
+    "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+    "difficulty": "4.656542373906925e-10",
+    "time": 1792582381,
+    "mediantime": 1792582380,
+    "verificationprogress": 1,
+    "initialblockdownload": false,
+    "chainwork": "00000000000000000000000000000000000000000000000000000000000022b0",
+    "size_on_disk": 1330378,
+    "pruned": false,
+    "warnings": []
+  },
+  "images": [
+    {
+      "component": "captain",
+      "reference": "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/captaind@sha256:9e1dff4d944ec3049bae08a45c6bb9d37ce66334a131a1faec42dfeac4d5f358"
+      ],
+      "created": "2026-09-11T12:03:23.939148777Z"
+    },
+    {
+      "component": "bark",
+      "reference": "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02",
+      "image_id": "sha256:e575cbfbf790d1d69a538740d33a8c21bd0c74cbc6f3d45ebc9158d2d45b5727",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "secondark/bark@sha256:ebbcab48d5c45e83e3b9f4328213bf89151193b9dffca3785e3c35ff6b3fbc02"
+      ],
+      "created": "2026-09-11T12:33:36.023820507Z"
+    },
+    {
+      "component": "bitcoin",
+      "reference": "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792",
+      "image_id": "sha256:1aafb9c72e7744929d37b2483c86e0197593992d62e91c1fd0d79eebf9d69453",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792"
+      ],
+      "created": "2026-05-14T13:15:02.695736273Z"
+    },
+    {
+      "component": "cln",
+      "reference": "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4",
+      "image_id": "sha256:0dc257a664587e5e5526d9171cc0fa7a9b16f1d01b62c218cef9bbc9b847f59c",
+      "architecture": "amd64",
+      "os": "linux",
+      "repo_digests": [
+        "elementsproject/lightningd@sha256:0421a5f0d1b2e1ad639edfa17d777816040e3850d91bae7f2d32186d9c1e6da4"
+      ],
+      "created": "2026-08-28T11:56:45.339588263Z"
+    }
+  ],
+  "containers": [
+    {
+      "name": "spiral-bitcoin",
+      "image_id": "sha256:1aafb9c72e7744929d37b2483c86e0197593992d62e91c1fd0d79eebf9d69453",
+      "running": true,
+      "started_at": "2026-10-21T11:12:25.195511371Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "bitcoind"
+      ],
+      "command": [
+        "-regtest",
+        "-server",
+        "-listen=0",
+        "-dnsseed=0",
+        "-discover=0",
+        "-txindex=1",
+        "-rpcbind=127.0.0.1",
+        "-rpcallowip=127.0.0.1",
+        "-rpcport=18483",
+        "-rpcuser=spiral",
+        "-rpcpassword=<redacted-local-test-credential>",
+        "-fallbackfee=0.00001",
+        "-dbcache=64",
+        "-par=1",
+        "-datadir=/data",
+        "-printtoconsole",
+        "-reindex"
+      ]
+    },
+    {
+      "name": "spiral-cln-server",
+      "image_id": "sha256:0dc257a664587e5e5526d9171cc0fa7a9b16f1d01b62c218cef9bbc9b847f59c",
+      "running": true,
+      "started_at": "2026-10-21T11:10:40.014099342Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "lightningd"
+      ],
+      "command": [
+        "--network=regtest",
+        "--lightning-dir=/data",
+        "--log-level=info",
+        "--alias=spiral-server",
+        "--bind-addr=127.0.0.1:11935",
+        "--grpc-port=11936",
+        "--grpc-host=127.0.0.1",
+        "--bitcoin-rpcconnect=127.0.0.1",
+        "--bitcoin-rpcport=18483",
+        "--bitcoin-rpcuser=spiral",
+        "--bitcoin-rpcpassword=<redacted-local-test-credential>"
+      ]
+    },
+    {
+      "name": "spiral-cln-peer",
+      "image_id": "sha256:0dc257a664587e5e5526d9171cc0fa7a9b16f1d01b62c218cef9bbc9b847f59c",
+      "running": true,
+      "started_at": "2026-10-21T11:10:40.692150012Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "lightningd"
+      ],
+      "command": [
+        "--network=regtest",
+        "--lightning-dir=/data",
+        "--log-level=info",
+        "--alias=spiral-peer",
+        "--bind-addr=127.0.0.1:12935",
+        "--grpc-port=12936",
+        "--grpc-host=127.0.0.1",
+        "--bitcoin-rpcconnect=127.0.0.1",
+        "--bitcoin-rpcport=18483",
+        "--bitcoin-rpcuser=spiral",
+        "--bitcoin-rpcpassword=<redacted-local-test-credential>"
+      ]
+    },
+    {
+      "name": "spiral-postgres",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "running": true,
+      "started_at": "2026-10-21T11:10:41.381467635Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "/bin/sh"
+      ],
+      "command": [
+        "/config/postgres-start.sh"
+      ]
+    },
+    {
+      "name": "spiral-captaind",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "running": true,
+      "started_at": "2026-10-21T11:22:23.981895382Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "captaind"
+      ],
+      "command": [
+        "--config",
+        "/data/config/captaind.toml",
+        "start"
+      ]
+    },
+    {
+      "name": "spiral-watchmand",
+      "image_id": "sha256:ff0e45bc4f8bfbd2b809eff7264aa4f31de413aaf3c2b8d45dd12b9a4e7e33e2",
+      "running": true,
+      "started_at": "2026-10-21T11:13:09.915087317Z",
+      "oom_killed": false,
+      "memory_limit": 805306368,
+      "network_mode": "host",
+      "entrypoint": [
+        "watchmand"
+      ],
+      "command": [
+        "--config",
+        "/data/config/watchmand.toml",
+        "start"
+      ]
+    }
+  ],
+  "configurations": {
+    "captaind.toml": {
+      "sha256": "f788c707432fa15545f0498b843ff2e5c1a763c54b14201774ef25bf394ff3a6",
+      "redacted_text": "#\n# This is a template config file for captaind.\n# All required values have a default value provided in this file.\n# All optional values are included here but are commented out.\n#\n\n\n# The directory all captaind data is stored\ndata_dir = \"/data/captain\"\n\n# The bitcoin network this server runs on\nnetwork = \"regtest\"\n\n# The lifetime of VTXOs in blocks\nvtxo_lifetime = 4320\n\n# Maximum value of VTXOs\n#max_vtxo_amount = \"1000000 sat\"\n\n# Minimum amount required for board transactions\nmin_board_amount = \"20000 sat\"\n\n# Maximum amount for a board\n# Unset means no limit. Zero disables boards.\n#max_board_amount = \"1000000 sat\"\n\n# Maximum total input amount for an offboard or send-onchain\n# Unset means no limit. Zero disables offboards.\n#max_offboard_amount = \"1000000 sat\"\n\n# Maximum total input amount for an arkoor send\n# Unset means no limit. Zero disables arkoor sends.\n#max_arkoor_amount = \"1000000 sat\"\n\n# The time between execution of each exit clause of the VTXO, in blocks\nvtxo_exit_delta = 144\n\n# The maximum transaction depth of the arkoor part of VTXOs that server cosigns\n# Maximum exit depth (genesis chain length) allowed for a VTXO.\n# Once a VTXO's exit depth reaches this value the server will refuse to\n# cosign further OOR transactions spending it. Clients should refresh\n# their VTXOs into a round before this limit is reached.\nmax_vtxo_exit_depth = 100\n\n# The maximum number of outputs per input of an arkoor tx\nmax_arkoor_fanout = 4\n\n# Number of confirmation required for a board tx to be accepted as a VTXO\nrequired_board_confirmations = 3\n\n# Minimum number of confirmations for a UTXO to be considered trusted.\nmin_trusted_confs = 2\n\n# Whether to provide rich errors and stacktraces in RPC error returns\nrpc_rich_errors = true\n\n# The interval at which the SyncManager polls for new blocks\nsync_manager_block_poll_interval = \"100ms\"\n\n# The number of blocks within which a tx broadcast via the TxNursery is\n# expected to confirm; when the target passes the operator is warned\n# on every new block\nnursery_confirm_target_blocks = 6\n\n# A public service announcement to send on each client-server handshake request\n#\n# Clients are supposed to display this message to their users.\n#handshake_psa = \"Welcome to the most Awesome Ark Server!\"\n\n# Link to the terms of service of this server, announced to clients\n# via `ArkInfo.tos_link`\n#tos_link = \"https://example.com/terms-of-service\"\n\n# Endpoint for OpenTelemetry collector\n#otel_collector_endpoint = \"http://127.0.0.1:4000\"\n# Probability of enabling OpenTelemetry tracing\n#otel_tracing_sampler = \"0.5\"\n# The name of your deployment used by OpenTelemetry\notel_deployment_name = \"my_regtest\"\n\n# The maximum number of items we return to mailbox queries\nmax_read_mailbox_items = 100\n\n\n##########\n# ROUNDS #\n##########\n\n# The interval to start new rounds\nround_interval = \"10s\"\n\n# The time users have to submit payments when a round starts\nround_submit_time = \"2s\"\n\n# The time users have to provide VTXO tree and forfeit tx signatures\nround_sign_time = \"2s\"\n\n# The amount of round cosign nonces we require users to provide\n#\n# This effectively caps the maximum number of leaf VTXOs in a round.\n# So, by default, the maximum number of output VTXOs in a round is:\n#   `radix ^ nb_round_nonces` (= 4 ^ 8 = 65 536)\nnb_round_nonces = 8\n\n# The duration after which to drop forfeit nonces\nround_forfeit_nonces_timeout = \"30s\"\n\n# Maximum total output amount for a single round participation\n# Unset means no limit. Zero disables round participation.\n#\n# NB this can strand a large balance: clients can't see the limit and don't\n# split a refresh to fit under it, and a VTXO above it can never be refreshed,\n# leaving a unilateral exit as the only way out.\n#max_round_amount = \"1000000 sat\"\n\n\n#############\n# OFFBOARDS #\n#############\n\n# The time after which we drop offboard sessions and release locked VTXOs\noffboard_session_timeout = \"30s\"\n\n# How often we check pending offboards: expiring timed-out sessions and\n# retrying the commit and broadcast of signed offboard txs\noffboard_check_interval = \"1s\"\n\n# The time in which a fee rate is considered valid for performing an offboard.\n#\n# This allows us to handle the case where clients don't receive up-to-date fee rates due to\n# caching, so we allow a grace period in which we honor historical fee rates when they\n# request an offboard.\n#\n# Note: Setting this lower than fee_estimator.history_duration will result in the duration\n# being limited by that.\noffboard_acceptable_fee_rate_duration = \"15m\"\n\n# Interval to retry connecting to disconnected CLN nodes\ncln_reconnect_interval = \"10s\"\n\n# Interval to double check on pending invoices\ninvoice_check_interval = \"3s\"\n\n# The time we give xpay to try finish a payment\ncln_xpay_timeout = \"60s\"\n\n# FIXME\ninvoice_check_base_delay = \"10s\"\n\n# FIXME\nmax_invoice_check_delay = \"10m\"\n\n# FIXME\ninvoice_poll_interval = \"30s\"\n\n# Interval at which the settler polls for cross-process HTLC settlements\nhtlc_settlement_poll_interval = \"60s\"\n\n# Base delay for TrackAll stream reconnection backoff\ntrack_all_base_delay = \"1s\"\n\n# Maximum delay for TrackAll stream reconnection backoff\nmax_track_all_delay = \"60s\"\n\n# The number of blocks to keep between Lightning and Ark HTLCs expiries.\nhtlc_expiry_delta = 40\n\n# The number of blocks after which an HTLC-send VTXO expires once granted.\n# When granting an HTLC-send VTXO, the Server doesn't know the lightning\n# route yet, so it needs this config to be sufficiently high to account\n# for the worst routing scenario.\nhtlc_send_expiry_delta = 258\n\n# Maximum CLTV delta server will allow clients to request an\n# invoice generation with.\nmax_user_invoice_cltv_delta = 250\n\n# The duration after which a generated invoice will expire.\ninvoice_expiry = \"48h\"\n\n# The duration for which the server will hold inbound HTLC(s) while\n# waiting for a user to claim a lightning receive.\n# After this timeout the server will fail the HTLC(s) back to the sender and\n# also cancel the hold invoice.\nreceive_htlc_forward_timeout = \"3min\"\n\n# Indicates whether the Ark server requires clients to either\n# provide a VTXO ownership proof, or a lightning receive token\n# when preparing a lightning claim.\nln_receive_anti_dos_required = false\n\n# Maximum amount for which the server will issue lightning receive\n# invoices.\n# Unset means no limit. Zero disables lightning receives.\n#max_ln_receive_amount = \"100000 sat\"\n\n# Maximum amount for a lightning send\n# Unset means no limit. Zero disables lightning sends.\n#max_ln_send_amount = \"100000 sat\"\n\n# The fraction of the fee we charge that we allow CLN to claim at most\n#\n# E.g. if a user wants to pay 1000 sat, we charge him 0.4%, so 4 sats,\n# and the ln_max_fee_ppm is set to 750000, we set CLN's maxfee to 3 sats.\nln_max_fee_ppm = 900000\n\n# This allows you to configure one or more lightning nodes for the server to use. Just add as\n# many [[cln_array]] entries as you need!\n#[[cln_array]]\n#uri = \"http://127.0.0.1:8000\"\n#priority = 10\n#server_cert_path = \"/etc/cln/server.cert\"\n#client_cert_path = \"/etc/cln/client.cert\"\n#client_key_path = \"/etc/cln/client.key\"\n#hold_invoice.uri = \"http://127.0.0.1:8001\"\n#hold_invoice.server_cert_path = \"/etc/cln/hold/server.cert\"\n#hold_invoice.client_cert_path = \"/etc/cln/hold/client.cert\"\n#hold_invoice.client_key_path = \"/etc/cln/chold/lient.key\"\n\n\n###############\n# BLOCKLIST   #\n###############\n\n# Optional path to a file containing one bitcoin address per line.\n# Addresses in this file are blocked from being used for boards, offboards, or\n# sending money to our internal wallets.\n#bitcoin_address_blocklist = \"/etc/captaind/blocklist.txt\"\n\n# How often the blocklist file is re-read from disk (default: 1h).\n# Only relevant if bitcoin_address_blocklist is set.\n#bitcoin_address_blocklist_refresh_interval = \"1h\"\n\n\n########\n# FEES #\n########\n\n# Board fees\n[fees.board]\nmin_fee_sat = 330 # Can be dust\nbase_fee_sat = 100\nppm = 1000 # 0.1%\n\n# Offboard fees with expiry-based PPM\n[fees.offboard]\nbase_fee_sat = 200\n# The number of bytes we charge fixed for each offboard\n#\n# This is multiplied with the offboard feerate. The user's output script is\n# charged on top, so this covers the rest of a 2-in-3-out taproot keyspend tx:\n#   2-in-3-out taproot keyspend tx     1018 wu   255 vb\n#   user's p2tr output script         - 136 wu  - 34 vb\n#                                      882 wu   221 vb\nfixed_additional_vb = 221\nppm_expiry_table = [\n    { expiry_blocks_threshold = 0, ppm = 0 },       # exp <= 96: 0 ppm\n    { expiry_blocks_threshold = 97, ppm = 1000 },   # 96 < exp <= 198: 1,000 ppm (0.1%)\n    { expiry_blocks_threshold = 199, ppm = 4000 },  # 198 < exp <= 2160: 4,000 ppm (0.4%)\n    { expiry_blocks_threshold = 2161, ppm = 8000 }, # 2160 < exp: 8,000 ppm (0.8%)\n]\n\n# Refresh fees with expiry-based PPM\n[fees.refresh]\nbase_fee_sat = 150\nppm_expiry_table = [\n    { expiry_blocks_threshold = 0, ppm = 0 },       # exp <= 96: 0 ppm\n    { expiry_blocks_threshold = 97, ppm = 1000 },   # 96 < exp <= 198: 1,000 ppm (0.1%)\n    { expiry_blocks_threshold = 199, ppm = 4000 },  # 198 < exp <= 2160: 4,000 ppm (0.4%)\n    { expiry_blocks_threshold = 2161, ppm = 8000 }, # 2160 < exp: 8,000 ppm (0.8%)\n]\n\n# Lightning receive fees\n[fees.lightning_receive]\nbase_fee_sat = 100\nppm = 2000 # 0.2%\n\n# Lightning send fees with expiry-based PPM\n[fees.lightning_send]\nmin_fee_sat = 10\nbase_fee_sat = 75\nppm_expiry_table = [\n    { expiry_blocks_threshold = 0, ppm = 0 },       # exp <= 96: 0 ppm\n    { expiry_blocks_threshold = 97, ppm = 1000 },   # 96 < exp <= 198: 1,000 ppm (0.1%)\n    { expiry_blocks_threshold = 199, ppm = 4000 },  # 198 < exp <= 2160: 4,000 ppm (0.4%)\n    { expiry_blocks_threshold = 2161, ppm = 8000 }, # 2160 < exp: 8,000 ppm (0.8%)\n]\n\n#############\n# VTXO POOL #\n#############\n\n[vtxopool]\n# The target set of VTXOs to maintain in the pool\n# Format: \"<amount>:<count>\", f.e. \"1000sat:50\"\nvtxo_targets = []\n# At what % of the target should new VTXOs be issued\n#\n# Once one of the target amounts falls below target, all amounts\n# will be replenished.\nvtxo_target_issue_threshold = 80\n# The lifetime in blocks of the VTXOs in the pool\nvtxo_lifetime = 432\n# Time in blocks before the expiry to no longer use VTXOs\nvtxo_pre_expiry = 144\n# Maximum depth for pool VTXOs\nmax_vtxo_exit_depth = 3\n\n\n#################\n# FEE ESTIMATOR #\n#################\n\n[fee_estimator]\n# Interval to update fee estimates from bitcoind\nupdate_interval = \"1m\"\n# How long to maintain the fee rate history for\nhistory_duration = \"60m\"\n# Fallback feerate for fast confirmation (1 block target)\nfallback_fee_rate_fast = \"25sat/vb\"\n# Fallback feerate for regular confirmation (3 block target)\nfallback_fee_rate_regular = \"10sat/vb\"\n# Fallback feerate for slow confirmation (6 block target)\nfallback_fee_rate_slow = \"4sat/vb\"\n# Optional ceiling for fetched fee rates. Any rate returned by the backend\n# above this value is clamped down to it. Useful to guard against mempool\n# spikes or a misconfigured esplora/bitcoind returning absurd rates.\n# Accepts the same units as the fallback rates (e.g. \"1000sat/vb\").\n# Unset by default (no ceiling).\n# max_fee_rate = \"1000sat/vb\"\n\n\n##################\n# gRPC interface #\n##################\n\n[rpc]\n# Listen address for the public gRPC API\npublic_address = \"127.0.0.1:13535\"\n# Listen address for the private admin gRPC API.\n# Unauthenticated by design and as privileged as shell access to this host.\n# Keep it on loopback, or comment it out to not start it.\nadmin_address = \"127.0.0.1:13536\"\n# Listen address for the integration manager gRPC API\nintegration_address = \"127.0.0.1:13537\"\n\n\n#################\n# POSTGRESQL DB #\n#################\n\n[postgres]\nhost = \"localhost\"\nuser = \"postgres\"\npassword = \"<local-test-credential-redacted>\"\nport = 15432\nname = \"spiral_capital\"\n# Maximum parallel connections to maintain in our connection pool\nmax_connections = 10\n# Timeout in seconds for acquiring a connection from the pool (default: 10)\n#connection_timeout_secs = 10\n# Idle connections are recycled after this many seconds (default: 90)\n#idle_timeout_secs = 90\n\n\n############\n# BITCOIND #\n############\n\n[bitcoind]\n# Bitcoind JSON_RPC API endpoint\nurl = \"http://127.0.0.1:18483\"\n# Path to the cookie file for RPC authentication\n#cookie = \"/home/bitcoin/.bitcoin/.cookie\"\nrpc_user = \"spiral\"\nrpc_pass = \"<local-test-credential-redacted>\"\n\n\n[[cln_array]]\nuri = \"https://localhost:11936\"\npriority = 1\nserver_cert_path = \"/data/cln-server/regtest/ca.pem\"\nclient_cert_path = \"/data/cln-server/regtest/client.pem\"\nclient_key_path = \"/data/cln-server/regtest/client-key.pem\"\n"
+    },
+    "watchmand.toml": {
+      "sha256": "b21dc2a563b0d3bc1831a358546e5bc25ec010008a8cca25d7b0157e1483954f",
+      "redacted_text": "admin_address = \"127.0.0.1:13538\"\nsweep_address = \"bcrt1p5dzkt58rxq2tjjvklh5wehmgstav5w9dpxrmqanzecqufzm7xp8qwet9x4\"\n#\n# This is a template config file for watchmand.\n# All required values have a default value provided in this file.\n# All optional values are included here but are commented out.\n#\n\n# The directory all watchmand data is stored\ndata_dir = \"/data/captain\"\n\n# The bitcoin network this server runs on\nnetwork = \"regtest\"\n\n# The interval at which the SyncManager polls for new blocks\nsync_manager_block_poll_interval = \"100ms\"\n\n# Interval at which the settler polls for cross-process HTLC settlements\nhtlc_settlement_poll_interval = \"60s\"\n\n# Minimum number of confirmations for a UTXO to be considered trusted\nmin_trusted_confs = 1\n\n# The name of your deployment used by OpenTelemetry\notel_deployment_name = \"my_regtest\"\n\n###############\n# BLOCKLIST   #\n###############\n\n# Optional path to a file containing one bitcoin address per line.\n# See captaind.default.toml for more details.\n#bitcoin_address_blocklist = \"/etc/watchmand/blocklist.txt\"\n\n# How often the blocklist file is re-read from disk (default: 1h).\n# Only relevant if bitcoin_address_blocklist is set.\n#bitcoin_address_blocklist_refresh_interval = \"1h\"\n\n\n#############\n# watchman #\n############\n[watchman]\n# How often to react to on-chain exit activity: progressing exit chains and\n# claiming VTXOs before a counterparty's timelock matures.\nreaction_interval = \"10m\"\n# How often to sweep VTXOs only the watchman can spend. Sweeps have no\n# deadline, so this can be much longer than reaction_interval.\nsweep_interval = \"2h\"\nprogress_grace_period = 2\nclaim_chunksize = 20\nincremental_relay_fee = \"100 sat/kvb\"\nmin_cpfp_amount = \"10000 sat\"\n\n\n#################\n# FEE ESTIMATOR #\n#################\n\n[fee_estimator]\n# Interval to update fee estimates from bitcoind\nupdate_interval = \"1m\"\n# How long to maintain the fee rate history for\nhistory_duration = \"60m\"\n# Fallback feerate for fast confirmation (1 block target)\nfallback_fee_rate_fast = \"25sat/vb\"\n# Fallback feerate for regular confirmation (3 block target)\nfallback_fee_rate_regular = \"10sat/vb\"\n# Fallback feerate for slow confirmation (6 block target)\nfallback_fee_rate_slow = \"4sat/vb\"\n# Optional ceiling for fetched fee rates. Any rate returned by the backend\n# above this value is clamped down to it. Unset by default (no ceiling).\n# max_fee_rate = \"1000sat/vb\"\n\n\n#################\n# POSTGRESQL DB #\n#################\n\n[postgres]\nhost = \"localhost\"\nuser = \"postgres\"\npassword = \"<local-test-credential-redacted>\"\nport = 15432\nname = \"spiral_capital\"\n# Maximum parallel connections to maintain in our connection pool\nmax_connections = 10\n# Timeout in seconds for acquiring a connection from the pool (default: 10)\n#connection_timeout_secs = 10\n# Idle connections are recycled after this many seconds (default: 90)\n#idle_timeout_secs = 90\n\n\n############\n# BITCOIND #\n############\n\n[bitcoind]\n# Bitcoind JSON_RPC API endpoint\nurl = \"http://127.0.0.1:18483\"\n# Path to the cookie file for RPC authentication\n#cookie = \"/home/bitcoin/.bitcoin/.cookie\"\nrpc_user = \"spiral\"\nrpc_pass = \"<local-test-credential-redacted>\"\n\n"
+    }
+  },
+  "executables": [
+    {
+      "binary": "bitcoind",
+      "container": "spiral-bitcoin",
+      "path": "/opt/bitcoin-31.0/bin/bitcoind",
+      "version": "Bitcoin Core daemon version v31.0.0 bitcoind",
+      "sha256": "dae69848ae9aaadcc3aa697d1c92b1283273a59c8d87b220b29ddc2813e25eb6"
+    },
+    {
+      "binary": "lightningd",
+      "container": "spiral-cln-server",
+      "path": "/usr/local/bin/lightningd",
+      "version": "v26.06.7",
+      "sha256": "cf814f01f69b857ec1cfb48a907b78d33179c803b6e5f3cff50fbf495d4a38a2"
+    },
+    {
+      "binary": "captaind",
+      "container": "spiral-captaind",
+      "path": "/usr/local/bin/captaind",
+      "version": "captaind 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "38881e672f06751180f485e4d927487c4bd90363da69449ffee4ba57fde7212a"
+    },
+    {
+      "binary": "watchmand",
+      "container": "spiral-watchmand",
+      "path": "/usr/local/bin/watchmand",
+      "version": "watchmand 0.7.1+8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+      "sha256": "aab9ae7d301be8a8a3e2864cce7315ec7644bfae5679915da966543e0e55ed17"
+    },
+    {
+      "binary": "bark",
+      "container": "spiral-bark",
+      "path": "/usr/local/bin/bark",
+      "version": "bark 0.7.1 (8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a)",
+      "sha256": "ce12ba616bdd1a7f97ddcfeb070f44e79308842b529456e5b3947f1332fcdbaf"
+    }
+  ],
+  "source_revisions": {
+    "bark_reported_build_commit": "8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+    "bitcoin_v31_release_commit": "6574cb40869b96b9ffc79c19dc8f4e467d60f321",
+    "cln_v26_06_7_release_commit": "8684c68dffb04ab606e526b64d7d60390d1fe7ed"
+  },
+  "transaction_lifecycle_verified": true,
+  "reference_reducer_acceptance": false
+}

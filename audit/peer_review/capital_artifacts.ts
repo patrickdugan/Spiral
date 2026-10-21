@@ -46,7 +46,7 @@ if (args[0] === "check") {
   json(resolve(root, "deep-reorg-status.json"), unresolved.m.report());
   json(resolve(root, "matched-service-status.json"), {
     status: "blocked_before_observed_semantics", evidence_class: "not_executed", reference_trace_hash: digest(events),
-    reason: "No owned Bark/Core/CLN regtest trace or execution manifest exists. Synthetic finality/reuse heights cannot calibrate implementation-grounded comparisons.",
+    reason: "Owned regtest transactions now prove recovery and independent round reuse, but retained backing and actual round overhead are not yet normalized through the reference reducer. Accelerated blocks and manual sweeps cannot calibrate operational clocks.",
     existing_results: "audit/peer_review/model_sensitivity.json remains a reference-model sensitivity; it has not been relabeled or overwritten.",
     reference_lifecycle: { offered_sat: trace.m.report().totals.offered / 1000, delivered_sat: trace.m.report().totals.delivered / 1000,
       delivery_rate: trace.m.report().delivery_rate, outstanding_fronting_sat: trace.m.report().outstanding_fronting / 1000 },

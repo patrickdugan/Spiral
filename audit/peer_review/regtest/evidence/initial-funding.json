@@ -1,0 +1,55 @@
+{
+  "before": {
+    "chain": {
+      "chain": "regtest",
+      "blocks": 101,
+      "headers": 101,
+      "bestblockhash": "4ec43ddd1dbf529b70df278da5c8a325b5db76de7c981ed6f436419061101f4a",
+      "bits": "207fffff",
+      "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+      "difficulty": 4.656542373906925e-10,
+      "time": 1792580319,
+      "mediantime": 1792580318,
+      "verificationprogress": 1,
+      "initialblockdownload": false,
+      "chainwork": "00000000000000000000000000000000000000000000000000000000000000cc",
+      "size_on_disk": 30375,
+      "pruned": false,
+      "warnings": []
+    },
+    "server": {
+      "rounds": {
+        "address": "bcrt1pugm5erp5uaheqgw648e52z0w0szummje6k4ckpk70swd84xe9x9qmzmgsk",
+        "confirmed_utxos": [],
+        "total_balance": 0,
+        "trusted_balance": 0,
+        "unconfirmed_utxos": [],
+        "untrusted_balance": 0
+      }
+    },
+    "cln": {
+      "outputs": [],
+      "channels": []
+    },
+    "bark": {
+      "total_sat": 0,
+      "trusted_spendable_sat": 0,
+      "immature_sat": 0,
+      "trusted_pending_sat": 0,
+      "untrusted_pending_sat": 0,
+      "confirmed_sat": 0
+    }
+  },
+  "addresses": {
+    "server": "bcrt1pugm5erp5uaheqgw648e52z0w0szummje6k4ckpk70swd84xe9x9qmzmgsk",
+    "cln": "bcrt1qyrqxd2h7hrqvqa22ku6a0h56zfkr4620ytwgan",
+    "bark": "bcrt1pv9tu7qrnepr4y5ydjk332qfy0vslk5nfs6mcdz9u8fr37689uvvqjutjtm"
+  },
+  "amounts_sat": {
+    "server": 1000000,
+    "cln": 1000000,
+    "bark": 200000
+  },
+  "txid": "46ac2161167f29d8077a619aa09f99e4e7ef52f2da6ae20afa583abfa42ebc5e",
+  "phase": "broadcast"
+}

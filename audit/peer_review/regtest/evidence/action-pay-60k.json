@@ -1,0 +1,8 @@
+{
+  "action": "pay-60k",
+  "monotonic_start_ns": 469035603884,
+  "height": 116,
+  "state": "uncertain-failure",
+  "error": "Expecting value: line 1 column 1 (char 0)",
+  "monotonic_end_ns": 471977655953
+}

@@ -1,0 +1,36 @@
+{
+  "event": "disk-full-interruption",
+  "core_before_reindex": {
+    "chain": "regtest",
+    "blocks": 101,
+    "headers": 101,
+    "bestblockhash": "4ec43ddd1dbf529b70df278da5c8a325b5db76de7c981ed6f436419061101f4a",
+    "bits": "207fffff",
+    "target": "7fffff0000000000000000000000000000000000000000000000000000000000",
+    "difficulty": "4.656542373906925e-10",
+    "time": 1792580319,
+    "mediantime": 1792580318,
+    "verificationprogress": 1,
+    "initialblockdownload": false,
+    "chainwork": "00000000000000000000000000000000000000000000000000000000000000cc",
+    "size_on_disk": 30375,
+    "pruned": false,
+    "warnings": []
+  },
+  "captaind_saved_tip": [
+    {
+      "height": 113,
+      "hash": "771a608f1a5a37b0754505e03c1becf687c6b79dfcd74933598669933ab6b876"
+    },
+    {
+      "height": 112,
+      "hash": "51a3ad1219029e74c8420c8c377f5a64c4424e00e54808e93d7e5c45b6213ba8"
+    },
+    {
+      "height": 111,
+      "hash": "56b51e5cfadad452c3517f67d3b53c1ca3e7a79167fe7f519298ce6b2062f4d7"
+    }
+  ],
+  "explanation": "Core restarted at 101; Bark retained 113. No completed Bark payment existed yet.",
+  "capital_lifecycle_complete": false
+}

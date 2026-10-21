@@ -1,0 +1,10 @@
+{
+  "action": "refresh-change",
+  "monotonic_start_ns": 715778427901,
+  "height": 1000,
+  "state": "returned",
+  "monotonic_end_ns": 724386139301,
+  "result": {
+    "stdout": "{\n  \"status\": \"unconfirmed\",\n  \"funding_txid\": \"8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059\"\n}\n"
+  }
+}

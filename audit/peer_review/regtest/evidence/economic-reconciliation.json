@@ -1,0 +1,217 @@
+{
+  "evidence_class": "observed-regtest",
+  "checks_passed": true,
+  "initial_fixture_sat": 2200000,
+  "initial_operator_funding_and_board_sat": 2100000,
+  "operator_remaining_economic_sat": 2027378,
+  "client_remaining_onchain_sat": 99845,
+  "recipient_channel_share_sat": 60000,
+  "delivered_msat": 60000000,
+  "all_miner_fees_sat": 12777,
+  "operator_miner_fees_sat": 12622,
+  "active_client_claims_sat": 38347,
+  "claims_are_overlay_not_additional_assets": true,
+  "channel_funding_counted_once": true,
+  "assets": {
+    "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5:1": {
+      "amount_sat": 99845,
+      "owner": "client",
+      "source": "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5"
+    },
+    "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5:0": {
+      "amount_sat": 500000,
+      "owner": "operator",
+      "source": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5"
+    },
+    "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5:1": {
+      "amount_sat": 499834,
+      "owner": "operator",
+      "source": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5"
+    },
+    "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0": {
+      "amount_sat": 38677,
+      "owner": "operator",
+      "source": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272"
+    },
+    "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:1": {
+      "amount_sat": 56171,
+      "owner": "operator",
+      "source": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272"
+    },
+    "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059:0": {
+      "amount_sat": 38982,
+      "owner": "operator",
+      "source": "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059"
+    },
+    "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16:0": {
+      "amount_sat": 953714,
+      "owner": "operator",
+      "source": "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16"
+    }
+  },
+  "active_claims": [
+    {
+      "id": "9243abf02ee9a811fdad9c71af68d5f2906c8ce99d3f59dd001b5cee6bd49742:0",
+      "amount_sat": 38347,
+      "policy_type": "pubkey",
+      "user_pubkey": "0227cd1ec87a0f5b41d344fcc99d853378fdf1bbdb0d5bca86a0eeb7e05a6f72b6",
+      "server_pubkey": "0266c2a59b2da0ef2999efdc0c5ee16943c08b8e44a68fb60848f59250f491bbaf",
+      "expiry_height": 8756,
+      "exit_delta": 144,
+      "chain_anchor": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0",
+      "exit_depth": 2,
+      "state": {
+        "type": "spendable"
+      }
+    }
+  ],
+  "fees": [
+    {
+      "txid": "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5",
+      "fee_sat": 155,
+      "payer": "client"
+    },
+    {
+      "txid": "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519",
+      "fee_sat": 1295,
+      "payer": "operator"
+    },
+    {
+      "txid": "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57",
+      "fee_sat": 617,
+      "payer": "operator"
+    },
+    {
+      "txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+      "fee_sat": 166,
+      "payer": "operator"
+    },
+    {
+      "txid": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+      "fee_sat": 3857,
+      "payer": "operator"
+    },
+    {
+      "txid": "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db",
+      "fee_sat": 617,
+      "payer": "operator"
+    },
+    {
+      "txid": "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+      "fee_sat": 3857,
+      "payer": "operator"
+    },
+    {
+      "txid": "a44165dd4f60b9a53de18c53e9b5fba7eb8637b04ea7b81babaaf29bddb80481",
+      "fee_sat": 2055,
+      "payer": "operator"
+    },
+    {
+      "txid": "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16",
+      "fee_sat": 158,
+      "payer": "operator"
+    }
+  ],
+  "transaction_events": [
+    {
+      "txid": "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5",
+      "inputs": [
+        "46ac2161167f29d8077a619aa09f99e4e7ef52f2da6ae20afa583abfa42ebc5e:3"
+      ],
+      "outputs": [
+        "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5:0",
+        "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5:1"
+      ],
+      "fee_sat": 155
+    },
+    {
+      "txid": "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519",
+      "inputs": [
+        "30f778f45605875865091a82b6ee6043d0b003cd90761e2a70e7768720d71cf5:0"
+      ],
+      "outputs": [
+        "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519:0"
+      ],
+      "fee_sat": 1295
+    },
+    {
+      "txid": "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57",
+      "inputs": [
+        "46ac2161167f29d8077a619aa09f99e4e7ef52f2da6ae20afa583abfa42ebc5e:0"
+      ],
+      "outputs": [
+        "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57:0",
+        "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57:1"
+      ],
+      "fee_sat": 617
+    },
+    {
+      "txid": "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5",
+      "inputs": [
+        "46ac2161167f29d8077a619aa09f99e4e7ef52f2da6ae20afa583abfa42ebc5e:1"
+      ],
+      "outputs": [
+        "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5:0",
+        "d649aea43fe07aacd8ff417b13e82afb0fe157dcf1bd9e58ca7db33ebd80edc5:1"
+      ],
+      "fee_sat": 166
+    },
+    {
+      "txid": "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272",
+      "inputs": [
+        "68c2be34ab7f8b11ec84279bcc373b260c9a86fdbb521c54967d6c457f9cc519:0"
+      ],
+      "outputs": [
+        "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:0",
+        "09f458267cc9f50da7af5ad1a32f39b4d83db5eb5dd44aa8ac9bc53b981da272:1"
+      ],
+      "fee_sat": 3857
+    },
+    {
+      "txid": "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db",
+      "inputs": [
+        "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57:1"
+      ],
+      "outputs": [
+        "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db:0",
+        "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db:1"
+      ],
+      "fee_sat": 617
+    },
+    {
+      "txid": "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059",
+      "inputs": [
+        "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db:0"
+      ],
+      "outputs": [
+        "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059:0",
+        "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059:1"
+      ],
+      "fee_sat": 3857
+    },
+    {
+      "txid": "a44165dd4f60b9a53de18c53e9b5fba7eb8637b04ea7b81babaaf29bddb80481",
+      "inputs": [
+        "9feb5b134f781e0462790f7f8ea43ce9bd66bb26d4fe9fde55a3f52ed98c8f57:0",
+        "2d449d444c8b436d1af87174938f17a2d1aad0ab13afa16cff80f0b6ebd782db:1"
+      ],
+      "outputs": [
+        "a44165dd4f60b9a53de18c53e9b5fba7eb8637b04ea7b81babaaf29bddb80481:0"
+      ],
+      "fee_sat": 2055
+    },
+    {
+      "txid": "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16",
+      "inputs": [
+        "a44165dd4f60b9a53de18c53e9b5fba7eb8637b04ea7b81babaaf29bddb80481:0",
+        "8b9e5985aeb1cd858a36e52c4cfc5db9f37ce10fd73770f6c31bceb8220b8059:1"
+      ],
+      "outputs": [
+        "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16:0"
+      ],
+      "fee_sat": 158
+    }
+  ],
+  "limitation": "Transaction/claim reconciliation only; reference-reducer acceptance and full capital-time normalization remain separate.",
+  "snapshot_sha256": "78e3836e5ba6150812da9b1e44c019458a98a515cb02d93a67c7c23d56a32bc6"
+}

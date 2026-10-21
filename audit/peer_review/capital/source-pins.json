@@ -113,7 +113,8 @@
     }
   ],
   "runtime": {
-    "status": "not_executed",
+    "status": "this_reference_pin_set_not_executed",
+    "executed_other_revision_manifest": "../regtest/evidence/runtime-identity.json",
     "genesis_hash": null,
     "best_block_hash": null,
     "binary_digests": null,

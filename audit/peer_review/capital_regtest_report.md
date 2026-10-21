@@ -1,8 +1,54 @@
 # Capital lifecycle execution report
 
-Date: 2026-10-21. **The owned Ark regtest lifecycle has not run.** The accounting
-implementation, synthetic lifecycle and read-only snapshot adapters have been
-locally verified; the full requested acceptance criterion remains unmet.
+Date: 2026-10-21. **An owned regtest payment-to-recovery-to-independent-round
+lifecycle has now run.** Its full transaction graph balances. The live retained-
+backing path is not yet accepted by the reference reducer, so the complete task
+and implementation-grounded comparison remain unfinished.
+
+## Observed lifecycle
+
+The [runtime manifest](regtest/evidence/runtime-identity.json) pins Bark/captaind/
+watchmand 0.7.1 at reported commit `8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a`,
+Core 31.0, CLN 26.06.7, immutable image digests, executable SHA-256 hashes,
+actual regtest genesis, commands and redacted configurations. This differs from
+the earlier source-only adapter revision. [Runtime source blobs](regtest/evidence/runtime-source.json)
+are recorded separately; a reported build commit is not a reproducible-build attestation.
+
+| Observed step | Result |
+|---|---|
+| Board at height 113 | 100,000-sat output; 99,670-sat client claim; 330-sat board fee |
+| Outgoing payment at 116 | 60,000 sats delivered; zero routing fee; 555-sat retained service fee |
+| Surviving change | 39,115 sats, still anchored to the original board |
+| Refresh at 1000 | 38,652-sat replacement claim expiring at 5320; 463-sat service fee |
+| Original-board expiry | Height 4433; not treated as available reserve |
+| Manual sweep | 100,000-sat sole input; 98,705-sat output; 1,295-sat miner fee |
+| Confirmed recovery at 4436 | Recovered output is the server wallet's sole UTXO and entire balance |
+| Independent new round | Sole input is that recovered output; three confirmations at 4439 |
+
+[reuse-proof.json](regtest/evidence/reuse-proof.json) binds the original board,
+sweep and new round by actual transaction outpoints. No external top-up occurred
+between recovery and reuse. Earlier pool assets were swept separately, automatic
+pool replenishment was explicitly disabled, and unrelated free reserve was moved
+to an owned quarantine address before original expiry. Those interventions are
+recorded; this is an isolated feasibility experiment, not an unattended production run.
+Timelocks retained source defaults. Blocks were accelerated and sweeps manually
+triggered, so these elapsed wall times cannot calibrate testnet4 operational clocks.
+
+The [independent transaction audit](regtest/evidence/economic-reconciliation.json)
+checks conservation at every onchain transaction, all remaining leaves against
+Core's UTXO set, active claim backing, and channel shares without counting their
+funding output twice:
+
+`2,200,000 = 2,027,378 operator + 99,845 client onchain + 60,000 recipient + 12,777 miner fees`.
+
+The final 38,347-sat client claim overlays operator-held backing and is not an
+additional economic asset. Five adversarial offline checks reject altered UTXO
+values, missing ancestry, channel double counting and unbacked claims.
+
+This run exposes a required model correction: outgoing change can retain its old
+backing. The abstract fresh-change case is not a universal Bark rule. The refresh
+also creates a 330-sat additional backing component and pays distinct miner fees;
+equating gross reserve with either the invoice or the forfeited claim is inadequate.
 
 ## What was executed
 
@@ -56,40 +102,37 @@ Randomized stateful testing checks 4,096 generated commands and supplies a
 deletion shrinker for counterexamples. See [verification.json](capital/verification.json)
 for the completed run's counts, commands and code hashes.
 
-## Why the regtest lane did not run
+## Runtime failures preserved
 
-The Windows host has no Docker, bitcoin-cli, captaind or lightning-cli executable
-on PATH. An existing Ubuntu-24.04 WSL environment was checked outside the shell
-sandbox; it has Cargo, but no Docker socket or Docker/bitcoind/lightningd/captaind
-executable. No running owned stack, daemon endpoint, wallet snapshot or effective
-configuration was provided. No daemon was launched and no transaction was signed
-or broadcast. Source inspection and TypeScript tests do not fill that gap.
+A task-local Docker daemon was provisioned in WSL. The pinned server rejected
+Core 30 despite its Compose example naming that version; the executed fixture
+uses Core 31. An initial temporary fixture was lost on a WSL restart. The retained
+fixture uses `/var/tmp/spiral-capital-runtime`, loopback ports and resource limits.
 
-The source references were pinned successfully. Their complete hashes are in
-[source-pins.json](capital/source-pins.json). The actual chain genesis, execution
-binary/container digests, effective node configuration and initial node/wallet
-snapshots are explicitly **null**. No standard regtest genesis was guessed and
-no mutable container tag was reported as a digest.
+Docker's initial VFS storage exhausted host disk space. Its 8.2-GB disposable
+cache was removed while preserving wallets and DBs, then rebuilt using overlay2.
+Host-space guards now check Windows free space, not just WSL's virtual capacity.
+After the interruption, Core's index showed 101 while Bark retained 113 and
+panicked. Reindexing existing block files restored the exact original height-113
+hash. [The recorded mismatch](regtest/evidence/disk-full-chain-interruption.json)
+occurred before the Bark payment and is not presented as a successful reorg test.
 
-[execution-status.json](capital/execution-status.json) preserves the environment
-observations and missing evidence. [deep-reorg-unresolved.jsonl](capital/deep-reorg-unresolved.jsonl)
-preserves a synthetic unresolved implementation case: a branch change crosses an
-already executed offchain payment. The reducer keeps that payment and freezes
-spending; liability reconstruction requires further observer data.
+Bark's send command returned success with empty stdout; an initial JSON parser
+treated that as uncertain failure. The action was not repeated. DB settlement
+proof and CLN `listpays` reconciled the successful payment. The failed local action
+record is preserved alongside the authoritative observation.
 
 ## Remaining acceptance work
 
-Provision an owned pinned stack as described in the existing
-[testnet4 protocol](testnet4_plan.md) and the [adapter instrumentation plan](capital_adapter.md).
-Capture one real lifecycle plus failure/refresh/exit/reorg branches, reconcile
-the whole backing graph and fees, then independently spend the recovered asset.
-Resolve actual channel reserves and opening fees rather than copying this
-fixture's zero-fee, fully spendable channel assumptions.
+Extend the reducer and adapter for retained backing, actual gross reserve,
+additional round backing, miner/service fee separation, batch recovery allocation
+and independent round reuse. Replay this observed journal through those rules.
+Complete live failure/timeout/receive/exit/reorg branches and their liability joins.
 
 The [matched-service status artifact](capital/matched-service-status.json) is
 blocked before observed recovery calibration. Existing matched-service
 sensitivity results remain forecasts; they have not been relabeled or replaced
 by synthetic "observations." Re-running the paper comparison under measured
 semantics, bounded testnet4 clocks, and patched-local BIP 448/LayerTree experiments
-all remain downstream of the missing regtest verification. No testnet4 experiment
+all remain downstream of complete reducer-level regtest verification. No testnet4 experiment
 was attempted.

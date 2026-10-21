@@ -1,9 +1,11 @@
 # Proposed capital-accounting amendments
 
-These are proposed edits, not new empirical findings. They are supported by the
+These are proposed edits supported by the
 [reference machine](../audit/peer_review/capital_state_machine.md), its falsification
 tests and [pinned source inspection](../audit/peer_review/capital_adapter.md).
-The manuscript's numerical tables remain unchanged pending actual regtest clocks.
+An [owned regtest trace](../audit/peer_review/capital_regtest_report.md) now supplies
+transaction-level evidence. Numerical comparison tables remain unchanged pending
+complete normalization and operational-clock measurements.
 
 1. **Define the economic boundary before adding capital terms.** A VTXO is a
    claim against backing, not an extra asset. A channel funding output and the
@@ -20,6 +22,10 @@ The manuscript's numerical tables remain unchanged pending actual regtest clocks
    1,000-sat VTXO may require 1,000 sats of gross fronting with 400 sats of new
    change backing. Routing fees and retained service fees are separate: only
    external fees leave the operator's economic boundary.
+   The observed Bark run instead retained 39,115 sats of change on the original
+   board after a 60,000-sat payment and 555-sat service fee. Fresh backing arrived
+   only with a later refresh. Do not apply the abstract full-input fronting rule
+   to that path. Account for round overhead and miner fees separately as well.
 4. **Keep stock and cumulative throughput separate.** `W = F-C <= B` is
    pointwise. The tested reference trace has `B=1000`, `F=2000`, `C=1000`, and
    `W=1000` after a provenance-checked second payment. This is a finite model
@@ -34,10 +40,11 @@ The manuscript's numerical tables remain unchanged pending actual regtest clocks
    right-censored. Integrate changes at observed transition times; a coarse
    simulation step must not charge or forgive an entire interval incorrectly.
 7. **Separate observations from forecasts.** Current new lifecycle figures are
-   synthetic reference-model results. Runtime source/binary/container pins,
-   actual genesis and initial snapshots remain missing. No new Ark-versus-channel
-   efficiency ranking follows from this patch. The observed matched-service
-   rerun and paper tables must wait for the regtest acceptance trace.
+   synthetic reference-model results. A separate pinned regtest run proves
+   original-output recovery and independent round reuse, with every fixture sat
+   reconciled. Its blocks were accelerated and sweeps manually triggered. No new
+   Ark-versus-channel efficiency ranking follows until the observed path passes
+   the reducer and matched-service comparisons are rerun with appropriate clocks.
 8. **Disclose reorg uncertainty.** Replaying a Bitcoin branch must not undo an
    already executed Lightning payment. Where surviving contingent liabilities
    cannot be reconstructed, publish the unresolved evidence and halt spending;

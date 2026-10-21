@@ -5,6 +5,12 @@ collector and not evidence that the upstream software was executed. The exact
 inspected files, Git blobs where available, normalized-source hashes and URLs
 are in [source-pins.json](capital/source-pins.json).
 
+The separate [read-only collector](regtest/observe.py) has now captured an owned
+regtest at Bark `8f5d8c4...` and Core 31; see the [execution report](capital_regtest_report.md).
+The adapter below still rejects that different pin set. Its existing event
+mapping must be extended for observed retained backing and round overhead before
+the live snapshots can be described as accepted reducer events.
+
 | Component | Source revision inspected | Execution identity |
 |---|---|---|
 | Bark/captaind | `683964f59fcb3dde1dcecd6eab23b2a9dd2eee6f` | None |
@@ -49,7 +55,13 @@ ServerHtlcSend claim policy or prove next-round reuse. The watchman's separate
 reaction/sweep intervals and progress grace period are configuration clocks,
 not a constant inferred from the invoice outcome.
 
-## Collection and instrumentation still needed
+## Collection contract and remaining instrumentation
+
+The owned run now provides binaries, configurations, consistent read-only DB
+snapshots, settlement proof checks, channel balances, full transaction ancestry,
+active claim backing and an exclusive recovered-output spend. The following
+contract still governs normalization and the unexecuted failure/receive/exit/reorg
+branches; collected snapshots do not by themselves satisfy all reducer invariants.
 
 1. Run Core, captaind, watchmand, CLN, PostgreSQL and two Bark wallets on an owned
    regtest. Pin binaries or immutable container digests and record their source

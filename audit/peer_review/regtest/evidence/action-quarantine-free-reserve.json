@@ -1,0 +1,10 @@
+{
+  "action": "quarantine-free-reserve",
+  "monotonic_start_ns": 930730690797,
+  "height": 1006,
+  "state": "returned",
+  "monotonic_end_ns": 931522969823,
+  "result": {
+    "txid": "75e689891eb6e1d13ece645cab2164a314c8f2e3e16a2310cfb4aa3c65af4b16"
+  }
+}

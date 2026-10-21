@@ -1,0 +1,80 @@
+# Owned regtest evidence and runner
+
+The completed transaction-level run is recorded in `evidence/reuse-proof.json`
+and `evidence/economic-reconciliation.json`. It proves original-board recovery
+and exclusive reuse as a new round input. It does not yet prove acceptance of
+that path by `model/capital.ts`, nor supply testnet4 operational clocks.
+
+All participants and keys are owned test fixtures. The logical recipient is
+outside the operator's accounting boundary even though its node is controlled
+for the test. Mining funds are outside the fixture until the three recorded
+initial outputs enter. Quarantined operator funds remain economic assets.
+
+## Runtime
+
+The runner uses Python 3.12, a task-local Docker 28.5.1 daemon, and immutable
+images in `bootstrap.py`. Docker uses overlay2 with no bridge or iptables changes;
+services bind loopback ports. Runtime data and signing material stay outside Git
+in `/var/tmp/spiral-capital-runtime`. Public evidence is allowlisted into `evidence/`.
+No system package, service unit, or global WSL configuration is installed.
+
+Check actual host disk space before running: WSL's virtual free space can exceed
+Windows physical free space. The Python runner requires at least 4 GiB host
+headroom, and image pulling requires 6 GiB. The observed VFS disk-full failure and
+chain-index recovery are documented in `../capital_regtest_report.md`.
+
+For a fresh fixture, run under WSL:
+
+```text
+sh start-runtime.sh
+python3 pull-images.py
+python3 bootstrap.py /path/to/bark-at-8f5d8c4
+python3 launch.py
+python3 watchman.py /path/to/bark-at-8f5d8c4
+python3 attest.py
+python3 fund.py
+python3 observe.py before-board
+python3 pay.py
+python3 isolate-expiry.py
+python3 refresh-change.py
+```
+
+Run `node trigger-sweep.mjs expired-pool` from a host that can reach the loopback
+watchman port, then `python3 quarantine-reserve.py`. Advance with
+`python3 advance.py 4432 before-original-expiry` and
+`python3 advance.py 4433 original-expiry-reached`. Run
+`node trigger-sweep.mjs original-board`, capture `observe.py original-sweep-broadcast`,
+then run `reuse.py` and `attest.py`. Heights are specific to this recorded fixture;
+another run must derive its own board expiry before advancing.
+
+Monetary actions write an intent before execution and refuse duplicate labels.
+After any uncertain result, inspect actual state; do not rerun funding or payment
+scripts to clear the error. `recover-chain.py` is the recorded one-time disk-full
+recovery, not a normal setup step. Bootstrap also refuses stopped containers;
+inspect their logs and state before explicitly restarting them.
+
+## Independent checks
+
+These checks run offline and need no keys or daemon access:
+
+```text
+python reconcile.py
+python test_reconcile.py
+```
+
+The collector uses one repeatable-read, read-only DB transaction. Other RPCs are
+sequential and bracketed by equal Core tip hashes, not cross-service atomic.
+Preimages are verified in memory and removed before publication. The observer
+uses `--no-sync` wallet reads and never signs, broadcasts, or advances the chain.
+Mutation scripts are separate. Decimal BTC tokens are preserved as strings and
+converted with exact decimal arithmetic.
+
+Sweeps were manually triggered; the source-default two-hour cadence was retained
+in config but not measured. Original VTXO lifetime 4320 and exit delta 144 were
+retained. Optional pool replenishment was disabled after initial funding to
+isolate recovery, with the intervention recorded. Accelerated block generation
+and operator delays are not production latency measurements.
+
+The first payment CLI returned empty stdout despite success. Its uncertain local
+parser record is retained; `payment-result-reconciliation.json` proves settlement
+without a duplicate send. Later code handles that CLI behavior explicitly.

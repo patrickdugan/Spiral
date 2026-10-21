@@ -1,0 +1,87 @@
+{
+  "revision": "8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a",
+  "evidence_class": "source-inspection",
+  "relationship": "Matches binary-reported build commit; not a reproducible-build attestation.",
+  "files": [
+    {
+      "path": "server/schema.sql",
+      "git_blob": "29313a9a97ad9ccac6a36c876e8fd9d3ccabf58e",
+      "sha256": "995c5f9c4f279ced1d3a8fa00aeeb29d810570b93d3bd9054b2e2fec1eeaf1bb",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/schema.sql"
+    },
+    {
+      "path": "server/src/ln/mod.rs",
+      "git_blob": "6b41663f4fdf02c6d6a893da7d55f9a63a7209db",
+      "sha256": "e10434d1f758f09e39faa01c9a182aa4b5fa2fd2cdb958bd468636dae625f94a",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/ln/mod.rs"
+    },
+    {
+      "path": "server/src/ln/cln/xpay.rs",
+      "git_blob": "44e1d0b783209df67efd07f29b3224c9568e81e7",
+      "sha256": "39212ae0f50666eae219c7a03b5157c880da5f08e9e5c48d5c4dee15bcc481c9",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/ln/cln/xpay.rs"
+    },
+    {
+      "path": "server/src/database/ln/model.rs",
+      "git_blob": "9202ac9b00b8e52420aa4243376e10d2645e6a29",
+      "sha256": "4dbb529f99d6d071bf2a4878531ef6d7f838bf3302cb3fccffc49c91b6ccdb52",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/database/ln/model.rs"
+    },
+    {
+      "path": "server/src/watchman/policy.rs",
+      "git_blob": "738db8dece573abd5481f52fc642337ee7310596",
+      "sha256": "0f16e9eda819dc920cdb4136034fc2cdfcb281d02adc894253002733b33faa6a",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/watchman/policy.rs"
+    },
+    {
+      "path": "server/src/watchman/mod.rs",
+      "git_blob": "262be2259eba4376394c4e4e5a32fec1a2ae3495",
+      "sha256": "81de5c66a8229161605fc4b610776f450d6a7b9c06a7d372059547ae0c0d5f5d",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/watchman/mod.rs"
+    },
+    {
+      "path": "server/src/sync/block_index.rs",
+      "git_blob": "cb688c4a0b24a884d7febcc0e100e5b7fab1c2c0",
+      "sha256": "35b6d197316ddbd3e43cbc8fb9d7827790074eb36a8d74c0a20a3693fe1440a8",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/sync/block_index.rs"
+    },
+    {
+      "path": "server/src/bitcoind.rs",
+      "git_blob": "2214f1803243d5d23a03c5569c57bb8f1c4fbfa2",
+      "sha256": "38210f3ff41d777b7ef75b38521984591ffb16a9dfbba10b9cab623283d405b5",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/bitcoind.rs"
+    },
+    {
+      "path": "server/src/wallet/mod.rs",
+      "git_blob": "0e12e36f2ff5dbb5a07b7a31ec049855494da19e",
+      "sha256": "00a3beed862e793a243a33b1aa02cb24900bc40025d13faffb53f4c0bad2ec00",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/src/wallet/mod.rs"
+    },
+    {
+      "path": "server/captaind.default.toml",
+      "git_blob": "72f832e04bcbbd6dc184bb8a3787ba73ea53f63c",
+      "sha256": "03ee2258c89fe11f7aefb89d45b7de11cf6af6408d47513c98bbfe2a719ab2ff",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/captaind.default.toml"
+    },
+    {
+      "path": "server/watchmand.default.toml",
+      "git_blob": "d71a8171cabedaeb230abd03d0f31ed8f28005d5",
+      "sha256": "839aeb8be08b85029eba528700f88388852be280be05594e47989863dc8e9ba1",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server/watchmand.default.toml"
+    },
+    {
+      "path": "server-log/src/msgs/watchman.rs",
+      "git_blob": "1d7ad24140b4e5e545072953724f43b5b304ab91",
+      "sha256": "340e884b2a86e4c4a2c5a47105d88ef086b285f821da307e9bf8b3d5a5fb1ac9",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/server-log/src/msgs/watchman.rs"
+    },
+    {
+      "path": "bark-cli/src/bin/bark/main.rs",
+      "git_blob": "6c38d0d4772d0daadbc970771c6d3d380b4e6903",
+      "sha256": "17d4f61803c54985d12d51cd1d46088eede74ca79694845e9656af6bb9dd3156",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/blob/8f5d8c4f4afae87c8e4b3c6fb26fe06e9ae50e6a/bark-cli/src/bin/bark/main.rs"
+    }
+  ],
+  "bitcoin_release_source": "https://github.com/bitcoin/bitcoin/commit/6574cb40869b96b9ffc79c19dc8f4e467d60f321",
+  "cln_release_source": "https://github.com/ElementsProject/lightning/commit/8684c68dffb04ab606e526b64d7d60390d1fe7ed"
+}

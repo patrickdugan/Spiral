@@ -29,7 +29,7 @@ for component, commit, name, repo_path, repository in [
                   "sha256_normalized_text": hashlib.sha256(content).hexdigest(), "url": f"https://github.com/{repository}/blob/{commit}/{repo_path}"})
 result = {"evidence_class": "source_inspection", "inspection_date": "2026-10-21",
           "spiral_base": "23155003010310c3a5c41b9ab8f3db910e69bc3e", "files": files,
-          "runtime": {"status": "not_executed", "genesis_hash": None, "best_block_hash": None,
+          "runtime": {"status": "this_reference_pin_set_not_executed", "executed_other_revision_manifest": "../regtest/evidence/runtime-identity.json", "genesis_hash": None, "best_block_hash": None,
                       "binary_digests": None, "container_digests": None, "effective_configuration": None,
                       "initial_state_snapshots": None}}
 destination = Path(__file__).parent / "capital" / "source-pins.json"

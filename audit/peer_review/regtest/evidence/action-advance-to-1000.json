@@ -1,0 +1,11 @@
+{
+  "action": "advance-to-1000",
+  "monotonic_start_ns": 660920012049,
+  "height": 116,
+  "state": "returned",
+  "monotonic_end_ns": 712434732007,
+  "result": {
+    "height": 1000,
+    "clock": "accelerated-owned-regtest"
+  }
+}
