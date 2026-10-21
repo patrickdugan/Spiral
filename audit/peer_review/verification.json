@@ -1,0 +1,134 @@
+{
+  "node_version": "v24.19.0",
+  "test_files": [
+    {
+      "path": "model/escrow_warden.test.ts",
+      "exit_code": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0
+    },
+    {
+      "path": "model/hamiltonian.test.ts",
+      "exit_code": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0
+    },
+    {
+      "path": "model/layertree.test.ts",
+      "exit_code": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0
+    },
+    {
+      "path": "model/ledger.test.ts",
+      "exit_code": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0
+    },
+    {
+      "path": "model/registry.test.ts",
+      "exit_code": 0,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0
+    },
+    {
+      "path": "model/server.test.ts",
+      "exit_code": 0,
+      "tests": 9,
+      "pass": 9,
+      "fail": 0
+    }
+  ],
+  "named_tests_passed": 30,
+  "review_date": "2026-10-21",
+  "baseline_commit": "6a9df365f727cf2471ae52e00b36e8816d0081bc",
+  "branch": "review/bitcoin-peer-review-2026-10-21",
+  "python_version": "Python 3.12.14",
+  "python_suite": {
+    "status": "blocked",
+    "missing_dependencies": [
+      "pytest",
+      "networkx"
+    ],
+    "standard_library_audits_passed": [
+      "math_witnesses.py",
+      "check_empirical.py"
+    ]
+  },
+  "empirical_audit": {
+    "archived_rows": 4536,
+    "sealed_rows": 3348,
+    "topology_clusters": 28,
+    "archived_contrasts_reproduced": 7,
+    "additional_paired_contrasts": 1,
+    "headers_checked": 512,
+    "internal_links_checked": 511,
+    "network_execution": false
+  },
+  "new_model_sensitivity": {
+    "status": "post_hoc",
+    "seeds_per_cell": 24,
+    "cells": 4,
+    "seed_cell_combinations": 96,
+    "ark_recovery_runs": 192,
+    "equal_service_checks_passed": true,
+    "failure_free_server_sizing": true
+  },
+  "pdf": {
+    "path": "paper/tex/main.pdf",
+    "pages": 41,
+    "build_command": "latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex",
+    "build_directory": "paper/tex",
+    "build_exit_code": 0,
+    "overfull_boxes": 0,
+    "unresolved_references": 0,
+    "visual_review": "All pages inspected; revised figures on pages 19 and 22 and final page 41 inspected after corrections."
+  },
+  "scope": {
+    "live_node_available": false,
+    "transactions_constructed": 0,
+    "transactions_broadcast": 0,
+    "real_prover_executed": false,
+    "proposed_opcode_scripts_executed": false
+  },
+  "artifact_sha256": {
+    "README.md": "24f1a4c7b6b072b34d82936718d86d13ca546abad9dd8479803dd96459fa6729",
+    "audit/peer_review/README.md": "19fbd7c5f2e3cc13a414f777c070d48772f2aca7dad000f41d76105aa9e6cab8",
+    "audit/peer_review/check_empirical.py": "ed7c3a6e9f29703d9452b696f2d4e9c11a22a9f685421d5d1d5b82b51af49147",
+    "audit/peer_review/empirical_check.json": "6e9dc2868552dec2bb8607efe54adadd1dfe5abdfd39272cb11fa337ad61cdf6",
+    "audit/peer_review/empirical_review.md": "07564e9f07bce985f1d5478b3ae2c6663e9c7ddc617423f5c4e051bbd2b74a77",
+    "audit/peer_review/math_grid_comparison.json": "42028785c46699a3ffab2d147e2141ea9f2af717880e3c57d1d4771708394958",
+    "audit/peer_review/math_review.md": "05592362c9c158388279ccc72112ca16f763ee8cc5b332409b42633fbce42775",
+    "audit/peer_review/math_witnesses.json": "69d773de2ecb6a64b3a3fcb61a8a195dc761f3868871e1dc1128b242d7757937",
+    "audit/peer_review/math_witnesses.py": "26cf4ed5eddf5a26a87fd5852cb8799900bd9945a14ad34a0cbf7c79cc5e680a",
+    "audit/peer_review/model_sensitivity.json": "57e10bfb95a74b4929d39c962c2321cd15127f5b69a3608473c92f77b7a57181",
+    "audit/peer_review/model_sensitivity.ts": "9977386713ba5536e355618fad6b8b6b6396ca03c8ddf26a785dbe789f053db7",
+    "audit/peer_review/render_sensitivity.py": "93c15eec302661738f982d74211056d8a4a9e75f1b4da3f8eced7eea8f32b9fe",
+    "audit/peer_review/testnet4_plan.md": "206d7d6232fa2e43881cee1e6b7f27ba09ae782c771e6dcaad12f7a4976feb7e",
+    "model/grid.ts": "ed00410b06b830d1c8b0e5e3c397c57701513930a6c9ed551aee69f32c714a5b",
+    "model/layertree.test.ts": "c4ba77ab98f5dd6bc7a3cafa86c3e6bcc0868028ab31cc577302eb5fb7da7d3f",
+    "model/layertree.ts": "163666bcdd0eaf373f77b9b01837a1b26909fc6ef7fb8a8f2b61ca780a64066f",
+    "model/registry.test.ts": "0a3fe2f9d6590d791abbb7cc5991f404f13ae3d26eff55eef3b0904748510b22",
+    "model/registry.ts": "a5a714ee84d08d753faaaceae0f75fcc97de312a9b2db6e156e581fe4508f342",
+    "model/server.test.ts": "ff24ef66588e8e4e2f1909b2c5a7999ac95e4ba926c7eefea005cde9a8ee5535",
+    "model/server.ts": "6971772c1fa3535a45d4892caa17b0ceef7beb9467fe6e52f888c056aeea13bd",
+    "paper/README.md": "b308c729aa10307a1059dc461b7ae75d1f6b111ec6beb2ed43530f578bd9880c",
+    "paper/designed_topology_note.tex": "7da7f5a7e63d25583adaf7035daf6aa6afc071be790f4f6f28e3b3f9fce64eff",
+    "paper/peer_review_changes.md": "02abef87c9490431588b54e248e92a72764dedb49898090496ebc226fb294f43",
+    "paper/tex/.gitignore": "808d6cd14975db75bf7343a6f1702e0eb0f8e234ce1fcfb0d815aa1eee235556",
+    "paper/tex/fig_gain.tex": "6c441b1aaf4c57f62b9f66ab9ac6f926832090ce1f6279f215e07698b598f8af",
+    "paper/tex/fig_locks.tex": "d29106987a002bea058618bcf74f456981e2d3668c7c90baf35f65ad6feda8c4",
+    "paper/tex/fig_objects.tex": "0d8366c9687bb287521c515fa363fb215ad7eb78d00c9c9c606c2c1ca879502c",
+    "paper/tex/fig_walks.tex": "6e320f368764294091a3bfdbde7b30f4ad03797ec55a4291b1ec0c99c0a3fb38",
+    "paper/tex/grid.tex": "8a86d4be779efb8bb1eadf00092d053f5a4a00add77120e5da2d30d9150a86a3",
+    "paper/tex/main.pdf": "505506f903a25942bdb41be438a3dd12b204156f6ee9455bcfc01a6acc9cbf9f",
+    "paper/tex/main.tex": "ee674aa193827cfec4221dd78012214532de44e7f82625482d2d0bfde1230f2e",
+    "paper/tex/references.bib": "231b40bdb213853bf3d61216cda9bf4bee7dae9c1485f8ffa5042027e64ae1a5",
+    "paper/tex/review_sensitivity.tex": "c00baa988ae834864b60d5e8f337e32e01fb25464fb7dfa228c576d6bc337cdc"
+  }
+}

@@ -1,0 +1,2280 @@
+{
+  "date": "2026-10-21",
+  "status": "post_hoc_model_sensitivity",
+  "baseline_commit": "6a9df365f727cf2471ae52e00b36e8816d0081bc",
+  "model": "corrected receipt-first oracle peaks; unaffordable spends rejected in full; exact recovery integration",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "evidence_class": "synthetic_reference_model",
+  "interval": "two-sided 95% Student t interval for the model mean across 24 seed replicates (t_23); Monte Carlo precision conditional on this generator and model, not a mainnet estimate",
+  "caveats": [
+    "Same oracle forecast and offered demand across mechanisms; oracle knows the entire horizon.",
+    "All objects reject only the common unaffordable outgoing requests; server sizing diagnostic has zero failed events in every included cell.",
+    "The one-round spend-recovery case is counterfactual. Refreshes still lock to expiry.",
+    "Service fees, membership churn and correlated faults are not in the capital ratio.",
+    "The small-group excess-gain fraction can be unstable when the full-pool gain is near one."
+  ],
+  "cells": [
+    {
+      "cell": "zero",
+      "params": {
+        "agents": 200,
+        "horizonLifetimes": 8,
+        "driftPerRound": 0,
+        "burst": {
+          "vIn": 5000,
+          "vOut": 4000,
+          "pIn": 0.02
+        },
+        "margin": 0.25,
+        "forecast": {
+          "kind": "oracle"
+        },
+        "volume": "both",
+        "serverTier": true,
+        "seed": 1,
+        "spendLock": "expiry",
+        "hyperedgeSizes": [
+          1,
+          5,
+          20,
+          200
+        ]
+      },
+      "equal_service_checks_passed": true,
+      "summary": {
+        "channel_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 104057.03125,
+          "min": 97237.5,
+          "max": 110337.5,
+          "sd": 3320.8821921753056,
+          "mc95": [
+            102654.7456841207,
+            105459.3168158793
+          ]
+        },
+        "issuance_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 67679.94791666667,
+          "min": 60950,
+          "max": 75068.75,
+          "sd": 3756.643110066288,
+          "mc95": [
+            66093.65665291208,
+            69266.23918042127
+          ]
+        },
+        "C_over_HN": {
+          "n": 24,
+          "mean": 1.5413829929274592,
+          "min": 1.4562734472696957,
+          "max": 1.626744891766134,
+          "sd": 0.04689490238251204,
+          "mc95": [
+            1.5215810123334892,
+            1.5611849735214292
+          ]
+        },
+        "C_over_V_expiry": {
+          "n": 24,
+          "mean": 0.8714443277582989,
+          "min": 0.8475070858220489,
+          "max": 0.9180876193532895,
+          "sd": 0.016127554696606962,
+          "mc95": [
+            0.864634258669649,
+            0.8782543968469488
+          ]
+        },
+        "C_over_V_round_counterfactual": {
+          "n": 24,
+          "mean": 1.5310972182451483,
+          "min": 1.4450089728828157,
+          "max": 1.6173193223875875,
+          "sd": 0.04686752901930505,
+          "mc95": [
+            1.5113067964087294,
+            1.5508876400815672
+          ]
+        },
+        "V_expiry_over_HN": {
+          "n": 24,
+          "mean": 1.7689697376495122,
+          "min": 1.6754929509319358,
+          "max": 1.87986550748984,
+          "sd": 0.050807941483609925,
+          "mc95": [
+            1.7475154255566654,
+            1.790424049742359
+          ]
+        },
+        "V_round_counterfactual_over_HN": {
+          "n": 24,
+          "mean": 1.006723927104909,
+          "min": 1.0051418967158496,
+          "max": 1.0081145966876985,
+          "sd": 0.0008735786267449823,
+          "mc95": [
+            1.006355047202505,
+            1.0070928070073133
+          ]
+        },
+        "common_unaffordable_spend_fraction": {
+          "n": 24,
+          "mean": 0.05641365665021664,
+          "min": 0.05019289088771069,
+          "max": 0.062000248581016694,
+          "sd": 0.0025797957271783134,
+          "mc95": [
+            0.05532430445348316,
+            0.057503008846950115
+          ]
+        },
+        "C_over_H5": {
+          "n": 24,
+          "mean": 1.3193786650071768,
+          "min": 1.27058481233634,
+          "max": 1.3850262619068814,
+          "sd": 0.028394443203825497,
+          "mc95": [
+            1.3073887431876912,
+            1.3313685868266625
+          ]
+        },
+        "C_over_H20": {
+          "n": 24,
+          "mean": 1.4666231165346206,
+          "min": 1.3933157852755842,
+          "max": 1.5337145110410093,
+          "sd": 0.038313872502516985,
+          "mc95": [
+            1.4504445870734397,
+            1.4828016459958016
+          ]
+        },
+        "fraction_of_full_pool_excess_gain_at20": {
+          "n": 24,
+          "mean": 0.8626443258771673,
+          "min": 0.8081121598343297,
+          "max": 0.9073747569160012,
+          "sd": 0.027898441904543735,
+          "mc95": [
+            0.8508638470377063,
+            0.8744248047166283
+          ]
+        }
+      },
+      "rows": [
+        {
+          "seed": 1,
+          "events": 48623,
+          "common_failures": 2766,
+          "metrics": {
+            "channel_stock_per_agent_sat": 105912.5,
+            "issuance_stock_per_agent_sat": 71225,
+            "C_over_HN": 1.4909378849199366,
+            "C_over_V_expiry": 0.8599129783511509,
+            "C_over_V_round_counterfactual": 1.478936908381866,
+            "V_expiry_over_HN": 1.7338241455301107,
+            "V_round_counterfactual_over_HN": 1.0081145966876985,
+            "common_unaffordable_spend_fraction": 0.056886658577216545,
+            "C_over_H5": 1.2934890466376614,
+            "C_over_H20": 1.4311291276074656,
+            "fraction_of_full_pool_excess_gain_at20": 0.8781744918255294
+          }
+        },
+        {
+          "seed": 2,
+          "events": 48724,
+          "common_failures": 2765,
+          "metrics": {
+            "channel_stock_per_agent_sat": 102368.75,
+            "issuance_stock_per_agent_sat": 65656.25,
+            "C_over_HN": 1.5591623036649216,
+            "C_over_V_expiry": 0.8679466610327522,
+            "C_over_V_round_counterfactual": 1.5511862641078344,
+            "V_expiry_over_HN": 1.7963803234287528,
+            "V_round_counterfactual_over_HN": 1.0051418967158496,
+            "common_unaffordable_spend_fraction": 0.05674821443231262,
+            "C_over_H5": 1.352741988767757,
+            "C_over_H20": 1.4741247412474123,
+            "fraction_of_full_pool_excess_gain_at20": 0.8479197151522072
+          }
+        },
+        {
+          "seed": 3,
+          "events": 48461,
+          "common_failures": 2645,
+          "metrics": {
+            "channel_stock_per_agent_sat": 107156.25,
+            "issuance_stock_per_agent_sat": 71456.25,
+            "C_over_HN": 1.5003938041480702,
+            "C_over_V_expiry": 0.8761912801345606,
+            "C_over_V_round_counterfactual": 1.490593473667416,
+            "V_expiry_over_HN": 1.7124044009176262,
+            "V_round_counterfactual_over_HN": 1.0065747842411665,
+            "common_unaffordable_spend_fraction": 0.054579971523493115,
+            "C_over_H5": 1.2998483699772554,
+            "C_over_H20": 1.437615294314942,
+            "fraction_of_full_pool_excess_gain_at20": 0.8745417922589794
+          }
+        },
+        {
+          "seed": 4,
+          "events": 48508,
+          "common_failures": 2611,
+          "metrics": {
+            "channel_stock_per_agent_sat": 102918.75,
+            "issuance_stock_per_agent_sat": 64900,
+            "C_over_HN": 1.5876397994600848,
+            "C_over_V_expiry": 0.8775823425784474,
+            "C_over_V_round_counterfactual": 1.5773445587810162,
+            "V_expiry_over_HN": 1.8091063623675463,
+            "V_round_counterfactual_over_HN": 1.006526944681652,
+            "common_unaffordable_spend_fraction": 0.053826173002391356,
+            "C_over_H5": 1.349090611174832,
+            "C_over_H20": 1.4950971490829854,
+            "fraction_of_full_pool_excess_gain_at20": 0.8425180689563125
+          }
+        },
+        {
+          "seed": 5,
+          "events": 48230,
+          "common_failures": 2647,
+          "metrics": {
+            "channel_stock_per_agent_sat": 104168.75,
+            "issuance_stock_per_agent_sat": 69100,
+            "C_over_HN": 1.5080528411147303,
+            "C_over_V_expiry": 0.8626049649871026,
+            "C_over_V_round_counterfactual": 1.4994225865877138,
+            "V_expiry_over_HN": 1.7482543021732762,
+            "V_round_counterfactual_over_HN": 1.0057557186374368,
+            "common_unaffordable_spend_fraction": 0.05488285299606054,
+            "C_over_H5": 1.330167597765363,
+            "C_over_H20": 1.4366864925437461,
+            "fraction_of_full_pool_excess_gain_at20": 0.8595296733024903
+          }
+        },
+        {
+          "seed": 6,
+          "events": 48650,
+          "common_failures": 2825,
+          "metrics": {
+            "channel_stock_per_agent_sat": 103693.75,
+            "issuance_stock_per_agent_sat": 68762.5,
+            "C_over_HN": 1.5095077790919844,
+            "C_over_V_expiry": 0.8571318129748967,
+            "C_over_V_round_counterfactual": 1.4988253827034226,
+            "V_expiry_over_HN": 1.7611151006667793,
+            "V_round_counterfactual_over_HN": 1.00712717873065,
+            "common_unaffordable_spend_fraction": 0.05806783144912641,
+            "C_over_H5": 1.296779740503361,
+            "C_over_H20": 1.4460908219297481,
+            "fraction_of_full_pool_excess_gain_at20": 0.8755328971124752
+          }
+        },
+        {
+          "seed": 7,
+          "events": 48473,
+          "common_failures": 2831,
+          "metrics": {
+            "channel_stock_per_agent_sat": 100725,
+            "issuance_stock_per_agent_sat": 66106.25,
+            "C_over_HN": 1.5262808978122926,
+            "C_over_V_expiry": 0.85380473949348,
+            "C_over_V_round_counterfactual": 1.5167873813486763,
+            "V_expiry_over_HN": 1.7876228922291522,
+            "V_round_counterfactual_over_HN": 1.0062589632405665,
+            "common_unaffordable_spend_fraction": 0.058403647391331255,
+            "C_over_H5": 1.3091795288383428,
+            "C_over_H20": 1.462431941923775,
+            "fraction_of_full_pool_excess_gain_at20": 0.8786789409345227
+          }
+        },
+        {
+          "seed": 8,
+          "events": 48274,
+          "common_failures": 2993,
+          "metrics": {
+            "channel_stock_per_agent_sat": 98331.25,
+            "issuance_stock_per_agent_sat": 62600,
+            "C_over_HN": 1.5715712716012387,
+            "C_over_V_expiry": 0.8548358270993226,
+            "C_over_V_round_counterfactual": 1.5623858513364157,
+            "V_expiry_over_HN": 1.838448064272158,
+            "V_round_counterfactual_over_HN": 1.0058790984678758,
+            "common_unaffordable_spend_fraction": 0.062000248581016694,
+            "C_over_H5": 1.3413760763918494,
+            "C_over_H20": 1.5186293436293437,
+            "fraction_of_full_pool_excess_gain_at20": 0.9073747569160012
+          }
+        },
+        {
+          "seed": 9,
+          "events": 48406,
+          "common_failures": 2799,
+          "metrics": {
+            "channel_stock_per_agent_sat": 101137.5,
+            "issuance_stock_per_agent_sat": 63868.75,
+            "C_over_HN": 1.58476153168152,
+            "C_over_V_expiry": 0.8715667100543647,
+            "C_over_V_round_counterfactual": 1.5760250764464565,
+            "V_expiry_over_HN": 1.8182905719089126,
+            "V_round_counterfactual_over_HN": 1.0055433478601508,
+            "common_unaffordable_spend_fraction": 0.05782341032103458,
+            "C_over_H5": 1.3424589347934297,
+            "C_over_H20": 1.4972242783123613,
+            "fraction_of_full_pool_excess_gain_at20": 0.8503026471022476
+          }
+        },
+        {
+          "seed": 10,
+          "events": 48454,
+          "common_failures": 2663,
+          "metrics": {
+            "channel_stock_per_agent_sat": 105281.25,
+            "issuance_stock_per_agent_sat": 68375,
+            "C_over_HN": 1.5430063204176974,
+            "C_over_V_expiry": 0.8821939226033008,
+            "C_over_V_round_counterfactual": 1.5315999652219063,
+            "V_expiry_over_HN": 1.7490557131298063,
+            "V_round_counterfactual_over_HN": 1.0074473462097124,
+            "common_unaffordable_spend_fraction": 0.05495934288190862,
+            "C_over_H5": 1.3119158878504673,
+            "C_over_H20": 1.4823125659978882,
+            "fraction_of_full_pool_excess_gain_at20": 0.8882264310052199
+          }
+        },
+        {
+          "seed": 11,
+          "events": 48687,
+          "common_failures": 2826,
+          "metrics": {
+            "channel_stock_per_agent_sat": 104056.25,
+            "issuance_stock_per_agent_sat": 70287.5,
+            "C_over_HN": 1.4830750044539465,
+            "C_over_V_expiry": 0.8475070858220489,
+            "C_over_V_round_counterfactual": 1.4714361256135973,
+            "V_expiry_over_HN": 1.7499263773298384,
+            "V_round_counterfactual_over_HN": 1.0079098770498758,
+            "common_unaffordable_spend_fraction": 0.05804424178938936,
+            "C_over_H5": 1.292423536717901,
+            "C_over_H20": 1.4260385438972163,
+            "fraction_of_full_pool_excess_gain_at20": 0.8819304248183935
+          }
+        },
+        {
+          "seed": 12,
+          "events": 48511,
+          "common_failures": 2813,
+          "metrics": {
+            "channel_stock_per_agent_sat": 101700,
+            "issuance_stock_per_agent_sat": 63950,
+            "C_over_HN": 1.590926867422761,
+            "C_over_V_expiry": 0.8766008532849745,
+            "C_over_V_round_counterfactual": 1.58112994390312,
+            "V_expiry_over_HN": 1.814881723490139,
+            "V_round_counterfactual_over_HN": 1.0061961532999981,
+            "common_unaffordable_spend_fraction": 0.05798684834367463,
+            "C_over_H5": 1.3461283917935143,
+            "C_over_H20": 1.4940776788173724,
+            "fraction_of_full_pool_excess_gain_at20": 0.8361063035976316
+          }
+        },
+        {
+          "seed": 13,
+          "events": 48437,
+          "common_failures": 2579,
+          "metrics": {
+            "channel_stock_per_agent_sat": 103006.25,
+            "issuance_stock_per_agent_sat": 68293.75,
+            "C_over_HN": 1.5088345692575298,
+            "C_over_V_expiry": 0.8529331664735792,
+            "C_over_V_round_counterfactual": 1.500271811046708,
+            "V_expiry_over_HN": 1.768995073196357,
+            "V_round_counterfactual_over_HN": 1.0057074712380603,
+            "common_unaffordable_spend_fraction": 0.053244420587567357,
+            "C_over_H5": 1.3137504982064567,
+            "C_over_H20": 1.461081560283688,
+            "fraction_of_full_pool_excess_gain_at20": 0.906152191971703
+          }
+        },
+        {
+          "seed": 14,
+          "events": 48032,
+          "common_failures": 2632,
+          "metrics": {
+            "channel_stock_per_agent_sat": 102056.25,
+            "issuance_stock_per_agent_sat": 63200,
+            "C_over_HN": 1.6173732171156892,
+            "C_over_V_expiry": 0.8923211965260399,
+            "C_over_V_round_counterfactual": 1.6053751032794492,
+            "V_expiry_over_HN": 1.8125460018347672,
+            "V_round_counterfactual_over_HN": 1.007473713658403,
+            "common_unaffordable_spend_fraction": 0.054796802131912056,
+            "C_over_H5": 1.363818591831621,
+            "C_over_H20": 1.5210992081974848,
+            "fraction_of_full_pool_excess_gain_at20": 0.8440586564995681
+          }
+        },
+        {
+          "seed": 15,
+          "events": 48018,
+          "common_failures": 2676,
+          "metrics": {
+            "channel_stock_per_agent_sat": 106637.5,
+            "issuance_stock_per_agent_sat": 69500,
+            "C_over_HN": 1.5355953559535593,
+            "C_over_V_expiry": 0.8849018379631806,
+            "C_over_V_round_counterfactual": 1.5254530619265345,
+            "V_expiry_over_HN": 1.7353284738204524,
+            "V_round_counterfactual_over_HN": 1.0066487093442362,
+            "common_unaffordable_spend_fraction": 0.05572910158690491,
+            "C_over_H5": 1.3064318529862173,
+            "C_over_H20": 1.4818481848184817,
+            "fraction_of_full_pool_excess_gain_at20": 0.8996496692183081
+          }
+        },
+        {
+          "seed": 16,
+          "events": 48605,
+          "common_failures": 2646,
+          "metrics": {
+            "channel_stock_per_agent_sat": 109175,
+            "issuance_stock_per_agent_sat": 75068.75,
+            "C_over_HN": 1.4562734472696957,
+            "C_over_V_expiry": 0.869161190120014,
+            "C_over_V_round_counterfactual": 1.4450089728828157,
+            "V_expiry_over_HN": 1.6754929509319358,
+            "V_round_counterfactual_over_HN": 1.007795435598166,
+            "common_unaffordable_spend_fraction": 0.05443884374035593,
+            "C_over_H5": 1.27058481233634,
+            "C_over_H20": 1.3933157852755842,
+            "fraction_of_full_pool_excess_gain_at20": 0.8620176949352518
+          }
+        },
+        {
+          "seed": 17,
+          "events": 48473,
+          "common_failures": 2834,
+          "metrics": {
+            "channel_stock_per_agent_sat": 107068.75,
+            "issuance_stock_per_agent_sat": 71200,
+            "C_over_HN": 1.5049635421242205,
+            "C_over_V_expiry": 0.8792077193490001,
+            "C_over_V_round_counterfactual": 1.495118876425963,
+            "V_expiry_over_HN": 1.7117269434787883,
+            "V_round_counterfactual_over_HN": 1.006584537091653,
+            "common_unaffordable_spend_fraction": 0.05846553751573041,
+            "C_over_H5": 1.3027376425855515,
+            "C_over_H20": 1.4345168313515324,
+            "fraction_of_full_pool_excess_gain_at20": 0.860491491175103
+          }
+        },
+        {
+          "seed": 18,
+          "events": 48536,
+          "common_failures": 2726,
+          "metrics": {
+            "channel_stock_per_agent_sat": 110337.5,
+            "issuance_stock_per_agent_sat": 73162.5,
+            "C_over_HN": 1.5094049247606018,
+            "C_over_V_expiry": 0.8893716172161378,
+            "C_over_V_round_counterfactual": 1.499003159047953,
+            "V_expiry_over_HN": 1.6971588653630056,
+            "V_round_counterfactual_over_HN": 1.0069391219423816,
+            "common_unaffordable_spend_fraction": 0.056164496456238666,
+            "C_over_H5": 1.2987567130140514,
+            "C_over_H20": 1.4197024527543225,
+            "fraction_of_full_pool_excess_gain_at20": 0.8239073325637054
+          }
+        },
+        {
+          "seed": 19,
+          "events": 48457,
+          "common_failures": 2877,
+          "metrics": {
+            "channel_stock_per_agent_sat": 103575,
+            "issuance_stock_per_agent_sat": 66175,
+            "C_over_HN": 1.5679818336644904,
+            "C_over_V_expiry": 0.8768326733878004,
+            "C_over_V_round_counterfactual": 1.5556622056350242,
+            "V_expiry_over_HN": 1.7882338115963579,
+            "V_round_counterfactual_over_HN": 1.007919217928443,
+            "common_unaffordable_spend_fraction": 0.059372226922838806,
+            "C_over_H5": 1.3114909781576447,
+            "C_over_H20": 1.4695397712157487,
+            "fraction_of_full_pool_excess_gain_at20": 0.8266809665132849
+          }
+        },
+        {
+          "seed": 20,
+          "events": 48484,
+          "common_failures": 2750,
+          "metrics": {
+            "channel_stock_per_agent_sat": 104718.75,
+            "issuance_stock_per_agent_sat": 68668.75,
+            "C_over_HN": 1.526651480637813,
+            "C_over_V_expiry": 0.8706816077627518,
+            "C_over_V_round_counterfactual": 1.5158932467762045,
+            "V_expiry_over_HN": 1.753398104458184,
+            "V_round_counterfactual_over_HN": 1.0070969600824384,
+            "common_unaffordable_spend_fraction": 0.05671974259549542,
+            "C_over_H5": 1.282335833460891,
+            "C_over_H20": 1.4255934654981708,
+            "fraction_of_full_pool_excess_gain_at20": 0.8081121598343297
+          }
+        },
+        {
+          "seed": 21,
+          "events": 48688,
+          "common_failures": 2836,
+          "metrics": {
+            "channel_stock_per_agent_sat": 106643.75,
+            "issuance_stock_per_agent_sat": 71493.75,
+            "C_over_HN": 1.4929565141307202,
+            "C_over_V_expiry": 0.8622092077680802,
+            "C_over_V_round_counterfactual": 1.4839329749402435,
+            "V_expiry_over_HN": 1.7315478664341755,
+            "V_round_counterfactual_over_HN": 1.0060808266565004,
+            "common_unaffordable_spend_fraction": 0.05824843904042064,
+            "C_over_H5": 1.299741011578306,
+            "C_over_H20": 1.438095238095238,
+            "fraction_of_full_pool_excess_gain_at20": 0.8887097046841455
+          }
+        },
+        {
+          "seed": 22,
+          "events": 48112,
+          "common_failures": 2858,
+          "metrics": {
+            "channel_stock_per_agent_sat": 97237.5,
+            "issuance_stock_per_agent_sat": 60950,
+            "C_over_HN": 1.597822738009654,
+            "C_over_V_expiry": 0.8499665170957925,
+            "C_over_V_round_counterfactual": 1.587108839392232,
+            "V_expiry_over_HN": 1.87986550748984,
+            "V_round_counterfactual_over_HN": 1.0067505758593875,
+            "common_unaffordable_spend_fraction": 0.05940305952776854,
+            "C_over_H5": 1.3850262619068814,
+            "C_over_H20": 1.5337145110410093,
+            "fraction_of_full_pool_excess_gain_at20": 0.8927638196197059
+          }
+        },
+        {
+          "seed": 23,
+          "events": 48373,
+          "common_failures": 2561,
+          "metrics": {
+            "channel_stock_per_agent_sat": 100512.5,
+            "issuance_stock_per_agent_sat": 61831.25,
+            "C_over_HN": 1.626744891766134,
+            "C_over_V_expiry": 0.8811103347670962,
+            "C_over_V_round_counterfactual": 1.6173193223875875,
+            "V_expiry_over_HN": 1.8462442529358498,
+            "V_round_counterfactual_over_HN": 1.0058278963517433,
+            "common_unaffordable_spend_fraction": 0.052942757323300185,
+            "C_over_H5": 1.348595387840671,
+            "C_over_H20": 1.527545592705167,
+            "fraction_of_full_pool_excess_gain_at20": 0.8417230034672823
+          }
+        },
+        {
+          "seed": 24,
+          "events": 48473,
+          "common_failures": 2433,
+          "metrics": {
+            "channel_stock_per_agent_sat": 108950,
+            "issuance_stock_per_agent_sat": 68487.5,
+            "C_over_HN": 1.5932730097797279,
+            "C_over_V_expiry": 0.9180876193532895,
+            "C_over_V_round_counterfactual": 1.5805121460434122,
+            "V_expiry_over_HN": 1.7354258746044806,
+            "V_round_counterfactual_over_HN": 1.008073878943772,
+            "common_unaffordable_spend_fraction": 0.05019289088771069,
+            "C_over_H5": 1.3162186650558745,
+            "C_over_H20": 1.4914442162902122,
+            "fraction_of_full_pool_excess_gain_at20": 0.8283609875876151
+          }
+        }
+      ]
+    },
+    {
+      "cell": "drain",
+      "params": {
+        "agents": 200,
+        "horizonLifetimes": 8,
+        "driftPerRound": -30,
+        "burst": {
+          "vIn": 5000,
+          "vOut": 4000,
+          "pIn": 0.02
+        },
+        "margin": 0.25,
+        "forecast": {
+          "kind": "oracle"
+        },
+        "volume": "both",
+        "serverTier": true,
+        "seed": 1,
+        "spendLock": "expiry",
+        "hyperedgeSizes": [
+          1,
+          5,
+          20,
+          200
+        ]
+      },
+      "equal_service_checks_passed": true,
+      "summary": {
+        "channel_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 61417.96875,
+          "min": 58356.25,
+          "max": 64737.5,
+          "sd": 1642.9664322044268,
+          "mc95": [
+            60724.20487047035,
+            62111.73262952965
+          ]
+        },
+        "issuance_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 22332.552083333332,
+          "min": 20543.75,
+          "max": 24512.5,
+          "sd": 1126.9050584482886,
+          "mc95": [
+            21856.70181038424,
+            22808.402356282426
+          ]
+        },
+        "C_over_HN": {
+          "n": 24,
+          "mean": 2.7670243278238775,
+          "min": 2.556905202006866,
+          "max": 2.938377059182428,
+          "sd": 0.09874544369800352,
+          "mc95": [
+            2.7253277838391736,
+            2.8087208718085814
+          ]
+        },
+        "C_over_V_expiry": {
+          "n": 24,
+          "mean": 0.6491516633896092,
+          "min": 0.6255166436234231,
+          "max": 0.6793773373868242,
+          "sd": 0.013937488299940605,
+          "mc95": [
+            0.6432663782344571,
+            0.6550369485447612
+          ]
+        },
+        "C_over_V_round_counterfactual": {
+          "n": 24,
+          "mean": 2.737210108700625,
+          "min": 2.5289102101813126,
+          "max": 2.9009682990293344,
+          "sd": 0.0966917383045234,
+          "mc95": [
+            2.696380768447698,
+            2.7780394489535523
+          ]
+        },
+        "V_expiry_over_HN": {
+          "n": 24,
+          "mean": 4.264432028021317,
+          "min": 3.9455676456927735,
+          "max": 4.576388949417472,
+          "sd": 0.17888477094099214,
+          "mc95": [
+            4.1888956139813285,
+            4.339968442061306
+          ]
+        },
+        "V_round_counterfactual_over_HN": {
+          "n": 24,
+          "mean": 1.0108818537783952,
+          "min": 1.0078676686119328,
+          "max": 1.0160056532838084,
+          "sd": 0.001852432136460514,
+          "mc95": [
+            1.0100996402892055,
+            1.011664067267585
+          ]
+        },
+        "common_unaffordable_spend_fraction": {
+          "n": 24,
+          "mean": 0.1576055353610652,
+          "min": 0.150708999591815,
+          "max": 0.16601444377245722,
+          "sd": 0.003876884848818796,
+          "mc95": [
+            0.15596847046400733,
+            0.15924260025812306
+          ]
+        },
+        "C_over_H5": {
+          "n": 24,
+          "mean": 1.6433741366997197,
+          "min": 1.5770744764603999,
+          "max": 1.73683234421365,
+          "sd": 0.04611559903534202,
+          "mc95": [
+            1.6239012270489326,
+            1.6628470463505067
+          ]
+        },
+        "C_over_H20": {
+          "n": 24,
+          "mean": 2.1743202837307396,
+          "min": 1.9729013854930726,
+          "max": 2.325012001920307,
+          "sd": 0.08709336299383055,
+          "mc95": [
+            2.1375439819101274,
+            2.211096585551352
+          ]
+        },
+        "fraction_of_full_pool_excess_gain_at20": {
+          "n": 24,
+          "mean": 0.6649775043134325,
+          "min": 0.5803592621996164,
+          "max": 0.7348597970094662,
+          "sd": 0.04066252268387309,
+          "mc95": [
+            0.6478072268593912,
+            0.6821477817674738
+          ]
+        }
+      },
+      "rows": [
+        {
+          "seed": 1,
+          "events": 56671,
+          "common_failures": 8856,
+          "metrics": {
+            "channel_stock_per_agent_sat": 62162.5,
+            "issuance_stock_per_agent_sat": 23850,
+            "C_over_HN": 2.6153037075992636,
+            "C_over_V_expiry": 0.6474226991064601,
+            "C_over_V_round_counterfactual": 2.591111901624686,
+            "V_expiry_over_HN": 4.039561342549115,
+            "V_round_counterfactual_over_HN": 1.0093364574333545,
+            "common_unaffordable_spend_fraction": 0.15627040285154664,
+            "C_over_H5": 1.6148725442441956,
+            "C_over_H20": 2.143996550980815,
+            "fraction_of_full_pool_excess_gain_at20": 0.7082238130197038
+          }
+        },
+        {
+          "seed": 2,
+          "events": 56640,
+          "common_failures": 8877,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60931.25,
+            "issuance_stock_per_agent_sat": 21850,
+            "C_over_HN": 2.8046605293440736,
+            "C_over_V_expiry": 0.6439009776858349,
+            "C_over_V_round_counterfactual": 2.7711892303044547,
+            "V_expiry_over_HN": 4.355732677132994,
+            "V_round_counterfactual_over_HN": 1.0120783159351199,
+            "common_unaffordable_spend_fraction": 0.15672669491525423,
+            "C_over_H5": 1.6817319303087803,
+            "C_over_H20": 2.1770879857079053,
+            "fraction_of_full_pool_excess_gain_at20": 0.6522489778926637
+          }
+        },
+        {
+          "seed": 3,
+          "events": 56347,
+          "common_failures": 8492,
+          "metrics": {
+            "channel_stock_per_agent_sat": 61031.25,
+            "issuance_stock_per_agent_sat": 22918.75,
+            "C_over_HN": 2.674609695973706,
+            "C_over_V_expiry": 0.6417902776804504,
+            "C_over_V_round_counterfactual": 2.646426949767178,
+            "V_expiry_over_HN": 4.167420088755852,
+            "V_round_counterfactual_over_HN": 1.0106493573189341,
+            "common_unaffordable_spend_fraction": 0.150708999591815,
+            "C_over_H5": 1.598984771573604,
+            "C_over_H20": 2.1004517100451707,
+            "fraction_of_full_pool_excess_gain_at20": 0.6571392203753545
+          }
+        },
+        {
+          "seed": 4,
+          "events": 56635,
+          "common_failures": 8930,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60200,
+            "issuance_stock_per_agent_sat": 20612.5,
+            "C_over_HN": 2.938377059182428,
+            "C_over_V_expiry": 0.6420732790984589,
+            "C_over_V_round_counterfactual": 2.9009682990293344,
+            "V_expiry_over_HN": 4.576388949417472,
+            "V_round_counterfactual_over_HN": 1.012895266785787,
+            "common_unaffordable_spend_fraction": 0.15767634854771784,
+            "C_over_H5": 1.7212294496068619,
+            "C_over_H20": 2.271162461683565,
+            "fraction_of_full_pool_excess_gain_at20": 0.6557869923510745
+          }
+        },
+        {
+          "seed": 5,
+          "events": 56273,
+          "common_failures": 8830,
+          "metrics": {
+            "channel_stock_per_agent_sat": 62231.25,
+            "issuance_stock_per_agent_sat": 23425,
+            "C_over_HN": 2.6651498929336186,
+            "C_over_V_expiry": 0.6538083873645143,
+            "C_over_V_round_counterfactual": 2.6412506330652916,
+            "V_expiry_over_HN": 4.0763470528066685,
+            "V_round_counterfactual_over_HN": 1.0090484634699703,
+            "common_unaffordable_spend_fraction": 0.15691361754304906,
+            "C_over_H5": 1.5918465227817746,
+            "C_over_H20": 2.0900503778337534,
+            "fraction_of_full_pool_excess_gain_at20": 0.654625978393651
+          }
+        },
+        {
+          "seed": 6,
+          "events": 56666,
+          "common_failures": 8916,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60306.25,
+            "issuance_stock_per_agent_sat": 21656.25,
+            "C_over_HN": 2.7943816970750075,
+            "C_over_V_expiry": 0.6405277243653004,
+            "C_over_V_round_counterfactual": 2.767053476093518,
+            "V_expiry_over_HN": 4.36262411567581,
+            "V_round_counterfactual_over_HN": 1.0098762894239655,
+            "common_unaffordable_spend_fraction": 0.15734302756503019,
+            "C_over_H5": 1.6159772232456875,
+            "C_over_H20": 2.152353334820433,
+            "fraction_of_full_pool_excess_gain_at20": 0.6422007852057705
+          }
+        },
+        {
+          "seed": 7,
+          "events": 56516,
+          "common_failures": 9020,
+          "metrics": {
+            "channel_stock_per_agent_sat": 58356.25,
+            "issuance_stock_per_agent_sat": 20543.75,
+            "C_over_HN": 2.8553516819571865,
+            "C_over_V_expiry": 0.6255166436234231,
+            "C_over_V_round_counterfactual": 2.8220526067446565,
+            "V_expiry_over_HN": 4.5647893002766855,
+            "V_round_counterfactual_over_HN": 1.0117995940731033,
+            "common_unaffordable_spend_fraction": 0.15960082100644066,
+            "C_over_H5": 1.5957955904973506,
+            "C_over_H20": 2.1688734030197443,
+            "fraction_of_full_pool_excess_gain_at20": 0.6300009935511066
+          }
+        },
+        {
+          "seed": 8,
+          "events": 56339,
+          "common_failures": 9311,
+          "metrics": {
+            "channel_stock_per_agent_sat": 59387.5,
+            "issuance_stock_per_agent_sat": 21743.75,
+            "C_over_HN": 2.7375396139441084,
+            "C_over_V_expiry": 0.6337749969451905,
+            "C_over_V_round_counterfactual": 2.714014898182745,
+            "V_expiry_over_HN": 4.319418763976348,
+            "V_round_counterfactual_over_HN": 1.008667865374326,
+            "common_unaffordable_spend_fraction": 0.16526739913736488,
+            "C_over_H5": 1.6793920113114174,
+            "C_over_H20": 2.263458789899952,
+            "fraction_of_full_pool_excess_gain_at20": 0.7271539478930084
+          }
+        },
+        {
+          "seed": 9,
+          "events": 56405,
+          "common_failures": 9085,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60943.75,
+            "issuance_stock_per_agent_sat": 21293.75,
+            "C_over_HN": 2.870473947600824,
+            "C_over_V_expiry": 0.6486750399069457,
+            "C_over_V_round_counterfactual": 2.843947855886698,
+            "V_expiry_over_HN": 4.4251339592357395,
+            "V_round_counterfactual_over_HN": 1.0093272074799893,
+            "common_unaffordable_spend_fraction": 0.16106728126939102,
+            "C_over_H5": 1.692588092345079,
+            "C_over_H20": 2.1986471251409245,
+            "fraction_of_full_pool_excess_gain_at20": 0.6408253516058736
+          }
+        },
+        {
+          "seed": 10,
+          "events": 56355,
+          "common_failures": 8671,
+          "metrics": {
+            "channel_stock_per_agent_sat": 61981.25,
+            "issuance_stock_per_agent_sat": 22850,
+            "C_over_HN": 2.7251992305578456,
+            "C_over_V_expiry": 0.6529946234206444,
+            "C_over_V_round_counterfactual": 2.696574765141048,
+            "V_expiry_over_HN": 4.173386935840563,
+            "V_round_counterfactual_over_HN": 1.0106151202580511,
+            "common_unaffordable_spend_fraction": 0.1538638985005767,
+            "C_over_H5": 1.6597489539748955,
+            "C_over_H20": 2.267779556368626,
+            "fraction_of_full_pool_excess_gain_at20": 0.7348597970094662
+          }
+        },
+        {
+          "seed": 11,
+          "events": 56732,
+          "common_failures": 8977,
+          "metrics": {
+            "channel_stock_per_agent_sat": 61637.5,
+            "issuance_stock_per_agent_sat": 22912.5,
+            "C_over_HN": 2.7019178082191786,
+            "C_over_V_expiry": 0.6478881418316995,
+            "C_over_V_round_counterfactual": 2.6737207802644907,
+            "V_expiry_over_HN": 4.170346135029354,
+            "V_round_counterfactual_over_HN": 1.010545988258317,
+            "common_unaffordable_spend_fraction": 0.15823521116830008,
+            "C_over_H5": 1.6414780292942743,
+            "C_over_H20": 2.0477574750830567,
+            "fraction_of_full_pool_excess_gain_at20": 0.615633416621564
+          }
+        },
+        {
+          "seed": 12,
+          "events": 56580,
+          "common_failures": 9133,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60562.5,
+            "issuance_stock_per_agent_sat": 21593.75,
+            "C_over_HN": 2.8308501314636283,
+            "C_over_V_expiry": 0.6455673545925382,
+            "C_over_V_round_counterfactual": 2.786254311001226,
+            "V_expiry_over_HN": 4.385057750093903,
+            "V_round_counterfactual_over_HN": 1.0160056532838084,
+            "common_unaffordable_spend_fraction": 0.16141746200070697,
+            "C_over_H5": 1.668388429752066,
+            "C_over_H20": 2.1414364640883976,
+            "fraction_of_full_pool_excess_gain_at20": 0.62344614912631
+          }
+        },
+        {
+          "seed": 13,
+          "events": 56601,
+          "common_failures": 8850,
+          "metrics": {
+            "channel_stock_per_agent_sat": 61068.75,
+            "issuance_stock_per_agent_sat": 21893.75,
+            "C_over_HN": 2.808565679793044,
+            "C_over_V_expiry": 0.6437558211308587,
+            "C_over_V_round_counterfactual": 2.772108220313237,
+            "V_expiry_over_HN": 4.362781022871925,
+            "V_round_counterfactual_over_HN": 1.0131515282169206,
+            "common_unaffordable_spend_fraction": 0.15635766152541475,
+            "C_over_H5": 1.6972381448671183,
+            "C_over_H20": 2.2482742751955818,
+            "fraction_of_full_pool_excess_gain_at20": 0.6902012402106531
+          }
+        },
+        {
+          "seed": 14,
+          "events": 56198,
+          "common_failures": 9048,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60537.5,
+            "issuance_stock_per_agent_sat": 20837.5,
+            "C_over_HN": 2.9201085318058486,
+            "C_over_V_expiry": 0.6522462058193339,
+            "C_over_V_round_counterfactual": 2.8865422529505493,
+            "V_expiry_over_HN": 4.477003477755287,
+            "V_round_counterfactual_over_HN": 1.011628542357552,
+            "common_unaffordable_spend_fraction": 0.1610021708957614,
+            "C_over_H5": 1.701686577652846,
+            "C_over_H20": 2.325012001920307,
+            "fraction_of_full_pool_excess_gain_at20": 0.6900714100125073
+          }
+        },
+        {
+          "seed": 15,
+          "events": 56005,
+          "common_failures": 8769,
+          "metrics": {
+            "channel_stock_per_agent_sat": 63475,
+            "issuance_stock_per_agent_sat": 22868.75,
+            "C_over_HN": 2.7870472008781557,
+            "C_over_V_expiry": 0.6744973070192724,
+            "C_over_V_round_counterfactual": 2.7587077773423467,
+            "V_expiry_over_HN": 4.132036068749673,
+            "V_round_counterfactual_over_HN": 1.0102727167293921,
+            "common_unaffordable_spend_fraction": 0.15657530577626996,
+            "C_over_H5": 1.6301765650080255,
+            "C_over_H20": 2.2384835794577915,
+            "fraction_of_full_pool_excess_gain_at20": 0.6930335017727569
+          }
+        },
+        {
+          "seed": 16,
+          "events": 56759,
+          "common_failures": 8642,
+          "metrics": {
+            "channel_stock_per_agent_sat": 63125,
+            "issuance_stock_per_agent_sat": 22156.25,
+            "C_over_HN": 2.86281179138322,
+            "C_over_V_expiry": 0.6670379968024986,
+            "C_over_V_round_counterfactual": 2.83130991926687,
+            "V_expiry_over_HN": 4.291827159931434,
+            "V_round_counterfactual_over_HN": 1.0111262535768277,
+            "common_unaffordable_spend_fraction": 0.15225779171585124,
+            "C_over_H5": 1.6503267973856208,
+            "C_over_H20": 2.165987561655587,
+            "fraction_of_full_pool_excess_gain_at20": 0.6259288066830356
+          }
+        },
+        {
+          "seed": 17,
+          "events": 56628,
+          "common_failures": 8960,
+          "metrics": {
+            "channel_stock_per_agent_sat": 63993.75,
+            "issuance_stock_per_agent_sat": 24512.5,
+            "C_over_HN": 2.6280800821355235,
+            "C_over_V_expiry": 0.6660841526832011,
+            "C_over_V_round_counterfactual": 2.5958392147978433,
+            "V_expiry_over_HN": 3.9455676456927735,
+            "V_round_counterfactual_over_HN": 1.0124202096778137,
+            "common_unaffordable_spend_fraction": 0.1582256127710673,
+            "C_over_H5": 1.6330143540669857,
+            "C_over_H20": 2.179902065147967,
+            "fraction_of_full_pool_excess_gain_at20": 0.7247199189368563
+          }
+        },
+        {
+          "seed": 18,
+          "events": 56514,
+          "common_failures": 8662,
+          "metrics": {
+            "channel_stock_per_agent_sat": 64737.5,
+            "issuance_stock_per_agent_sat": 23262.5,
+            "C_over_HN": 2.788156123822342,
+            "C_over_V_expiry": 0.6793773373868242,
+            "C_over_V_round_counterfactual": 2.766054544942998,
+            "V_expiry_over_HN": 4.103987534448504,
+            "V_round_counterfactual_over_HN": 1.007990290328783,
+            "common_unaffordable_spend_fraction": 0.15327175567116114,
+            "C_over_H5": 1.5977171062779578,
+            "C_over_H20": 2.0377729687192603,
+            "fraction_of_full_pool_excess_gain_at20": 0.5803592621996164
+          }
+        },
+        {
+          "seed": 19,
+          "events": 56432,
+          "common_failures": 9068,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60518.75,
+            "issuance_stock_per_agent_sat": 23793.75,
+            "C_over_HN": 2.556905202006866,
+            "C_over_V_expiry": 0.631857688848899,
+            "C_over_V_round_counterfactual": 2.5289102101813126,
+            "V_expiry_over_HN": 4.046647286456173,
+            "V_round_counterfactual_over_HN": 1.0110699825216594,
+            "common_unaffordable_spend_fraction": 0.16068897079671107,
+            "C_over_H5": 1.5871168660875268,
+            "C_over_H20": 1.9729013854930726,
+            "fraction_of_full_pool_excess_gain_at20": 0.6248944278938713
+          }
+        },
+        {
+          "seed": 20,
+          "events": 56456,
+          "common_failures": 8771,
+          "metrics": {
+            "channel_stock_per_agent_sat": 62600,
+            "issuance_stock_per_agent_sat": 23556.25,
+            "C_over_HN": 2.675213675213675,
+            "C_over_V_expiry": 0.6550037895472257,
+            "C_over_V_round_counterfactual": 2.641046848937658,
+            "V_expiry_over_HN": 4.084272057514245,
+            "V_round_counterfactual_over_HN": 1.012936849753256,
+            "common_unaffordable_spend_fraction": 0.15535992631429785,
+            "C_over_H5": 1.5770744764603999,
+            "C_over_H20": 2.1356076759061833,
+            "fraction_of_full_pool_excess_gain_at20": 0.6778882555154258
+          }
+        },
+        {
+          "seed": 21,
+          "events": 56854,
+          "common_failures": 9008,
+          "metrics": {
+            "channel_stock_per_agent_sat": 61962.5,
+            "issuance_stock_per_agent_sat": 22375,
+            "C_over_HN": 2.7739227756015667,
+            "C_over_V_expiry": 0.650848373221968,
+            "C_over_V_round_counterfactual": 2.7522688364653076,
+            "V_expiry_over_HN": 4.262010768913049,
+            "V_round_counterfactual_over_HN": 1.0078676686119328,
+            "common_unaffordable_spend_fraction": 0.15844091884476028,
+            "C_over_H5": 1.6194054230643578,
+            "C_over_H20": 2.174122807017544,
+            "fraction_of_full_pool_excess_gain_at20": 0.6618793237035808
+          }
+        },
+        {
+          "seed": 22,
+          "events": 56218,
+          "common_failures": 9333,
+          "metrics": {
+            "channel_stock_per_agent_sat": 58531.25,
+            "issuance_stock_per_agent_sat": 21256.25,
+            "C_over_HN": 2.762536873156342,
+            "C_over_V_expiry": 0.6263391035345421,
+            "C_over_V_round_counterfactual": 2.736239746024944,
+            "V_expiry_over_HN": 4.410608977735637,
+            "V_round_counterfactual_over_HN": 1.009610680924287,
+            "common_unaffordable_spend_fraction": 0.16601444377245722,
+            "C_over_H5": 1.73683234421365,
+            "C_over_H20": 2.2824762368998295,
+            "fraction_of_full_pool_excess_gain_at20": 0.7276308691364722
+          }
+        },
+        {
+          "seed": 23,
+          "events": 56405,
+          "common_failures": 8924,
+          "metrics": {
+            "channel_stock_per_agent_sat": 60143.75,
+            "issuance_stock_per_agent_sat": 20950,
+            "C_over_HN": 2.8845923261390887,
+            "C_over_V_expiry": 0.6420592868991849,
+            "C_over_V_round_counterfactual": 2.852284975143619,
+            "V_expiry_over_HN": 4.492719574340528,
+            "V_round_counterfactual_over_HN": 1.0113268313920294,
+            "common_unaffordable_spend_fraction": 0.158212924386136,
+            "C_over_H5": 1.655712319339298,
+            "C_over_H20": 2.2727916863486066,
+            "fraction_of_full_pool_excess_gain_at20": 0.6753671171717753
+          }
+        },
+        {
+          "seed": 24,
+          "events": 56517,
+          "common_failures": 8536,
+          "metrics": {
+            "channel_stock_per_agent_sat": 63606.25,
+            "issuance_stock_per_agent_sat": 23268.75,
+            "C_over_HN": 2.7468286099865047,
+            "C_over_V_expiry": 0.6665927128353463,
+            "C_over_V_round_counterfactual": 2.7171643553430083,
+            "V_expiry_over_HN": 4.1207000273118695,
+            "V_round_counterfactual_over_HN": 1.0109173574963048,
+            "common_unaffordable_spend_fraction": 0.15103420209848364,
+            "C_over_H5": 1.5926447574334899,
+            "C_over_H20": 2.127299331103679,
+            "fraction_of_full_pool_excess_gain_at20": 0.645340547240286
+          }
+        }
+      ]
+    },
+    {
+      "cell": "accumulate",
+      "params": {
+        "agents": 200,
+        "horizonLifetimes": 8,
+        "driftPerRound": 60,
+        "burst": {
+          "vIn": 5000,
+          "vOut": 4000,
+          "pIn": 0.02
+        },
+        "margin": 0.25,
+        "forecast": {
+          "kind": "oracle"
+        },
+        "volume": "both",
+        "serverTier": true,
+        "seed": 1,
+        "spendLock": "expiry",
+        "hyperedgeSizes": [
+          1,
+          5,
+          20,
+          200
+        ]
+      },
+      "equal_service_checks_passed": true,
+      "summary": {
+        "channel_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 411539.5833333333,
+          "min": 404400,
+          "max": 419943.75,
+          "sd": 4241.018589623987,
+          "mc95": [
+            409748.7582426787,
+            413330.4084239879
+          ]
+        },
+        "issuance_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 407828.125,
+          "min": 399856.25,
+          "max": 416343.75,
+          "sd": 4306.040767618359,
+          "mc95": [
+            406009.84345157695,
+            409646.40654842305
+          ]
+        },
+        "C_over_HN": {
+          "n": 24,
+          "mean": 1.0091967092942642,
+          "min": 1.007621742503765,
+          "max": 1.0121152433209837,
+          "sd": 0.0010881135787220693,
+          "mc95": [
+            1.0087372392266194,
+            1.009656179361909
+          ]
+        },
+        "C_over_V_expiry": {
+          "n": 24,
+          "mean": 0.9699369571019393,
+          "min": 0.968560766934159,
+          "max": 0.9724990291375547,
+          "sd": 0.0010097598862732215,
+          "mc95": [
+            0.9695105728969045,
+            0.9703633413069741
+          ]
+        },
+        "C_over_V_round_counterfactual": {
+          "n": 24,
+          "mean": 0.9872837871687827,
+          "min": 0.98589801347785,
+          "max": 0.9903240885991181,
+          "sd": 0.0010148715743118783,
+          "mc95": [
+            0.9868552444871929,
+            0.9877123298503726
+          ]
+        },
+        "V_expiry_over_HN": {
+          "n": 24,
+          "mean": 1.0404766660231155,
+          "min": 1.0394142408737894,
+          "max": 1.0412233012546996,
+          "sd": 0.00047351523358810706,
+          "mc95": [
+            1.0402767180758956,
+            1.0406766139703354
+          ]
+        },
+        "V_round_counterfactual_over_HN": {
+          "n": 24,
+          "mean": 1.0221951363341046,
+          "min": 1.0218152972511263,
+          "max": 1.0228330304443043,
+          "sd": 0.00024324048499000105,
+          "mc95": [
+            1.022092424885339,
+            1.0222978477828704
+          ]
+        },
+        "common_unaffordable_spend_fraction": {
+          "n": 24,
+          "mean": 0.005265658993571381,
+          "min": 0.004461657629744384,
+          "max": 0.006387200793749225,
+          "sd": 0.000437938222558913,
+          "mc95": [
+            0.005080733900568027,
+            0.005450584086574735
+          ]
+        },
+        "C_over_H5": {
+          "n": 24,
+          "mean": 1.0074100713303833,
+          "min": 1.0062308667553108,
+          "max": 1.0098104967636279,
+          "sd": 0.0008674709132854688,
+          "mc95": [
+            1.0070437704891833,
+            1.0077763721715833
+          ]
+        },
+        "C_over_H20": {
+          "n": 24,
+          "mean": 1.0088589402009118,
+          "min": 1.0074146311259713,
+          "max": 1.0114037554285,
+          "sd": 0.0009908650681333014,
+          "mc95": [
+            1.0084405345778364,
+            1.0092773458239872
+          ]
+        },
+        "fraction_of_full_pool_excess_gain_at20": {
+          "n": 24,
+          "mean": 0.9640186208214069,
+          "min": 0.926907191753421,
+          "max": 0.9925593599703317,
+          "sd": 0.016659178446885314,
+          "mc95": [
+            0.9569840667109003,
+            0.9710531749319135
+          ]
+        }
+      },
+      "rows": [
+        {
+          "seed": 1,
+          "events": 32337,
+          "common_failures": 165,
+          "metrics": {
+            "channel_stock_per_agent_sat": 416312.5,
+            "issuance_stock_per_agent_sat": 411756.25,
+            "C_over_HN": 1.0111881954670352,
+            "C_over_V_expiry": 0.972435199424218,
+            "C_over_V_round_counterfactual": 0.9891974569584473,
+            "V_expiry_over_HN": 1.0398514945425288,
+            "V_round_counterfactual_over_HN": 1.0222308886399731,
+            "common_unaffordable_spend_fraction": 0.005102514147880138,
+            "C_over_H5": 1.0084936940756104,
+            "C_over_H20": 1.0106512107786612,
+            "fraction_of_full_pool_excess_gain_at20": 0.952004352269657
+          }
+        },
+        {
+          "seed": 2,
+          "events": 32324,
+          "common_failures": 172,
+          "metrics": {
+            "channel_stock_per_agent_sat": 413962.5,
+            "issuance_stock_per_agent_sat": 410831.25,
+            "C_over_HN": 1.007621742503765,
+            "C_over_V_expiry": 0.9686428304469803,
+            "C_over_V_round_counterfactual": 0.98589801347785,
+            "V_expiry_over_HN": 1.040240748015239,
+            "V_round_counterfactual_over_HN": 1.0220344586650323,
+            "common_unaffordable_spend_fraction": 0.005321123623313946,
+            "C_over_H5": 1.0065651499954407,
+            "C_over_H20": 1.007483800310304,
+            "fraction_of_full_pool_excess_gain_at20": 0.9819014886172104
+          }
+        },
+        {
+          "seed": 3,
+          "events": 32343,
+          "common_failures": 181,
+          "metrics": {
+            "channel_stock_per_agent_sat": 416443.75,
+            "issuance_stock_per_agent_sat": 412750,
+            "C_over_HN": 1.0089491217443973,
+            "C_over_V_expiry": 0.969775870220205,
+            "C_over_V_round_counterfactual": 0.9869614258274321,
+            "V_expiry_over_HN": 1.0403941289189815,
+            "V_round_counterfactual_over_HN": 1.0222781715086096,
+            "common_unaffordable_spend_fraction": 0.005596265034165044,
+            "C_over_H5": 1.0079265433312659,
+            "C_over_H20": 1.0087352771974445,
+            "fraction_of_full_pool_excess_gain_at20": 0.9761044096772162
+          }
+        },
+        {
+          "seed": 4,
+          "events": 32400,
+          "common_failures": 161,
+          "metrics": {
+            "channel_stock_per_agent_sat": 409825,
+            "issuance_stock_per_agent_sat": 406031.25,
+            "C_over_HN": 1.0095455105308537,
+            "C_over_V_expiry": 0.9695763716719811,
+            "C_over_V_round_counterfactual": 0.987576871293774,
+            "V_expiry_over_HN": 1.0412233012546996,
+            "V_round_counterfactual_over_HN": 1.0222449916311829,
+            "common_unaffordable_spend_fraction": 0.004969135802469136,
+            "C_over_H5": 1.0072039690951262,
+            "C_over_H20": 1.009250280894553,
+            "fraction_of_full_pool_excess_gain_at20": 0.9690713623596628
+          }
+        },
+        {
+          "seed": 5,
+          "events": 32068,
+          "common_failures": 159,
+          "metrics": {
+            "channel_stock_per_agent_sat": 414006.25,
+            "issuance_stock_per_agent_sat": 410375,
+            "C_over_HN": 1.0089100767637382,
+            "C_over_V_expiry": 0.9706525436053215,
+            "C_over_V_round_counterfactual": 0.9870658511268531,
+            "V_expiry_over_HN": 1.0394142408737894,
+            "V_round_counterfactual_over_HN": 1.022130464357517,
+            "common_unaffordable_spend_fraction": 0.004958213795684171,
+            "C_over_H5": 1.0072072620006993,
+            "C_over_H20": 1.0084646418512597,
+            "fraction_of_full_pool_excess_gain_at20": 0.950007735703096
+          }
+        },
+        {
+          "seed": 6,
+          "events": 32373,
+          "common_failures": 168,
+          "metrics": {
+            "channel_stock_per_agent_sat": 412775,
+            "issuance_stock_per_agent_sat": 408956.25,
+            "C_over_HN": 1.0097081441391857,
+            "C_over_V_expiry": 0.9697905722970536,
+            "C_over_V_round_counterfactual": 0.9875973503935112,
+            "V_expiry_over_HN": 1.041161022784108,
+            "V_round_counterfactual_over_HN": 1.0223884700954944,
+            "common_unaffordable_spend_fraction": 0.00518950977666574,
+            "C_over_H5": 1.0073979163806646,
+            "C_over_H20": 1.00899854862119,
+            "fraction_of_full_pool_excess_gain_at20": 0.926907191753421
+          }
+        },
+        {
+          "seed": 7,
+          "events": 32294,
+          "common_failures": 192,
+          "metrics": {
+            "channel_stock_per_agent_sat": 407612.5,
+            "issuance_stock_per_agent_sat": 403443.75,
+            "C_over_HN": 1.0104111796238342,
+            "C_over_V_expiry": 0.9705679110237276,
+            "C_over_V_round_counterfactual": 0.9886505928899336,
+            "V_expiry_over_HN": 1.0410515000007377,
+            "V_round_counterfactual_over_HN": 1.0220103916291519,
+            "common_unaffordable_spend_fraction": 0.005945376850188889,
+            "C_over_H5": 1.0085829608895351,
+            "C_over_H20": 1.0101764222982916,
+            "fraction_of_full_pool_excess_gain_at20": 0.9774514191451332
+          }
+        },
+        {
+          "seed": 8,
+          "events": 31801,
+          "common_failures": 166,
+          "metrics": {
+            "channel_stock_per_agent_sat": 406756.25,
+            "issuance_stock_per_agent_sat": 403643.75,
+            "C_over_HN": 1.0077110075406839,
+            "C_over_V_expiry": 0.968560766934159,
+            "C_over_V_round_counterfactual": 0.9861435771811669,
+            "V_expiry_over_HN": 1.0404210473344377,
+            "V_round_counterfactual_over_HN": 1.0218704769351805,
+            "common_unaffordable_spend_fraction": 0.005219961636426527,
+            "C_over_H5": 1.0062308667553108,
+            "C_over_H20": 1.0074146311259713,
+            "fraction_of_full_pool_excess_gain_at20": 0.9615645020253346
+          }
+        },
+        {
+          "seed": 9,
+          "events": 32321,
+          "common_failures": 179,
+          "metrics": {
+            "channel_stock_per_agent_sat": 404650,
+            "issuance_stock_per_agent_sat": 399856.25,
+            "C_over_HN": 1.0121152433209837,
+            "C_over_V_expiry": 0.9724990291375547,
+            "C_over_V_round_counterfactual": 0.9903240885991181,
+            "V_expiry_over_HN": 1.0407365076945752,
+            "V_round_counterfactual_over_HN": 1.022004064096523,
+            "common_unaffordable_spend_fraction": 0.005538194981590916,
+            "C_over_H5": 1.0098104967636279,
+            "C_over_H20": 1.0114037554285,
+            "fraction_of_full_pool_excess_gain_at20": 0.9412733303299529
+          }
+        },
+        {
+          "seed": 10,
+          "events": 32275,
+          "common_failures": 144,
+          "metrics": {
+            "channel_stock_per_agent_sat": 413087.5,
+            "issuance_stock_per_agent_sat": 409725,
+            "C_over_HN": 1.008268245057359,
+            "C_over_V_expiry": 0.9693495155956289,
+            "C_over_V_round_counterfactual": 0.9862138352241488,
+            "V_expiry_over_HN": 1.040149325744302,
+            "V_round_counterfactual_over_HN": 1.0223627057799263,
+            "common_unaffordable_spend_fraction": 0.004461657629744384,
+            "C_over_H5": 1.0066711343974657,
+            "C_over_H20": 1.0082067240222101,
+            "fraction_of_full_pool_excess_gain_at20": 0.9925593599703317
+          }
+        },
+        {
+          "seed": 11,
+          "events": 32402,
+          "common_failures": 158,
+          "metrics": {
+            "channel_stock_per_agent_sat": 414112.5,
+            "issuance_stock_per_agent_sat": 410637.5,
+            "C_over_HN": 1.008585258927756,
+            "C_over_V_expiry": 0.9694028434856687,
+            "C_over_V_round_counterfactual": 0.9867583204526356,
+            "V_expiry_over_HN": 1.040419125759111,
+            "V_round_counterfactual_over_HN": 1.0221198423390119,
+            "common_unaffordable_spend_fraction": 0.004876242207271156,
+            "C_over_H5": 1.006593339815265,
+            "C_over_H20": 1.0082782968621604,
+            "fraction_of_full_pool_excess_gain_at20": 0.964245450465897
+          }
+        },
+        {
+          "seed": 12,
+          "events": 32276,
+          "common_failures": 163,
+          "metrics": {
+            "channel_stock_per_agent_sat": 407281.25,
+            "issuance_stock_per_agent_sat": 403193.75,
+            "C_over_HN": 1.0103257414843643,
+            "C_over_V_expiry": 0.9707326119657381,
+            "C_over_V_round_counterfactual": 0.9880193364336467,
+            "V_expiry_over_HN": 1.0407868542074112,
+            "V_round_counterfactual_over_HN": 1.02257689118842,
+            "common_unaffordable_spend_fraction": 0.005050192093196183,
+            "C_over_H5": 1.0086680597476976,
+            "C_over_H20": 1.0100125544413274,
+            "fraction_of_full_pool_excess_gain_at20": 0.9696692926594098
+          }
+        },
+        {
+          "seed": 13,
+          "events": 32461,
+          "common_failures": 172,
+          "metrics": {
+            "channel_stock_per_agent_sat": 411212.5,
+            "issuance_stock_per_agent_sat": 407518.75,
+            "C_over_HN": 1.009125906839062,
+            "C_over_V_expiry": 0.9700219843741037,
+            "C_over_V_round_counterfactual": 0.9875815223688652,
+            "V_expiry_over_HN": 1.0403124084761746,
+            "V_round_counterfactual_over_HN": 1.0218152972511263,
+            "common_unaffordable_spend_fraction": 0.005298666091617633,
+            "C_over_H5": 1.007426235281508,
+            "C_over_H20": 1.0087855138682327,
+            "fraction_of_full_pool_excess_gain_at20": 0.9627003675544634
+          }
+        },
+        {
+          "seed": 14,
+          "events": 31916,
+          "common_failures": 158,
+          "metrics": {
+            "channel_stock_per_agent_sat": 407256.25,
+            "issuance_stock_per_agent_sat": 403231.25,
+            "C_over_HN": 1.0101540941927882,
+            "C_over_V_expiry": 0.9705276010529341,
+            "C_over_V_round_counterfactual": 0.9878146553631341,
+            "V_expiry_over_HN": 1.0408298466698556,
+            "V_round_counterfactual_over_HN": 1.0226150105268907,
+            "common_unaffordable_spend_fraction": 0.0049504950495049506,
+            "C_over_H5": 1.0082003991892436,
+            "C_over_H20": 1.0096688721198692,
+            "fraction_of_full_pool_excess_gain_at20": 0.952214144983643
+          }
+        },
+        {
+          "seed": 15,
+          "events": 31852,
+          "common_failures": 176,
+          "metrics": {
+            "channel_stock_per_agent_sat": 414106.25,
+            "issuance_stock_per_agent_sat": 410743.75,
+            "C_over_HN": 1.0083398012448828,
+            "C_over_V_expiry": 0.9696761152441101,
+            "C_over_V_round_counterfactual": 0.9863233992971314,
+            "V_expiry_over_HN": 1.0398727836985437,
+            "V_round_counterfactual_over_HN": 1.0223216867443685,
+            "common_unaffordable_spend_fraction": 0.00552555569508979,
+            "C_over_H5": 1.0069452887537993,
+            "C_over_H20": 1.0079409751274055,
+            "fraction_of_full_pool_excess_gain_at20": 0.9521779829319158
+          }
+        },
+        {
+          "seed": 16,
+          "events": 32597,
+          "common_failures": 174,
+          "metrics": {
+            "channel_stock_per_agent_sat": 416825,
+            "issuance_stock_per_agent_sat": 413368.75,
+            "C_over_HN": 1.0083611787296451,
+            "C_over_V_expiry": 0.9692998146924763,
+            "C_over_V_round_counterfactual": 0.9865354590397418,
+            "V_expiry_over_HN": 1.040298536577727,
+            "V_round_counterfactual_over_HN": 1.0221236038602683,
+            "common_unaffordable_spend_fraction": 0.005337914532012149,
+            "C_over_H5": 1.00644382403984,
+            "C_over_H20": 1.0079344688439855,
+            "fraction_of_full_pool_excess_gain_at20": 0.9489653433496528
+          }
+        },
+        {
+          "seed": 17,
+          "events": 32416,
+          "common_failures": 186,
+          "metrics": {
+            "channel_stock_per_agent_sat": 409556.25,
+            "issuance_stock_per_agent_sat": 406093.75,
+            "C_over_HN": 1.0086505456616435,
+            "C_over_V_expiry": 0.9692267757129459,
+            "C_over_V_round_counterfactual": 0.9870080008759001,
+            "V_expiry_over_HN": 1.0406754857960856,
+            "V_round_counterfactual_over_HN": 1.021927425883617,
+            "common_unaffordable_spend_fraction": 0.005737907206317868,
+            "C_over_H5": 1.0071158515968401,
+            "C_over_H20": 1.0085729237209875,
+            "fraction_of_full_pool_excess_gain_at20": 0.9910269312836362
+          }
+        },
+        {
+          "seed": 18,
+          "events": 32265,
+          "common_failures": 186,
+          "metrics": {
+            "channel_stock_per_agent_sat": 419943.75,
+            "issuance_stock_per_agent_sat": 416343.75,
+            "C_over_HN": 1.0086467011934248,
+            "C_over_V_expiry": 0.970182648975104,
+            "C_over_V_round_counterfactual": 0.9867760970215033,
+            "V_expiry_over_HN": 1.0396461967846509,
+            "V_round_counterfactual_over_HN": 1.022163694720551,
+            "common_unaffordable_spend_fraction": 0.005764760576476058,
+            "C_over_H5": 1.0065615028538044,
+            "C_over_H20": 1.0082531774733272,
+            "fraction_of_full_pool_excess_gain_at20": 0.9544885718501703
+          }
+        },
+        {
+          "seed": 19,
+          "events": 32171,
+          "common_failures": 158,
+          "metrics": {
+            "channel_stock_per_agent_sat": 408256.25,
+            "issuance_stock_per_agent_sat": 404662.5,
+            "C_over_HN": 1.0088808575047106,
+            "C_over_V_expiry": 0.9694021816131118,
+            "C_over_V_round_counterfactual": 0.9870584757461303,
+            "V_expiry_over_HN": 1.0407247648503384,
+            "V_round_counterfactual_over_HN": 1.0221084994403038,
+            "common_unaffordable_spend_fraction": 0.00491125547853657,
+            "C_over_H5": 1.0071076164045636,
+            "C_over_H20": 1.0085848838107,
+            "fraction_of_full_pool_excess_gain_at20": 0.966672847317562
+          }
+        },
+        {
+          "seed": 20,
+          "events": 32356,
+          "common_failures": 181,
+          "metrics": {
+            "channel_stock_per_agent_sat": 411043.75,
+            "issuance_stock_per_agent_sat": 407418.75,
+            "C_over_HN": 1.0088974795588077,
+            "C_over_V_expiry": 0.9696658052700071,
+            "C_over_V_round_counterfactual": 0.9871439509567199,
+            "V_expiry_over_HN": 1.0404589643932802,
+            "V_round_counterfactual_over_HN": 1.022036835236649,
+            "common_unaffordable_spend_fraction": 0.005594016565706515,
+            "C_over_H5": 1.0075682135032862,
+            "C_over_H20": 1.0087582060249094,
+            "fraction_of_full_pool_excess_gain_at20": 0.9843468554237429
+          }
+        },
+        {
+          "seed": 21,
+          "events": 32591,
+          "common_failures": 156,
+          "metrics": {
+            "channel_stock_per_agent_sat": 410181.25,
+            "issuance_stock_per_agent_sat": 406762.5,
+            "C_over_HN": 1.0085287518824724,
+            "C_over_V_expiry": 0.9686815737367134,
+            "C_over_V_round_counterfactual": 0.9868696868194119,
+            "V_expiry_over_HN": 1.041135476534407,
+            "V_round_counterfactual_over_HN": 1.0219472391870354,
+            "common_unaffordable_spend_fraction": 0.004786597526924611,
+            "C_over_H5": 1.0068113829868834,
+            "C_over_H20": 1.008296332713669,
+            "fraction_of_full_pool_excess_gain_at20": 0.972748747764476
+          }
+        },
+        {
+          "seed": 22,
+          "events": 31810,
+          "common_failures": 164,
+          "metrics": {
+            "channel_stock_per_agent_sat": 404400,
+            "issuance_stock_per_agent_sat": 400918.75,
+            "C_over_HN": 1.0088247216938475,
+            "C_over_V_expiry": 0.9693471217237132,
+            "C_over_V_round_counterfactual": 0.9868683362903576,
+            "V_expiry_over_HN": 1.0407259681133985,
+            "V_round_counterfactual_over_HN": 1.0222485458252963,
+            "common_unaffordable_spend_fraction": 0.005155611442942471,
+            "C_over_H5": 1.0068467571268518,
+            "C_over_H20": 1.0083687876946095,
+            "fraction_of_full_pool_excess_gain_at20": 0.9483344614078972
+          }
+        },
+        {
+          "seed": 23,
+          "events": 32252,
+          "common_failures": 206,
+          "metrics": {
+            "channel_stock_per_agent_sat": 409368.75,
+            "issuance_stock_per_agent_sat": 405887.5,
+            "C_over_HN": 1.0085768839887899,
+            "C_over_V_expiry": 0.9695748596925602,
+            "C_over_V_round_counterfactual": 0.9865853190563783,
+            "V_expiry_over_HN": 1.0402259030402219,
+            "V_round_counterfactual_over_HN": 1.0222905860320783,
+            "common_unaffordable_spend_fraction": 0.006387200793749225,
+            "C_over_H5": 1.007444435899408,
+            "C_over_H20": 1.0084526558891453,
+            "fraction_of_full_pool_excess_gain_at20": 0.9855159403103869
+          }
+        },
+        {
+          "seed": 24,
+          "events": 32358,
+          "common_failures": 152,
+          "metrics": {
+            "channel_stock_per_agent_sat": 417975,
+            "issuance_stock_per_agent_sat": 413725,
+            "C_over_HN": 1.0103946334683023,
+            "C_over_V_expiry": 0.9708944225505217,
+            "C_over_V_round_counterfactual": 0.9878392693569948,
+            "V_expiry_over_HN": 1.040684352490165,
+            "V_round_counterfactual_over_HN": 1.0228330304443043,
+            "common_unaffordable_spend_fraction": 0.004697447308239075,
+            "C_over_H5": 1.0080188110454602,
+            "C_over_H20": 1.0099216237031667,
+            "fraction_of_full_pool_excess_gain_at20": 0.9544948105598965
+          }
+        }
+      ]
+    },
+    {
+      "cell": "steady",
+      "params": {
+        "agents": 3,
+        "horizonLifetimes": 8,
+        "driftPerRound": 0,
+        "burst": {
+          "vIn": 0,
+          "vOut": 1,
+          "pIn": 0
+        },
+        "steady": {
+          "base": 100,
+          "jitter": 10
+        },
+        "margin": 0.25,
+        "forecast": {
+          "kind": "oracle"
+        },
+        "volume": "both",
+        "serverTier": true,
+        "seed": 1,
+        "spendLock": "expiry",
+        "hyperedgeSizes": [
+          1,
+          3
+        ]
+      },
+      "equal_service_checks_passed": true,
+      "summary": {
+        "channel_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 674.888888888889,
+          "min": 494,
+          "max": 1055.6666666666667,
+          "sd": 125.51950660292682,
+          "mc95": [
+            621.8866496765789,
+            727.8911281011991
+          ]
+        },
+        "issuance_stock_per_agent_sat": {
+          "n": 24,
+          "mean": 585.2499999999999,
+          "min": 397.3333333333333,
+          "max": 1018,
+          "sd": 131.56142372504328,
+          "mc95": [
+            529.6964829403317,
+            640.803517059668
+          ]
+        },
+        "C_over_HN": {
+          "n": 24,
+          "mean": 1.3747256944071922,
+          "min": 1.1322845906328207,
+          "max": 1.5884244372990355,
+          "sd": 0.11663284217804282,
+          "mc95": [
+            1.325475964477262,
+            1.4239754243371223
+          ]
+        },
+        "C_over_V_expiry": {
+          "n": 24,
+          "mean": 0.00736454726834052,
+          "min": 0.005289760172557456,
+          "max": 0.011509957080896771,
+          "sd": 0.0013942409249191906,
+          "mc95": [
+            0.00677581095936242,
+            0.00795328357731862
+          ]
+        },
+        "C_over_V_round_counterfactual": {
+          "n": 24,
+          "mean": 0.9240647616626435,
+          "min": 0.8538307748094917,
+          "max": 1.0390672964429675,
+          "sd": 0.05192270988889157,
+          "mc95": [
+            0.9021397241560172,
+            0.9459897991692698
+          ]
+        },
+        "V_expiry_over_HN": {
+          "n": 24,
+          "mean": 194.08454427393178,
+          "min": 98.37435384638302,
+          "max": 300.2828834357296,
+          "sd": 44.27844553256941,
+          "mc95": [
+            175.3873965111492,
+            212.78169203671436
+          ]
+        },
+        "V_round_counterfactual_over_HN": {
+          "n": 24,
+          "mean": 1.4886404267019129,
+          "min": 1.2465497684594036,
+          "max": 1.7550528249885164,
+          "sd": 0.11213218578519944,
+          "mc95": [
+            1.4412911572916414,
+            1.5359896961121844
+          ]
+        },
+        "common_unaffordable_spend_fraction": {
+          "n": 24,
+          "mean": 0.000240265376984127,
+          "min": 0.0001240079365079365,
+          "max": 0.00040302579365079363,
+          "sd": 0.00008086912470433186,
+          "mc95": [
+            0.0002061173404878683,
+            0.0002744134134803857
+          ]
+        }
+      },
+      "rows": [
+        {
+          "seed": 1,
+          "events": 32256,
+          "common_failures": 5,
+          "metrics": {
+            "channel_stock_per_agent_sat": 1055.6666666666667,
+            "issuance_stock_per_agent_sat": 1018,
+            "C_over_HN": 1.1322845906328207,
+            "C_over_V_expiry": 0.011509957080896771,
+            "C_over_V_round_counterfactual": 0.9083348449313806,
+            "V_expiry_over_HN": 98.37435384638302,
+            "V_round_counterfactual_over_HN": 1.2465497684594036,
+            "common_unaffordable_spend_fraction": 0.00015500992063492063
+          }
+        },
+        {
+          "seed": 2,
+          "events": 32256,
+          "common_failures": 4,
+          "metrics": {
+            "channel_stock_per_agent_sat": 688.6666666666666,
+            "issuance_stock_per_agent_sat": 663,
+            "C_over_HN": 1.1921523369878821,
+            "C_over_V_expiry": 0.007599492005330602,
+            "C_over_V_round_counterfactual": 0.8538307748094917,
+            "V_expiry_over_HN": 156.87263519083336,
+            "V_round_counterfactual_over_HN": 1.396239597072239,
+            "common_unaffordable_spend_fraction": 0.0001240079365079365
+          }
+        },
+        {
+          "seed": 3,
+          "events": 32256,
+          "common_failures": 6,
+          "metrics": {
+            "channel_stock_per_agent_sat": 623.3333333333334,
+            "issuance_stock_per_agent_sat": 508,
+            "C_over_HN": 1.4806017418844024,
+            "C_over_V_expiry": 0.006890324647804109,
+            "C_over_V_round_counterfactual": 0.9575185165183546,
+            "V_expiry_over_HN": 214.88127447757608,
+            "V_round_counterfactual_over_HN": 1.5462904542755345,
+            "common_unaffordable_spend_fraction": 0.00018601190476190475
+          }
+        },
+        {
+          "seed": 4,
+          "events": 32256,
+          "common_failures": 5,
+          "metrics": {
+            "channel_stock_per_agent_sat": 753.6666666666666,
+            "issuance_stock_per_agent_sat": 581,
+            "C_over_HN": 1.5205110961667787,
+            "C_over_V_expiry": 0.0082382090583038,
+            "C_over_V_round_counterfactual": 1.0390672964429675,
+            "V_expiry_over_HN": 184.56816104152657,
+            "V_round_counterfactual_over_HN": 1.4633422699106542,
+            "common_unaffordable_spend_fraction": 0.00015500992063492063
+          }
+        },
+        {
+          "seed": 5,
+          "events": 32256,
+          "common_failures": 7,
+          "metrics": {
+            "channel_stock_per_agent_sat": 733.3333333333334,
+            "issuance_stock_per_agent_sat": 593,
+            "C_over_HN": 1.4445173998686802,
+            "C_over_V_expiry": 0.008220534687271817,
+            "C_over_V_round_counterfactual": 0.9985531482260255,
+            "V_expiry_over_HN": 175.72061366096833,
+            "V_round_counterfactual_over_HN": 1.4466104307366414,
+            "common_unaffordable_spend_fraction": 0.00021701388888888888
+          }
+        },
+        {
+          "seed": 6,
+          "events": 32256,
+          "common_failures": 5,
+          "metrics": {
+            "channel_stock_per_agent_sat": 612.6666666666666,
+            "issuance_stock_per_agent_sat": 503,
+            "C_over_HN": 1.4715772618094476,
+            "C_over_V_expiry": 0.006559130129417203,
+            "C_over_V_round_counterfactual": 0.9428005401614091,
+            "V_expiry_over_HN": 224.35555215005337,
+            "V_round_counterfactual_over_HN": 1.5608574657344922,
+            "common_unaffordable_spend_fraction": 0.00015500992063492063
+          }
+        },
+        {
+          "seed": 7,
+          "events": 32256,
+          "common_failures": 6,
+          "metrics": {
+            "channel_stock_per_agent_sat": 643.6666666666666,
+            "issuance_stock_per_agent_sat": 539.6666666666666,
+            "C_over_HN": 1.4219440353460973,
+            "C_over_V_expiry": 0.0070252560952408115,
+            "C_over_V_round_counterfactual": 0.9396485655478957,
+            "V_expiry_over_HN": 202.4045837004261,
+            "V_round_counterfactual_over_HN": 1.5132721822620803,
+            "common_unaffordable_spend_fraction": 0.00018601190476190475
+          }
+        },
+        {
+          "seed": 8,
+          "events": 32256,
+          "common_failures": 8,
+          "metrics": {
+            "channel_stock_per_agent_sat": 559,
+            "issuance_stock_per_agent_sat": 507.3333333333333,
+            "C_over_HN": 1.330952380952381,
+            "C_over_V_expiry": 0.005985479911650245,
+            "C_over_V_round_counterfactual": 0.854491354290137,
+            "V_expiry_over_HN": 222.36351981764932,
+            "V_round_counterfactual_over_HN": 1.5575960766250947,
+            "common_unaffordable_spend_fraction": 0.000248015873015873
+          }
+        },
+        {
+          "seed": 9,
+          "events": 32256,
+          "common_failures": 10,
+          "metrics": {
+            "channel_stock_per_agent_sat": 872.6666666666666,
+            "issuance_stock_per_agent_sat": 838.3333333333334,
+            "C_over_HN": 1.1594331266607618,
+            "C_over_V_expiry": 0.009552505378246031,
+            "C_over_V_round_counterfactual": 0.8886287038381644,
+            "V_expiry_over_HN": 121.37476826772007,
+            "V_round_counterfactual_over_HN": 1.304744176789405,
+            "common_unaffordable_spend_fraction": 0.00031001984126984125
+          }
+        },
+        {
+          "seed": 10,
+          "events": 32256,
+          "common_failures": 9,
+          "metrics": {
+            "channel_stock_per_agent_sat": 709.3333333333334,
+            "issuance_stock_per_agent_sat": 626.3333333333334,
+            "C_over_HN": 1.3111521873074554,
+            "C_over_V_expiry": 0.00762702141181967,
+            "C_over_V_round_counterfactual": 0.9174435177085469,
+            "V_expiry_over_HN": 171.90881164638532,
+            "V_round_counterfactual_over_HN": 1.4291366847108529,
+            "common_unaffordable_spend_fraction": 0.00027901785714285713
+          }
+        },
+        {
+          "seed": 11,
+          "events": 32256,
+          "common_failures": 7,
+          "metrics": {
+            "channel_stock_per_agent_sat": 716.6666666666666,
+            "issuance_stock_per_agent_sat": 618.3333333333334,
+            "C_over_HN": 1.341235184029944,
+            "C_over_V_expiry": 0.007902331190162372,
+            "C_over_V_round_counterfactual": 0.9413449511597493,
+            "V_expiry_over_HN": 169.72652142188753,
+            "V_round_counterfactual_over_HN": 1.4248073274069453,
+            "common_unaffordable_spend_fraction": 0.00021701388888888888
+          }
+        },
+        {
+          "seed": 12,
+          "events": 32256,
+          "common_failures": 13,
+          "metrics": {
+            "channel_stock_per_agent_sat": 801.3333333333334,
+            "issuance_stock_per_agent_sat": 633,
+            "C_over_HN": 1.4596235579842138,
+            "C_over_V_expiry": 0.008767850870465187,
+            "C_over_V_round_counterfactual": 1.0302919564882569,
+            "V_expiry_over_HN": 166.47449637869718,
+            "V_round_counterfactual_over_HN": 1.4167086802845,
+            "common_unaffordable_spend_fraction": 0.00040302579365079363
+          }
+        },
+        {
+          "seed": 13,
+          "events": 32256,
+          "common_failures": 8,
+          "metrics": {
+            "channel_stock_per_agent_sat": 757.6666666666666,
+            "issuance_stock_per_agent_sat": 602.6666666666666,
+            "C_over_HN": 1.468346253229974,
+            "C_over_V_expiry": 0.00829140067348333,
+            "C_over_V_round_counterfactual": 1.0146032347014267,
+            "V_expiry_over_HN": 177.0926663725083,
+            "V_round_counterfactual_over_HN": 1.4472122727482464,
+            "common_unaffordable_spend_fraction": 0.000248015873015873
+          }
+        },
+        {
+          "seed": 14,
+          "events": 32256,
+          "common_failures": 12,
+          "metrics": {
+            "channel_stock_per_agent_sat": 614.6666666666666,
+            "issuance_stock_per_agent_sat": 524.3333333333334,
+            "C_over_HN": 1.3990895295902883,
+            "C_over_V_expiry": 0.006686927522610204,
+            "C_over_V_round_counterfactual": 0.9177277689713241,
+            "V_expiry_over_HN": 209.22756002059398,
+            "V_round_counterfactual_over_HN": 1.5245147601434352,
+            "common_unaffordable_spend_fraction": 0.0003720238095238095
+          }
+        },
+        {
+          "seed": 15,
+          "events": 32256,
+          "common_failures": 12,
+          "metrics": {
+            "channel_stock_per_agent_sat": 599.6666666666666,
+            "issuance_stock_per_agent_sat": 517.6666666666666,
+            "C_over_HN": 1.3902627511591965,
+            "C_over_V_expiry": 0.006466212836740082,
+            "C_over_V_round_counterfactual": 0.9030802360623508,
+            "V_expiry_over_HN": 215.00417419914254,
+            "V_round_counterfactual_over_HN": 1.5394675862037241,
+            "common_unaffordable_spend_fraction": 0.0003720238095238095
+          }
+        },
+        {
+          "seed": 16,
+          "events": 32256,
+          "common_failures": 7,
+          "metrics": {
+            "channel_stock_per_agent_sat": 761,
+            "issuance_stock_per_agent_sat": 683,
+            "C_over_HN": 1.271866295264624,
+            "C_over_V_expiry": 0.008326673205589136,
+            "C_over_V_round_counterfactual": 0.9200488187627048,
+            "V_expiry_over_HN": 152.74603240234117,
+            "V_round_counterfactual_over_HN": 1.3823900094508557,
+            "common_unaffordable_spend_fraction": 0.00021701388888888888
+          }
+        },
+        {
+          "seed": 17,
+          "events": 32256,
+          "common_failures": 4,
+          "metrics": {
+            "channel_stock_per_agent_sat": 514,
+            "issuance_stock_per_agent_sat": 429.6666666666667,
+            "C_over_HN": 1.494186046511628,
+            "C_over_V_expiry": 0.005609503897582792,
+            "C_over_V_round_counterfactual": 0.8927047500407057,
+            "V_expiry_over_HN": 266.36687910235554,
+            "V_round_counterfactual_over_HN": 1.6737740517718716,
+            "common_unaffordable_spend_fraction": 0.0001240079365079365
+          }
+        },
+        {
+          "seed": 18,
+          "events": 32256,
+          "common_failures": 12,
+          "metrics": {
+            "channel_stock_per_agent_sat": 494,
+            "issuance_stock_per_agent_sat": 397.3333333333333,
+            "C_over_HN": 1.5884244372990355,
+            "C_over_V_expiry": 0.005289760172557456,
+            "C_over_V_round_counterfactual": 0.9050579074788981,
+            "V_expiry_over_HN": 300.2828834357296,
+            "V_round_counterfactual_over_HN": 1.7550528249885164,
+            "common_unaffordable_spend_fraction": 0.0003720238095238095
+          }
+        },
+        {
+          "seed": 19,
+          "events": 32256,
+          "common_failures": 10,
+          "metrics": {
+            "channel_stock_per_agent_sat": 582.3333333333334,
+            "issuance_stock_per_agent_sat": 518.3333333333334,
+            "C_over_HN": 1.3469545104086353,
+            "C_over_V_expiry": 0.006258525850009188,
+            "C_over_V_round_counterfactual": 0.8755966435253165,
+            "V_expiry_over_HN": 215.21913349717295,
+            "V_round_counterfactual_over_HN": 1.538327631071704,
+            "common_unaffordable_spend_fraction": 0.00031001984126984125
+          }
+        },
+        {
+          "seed": 20,
+          "events": 32256,
+          "common_failures": 8,
+          "metrics": {
+            "channel_stock_per_agent_sat": 619.3333333333334,
+            "issuance_stock_per_agent_sat": 531.6666666666666,
+            "C_over_HN": 1.389678384442782,
+            "C_over_V_expiry": 0.00674760360471225,
+            "C_over_V_round_counterfactual": 0.9151038182920389,
+            "V_expiry_over_HN": 205.95139635533533,
+            "V_round_counterfactual_over_HN": 1.5186018861078463,
+            "common_unaffordable_spend_fraction": 0.000248015873015873
+          }
+        },
+        {
+          "seed": 21,
+          "events": 32256,
+          "common_failures": 8,
+          "metrics": {
+            "channel_stock_per_agent_sat": 562.3333333333334,
+            "issuance_stock_per_agent_sat": 508,
+            "C_over_HN": 1.3388888888888888,
+            "C_over_V_expiry": 0.006070581774341214,
+            "C_over_V_round_counterfactual": 0.8589757845165399,
+            "V_expiry_over_HN": 220.5536369756236,
+            "V_round_counterfactual_over_HN": 1.5587038808578988,
+            "common_unaffordable_spend_fraction": 0.000248015873015873
+          }
+        },
+        {
+          "seed": 22,
+          "events": 32256,
+          "common_failures": 6,
+          "metrics": {
+            "channel_stock_per_agent_sat": 535,
+            "issuance_stock_per_agent_sat": 447.6666666666667,
+            "C_over_HN": 1.47926267281106,
+            "C_over_V_expiry": 0.00594999169098991,
+            "C_over_V_round_counterfactual": 0.9069808729972609,
+            "V_expiry_over_HN": 248.61592244760809,
+            "V_round_counterfactual_over_HN": 1.6309744966535005,
+            "common_unaffordable_spend_fraction": 0.00018601190476190475
+          }
+        },
+        {
+          "seed": 23,
+          "events": 32256,
+          "common_failures": 7,
+          "metrics": {
+            "channel_stock_per_agent_sat": 663.3333333333334,
+            "issuance_stock_per_agent_sat": 605,
+            "C_over_HN": 1.2805662805662805,
+            "C_over_V_expiry": 0.007308325505392623,
+            "C_over_V_round_counterfactual": 0.8867420858510867,
+            "V_expiry_over_HN": 175.220203262893,
+            "V_round_counterfactual_over_HN": 1.4441248487007414,
+            "common_unaffordable_spend_fraction": 0.00021701388888888888
+          }
+        },
+        {
+          "seed": 24,
+          "events": 32256,
+          "common_failures": 7,
+          "metrics": {
+            "channel_stock_per_agent_sat": 724,
+            "issuance_stock_per_agent_sat": 651.6666666666666,
+            "C_over_HN": 1.2799057159693579,
+            "C_over_V_expiry": 0.007865535239555684,
+            "C_over_V_round_counterfactual": 0.9089781885814124,
+            "V_expiry_over_HN": 162.723282902952,
+            "V_round_counterfactual_over_HN": 1.4080708778797317,
+            "common_unaffordable_spend_fraction": 0.00021701388888888888
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -45,7 +45,7 @@ export type VolumeBasis = "out" | "both";
 
 export class ArkServer {
   readonly params: ServerParams;
-  readonly capital: number;    // B_S
+  readonly capital: number;    // fixed reserve for fronting, B_S^F; issuance stock is charged separately
   committed = 0;               // W_S: forfeited-but-unswept value the server has fronted
   height = 0;
   volumeDelivered = 0;         // outward Lightning spends the server fronted
@@ -60,6 +60,7 @@ export class ArkServer {
   private readonly byHolder = new Map<string, Set<string>>();
   readonly outward = new Map<string, number>();
   readonly inward = new Map<string, number>();
+  /** Cumulative gross receipt issuance plus outgoing allocations; not outstanding reserved stock. */
   readonly allocated = new Map<string, number>();
   /** Aggregate Lightning flow through the server per advance() call: what the server's channels carry. */
   readonly aggregateSteps: Array<{ in: number; out: number }> = [];
@@ -85,6 +86,7 @@ export class ArkServer {
   }
 
   advance(blocks: number): void {
+    if (!Number.isSafeInteger(blocks) || blocks < 0) throw new Error("blocks must be a nonnegative safe integer");
     // W_S is piecewise constant between events; integrate over the interval before applying sweeps.
     this.lockedIntegral += this.committed * blocks;
     const from = this.height;
@@ -95,7 +97,12 @@ export class ArkServer {
     for (let h = from + 1; h <= this.height; h++) {
       const due = this.sweepAt.get(h);
       if (!due) continue;
-      for (const v of due) this.committed -= v.value; // sweep: fronted value recovered
+      for (const v of due) {
+        this.committed -= v.value; // sweep: fronted value recovered
+        // A caller may advance past several sweep heights in one step. The upfront integral
+        // charged this value to the endpoint; remove the time after its actual recovery.
+        this.lockedIntegral -= v.value * (this.height - h);
+      }
       this.sweepAt.delete(h);
     }
     // Holders refresh outputs approaching expiry; a refresh is a forfeit plus a server-funded reissue.
@@ -174,7 +181,7 @@ export class ArkServer {
     const change = total - amount;
     if (change > 0) this.newVtxo(holder, change); // reissued from the fronted value
     ArkServer.bump(this.outward, holder, amount);
-    ArkServer.bump(this.allocated, holder, amount); // K^S_A: the server allocated at spend time
+    ArkServer.bump(this.allocated, holder, amount); // cumulative allocation, which may recycle the same reserve
     this.volumeDelivered += amount;
     this.stepOut += amount;
     return true;
@@ -197,12 +204,12 @@ export class ArkServer {
     return vol === 0 ? Infinity : this.lockedIntegralBlocks() / vol;
   }
 
-  /** S2, first inequality, per holder: O − I ≤ V(0) + K with V(0)=0. */
+  /** Holder conservation with zero initial holdings: V = I − O; refresh preserves V. */
   holderBoundHolds(holder: string): boolean {
-    return (this.outward.get(holder) ?? 0) - (this.inward.get(holder) ?? 0) <= (this.allocated.get(holder) ?? 0);
+    return this.holderValue(holder) === (this.inward.get(holder) ?? 0) - (this.outward.get(holder) ?? 0);
   }
 
-  /** S2, second inequality: what the server has allocated in fronting never exceeds capital. */
+  /** Pointwise fronting constraint W <= B; cumulative allocations may exceed B after recycling. */
   aggregateBoundHolds(): boolean {
     return this.committed <= this.capital;
   }
@@ -235,7 +242,14 @@ export function channelLiquidityDuration(
   for (const steps of perAgent.values()) {
     const peakOf = (from: number, to: number, start: number): number => {
       let running = start, peak = start;
-      for (let i = from; i < to; i++) { running = Math.max(0, running + steps[i]!.in - steps[i]!.out); peak = Math.max(peak, running); }
+      for (let i = from; i < to; i++) {
+        const s = steps[i]!;
+        // Match execution: receipt first, then an all-or-nothing spend. Netting a whole
+        // round hides the inbound needed before its spend and invents partial spends.
+        running += s.in;
+        peak = Math.max(peak, running);
+        if (s.out <= running) running -= s.out;
+      }
       return peak;
     };
     let balance = 0;
@@ -257,7 +271,7 @@ export function channelLiquidityDuration(
         let running = balance, peak = balance;
         for (let i = from; i < to; i++) {
           const s = steps[i]!;
-          if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; } }
+          if (s.in) { if (s.in > forecast - balance) failures += 1; else { balance += s.in; volume += s.in; peak = Math.max(peak, balance); } }
           if (s.out) { if (s.out > balance) failures += 1; else { balance -= s.out; volume += s.out; } }
           running = balance; peak = Math.max(peak, running);
         }
@@ -293,15 +307,18 @@ export function hyperedgeLiquidityDuration(
   for (let g = 0; g < agents.length; g += groupSize) {
     const members = agents.slice(g, g + groupSize);
     const nSteps = members[0]!.length;
-    // Peak of the total the members hold, each member's balance clamped at zero as in the channel model.
+    // Peak of the total members hold, using the same receipt-first and all-or-nothing
+    // spending order as play(). Include every intra-round peak.
     const peakOf = (from: number, to: number): number => {
       const running = new Array<number>(members.length).fill(0);
       let total = 0, peak = 0;
       for (let i = from; i < to; i++) {
         for (let m = 0; m < members.length; m++) {
           const s = members[m]![i]!;
-          const next = Math.max(0, running[m]! + s.in - s.out);
-          total += next - running[m]!; running[m] = next;
+          running[m] = running[m]! + s.in;
+          total += s.in;
+          peak = Math.max(peak, total);
+          if (s.out <= running[m]!) { running[m] = running[m]! - s.out; total -= s.out; }
         }
         peak = Math.max(peak, total);
       }
@@ -309,12 +326,14 @@ export function hyperedgeLiquidityDuration(
     };
     const balance = new Array<number>(members.length).fill(0);
     let held = 0;
-    const play = (i: number, forecast: number): void => {
+    const play = (i: number, forecast: number): number => {
+      let peak = held;
       for (let m = 0; m < members.length; m++) {
         const s = members[m]![i]!;
-        if (s.in) { if (s.in > forecast - held) failures += 1; else { balance[m] = balance[m]! + s.in; held += s.in; volume += s.in; } }
+        if (s.in) { if (s.in > forecast - held) failures += 1; else { balance[m] = balance[m]! + s.in; held += s.in; volume += s.in; peak = Math.max(peak, held); } }
         if (s.out) { if (s.out > balance[m]!) failures += 1; else { balance[m] = balance[m]! - s.out; held -= s.out; volume += s.out; } }
       }
+      return peak;
     };
     if (rule.kind === "oracle") {
       const forecast = Math.ceil(peakOf(0, nSteps) * (1 + margin));
@@ -329,7 +348,7 @@ export function hyperedgeLiquidityDuration(
         const forecast = Math.max(held, Math.ceil(prevPeak * (1 + margin)));
         lockedIntegral += forecast * (to - from) * rule.roundBlocks;
         let peak = held;
-        for (let i = from; i < to; i++) { play(i, forecast); peak = Math.max(peak, held); }
+        for (let i = from; i < to; i++) peak = Math.max(peak, play(i, forecast));
         prevPeak = peak;
       }
     }
@@ -339,8 +358,10 @@ export function hyperedgeLiquidityDuration(
 
 /**
  * The server-tier directional term: the channel model applied to the server's aggregate Lightning flow.
- * Its inbound requirement is the peak of the summed net receipts, forecast by the same rule an LSP would
- * use; pooling is the gap between this peak-of-sum and the channel model's sum-of-peaks.
+ * This is a post hoc sizing diagnostic on the unconstrained server's delivered aggregate flow.
+ * A failed event here does not feed back into ArkServer, its delivery denominator, or its forfeit locks.
+ * A nonzero failure count therefore means the resulting duration is not a feasible end-to-end replay.
+ * The receipt-first order within an aggregate round also includes a conservative transient peak.
  */
 export function serverTierTerm(S: ArkServer, horizonBlocks: number, margin: number, rule: ForecastRule): { lockedIntegral: number; failures: number } {
   const one = new Map([["server", S.aggregateSteps.map((s) => ({ in: s.in, out: s.out }))]]);

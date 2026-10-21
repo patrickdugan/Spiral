@@ -93,9 +93,10 @@ const curveRows = curveKs.map((k, i) =>
 process.stdout.write("\\pgfplotstableread[row sep=\\\\]{k zero drain fails \\\\\n" + curveRows.join("\n") + "\n}\\hypercurve\n");
 process.stdout.write(`\\newcommand{\\hyperfloor}{${trail.arkFailures}}\n`);
 
-// Sample paths for the figure beside Remark 1 (fig:walks): four agents of the zero-drift cell, balances
-// kept as in the channel replay (a spend from an empty balance fails), over walkT rounds, with their sum;
-// and the two stocks the remark compares, the sum of the four peaks and the peak of the sum.
+// Sample paths for fig:walks: four agents with zero offered drift. Replay each receipt before its
+// agent's spend and reject the whole spend when unaffordable, as in the channel and hyperedge models.
+// Record state-changing event prefixes so a receipt followed by a spend cannot hide an intraround
+// peak. Fractional round positions expose processing order; they do not model physical event times.
 const walkT = 400;
 const walkAgents = 4;
 const walk = rng(11);
@@ -104,20 +105,28 @@ const walkPeak = new Array<number>(walkAgents).fill(0);
 let walkSumPeak = 0;
 const walkRows: string[] = [];
 const pOutWalk = (0.02 * 5000) / 4000; // zero drift: E[out] = E[in]
-for (let t = 0; t <= walkT; t++) {
-  if (t > 0) {
-    for (let a = 0; a < walkAgents; a++) {
-      const inn = walk() < 0.02 ? 5000 : 0;
-      const out = walk() < pOutWalk ? 4000 : 0;
-      walkBal[a] = walkBal[a]! + inn;
-      if (out <= walkBal[a]!) walkBal[a] = walkBal[a]! - out;
-      walkPeak[a] = Math.max(walkPeak[a]!, walkBal[a]!);
-    }
-  }
+const recordWalk = (t: number) => {
+  for (let a = 0; a < walkAgents; a++) walkPeak[a] = Math.max(walkPeak[a]!, walkBal[a]!);
   const total = walkBal.reduce((s, x) => s + x, 0);
   walkSumPeak = Math.max(walkSumPeak, total);
   walkRows.push(`${t} ${walkBal.join(" ")} ${total} \\\\`);
+};
+recordWalk(0);
+for (let t = 1; t <= walkT; t++) {
+  for (let a = 0; a < walkAgents; a++) {
+    const inn = walk() < 0.02 ? 5000 : 0;
+    const out = walk() < pOutWalk ? 4000 : 0;
+    if (inn > 0) {
+      walkBal[a] = walkBal[a]! + inn;
+      recordWalk(t - 1 + (2 * a + 1) / (2 * walkAgents));
+    }
+    if (out > 0 && out <= walkBal[a]!) {
+      walkBal[a] = walkBal[a]! - out;
+      recordWalk(t - 1 + (2 * a + 2) / (2 * walkAgents));
+    }
+  }
 }
+recordWalk(walkT);
 process.stdout.write("\\pgfplotstableread[row sep=\\\\]{t a1 a2 a3 a4 sum \\\\\n" + walkRows.join("\n") + "\n}\\walkpaths\n");
 process.stdout.write(`\\newcommand{\\walkT}{${walkT}}\n`);
 process.stdout.write(`\\newcommand{\\walkpeaksum}{${walkPeak.reduce((s, x) => s + x, 0)}}\n`);

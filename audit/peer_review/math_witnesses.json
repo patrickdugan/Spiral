@@ -1,0 +1,65 @@
+{
+  "routing": {
+    "scope": "same initial state and one route attempt per payment; single-path requests",
+    "initial_directional_balances": {
+      "s-a": [
+        2,
+        0
+      ],
+      "a-t": [
+        1,
+        1
+      ],
+      "s-b": [
+        1,
+        1
+      ],
+      "b-t": [
+        1,
+        1
+      ]
+    },
+    "consume_future_route": {
+      "first_path": [
+        "s",
+        "a",
+        "t"
+      ],
+      "first_payment_succeeded": true,
+      "second_feasible_paths": [],
+      "payments_delivered": 1,
+      "cut_prefix_checks": 14
+    },
+    "preserve_future_route": {
+      "first_path": [
+        "s",
+        "b",
+        "t"
+      ],
+      "first_payment_succeeded": true,
+      "second_feasible_paths": [
+        [
+          "s",
+          "a"
+        ]
+      ],
+      "payments_delivered": 2,
+      "cut_prefix_checks": 28
+    },
+    "implication": "cut conservation does not imply equal future routability or an attempt-budget-only gain"
+  },
+  "nullifier_authority": {
+    "object_value": 100,
+    "valid_authority_credentials": 2,
+    "distinct_nullifiers": 2,
+    "accepted_weight_under_naive_relation": 200,
+    "implication": "the theorem requires one canonical nullifier credential for each eligible object"
+  },
+  "stock_flow": {
+    "fronting_reserve": 10,
+    "cumulative_fronted": 20,
+    "cumulative_recovered": 20,
+    "outstanding": 0,
+    "implication": "the capacity bound is pointwise on outstanding fronting, not cumulative allocations"
+  }
+}

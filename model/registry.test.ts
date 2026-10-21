@@ -112,3 +112,115 @@ test("L4 with S3: identity splitting leaves coalition payout invariant and integ
     assert.equal(alloc.get(commit("b")), 60);
   }
 });
+
+test("S3: malformed claim weights cannot consume a nullifier or alter reward weight", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:valid", value: 100, authorityKey: "k" });
+  const R = new Registry(set);
+  for (const v of [0, -1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(R.submit(...claim(R, set, "u:valid", "holder", v)), "invalid");
+    assert.equal(R.totalWeight(), 0);
+  }
+  assert.equal(R.submit(...claim(R, set, "u:valid", "holder", 100)), "accepted");
+  assert.equal(R.totalWeight(), 100);
+});
+
+test("S3: settled values are valid satoshi amounts and callers cannot mutate validated objects", () => {
+  const set = new SettledSet();
+  const emptyRoot = set.root();
+  for (const value of [-1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => set.add({ id: "bad", value, authorityKey: "k" }), /nonnegative safe integer/);
+    assert.equal(set.root(), emptyRoot);
+  }
+  const original = { id: "u:source", value: 100, authorityKey: "k" };
+  set.add(original);
+  const root = set.root();
+  original.value = NaN;
+  set.get("u:source")!.value = Infinity;
+  assert.equal(set.root(), root);
+  const refreshed = set.refresh("u:source", "u:successor");
+  refreshed.value = -1;
+  set.descendant("u:source")!.value = NaN;
+  assert.equal(set.get("u:successor")!.value, 100);
+  set.add({ id: "u:zero", value: 0, authorityKey: "k" });
+  const R = new Registry(set);
+  assert.equal(R.submit(...claim(R, set, "u:zero", "holder", 1)), "invalid");
+});
+
+test("S3: add, refresh and transfer reject live and previously spent identifiers atomically", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:a", value: 100, authorityKey: "ka" });
+  set.add({ id: "u:b", value: 200, authorityKey: "kb" });
+  const unchanged = () => {
+    assert.deepEqual(set.get("u:a"), { id: "u:a", value: 100, authorityKey: "ka" });
+    assert.deepEqual(set.get("u:b"), { id: "u:b", value: 200, authorityKey: "kb" });
+  };
+  const root = set.root();
+  assert.throws(() => set.add({ id: "u:a", value: 999, authorityKey: "other" }), /fresh/);
+  for (const target of ["u:a", "u:b"]) {
+    assert.throws(() => set.refresh("u:a", target), /fresh/);
+    assert.throws(() => set.transfer("u:a", target, "other"), /fresh/);
+    assert.equal(set.root(), root);
+    unchanged();
+  }
+  set.remove("u:b");
+  const afterRemoval = set.root();
+  assert.throws(() => set.add({ id: "u:b", value: 200, authorityKey: "kb" }), /fresh/);
+  assert.throws(() => set.refresh("u:a", "u:b"), /fresh/);
+  assert.throws(() => set.transfer("u:a", "u:b", "other"), /fresh/);
+  assert.equal(set.root(), afterRemoval);
+  set.refresh("u:a", "u:a1");
+  assert.throws(() => set.refresh("u:a1", "u:a"), /fresh/);
+  assert.equal(set.descendant("u:a")!.id, "u:a1");
+  assert.throws(() => set.transfer("u:a1", "u:new", ""), /nonempty/);
+  assert.equal(set.get("u:a1")!.value, 100);
+});
+
+test("S3: snapshots preserve spent identifiers and attested lineage independently of later transfers", () => {
+  const set = new SettledSet();
+  set.add({ id: "v:old", value: 500, authorityKey: "k" });
+  set.refresh("v:old", "v:current");
+  const snapshot = set.snapshot();
+  assert.throws(() => snapshot.add({ id: "v:old", value: 500, authorityKey: "k" }), /fresh/);
+  assert.equal(snapshot.descendant("v:old")!.id, "v:current");
+  set.transfer("v:current", "v:new", "k2");
+  assert.equal(set.descendant("v:old"), undefined);
+  assert.equal(snapshot.descendant("v:old")!.id, "v:current");
+});
+
+test("L4: reward pools reject invalid amounts, including when there are no claims", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:a", value: 10, authorityKey: "k" });
+  const R = new Registry(set);
+  for (const pool of [-1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => R.allocate(pool), /nonnegative safe integer/);
+  }
+  assert.deepEqual(R.allocate(0), new Map());
+  assert.deepEqual(R.allocate(100), new Map());
+  R.submit(...claim(R, set, "u:a", "holder", 10));
+  assert.deepEqual(R.allocate(0), new Map([[commit("holder"), 0]]));
+});
+
+test("L4: floor allocation is exact at the safe-integer boundary and aggregate weight cannot overflow", () => {
+  const set = new SettledSet();
+  set.add({ id: "u:one", value: 1, authorityKey: "k1" });
+  set.add({ id: "u:two", value: 2, authorityKey: "k2" });
+  const R = new Registry(set);
+  R.submit(...claim(R, set, "u:one", "one", 1));
+  R.submit(...claim(R, set, "u:two", "two", 2));
+  const allocation = R.allocate(Number.MAX_SAFE_INTEGER);
+  // Floating-point division rounds the two-thirds share up before Math.floor can discard the fraction.
+  assert.equal(allocation.get(commit("one")), 3_002_399_751_580_330);
+  assert.equal(allocation.get(commit("two")), 6_004_799_503_160_660);
+  assert.equal([...allocation.values()].reduce((a, b) => a + b, 0), Number.MAX_SAFE_INTEGER - 1);
+
+  const large = new SettledSet();
+  large.add({ id: "u:large", value: Number.MAX_SAFE_INTEGER - 1, authorityKey: "kl" });
+  large.add({ id: "u:last", value: 1, authorityKey: "kt" });
+  large.add({ id: "u:overflow", value: 1, authorityKey: "ko" });
+  const bounded = new Registry(large);
+  assert.equal(bounded.submit(...claim(bounded, large, "u:large", "large", Number.MAX_SAFE_INTEGER - 1)), "accepted");
+  assert.equal(bounded.submit(...claim(bounded, large, "u:last", "last", 1)), "accepted");
+  assert.equal(bounded.submit(...claim(bounded, large, "u:overflow", "overflow", 1)), "invalid");
+  assert.equal(bounded.totalWeight(), Number.MAX_SAFE_INTEGER);
+});

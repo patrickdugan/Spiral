@@ -1,0 +1,81 @@
+{
+  "baseline_commit": "6a9df365f727cf2471ae52e00b36e8816d0081bc",
+  "change": "event-level receipt-first peak; all-or-nothing outgoing semantics; exact intra-step recovery integral",
+  "before": {
+    "gridrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 0.85 & 0.46 & 1.46 & 1.06 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 0.63 & 0.63 & 1.40 & 1.40 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 0.97 & 1.05 & 0.99 & 1.11 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 0.63 & 0.33 & 2.52 & 1.52 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 0.01 & 0.00 & 0.71 & 0.88 \\\\"
+    ],
+    "acctrows": [
+      "no server-tier term, outbound-only volume & 7.14 \\\\",
+      "no server-tier term, two-way volume & 25.42 \\\\",
+      "server-tier term charged, two-way volume & 0.97 \\\\"
+    ],
+    "gridfailrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 48\\,623 & 2\\,766 & 6\\,927 & 24 & 2\\,766 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 6\\,092 & 944 & 944 & 0 & 907 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 32\\,337 & 165 & 6\\,272 & 897 & 165 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 56\\,671 & 8\\,856 & 12\\,931 & 0 & 8\\,856 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 32\\,256 & 8 & 12\\,703 & 8\\,229 & 4 \\\\"
+    ],
+    "hyperrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 1.30 & 1.44 & 1.50 & 0.99 & 1.01 & 1.03 & 1.77 & 1.03 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 1.30 & 1.47 & 1.50 & 1.30 & 1.47 & 1.50 & 2.40 & 1.07 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 1.01 & 1.01 & 1.01 & 1.00 & 1.01 & 1.02 & 1.04 & 1.02 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 1.65 & 2.23 & 2.76 & 1.21 & 1.38 & 1.55 & 4.38 & 1.09 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & -- & -- & 1.05 & -- & -- & 1.68 & 198.14 & 1.48 \\\\"
+    ],
+    "hyperfailrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 48\\,623 & 6\\,927 & 4\\,145 & 3\\,402 & 3\\,132 & 2\\,766 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 6\\,092 & 944 & 907 & 907 & 907 & 907 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 32\\,337 & 6\\,272 & 5\\,073 & 4\\,922 & 4\\,828 & 165 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 56\\,671 & 12\\,931 & 9\\,884 & 9\\,040 & 8\\,856 & 8\\,856 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 32\\,256 & 12\\,703 & -- & -- & 1\\,287 & 4 \\\\"
+    ]
+  },
+  "after": {
+    "gridrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 0.86 & 0.47 & 1.48 & 1.07 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 0.65 & 0.65 & 1.45 & 1.45 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 0.97 & 1.05 & 0.99 & 1.11 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 0.65 & 0.33 & 2.59 & 1.53 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 0.01 & 0.01 & 0.85 & 0.75 \\\\"
+    ],
+    "acctrows": [
+      "no server-tier term, outbound-only volume & 7.15 \\\\",
+      "no server-tier term, two-way volume & 25.45 \\\\",
+      "server-tier term charged, two-way volume & 0.97 \\\\"
+    ],
+    "gridfailrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 48\\,623 & 2\\,766 & 6\\,746 & 24 & 2\\,766 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 6\\,092 & 907 & 907 & 0 & 907 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 32\\,337 & 165 & 6\\,257 & 895 & 165 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 56\\,671 & 8\\,856 & 12\\,713 & 0 & 8\\,856 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 32\\,256 & 4 & 8 & 0 & 4 \\\\"
+    ],
+    "hyperrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 1.29 & 1.43 & 1.49 & 0.99 & 1.02 & 1.03 & 1.73 & 1.01 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 1.28 & 1.43 & 1.46 & 1.28 & 1.43 & 1.46 & 2.25 & 1.01 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 1.01 & 1.01 & 1.01 & 1.01 & 1.01 & 1.02 & 1.04 & 1.02 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 1.61 & 2.14 & 2.62 & 1.21 & 1.38 & 1.55 & 4.04 & 1.01 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & -- & -- & 1.19 & -- & -- & 1.25 & 156.87 & 1.40 \\\\"
+    ],
+    "hyperfailrows": [
+      "200 agents, bursty, drift $0$, $H=8\\tau$ & 48\\,623 & 6\\,746 & 4\\,142 & 3\\,393 & 3\\,116 & 2\\,766 \\\\",
+      "200 agents, bursty, drift $0$, $H=1\\tau$ & 6\\,092 & 907 & 907 & 907 & 907 & 907 \\\\",
+      "200 agents, bursty, drift $+60$, $H=8\\tau$ & 32\\,337 & 6\\,257 & 5\\,071 & 4\\,918 & 4\\,826 & 165 \\\\",
+      "200 agents, bursty, drift $-30$, $H=8\\tau$ & 56\\,671 & 12\\,713 & 9\\,847 & 9\\,037 & 8\\,856 & 8\\,856 \\\\",
+      "3 agents, steady, drift $0$, $H=8\\tau$ & 32\\,256 & 8 & -- & -- & 5 & 4 \\\\"
+    ]
+  },
+  "model_after_sha256": "6971772c1fa3535a45d4892caa17b0ceef7beb9467fe6e52f888c056aeea13bd",
+  "grid_before_sha256": "fb31b56044e6947e92832aec8150a174d8f8bf29beec0a9f69dab00857df67da",
+  "grid_after_sha256": "1422000282b08aa3e354a12a37c9f3662a3ced5ff1da02e170042b1427b0ca4a",
+  "event_prefix_figure_followup": {
+    "description": "The final grid also records every receipt and successful-spend event prefix in the sample walk figure. All numerical table rows and hyperedge curve rows remain identical to the corrected table snapshot above.",
+    "final_grid_sha256": "8a86d4be779efb8bb1eadf00092d053f5a4a00add77120e5da2d30d9150a86a3"
+  }
+}

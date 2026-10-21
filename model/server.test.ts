@@ -1,6 +1,63 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ArkServer, DEFAULT_SERVER, runCorner, type CornerParams } from "./server.ts";
+import { ArkServer, DEFAULT_SERVER, channelLiquidityDuration, hyperedgeLiquidityDuration, runCorner, type CornerParams } from "./server.ts";
+
+test("oracle provisioning covers receipt-first peaks and preserves a rejected spend's balance", () => {
+  const roundTrip = new Map([["a", [{ in: 10, out: 10 }]]]);
+  assert.deepEqual(channelLiquidityDuration(roundTrip, 1, 0), { duration: 0.5, failures: 0, locked: 10 });
+  assert.deepEqual(hyperedgeLiquidityDuration(roundTrip, 1, 1, 0), { duration: 0.5, failures: 0, locked: 10 });
+  const rejectedSpend = new Map([["a", [{ in: 5, out: 7 }, { in: 5, out: 5 }]]]);
+  // First spend is rejected as a whole, so the second receipt raises holdings from 5 to 10.
+  assert.deepEqual(channelLiquidityDuration(rejectedSpend, 2, 0), { duration: 20 / 15, failures: 1, locked: 10 });
+  assert.deepEqual(hyperedgeLiquidityDuration(rejectedSpend, 1, 2, 0), { duration: 20 / 15, failures: 1, locked: 10 });
+  const trailing = { kind: "trailing", intervalBlocks: 1, roundBlocks: 1 } as const;
+  const repeated = new Map([["a", [{ in: 10, out: 10 }, { in: 10, out: 10 }, { in: 10, out: 10 }]]]);
+  assert.equal(channelLiquidityDuration(repeated, 3, 0, trailing).failures, 0);
+  assert.equal(hyperedgeLiquidityDuration(repeated, 1, 3, 0, trailing).failures, 0);
+});
+
+test("oracle forecasts add no receipt failures on exhaustive small demand paths", () => {
+  // Independent unconstrained holder ledger: only an unaffordable outgoing request may fail.
+  // Every 5-round path over {no event, receipt, spend, both} is checked at zero margin.
+  const choices = [{ in: 0, out: 0 }, { in: 2, out: 0 }, { in: 0, out: 3 }, { in: 2, out: 3 }];
+  for (let mask = 0; mask < 4 ** 5; mask++) {
+    let code = mask, balance = 0, expectedFailures = 0;
+    const steps = [];
+    for (let i = 0; i < 5; i++) {
+      const s = choices[code % 4]!; code = Math.floor(code / 4); steps.push(s);
+      balance += s.in;
+      if (s.out > balance) expectedFailures += 1; else balance -= s.out;
+    }
+    const demand = new Map([["a", steps], ["b", [...steps].reverse()]]);
+    let secondBalance = 0, secondFailures = 0;
+    for (const s of [...steps].reverse()) {
+      secondBalance += s.in;
+      if (s.out > secondBalance) secondFailures += 1; else secondBalance -= s.out;
+    }
+    const c = channelLiquidityDuration(demand, 5, 0);
+    const h1 = hyperedgeLiquidityDuration(demand, 1, 5, 0);
+    const h2 = hyperedgeLiquidityDuration(demand, 2, 5, 0);
+    assert.equal(c.failures, expectedFailures + secondFailures, `path ${mask}`);
+    assert.deepEqual(h1, c);
+    assert.equal(h2.failures, c.failures, `pooled path ${mask}`);
+    assert.ok(h2.locked <= c.locked, `pooling stock on path ${mask}`);
+  }
+});
+
+test("fronted capital recycles and lock integration is invariant to sweep-step size", () => {
+  const params = { lifetimeBlocks: 5, roundInterval: 1, refreshLead: Number.NEGATIVE_INFINITY, spendLock: "expiry" } as const;
+  const coarse = new ArkServer(10, params), fine = new ArkServer(10, params);
+  for (const s of [coarse, fine]) { s.receive("a", 10); assert.ok(s.spendLightning("a", 10)); }
+  coarse.advance(10);
+  for (let i = 0; i < 10; i++) fine.advance(1);
+  assert.equal(coarse.lockedIntegralBlocks(), 50);
+  assert.equal(coarse.lockedIntegralBlocks(), fine.lockedIntegralBlocks());
+  assert.equal(coarse.committed, 0);
+  coarse.receive("a", 10); assert.ok(coarse.spendLightning("a", 10));
+  assert.equal(coarse.volumeDelivered, 20); // cumulative delivery can exceed a 10-sat stock
+  assert.ok(coarse.aggregateBoundHolds());
+  assert.ok(coarse.holderBoundHolds("a"));
+});
 
 test("S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating", () => {
   const S = new ArkServer(1_300_000, { ...DEFAULT_SERVER, refreshLead: Number.NEGATIVE_INFINITY }); // holders never refresh: isolate the sweep clock
