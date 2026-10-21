@@ -6,6 +6,11 @@ and exclusive reuse as a new round input. The normalized 34-event path also
 passes `model/capital.ts` economic replay. It does not supply exact operational
 clocks or live validation of the separate failure, receive, exit and reorg paths.
 
+The subsequent [outbound failure report](../capital_failure_report.md) now
+verifies two accepted/failed HTLCs followed by cooperative revocation, including
+one captured pending-channel state. This leaves timeout, receive, exit and reorg
+paths distinct from the completed cooperative failure path.
+
 All participants and keys are owned test fixtures. The logical recipient is
 outside the operator's accounting boundary even though its node is controlled
 for the test. Mining funds are outside the fixture until the three recorded
@@ -69,6 +74,12 @@ Preimages are verified in memory and removed before publication. The observer
 uses `--no-sync` wallet reads and never signs, broadcasts, or advances the chain.
 Mutation scripts are separate. Decimal BTC tokens are preserved as strings and
 converted with exact decimal arithmetic.
+
+For an in-flight payment, `snapshot(label, include_client=False)` avoids opening
+the Bark wallet already owned by `send --wait`; the resulting client-read gap
+is explicit. Pinned captaind wallet status reveals an address in memory without
+persisting it, a nonmonetary side effect. Strictly side-effect-free wallet status
+would require a different upstream endpoint.
 
 Sweeps were manually triggered; the source-default two-hour cadence was retained
 in config but not measured. Original VTXO lifetime 4320 and exit delta 144 were

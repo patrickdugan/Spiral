@@ -106,9 +106,11 @@
   "remaining": [
     "Instrument exact acceptance/commit timing; current journal uses snapshot detection heights and unknown seconds",
     "Validate live inbound backing and batching; hold plugin is absent from the current fixture",
-    "Complete additional live failure/timeout/exit/reorg branches",
+    "Complete live timeout/unilateral failure recovery, exit and reorg branches",
     "Execute bounded testnet4 operational-clock protocol after receiving synchronized endpoint and test funding"
   ],
   "fixed_budget_comparison": "../capital_fixed_budget_results.md (completed conditional single-participant forecast; 384 Ark and 672 channel/group holdouts)",
-  "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441"
+  "frozen_protocol_commit": "ce2d66f0485a8fd6a7d813c28e8b247e595d0441",
+  "cooperative_failure_reconciliation": "../regtest/evidence/failure-machine-reconciliation.json",
+  "cooperative_failure_status": "two accepted failed HTLCs revoked; one pending-channel capture; client claims and economic assets conserved"
 }

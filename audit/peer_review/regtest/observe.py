@@ -82,7 +82,7 @@ def transactions(ids):
     return result
 
 
-def snapshot(label):
+def snapshot(label, include_client=True):
     if not re.fullmatch(r"[a-z0-9-]+", label):
         raise ValueError("invalid label")
     begin = time.monotonic_ns()
@@ -91,10 +91,13 @@ def snapshot(label):
               "captured_unix_ns": time.time_ns(), "chain_before": before, "database": database(),
               "server_wallet": json.loads(rpc("wallet").stdout),
               "cln_funds": cln("server", "listfunds"), "channels": cln("server", "listpeerchannels"),
-              "pays": redact(cln("server", "listpays")), "peer_invoices": redact(cln("peer", "listinvoices")),
-              "bark_balance": json.loads(bark("balance", "--no-sync").stdout),
-              "bark_vtxos": json.loads(bark("vtxos", "--all", "--no-sync").stdout),
-              "bark_utxos": json.loads(bark("onchain", "utxos", "--no-sync").stdout)}
+              "pays": redact(cln("server", "listpays")), "peer_invoices": redact(cln("peer", "listinvoices"))}
+    if include_client:
+        result.update(bark_balance=json.loads(bark("balance", "--no-sync").stdout),
+                      bark_vtxos=json.loads(bark("vtxos", "--all", "--no-sync").stdout),
+                      bark_utxos=json.loads(bark("onchain", "utxos", "--no-sync").stdout))
+    else:
+        result['client_read_gap'] = 'Concurrent Bark CLI reads omitted while send owns the wallet; no client state inferred from missing fields.'
     result['watchman_claims'] = watchman_claims()
     result['mempool'] = core('getrawmempool')
     ids = list(result['mempool'])

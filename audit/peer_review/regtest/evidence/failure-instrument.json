@@ -1,0 +1,10 @@
+{
+  "evidence_class": "owned_regtest_fault_instrument",
+  "plugin_sha256": "f8ee13afdc4ded2aae2fbd0a6b0ef62d04589ca6a67c71821820b95d3845c01e",
+  "python_executable_sha256": "9bee109da0dce17a7c9eeaca9f420cc6770a9fe143b9382d73bd22fe59b21a5f",
+  "kernel_boot_id": "69f59641-c24d-43e0-a651-6e8ca3be102a",
+  "python_packages": "libpython3.11-stdlib:amd64\t3.11.2-6+deb12u9\npython3\t3.11.2-1+b1\npython3.11\t3.11.2-6+deb12u9\n",
+  "scope": "Dynamic receiver hook, 90-second fail guard, target hash only. No channel or consensus implementation change.",
+  "container_overlay_change": "Python interpreter and standard library added to spiral-cln-peer; original CLN executable unchanged.",
+  "corelightning_hook_reference": "https://docs.corelightning.org/reference/hook-htlc_accepted"
+}

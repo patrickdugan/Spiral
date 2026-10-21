@@ -535,6 +535,16 @@
             "operation_id": {
               "type": "string",
               "minLength": 1
+            },
+            "in_flight_amount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "observed_spendable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -663,6 +673,46 @@
             "resolution_hash": {
               "type": "string",
               "minLength": 1
+            },
+            "replacements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "claim_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "claimant": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "allocations": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "expiry_height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "parent_claim_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "claim_id",
+                  "claimant",
+                  "allocations",
+                  "expiry_height"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [

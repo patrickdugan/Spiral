@@ -58,6 +58,12 @@ the ratios; do not promote passing a payment target into a redemption guarantee.
    automatically release reserves. Release needs protocol revocation or a
    proven timeout/chain resolution. Bark's attempt status is not authoritative
    for settlement, so status-only accounting can prematurely release funds.
+   The [observed failure extension](../audit/peer_review/capital_failure_report.md)
+   now confirms two cooperative revocations with zero charged fees despite
+   83/84-sat admission quotes. One 1,001-sat HTLC reduced CLN spendable capacity
+   by 1,428 sats; actual principal, routing allowance and channel headroom must
+   be recorded separately. New refund/change claim IDs replace the consumed
+   inputs, including subdust outputs, while preserving the same backing.
 6. **Publish service denominators and terminal exposures.** Record offered
    demand before admission, retain rejected requests in the offered denominator,
    and show achieved delivery alongside every ratio. Keep unresolved recovery

@@ -1,0 +1,25 @@
+{
+  "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+  "events": [
+    {
+      "event": "receiver_hook_accepted",
+      "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+      "monotonic_ns": 7253146147817,
+      "htlc": {
+        "short_channel_id": "108x2x0",
+        "id": 2,
+        "amount_msat": 1001000,
+        "cltv_expiry": 4450,
+        "cltv_expiry_relative": 11,
+        "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87"
+      },
+      "peer_id": "0292c703491a311923395c9925b387f08577b98c83b074bdbf8c126a0c12515db7"
+    },
+    {
+      "event": "receiver_failure_response",
+      "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+      "monotonic_ns": 7267657231725,
+      "trigger": "operator_release"
+    }
+  ]
+}

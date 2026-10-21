@@ -1,0 +1,15 @@
+{
+  "action": "failure-captured-invoice-1001",
+  "monotonic_start_ns": 7236346443936,
+  "height": 4439,
+  "state": "returned",
+  "monotonic_end_ns": 7236850281464,
+  "result": {
+    "payment_hash": "79c2cfdd29f91b32e46ef417ef7dfce951dc461e4ba92cafdb1c0dd0ba0a6d87",
+    "expires_at": 1793193034,
+    "bolt11": "lnbcrt10010n1p4d3ww2sp5mrdxu7qvndqyfnym6r8d5zm05ms2g9v6z7ud7gwg62rqm3x3g0tspp508pvlhfflydn9erw7st77l0ua9gac3s7fw5jet7mrsxapws2dkrsdp5damkuetyypex2em5v4ehggryv4kxjcn9wfshgefqveskjmr4wfjsxqyjw5qcqp29qxpqysgqladq8s3nd8yzwtvlge66yhjp3wnz48kzzjj33mk0zwj8209v4dl5eyq4eyawwjqzs5qfed97t5wfdnzv2jkjsvuqsr9nzpe4xe6z93qqhfc6fs",
+    "payment_secret": "d8da6e780c9b4044cc9bd0ceda0b6fa6e0a4159a17b8df21c8d2860dc4d143d7",
+    "created_index": 3,
+    "warning_deadends": "Insufficient incoming capacity, once dead-end peers were excluded"
+  }
+}

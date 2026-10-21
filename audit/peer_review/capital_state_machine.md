@@ -247,3 +247,24 @@ fee expenditure cannot masquerade as reduced capital requirements. Expired
 holder claims, uneconomic standalone sweeps, and exhausted fronting shortfalls
 remain visible at the horizon. A 99% payment-delivery target does not establish
 that every terminal holder claim is immediately spendable.
+
+## Observed cooperative failure lane
+
+The [failure report](capital_failure_report.md) extends the successful trace
+with two deliberately failed outbound HTLCs and verified cooperative revocation.
+`HTLC_ACCEPTED` may record `in_flight_amount` separately from its routing
+allowance. For an isolated channel attempt it may also record
+`observed_spendable`, preserving the measured channel capacity reduction as
+`capacity_reserved`. That capacity reservation is not an additional economic
+asset or a second fronting debit. The HTLC integral uses observed in-flight
+principal when supplied; otherwise it retains the explicitly conservative
+authorization envelope. Settlement must agree with a supplied in-flight amount.
+
+`RESOLVE_FAILED` may atomically replace old claim IDs with the observed
+revocation/change outputs. The same claimant, bounded expiry, exact backing,
+and each parent's allocation must be conserved. Historical inputs retain
+provenance with zero residual allocation; no duplicate backing is created.
+The failure journal reconciles actual terminal identities but uses aggregate
+input reservations for unsampled intermediate client states. Historical missing
+timestamps still prevent whole-journal second integrals; the measured receiver
+hold intervals are separate lower bounds, not production latency samples.

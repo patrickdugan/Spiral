@@ -38,6 +38,8 @@ export interface Operation extends Request {
   committed_at: number | null; recovered_at: number | null;
   kind: "payment" | "refresh"; resolution?: "revocation" | "timeout";
   recovery_complete?: boolean;
+  in_flight_amount?: number;
+  capacity_reserved?: number;
 }
 export interface Block { height: number; hash: string; parent_hash: string }
 export interface Sweep {
@@ -66,10 +68,10 @@ export interface Payloads {
   PAYMENT_OFFERED: { operation_id: string; holder: string };
   REQUEST_OUTGOING: Request;
   CANCEL_REQUEST: { operation_id: string };
-  HTLC_ACCEPTED: { operation_id: string };
+  HTLC_ACCEPTED: { operation_id: string; in_flight_amount?: number; observed_spendable?: number };
   HTLC_SETTLED: { operation_id: string; fee: number; service_fee?: number; preimage_evidence_ref: string; change?: ClaimSpec };
   HTLC_FAILED: { operation_id: string };
-  RESOLVE_FAILED: { operation_id: string; path: "revocation" | "timeout"; resolution_height?: number; resolution_hash?: string };
+  RESOLVE_FAILED: { operation_id: string; path: "revocation" | "timeout"; resolution_height?: number; resolution_hash?: string; replacements?: ClaimSpec[] };
   REFRESH: { operation_id: string; input_claim_ids: string[]; reserve_ids: string[]; fee: number; replacement: ClaimSpec };
   EXPIRY_REACHED: { operation_id: string };
   SWEEP_BROADCAST: { sweep_id: string; operation_id: string; output_id: string; destination: string; fee: number; input_outpoints: string[] };
@@ -209,7 +211,7 @@ export class CapitalAccountingMachine {
     const s = this.state, assets = Object.values(s.A), channels = Object.values(s.H.channels);
     return { fronting: s.B.F - s.B.C,
       unique_committed: sum(assets.filter(a => !free(a) && a.state !== "TRANSFERRED_OUT").map(a => a.amount)),
-      htlc: sum(Object.values(s.H.operations).filter(o => o.state === "ACCEPTED" || o.state === "FAILED").map(o => o.delivered + o.max_fee)),
+      htlc: sum(Object.values(s.H.operations).filter(o => o.state === "ACCEPTED" || o.state === "FAILED").map(o => o.in_flight_amount ?? o.delivered + o.max_fee)),
       inbound: sum(channels.map(c => c.remote)), outbound: sum(assets.filter(a => a.location.startsWith("ln:")).map(a => a.amount)),
       idle: sum(assets.filter(a => a.pool && free(a)).map(a => a.amount)) };
   }
@@ -401,6 +403,20 @@ export class CapitalAccountingMachine {
       case "REQUEST_OUTGOING": demand(e.amount === e.data.delivered, "request amount mismatch"); this.request(e, e.data); break;
       case "HTLC_ACCEPTED": {
         const op = this.operation(e, e.data.operation_id); demand(op.state === "RESERVED", "HTLC not reserved");
+        if (e.data.in_flight_amount !== undefined) {
+          const actual = integer(e.data.in_flight_amount);
+          demand(actual >= op.delivered && actual <= op.delivered + op.max_fee, "in-flight amount outside authorized envelope");
+          op.in_flight_amount = actual;
+        }
+        if (e.data.observed_spendable !== undefined) {
+          demand(!Object.values(s.H.operations).some(o => o.operation_id !== op.operation_id && o.channel_id === op.channel_id &&
+            ["RESERVED", "ACCEPTED", "FAILED"].includes(o.state)), "capacity attribution requires isolated channel attempt");
+          const ch = this.channel(e, op.channel_id), before = ch.spendable + op.delivered + op.max_fee;
+          const spendable = integer(e.data.observed_spendable);
+          demand(spendable + (op.in_flight_amount ?? op.delivered + op.max_fee) <= before, "capacity observation ignores in-flight value");
+          op.capacity_reserved = before - spendable;
+          ch.spendable = spendable; ch.last_event_id = e.event_id;
+        }
         op.state = "ACCEPTED"; op.committed_at = e.block_height; op.last_event_id = e.event_id;
         s.B.reserved -= op.gross; s.B.F += op.gross;
         for (const id of op.reserve_ids) { const a = this.asset(e, id); a.state = "COMMITTED"; a.last_event_id = e.event_id; } break;
@@ -417,8 +433,30 @@ export class CapitalAccountingMachine {
           op.resolution = resolution.path; op.recovered = op.gross; op.recovered_at = e.block_height; s.B.C += op.gross;
         }
         for (const id of op.reserve_ids) { const a = this.asset(e, id); a.state = "FREE"; a.last_event_id = e.event_id; }
-        for (const id of op.input_claim_ids) { const c = this.claim(e, id); c.state = "ACTIVE"; c.last_event_id = e.event_id; }
-        const ch = this.channel(e, op.channel_id); ch.spendable += op.delivered + op.max_fee; ch.last_event_id = e.event_id;
+        const inputs = op.input_claim_ids.map(id => this.claim(e, id));
+        if (e.event_type === "RESOLVE_FAILED" && e.data.replacements) {
+          demand(e.data.path === "revocation" && e.data.replacements.length > 0, "replacement claims require revocation");
+          const available: Record<string, number> = {};
+          for (const c of inputs) for (const [id, amount] of Object.entries(c.allocations)) available[id] = sum([available[id] ?? 0, amount]);
+          const assigned: Record<string, number> = {};
+          const assignedByParent: Record<string, Record<string, number>> = {};
+          for (const c of e.data.replacements) {
+            demand(c.claimant === op.holder && c.parent_claim_id && op.input_claim_ids.includes(c.parent_claim_id), "revocation replacement holder/parent mismatch");
+            demand(c.expiry_height <= Math.min(...inputs.map(c => c.expiry_height)), "revocation cannot extend backing expiry");
+            for (const [id, amount] of Object.entries(c.allocations)) assigned[id] = sum([assigned[id] ?? 0, amount]);
+            const parentAllocation = assignedByParent[c.parent_claim_id] ??= {};
+            for (const [id, amount] of Object.entries(c.allocations)) parentAllocation[id] = sum([parentAllocation[id] ?? 0, amount]);
+          }
+          demand(Object.keys(assigned).length === Object.keys(available).length && Object.keys(available).every(id => assigned[id] === available[id]), "revocation replacement backing mismatch");
+          for (const c of inputs) demand(Object.keys(assignedByParent[c.claim_id] ?? {}).length === Object.keys(c.allocations).length &&
+            Object.entries(c.allocations).every(([id, amount]) => assignedByParent[c.claim_id]?.[id] === amount), "revocation parent provenance mismatch");
+          for (const c of inputs) {
+            c.state = "FORFEITED"; c.last_event_id = e.event_id;
+            for (const id of Object.keys(c.allocations)) c.allocations[id] = 0;
+          }
+          for (const c of e.data.replacements) this.issue(e, c, sum(Object.values(c.allocations)), false);
+        } else for (const c of inputs) { c.state = "ACTIVE"; c.last_event_id = e.event_id; }
+        const ch = this.channel(e, op.channel_id); ch.spendable += op.capacity_reserved ?? op.delivered + op.max_fee; ch.last_event_id = e.event_id;
         op.state = "RESOLVED"; op.last_event_id = e.event_id; break;
       }
       case "HTLC_FAILED": {
@@ -431,10 +469,12 @@ export class CapitalAccountingMachine {
         demand((op.change_backing === "retained" ? d.fee <= op.max_fee && d.fee + serviceFee <= (op.max_holder_fee ?? op.max_fee) :
           d.fee + serviceFee <= op.max_fee) && e.evidence_refs.includes(d.preimage_evidence_ref), "fee/preimage evidence mismatch");
         demand(e.amount === op.delivered, "settled amount mismatch");
+        demand(op.in_flight_amount === undefined || op.in_flight_amount === op.delivered + d.fee, "settlement disagrees with observed in-flight amount");
         const ch = this.channel(e, op.channel_id);
         for (const id of op.reserve_ids) this.asset(e, id);
         this.debit(e, op.reserve_ids, op.delivered + d.fee); ch.remote += op.delivered + d.fee;
-        ch.receivable += op.delivered + d.fee; ch.spendable += op.max_fee - d.fee; ch.last_event_id = e.event_id;
+        ch.receivable += op.delivered + d.fee;
+        ch.spendable += (op.capacity_reserved ?? op.delivered + op.max_fee) - op.delivered - d.fee; ch.last_event_id = e.event_id;
         const inputs = op.input_claim_ids.map(id => this.claim(e, id));
         for (const c of inputs) { c.state = "FORFEITED"; c.last_event_id = e.event_id; }
         const change = sum(inputs.map(c => c.amount)) - op.delivered - d.fee - serviceFee;
