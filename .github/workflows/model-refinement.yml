@@ -1,0 +1,40 @@
+name: Model correspondence checks
+
+on:
+  push:
+    paths:
+      - "model/**"
+      - "src/spiral_ln/algebra.py"
+      - "tests/test_algebra.py"
+      - ".github/workflows/model-refinement.yml"
+  pull_request:
+    paths:
+      - "model/**"
+      - "src/spiral_ln/algebra.py"
+      - "tests/test_algebra.py"
+      - ".github/workflows/model-refinement.yml"
+  workflow_dispatch:
+
+jobs:
+  python-route:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest
+      - name: Test payment-route atomicity and cut conservation
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q tests/test_algebra.py
+
+  typescript-ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Run finite reference-model witnesses
+        run: node --experimental-strip-types --test "model/*.test.ts"
