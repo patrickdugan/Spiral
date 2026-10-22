@@ -18,17 +18,25 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: formal
-          use-mathlib-cache: "true"
-          test: "false"
+      - name: Install Lean toolchain
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Resolve pinned Mathlib version
+        working-directory: formal
+        run: lake update
+      - name: Restore Mathlib compiled cache
+        working-directory: formal
+        run: lake exe cache get
+      - name: Check capital-bound proof leaves
+        working-directory: formal
+        run: lake build
       - name: Inspect theorem axioms
         working-directory: formal
         run: lake build SpiralFormal.Audit
       - name: Reject proof placeholders in project leaves
         run: |
-          if grep -REn '\\b(sorry|admit)\\b' formal/SpiralFormal/*.lean; then
+          if grep -REn '(^|[^[:alnum:]_])(sorry|admit)([^[:alnum:]_]|$)' formal/SpiralFormal/*.lean; then
             echo "Proof placeholder found."
             exit 1
           fi
