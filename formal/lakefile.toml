@@ -1,0 +1,11 @@
+name = "spiral_formal"
+version = "0.1.0"
+defaultTargets = ["SpiralFormal"]
+
+[[lean_lib]]
+name = "SpiralFormal"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.35.0"
