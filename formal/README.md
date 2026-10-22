@@ -13,6 +13,8 @@ is an independent attempt to state and check their mathematical contracts.
 | cutStep_preserves | Section 3, prefix cut bound | src/spiral_ln/algebra.py:Channel.transfer | Each crossing settles only when stock is available; no fees or HTLC holds |
 | prefix_cut_bound | Section 3, Lemma 1 | src/spiral_ln/algebra.py:NetworkState | A finite abstract cut trace, rather than a proof that route execution refines it |
 | policy_invariance | Section 3, policy-invariance proposition | src/spiral_ln/simulator.py | Every admissible trace; does not promise that two policies realize equal volumes |
+| peak_of_pool_le_sum_of_peaks | Sections 3 and 5, provisioning advantage | model/server.ts:hyperedgeLiquidityDuration | Finite agent and time sets; deterministically bounds pooled envelope by sum of separate envelopes, with no stochastic gain ratio |
+| singleton_pool_has_same_peak | Section 5, k=1 identity | model/server.test.ts | A single member's pooled peak equals its separate peak exactly |
 | server_capital_bound | Section 4, server bound, outstanding-capital reading | model/server.ts:ArkServer.forfeit, spendLightning, advance | The server atomically fronts the full gross VTXO input; recovered amounts decrease outstanding capital |
 | fronting_fits_headroom | Section 4, server admission | model/server.ts:ArkServer.spendLightning | The server begins within its budget |
 | cumulative_allocation_not_headroom | Counterexample to literal cumulative-allocation inequality | model/server.ts:ArkServer.allocated, aggregateBoundHolds | Three 300,000-sat spends from gross 400,000-sat inputs |
