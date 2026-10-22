@@ -214,20 +214,82 @@ The proof is bookkeeping: each event debits a hold on its source at initiation, 
 
 Let a server $S$ issue VTXOs to a holder set $A$. Holders carry no directional stock. The server's liquidity is a stock $R_S$ with three sinks and two sources per round \citep{second2025liquidity}: it funds new outputs at refresh, fronts Lightning spends at the moment of spend, and funds offboards; it recovers forfeited or expired value by sweeping a round after its absolute timelock, and it receives inbound HTLC settlements on its own channels. Write $V_A(n)$ for the VTXO value held by $A$, $W_S(n)$ for value the server has fronted into rounds and not yet recovered, and $B_S$ for the server's total on-chain and channel capital.
 
-\begin{proposition}[bound relocation]
+\begin{proposition}[bound relocation and instantaneous server headroom]
 \label{prop:relocation}
-For $A$ served by $S$,
+For a set of VTXO holders $A$, count $O_A(n)$ and $I_A(n)$ as the
+face value of \emph{settled} outgoing and incoming transfers through step $n$.
+Let $V_A(0)$ be their initial settled balance, and let $J_A(n)$ denote
+any separately recorded net external issuance into $A$ that is absent
+from $I_A(n)$, with fees and burns included among outflows. Nonnegative
+holder balances imply
 \[
-O_A(n)-I_A(n)\;\le\;V_A(0)+K^S_A(n),
-\qquad
-\sum_{A}K^S_A(n)\;\le\;B_S-W_S(n),
+O_A(n)-I_A(n)\;\le\;V_A(0)+J_A(n).
 \]
-where $K^S_A(n)$ is what the server has allocated to $A$ at the moments of $A$'s spends. The per-cut directional constraint on $A$ is replaced by an aggregate constraint on the server's uncommitted capital, pooled over holders and indexed by output lifetime rather than by edge direction; a coalition of holders can change which of them consumes $B_S-W_S$ and when, and cannot raise the sum.
+This is the holder-stock identity; in the reference model, receipts
+recorded in $I_A$ already create VTXOs, and those receipts must not also
+be added to $J_A$.
+
+For the server, let $B_S$ be the fixed capital budget available for
+\emph{fronting}, let $W_S(t^-)$ be gross fronted value awaiting recovery
+immediately before an admitted event at time $t$, and let $F^S_A(t)$
+be new gross input value fronted at that event for holder set $A$.
+If $R_S(t)$ is the gross value subsequently released by confirmed sweeps,
+the admission condition and outstanding-capital invariant are
+\[
+\sum_A F^S_A(t)\;\le\;B_S-W_S(t^-),\qquad
+W_S(t^+)=W_S(t^-)+\sum_A F^S_A(t)\;\le\;B_S,
+\]
+with a sweep reducing $W_S$ by $R_S(t)$ when that recovery becomes
+available. The $A$ in the sum partitions the gross inputs of one
+atomic event, so the same input is counted once. These constraints
+apply to current outstanding commitments; the cumulative value
+fronted across the entire horizon may exceed $B_S$ through reuse
+after recovery.
 \end{proposition}
 
-The proof is by definition of $W_S$ and the fact that the server co-signs every issuance. The proposition's cost is also by definition: the holder must refresh before $\tau$, the server can decline to include a holder in a round, and an out-of-round payment is trusted until the round confirms. Neither cost is a property of shared outputs as such: under the LayerTree leaf the holder renews a lease or is paid out, and the operator can decline a graft or a co-signed update but not an exit.
+For the holder identity, rearrange the settled balance equation
+$V_A(n)=V_A(0)+I_A(n)+J_A(n)-O_A(n)\ge 0$.
+For the server invariant, proceed by induction over admitted fronting
+and confirmed recovery events: the admission guard bounds each increase,
+and each recovery lowers the outstanding stock. A pending payment and
+an unconfirmed sweep are excluded from settled balances and available
+recovery respectively. A concrete reference-model check uses
+$B_S=1{,}300{,}000$ sat, three $300{,}000$-sat payments funded by
+$400{,}000$-sat gross inputs each, and $W_S=1{,}200{,}000$ sat.
+The current headroom is then $100{,}000$ sat while the cumulative
+outbound payments are $900{,}000$ sat, a counterexample to imposing the
+headroom bound on \emph{cumulative} allocations. In
+\texttt{model/server.ts}, \texttt{aggregateBoundHolds()} checks
+$W_S\le B_S$; the \texttt{allocated} map accumulates across time and is
+not the $F^S_A(t)$ of this proposition.
 
-What the proposition does not say, and what a pooling argument that stops here gets wrong, is that the server still forecasts. Every Lightning receipt into the Ark becomes an output the server issues to its holder from the server's own capital, and every Lightning spend out returns value to the server, so the server's stock toward its holders rises and falls with the population's aggregate net receipts, and what the server must forecast is the running peak of that aggregate, $\hat f_S$, which is the peak-of-sum of Remark~\ref{rem:sqrtN}. The direction problem has not vanished. It has been moved from $N$ edges, one per agent, to one node. The pooling gain is the gap between $\sum_a\hat f_a$ and $\hat f_S$ and is exactly as large as that remark says: a factor of order $\sqrt N$ when per-agent imbalances are uncorrelated and signed, a constant near $\pi/2$ when the agents start from nothing, and nothing when they share a drift. The same forecast sizes a second stock. The server is a node in $G$, and Lemma~\ref{lem:cut} applies to the cut $\{S\}$: the receipts cross $\partial\{S\}$ inward on the server's own channels and consume inbound that its counterparties provisioned toward it. That stock is common to every object, since an operator of per-agent channels receives for its agents over channels of its own as well, and the tables that follow charge each object its operator's own stock toward the agents and charge the network's stock toward the operator to none (Section~\ref{sec:hratio}). The term is zero only for value that enters the Ark on-chain by boarding, which draws on no channel.
+These are fronting-budget constraints under the reference model's
+admission and recovery rules. Issued VTXO liabilities, server insolvency,
+and actual Ark recovery semantics require additional protocol accounting;
+the simulator's \texttt{receive} operation accepts external issuance
+without independently proving that the server has provisioned its backing.
+The holder must refresh before $\tau$, the server can decline to include
+a holder in a round, and an out-of-round payment remains pending until
+the round confirms. Under the LayerTree leaf the holder renews a lease
+or is paid out, and the operator can decline a graft or co-signed update
+while a valid unilateral exit has a separate path.
+
+What the proposition does not settle is the forecast at the server tier.
+Each Lightning receipt into an Ark produces value for a holder while
+consuming capacity on the server's own Lightning channels. The aggregate
+demand forecast $\hat f_S$ is the peak-of-sum of
+Remark~\ref{rem:sqrtN}; pooling replaces individually provisioned
+$\sum_a\hat f_a$ with that aggregate stock under the stated demand
+assumptions. Under signed uncorrelated imbalances the theoretical
+gain can scale as $\sqrt N$, while the reflected-at-zero case considered
+in the reference model gives a constant near $\pi/2$ in its diffusion
+limit. Shared drift eliminates that pooling gain. The server is also
+a node in $G$, and Lemma~\ref{lem:cut} applies to the cut $\{S\}$.
+Receipts cross $\partial\{S\}$ and consume directional capacity
+that counterparties must provision. That network-facing stock is
+common to the compared settlement objects and is handled by the
+single-tier accounting convention in Section~\ref{sec:hratio};
+boarding from an on-chain UTXO follows a different path.
 
 \subsection{The ratio that decides}
 
