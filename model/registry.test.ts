@@ -135,4 +135,8 @@ test("S3: a distinct live object cannot be overwritten by id reuse", () => {
   assert.equal(set.root(), before);
   assert.equal(set.get("a")?.value, 100);
   assert.equal(set.get("b")?.value, 200);
+  set.remove("a");
+  assert.throws(() => set.add({ id: "a", value: 100, authorityKey: "k" }), /duplicate|already/);
+  const copy = set.snapshot();
+  assert.throws(() => copy.add({ id: "a", value: 100, authorityKey: "k" }), /duplicate|already/);
 });
