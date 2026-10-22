@@ -1,0 +1,29 @@
+name: Route atomicity
+
+on:
+  push:
+    paths:
+      - "src/spiral_ln/algebra.py"
+      - "tests/test_algebra.py"
+      - "tests/test_route_cut_projection.py"
+      - ".github/workflows/route-atomicity.yml"
+  pull_request:
+    paths:
+      - "src/spiral_ln/algebra.py"
+      - "tests/test_algebra.py"
+      - "tests/test_route_cut_projection.py"
+      - ".github/workflows/route-atomicity.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest
+      - name: Replay atomicity and cut fixtures
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q tests/test_algebra.py tests/test_route_cut_projection.py
