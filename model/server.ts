@@ -85,19 +85,28 @@ export class ArkServer {
   }
 
   advance(blocks: number): void {
-    // W_S is piecewise constant between events; integrate over the interval before applying sweeps.
-    this.lockedIntegral += this.committed * blocks;
-    const from = this.height;
-    this.height += blocks;
-    this.lastHeight = this.height;
+    if (!Number.isSafeInteger(blocks) || blocks < 0) throw new Error("blocks must be a nonnegative integer");
+    // Integrate the actual step function W_S(t), splitting the requested
+    // interval at every confirmed sweep. A sweep at h releases capital at h,
+    // so a forfeit from height 0 until h contributes value * h sat-blocks.
+    // This also permits steps longer than one round without charging capital
+    // for the remainder of the interval after its release.
+    const end = this.height + blocks;
+    let cursor = this.height;
+    const sweeps = [...this.sweepAt.keys()]
+      .filter((h) => h > cursor && h <= end)
+      .sort((a, b) => a - b);
+    for (const h of sweeps) {
+      this.lockedIntegral += this.committed * (h - cursor);
+      for (const v of this.sweepAt.get(h)!) this.committed -= v.value;
+      this.sweepAt.delete(h);
+      cursor = h;
+    }
+    this.lockedIntegral += this.committed * (end - cursor);
+    this.height = end;
+    this.lastHeight = end;
     this.aggregateSteps.push({ in: this.stepIn, out: this.stepOut });
     this.stepIn = 0; this.stepOut = 0;
-    for (let h = from + 1; h <= this.height; h++) {
-      const due = this.sweepAt.get(h);
-      if (!due) continue;
-      for (const v of due) this.committed -= v.value; // sweep: fronted value recovered
-      this.sweepAt.delete(h);
-    }
     // Holders refresh outputs approaching expiry; a refresh is a forfeit plus a server-funded reissue.
     // Live outputs are expiry-ordered, so the scan stops at the first output outside the lead window.
     const toRefresh: string[] = [];

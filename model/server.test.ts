@@ -118,3 +118,20 @@ test("hyperedge (BIP 448 multiparty channel): k = 1 is the channel; the gain gro
   assert.ok(o.hyperedge[3]!.dH < 0.7 * o.dV, `expiry reading: ${o.hyperedge[3]!.dH} vs ${o.dV}`);
   assert.ok(Math.abs(round.hyperedge[0]!.dH / round.dV - 1) < 0.1, `round reading: ${round.hyperedge[0]!.dH / round.dV}`);
 });
+
+
+test("S2: capital-time accrues only until the sweep height inside a long advance", () => {
+  for (const spendLock of ["expiry", "round"] as const) {
+    const S = new ArkServer(1_000, {
+      lifetimeBlocks: 5, roundInterval: 3,
+      refreshLead: Number.NEGATIVE_INFINITY, spendLock,
+    });
+    S.receive("h", 100);
+    assert.ok(S.spendLightning("h", 100));
+    S.advance(10);
+    assert.equal(S.committed, 0);
+    // Expiry at block 5, or round recovery at block 3; the clocked integral
+    // must split the time interval at the actual capital release event.
+    assert.equal(S.lockedIntegralBlocks(), 100 * (spendLock === "round" ? 3 : 5));
+  }
+});
