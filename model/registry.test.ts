@@ -112,3 +112,27 @@ test("L4 with S3: identity splitting leaves coalition payout invariant and integ
     assert.equal(alloc.get(commit("b")), 60);
   }
 });
+
+
+test("S3: frozen settled-set roots bind unambiguously to typed object records", () => {
+  const a = new SettledSet();
+  a.add({ id: "a|1", value: 2, authorityKey: "x" });
+  const b = new SettledSet();
+  b.add({ id: "a", value: 1, authorityKey: "2|x" });
+  // Separator-based concatenation gave both sets the same serialized bytes:
+  // "a|1|2|x\n", despite the objects being distinct.
+  assert.notEqual(a.root(), b.root());
+});
+
+test("S3: a distinct live object cannot be overwritten by id reuse", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 100, authorityKey: "k" });
+  set.add({ id: "b", value: 200, authorityKey: "k" });
+  const before = set.root();
+  assert.throws(() => set.add({ id: "a", value: 1, authorityKey: "x" }), /duplicate|already/);
+  assert.throws(() => set.refresh("a", "b"), /duplicate|already/);
+  assert.throws(() => set.transfer("a", "b", "other"), /duplicate|already/);
+  assert.equal(set.root(), before);
+  assert.equal(set.get("a")?.value, 100);
+  assert.equal(set.get("b")?.value, 200);
+});
