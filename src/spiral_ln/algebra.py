@@ -105,11 +105,32 @@ class NetworkState:
     def clone(self) -> "NetworkState":
         return NetworkState({key: channel.copy() for key, channel in self.channels.items()})
 
+    def _stage_route(self, path: Sequence[str], amount: int) -> dict[frozenset[str], Channel]:
+        """Replay the whole route on copies of *touched* channels before committing.
+
+        A path may revisit a channel. Each hop must see the balances produced
+        by its predecessors, including changes to reserves and locked capacity.
+        Staging keeps rejected attempts equal to the identity on live state.
+        """
+        if len(path) < 2 or not isinstance(amount, int) or amount <= 0:
+            raise ValueError("route is infeasible")
+        staged: dict[frozenset[str], Channel] = {}
+        for a, b in zip(path, path[1:]):
+            key = frozenset((a, b))
+            live = self.channels.get(key)
+            if live is None:
+                raise ValueError("route is infeasible")
+            if key not in staged:
+                staged[key] = live.copy()
+            staged[key].transfer(a, b, amount)
+        return staged
+
     def route_feasible(self, path: Sequence[str], amount: int) -> bool:
-        return len(path) >= 2 and all(
-            self.channel(a, b).available(a, b) >= amount
-            for a, b in zip(path, path[1:])
-        )
+        try:
+            self._stage_route(path, amount)
+            return True
+        except ValueError:
+            return False
 
     def route_cost_msat(self, path: Sequence[str], amount: int) -> int:
         return sum(
@@ -117,11 +138,10 @@ class NetworkState:
         )
 
     def apply_route(self, path: Sequence[str], amount: int) -> None:
-        if not self.route_feasible(path, amount):
-            raise ValueError("route is infeasible")
+        staged = self._stage_route(path, amount)  # raises without mutating live state
         before = self.total_capacity
-        for a, b in zip(path, path[1:]):
-            self.channel(a, b).transfer(a, b, amount)
+        for key, after in staged.items():
+            self.channels[key].balance_uv = after.balance_uv
         if self.total_capacity != before:
             raise AssertionError("payment rewrite changed channel capacity")
 
