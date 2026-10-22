@@ -82,6 +82,9 @@ theorem sendLeft_refines_cut (c : ConcreteChannel) (a frameOut frameIn : Nat)
     dsimp [ConcreteChannel.LeftGuard] at h
     dsimp [start, CutState.initial]
     omega
+  have hlocal : a ≤ c.left := by
+    have hguard : a + c.reserve + c.lockedLeft ≤ c.left := h.2
+    omega
   refine ⟨finish, CutStep.outward start a ha, ?_, ?_, ?_⟩
   · change (c.left + frameOut) - a = (c.left - a) + frameOut
     omega
@@ -107,6 +110,9 @@ theorem sendRight_refines_cut (c : ConcreteChannel) (a frameOut frameIn : Nat)
   have ha : a ≤ start.inbound := by
     dsimp [ConcreteChannel.RightGuard] at h
     dsimp [start, CutState.initial]
+    omega
+  have hlocal : a ≤ c.right := by
+    have hguard : a + c.reserve + c.lockedRight ≤ c.right := h.2
     omega
   refine ⟨finish, CutStep.inward start a ha, ?_, ?_, ?_⟩
   · dsimp [finish, start, CutState.initial, ConcreteChannel.sendRight]
