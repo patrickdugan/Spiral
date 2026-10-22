@@ -79,7 +79,7 @@ theorem cutStep_preserves {out₀ in₀ : Nat} {s t : CutState}
     CutInvariant out₀ in₀ t := by
   rcases h with ⟨hout, hin⟩
   cases hs <;>
-    constructor <;> dsimp [CutInvariant] at * <;> omega
+    constructor <;> simp [CutInvariant] at * <;> omega
 
 /-- A complete finite history preserves the identities at every prefix. -/
 theorem cutTrace_preserves {s t : CutState} (hs : CutTrace s t) :
