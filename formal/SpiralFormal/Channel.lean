@@ -83,7 +83,7 @@ theorem sendLeft_refines_cut (c : ConcreteChannel) (a frameOut frameIn : Nat)
     dsimp [start, CutState.initial]
     omega
   refine ⟨finish, CutStep.outward start a ha, ?_, ?_, ?_⟩
-  · dsimp [finish, start, CutState.initial, ConcreteChannel.sendLeft]
+  · change (c.left + frameOut) - a = (c.left - a) + frameOut
     omega
   · dsimp [finish, start, CutState.initial, ConcreteChannel.sendLeft]
     omega
@@ -111,7 +111,7 @@ theorem sendRight_refines_cut (c : ConcreteChannel) (a frameOut frameIn : Nat)
   refine ⟨finish, CutStep.inward start a ha, ?_, ?_, ?_⟩
   · dsimp [finish, start, CutState.initial, ConcreteChannel.sendRight]
     omega
-  · dsimp [finish, start, CutState.initial, ConcreteChannel.sendRight]
+  · change (c.right + frameIn) - a = (c.right - a) + frameIn
     omega
   · simp [finish, start, CutState.initial]
 
