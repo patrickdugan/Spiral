@@ -1,0 +1,41 @@
+name: Rebuild corrected paper PDF (one shot)
+
+on:
+  push:
+    branches: [paper/rebuild-current-pdf]
+    paths:
+      - ".github/workflows/rebuild-pdf-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LaTeX and PDF verification tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-pictures poppler-utils
+      - name: Compile corrected manuscript
+        working-directory: paper/tex
+        run: latexmk -pdf -halt-on-error -interaction=nonstopmode main.tex
+      - name: Check PDF text and pages
+        run: |
+          pdfinfo paper/tex/main.pdf | grep -E '^Pages:'
+          pdftotext paper/tex/main.pdf /tmp/compiled-paper.txt
+          grep -iq "instantaneous server headroom" /tmp/compiled-paper.txt
+      - name: Commit generated PDF on this source branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/tex/main.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "paper: regenerate PDF with corrected server-capital inequality"
+            git push origin HEAD:paper/rebuild-current-pdf
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: corrected-capital-paper
+          path: paper/tex/main.pdf
