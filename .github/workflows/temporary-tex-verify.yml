@@ -1,0 +1,23 @@
+name: Verify manuscript LaTeX
+
+on:
+  push:
+    branches:
+      - paper/correct-server-headroom
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install TeX dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-pictures
+      - name: Compile paper
+        working-directory: paper/tex
+        run: latexmk -pdf -halt-on-error -interaction=nonstopmode main.tex
