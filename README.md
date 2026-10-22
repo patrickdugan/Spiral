@@ -13,6 +13,16 @@ Lightning Network liquidity as a capital problem for populations of autonomous a
 | `audit/` | Reproducible adversarial audit of the first manuscript; start from [`audit/README.md`](audit/README.md). |
 | `docs/evaluation_harnesses.md` | Evaluation-design harnesses that share this repository but not the liquidity question. |
 
+## Formal verification
+
+The Lean 4 proof leaves have their own repository:
+[bitcoin-liquidity-formal](https://github.com/patrickdugan/bitcoin-liquidity-formal).
+It contains the machine-checked abstract capital bounds, source provenance,
+and a separate axiom-audited CI. This Spiral repository remains the home for
+the paper, the finite reference models, and their experiment outputs. The
+standalone proof package does not establish deployed Bitcoin consensus
+equivalence; its trust and correspondence boundaries are documented there.
+
 ## Reproduce
 
 ```powershell
