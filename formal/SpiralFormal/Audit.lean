@@ -17,3 +17,5 @@ does not establish correspondence to the reference models.
 #print axioms Spiral.CapitalBound.cumulative_allocation_not_headroom
 #print axioms Spiral.CapitalBound.peak_of_pool_le_sum_of_peaks
 #print axioms Spiral.CapitalBound.singleton_pool_has_same_peak
+#print axioms Spiral.CapitalBound.cross_class_conservation
+#print axioms Spiral.CapitalBound.held_plus_available_eq_source
