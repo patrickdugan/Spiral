@@ -15,3 +15,5 @@ does not establish correspondence to the reference models.
 #print axioms Spiral.CapitalBound.server_capital_bound
 #print axioms Spiral.CapitalBound.fronting_fits_headroom
 #print axioms Spiral.CapitalBound.cumulative_allocation_not_headroom
+#print axioms Spiral.CapitalBound.peak_of_pool_le_sum_of_peaks
+#print axioms Spiral.CapitalBound.singleton_pool_has_same_peak
