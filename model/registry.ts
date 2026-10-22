@@ -28,9 +28,18 @@ export const prf = (k: string, id: string): string => createHmac("sha256", k).up
 
 export class SettledSet {
   private readonly objs = new Map<string, SettledObject>();
+  private readonly usedIds = new Set<string>();
   /** successor links the set maintainer attests: old id → new id (a refresh, same holder key). */
   private readonly successor = new Map<string, string>();
-  add(o: SettledObject): void { this.objs.set(o.id, o); }
+  private requireFreshId(id: string): void {
+    if (this.usedIds.has(id)) throw new Error("duplicate settled object id");
+  }
+  add(o: SettledObject): void {
+    this.requireFreshId(o.id);
+    if (!Number.isSafeInteger(o.value) || o.value < 0) throw new Error("invalid settled value");
+    this.objs.set(o.id, { ...o });
+    this.usedIds.add(o.id);
+  }
   remove(id: string): void { this.objs.delete(id); }
   has(id: string): boolean { return this.objs.has(id); }
   get(id: string): SettledObject | undefined { return this.objs.get(id); }
@@ -38,9 +47,11 @@ export class SettledSet {
   refresh(id: string, newId: string): SettledObject {
     const o = this.objs.get(id);
     if (!o) throw new Error("not settled");
+    this.requireFreshId(newId);
     this.objs.delete(id);
     const n: SettledObject = { id: newId, value: o.value, authorityKey: o.authorityKey };
     this.objs.set(newId, n);
+    this.usedIds.add(newId);
     this.successor.set(id, newId);
     return n;
   }
@@ -48,9 +59,11 @@ export class SettledSet {
   transfer(id: string, newId: string, newKey: string): SettledObject {
     const o = this.objs.get(id);
     if (!o) throw new Error("not settled");
+    this.requireFreshId(newId);
     this.objs.delete(id);
     const n: SettledObject = { id: newId, value: o.value, authorityKey: newKey };
     this.objs.set(newId, n);
+    this.usedIds.add(newId);
     return n;
   }
   /** Follow attested successor links from `id`; returns the live descendant or undefined if spent without one. */
@@ -65,18 +78,20 @@ export class SettledSet {
     }
     return this.objs.get(cur);
   }
-  /** Deterministic commitment to the set contents; stands in for a Merkle root. */
+  /** Deterministic digest of typed, unambiguously encoded records.
+   * This remains a stand-in for a Merkle commitment, without inclusion proofs.
+   */
   root(): string {
-    const h = createHash("sha256");
-    for (const id of [...this.objs.keys()].sort()) {
-      const o = this.objs.get(id)!;
-      h.update(`${id}|${o.value}|${o.authorityKey}\n`);
-    }
-    return h.digest("hex");
+    const records = [...this.objs.values()]
+      .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+      .map((o) => [o.id, o.value, o.authorityKey]);
+    return createHash("sha256").update(JSON.stringify(records)).digest("hex");
   }
   snapshot(): SettledSet {
     const c = new SettledSet();
     for (const o of this.objs.values()) c.add({ ...o });
+    for (const id of this.usedIds) c.usedIds.add(id);
+    for (const [oldId, newId] of this.successor) c.successor.set(oldId, newId);
     return c;
   }
 }
