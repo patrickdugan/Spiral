@@ -1,0 +1,34 @@
+name: Lean capital bounds
+
+on:
+  push:
+    paths:
+      - "formal/**"
+      - ".github/workflows/lean-capital.yml"
+  pull_request:
+    paths:
+      - "formal/**"
+      - ".github/workflows/lean-capital.yml"
+  workflow_dispatch:
+
+jobs:
+  formal:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: formal
+          use-mathlib-cache: "true"
+          test: "false"
+      - name: Inspect theorem axioms
+        working-directory: formal
+        run: lake build SpiralFormal.Audit
+      - name: Reject proof placeholders in project leaves
+        run: |
+          if grep -REn '\\b(sorry|admit)\\b' formal/SpiralFormal/*.lean; then
+            echo "Proof placeholder found."
+            exit 1
+          fi
