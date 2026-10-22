@@ -47,6 +47,19 @@ inductive ServerTrace : ServerState → ServerState → Prop where
   | next {s t u : ServerState} :
       ServerStep s t → ServerTrace t u → ServerTrace s u
 
+/-- Server steps preserve the total capital parameter. -/
+theorem serverStep_capital_fixed {s t : ServerState}
+    (h : ServerStep s t) : t.capital = s.capital := by
+  cases h <;> rfl
+
+/-- A sequence of steps leaves the server's total capital unchanged. -/
+theorem serverTrace_capital_fixed {s t : ServerState}
+    (h : ServerTrace s t) : t.capital = s.capital := by
+  induction h with
+  | refl _ => rfl
+  | next hstep _ ih =>
+      exact ih.trans (serverStep_capital_fixed hstep)
+
 /-- The server starts below its capital ceiling. -/
 theorem serverSafe_initial (capital : Nat) :
     ServerSafe (ServerState.initial capital) := by
@@ -71,7 +84,12 @@ theorem server_capital_bound {capital : Nat} {s : ServerState}
     | next hstep _ ih =>
         intro h
         exact ih (serverStep_preserves h hstep)
-  exact aux _ _ history (serverSafe_initial capital)
+  have hs : ServerSafe s :=
+    aux _ _ history (serverSafe_initial capital)
+  have hc : s.capital = capital := by
+    simpa [ServerState.initial] using (serverTrace_capital_fixed history)
+  dsimp [ServerSafe] at hs
+  omega
 
 /-- Equivalent forms of the implementation's admission rule. -/
 theorem fronting_fits_headroom (s : ServerState) (gross : Nat)
