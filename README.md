@@ -7,7 +7,8 @@ Lightning Network liquidity as a capital problem for populations of autonomous a
 | Path | Contents |
 |---|---|
 | `paper/tex/` | The current paper, *Where the Capital Bound Moves* (`main.tex`, compiled `main.pdf`). `grid.tex` is generated from the reference model. |
-| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. Twenty-one tests witness the propositions on finite cases. |
+| `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. Finite tests witness the propositions, and additional regression cases check capital clocks and claim-registry integrity. |
+| `formal/` | Lean 4/Mathlib proof leaves for directional cut bounds, single-channel cut refinement, pooling, server headroom, and cross-class accounting; [`formal/REVIEW.md`](formal/REVIEW.md) tracks counterexamples and trusted boundaries. |
 | `src/spiral_ln/` | Python simulator: directional balance algebra, typed connectors, routing and placement campaigns on sampled public topology, coalition fixtures. |
 | `paper/` | Earlier manuscripts and their audit, plus design documents from other programs; [`paper/README.md`](paper/README.md) says which is which. |
 | `audit/` | Reproducible adversarial audit of the first manuscript; start from [`audit/README.md`](audit/README.md). |
