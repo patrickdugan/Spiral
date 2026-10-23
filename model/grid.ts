@@ -6,6 +6,7 @@
 // Every number in those tables comes from here; nothing is hand-edited.
 
 import { rng, runCorner, type CornerParams } from "./server.ts";
+import { poolingTable } from "./pooling.ts";
 
 const trailing = { kind: "trailing", intervalBlocks: 4032, roundBlocks: 6 } as const;
 const oracle = { kind: "oracle" } as const;
@@ -122,3 +123,11 @@ process.stdout.write("\\pgfplotstableread[row sep=\\\\]{t a1 a2 a3 a4 sum \\\\\n
 process.stdout.write(`\\newcommand{\\walkT}{${walkT}}\n`);
 process.stdout.write(`\\newcommand{\\walkpeaksum}{${walkPeak.reduce((s, x) => s + x, 0)}}\n`);
 process.stdout.write(`\\newcommand{\\walksumpeak}{${walkSumPeak}}\n`);
+
+// The scale of the pooling gain (tab:pool, beside Remark 1): sum of per-agent peaks over the peak of the sum
+// on the grid's demand law, reflected (the model's agents), signed (either-sign imbalance) and under the
+// +60 drift, averaged over 20 sample paths of the zero-drift cell's 5,376 rounds.
+const poolRows = poolingTable([1, 2, 4, 8, 16, 32, 64, 128, 200]).map((r) =>
+  `${r.agents} & ${r.reflected.toFixed(2)} & ${r.signed.toFixed(2)} & ${r.signedOverSqrtN.toFixed(2)} & ${r.sharedDrift.toFixed(2)} \\\\`,
+);
+process.stdout.write("\\newcommand{\\poolrows}{%\n" + poolRows.join("\n") + "}\n");
