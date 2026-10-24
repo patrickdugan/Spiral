@@ -1,0 +1,19 @@
+{
+  "schema": "runtime_control.controller_brief_protocol.v1",
+  "status": "fixed 2026-10-14 before any brief was written or tried, at the user's request for option 2 (a better controller prompt, judged on a held-out set)",
+  "what_is_tuned": "only the controller brief (the run profile's controllerBrief, appended to the controller's system prompt in its own 600-token lane). The controller model (pinned Bonsai-8B base, 284a335a, no adapter), the kernel prompt, decoding (temperature 0) and the trigger policy stay fixed.",
+  "rule": "configs/controller_qualification_v2.json (signed): its conditions, positives, vetoes and keyAdmissible subset, scored from live runs by scripts/score_live_controller.py",
+  "development": {
+    "data": "the seed set, oracle and adversary plus random seeds 0-59 (the collect-v3 seeds), null arm, the candidate brief deciding live",
+    "iteration": "briefs are compared on a development subset (seeds 0-14) to save GPU; the chosen brief is then run on all 60 development seeds",
+    "maxBriefs": 6,
+    "record": "every brief tried is kept in configs/controller_briefs/ with its development score, whether or not it is chosen"
+  },
+  "heldOut": {
+    "A": "the seed set, random seeds 60-119 only (no oracle or adversary, which would repeat development runs), null arm",
+    "B": "BitAgent's open-gate scenarios (40, none in the seed set), oracle and adversary plus random seeds 0-59, null arm",
+    "inProcessSize": "A: 978 admissible-move execute turns, 101 positive; B: 1,605 turns, 305 positive (in-process counts with no controller)",
+    "use": "each held-out set is run once, with the final brief only, after it is chosen on development data; nothing about a brief changes after"
+  },
+  "verdict": "the brief qualifies the controller only if the v2 conditions pass on held-out A and on held-out B; development scores are reported, never the verdict"
+}

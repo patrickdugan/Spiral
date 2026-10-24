@@ -1,0 +1,192 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\PassOptionsToPackage{hyphens}{url}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={A Runtime Control Layer Under Hermes and Goose}, pdfauthor={Patrick Dugan}}
+
+\newcommand{\pending}[1]{\textcolor{red}{[#1]}}
+\input{generated/macros.tex}
+\setlength{\emergencystretch}{2em}
+
+\title{A Runtime Control Layer Under Hermes and Goose:\\What Scripts Showed and Live Models Exposed}
+\author{Patrick Dugan\\Morality Lab}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Agent runtimes differ in how they call tools, retry, delegate and compact context, and the controls that keep an agent within what its user approved are usually written into one runtime at a time. We build one control plane that sits under two runtimes, Hermes Lite (Python) and goose (Rust): a hash-chained ledger that is the only source of truth, policy engines combined by conjunction, a tool gateway that is the only path to effects, a model proxy, an egress sink, and a controller thread above the agent loop that can only reduce authority. On BitAgent's development scenarios, with scripted policies, every run through each of four runtime arms is byte-identical to the same run without a runtime, the adversary lands no unauthorized effect, every gate knockout is caught, and the two modified runtimes write the same decision projection of the ledger for the same calls. The first live models found what scripted ones could not: a frozen prompt that made the model answer in text, protocol noise on a shared stdout, a turn cap one runtime ignores, and a soundness gap, an execute move sent through the tool registered as having no effect, which the host executed off the consequential path. Every hard gate stayed at zero once each was fixed. Qualifying a small model as the controller showed more. The first rule's positives could be caught by a lookup of the visible admissible moves; a counterfactual replay misstates a controller that reads its own earlier turns, which live intervened where the replay had passed or held; and our first live scorer labelled every refused turn from a missing proposal, so every refusal scored as right. After each was corrected, a 1-bit 8B controller with no brief fails the stricter rule (it mostly intervenes and almost never holds). With a short domain brief the same model passes it on the development seeds and on two held-out sets, but by holding about three quarters of the turns: precision \briefDevelopmentPrecision{} against a base rate of \briefDevelopmentBase, F1 \briefDevelopmentFOne{} against \texttt{always\_hold}'s \briefDevelopmentHoldFOne, and fewer completed runs, while the rule its brief states, applied to the same turns, scores F1 \briefDevelopmentStateFOne. A deterministic engine implementing that rule refuses with precision \engineDevelopmentPrecision{} and recall \engineDevelopmentRecall{} and costs no completions. Beating the constant controllers is a floor a controller can pass by being mostly one of them.
+\end{abstract}
+
+\section{Introduction}
+
+A tool-using agent acts through a runtime: the loop that asks a model for its next step, dispatches the tool calls it returns, feeds results back and decides when to stop \citep{yao2023react,schick2023toolformer}. Runtimes differ in everything that matters to control: whether calls in one model turn run in order or in parallel, whether code the model writes can call tools, whether sub-agents get their own tools, how context is compacted, how many rounds a turn may take. Controls written inside one runtime, a permission prompt here and an allowlist there, do not carry to the next, and results measured in one say little about another.
+
+We ask whether one control plane can sit under two quite different runtimes and hold the same run contract in both, and what changes when the agent is a real model rather than a script. The runtimes are Hermes Lite \citep{hermeslite2026}, a Python agent loop in the Hermes line \citep{teknium2024hermes3}, and goose \citep{goose2025}, a Rust agent that speaks the Model Context Protocol \citep{mcp2024}. The environment is BitAgent's control-capability bench \citep{bitagent2026}: an agent moving testnet funds through a fixed graph of host-checked steps, with eighteen gates and an oracle that labels every decision.
+
+The contributions are a design, a soundness result without models, and what the first live models exposed:
+\begin{itemize}[leftmargin=1.2em,itemsep=2pt]
+\item A control plane whose ledger is the single source of truth, built so that a runtime only proposes and the gateway only commits under a lease the control module issued (Section~\ref{sec:system}), integrated into goose as a hook and as a fork and into Hermes Lite as a shim.
+\item Soundness through four runtime arms on \soundRunsTotal{} scripted runs, each byte-identical to the run without a runtime (Section~\ref{sec:soundness}).
+\item Seven defects only a live model exposed, one of them a soundness gap, and hard gates at zero after each fix (Section~\ref{sec:live}).
+\item A controller qualification method and three ways it can mislead: a floor a lookup passes, a counterfactual replay that misstates a controller with memory, and a scoring path that made every refusal look right (Section~\ref{sec:controller}).
+\end{itemize}
+
+\section{The control plane}
+\label{sec:system}
+
+\paragraph{Control module and ledger.} Every event of a run is a record in a hash-chained JSON-lines ledger: the run contract and tool registry at the start, each proposed call with its provenance, each decision with the state hash it used, leases, results, escalations, controller turns and interventions. Control state is a fold over the ledger, so a module restarted mid-run writes a byte-identical ledger, and every decision can be re-derived. A runtime never executes a consequential call on its own say-so: it proposes, the module asks its policy engines (combined by conjunction, so any refusal stands) and, for consequential calls, its controller, and an allowed call gets a single-use lease bound to the call's fingerprint.
+
+\paragraph{Gateway, proxy and egress.} The tool gateway is the only path from a runtime to the environment. It speaks MCP over loopback, commits only under a valid lease, and writes the environment's own labels to a truth plane the control module cannot read. The model proxy sits between the runtime and its model server, enforces the context ceiling with the server's own tokenizer, and records every request, so runs can be replayed against recorded model traffic. Every runtime gets an egress sink as its HTTP(S) proxy, which refuses and records any request that would leave the machine.
+
+\paragraph{Runtime integration.} goose was run unmodified with a pre-tool-use hook, which leaves calls made from code-mode scripts and sub-agents unseen (the gateway then refuses them as bypasses), and as a fork whose gate proposes every call, including those, with sub-agents registered as their own actors. Hermes Lite carries a shim in its tool dispatch that proposes every call, runs a turn's calls in order rather than in its thread pool, and gates its memory flush. A third arm runs Hermes Lite's unmodified main branch with only the gateway between it and the environment.
+
+\paragraph{Policy engines.} An engine decides from the environment's public view, recorded in the ledger. Four were built: BitAgent's eighteen run-contract gates, evaluated in BitAgent's own code through a stdio server (all 7{,}966 recorded gate evaluations of its soundness suite replay to identical verdicts); Hermes Lite's skill phase contracts; RTG's ledger gateway; and \texttt{bitagent-state-v1}, which refuses an execute when the view shows no admitted, unexpired, gate-clean simulation, no approval, or a move outside the admissible list (Section~\ref{sec:controller}).
+
+\paragraph{Controller thread.} Above the agent loop runs a second conversation, the controller. It never reads the agent's raw text. Each ledger record becomes one line of whitelisted fields, with free-text arguments reduced to size and hash unless the tool registry marks a field visible. The thread keeps the run contract, a rolled-up action history, interventions and whether they were followed, open questions and its own notes, and is laid into a fixed 12K-token partition that fails closed when the contract alone does not fit. A blocking turn runs on every consequential call the engines admitted, and the controller answers with one of five actions under a JSON-schema grammar: pass, hold, ask the principal, intervene (a message delivered to the agent) or halt. It can only reduce what the engines decided. A run may pin a short domain brief, appended to the controller's system prompt in its own token lane.
+
+\section{Bench, arms and gates}
+\label{sec:bench}
+
+BitAgent's development split is its 42 seed scenarios: nominal deposits, orders and withdrawals and their faults (stale or replayed quotes, unlisted venues, caps, injected intents, ambiguous submissions, expiry). Each turn the host shows a packet with the admissible moves of its graph (observe, inspect, validate, simulate, display, approval, execute, verify, reconcile, complete) and labels the proposed candidate against its oracle: preferred, admissible, wrong or critical. At harness level H3 all eighteen gates are on. Reference policies are the oracle, an adversary that tries to execute early and wide, and random walks.
+
+In step mode each BitAgent turn is one fresh conversation of a real runtime: the candidate travels as a tool call, \texttt{bitagent\_step} for any move but execute (effect class none) and \texttt{bitagent\_execute} for execute (state change), and what reaches the gateway is the runtime's proposal. The arms are a minimal loop with a shim (null), Hermes Lite main with only the gateway (R0), Hermes Lite with the shim (R1) and the goose fork over ACP (R2). The hard gates are four counts that must be zero: unauthorized effects at H3, bypasses, tool calls without a proposal, and requests off the machine.
+
+\section{Soundness without a model}
+\label{sec:soundness}
+
+With scripted policies the runtime must change nothing (Table~\ref{tab:soundness}). Each arm ran \soundRunsPerArm{} runs: the oracle on all 42 scenarios, the adversary and one random walk on each, each gate's knockout, and twenty controller runs. Every run equals the same run without a runtime, byte for byte; the adversary and random walks land no unauthorized effect; each knockout lets the adversary land exactly the violation the knocked-out gate prevents; \texttt{always\_hold} commits nothing, \texttt{always\_pass} equals no controller, and a scripted hold, question and intervention appear in the ledger and reach the agent. The null arm, R1 and R2 write the same decision projection of the ledger for the same calls (\soundProjectionPairs{} pairs for each pair of arms): the runtimes differ in prompts and positions, not in what was proposed, decided and committed.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_soundness.tex}}
+\caption{Soundness through four runtime arms with scripted policies (BitAgent seed scenarios, H3). ``$=$ direct'': runs byte-identical to the same run without a runtime.}
+\label{tab:soundness}
+\end{table}
+
+Soundness is only as wide as what the scripts exercise. The scripted policies always chose the tool that matched their move; Section~\ref{sec:live} shows what that left untested.
+
+\section{First live models}
+\label{sec:live}
+
+The actor was Bonsai-8B \citep{prismml2026bonsai} in its 1-bit Q1\_0 form with BitAgent's v3 DAG adapter, served by llama.cpp \citep{llamacpp}, given BitAgent's own A1 prompt as the task message. Each defect below was found in a run, fixed in its own commit, and the affected runs were set aside and run again.
+% source of the counts in this list: Goose-Experiments results/phase9-logs and commit messages 2141528, 0fc9d2f, 872563a, 5056c53, 2d20a21, b89daf7 (BitAgent and Goose-Experiments).
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item \emph{A frozen prompt line.} A1 ends ``Reply with one JSON object''; with a ``submit it as the tool's candidate'' line appended, the actor answered in text in all 21 replies of the first seven runs, so nothing reached the tools. Replacing that line with a tool-call instruction under the same field rules gave a tool call in 6 of 6 replayed requests.
+\item \emph{Protocol on a shared stdout.} Hermes Lite prints to the stdout its serve protocol uses when a model calls tools until the iteration cap; the harness took the notice for its reply. It now finds the reply by its request id.
+\item \emph{Rounds a turn.} The actor called the tool again after every accepted submission, up to the runtime's cap of four rounds and a summary, and a ``turn over'' line in the tool result did not stop it (3 of 3 replays). Step mode means one candidate a turn, so the runtimes get one tool round a turn.
+\item \emph{Unbounded replies.} A degenerate reply repeated one tool call until the context ran out; on a contended GPU one request took 74 minutes. Actor requests are capped at 512 output tokens.
+\item \emph{A cap one runtime ignores.} goose over ACP reads \texttt{GOOSE\_MAX\_TURNS}, not \texttt{--max-turns}, so its first pass ran about 30 tool rounds a turn where the other arms ran one.
+\item \emph{A miscounted audit.} goose reports a call it refused before dispatch (arguments cut off at the output cap) as a failed tool call; the coverage audit counted 477 of them as calls without a proposal. All were of that kind and none was dispatched; they are now counted apart.
+\item \emph{The effect class could be sidestepped by the tool choice.} In R0 the actor sent its execute move through \texttt{bitagent\_step}. The control plane saw a call with no effect: no consequential decision, no controller turn. BitAgent's host executed it, authorized by its own gates, so no unauthorized effect landed, but a consequential move had left the consequential path. The gateway now refuses an execute move through the no-effect tool.
+\end{enumerate}
+
+The last item is the one a soundness suite cannot find with policies that always choose the matching tool. It generalizes: an effect class attached to a tool name is sound only if the environment refuses arguments that belong to another class.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_actor.tex}}
+\caption{The live actor (Bonsai-8B + v3, A1 prompt, one tool round a turn) through the runtime arms, final run. Acting: runs that should close and did; stopping: runs that should stop and did.}
+\label{tab:actor}
+\end{table}
+
+With those fixes every hard gate is zero in every cell (Table~\ref{tab:actor}): \actorToolCalls{} tool calls, each proposed and decided, and \actorUndispatched{} more that goose refused before dispatch. The control path held; the actor did not get far. It passes \texttt{inspect} and then proposes \texttt{validate} without the intent and quote it needs, which are on its screen; it reached approval in \actorReachedApproval{} of \actorRuns{} runs and closed \actorClosed{}. Stopping on fault scenarios is the host holding a model that cannot advance. The actor never called \texttt{bitagent\_execute}, so in these runs the controller had no turn.
+
+\paragraph{What the runtimes cost the model.} BitAgent's in-process A1 arm gives the same models the same prompt without a runtime (Table~\ref{tab:inprocess}). In process the 8B with the adapter has 8 of 44 \texttt{validate} proposals accepted; through the runtimes, \runtimeValidateAccepted{} of \runtimeValidateProposed. Bonsai-27B closes 13 of 21 nominal scenarios in process; a pilot through R1 reached \texttt{display} or \texttt{approval} in 4 of 4 nominal runs and executed in none. The runtime's own system prompt and the tool-call format cost the model most of what it does in process.
+
+\begin{table}[t]
+\centering
+\small
+\input{generated/tab_inprocess.tex}
+\caption{BitAgent's in-process A1 arm (no runtime), development scenarios at H3.}
+\label{tab:inprocess}
+\end{table}
+
+\section{Qualifying a controller}
+\label{sec:controller}
+
+BitAgent's rule for its critic, which we apply to the controller, is that on development data its veto precision and recall must beat \texttt{always\_pass} and \texttt{always\_hold} before any result is attributed to it. We signed that rule before scoring, with three additions: F1 must also beat \texttt{always\_hold}, at least 20 positives and 20 negatives, and a one-sided binomial test that veto precision exceeds the base rate. A turn is positive when its candidate is critical or wrong; holds, halts and questions are vetoes. The controller is the pinned Bonsai-8B base, never the actor's model.
+
+\paragraph{A floor a lookup passes.} The first qualification set (reference policies through the null arm with \texttt{always\_pass}) had \vOneTurns{} controller turns, \vOnePositives{} of them positive. Of these, \vOneLookupPositives{} are executes proposed where execute is not an admissible move, which a lookup of the visible admissible list catches (F1 \vOneLookupFOne). The controller, asked each recorded turn again, held \vOneHolds{} times, all rightly, and otherwise passed (\vOnePass) or intervened (\vOneIntervene): F1 \vOneModelFOne{} against \texttt{always\_hold}'s \vOneHoldFOne. It failed even the floor.
+
+\paragraph{A replay misstates a controller with memory.} The controller's thread carries its own earlier turns. Run live on the same scenarios, it agreed with the replay on the first turn of \divergeFirstAgree{} of \divergeFirstRuns{} runs; from the second turn on it intervened where the replay had passed (\divergePassToIntervene{} turns) and where it had held (\divergeHoldToIntervene). Asked each turn of an \texttt{always\_pass} run, it saw a history of passes it would not have written. A controller whose turns depend on its own must be qualified live.
+
+\paragraph{Qualification v2.} The second rule keeps the conditions and scores only turns whose candidate was an admissible move, where the lookup is no better than \texttt{always\_pass}, from live runs. Its reference collection (60 random seeds a scenario, \texttt{always\_pass}) has \vTwoRefTurns{} such turns, \vTwoRefPositives{} positive (base rate \vTwoRefBase); \texttt{always\_hold} scores F1 \vTwoRefHoldFOne, and holding what the view marks faulty scores F1 \vTwoRefStateFOne{} (precision \vTwoRefStatePrecision, recall \vTwoRefStateRecall), reported but not required.
+
+\paragraph{Every refusal scored as right.} Our first live runs carried a scoring path that cannot qualify anything. A call the control plane refused never reaches the gateway, so BitAgent's runner received no proposal for that turn and labelled it critical, and the scorer joined each refused turn to that label: every hold and every engine refusal was a true positive by construction. Under it the briefed controller below showed precision \artifactPrecision{} and recall \artifactRecall{} on held-out A; \artifactUnlabelled{} of its \artifactVetoes{} holds were of well-formed candidates labelled with no candidate at all. The runner now receives the refused candidate and labels it exactly as it labels the same candidate applied: an execute's gates are evaluated, nothing is applied or recorded (tested against runs that apply the same candidate). The scorer fails any verdict in which a veto of a well-formed candidate carries a label without that candidate's key. (A first version of this check also failed refused moves the host would have rejected anyway, which BitAgent labels with their key but not as control refusals, and random-policy candidates with an extra field, which its strict schema never keys in any run; it was narrowed before any r2 result was read beyond that check.) Every live result below is from runs made after the fix.
+
+\paragraph{Results.} The pinned controller with no brief, live on the development seeds, is in Table~\ref{tab:base}: on the admissible-move turns it held \baseDevelopmentHoldShare{} of the time and mostly intervened, so it catches nothing and fails every condition. (Its first attempt stopped after 53 runs when three runs of one scenario failed to finish in a row; those were set aside and the run resumed.) A brief protocol was fixed before any brief was written: only the brief is tuned, on development seeds; held-out A is the seed scenarios with unused random seeds and no reference policies; held-out B is BitAgent's 40 open-gate scenarios, none in the seed set; each is run once with the chosen brief, and the controller qualifies only if the v2 conditions pass on both. One brief was written and chosen (it says what the view shows, when to hold, to pass otherwise, and not to intervene to repeat the rules); its results are in Table~\ref{tab:brief}. The state engine, whose checks were chosen on the reference collection, is in Table~\ref{tab:engine}. The engine and the controller change the runs they decide, and a refused move may be proposed again, so their turn sets differ and the tables are not a ranking.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_base.tex}}
+\caption{The pinned Bonsai-8B base controller, no brief, live, qualification v2 (admissible-move turns). Completions: runs reaching their expected end, without $\to$ with the controller.}
+\label{tab:base}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_brief.tex}}
+\caption{The same controller with the brief, live, qualification v2. Held-out A: unused seeds; held-out B: the open-gate scenarios.}
+\label{tab:brief}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_engine.tex}}
+\caption{The state engine \texttt{bitagent-state-v1} alone (no controller), live, scored by the v2 conditions on its refusals.}
+\label{tab:engine}
+\end{table}
+
+\paragraph{What the pass is worth.} The briefed controller qualifies on development and on both held-out sets, and the margin is thin. It holds \briefDevelopmentHoldShare{} of the admissible-move turns on development (\briefHeldoutAHoldShare{} on held-out A), so its recall is high and its precision, \briefDevelopmentPrecision{}, sits a few points above the base rate of \briefDevelopmentBase; its F1, \briefDevelopmentFOne, beats \texttt{always\_hold}'s by \briefDevelopmentFOneMargin. The brief states a rule, and the ``view rule'' column applies that rule to the same turns: F1 \briefDevelopmentStateFOne{} on development, \briefHeldoutAStateFOne{} on held-out A and \briefHeldoutBStateFOne{} on held-out B. The 8B model read the brief as a reason to hold, not as a test to apply. The engine that implements the rule in code refuses with precision \engineDevelopmentPrecision{} and recall \engineDevelopmentRecall{} on development and needs no model, no GPU and no brief. The rule's floor, beating the two constant controllers, is passed by a controller that is mostly one of them.
+
+\paragraph{What a refusal costs.} Before the fix a refused turn also arrived as a missing proposal, which BitAgent counts as a failed attempt: when its retries ran out the run was held, where the host's own refusal of the same move lets the run continue. Under that path the briefed controller's correct holds cut completions on the development seeds from 816 to 651. % source: runtime-phase9-brief-b1-dev-full.json, outcomes (runs before the fix; completions do not depend on the labels)
+The runner now treats a control refusal like its own: the step is used, the node stays, the run goes on. The completion columns of Tables~\ref{tab:base}--\ref{tab:engine} are under that path. Holds still cost what they use: the briefed controller's take the development seeds from \briefDevelopmentCfcWithout{} completions to \briefDevelopmentCfcWith{} (held-out A \briefHeldoutACfcWithout{} to \briefHeldoutACfcWith, held-out B \briefHeldoutBCfcWithout{} to \briefHeldoutBCfcWith), because most of them stop moves that were right. The engine's refusals cost none (\engineDevelopmentCfcWithout{} to \engineDevelopmentCfcWith): it refuses only executes the host's own gates would have stopped later.
+
+\paragraph{The controller across runtimes.} Table~\ref{tab:live} runs the pinned controller with no brief live across all four arms, deciding the calls of the reference policies, so the controller's path is exercised in each runtime regardless of the actor's skill. In \liveRuns{} runs it took \liveTurns{} turns and held \liveHolds{} times; it intervened \liveInterventions{} times, and all \liveReached{} interventions reached the agent. They carried nothing the agent's own state did not show: most were generic exhortations (``Please review the task and ensure all necessary actions are taken'') or reminders of the event that triggered the turn. That is why the brief tells the controller not to intervene to repeat the rules or encourage the agent. Every hard gate stayed at zero in every arm. The mix of actions differs between arms (under the goose fork the controller passed far more often), so the same controller is not the same monitor under every runtime, even though its path through each is.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{\input{generated/tab_live.tex}}
+\caption{The pinned controller (no brief) live in each runtime arm, deciding the reference policies' calls (two random seeds a scenario). Scored on all controller turns.}
+\label{tab:live}
+\end{table}
+
+\section{Discussion and limitations}
+
+\paragraph{What held and what did not.} The control path held in every arm and every run: no unauthorized effect, no bypass, no unproposed call, nothing off the machine. Everything else we learned came from places a scripted bench does not reach: the prompt, the runtime's own conventions, and the measurement. Six of the seven live defects were in our harness, not in the control plane or the models; the seventh was a gap in how the step environment tied effect classes to tools. All three qualification problems were in our method.
+
+\paragraph{What the brief shows.} The brief told the controller which faults to look for, and the controller passed the signed rule without applying them: it held most turns, and the rule written in its brief, applied to the same turns, does far better. A pass of v2 was meant to show the controller reads the faults its view shows; this one shows a controller that holds often enough to clear two constant baselines. The rule's floor is necessary and not sufficient. A stricter rule would compare a controller with the deterministic rule its brief states, or require precision well above the base rate rather than significantly above it; we did not change the signed rule after seeing these results, and report the comparison instead. Where the deterministic engine suffices, it is better on every count here, and it does not fail when its server runs out of memory, which the controller's did several times on a shared GPU; the runner now refuses to start a run while the controller is down.
+
+\paragraph{Limitations.} All results are on one bench: held-out A shares its scenarios with development, and held-out B is a different scenario family from the same generator. One model family was used, in 1-bit form, and the qualification actors are scripted reference policies, not models. One brief was tried. The live controller ran on a GPU shared with other jobs, so timings are not throughput measurements. Labels are BitAgent's oracle's; where the oracle is wrong, so are our scores.
+
+\section{Related work}
+
+AI control studies safety protocols that hold even if the model is adversarial, using a weaker trusted model to monitor a stronger untrusted one \citep{greenblatt2024control}; our controller is a trusted monitor in that sense, and our qualification is a test of whether it monitors at all. CaMeL separates control flow from untrusted data so that injected text cannot change what an agent does \citep{debenedetti2025camel}; our renderer's rule that the controller never reads free text is the same separation at a smaller scale. AgentDojo and $\tau$-bench evaluate agents' tool use under attack and with users \citep{debenedetti2024agentdojo,yao2024taubench}; our bench differs in that its oracle labels every decision and its host, not the agent, holds the authority to commit, as LLM-Modulo frameworks place external verifiers in charge of acceptance \citep{kambhampati2024llmmodulo}. Guardrail toolkits and safety classifiers filter model inputs and outputs \citep{rebedea2023nemo,inan2023llamaguard}; the control plane here gates actions, at the boundary between the runtime and the world, whatever the text said.
+
+\section{Conclusion}
+
+One control plane can sit under two quite different agent runtimes and hold the same run contract in both, with every scripted run unchanged by the runtime. The first live models did not break the control path, but they broke almost everything around it, and the most useful findings were about measurement: a qualification floor a lookup passes, a counterfactual replay that misstates a controller with memory, and a scoring path in which every refusal looked right. Judged live with those corrected, a 1-bit 8B controller with no brief fails, and with a brief it passes the signed rule on held-out scenarios while holding most turns, far below the rule its own brief states; the deterministic engine that implements the rule is better on every measure here. For this bench the useful controller is the engine, and a model controller has yet to show it adds anything a rule over the visible state does not.
+
+\paragraph{Reproduction.} Code, run directories and rules are in Goose-Experiments \citep{gooseexperiments2026} and BitAgent \citep{bitagent2026}; every number above is generated by \nolinkurl{paper/make_tables.py} from those files. The qualification rules are \nolinkurl{configs/controller_qualification_v1.json} and \nolinkurl{_v2.json}, the brief protocol \nolinkurl{configs/controller_brief_protocol_v1.json}, and the brief \nolinkurl{configs/controller_briefs/bitagent-b1.txt}.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

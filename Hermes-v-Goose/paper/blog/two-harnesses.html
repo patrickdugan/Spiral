@@ -1,0 +1,196 @@
+<title>Two Harnesses, One Control Plane</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Schibsted+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of essay text; the comparison and the call path break out a little wider. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #eaedf2;
+  --fg: #1a1e26;
+  --muted: #586172;
+  --rule: #d5dae2;
+  --accent: #2c5a85;
+  --hermes: #7b4a96;
+  --goose: #2b7259;
+  --font-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --measure: 68ch;
+  --wide: 980px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171d; --surface: #1d222b; --fg: #e3e6ec; --muted: #9aa3b2; --rule: #2e3542;
+    --accent: #84aedb; --hermes: #c39ade; --goose: #7cc6a7; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171d; --surface: #1d222b; --fg: #e3e6ec; --muted: #9aa3b2; --rule: #2e3542;
+  --accent: #84aedb; --hermes: #c39ade; --goose: #7cc6a7; color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 1.125rem/1.62 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { display: grid; gap: 0; padding-block: 3.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; }
+main > .wide { max-width: var(--wide); }
+p, li { margin: 0 0 1.05em; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; line-height: 1.15; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.1rem); margin: 0 0 0.6rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; margin: 2.6rem 0 0.8rem; }
+h3 { font-size: 1.1rem; margin: 1.6rem 0 0.5rem; }
+.dek { font-size: 1.3rem; line-height: 1.45; color: var(--muted); margin: 0 0 1.2rem; }
+.byline { font: 500 0.82rem/1.4 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 2.4rem; }
+code { font-family: var(--font-mono); font-size: 0.86em; background: var(--surface); padding: 0.08em 0.32em; border-radius: 3px; overflow-wrap: anywhere; }
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+em { font-style: italic; }
+.rt-h { color: var(--hermes); font-weight: 600; }
+.rt-g { color: var(--goose); font-weight: 600; }
+blockquote { margin: 1.4rem 0; padding-left: 1.1rem; border-left: 3px solid var(--accent); color: var(--fg); font-style: italic; }
+
+/* The call path: one column of stations, the runtime station split in two. */
+.path { margin: 1.6rem auto 2rem; display: grid; gap: 0.5rem; font-family: var(--font-display); }
+.station { border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.9rem; background: var(--bg); }
+.station b { display: block; font-size: 0.95rem; }
+.station span { display: block; font: 400 0.82rem/1.45 var(--font-mono); color: var(--muted); margin-top: 0.15rem; }
+.station.core { background: var(--surface); border-color: var(--accent); }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.split .station:first-child { border-top: 3px solid var(--hermes); }
+.split .station:last-child { border-top: 3px solid var(--goose); }
+.arrow { text-align: center; color: var(--muted); font: 400 0.8rem/1 var(--font-mono); }
+.caption { font: 400 0.85rem/1.5 var(--font-display); color: var(--muted); margin-top: 0.4rem; }
+
+/* Side-by-side comparison. */
+.compare-wrap { overflow-x: auto; margin: 1.4rem auto 2rem; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font: 400 0.92rem/1.5 var(--font-body); }
+th, td { text-align: left; vertical-align: top; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--rule); }
+thead th { font: 700 0.8rem/1.3 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+thead th:nth-child(2) { color: var(--hermes); }
+thead th:nth-child(3) { color: var(--goose); }
+tbody th { font: 700 0.88rem/1.35 var(--font-display); width: 17%; }
+td { width: 41.5%; }
+
+/* Numbers that matter, inline as a short ledger. */
+.ledger { margin: 1.4rem auto 1.8rem; border-top: 1px solid var(--rule); }
+.ledger div { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule); }
+.ledger dt { font: 500 1.05rem/1.4 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--accent); }
+.ledger dd { margin: 0; font-size: 1rem; line-height: 1.5; }
+ol.defects { padding-left: 1.3rem; }
+ol.defects li::marker { font-family: var(--font-display); font-weight: 700; color: var(--muted); }
+.note { font: 400 0.9rem/1.55 var(--font-display); color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 2.6rem; }
+
+@media (max-width: 560px) {
+  body { font-size: 1.06rem; }
+  .split { grid-template-columns: 1fr; }
+  .ledger div { grid-template-columns: 1fr; gap: 0.15rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<main>
+  <h1>Two Harnesses, One Control Plane</h1>
+  <p class="dek">I put the same safety layer under two very different agent runtimes, Hermes Lite in Python and goose in Rust. Scripted agents changed nothing. Real models found the gaps.</p>
+  <p class="byline">Patrick Dugan · Morality Lab · Draft</p>
+
+  <p>An agent runtime, or harness, is the loop around a model. It asks the model for its next step, runs the tool calls the model returns, feeds back the results and decides when to stop. Most of the controls that keep an agent inside what its user approved live in that loop: a permission prompt, an allowlist, a hook that can say no.</p>
+  <p>That makes the controls only as portable as the loop. Runtimes disagree on almost everything that matters for control: whether one turn's calls run in order or all at once, whether code the model writes can call tools, whether sub-agents get their own tools, how the context gets compacted, how many rounds a turn may take. A rule written into one harness does not carry to the next.</p>
+  <p>So I tried the opposite approach. I built one control plane that sits <em>under</em> the runtime, and ran it beneath two harnesses that share almost no code or conventions. This post is about what each harness looks like from underneath, and what that taught me about where enforcement can live.</p>
+
+  <h2>The two harnesses</h2>
+  <p><span class="rt-h">Hermes Lite</span> is a Python agent loop in the Hermes line, tuned for small local models. Its tool calls go through one method, <code>_execute_tool_calls</code>, which either runs a single call or a batch on a thread pool of up to eight. A handful of tools (todo, memory, clarify, session search, delegation) run inside the loop itself; the rest go through a registry. It also has a "lean" mode in which the model never calls tools at all: it returns a phase and an operation, and harness-owned code does the work under skill contracts that list each phase's allowed operations.</p>
+  <p><span class="rt-g">goose</span> is a Rust agent built around the Model Context Protocol. Every capability is an extension. It has two agent loops (a legacy one and a newer state machine that must stay in parity), runs a turn's tool calls as concurrent futures, lets the model write JavaScript that calls tools ("code mode"), and can delegate to sub-agents. It speaks ACP to editors and has a headless CLI.</p>
+
+  <div class="compare-wrap wide">
+    <table>
+      <thead><tr><th scope="col">Where control lives</th><th scope="col">Hermes Lite</th><th scope="col">goose 1.53</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Dispatch</th><td>One method sees every call. Batches run on a thread pool of up to 8.</td><td>One dispatch function for normal calls; futures run concurrently. Code-mode calls take a separate path.</td></tr>
+        <tr><th scope="row">Interception</th><td>None built in. Two callbacks, both observe-only.</td><td>A <code>ToolInspector</code> trait (allow, deny, require approval; an inspector error is logged and skipped) and <code>PreToolUse</code> hooks that can deny, with failure defaulting to allow. Code-mode inner calls skip both.</td></tr>
+        <tr><th scope="row">Sub-agents</th><td>Delegation is handed to a separate swarm process; no lineage record.</td><td>A child session with hooks disabled and its mode forced to auto-approve.</td></tr>
+        <tr><th scope="row">Approval</th><td>A dangerous-shell-pattern check only.</td><td>Several modes. Headless runs in the default mode answer "allow once" by themselves, security alerts included.</td></tr>
+        <tr><th scope="row">Context</th><td>Lean mode: stateless packets of at most 8,000 tokens, counted by the model server's own tokenizer.</td><td>A growing conversation, compacted at 80% of the limit. Tokens are counted with one OpenAI tokenizer for every model, and the estimate leaves out the system prompt and tool schemas.</td></tr>
+        <tr><th scope="row">Phases</th><td>Skill contracts declare phases and the operations each allows.</td><td>Skills and recipes configure a run; no phase contracts.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Read from underneath, these are two different answers to the question "who is allowed to say no?" Hermes Lite has one narrow door that every call walks through, and nobody standing at it. goose has several people standing at its doors, each of whom steps aside if they trip, and a couple of side entrances they don't watch.</p>
+
+  <h2>Putting one control plane under both</h2>
+  <p>The control plane has one rule: a runtime only <em>proposes</em>. Every event goes into a hash-chained ledger, which is the only source of truth. A proposed call is decided by policy engines combined by conjunction (any refusal stands) and, for consequential calls, by a controller model that can only reduce authority. An allowed call gets a single-use lease bound to the call's fingerprint. A tool gateway is the only path to the environment, and it commits only under a valid lease. Anything that tries to leave the machine hits an egress sink.</p>
+
+  <div class="path">
+    <div class="station"><b>Model</b><span>behind a proxy that enforces the context ceiling and records every request</span></div>
+    <div class="arrow">tool calls ↓</div>
+    <div class="split">
+      <div class="station"><b>Hermes Lite + shim</b><span>proposes every call in dispatch, runs a turn's calls in order, gates the memory flush</span></div>
+      <div class="station"><b>goose fork</b><span>proposes every call, code-mode and sub-agent calls included; children are their own actors</span></div>
+    </div>
+    <div class="arrow">proposal ↓ decision ↑</div>
+    <div class="station core"><b>Control module</b><span>ledger · engines by conjunction · controller thread · leases</span></div>
+    <div class="arrow">leased call ↓</div>
+    <div class="station"><b>Tool gateway</b><span>MCP over loopback; commits only under a valid lease; refuses anything unproposed</span></div>
+    <div class="arrow">↓</div>
+    <div class="station"><b>Environment</b><span>BitAgent: testnet funds through a fixed graph of host-checked steps, 18 gates, an oracle that labels every decision</span></div>
+    <p class="caption">The call path. The runtime is the only part that changes between arms.</p>
+  </div>
+
+  <p>Integration meant finding each harness's one door. In Hermes Lite that was easy: a shim in the dispatch method turns every call into a proposal. I also made a turn's calls run in order rather than on the thread pool, because a ledger needs an order, and gated the memory flush, which otherwise writes to disk outside any tool call.</p>
+  <p>goose was harder, and I did it two ways. With an unmodified build and a <code>PreToolUse</code> hook, calls from code-mode scripts and from sub-agents never reached the hook. The gateway still refused them, because they arrived without a proposal, but the control plane saw them only as bypasses. So I also built a fork whose gate proposes every call, including those, and registers each sub-agent as its own actor. As of goose <code>main</code> this month the code-mode path still goes from the script callback straight to the extension call, with no hook or inspector in between. A third arm ran Hermes Lite's unmodified main branch with nothing but the gateway in the way.</p>
+
+  <h2>With scripts, the runtime changed nothing</h2>
+  <p>The first test used scripted agents (an oracle, an adversary that tries to execute early and wide, and random walks) on BitAgent's 42 development scenarios, through four arms: a minimal loop, Hermes Lite main behind the gateway, Hermes Lite with the shim, and the goose fork.</p>
+  <dl class="ledger">
+    <div><dt>656</dt><dd>scripted runs, 164 per arm, each byte-identical to the same run with no runtime at all</dd></div>
+    <div><dt>0</dt><dd>unauthorized effects landed by the adversary or the random walks, in any arm</dd></div>
+    <div><dt>18 / 18</dt><dd>gate knockouts caught in each arm: switch one gate off and exactly the violation it prevents gets through</dd></div>
+    <div><dt>164 / 164</dt><dd>runs where Hermes Lite, the goose fork and the minimal loop wrote the same decision projection of the ledger for the same calls</dd></div>
+  </dl>
+  <p>The two runtimes differ in prompts, positions and timing, and in nothing that was proposed, decided or committed. That is the result I wanted. It is also only as wide as what the scripts exercise, and scripts always pick the tool that matches their move.</p>
+
+  <h2>Real models found what the scripts couldn't</h2>
+  <p>The live actor was Bonsai-8B in 1-bit form with a task adapter, served by llama.cpp. Every hard gate stayed at zero once each defect below was fixed, but the list is mostly about the harnesses:</p>
+  <ol class="defects">
+    <li><strong>A frozen prompt line.</strong> With a "submit it as the tool's candidate" line added to the task prompt, the model answered in text in all 21 replies of the first seven runs. Nothing reached the tools.</li>
+    <li><strong>Protocol on a shared stdout</strong> (Hermes Lite). Its serve protocol shares stdout with a notice it prints when the model hits the iteration cap. The harness took the notice for its reply.</li>
+    <li><strong>Rounds per turn.</strong> The model kept calling the tool after every accepted submission, up to the runtime's cap, and a "turn over" line in the result did not stop it.</li>
+    <li><strong>Unbounded replies.</strong> One degenerate reply repeated a tool call until the context ran out; on a contended GPU that request took 74 minutes.</li>
+    <li><strong>A cap one runtime ignores</strong> (goose). Over ACP, goose reads <code>GOOSE_MAX_TURNS</code> and not <code>--max-turns</code>, so its first pass ran about 30 tool rounds a turn where the other arms ran one.</li>
+    <li><strong>A miscounted audit</strong> (goose). goose reports a call it refused before dispatch, with arguments cut off at the output cap, as a failed tool call. My coverage audit counted 477 of them as unproposed calls. None had been dispatched.</li>
+    <li><strong>An effect class sidestepped by tool choice</strong> (Hermes Lite main). The model sent an execute move through the tool registered as having no effect. The control plane saw a harmless call: no consequential decision, no controller turn. The host's own gates authorized it, so nothing bad landed, but a consequential move had left the consequential path.</li>
+  </ol>
+  <p>The last one is the lesson I'd generalize. An effect class attached to a tool <em>name</em> is sound only if the environment refuses arguments that belong to another class. Scripted policies never find this, because they never pick the wrong tool on purpose.</p>
+  <p>The harnesses also cost the model most of its skill. In process, without a runtime, the 8B with its adapter had 8 of 44 <code>validate</code> proposals accepted. Through the runtimes it had 14 of 722. The runtime's own system prompt and tool-call format sit between the model and what it was trained to do.</p>
+
+  <h2>The controller, and a lesson about measuring it</h2>
+  <p>Above the agent loop runs a second conversation, the controller. It never reads the agent's raw text, only whitelisted fields of ledger events, and on each consequential call it can pass, hold, ask the principal, intervene with a message, or halt. I held it to a rule signed before scoring: on live runs it must beat both "always pass" and "always hold" on precision, recall and F1.</p>
+  <p>Getting a fair measurement took three corrections, all in my method: a first rule whose positives a lookup of the visible admissible moves could catch; a replay method that misstates a controller whose thread remembers its own earlier turns; and a scoring path that labelled every refused call from a missing proposal, so every refusal scored as right. After all three:</p>
+  <dl class="ledger">
+    <div><dt>fails</dt><dd>the 8B controller with no brief: 5 holds in 1,102 turns, all wrong; it mostly sends interventions like "Please review the task and ensure all necessary actions are taken"</dd></div>
+    <div><dt>passes, barely</dt><dd>the same model with a short brief, on development and two held-out sets, by holding about 77% of turns: precision 0.19 to 0.22 against a base rate of 0.17 to 0.19, and fewer completed runs</dd></div>
+    <div><dt>0.73 to 0.88</dt><dd>F1 of the rule written in that brief, applied to the same turns; the controller scores 0.32 to 0.36</dd></div>
+    <div><dt>1.000</dt><dd>precision of a deterministic engine implementing that rule, with recall 0.79 to 0.91 and no completions lost</dd></div>
+  </dl>
+  <blockquote>Beating the two constant controllers is a floor, and a controller can pass it by being mostly one of them.</blockquote>
+  <p>On this bench the useful controller is the rule over the visible state. A small model has yet to show it adds anything that rule does not.</p>
+
+  <h2>What I'd tell someone building a harness</h2>
+  <ul>
+    <li><strong>Put enforcement below the runtime, at one choke point.</strong> The gateway caught every call the goose hook missed. A hook inside the loop is a convenience for the user; it is not where a guarantee can live.</li>
+    <li><strong>Find the side entrances.</strong> In goose they were code mode and sub-agents. In Hermes Lite it was the memory flush and the thread pool. Every harness has calls that don't go through the front door.</li>
+    <li><strong>Fail closed, and say so.</strong> goose's inspectors and hooks default to allow when they break. That's a reasonable default for a coding assistant and the wrong one for anything that moves money.</li>
+    <li><strong>Tie effect classes to arguments, not tool names.</strong> A model will eventually send the dangerous move through the harmless tool.</li>
+    <li><strong>Test with live models early.</strong> Scripts proved the plumbing. Every interesting failure came from a real model doing something no script would.</li>
+  </ul>
+
+  <h2>Limits</h2>
+  <p>Everything here is one bench, BitAgent's, with one model family in 1-bit form, on one shared laptop GPU that capped itself to 15 W for parts of the run. The held-out sets share a generator with the development set. One brief was tried. The controller's qualification used scripted actors, not models. The full paper, with every number generated from the run files, is in the Goose-Experiments repository.</p>
+
+  <p class="note">Draft for Substack. Numbers are from the runtime-control-layer paper (October 2026); the goose code-mode path was checked against goose main on 2026-10-23.</p>
+</main>

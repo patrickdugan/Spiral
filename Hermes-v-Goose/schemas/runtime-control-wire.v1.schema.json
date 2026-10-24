@@ -1,0 +1,523 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://control-harness.local/schemas/runtime-control-wire.v1.schema.json",
+  "title": "Runtime control plane wire types",
+  "description": "One message between runtime shims, the control module, the tool gateway and the model proxy: a kind and its body. src/runtime_control/wire.py enforces the proposal, provenance, outcome and registry shapes; tests/test_runtime_control_wire.py keeps the two in step. Hashed objects use sorted-key compact JSON with no floats.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "body"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "proposal",
+        "decision",
+        "outcome",
+        "registry"
+      ]
+    },
+    "body": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "proposal"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "$ref": "#/$defs/proposal"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "decision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "$ref": "#/$defs/decision"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "outcome"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "$ref": "#/$defs/outcome"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "registry"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "$ref": "#/$defs/registry"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agentId",
+        "lineage"
+      ],
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "role": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "commit",
+        "shimHash",
+        "tier"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shimHash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tier": {
+          "enum": [
+            "gateway_only",
+            "hooks",
+            "fork",
+            "harness"
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "surface",
+        "attestation",
+        "contextTaint"
+      ],
+      "properties": {
+        "schema": {
+          "const": "control.provenance.v1"
+        },
+        "surface": {
+          "enum": [
+            "agent_loop",
+            "code_mode",
+            "subagent",
+            "lean_phase",
+            "sidecar",
+            "app_call",
+            "final_output",
+            "skill_load",
+            "gateway_only"
+          ]
+        },
+        "attestation": {
+          "enum": [
+            "shim",
+            "gateway_only"
+          ]
+        },
+        "nativeCallId": {
+          "type": "string"
+        },
+        "modelTurn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "turnId",
+            "requestSha256",
+            "responseSha256",
+            "modelHash"
+          ],
+          "properties": {
+            "turnId": {
+              "type": "string"
+            },
+            "requestSha256": {
+              "type": "string"
+            },
+            "responseSha256": {
+              "type": "string"
+            },
+            "modelHash": {
+              "type": "string"
+            },
+            "adapterHash": {
+              "type": "string"
+            }
+          }
+        },
+        "skill": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "sha256"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "phase": {
+              "type": "string"
+            }
+          }
+        },
+        "contextTaint": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "evidenceId",
+              "trust"
+            ],
+            "properties": {
+              "evidenceId": {
+                "type": "string"
+              },
+              "trust": {
+                "enum": [
+                  "host_verified",
+                  "provider_reported",
+                  "untrusted_text"
+                ]
+              }
+            }
+          }
+        },
+        "argRefs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "claims": {
+          "type": "array"
+        }
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "runId",
+        "seq",
+        "actor",
+        "runtime",
+        "tool",
+        "args",
+        "fingerprint",
+        "contractHash",
+        "provenance",
+        "proposedAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "control.tool_call_proposal.v1"
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actor": {
+          "$ref": "#/$defs/actor"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "nativeName",
+            "registryHash"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "nativeName": {
+              "type": "string"
+            },
+            "registryHash": {
+              "type": "string"
+            }
+          }
+        },
+        "args": {
+          "type": "object"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "contractHash": {
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "proposedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "decision": {
+      "description": "Returned by decide; the full record is the control_decision ledger payload.",
+      "type": "object",
+      "required": [
+        "decisionId",
+        "effectClass",
+        "fingerprint",
+        "nextAuthority",
+        "reasonCodes",
+        "verdict"
+      ],
+      "properties": {
+        "decisionId": {
+          "type": "string"
+        },
+        "effectClass": {
+          "enum": [
+            "none",
+            "read",
+            "local_write",
+            "state_change",
+            "delegation",
+            "authority"
+          ]
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "nextAuthority": {
+          "enum": [
+            "none",
+            "principal",
+            "lease"
+          ]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "verdict": {
+          "enum": [
+            "allow",
+            "deny",
+            "escalate"
+          ]
+        },
+        "lease": {
+          "type": "object",
+          "required": [
+            "leaseId",
+            "expiresAt"
+          ],
+          "properties": {
+            "leaseId": {
+              "type": "string"
+            },
+            "expiresAt": {
+              "type": "string"
+            }
+          }
+        },
+        "escalationId": {
+          "type": "string"
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "fingerprint",
+        "status",
+        "resultSha256",
+        "resultBytes",
+        "evidenceIds",
+        "durationMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "control.tool_call_outcome.v1"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "decisionId": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "error",
+            "denied",
+            "timeout",
+            "cancelled"
+          ]
+        },
+        "resultSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "resultBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resultTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "effectId": {
+          "type": "string"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "view": {
+          "type": "object",
+          "description": "The environment's public state after the call, as the gateway reports it."
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "tools"
+      ],
+      "properties": {
+        "schema": {
+          "const": "control.tool_registry.v1"
+        },
+        "tools": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "effectClass"
+            ],
+            "properties": {
+              "effectClass": {
+                "enum": [
+                  "none",
+                  "read",
+                  "local_write",
+                  "state_change",
+                  "delegation",
+                  "authority"
+                ]
+              },
+              "controllerVisible": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "controllerHidden": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

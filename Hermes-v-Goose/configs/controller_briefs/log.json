@@ -1,0 +1,13 @@
+{
+  "protocol": "configs/controller_brief_protocol_v1.json",
+  "tried": [
+    {
+      "brief": "bitagent-b1.txt",
+      "development": "subset (seeds 0-14 with oracle and adversary), brief-dev-b1: 714 runs, 400 admissible-move turns (222 positive), holds 198, passes 202, no interventions; precision 1.000, recall 0.892, F1 0.943 (always_hold 0.714); v2 conditions pass",
+      "chosen": true,
+      "why": "recall 0.892 is at the ceiling of what the view shows (the best visible-state rule reaches 0.896 on collect-v3), with no false holds, so another brief has little to gain and adds a chance to fit the development seeds"
+    }
+  ],
+  "chosenBrief": "bitagent-b1.txt",
+  "chosenAt": "2026-10-15, before the full development run and before either held-out set was run"
+}

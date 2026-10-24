@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Run output: ledgers, truth planes, goose roots and model records are local evidence, not source.
+results/
+runs/
+*.jsonl
+!schemas/**/*.jsonl

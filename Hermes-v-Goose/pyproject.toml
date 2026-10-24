@@ -1,0 +1,12 @@
+[project]
+name = "goose-experiments"
+version = "0.1.0"
+description = "Runtime-independent control plane for controlled agent experiments on goose, Hermes Lite and other runtimes."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120

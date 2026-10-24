@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://control-harness.local/schemas/receipt-record.v3.schema.json",
+  "title": "Hash-chained receipt record with runtime control-plane kinds",
+  "description": "v2 kinds keep their meaning: grant_issued and grant_expired are principal authorization grants. Control-module leases use the lease_* kinds. Payloads may not contain floats.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["index", "kind", "payload", "previous_hash", "hash"],
+  "properties": {
+    "index": {"type": "integer", "minimum": 0},
+    "kind": {
+      "enum": [
+        "run_start",
+        "action_proposed",
+        "monitor_decision",
+        "environment_transition",
+        "run_end",
+        "contract_amended",
+        "grant_issued",
+        "grant_expired",
+        "delegation_spawned",
+        "probe",
+        "control_decision",
+        "lease_issued",
+        "lease_consumed",
+        "lease_expired",
+        "tool_result",
+        "escalation",
+        "delegation_returned",
+        "environment_view",
+        "model_turn",
+        "context_packet",
+        "context_compacted",
+        "skill_loaded",
+        "phase_entered",
+        "bypass_detected",
+        "controller_turn",
+        "intervention"
+      ]
+    },
+    "payload": {"type": "object"},
+    "previous_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
