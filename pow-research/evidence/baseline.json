@@ -1,0 +1,40 @@
+{
+  "base_commit": "a9aa6ac7cb42e9ad7f40e4d7aa8d0b038b15ba9b",
+  "budget_per_instance": 4096,
+  "evidence_class": "bounded_synthetic",
+  "instances": 48,
+  "local_python": "3.13.5",
+  "named_tests_passed": 32,
+  "outcomes": {
+    "bitwin": {
+      "solved": 8
+    },
+    "cunningham1": {
+      "solved": 8
+    },
+    "cunningham2": {
+      "solved": 8
+    },
+    "ecdlp": {
+      "solved": 8
+    },
+    "hashcash": {
+      "budget_exhausted": 1,
+      "solved": 7
+    },
+    "sat": {
+      "exhaustive_unsat": 2,
+      "solved": 6
+    }
+  },
+  "remote_ci": "unobserved_at_receipt_creation",
+  "report_sha256": "956b46cd5b2b6c27ed7fb370494100fb648898681d7c5f4f3eb4633ef553d823",
+  "schema": "spiral-pow-evidence-v1",
+  "seeds": 8,
+  "source_sha256": {
+    "pow_lab.py": "2bb8f0a34e638498078456c282ffcf1c66cb82384bc79f5ecf42c5cc342a8156",
+    "test_pow_lab.py": "1595eb26ef2a07164dbbd417ff29a260e1af23c0f90b7a1fb44906c8b5c274a7",
+    "verify_evidence.py": "381d86e4f8a00f6461f6b7231b23c0d1d74c7748ad6d9bd2f240adf0730d1050"
+  },
+  "verified_witnesses": 45
+}

@@ -1,0 +1,23 @@
+name: PoW research lab
+on:
+  push:
+    paths: ['pow-research/**', '.github/workflows/pow-research.yml']
+  pull_request:
+    paths: ['pow-research/**', '.github/workflows/pow-research.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bounded-offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Interpreter
+        run: python3 --version
+      - name: Finite oracles and adversarial checks
+        run: python3 -m unittest discover -s pow-research -p 'test_*.py' -v
+      - name: Replay retained evidence
+        run: python3 pow-research/verify_evidence.py
