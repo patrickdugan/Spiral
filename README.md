@@ -128,6 +128,10 @@ The campaign reports episode precision and recall, false-positive rate, entity r
 
 `paper/manuscript.md` (*Connector Calculus*) is frozen at baseline `a0a3140` and hash-bound by `audit/validate_bundle.py`; corrections are recorded in `paper/manuscript_errata.md` rather than applied in place. The audit's own papers are `paper/liquidity_on_trial.md` and `paper/connector_calculus_critique.md`; its evidence classes, receipts, and scripts are described in [`audit/README.md`](audit/README.md).
 
+## General proof-of-work research
+
+The explicitly satirical *Olde Coin Pump* label belongs to the isolated [PoW Research Lab](pow-research/README.md). That folder studies proof-of-work complexity, prime-chain certificate semantics, source-derived Primecoin acceptance checks and reorg-sensitive duplicate policies. These offline experiments neither issue tokens nor integrate with wallets or networks and make no claim about Spiral/Block sponsorship or grant allocation.
+
 ## Also in this repository
 
 The blue-team sandbagging evaluation and its graded arena, the evaluation design calculus with its exact testbed, and the Prime Intellect example atlas are evaluation-design work that shares this repository but not the liquidity question. Their run instructions moved unchanged to [`docs/evaluation_harnesses.md`](docs/evaluation_harnesses.md); their design documents remain under `paper/`.

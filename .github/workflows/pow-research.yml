@@ -21,3 +21,5 @@ jobs:
         run: python3 -m unittest discover -s pow-research -p 'test_*.py' -v
       - name: Replay retained evidence
         run: python3 pow-research/verify_evidence.py
+      - name: Replay stage-2 source-derived evidence
+        run: python3 pow-research/verify_phase2.py

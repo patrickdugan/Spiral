@@ -1,0 +1,25 @@
+{
+  "base_commit": "d3c6ee7da7e3653a0841999b86a9e08f53a3298d",
+  "contexts": 6,
+  "domain_bits": [
+    8,
+    10,
+    12,
+    14
+  ],
+  "evidence_class": "bounded_synthetic",
+  "named_tests_passed": 59,
+  "report_sha256": "8d588772845a6e782fdb4ceaeb796c03cb73e9c286a46b00aa8ecaf09fd63b35",
+  "schema": "spiral-pow-stage2-evidence-v1",
+  "source_sha256": {
+    "primecoin_reference.py": "d88fce268162ce3e7ca96f5ae8eb089674b535e0666f85b082fd588fc28922dd",
+    "reorg_registry.py": "a50ae60cebd7b411dd5478f20aa05aab4b4e018f2c8c993b0c632dda5fbbf42e",
+    "reuse_campaign.py": "ab6e94092c111bf271764a9088faa662132f9d47e2de620a17f11d56ea00c16e",
+    "test_stage2.py": "2b9910d8734e0825a2d5ed471c42a2807483d55c6b0053362556d0133106b359",
+    "verify_phase2.py": "eef5d021f1af1fdf09ea2626937857658986dc037367b4d54de5b2a22a06f4f8"
+  },
+  "tickets_per_context": 128,
+  "upstream_commit": "8acbee471c69a39bdb04ac2a941edb7112fb5dfa",
+  "upstream_native_validation": false,
+  "upstream_repo": "primecoin/primecoin"
+}

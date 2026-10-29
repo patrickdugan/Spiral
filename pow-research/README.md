@@ -112,3 +112,9 @@ https://www.rfc-editor.org/rfc/rfc9380.html
 Sources checked October 29, 2026. S4 supplies historical complexity terminology;
 this prototype makes no claim about the current truth of ETH or a claimed new
 ECDLP algorithm. The originating social-media claims remain unverified here.
+
+## Stage 2: source-derived scoring and fork-local claims
+
+See [STAGE2.md](STAGE2.md) for the pinned upstream Primecoin code paths, an independent bounded 8.24 target-scoring model, Fermat versus Euler-Lagrange-Lifchitz cross-check fixtures, multiplier normalization, a reorganization-aware counterfactual registry and measured collision occupancy in deliberately small origin spaces.
+
+The expanded suite passes 59 Python unittest cases on the local evidence run. Verify the separate stage-2 receipt with `python pow-research/verify_phase2.py`. The scripts remain explicitly distinct from production Primecoin consensus and use no native Primecoin binary.
