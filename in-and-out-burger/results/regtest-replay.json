@@ -1,0 +1,114 @@
+{
+ "bitcoind": "/Satoshi:31.1.0/",
+ "failed": 0,
+ "float_btc_after_one_block_more": "99.99051216",
+ "float_btc_before": "50.0",
+ "gate": [
+  "/root/kan-gate/kan-payment-gate"
+ ],
+ "passed": 8,
+ "steps": [
+  {
+   "ok": true,
+   "result": {
+    "in": {
+     "address": "bc1q3czxrv2eptks5u37yxkpdayrzlxm965ktma3cu",
+     "block_hash": "000000000000000000017809af97fdd5530149e411b2ab091db4f405e355fe22",
+     "block_height": 975067,
+     "confirmations": 6,
+     "outpoint": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0",
+     "tip_chainwork": "156c4c3c54ad473bac5daf261",
+     "tip_height": 975072,
+     "value_sats": 940000
+    },
+    "payout": {
+     "broadcast": true,
+     "fee_sats": 1000,
+     "network": "regtest",
+     "rate_ppm": 1010000,
+     "sats": 948400,
+     "txid": "ed445369257b648b5ca5fb34b76659e55ba5747c0f2797d10fc4434021d4aaff"
+    },
+    "proof": "absent",
+    "sender": {
+     "kind": "p2wpkh",
+     "payout_address": "bcrt1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2qs9rzj",
+     "rule": "input0:p2wpkh",
+     "script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a"
+    },
+    "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+    "status": "served"
+   },
+   "step": "serve the M16 mainnet payment order"
+  },
+  {
+   "ok": true,
+   "result": {
+    "confirmations": 1,
+    "fee_sats": 384,
+    "link_output": true,
+    "outputs_to_sender_sats": [
+     948400
+    ],
+    "payout_txid": "ed445369257b648b5ca5fb34b76659e55ba5747c0f2797d10fc4434021d4aaff",
+    "sender_utxo_total_btc": "0.009484",
+    "vsize": 192
+   },
+   "step": "payout confirmed on regtest, sender script holds exactly the payout"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0 paid by ed445369257b648b5ca5fb34b76659e55ba5747c0f2797d10fc4434021d4aaff",
+    "reason": "already_served",
+    "status": "refused"
+   },
+   "step": "serve the same order again"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "payment wtxid is not under the block's witness commitment",
+    "reason": "sender_proof_witness",
+    "status": "refused"
+   },
+   "step": "forged witness (same txid)"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "58432f41ce2b63d9a8e65e9b5bed183cd2ed12a03fe2b6020cda00235c147283",
+    "reason": "script_not_registered",
+    "status": "refused"
+   },
+   "step": "menu pre-programmed with another address"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "tip 975072 chainwork 156c4c3c54ad473bac5daf261",
+    "reason": "chainwork_below_floor",
+    "status": "refused"
+   },
+   "step": "chainwork floor one above the proven tip"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "no final proof in the order",
+    "reason": "proof_required",
+    "status": "refused"
+   },
+   "step": "no proof, no --allow-unproven"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: 5df3760fed1620671151183a73c9407d528b2239a5cd243b14cf5c7b4d4af46b",
+    "reason": "proof_wrong_program",
+    "status": "refused"
+   },
+   "step": "guest A's real final proof offered for the M16 statement (kan-payment-gate check)"
+  }
+ ]
+}
