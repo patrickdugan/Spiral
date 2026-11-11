@@ -17,7 +17,7 @@ DUP, ROT, SWAP, CAT, EQUALVERIFY = 0x76, 0x7b, 0x7c, 0x7e, 0x88
 SHA256, CHECKSIGVERIFY, TRUE = 0xa8, 0xad, 0x51
 PUBKEYS = (
     bytes.fromhex("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"),
-    bytes.fromhex("c6047f9441ed7d6d3045406e95c07cd85a2d7c5d9b5f862d6bc79f1c1e74d"),
+    bytes.fromhex("c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"),
 )
 
 class Reject(ValueError):
