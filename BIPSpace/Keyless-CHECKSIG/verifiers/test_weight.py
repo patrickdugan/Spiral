@@ -17,8 +17,10 @@ class WeightTests(unittest.TestCase):
         tx2,script2,c2,w2=fixture(5,1)
         self.assertEqual(script1,script2)
         self.assertEqual(c1,c2)
-        self.assertEqual(weight(tx1,w1,script1,c1)["weight_units"],
-                         weight(tx2,w2,script2,c2)["weight_units"])
+        # Right-hand Merkle membership uses a one-byte direction flag;
+        # left-hand membership encodes false as an empty stack item.
+        self.assertEqual(weight(tx2,w2,script2,c2)["weight_units"],
+                         weight(tx1,w1,script1,c1)["weight_units"] + 1)
 
     def test_adding_witness_bytes_increases_weight(self):
         tx,script,c,wit=fixture()
