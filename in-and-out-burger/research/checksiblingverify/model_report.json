@@ -1,0 +1,43 @@
+{
+  "scope": "Symbolic UTXO and transaction model of a proposed sibling-check opcode and one-shot profile",
+  "tests_run": 43,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "exhaustive_substitution": {
+    "graphs": 24,
+    "combinations": 576,
+    "valid_same_graph": 24,
+    "rejected_cross_graph": 552
+  },
+  "implemented": [
+    "Exactly 12-byte uint32 little-endian descriptor semantics",
+    "Bitcoin non-witness transaction serialization and txids",
+    "BIP 446 annex-absent tagged TemplateHash",
+    "Fixed two-input terminal payout and atomic recovery transactions",
+    "UTXO existence, amounts, duplicate-input rejection and consumption",
+    "Block-height relative-lock boundary for the declared profile",
+    "Zero-valued fixed parent anchor with external fee child"
+  ],
+  "observed_boundaries": [
+    "At payout maturity, a valid fraud spend and delayed payout may both be valid; first confirmed wins",
+    "Distinct admitted graph roots can reimburse the same economic payment if admission permits duplicated claims"
+  ],
+  "ideal_predicates": [
+    "Correct and publicly evaluable setup with correct claim encoding before admission",
+    "Graph/statement/setup-bound fraud verification",
+    "Operator and fee-sponsor signature validity",
+    "NUMS/key-path exclusion and complete-tree audit recorded in manifest"
+  ],
+  "limitations": [
+    "No Bitcoin Core patch, Bitcoin Script execution, Taproot arithmetic or real proof verification",
+    "Symbolic script identifiers are not valid instantiated Taproot programs",
+    "Synthetic Assert admission; a real Reserve-to-Assert path must enforce the complete claim witness",
+    "No garbling soundness, proof-system soundness, data-availability or secret-erasure implementation",
+    "No relay, RBF, package acceptance, fee estimation, miner-inclusion or censorship analysis",
+    "No chain reorganizations, mempool model, global payment-nullifier set or complete bridge accounting",
+    "One-shot terminal recovery only; recurrent or reusable garbling remains outside scope",
+    "Only annex-absent, fixed two-input templates are modeled",
+    "Terminal recovery destination must preserve application liabilities; this model assumes its correctness"
+  ]
+}

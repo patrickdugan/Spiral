@@ -361,3 +361,6 @@ OP_CHECKCONTRACTVERIFY could hold the connectors. None of these is active on mai
 
 Standard library only (Python 3.10 or later). The gate is GPL-3.0-only because it links
 `m13-verify`, so it runs as a separate process.
+## Experimental sibling-covenant proposal
+
+The research-only [OP_CHECKSIBLINGVERIFY draft and executable adversarial model](research/checksiblingverify/README.md) explore replacing presigned connector-spending edges with a same-parent input check and fixed output templates. The design is unactivated, its crypto/setup predicates are idealized, and the funding and challenge assumptions are documented in the draft.

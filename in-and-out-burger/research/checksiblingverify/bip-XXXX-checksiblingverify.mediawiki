@@ -1,0 +1,295 @@
+<pre>
+  BIP: Unassigned
+  Layer: Consensus (soft fork)
+  Title: OP_CHECKSIBLINGVERIFY
+  Authors: To be assigned before submission
+  Status: Unsubmitted research draft
+  Type: Specification
+  Created: 2026-11-11
+  Requires: 341, 342
+  License: To be selected before submission
+</pre>
+
+== Abstract ==
+
+This document proposes a tapscript opcode that checks an exact relationship between two transaction inputs. Their outpoints must refer to distinct, specified outputs of the same creating transaction. The interpreter obtains the transaction identifiers from the actual spending transaction. A script can therefore require a particular sibling coin without embedding the identifier of its own creating transaction.
+
+A reference application combines this primitive with BIP 446 OP_TEMPLATEHASH to enforce a finite BitVM transaction graph. One assertion transaction creates a principal output and its dispute connector together. Settlement and successful disproval both consume that pair. The reference application replaces the presigned authorization of those graph edges with consensus predicates.
+
+The opcode operates independently of any proof system. BitVM garbling correctness, public-statement binding and availability of evaluation data remain obligations of the application. The reference graph covers a single funded claim whose terms are fixed before funding. Dynamic bridge state and global reimbursement uniqueness require additional constructions.
+
+== Status and provenance ==
+
+This is a research draft prepared for design review. Its BIP number, opcode byte and activation mechanism are unassigned. A small executable model accompanies it. Bitcoin Core integration, real tapscript execution and adversarial network tests remain implementation work.
+
+Anthony Towns described the underlying same-parent outpoint comparison in the April 16, 2025 discussion of CTV+CSFS and BitVM, including why it avoids circular transaction-identifier commitments [1]. Josh Doman's May 27, 2026 survey places related input-binding mechanisms in the wider covenant design space [2]. The proposed contribution is a restricted opcode interface with a concrete graph profile and attack cases.
+
+Here, ''sibling outputs'' means outputs created by one transaction. Some covenant discussions use ''sibling inputs'' more broadly for inputs of a spending transaction; that broader relation is outside this opcode's scope.
+
+== Motivation ==
+
+The BitVM3 bridge paper describes an n-of-n committee presigning withdrawals so that a reserve spend must also consume its intended assertion output. At least one participant must delete its signing key to prevent additional authorized transactions [3].
+
+An output-template covenant constrains destinations and values. A separate constraint is useful when the safety of the transaction also depends on consuming a particular connector. Checking that another input has a publicly known script or claim identifier establishes a script match. An attacker can create another UTXO with the same public program. The application needs the identity of the intended coin.
+
+Hardcoding both sides of a mutual dependency can create a hash cycle: each script participates in the creating transaction's identifier that the other script would have to embed. A comparison between actual outpoints avoids this construction problem when the outputs are created together.
+
+The proposed opcode checks that relation in constant time. Its application can retain separate principal and dispute outputs while enforcing atomic settlement and atomic recovery.
+
+== Consensus specification ==
+
+=== Activation context ===
+
+An available OP_SUCCESSx byte, selected through the BIP process, is reassigned to OP_CHECKSIBLINGVERIFY in tapscript leaf version 0xc0 after activation. The byte is intentionally unassigned in this draft. Execution in other script versions follows the rules of those versions.
+
+BIP 342 defines OP_SUCCESSx as a soft-fork extension mechanism [4]. Upgraded validation adds conditions to a spend that old validation would accept. The set of accepted blocks is restricted. Funding these scripts requires activation first, because the old OP_SUCCESSx behavior supplies no protection for the intended predicate.
+
+=== Stack argument ===
+
+The opcode consumes one stack element of exactly 12 bytes:
+
+<pre>
+uint32_le own_parent_vout
+uint32_le peer_input_index
+uint32_le peer_parent_vout
+</pre>
+
+These fields are fixed-width unsigned integers. They use no ScriptNum interpretation. Every 12-byte string has one decoding. The size is fixed to keep parsing and review simple. This draft supplies no flags or reserved-success argument encodings.
+
+Let T be the transaction being validated and i the index of the input whose script is executing. Let the decoded fields be a, j and b.
+
+Execution fails when the stack is empty or the top element has a length other than 12. After popping a correctly sized element, execution fails if any of the following conditions holds:
+
+* j is outside T.vin;
+* j equals i;
+* a equals b;
+* T.vin[i].prevout.n differs from a;
+* T.vin[j].prevout.n differs from b;
+* T.vin[i].prevout.hash differs from T.vin[j].prevout.hash.
+
+If all checks pass, execution continues. The opcode pushes no result. The surrounding script must still satisfy ordinary tapscript success conditions.
+
+The descriptor should be pushed as a constant by the application script. A witness-selected descriptor would let the spender choose the relationship being checked. That construction remains consensus-valid but does not implement this reference profile.
+
+=== Pseudocode ===
+
+<pre>
+def op_checksiblingverify(stack, tx, current_input_index):
+    require(len(stack) >= 1)
+    raw = stack.pop()
+    require(len(raw) == 12)
+    own_vout, peer_vin, peer_vout = decode_three_uint32_le(raw)
+
+    require(peer_vin < len(tx.vin))
+    require(peer_vin != current_input_index)
+    require(own_vout != peer_vout)
+
+    own = tx.vin[current_input_index].prevout
+    peer = tx.vin[peer_vin].prevout
+    require(own.n == own_vout)
+    require(peer.n == peer_vout)
+    require(own.hash == peer.hash)
+</pre>
+
+Ordinary transaction validation establishes input existence, unique input references, value rules and successful execution of every input program. The opcode supplements those checks. It reads fields already present in the spending transaction and adds no historical-chain query or UTXO lookup.
+
+=== Resource behavior ===
+
+Each execution reads one fixed-size descriptor and two outpoints, compares one pair of 32-byte values and checks bounded integers. Its added work and temporary storage are O(1). It adds no signature operation and introduces no repeated whole-transaction hashing. Existing witness and block limits bound the number of executions.
+
+=== Example descriptors ===
+
+{| class="wikitable"
+! Protected role !! Expected spending input !! Descriptor fields !! Descriptor bytes
+|-
+| Principal V, created at output 0 || 0 || (0, 1, 1) || <code>000000000100000001000000</code>
+|-
+| Connector C, created at output 1 || 1 || (1, 0, 0) || <code>010000000000000000000000</code>
+|}
+
+The descriptor establishes the originating output roles. BIP 446 template constants additionally bind the current input index and the fixed transaction layout.
+
+== Reference application: a finite claim graph ==
+
+This section defines an application profile, separate from the opcode's consensus semantics. Its use requires an output-template primitive. The concrete reference uses BIP 446, which is included in the draft BIP 448 bundle [5,6].
+
+=== Scope ===
+
+One graph handles one claim with known terms. Its principal amount, operator reimbursement script, recovery destinations, challenge delay and verifier commitments are fixed before the funding transaction is authorized. The graph is finite and closes at a terminal settlement or recovery output set.
+
+A wallet or contract admitting the funding transaction must assign one authentic funded root to the economic claim. If two roots reimburse the same payment, each can independently satisfy this graph. Global claim uniqueness therefore belongs to funding admission or to a separately enforced shared claim/nullifier state.
+
+=== Manifest ===
+
+Before funding, the application reconstructs a manifest containing:
+
+* network/application domain and protocol version;
+* a unique claim-instance identifier g, derived from data available before construction or assigned through the admission procedure;
+* the unique economic liability or payment reference and its authorization;
+* principal amount P and any bond B;
+* payout script and the complete recovery policy;
+* challenge delay Delta;
+* the exact verifier program or verification-key commitment;
+* circuit and garbling commitments, label-encoding parameters and setup-verification evidence;
+* the complete tapscript trees, NUMS internal keys, output roles and per-input template constants;
+* the publication/evaluation procedure and fee anchors for all stages.
+
+An instance identifier included in a proof statement must also be connected to the economic event being proved. Adding a free salt to an otherwise reusable proof fails to establish one reimbursement per payment. The application should check the event's unique association with the admitted liability.
+
+Using the future assertion txid inside a script committed by that assertion would recreate a circularity. g therefore comes from an earlier authorized event or a preassigned domain-separated identifier. The opcode itself obtains the assertion txid from actual outpoints at spending time.
+
+All protected Taproot outputs use a publicly reproducible internal key with unknown discrete logarithm, such as the BIP 341 NUMS construction [7]. Admission reconstructs the full tree. Verifying a single good leaf leaves the rest of the spending policy unchecked.
+
+=== Funding and assertion ===
+
+An admitted reserve output R contains a path that creates assertion transaction A with fixed protected outputs:
+
+* A output 0: V, carrying P satoshis;
+* A output 1: C, carrying B satoshis or the chosen connector value;
+* A output 2: the profile's zero-value fee anchor.
+
+The R-to-A script checks the complete assertion-encoding witness required by the selected BitVM construction and enforces A's template. This witness must publish the material from which a challenger can evaluate the asserted proof. The template alone authenticates transaction fields and leaves witness interpretation to the script.
+
+A valid encoding of a claimed proof can represent a false claim; that case is the purpose of the subsequent fraud path. Setup verification establishes that the disclosed encoding, committed verifier and false-result condition correspond.
+
+In SegWit, txid excludes the witness. The block witness commitment authenticates the witness that actually confirms. Challengers must evaluate that confirmed evidence, and must revalidate after a reorganization.
+
+If B is financed separately, the funding construction must enforce its contribution and the exact output values. Funding admission validates the initial denomination because BIP 446 omits input amounts. Subsequent templates fix the amounts created by the graph. An output accidentally funded above its registered amount can otherwise donate the excess as a fee.
+
+=== Successful settlement ===
+
+After Delta blocks of relative age, transaction S spends V at input 0 and C at input 1. Their scripts each check the fixed sibling descriptor. Their settlement branches require the per-input BIP 446 template hash of S.
+
+C's settlement branch also enforces a block-based CHECKSEQUENCEVERIFY delay. The profile can impose the same delay on V for redundant auditability. An ordinary operator signature may authorize settlement through its script leaf. Keeping this live authorization key creates no graph bypass because the output template and sibling predicate still apply.
+
+S pays P to the registered reimbursement script and distributes B according to the fixed settlement policy. It includes the fee anchor. The protected parent transaction has zero fee, with P+B fully accounted for in its prescribed outputs.
+
+=== Successful disproval ===
+
+Transaction D spends the same V and C at the same input positions. Both inputs check the sibling descriptors and the per-input recovery template. C additionally verifies a valid fraud witness for the exact committed instance. Permissionless use of that witness requires no cooperation from the operator.
+
+D restores P to the precommitted recovery destination and handles B according to the agreed penalty or reward policy. Its protected outputs conserve the registered amount. A connector-only burn fails the sibling checks, so this profile keeps recovery atomic.
+
+BIP 446 fixes the recovery recipients in advance. Permissionless submission therefore coexists with a predetermined bond recipient. Paying an arbitrary challenger-selected address requires an additional mechanism, or a separately analyzed anyone-can-spend reward output with its associated capture and fee risks.
+
+The full recovery policy must preserve existing liabilities. For a bridge whose wrapped asset remains outstanding, returning principal to the original depositor can break backing. A reference implementation must choose a recovery covenant or terminal liability resolution appropriate to the application before enabling funding.
+
+Settlement and recovery templates have distinct protected output vectors. Every protected input uses the same branch classification. A transaction attempting to combine V's settlement leaf with C's recovery leaf would have to satisfy incompatible template commitments.
+
+=== Closing an instance ===
+
+Recovery closes the instance. A retry needs fresh commitments and a separately authorized next graph. Disproval can reveal a false-result label or one-time signature material. Reusing those secrets can make a later claim challengeable by anyone holding the earlier disclosure.
+
+A finite sequence of retry graphs can be precommitted from its terminal state backward, with fresh instances at each step. Returning to the identical initial template creates a hash-cycle problem for a simple template covenant and can reuse compromised challenge material. A general reusable vault needs additional state-machine work.
+
+== Security properties and assumptions ==
+
+=== Exact pairing ===
+
+For an authentic V=(A.txid,0), the fixed descriptor requires input 1 to be exactly (A.txid,1). A same-script connector created by transaction A' fails when A'.txid differs from A.txid. This property follows directly from the specified predicate plus ordinary input-existence validation.
+
+=== Mutual exclusion ===
+
+Every accepted terminal spend consumes V and C. Within one canonical chain, at most one of S and D can confirm. If D confirms and remains in that chain, the inputs required by S are spent.
+
+This statement concerns confirmed transactions. A broadcast fraud transaction has no consensus priority over another valid spend. At the first height where S is eligible, a miner can choose S if D has yet to confirm.
+
+=== Destination and amount enforcement ===
+
+Given exact admitted input values and collision-resistant template hashes, each terminal branch fixes its protected destinations and amounts. Every principal-moving branch must implement these constraints. A known Taproot internal key or an additional permissive leaf would become another spending authority and invalidate the claimed enforcement.
+
+=== Removal of deletion-based graph authorization ===
+
+For a fully covered finite graph, consensus enforces the relationships that the presigning committee otherwise authorized. Retaining the former committee keys then supplies no alternative spend path in this construction. The security statement depends on the complete root-to-terminal graph and its funding admission, including key paths.
+
+The cryptographic setup has its own requirements. The garbled function, encoding and false-result condition must be verified, and the committed data must be available for evaluation. A proof of correct garbling, or the applicable independently checked setup procedure, can discharge part of that obligation. Its proof system carries its own assumptions. This opcode changes graph authorization alone.
+
+=== Statement binding and global uniqueness ===
+
+Binding witnesses to g and to the specified payment protects against using evidence for the wrong instance under the assumed verifier. It does not itself prevent admitting two graphs for the same payment. A production bridge must supply authenticated global uniqueness or consume a uniquely assigned liability state. The model includes this limitation as an executable example.
+
+=== Correlated exposure ===
+
+If one graph carries P principal and B bond, those are the funds directly governed by its terminal branches. A common verifier, compiler or publication failure can affect every active graph. For m equal active slots, aggregate principal exposure can reach mP, with bonds accounted for separately. A claim of loss bounded by one slot requires a failure confined to that slot.
+
+== Execution profile ==
+
+=== Fee sponsorship ===
+
+The application uses fixed-output zero-fee protocol parents. A child transaction spends the fee anchor together with a confirmed sponsor coin, returns the sponsor's change, and pays the package fee. Replacing that child changes fee expenditure while leaving the parent transaction and its protected outputs unchanged.
+
+BIP 446 commits every input sequence and all outputs. Appending inputs or arbitrary sponsor change changes the template. This profile therefore supplies fees through a child. A separately specified fixed sponsor input could pay fees, but its change and accounting would need their own commitments.
+
+An allowance that lets the spender reduce protected outputs under the label of fees gives that value to miners. The proposed profile keeps the principal's amount explicit.
+
+TRUC and package relay are useful implementation targets [8,9]. Their topology rules and replacement behavior are mempool policy. The current BIP 431 profile caps transaction size at 10,000 virtual bytes and children of unconfirmed TRUC parents at 1,000 virtual bytes. Each real assertion and disproval must be measured against the policy used in testing. The application waits for the previous protocol stage to confirm before advancing, so an anchor child can occupy the permitted unconfirmed child position.
+
+An exact standard fee-anchor script and release-specific relay harness belong to the implementation profile. The abstract model uses a symbolic anchor and tests transaction independence only.
+
+=== Timing ===
+
+The withdrawal clock begins with A's confirmation, using the output age rules of BIP 68 and CHECKSEQUENCEVERIFY [10,11]. A timer attached only to an older funding coin could already have elapsed when the fresh assertion appears.
+
+A sufficient operational condition is:
+
+<pre>
+d_data + d_evaluate + d_relay + d_inclusion + d_reorg_margin < Delta
+</pre>
+
+All quantities must use compatible units, such as budgets in block-height progress. Evaluation measured in seconds requires a conservative treatment of variable block arrival times. The application must identify the assumed inclusion bound. Consensus enforces Delta; data delivery and timely mining remain external assumptions.
+
+Challengers need the actual published artifact set, working evaluation software and an independent fee reserve. The admission procedure should include independent download and evaluation checks. Hash commitments authenticate bytes after retrieval; retained copies and network availability require operational evidence.
+
+If rewards use publicly copyable fraud witnesses, another submitter can copy the evidence. A fixed recovery template still protects principal when the copy confirms, while the reward design needs separate scrutiny. Concurrent false assertions also create an evaluation and fee-budget load. Slot admission should be limited by the capacity demonstrated within the chosen delay.
+
+== Alternatives and minimality ==
+
+=== Merge the principal and challenge output ===
+
+For a suitable finite, precommitted claim, the principal can itself occupy the contested output, whose leaves provide delayed settlement and fraud recovery. Both outcomes naturally spend that same coin. A template-only covenant can then enforce the required output graph. This inference motivates a baseline implementation with BIP 446 alone.
+
+The proposed opcode is useful when separate output roles provide a measurable implementation or composition benefit. A BIP case should compare actual scripts, witness sizes, graph compilation and recovery complexity against that merged-output baseline.
+
+=== Broader introspection ===
+
+BIP 346 supplies selectable hashes of transaction fields, including selected prevouts [12]. Its PREVOUTS field commits to whole outpoints. Deriving a same-parent relation from two whole-outpoint hashes requires an authenticated decomposition or another construction; comparing those two hashes directly compares different output indices as well.
+
+BIP 443 offers state-carrying contracts and value-accounting modes [13]. Its input mode checks a P2TR program and committed data. Authenticating a particular coin's origin requires the surrounding state or lineage construction. These broader primitives may support a better reusable bridge design.
+
+Towns's construction [1], Doman's alternatives [2], and CTV-based techniques remain essential comparisons. The draft's opcode specializes a known outpoint relationship. It makes no claim to establish a new class of covenant expressiveness.
+
+== Implementation and evaluation plan ==
+
+The accompanying Python model implements the descriptor predicate, BIP 446's annex-absent template serialization, a ledger of distinct UTXOs and symbolic branch validation. Cryptographic proof validity, signatures, full Taproot construction and assertion admission are explicit ideal assumptions. The model tests ledger and graph properties within that scope.
+
+The recorded run passes 43 tests. An exhaustive test over 24 distinct creating transactions with identical protected scripts checks 576 principal/connector combinations. All 24 intended pairs pass, and all 552 cross-parent substitutions fail. Additional cases exercise malformed descriptors, output redirection, connector-only burning, branch splicing, premature payouts, mutually conflicting terminal spends and independently supplied fees.
+
+Two tests demonstrate the design's boundaries: either eligible terminal spend can win at the maturity height, and independently admitted graph roots can reimburse one economic payment twice. Cryptographic tests use ideal predicates and establish no result about a deployed BitVM verifier. Full run details and exclusions are recorded in model_report.json.
+
+Before submission, implement the opcode in a private Bitcoin Core development branch, assign a development-only opcode value, and add interpreter vectors. Test both the merged-output baseline and the paired-output graph with the actual circuit artifacts. A real node run must cover script/control-block commitments, assertion evidence, key-path exclusion and all refund paths.
+
+The relay harness must measure hostile anchor descendants, replacement fees and package propagation on the supported Core releases. Reorg tests must reset output ages and verify confirmed assertion evidence again. Correlated-failure tests should cover reused templates, duplicated economic claims, missing garbled data and simultaneous invalid assertions.
+
+The application-specific adoption decision depends on whether the paired graph provides enough benefit over existing covenant constructions to justify an additional consensus opcode.
+
+== Compatibility and deployment ==
+
+The opcode is opt-in through newly constructed tapscript paths. Existing UTXOs retain their current consensus rules. Coins sent to the new scripts before activation can be spent under the old OP_SUCCESSx rules. Activation parameters require normal Bitcoin consensus review.
+
+The opcode adds no gas market, VM instruction set or verifier-specific curve/hash primitive. Its cost comes from input-index and outpoint comparisons. Deployment of the reference BitVM profile also requires the selected output-template capability and compatible relay policy.
+
+== References ==
+
+* [1] Anthony Towns, April 16, 2025, reply 8: https://delvingbitcoin.org/t/how-ctv-csfs-improves-bitvm-bridges/1591/8
+* [2] Josh Doman, May 27, 2026, Mapping the design space of sibling-aware covenants: https://mirror.b10c.me/lists/bitcoindev/fd2ba4b8-95f6-4541-900a-47bdf65a166cn%40googlegroups.com/t/
+* [3] BitVM3: Efficient Bitcoin Bridges via Garbled Circuits, live 29-page revision retrieved November 11, 2026; sections 3.5, 4.2 and 6.1: https://bitvm.org/bitvm3.pdf
+* [4] BIP 342: https://bips.dev/342/
+* [5] BIP 446: https://bips.dev/446/
+* [6] BIP 448: https://bips.dev/448/
+* [7] BIP 341, internal-key construction: https://bips.dev/341/
+* [8] BIP 431: https://bips.dev/431/
+* [9] Bitcoin Core 31.0 release notes: https://bitcoincore.org/en/releases/31.0/
+* [10] BIP 68: https://bips.dev/68/
+* [11] BIP 112: https://bips.dev/112/
+* [12] BIP 346: https://bips.dev/346/
+* [13] BIP 443: https://bips.dev/443/
