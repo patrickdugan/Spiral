@@ -61,3 +61,21 @@ python BIPSpace/Keyless-CHECKSIG/reference.py
 
 The original BIP341 test-vector source is
 https://github.com/bitcoin/bips/blob/master/bip-0341/wallet-test-vectors.json .
+
+
+## Nova and transparent proof workbench (2026-11-12)
+
+See [verifiers/](verifiers/README.md). It now contains a 296-byte
+Script-compiled full-trace AIR verifier with dynamic output targeting,
+a real standalone Pallas IPA argument, public Nova folding-equation
+checks, and a Rust adapter to the pinned real Nova 0.76 compressed
+Spartan+IPA verifier.
+
+The added research suite passed **66 tests** on GitHub Actions:
+[CI run](https://github.com/patrickdugan/Spiral/actions/runs/43123181535).
+
+The AIR is a fully opened four-step trace, **not a scalable STARK**;
+the IPA and fold equation are **components**, not a complete native
+Nova-on-Bitcoin verifier. The full real Nova verifier is callable by
+the opt-in Rust runner but has not been exercised in this session.
+No new consensus rules have been activated or run in Bitcoin Core.
