@@ -19,6 +19,9 @@ coinbase's BIP141 witness commitment. Every byte the desk reads is then bound to
 A spender who builds an unusual script can make rule 2 name a script other than the one they
 spent (for example a P2WSH whose witness script looks like a public key). That only redirects
 their own payout: the payment transaction, and so the reconstruction, is theirs alone.
+
+Under rule 2, when the spend revealed one key, the desk by default pays a key derived from it
+rather than the spent script (`payout_key.py`), so the sender's old address is not paid again.
 """
 from __future__ import annotations
 
@@ -35,7 +38,10 @@ COMMITMENT_PREFIX = bytes.fromhex("6a24aa21a9ed")
 class Sender:
     script_pubkey: bytes
     kind: str
-    rule: str  # "declared" or "input0:<how>"
+    rule: str  # "declared" or "input0:<how>", with ":derived" once paid at a derived key
+    pubkey: bytes | None = None  # the one key input 0 revealed (P2PKH, P2WPKH, P2SH-P2WPKH)
+    key_type: str | None = None  # "p2pkh", "p2wpkh" or "p2sh-p2wpkh" when pubkey is set
+    derived_from: dict | None = None  # set by payout_key.derive_sender
 
 
 def declared_return(tx: btc.Tx):
@@ -87,7 +93,7 @@ def from_input(txin: btc.TxIn) -> Sender:
         if not pushes:
             raise Refusal("sender_unresolvable", "empty scriptSig and no witness")
         if len(pushes) == 2 and btc.is_der_signature(pushes[0]) and btc.is_pubkey(pushes[1]):
-            return Sender(btc.p2pkh(btc.hash160(pushes[1])), "p2pkh", "input0:p2pkh")
+            return Sender(btc.p2pkh(btc.hash160(pushes[1])), "p2pkh", "input0:p2pkh", pushes[1], "p2pkh")
         redeem = pushes[-1]
         if not redeem or btc.is_der_signature(redeem):
             raise Refusal("sender_unresolvable", "bare P2PK or multisig spend does not reveal its script")
@@ -97,15 +103,17 @@ def from_input(txin: btc.TxIn) -> Sender:
     if tap and not txin.script_sig:
         raise Refusal("sender_unresolvable", f"{tap}: use an IOB1 return output")
 
+    key = None
     if len(wit) == 2 and btc.is_der_signature(wit[0]) and btc.is_compressed_pubkey(wit[1]):
         program = b"\x00\x14" + btc.hash160(wit[1])
         how = "p2wpkh"
+        key = wit[1]
     else:
         program = b"\x00\x20" + btc.sha256(wit[-1])
         how = "p2wsh"
 
     if not txin.script_sig:
-        return Sender(program, how, f"input0:{how}")
+        return Sender(program, how, f"input0:{how}", key, how if key else None)
 
     # Nested segwit: scriptSig is exactly one push of the witness program, and the program must
     # match what the witness reveals.
@@ -113,7 +121,7 @@ def from_input(txin: btc.TxIn) -> Sender:
         raise Refusal("sender_unresolvable", "witness spend with a scriptSig that is not one witness program")
     if pushes[0] != program:
         raise Refusal("sender_unresolvable", "P2SH witness program does not match the witness")
-    return Sender(btc.p2sh(btc.hash160(pushes[0])), "p2sh", f"input0:p2sh-{how}")
+    return Sender(btc.p2sh(btc.hash160(pushes[0])), "p2sh", f"input0:p2sh-{how}", key, "p2sh-p2wpkh" if key else None)
 
 
 def resolve(tx: btc.Tx) -> Sender:

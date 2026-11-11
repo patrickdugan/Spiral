@@ -17,7 +17,8 @@
     "fee_sats": 1000,
     "max_payout_sats": 2000000,
     "fee_rate_sat_vb": 2,
-    "link_op_return": true
+    "link_op_return": true,
+    "payout_key": "derived"
   },
   "pins": {
     "wrap_vk_sha256": "d42c63e3c873b35576b4c95fa8c41770a8c6b8a9f16ba74732c5b52a43b0b0d7",

@@ -8,6 +8,9 @@
   python -m iob tx --block BLOCK.bin --txid TXID                 (prints the transaction hex)
   python -m iob policy --menu M                                  (prints the gate policy JSON)
   python -m iob inspect --statement S                            (prints the parsed statement)
+  python -m iob payout-key --in-outpoint TXID:VOUT --type T --network N (--pubkey HEX | --wif-stdin)
+      (the derived payout key for a payment; with --wif-stdin, reads the payer's WIF on stdin and
+       prints the derived WIF and a descriptor to import)
 
 `order` prints one JSON line and exits 0 when the order is accepted or served, 1 when refused.
 """
@@ -17,7 +20,7 @@ import argparse
 import json
 import sys
 
-from . import btc, desk, menu as menu_mod, sender, statement
+from . import btc, desk, ec, menu as menu_mod, payout_key, sender, statement
 from .errors import Refusal
 from .ledger import Ledger
 from .rpc import RPC
@@ -81,6 +84,28 @@ def cmd_inspect(a) -> int:
     return 0
 
 
+def cmd_payout_key(a) -> int:
+    txid, vout = payout_key.parse_outpoint(a.in_outpoint)
+    out = {"in_outpoint": a.in_outpoint, "type": a.type, "network": a.network}
+    if a.wif_stdin:
+        secret, compressed, version = payout_key.wif_decode(sys.stdin.readline())
+        if version != payout_key.WIF_VERSION[a.network]:
+            raise SystemExit(f"the WIF is not for {a.network}")
+        pub = ec.serialize(ec.mul(secret), compressed)
+        derived = payout_key.derive_private(secret, compressed, txid, vout)
+        wif = payout_key.wif_encode(derived, a.network, compressed)
+        out["descriptor"] = payout_key.DESCRIPTOR[a.type].format(wif)
+        out["wif"] = wif
+    else:
+        pub = bytes.fromhex(a.pubkey)
+    new_pk, t = payout_key.derive_pubkey(pub, txid, vout)
+    spk = payout_key.script_for(new_pk, a.type)
+    out.update(pubkey=pub.hex(), tweak=f"{t:064x}", derived_pubkey=new_pk.hex(),
+               script_pubkey=spk.hex(), address=btc.spk_to_address(spk, a.network))
+    print(json.dumps(out, indent=1))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="iob", description="In-and-Out-Burger: proven payment in, sats out to the sender")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -120,6 +145,15 @@ def main(argv=None) -> int:
     i = sub.add_parser("inspect")
     i.add_argument("--statement", required=True)
     i.set_defaults(fn=cmd_inspect)
+
+    k = sub.add_parser("payout-key", help="the derived key the desk pays for a payment")
+    k.add_argument("--in-outpoint", required=True, help="the payment, TXID:VOUT")
+    k.add_argument("--type", choices=payout_key.TYPES, default="p2wpkh", help="script type of the key the payment spent")
+    k.add_argument("--network", choices=sorted(btc.NETWORKS), default="mainnet", help="the payout network")
+    g = k.add_mutually_exclusive_group(required=True)
+    g.add_argument("--pubkey", help="the key the payment's input 0 revealed, hex")
+    g.add_argument("--wif-stdin", action="store_true", help="read that key's WIF from stdin; print the derived WIF")
+    k.set_defaults(fn=cmd_payout_key)
 
     a = ap.parse_args(argv)
     if a.cmd == "order" and a.pay and not a.rpc_url:

@@ -38,6 +38,7 @@ class Menu:
     max_payout_sats: int
     fee_rate_sat_vb: float
     link_op_return: bool
+    payout_key: str  # "derived": pay P + t*G for a one-key sender; "spent": pay the script they spent
     pins: dict
     gate_argv: tuple
     gate_paths: str
@@ -93,6 +94,9 @@ def from_dict(d: dict) -> Menu:
     chainwork = int(chainwork[2:] if chainwork.startswith("0x") else chainwork, 16)
     if chainwork <= 0:
         raise ValueError("in.min_tip_chainwork is required: the proof shows a valid chain, not the heaviest one")
+    payout_key = o.get("payout_key", "derived")
+    if payout_key not in ("derived", "spent"):
+        raise ValueError("out.payout_key must be derived or spent")
     pins = {k: _hex32(d["pins"][k], f"pins.{k}") for k in PIN_NAMES}
     if set(d["pins"]) - set(PIN_NAMES):
         raise ValueError(f"unknown pins: {sorted(set(d['pins']) - set(PIN_NAMES))}")
@@ -111,6 +115,7 @@ def from_dict(d: dict) -> Menu:
         max_payout_sats=int(o["max_payout_sats"]),
         fee_rate_sat_vb=float(o.get("fee_rate_sat_vb", 1)),
         link_op_return=bool(o.get("link_op_return", True)),
+        payout_key=payout_key,
         pins=pins,
         gate_argv=tuple(gate.get("argv", ())),
         gate_paths=gate.get("paths", "native"),

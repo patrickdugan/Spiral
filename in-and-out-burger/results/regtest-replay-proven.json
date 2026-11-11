@@ -1,19 +1,19 @@
 {
  "bitcoind": "/Satoshi:31.1.0/",
  "failed": 0,
- "float_btc_after_one_block_more": "99.99051216",
+ "float_btc_after_one_block_more": "199.99044588",
  "float_btc_before": "50.0",
  "gate": [
   "/root/kan-gate/kan-payment-gate"
  ],
  "gate_sha256": "2344753bc291b611bcffb74e04bcabd0e9b92a3832e7a95132641ef752602f56",
- "passed": 14,
+ "passed": 16,
  "proof": {
   "bytes": 1099173,
   "path": "/root/m16-main/m16-wrap-blake3-v2.bin",
   "sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3"
  },
- "seconds": 8.8,
+ "seconds": 40.4,
  "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
  "steps": [
   {
@@ -35,19 +35,25 @@
      "network": "regtest",
      "rate_ppm": 1010000,
      "sats": 948400,
-     "txid": "8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841"
+     "txid": "eeda2995957cd3e4fe51009efebb7ae737004e3d145396be52396bfe6687fe73"
     },
     "proof": "verified",
     "sender": {
+     "derived_from": {
+      "derived_pubkey": "02af01bc277eb5c041cd66826e9d6fbcadfc485cd76cc3fec655b2110444d1501f",
+      "pubkey": "0254bb0907cb48ad4c28832b85a448f10bd2118dc582e65738bb71984d54647b3b",
+      "spent_script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a",
+      "tweak": "51de31df378da9cf7e48caef6ea4ecededa4fa5972de68e703fcda0fef21fc7d"
+     },
      "kind": "p2wpkh",
-     "payout_address": "bcrt1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2qs9rzj",
-     "rule": "input0:p2wpkh",
-     "script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a"
+     "payout_address": "bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6",
+     "rule": "input0:p2wpkh:derived",
+     "script_pubkey": "00144c62077e87ad3a902547c965968d924f64b421e8"
     },
     "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
     "status": "served"
    },
-   "seconds": 0.135,
+   "seconds": 0.591,
    "step": "serve the M16 mainnet payment order"
   },
   {
@@ -59,26 +65,104 @@
    "ok": true,
    "result": {
     "confirmations": 1,
+    "derived_payout_address": "bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6",
     "fee_sats": 384,
     "link_output": true,
     "outputs_to_sender_sats": [
      948400
     ],
-    "payout_txid": "8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841",
+    "payout_txid": "eeda2995957cd3e4fe51009efebb7ae737004e3d145396be52396bfe6687fe73",
     "sender_utxo_total_btc": "0.009484",
+    "spent_script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a",
+    "spent_script_utxo_total_btc": "0.0",
     "vsize": 192
    },
-   "step": "payout confirmed on regtest, sender script holds exactly the payout"
+   "step": "payout confirmed on regtest, payout script holds exactly the payout"
   },
   {
    "ok": true,
    "result": {
-    "detail": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0 paid by 8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841",
+    "detail": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0 paid by eeda2995957cd3e4fe51009efebb7ae737004e3d145396be52396bfe6687fe73",
     "reason": "already_served",
     "status": "refused"
    },
-   "seconds": 0.032,
+   "seconds": 0.361,
    "step": "serve the same order again"
+  },
+  {
+   "ok": true,
+   "result": {
+    "in": {
+     "address": "bc1q3czxrv2eptks5u37yxkpdayrzlxm965ktma3cu",
+     "block_hash": "000000000000000000017809af97fdd5530149e411b2ab091db4f405e355fe22",
+     "block_height": 975067,
+     "confirmations": 6,
+     "outpoint": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0",
+     "tip_chainwork": "156c4c3c54ad473bac5daf261",
+     "tip_height": 975072,
+     "value_sats": 940000
+    },
+    "payout": {
+     "fee_sats": 1000,
+     "network": "regtest",
+     "rate_ppm": 1010000,
+     "sats": 948400
+    },
+    "proof": "verified",
+    "sender": {
+     "kind": "p2wpkh",
+     "payout_address": "bcrt1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2qs9rzj",
+     "rule": "input0:p2wpkh",
+     "script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a"
+    },
+    "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+    "status": "accepted"
+   },
+   "seconds": 0.404,
+   "step": "menu with payout_key spent: the same order priced to the script the payer spent"
+  },
+  {
+   "ok": true,
+   "result": {
+    "address_mismatch": [],
+    "keys": [
+     {
+      "address": "bcrt1qdepd7cg25c8jh2hfwan0preg5yesn2amf72dr0",
+      "compressed": true,
+      "core_address": "bcrt1qdepd7cg25c8jh2hfwan0preg5yesn2amf72dr0",
+      "funding_txid": "df5e9dc8307780334a913ad956df1c0eb752334c5aeb1ded7dabcbd109c963da",
+      "type": "p2wpkh"
+     },
+     {
+      "address": "2Mwnr1ctRuoDSb5Y49tagYGZiKePEC5pKWJ",
+      "compressed": true,
+      "core_address": "2Mwnr1ctRuoDSb5Y49tagYGZiKePEC5pKWJ",
+      "funding_txid": "93791afa982d907dcea1d259e485bec4509d8372cd518527d9d138bf6b8b50a4",
+      "type": "p2sh-p2wpkh"
+     },
+     {
+      "address": "mkTR2r2uViVyEzWaWWQenSwExi4uE8GsTp",
+      "compressed": true,
+      "core_address": "mkTR2r2uViVyEzWaWWQenSwExi4uE8GsTp",
+      "funding_txid": "bff3a7b07b7c13d4ee5e6af0b3d89b9196c46f090d17711ca67876eedb816b95",
+      "type": "p2pkh"
+     },
+     {
+      "address": "mpWRuk14Lij4bK1RuTaLaY21chugxMFcGQ",
+      "compressed": false,
+      "core_address": "mpWRuk14Lij4bK1RuTaLaY21chugxMFcGQ",
+      "funding_txid": "5cddf1df515e8177e7d297e30bffa85e752d7e2f342ed3b36bcb2137a787257d",
+      "type": "p2pkh"
+     }
+    ],
+    "payer_wallet_balance_btc": "0.002",
+    "status": "swept",
+    "sweep_confirmations": 1,
+    "sweep_inputs": 4,
+    "sweep_txid": "16a7d2dbdad68484fea2157b4b8e55091096e6e2eb1bd06bfa8e9642bd275b89"
+   },
+   "seconds": 6.199,
+   "step": "derived keys of every one-key type: Core derives the same address from p + t, then spends it"
   },
   {
    "ok": true,
@@ -87,7 +171,7 @@
     "reason": "sender_proof_witness",
     "status": "refused"
    },
-   "seconds": 0.034,
+   "seconds": 0.31,
    "step": "forged witness (same txid)"
   },
   {
@@ -97,7 +181,7 @@
     "reason": "script_not_registered",
     "status": "refused"
    },
-   "seconds": 0.032,
+   "seconds": 0.249,
    "step": "menu pre-programmed with another address"
   },
   {
@@ -107,7 +191,7 @@
     "reason": "chainwork_below_floor",
     "status": "refused"
    },
-   "seconds": 0.036,
+   "seconds": 0.254,
    "step": "chainwork floor one above the proven tip"
   },
   {
@@ -127,7 +211,7 @@
     "reason": "proof_wrong_program",
     "status": "refused"
    },
-   "seconds": 0.037,
+   "seconds": 0.37,
    "step": "guest A's real final proof offered for the M16 statement (kan-payment-gate check)"
   },
   {
@@ -137,7 +221,7 @@
     "reason": "proof_rejected",
     "status": "refused"
    },
-   "seconds": 0.032,
+   "seconds": 0.292,
    "step": "tampered wrap: one bit flipped at the middle byte"
   },
   {
@@ -147,7 +231,7 @@
     "reason": "proof_rejected",
     "status": "refused"
    },
-   "seconds": 0.007,
+   "seconds": 0.071,
    "step": "tampered wrap: committed digest re-pointed at a statement claiming 1,880,000 sats"
   },
   {
@@ -157,7 +241,7 @@
     "reason": "proof_malformed",
     "status": "refused"
    },
-   "seconds": 0.008,
+   "seconds": 0.06,
    "step": "tampered wrap: last byte cut"
   },
   {
@@ -167,7 +251,7 @@
     "reason": "statement_digest_mismatch",
     "status": "refused"
    },
-   "seconds": 0.031,
+   "seconds": 0.411,
    "step": "wrong statement: the real wrap with the value doubled to 1,880,000 sats"
   },
   {
@@ -177,7 +261,7 @@
     "reason": "statement_digest_mismatch",
     "status": "refused"
    },
-   "seconds": 0.035,
+   "seconds": 0.257,
    "step": "wrong statement: the real wrap with another real M16 statement (sha256 67a9deb95cb04d9d...)"
   }
  ]

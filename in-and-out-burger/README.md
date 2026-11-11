@@ -23,7 +23,8 @@ lists what it needs.
   necessarily the heaviest one.
 - **Send sats to the sender.** Bitcoin has no sender field. The desk reads the sender from the
   payment transaction (see [Who is the sender](#who-is-the-sender)) and binds every byte it reads
-  to the proven block.
+  to the proven block. It pays a fresh key derived from the sender's, not the address they
+  paid from.
 - **Dynamic amount.** The payout follows a price list: a rate per tier of payment size, a flat
   fee, a cap, and Core's dust limits.
 
@@ -48,7 +49,8 @@ The desk checks them in this order. Each refusal has its own reason code:
    pre-programmed script, minimum value.
 4. **The transaction matches the proof.** It hashes to the proven txid, and output `vout` is the
    proven script and value.
-5. **The sender is resolved**, with the witness bound to the proven block when the rule needs it.
+5. **The sender is resolved**, with the witness bound to the proven block when the rule needs it,
+   and for a one-key sender the payout key is derived from theirs ([The payout key](#the-payout-key)).
 6. **The order is priced.**
 7. **The journal is checked.** An outpoint is served once (`iob/ledger.py`, fsync'ed JSON lines,
    with reserved, paid and released states).
@@ -93,6 +95,34 @@ A spender who builds an unusual script, such as a P2WSH whose witness script loo
 can make rule 2 name a script they did not spend. That only redirects their own payout. Nobody
 else can change a confirmed transaction or its committed witness.
 
+### The payout key
+
+Under rule 2 the desk does not pay the sender's old address again. When input 0 revealed one
+key P (P2PKH, P2WPKH, or P2WPKH in P2SH), it pays the same script type over a key derived from
+P and the payment ([`iob/payout_key.py`](iob/payout_key.py)):
+
+```
+P' = P + t·G,   t = int(tagged_hash("IOB/payout-key", in_txid || in_vout || P)) mod n
+```
+
+`in_txid` is in internal byte order, `in_vout` is a little-endian u32, and P is serialized as
+the spend revealed it (33 or 65 bytes). The payer's key for P' is p + t mod n.
+
+- The payer puts nothing extra in the payment and receives at a fresh address for every
+  payment.
+- Every input to t is public and bound by the proof, so anyone can recompute P' from the
+  chain, including a later proof of the payout leg.
+- The payer recovers the key with
+  `python -m iob payout-key --in-outpoint TXID:VOUT --type p2wpkh --network mainnet --wif-stdin`,
+  which reads the WIF of the key they paid from on stdin and prints the derived WIF and a
+  descriptor (`wpkh(…)`, `sh(wpkh(…))` or `pkh(…)`) to import into Core or any wallet that
+  takes one. No wallet finds P' on its own.
+
+A declared return script (rule 1) is paid as declared. A sender that revealed a script rather
+than one key (P2SH, P2WSH, P2SH-P2WSH) is paid at that script; such a sender avoids reuse with
+`IOB1`. A revealed key that is not on secp256k1 is refused (`sender_key_invalid`). Menu
+`out.payout_key` is `derived` (the default) or `spent`, which pays the old script as before.
+
 ## Pricing
 
 Menu `out` section: `tiers` (`min_value_sats`, `rate_ppm`), `fee_sats`, `max_payout_sats`.
@@ -115,12 +145,14 @@ The M16 mainnet run proves this payment:
   975,067, 6 confirmations under tip 975,072;
 - statement `cae6068f…c869`, from the CPU execution (34,055,622,753 instructions).
 
-The replay menu pre-programs that address. The desk pays the sender's script on a private
-regtest chain: scripts do not depend on the network, so the payout is spendable by the same key,
-and no real sats move.
+The replay menu pre-programs that address. The desk pays the sender on a private regtest
+chain: scripts do not depend on the network, so the payout is spendable by the same key, and no
+real sats move.
 
-The sender is input 0's P2WPKH key `0254bb09…7b3b`, giving `bc1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2gl8awg`.
+The sender is input 0's P2WPKH key `0254bb09…7b3b`, which spent `bc1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2gl8awg`.
 mempool.space reports the same address for the spent output (`862239f7…876e:1`, 950,000 sats).
+The desk pays the derived key `02af01bc…501f` (t = `51de31df…fc7d`) instead: `bc1qf33qwl5845afqf28e9jedrvjfajtgg0g8lal8q`
+on mainnet, `bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6` on regtest.
 
 Fixtures ([`fixtures/m16-mainnet`](fixtures/m16-mainnet)) come from the M16 inputs:
 
@@ -146,28 +178,35 @@ The final proof is the M16 mainnet run's BLAKE3 v2 wrap, proved on the laptop GP
 python3 scripts/regtest_replay.py --proof /root/m16-main/m16-wrap-blake3-v2.bin --out results/regtest-replay-proven.json
 ```
 
-Run in WSL with Bitcoin Core 31.1 regtest: 14 of 14 steps passed in 8.8 s, with no
-`--allow-unproven`. The record is [`results/regtest-replay-proven.json`](results/regtest-replay-proven.json).
+Run in WSL with Bitcoin Core 31.1 regtest and `payout_key: derived`: 16 of 16 steps passed in
+40.4 s, with no `--allow-unproven`. The record is [`results/regtest-replay-proven.json`](results/regtest-replay-proven.json).
 
 | Step | Result | Time |
 | --- | --- | --- |
-| serve the M16 order with the real wrap (`kan-payment-gate check`, then the desk's checks) | served, `proof: verified`: 948,400 sats to `bcrt1qcfgp…qs9rzj`, 192 vB, 384 sats fee | 0.135 s |
-| the chain after one block | the sender's script holds exactly 948,400 sats (`scantxoutset`); the payout carries the IOBP link | |
-| the same order again | `already_served` | 0.032 s |
-| a forged witness with the same txid | `sender_proof_witness` | 0.034 s |
-| a menu pre-programmed with another address | `script_not_registered` (from the gate's policy) | 0.032 s |
-| a chainwork floor one above the proven tip | `chainwork_below_floor` (from the gate's policy) | 0.036 s |
+| serve the M16 order with the real wrap (`kan-payment-gate check`, then the desk's checks) | served, `proof: verified`: 948,400 sats to the derived key, `bcrt1qf33qwl…slpt6`, 192 vB, 384 sats fee | 0.591 s |
+| the chain after one block | the derived script holds exactly 948,400 sats and the script the payer spent from holds 0 (`scantxoutset`); the payout carries the IOBP link | |
+| the same order again | `already_served` | 0.361 s |
+| the same order under a `payout_key: spent` menu | accepted, priced to the old script `bcrt1qcfgp…qs9rzj` | 0.404 s |
+| a fresh key of each one-key type (P2WPKH, P2SH-P2WPKH, compressed and uncompressed P2PKH), derived with the real in-outpoint | for all four, Core's `deriveaddresses` on the derived WIF gives the desk's address; the desk pays 50,000 sats to each; a Core wallet that imported only the four derived WIFs sweeps all four in one transaction, confirmed | 6.199 s |
+| a forged witness with the same txid | `sender_proof_witness` | 0.310 s |
+| a menu pre-programmed with another address | `script_not_registered` (from the gate's policy) | 0.249 s |
+| a chainwork floor one above the proven tip | `chainwork_below_floor` (from the gate's policy) | 0.254 s |
 | no proof and no `--allow-unproven` | `proof_required` | 0.000 s |
-| guest A's real final proof offered for the M16 statement | `proof_wrong_program` | 0.037 s |
-| the wrap with one bit flipped at its middle byte | `proof_rejected` (PCS root mismatch) | 0.032 s |
-| the wrap's committed digest re-pointed at a statement claiming 1,880,000 sats, offered with that statement | `proof_rejected` (`GkrVerificationFailed(Pow)`) | 0.007 s |
-| the wrap with its last byte cut | `proof_malformed` | 0.008 s |
-| the real wrap with the statement's value doubled to 1,880,000 sats | `statement_digest_mismatch` | 0.031 s |
-| the real wrap with another real M16 statement (block 170 run, `67a9deb9…`) | `statement_digest_mismatch` | 0.035 s |
+| guest A's real final proof offered for the M16 statement | `proof_wrong_program` | 0.370 s |
+| the wrap with one bit flipped at its middle byte | `proof_rejected` (PCS root mismatch) | 0.292 s |
+| the wrap's committed digest re-pointed at a statement claiming 1,880,000 sats, offered with that statement | `proof_rejected` (`GkrVerificationFailed(Pow)`) | 0.071 s |
+| the wrap with its last byte cut | `proof_malformed` | 0.060 s |
+| the real wrap with the statement's value doubled to 1,880,000 sats | `statement_digest_mismatch` | 0.411 s |
+| the real wrap with another real M16 statement (block 170 run, `67a9deb9…`) | `statement_digest_mismatch` | 0.257 s |
 
-Run alone under `/usr/bin/time`, the gate verifies the 1.1 MB wrap in 0.03 s with 5.5 MB peak
-RSS. The committed digest sits at byte 240 of the wrap, one byte per little-endian u32; the
-replay checks that before it re-points it.
+The 16 steps are the 15 rows above plus a check that the order's proof state is `verified`.
+
+The first proven run (00bae56, `payout_key` before it existed, so the old script was paid)
+passed 14 of 14 in 8.8 s, with each gate step at 0.03 s. Run alone under `/usr/bin/time`, the
+gate verifies the 1.1 MB wrap in 0.03 s with 5.5 MB peak RSS. The 2026-11-11 derived run's steps
+took about ten times as long, with the laptop shared with other jobs (WSL load average 4.35 on
+20 threads when it finished). The committed digest sits at byte 240 of the wrap, one byte per
+little-endian u32; the replay checks that before it re-points it.
 
 ### Unproven replay (2026-11-10)
 
@@ -186,11 +225,15 @@ The record is [`results/regtest-replay.json`](results/regtest-replay.json).
 | no proof and no `--allow-unproven` | `proof_required` |
 | guest A's real final proof offered for the M16 statement (`kan-payment-gate check`) | `proof_wrong_program` |
 
-Unit tests (`tests/`, 46) run against the real statement, the real transaction and the real
+Unit tests (`tests/`, 61) run against the real statement, the real transaction and the real
 sender proof, with each binding tampered in turn, and against synthetic blocks for the other
-sender rules (P2PKH, P2SH-P2WPKH, P2SH-P2WSH, P2WSH, declared return, Taproot refusals).
-On 2026-11-11: 46 passed in 1.8 s (Python 3.12, Windows). Re-running the unproven replay with the
-2026-11-11 script gave 9 of 9; the extra step is the `proof: absent` check.
+sender rules (P2PKH, P2SH-P2WPKH, P2SH-P2WSH, P2WSH, declared return, Taproot refusals), each
+paid at its derived key or, for a script sender, at its script. `test_payout_key.py` covers the curve (generator multiples, negation, point
+encodings, off-curve refusals), WIF vectors, the tweak's binding to txid, vout and key encoding,
+p + t against P + t·G for compressed and uncompressed keys, and the `payout-key` command.
+On 2026-11-11: 61 passed in 13.5 s (Python 3.12, Windows), 9.4 s of it the pure-Python
+RIPEMD-160 vectors. The unproven replay with the 2026-11-11 script passed 11 of 11; the new steps
+are the `proof: absent` check, the spent-key menu and the sweep.
 
 ## Commands
 
@@ -204,6 +247,10 @@ python -m iob tx --block BLOCK.bin --txid T                # the payment tx, wit
 python -m iob sender-proof --block BLOCK.bin --txid T      # the sender proof for it
 python -m iob order --menu M --statement S --tx T.hex [--sender-proof SP.json] --proof P \
     --ledger served.jsonl [--pay --rpc-url URL --rpc-cookie COOKIE --wallet burger]
+python -m iob payout-key --in-outpoint TXID:VOUT --type p2wpkh --network N --pubkey HEX
+                                                           # the derived payout address for a payment
+python -m iob payout-key --in-outpoint TXID:VOUT --type p2wpkh --network N --wif-stdin < key.wif
+                                                           # the payer's derived WIF and descriptor
 ```
 
 `order` prints one JSON line. It exits 0 when the order is accepted or served and 1 when it is
@@ -215,7 +262,8 @@ Linux gate from Windows through `wsl.exe`.
 1. Write a menu with your address as `in.address` (`mainnet`, or `testnet4`, which M16 and the
    gate are also pinned for). Take `min_tip_chainwork` from your own node's `getblockheader`.
    Set `out.network` to the payout chain.
-2. The customer pays the address. To name the payout script explicitly, which a Taproot
+2. The customer pays the address. A one-key spender is paid at the derived key and recovers it
+   with `iob payout-key --wif-stdin`. To name the payout script explicitly, which a Taproot
    spender must do, the payment includes `OP_RETURN "IOB1" || scriptPubKey`.
 3. Prove it:
    - extend the Nova chain past the payment block plus the confirmations you require
@@ -232,18 +280,29 @@ Orders settle in hours, not minutes, because the proof dominates.
 
 In this design the desk fronts every payout from its own float: once the proof checks out, the
 operator pays. That is also how a BitVM bridge pays out. Presigned BitVM transactions fix their
-outputs when they are signed, so a vault cannot pay a recipient chosen later. The operator pays
-first and claims afterwards. Refilling the float from a BitVM3 vault without trusting the
-operator still needs three things:
+outputs and amounts when the committee signs them, and the committee then deletes its keys, so
+a vault cannot pay a recipient chosen later. The customer's address therefore never enters the
+vault: the operator pays the customer, and the vault reimburses the operator.
+
+The one address a graph fixes is the operator's reimbursement address, and it need not repeat:
+derive graph i's key from an operator xpub at non-hardened index i, and have every committee
+member re-derive it before signing. Choosing the payout inside the graph after setup would need a
+covenant opcode (CTV with a template hash taken from the witness and fixed by a Winternitz
+commitment the fraud proof checks; or CSFS, OP_CAT, OP_CHECKCONTRACTVERIFY). None is active on
+mainnet.
+
+Refilling the float from a BitVM3 vault without trusting the operator still needs three things:
 
 1. **The claim transaction graph.** Claim, challenge and disprove transactions in which a
    challenger evaluates the M14 circuit on the operator's committed proof, and a reject label
    unlocks the disprove. nova-bitvm3 has the circuit (785,442,492 gates, garbled and evaluated
    on real proofs) but not these transactions.
-2. **A statement covering both legs.** The in-payment to the menu address, and the payout to
-   the script that the in-payment's input reveals, linked by IOBP. M16 proves one payment and
-   does not apply the sender rule, so this needs a new guest that runs M16's check twice, plus
-   the sender rule with its witness-commitment check.
+2. **A statement covering both legs.** The in-payment to the menu address, and the operator's
+   payout to the sender, linked by IOBP. M16 proves one payment and does not apply the sender
+   rule, so this needs a new guest that runs M16's check twice, plus the sender rule with its
+   witness-commitment check and the payout key (one tagged hash and one secp256k1 multiply and
+   add). A graph reimburses a fixed amount, so the vault is split into fixed-size UTXOs and the
+   statement proves that the operator's payouts add up to at least the UTXO it claims.
 3. **Latency the vault can tolerate.** About 5 GPU hours per mainnet proof, plus the challenge
    window.
 
@@ -254,6 +313,8 @@ operator still needs three things:
 - `iob/statement.py`: the M16 statement.
 - `iob/policy.py`: the gate's policy rules.
 - `iob/sender.py`: the sender rules and the sender proof.
+- `iob/ec.py`: secp256k1 point arithmetic for the payout key.
+- `iob/payout_key.py`: the derived payout key, WIF, and the payer's side.
 - `iob/menu.py`: the menu and pricing.
 - `iob/gate.py`: running `kan-payment-gate`.
 - `iob/ledger.py`: the served-outpoint journal.

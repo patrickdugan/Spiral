@@ -14,7 +14,10 @@ no real sats move. Steps:
 5. refusals for a forged witness, a wrong in-address and a raised chainwork floor;
 6. the proof layer through the real gate: guest A's real final proof offered for the M16
    statement (refused), and the order with no proof and no --allow-unproven (refused);
-7. with --proof only: the wrap tampered three ways (a bit flipped, the committed digest
+7. the payout key: the order pays P + t*G (`payout_key.py`), not the script the payer spent, and
+   the spent-key menu prices the same order to the old script; for a fresh key of each one-key
+   type, Core derives the same address from p + t and spends the derived output;
+8. with --proof only: the wrap tampered three ways (a bit flipped, the committed digest
    re-pointed at a statement claiming twice the value, the last byte cut) and the real wrap
    offered with a wrong statement (the value doubled; another real M16 statement). All refused.
 
@@ -40,7 +43,7 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from iob import btc, desk, menu as menu_mod, statement  # noqa: E402
+from iob import btc, desk, ec, menu as menu_mod, payout_key, sender, statement  # noqa: E402
 from iob.ledger import Ledger  # noqa: E402
 from iob.rpc import RPC, RPCError  # noqa: E402
 
@@ -68,6 +71,59 @@ VALUE_OFFSET = statement.CHAIN_BYTES + 84  # PAY1 u64 value
 def sha256_file(path: str) -> str:
     with open(path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()
+
+
+SWEEP_TYPES = (("p2wpkh", True), ("p2sh-p2wpkh", True), ("p2pkh", True), ("p2pkh", False))
+SWEEP_SATS = 50_000
+
+
+def sweep_derived(node, burger, payer, txid_internal: bytes, vout: int) -> dict:
+    """For a fresh key of each one-key type: the desk derives P' = P + t*G and pays it; the payer
+    derives p + t (`payout_key.derive_private`, what `iob payout-key --wif-stdin` prints), imports
+    it into a Core descriptor wallet, and spends every derived output back to the desk. Core
+    computing the same address from p + t that the desk computed from P + t*G is an independent
+    check of the tweak arithmetic."""
+    keys, mismatch = [], []
+    for key_type, compressed in SWEEP_TYPES:
+        secret = int.from_bytes(os.urandom(32), "big") % (ec.N - 1) + 1
+        pub = ec.serialize(ec.mul(secret), compressed)
+        derived_pub, _ = payout_key.derive_pubkey(pub, txid_internal, vout)
+        spk = payout_key.script_for(derived_pub, key_type)
+        addr = btc.spk_to_address(spk, "regtest")
+        wif = payout_key.wif_encode(payout_key.derive_private(secret, compressed, txid_internal, vout), "regtest", compressed)
+        desc = payout_key.DESCRIPTOR[key_type].format(wif)
+        info = node.call("getdescriptorinfo", desc)
+        core_addr = node.call("deriveaddresses", info["descriptor"])[0]
+        if core_addr != addr:
+            mismatch.append(key_type)
+        paid = payer.pay(spk, SWEEP_SATS, None)
+        keys.append({"type": key_type, "compressed": compressed, "address": addr, "core_address": core_addr,
+                     "funding_txid": paid["txid"], "desc": f"{desc}#{info['checksum']}"})
+    node.call("generatetoaddress", 1, burger.call("getnewaddress"))
+
+    node.call("createwallet", "payer", False, True)
+    pw = node.wallet("payer")
+    imported = pw.call("importdescriptors", [{"desc": k["desc"], "timestamp": 0} for k in keys])
+    balance = pw.call("getbalance")
+    back = burger.call("getnewaddress")
+    sent = pw.call("sendall", [back])
+    node.call("generatetoaddress", 1, burger.call("getnewaddress"))
+    swept = pw.call("gettransaction", sent["txid"])
+    dec = node.call("decoderawtransaction", swept["hex"])
+    ok = (not mismatch and all(r.get("success") for r in imported)
+          and round(float(balance) * 1e8) == SWEEP_SATS * len(keys)
+          and swept["confirmations"] == 1 and len(dec["vin"]) == len(keys))
+    for k in keys:
+        del k["desc"]  # carries the private key; regtest only, but not needed in the record
+    return {
+        "status": "swept" if ok else "failed",
+        "keys": keys,
+        "address_mismatch": mismatch,
+        "payer_wallet_balance_btc": str(balance),
+        "sweep_txid": sent["txid"],
+        "sweep_inputs": len(dec["vin"]),
+        "sweep_confirmations": swept["confirmations"],
+    }
 
 
 def main() -> int:
@@ -158,10 +214,29 @@ def main() -> int:
             chain["vsize"] = dec["vsize"]
             ok = (wtx["confirmations"] == 1 and pays == [res["payout"]["sats"]] and has_link
                   and round(float(scan["total_amount"]) * 1e8) == res["payout"]["sats"])
-            log.append({"step": "payout confirmed on regtest, sender script holds exactly the payout", "ok": ok, "result": chain})
+            spent = (res["sender"].get("derived_from") or {}).get("spent_script_pubkey")
+            if m.payout_key == "derived":
+                # The payout goes to P + t*G; the script the payer spent from receives nothing.
+                old = node.call("scantxoutset", "start", [f"raw({spent})"]) if spent else None
+                chain["derived_payout_address"] = res["sender"]["payout_address"]
+                chain["spent_script_pubkey"] = spent
+                chain["spent_script_utxo_total_btc"] = str(old["total_amount"]) if old else None
+                ok = ok and bool(spent) and spent != spk.hex() and old is not None and old["total_amount"] == 0
+            log.append({"step": "payout confirmed on regtest, payout script holds exactly the payout", "ok": ok, "result": chain})
             print(f"[{'ok' if ok else 'FAIL'}] payout on chain: {chain}", flush=True)
 
         step("serve the same order again", lambda: desk.serve(m, real, Ledger(ledger_path), payer, allow_unproven=unproven), "refused", "already_served")
+
+        d0 = json.load(open(a.menu, encoding="utf-8"))
+        d0["out"]["payout_key"] = "spent"
+        res = step("menu with payout_key spent: the same order priced to the script the payer spent",
+                   lambda: desk.serve(menu_mod.from_dict(d0), real, Ledger(None), None, allow_unproven=unproven), "accepted")
+        spent_spk = sender.from_input(btc.parse_tx(bytes.fromhex(real.tx_hex)).inputs[0]).script_pubkey.hex()
+        if res.get("sender", {}).get("script_pubkey") != spent_spk:
+            log[-1]["ok"] = False
+
+        step("derived keys of every one-key type: Core derives the same address from p + t, then spends it",
+             lambda: sweep_derived(node, w, payer, st.payment.txid_internal, st.payment.vout), "swept")
 
         tx = bytearray(bytes.fromhex(real.tx_hex))
         tx[-40] ^= 1

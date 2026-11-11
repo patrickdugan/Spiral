@@ -7,7 +7,8 @@ Order of checks (each refusal has its own reason code):
 3. the menu's policy on the statement (`policy.check`): network, genesis, Nova key, chainwork
    floor, confirmations, the pre-programmed address, minimum value;
 4. the payment transaction hashes to the proven txid and its output is the proven one;
-5. the sender (`sender.resolve`), with the witness bound to the proven block when needed;
+5. the sender (`sender.resolve`), with the witness bound to the proven block when needed, and
+   for a one-key sender under `payout_key: derived`, the derived payout key (`payout_key.py`);
 6. the price (`Menu.payout_sats`);
 7. the journal: the outpoint has not been served.
 Only then does the desk reserve the outpoint and pay.
@@ -19,7 +20,7 @@ import struct
 import tempfile
 from dataclasses import dataclass
 
-from . import btc, gate, policy, sender, statement
+from . import btc, gate, payout_key, policy, sender, statement
 from .errors import Refusal
 from .ledger import Ledger
 from .menu import Menu
@@ -127,9 +128,19 @@ def evaluate(menu: Menu, order: Order, ledger: Ledger, *, allow_unproven: bool =
     tx = _payment_tx(order, st)
     _check_output(menu, st, tx)
     who = _sender(order, st, tx)
+    if menu.payout_key == "derived":
+        who = payout_key.derive_sender(who, st.payment.txid_internal, st.payment.vout)
     payout, tier = menu.payout_sats(st.payment.value_sats, who.kind)
     ledger.check_free(st.payment.outpoint)
     p = st.payment
+    who_out = {
+        "script_pubkey": who.script_pubkey.hex(),
+        "kind": who.kind,
+        "rule": who.rule,
+        "payout_address": btc.spk_to_address(who.script_pubkey, menu.out_network),
+    }
+    if who.derived_from:
+        who_out["derived_from"] = dict(who.derived_from)
     return {
         "status": "accepted",
         "proof": proof_state,
@@ -144,12 +155,7 @@ def evaluate(menu: Menu, order: Order, ledger: Ledger, *, allow_unproven: bool =
             "tip_height": st.tip.height,
             "tip_chainwork": f"{st.tip.chainwork:x}",
         },
-        "sender": {
-            "script_pubkey": who.script_pubkey.hex(),
-            "kind": who.kind,
-            "rule": who.rule,
-            "payout_address": btc.spk_to_address(who.script_pubkey, menu.out_network),
-        },
+        "sender": who_out,
         "payout": {"sats": payout, "rate_ppm": tier.rate_ppm, "fee_sats": menu.fee_sats, "network": menu.out_network},
         "_link": link_data(p).hex(),
     }
