@@ -336,8 +336,11 @@ this section is built here.
 
 Removing the committee needs a covenant that checks inputs as well as outputs. CTV fixes outputs
 but not which other inputs a transaction spends, so it cannot hold the connector outputs the
-disprove path depends on. TXHASH or OP_CHECKCONTRACTVERIFY could hold them. Neither is active on
-mainnet.
+disprove path depends on. BIP 448 (OP_TEMPLATEHASH from BIP 446 with OP_CHECKSIGFROMSTACK and
+OP_INTERNALKEY, a draft) leaves out prevouts and amounts in the same way. With it, edges that only
+fix outputs would need no presigned signatures, which cuts the number of MuSig2 sessions and
+nonces. The committee would still sign every transaction that spends a connector. TXHASH or
+OP_CHECKCONTRACTVERIFY could hold the connectors. None of these is active on mainnet.
 
 ## Layout
 
