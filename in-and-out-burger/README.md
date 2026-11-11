@@ -306,6 +306,39 @@ Refilling the float from a BitVM3 vault without trusting the operator still need
 3. **Latency the vault can tolerate.** About 5 GPU hours per mainnet proof, plus the challenge
    window.
 
+### Who holds the committee keys
+
+The graph is presigned by an n-of-n MuSig2 committee that then deletes its keys. Once every
+member has signed, the graph can only be changed with all n keys, so one member who really
+deleted is enough. Everything except the keys can run as a deterministic flow, and nothing in
+this section is built here.
+
+- **The graph is a pure function.** Its inputs are the vault UTXO, the operator's xpub index, the
+  M14 circuit hash, the timelocks and the fees. Each member rebuilds the graph and computes every
+  sighash itself, and signs only those. A coordinator then cannot slip in a transaction the graph
+  does not contain. Signing a sighash the coordinator hands over amounts to signing a theft.
+- **Keys and nonces are fresh randomness, held only in RAM.** A key derived from a seed cannot be
+  deleted, because the seed derives it again. MuSig2 key aggregation stops rogue-key attacks, so
+  key generation only needs each member's own randomness to be sound. Every transaction in the
+  graph is its own signing session and needs its own random nonce pair. Using a secret nonce
+  twice leaks the key, and BIP327's deterministic signing is safe only for the last signer.
+- **Funding comes last.** Each member checks the aggregated signatures on the whole graph before
+  deleting. The depositor checks them before signing the deposit, so funds never sit behind a
+  graph that is only partly signed.
+- **Deletion cannot be proven, only made believable.** Three ways to back it:
+  - the depositor or LP joins the committee and then trusts only itself;
+  - a member runs an amnesic air-gapped signer that boots read-only, keeps keys in RAM and is
+    powered off afterwards (airsign). Two MuSig2 rounds per transaction over QR codes is many
+    scans for a graph with tens to hundreds of transactions;
+  - members run attested TEEs from different vendors.
+- **The damage has a bound.** Use a fresh committee for each graph and fixed-size vault UTXOs. A
+  committee that colludes, or whose keys all leak, then opens one UTXO, not the vault.
+
+Removing the committee needs a covenant that checks inputs as well as outputs. CTV fixes outputs
+but not which other inputs a transaction spends, so it cannot hold the connector outputs the
+disprove path depends on. TXHASH or OP_CHECKCONTRACTVERIFY could hold them. Neither is active on
+mainnet.
+
 ## Layout
 
 - `iob/btc.py`: hashes (including RIPEMD-160, which OpenSSL 3 may lack), transactions, Merkle
