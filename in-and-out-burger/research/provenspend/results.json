@@ -1,0 +1,15 @@
+{
+  "tests_run": 55,
+  "failures": 0,
+  "errors": 0,
+  "success": true,
+  "scope": "semantic binding, origin rules, dynamic P2WPKH payout, replay state, test cost caps",
+  "proof_backend": "ideal receipt oracle; no cryptographic proofs",
+  "core_integration": false,
+  "wire_decoder_implemented": false,
+  "model_profile_and_limits": "test-only, unallocated, unbenchmarked",
+  "source_sha256": {
+    "model.py": "103257809c5ac84fd76c342e0e141e991cce8f7005829bdec8c0397c11e4e497",
+    "test_model.py": "37d713c71001a5bf1c51f875fc6a10df2f3e282458f172e610b851699087d78e"
+  }
+}
