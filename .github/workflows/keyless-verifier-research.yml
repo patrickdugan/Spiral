@@ -26,3 +26,7 @@ jobs:
         run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p 'test_*.py' -v
       - name: Native Pallas IPA demonstration
         run: python BIPSpace/Keyless-CHECKSIG/verifiers/nova_ipa.py
+      - name: Nova fold demonstration
+        run: python BIPSpace/Keyless-CHECKSIG/verifiers/nova_fold.py
+      - name: Script-compiled transparent AIR demonstration
+        run: python BIPSpace/Keyless-CHECKSIG/verifiers/stark_trace.py
