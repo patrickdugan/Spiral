@@ -25,3 +25,10 @@ Bitcoin Core consensus integration is not implemented.
 
 See its [README](Keyless-CHECKSIG/README.md) and
 [BIP research draft](Keyless-CHECKSIG/bip-keyless-checksig.md).
+
+
+The [Keyless CHECKSIG verifier workbench](Keyless-CHECKSIG/verifiers/)
+contains the current transparent Script arithmetic and Pallas/Nova
+cryptographic prototypes. Its full-trace AIR model is distinguished
+from a production STARK, and the separate Rust adapter calls the
+existing real Nova 0.76 native compressed verifier.
