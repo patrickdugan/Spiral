@@ -1,0 +1,184 @@
+{
+ "bitcoind": "/Satoshi:31.1.0/",
+ "failed": 0,
+ "float_btc_after_one_block_more": "99.99051216",
+ "float_btc_before": "50.0",
+ "gate": [
+  "/root/kan-gate/kan-payment-gate"
+ ],
+ "gate_sha256": "2344753bc291b611bcffb74e04bcabd0e9b92a3832e7a95132641ef752602f56",
+ "passed": 14,
+ "proof": {
+  "bytes": 1099173,
+  "path": "/root/m16-main/m16-wrap-blake3-v2.bin",
+  "sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3"
+ },
+ "seconds": 8.8,
+ "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+ "steps": [
+  {
+   "ok": true,
+   "result": {
+    "in": {
+     "address": "bc1q3czxrv2eptks5u37yxkpdayrzlxm965ktma3cu",
+     "block_hash": "000000000000000000017809af97fdd5530149e411b2ab091db4f405e355fe22",
+     "block_height": 975067,
+     "confirmations": 6,
+     "outpoint": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0",
+     "tip_chainwork": "156c4c3c54ad473bac5daf261",
+     "tip_height": 975072,
+     "value_sats": 940000
+    },
+    "payout": {
+     "broadcast": true,
+     "fee_sats": 1000,
+     "network": "regtest",
+     "rate_ppm": 1010000,
+     "sats": 948400,
+     "txid": "8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841"
+    },
+    "proof": "verified",
+    "sender": {
+     "kind": "p2wpkh",
+     "payout_address": "bcrt1qcfgpeswyzk9sh9qxxa53lqrnd92whjy2qs9rzj",
+     "rule": "input0:p2wpkh",
+     "script_pubkey": "0014c2501cc1c4158b0b940637691f80736954ebc88a"
+    },
+    "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+    "status": "served"
+   },
+   "seconds": 0.135,
+   "step": "serve the M16 mainnet payment order"
+  },
+  {
+   "ok": true,
+   "result": "verified",
+   "step": "proof state is verified"
+  },
+  {
+   "ok": true,
+   "result": {
+    "confirmations": 1,
+    "fee_sats": 384,
+    "link_output": true,
+    "outputs_to_sender_sats": [
+     948400
+    ],
+    "payout_txid": "8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841",
+    "sender_utxo_total_btc": "0.009484",
+    "vsize": 192
+   },
+   "step": "payout confirmed on regtest, sender script holds exactly the payout"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045:0 paid by 8c44697f392f01e0862ce4a6a2d23eaa0a3d19355122d70ea34134e47ca49841",
+    "reason": "already_served",
+    "status": "refused"
+   },
+   "seconds": 0.032,
+   "step": "serve the same order again"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "payment wtxid is not under the block's witness commitment",
+    "reason": "sender_proof_witness",
+    "status": "refused"
+   },
+   "seconds": 0.034,
+   "step": "forged witness (same txid)"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: 58432f41ce2b63d9a8e65e9b5bed183cd2ed12a03fe2b6020cda00235c147283",
+    "reason": "script_not_registered",
+    "status": "refused"
+   },
+   "seconds": 0.032,
+   "step": "menu pre-programmed with another address"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: tip 975072 chainwork 000000000000000000000000000000000000000156c4c3c54ad473bac5daf261",
+    "reason": "chainwork_below_floor",
+    "status": "refused"
+   },
+   "seconds": 0.036,
+   "step": "chainwork floor one above the proven tip"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "no final proof in the order",
+    "reason": "proof_required",
+    "status": "refused"
+   },
+   "seconds": 0.0,
+   "step": "no proof, no --allow-unproven"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: 5df3760fed1620671151183a73c9407d528b2239a5cd243b14cf5c7b4d4af46b",
+    "reason": "proof_wrong_program",
+    "status": "refused"
+   },
+   "seconds": 0.037,
+   "step": "guest A's real final proof offered for the M16 statement (kan-payment-gate check)"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: BLAKE3 wrap proof (transcript v2) rejected: InvalidopeningArgument(DensePcsVerificationFailed(PcsError(tensor opening error: root mismatch)))",
+    "reason": "proof_rejected",
+    "status": "refused"
+   },
+   "seconds": 0.032,
+   "step": "tampered wrap: one bit flipped at the middle byte"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: BLAKE3 wrap proof (transcript v2) rejected: GkrVerificationFailed(Pow)",
+    "reason": "proof_rejected",
+    "status": "refused"
+   },
+   "seconds": 0.007,
+   "step": "tampered wrap: committed digest re-pointed at a statement claiming 1,880,000 sats"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: io error: unexpected end of file",
+    "reason": "proof_malformed",
+    "status": "refused"
+   },
+   "seconds": 0.008,
+   "step": "tampered wrap: last byte cut"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: proof commits cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869, statement is 8f589c349401e65b51636c14e66e6c646c63b69a7ad3f02b3b0a3706495e5264",
+    "reason": "statement_digest_mismatch",
+    "status": "refused"
+   },
+   "seconds": 0.031,
+   "step": "wrong statement: the real wrap with the value doubled to 1,880,000 sats"
+  },
+  {
+   "ok": true,
+   "result": {
+    "detail": "gate: proof commits cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869, statement is 67a9deb95cb04d9d7fa7615d9aba45a2a0c95256a5d8e853191706c8b9a25c71",
+    "reason": "statement_digest_mismatch",
+    "status": "refused"
+   },
+   "seconds": 0.035,
+   "step": "wrong statement: the real wrap with another real M16 statement (sha256 67a9deb95cb04d9d...)"
+  }
+ ]
+}

@@ -61,8 +61,8 @@ The payout carries `OP_RETURN "IOBP" || in-txid || vout`, so each payout names t
 answers and is itself provable by M16.
 
 An order without a proof is refused (`proof_required`). `--allow-unproven` admits one for a
-regtest payout only (`unproven_needs_regtest` otherwise). That flag exists for the replay below,
-because no M16 final proof exists yet.
+regtest payout only (`unproven_needs_regtest` otherwise). The unproven replay below uses it; the
+proven replay does not.
 
 ## Who is the sender
 
@@ -130,7 +130,46 @@ Fixtures ([`fixtures/m16-mainnet`](fixtures/m16-mainnet)) come from the M16 inpu
 | `payment-tx.hex` | `python -m iob tx`, run on `block.bin` (block 975,067 from mempool.space, SHA-256 `41600bb8…aae8`; its header matches Core's) |
 | `sender-proof.json` | `python -m iob sender-proof`, run on the same block |
 
-### Results (2026-11-10)
+### Proven order (2026-11-11)
+
+The final proof is the M16 mainnet run's BLAKE3 v2 wrap, proved on the laptop GPU on
+2026-11-11:
+
+| | |
+| --- | --- |
+| file | `m16-wrap-blake3-v2.bin`, 1,099,173 bytes, SHA-256 `97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3` |
+| where | garbled-snark-verifier `nova-bitvm3/m13/fixtures/`; public in patrickdugan/zk-rusto-no-bitcoino at `integrations/bitvm3-nova/m13/fixtures/` (c85ee60, same SHA-256) |
+| commits | statement `cae6068f…c869` (equal to `fixtures/m16-mainnet/statement.bin`), program key `dfc68a5d…cb60`, recursion root `7487c217…f257`, wrap key `d42c63e3…b0d7` |
+| gate | `kan-payment-gate` from UTXO-Ref fc69bba, binary SHA-256 `2344753b…2f56` |
+
+```sh
+python3 scripts/regtest_replay.py --proof /root/m16-main/m16-wrap-blake3-v2.bin --out results/regtest-replay-proven.json
+```
+
+Run in WSL with Bitcoin Core 31.1 regtest: 14 of 14 steps passed in 8.8 s, with no
+`--allow-unproven`. The record is [`results/regtest-replay-proven.json`](results/regtest-replay-proven.json).
+
+| Step | Result | Time |
+| --- | --- | --- |
+| serve the M16 order with the real wrap (`kan-payment-gate check`, then the desk's checks) | served, `proof: verified`: 948,400 sats to `bcrt1qcfgp…qs9rzj`, 192 vB, 384 sats fee | 0.135 s |
+| the chain after one block | the sender's script holds exactly 948,400 sats (`scantxoutset`); the payout carries the IOBP link | |
+| the same order again | `already_served` | 0.032 s |
+| a forged witness with the same txid | `sender_proof_witness` | 0.034 s |
+| a menu pre-programmed with another address | `script_not_registered` (from the gate's policy) | 0.032 s |
+| a chainwork floor one above the proven tip | `chainwork_below_floor` (from the gate's policy) | 0.036 s |
+| no proof and no `--allow-unproven` | `proof_required` | 0.000 s |
+| guest A's real final proof offered for the M16 statement | `proof_wrong_program` | 0.037 s |
+| the wrap with one bit flipped at its middle byte | `proof_rejected` (PCS root mismatch) | 0.032 s |
+| the wrap's committed digest re-pointed at a statement claiming 1,880,000 sats, offered with that statement | `proof_rejected` (`GkrVerificationFailed(Pow)`) | 0.007 s |
+| the wrap with its last byte cut | `proof_malformed` | 0.008 s |
+| the real wrap with the statement's value doubled to 1,880,000 sats | `statement_digest_mismatch` | 0.031 s |
+| the real wrap with another real M16 statement (block 170 run, `67a9deb9…`) | `statement_digest_mismatch` | 0.035 s |
+
+Run alone under `/usr/bin/time`, the gate verifies the 1.1 MB wrap in 0.03 s with 5.5 MB peak
+RSS. The committed digest sits at byte 240 of the wrap, one byte per little-endian u32; the
+replay checks that before it re-points it.
+
+### Unproven replay (2026-11-10)
 
 `scripts/regtest_replay.py`, run in WSL with Bitcoin Core 31.1 regtest and the
 `kan-payment-gate` binary built from UTXO-Ref fc69bba: 8 of 8 steps passed in 12 s.
@@ -150,21 +189,15 @@ The record is [`results/regtest-replay.json`](results/regtest-replay.json).
 Unit tests (`tests/`, 46) run against the real statement, the real transaction and the real
 sender proof, with each binding tampered in turn, and against synthetic blocks for the other
 sender rules (P2PKH, P2SH-P2WPKH, P2SH-P2WSH, P2WSH, declared return, Taproot refusals).
-
-**Not yet run:** a *proven* order. The M16 mainnet GPU proof is running
-(`/root/nb3-runs/m16-mainnet-t27`), and its BLAKE3 v2 wrap does not exist yet. When it does:
-
-```sh
-python3 scripts/regtest_replay.py --proof <m16-wrap-blake3-v2.bin> --out results/regtest-replay-proven.json
-```
-
-That run serves the order with `proof: verified` and no `--allow-unproven`.
+On 2026-11-11: 46 passed in 1.8 s (Python 3.12, Windows). Re-running the unproven replay with the
+2026-11-11 script gave 9 of 9; the extra step is the `proof: absent` check.
 
 ## Commands
 
 ```sh
 python -m pytest -q tests                                  # unit tests, any OS, standard library only
 python3 scripts/regtest_replay.py --out results/x.json     # WSL: needs bitcoind and kan-payment-gate
+python3 scripts/regtest_replay.py --proof WRAP.bin --out results/x.json   # proven, plus tamper refusals
 python -m iob inspect --statement S                        # decode an M16 statement
 python -m iob policy --menu M                              # the kan-payment-gate policy a menu implies
 python -m iob tx --block BLOCK.bin --txid T                # the payment tx, with witness, from a raw block
