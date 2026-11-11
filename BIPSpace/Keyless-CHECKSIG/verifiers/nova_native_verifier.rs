@@ -6,19 +6,27 @@
 //! It runs NATIVELY, not in Bitcoin Script. No script-value authorization
 //! follows from its output unless the proved statement includes that relation.
 
-use nova_bitvm3_m12::nova_io;
+use nova_bitvm3_m12::{bundle::Bundle, nova_io};
 use std::{env, fs, process::ExitCode};
 
 fn run() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
     if args.len() != 4 {
         return Err(
-            "usage: keyless_nova_verify NHC1_OR_NHT4_BUNDLE COMPRESSED_VERIFIER_KEY EXPECTED_PUBLIC_STATEMENT_SHA256"
+            "usage: keyless_nova_verify NHC1_OR_NHT4_BUNDLE COMPRESSED_VERIFIER_KEY_OR_--rebuild-testnet4-k1 EXPECTED_PUBLIC_STATEMENT_SHA256"
                 .to_owned(),
         );
     }
     let bundle = fs::read(&args[1]).map_err(|e| format!("read bundle: {e}"))?;
-    let vk = fs::read(&args[2]).map_err(|e| format!("read verifier key: {e}"))?;
+    let vk = if args[2] == "--rebuild-testnet4-k1" {
+        let desc = Bundle::parse(&bundle).map_err(|e| format!("bundle: {e}"))?;
+        if desc.net.name() != "testnet4" || desc.k != 1 {
+            return Err("key rebuild permitted only for pinned testnet4 k=1 fixture".into());
+        }
+        nova_io::vk_export(desc.net, 1)
+    } else {
+        fs::read(&args[2]).map_err(|e| format!("read verifier key: {e}"))?
+    };
     if args[3].len() != 64 || !args[3].bytes().all(|b| b.is_ascii_hexdigit()) {
         return Err("expected statement digest must be 64 hexadecimal characters".to_owned());
     }
