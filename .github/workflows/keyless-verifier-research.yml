@@ -24,9 +24,13 @@ jobs:
           python-version: '3.11'
       - name: Test Nova IPA and transparent Script prototype
         run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p 'test_*.py' -v
+      - name: Validate optional Nova runner shell syntax
+        run: bash -n BIPSpace/Keyless-CHECKSIG/verifiers/run_nova_native.sh
       - name: Native Pallas IPA demonstration
         run: python BIPSpace/Keyless-CHECKSIG/verifiers/nova_ipa.py
       - name: Nova fold demonstration
         run: python BIPSpace/Keyless-CHECKSIG/verifiers/nova_fold.py
       - name: Script-compiled transparent AIR demonstration
         run: python BIPSpace/Keyless-CHECKSIG/verifiers/stark_trace.py
+      - name: Compute Bitcoin witness weight of research spend
+        run: python BIPSpace/Keyless-CHECKSIG/verifiers/weight.py
