@@ -1,0 +1,28 @@
+name: BIPSpace verifier research checks
+
+on:
+  push:
+    paths:
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/**'
+      - '.github/workflows/keyless-verifier-research.yml'
+  pull_request:
+    paths:
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/**'
+      - '.github/workflows/keyless-verifier-research.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verifier-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test Nova IPA and transparent Script prototype
+        run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p 'test_*.py' -v
+      - name: Native Pallas IPA demonstration
+        run: python BIPSpace/Keyless-CHECKSIG/verifiers/nova_ipa.py
