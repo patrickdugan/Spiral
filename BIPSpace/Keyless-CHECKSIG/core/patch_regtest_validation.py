@@ -28,7 +28,10 @@ def apply(root: Path) -> None:
     text = path.read_text()
     if MARKER in text:
         raise ValueError('Regtest validation patch already applied')
-    begin = text.index('static unsigned int GetBlockScriptFlags(')
+    signature = 'static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)\n{'
+    if text.count(signature) != 1:
+        raise ValueError('Expected one GetBlockScriptFlags definition')
+    begin = text.index(signature)
     end = text.index('bool Chainstate::ConnectBlock(', begin)
     section = text[begin:end]
     old = '    return flags;\n'
