@@ -1,0 +1,36 @@
+name: Keyless IPA claim audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/keyless-ipa-audit.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/nova_ipa.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/test_ipa_claim_binding.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/audit_ipa_claim.py'
+  pull_request:
+    paths:
+      - '.github/workflows/keyless-ipa-audit.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/*ipa*.py'
+
+permissions:
+  contents: read
+
+jobs:
+  adversarial-claim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve exact vulnerable research revision
+        run: git fetch --depth=1 origin 0e03f8ab4dd53892436c10059c8087364765a463
+      - name: Reproduce attack and enforce rejection after repair
+        run: python3 BIPSpace/Keyless-CHECKSIG/verifiers/audit_ipa_claim.py
+      - name: Run all lightweight verifier tests
+        run: python3 -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p 'test_*.py' -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-audited-source-and-result
+          path: |
+            ipa-claim-audit.json
+            BIPSpace/Keyless-CHECKSIG
