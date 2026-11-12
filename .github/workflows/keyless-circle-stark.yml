@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - '.github/workflows/keyless-circle-stark.yml'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_measure.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py'
   pull_request:
     paths:
       - '.github/workflows/keyless-circle-stark.yml'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_measure.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py'
 
 permissions:
   contents: read
@@ -20,6 +20,7 @@ jobs:
     env:
       CARGO_BUILD_JOBS: '2'
       CARGO_HUSKY_DONT_INSTALL_HOOKS: 'true'
+      KEYLESS_EXPORT_DIR: ${{ github.workspace }}/circle-stages
     steps:
       - uses: actions/checkout@v4
       - name: Fetch pinned Circle-STARK implementation
@@ -32,13 +33,17 @@ jobs:
           git -C /tmp/keyless-circle checkout --detach FETCH_HEAD
           test "$(git -C /tmp/keyless-circle rev-parse HEAD)" = 9540164f243b23e4ca995c153f70ec64744df28a
           rustup toolchain install nightly-2024-11-06 --profile minimal
+      - name: Instrument byte and witness measurements only
+        working-directory: /tmp/keyless-circle
+        shell: bash
+        run: python3 "$GITHUB_WORKSPACE/BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py" /tmp/keyless-circle
       - name: Execute actual prover and all split Script verification stages
         working-directory: /tmp/keyless-circle
         shell: bash
         run: |
           set -euo pipefail
           cargo test --locked --features assume-op-cat dsl::plonk::test::test_generate_dsl -- --exact --nocapture 2>&1 | tee "$GITHUB_WORKSPACE/circle-full-verifier.log"
-      - name: Record exact reported script sizes and stack usage
+      - name: Record exact reported code and witness sizes
         if: always()
         shell: bash
         run: |
@@ -48,12 +53,19 @@ jobs:
           log=path.read_text() if path.exists() else ''
           sizes=[int(x) for x in re.findall(r'script size: (\d+)',log)]
           stacks=[int(x) for x in re.findall(r'max stack size: (\d+)',log)]
+          stages=[json.loads(p.read_text()) for p in sorted(pathlib.Path('circle-stages').glob('stage-*.json'))]
           passed=bool(re.search(r'test result: ok\. 1 passed; 0 failed;',log))
           out={'source_revision':'9540164f243b23e4ca995c153f70ec64744df28a',
                'real_proof_generated':passed,'all_split_script_stages_passed':passed,
                'executed_script_stages':len(sizes),'reported_script_bytes':sizes,
                'sum_reported_script_bytes':sum(sizes),'max_stack_items':max(stacks,default=0),
-               'scope':'Upstream real STWO proof; separate Script verifier stages. Sizes include inline input/hint pushes and expected-state checks.',
+               'exported_stages':len(stages),'sum_compiled_program_bytes':sum(s['script_bytes'] for s in stages),
+               'sum_hint_items':sum(s['hint_items'] for s in stages),
+               'sum_input_items':sum(s['input_items'] for s in stages),
+               'sum_serialized_hint_bytes':sum(s['serialized_hint_bytes'] for s in stages),
+               'sum_serialized_input_bytes':sum(s['serialized_input_bytes'] for s in stages),
+               'max_witness_item_bytes':max((s['max_witness_item_bytes'] for s in stages),default=0),
+               'scope':'Real STWO proof, separately verified Script stages. Compiled programs and proof hints are exported separately. No single-transaction or payout-binding claim.',
                'single_transaction_verified':False,'txcommit_integrated':False}
           pathlib.Path('circle-measurements.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
@@ -65,3 +77,4 @@ jobs:
           path: |
             circle-full-verifier.log
             circle-measurements.json
+            circle-stages
