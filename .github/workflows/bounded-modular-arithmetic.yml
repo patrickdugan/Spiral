@@ -1,0 +1,33 @@
+name: Bounded modular arithmetic research
+
+on:
+  push:
+    paths:
+      - 'BIPSpace/Bounded-Modular-Arithmetic/**'
+      - '.github/workflows/bounded-modular-arithmetic.yml'
+  pull_request:
+    paths:
+      - 'BIPSpace/Bounded-Modular-Arithmetic/**'
+      - '.github/workflows/bounded-modular-arithmetic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-and-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python and native toolchains
+        run: |
+          python3 --version
+          g++ --version
+          clang++ --version
+      - name: Run semantics, adversarial traces and sanitized native checks
+        run: python3 BIPSpace/Bounded-Modular-Arithmetic/verify.py --output "$RUNNER_TEMP/bma-results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bounded-modular-arithmetic-verification
+          path: ${{ runner.temp }}/bma-results

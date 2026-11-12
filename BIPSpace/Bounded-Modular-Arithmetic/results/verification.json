@@ -1,0 +1,158 @@
+{
+  "elapsed_seconds": 5.004114350000009,
+  "errors": 0,
+  "failures": 0,
+  "microbenchmark": {
+    "flags": "-std=c++17 -O2 -DNDEBUG",
+    "iterations_per_sample": 4000,
+    "samples": 5,
+    "scope": "Local dense-operand microbenchmark including decode and result allocation; no consensus price calibration.",
+    "widths": {
+      "1": {
+        "checksums": [
+          763536,
+          763536,
+          763536,
+          763536,
+          763536
+        ],
+        "median_ns": 178.87,
+        "nanoseconds_per_call": [
+          209.48,
+          236.61,
+          178.87,
+          174.47,
+          157.73
+        ]
+      },
+      "16": {
+        "checksums": [
+          763536,
+          763536,
+          763536,
+          763536,
+          763536
+        ],
+        "median_ns": 6359.14,
+        "nanoseconds_per_call": [
+          6894.44,
+          6359.14,
+          5934.35,
+          6911.26,
+          6273.37
+        ]
+      },
+      "32": {
+        "checksums": [
+          763536,
+          763536,
+          763536,
+          763536,
+          763536
+        ],
+        "median_ns": 21921.0,
+        "nanoseconds_per_call": [
+          22060.2,
+          21921.0,
+          21782.7,
+          23351.52,
+          21607.3
+        ]
+      },
+      "4": {
+        "checksums": [
+          763536,
+          763536,
+          763536,
+          763536,
+          763536
+        ],
+        "median_ns": 1015.5,
+        "nanoseconds_per_call": [
+          1135.0,
+          971.25,
+          1015.5,
+          1094.05,
+          915.32
+        ]
+      },
+      "8": {
+        "checksums": [
+          763536,
+          763536,
+          763536,
+          763536,
+          763536
+        ],
+        "median_ns": 2295.01,
+        "nanoseconds_per_call": [
+          2295.01,
+          2369.26,
+          2276.86,
+          2718.55,
+          2124.81
+        ]
+      }
+    }
+  },
+  "native": {
+    "clang++": {
+      "compiler": "clang version 17.0.0 (https://github.com/swiftlang/llvm-project.git 10999b6d034fe318f3d56c83bddb6572593a8bb0)",
+      "flags": [
+        "-std=c++17",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all"
+      ],
+      "rejection_vectors": 293,
+      "sanitizer": "undefined; no recovery",
+      "valid_vectors": 12037
+    },
+    "g++": {
+      "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+      "flags": [
+        "-std=c++17",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all"
+      ],
+      "rejection_vectors": 293,
+      "sanitizer": "undefined; no recovery",
+      "valid_vectors": 12037
+    }
+  },
+  "original_python_vectors": {
+    "boundary_vectors": 1709,
+    "exhaustive_vectors": 8280,
+    "random_vectors": 2048
+  },
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "scope": "Host models and standalone C++ only; Bitcoin Core and live BitVM execution untested.",
+  "skipped": 0,
+  "source_sha256": {
+    "dispute.py": "ea685f747372d6109c6f6563c1dc99b86661773af0bcf6b4d3c2839f94ded5ee",
+    "metering.py": "6b24a19ddac7cdcca3847d6acc2334be6b45d4fb7e156b4b510621b6b4e89cab",
+    "muladdmod.py": "1ef628cc157e0a046ff641f289ce386245fb7da26b5720f91f5947ed9e63ccad",
+    "native/muladdmod.cpp": "ea3cc122bb773ff84d1f1493cba7c20efb15c5ddea5f190139e75f9b82382f84",
+    "test_dispute.py": "cfb1d7ee76c50078295f9c3b9f2eddba0af7ef2d4de579aee9c40710a2056936",
+    "test_metering.py": "0f06738a6236c1d3b94a56dc2f9aee3a9ac49d99f8b5e9476620e6852c3c021f",
+    "test_muladdmod.py": "775704d5de4c482616894efa6cdfb2cd9f28373ffe14e87e467abab2927688c3",
+    "test_native.py": "c8ea0af6c4123a3ac5ae3c78a1def2d8ea45115b7d3212ced60771242e8cc660",
+    "verify.py": "c203b5a1b5bbd9078740b4cf4ead137aa1d907897b214b0feb0b7eabc2e0e377"
+  },
+  "status": "pass",
+  "tests": 59,
+  "trace_exhaustion": {
+    "exhaustive_traces": 243,
+    "wrong_traces_challenged": 242
+  }
+}
