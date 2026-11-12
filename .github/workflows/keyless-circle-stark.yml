@@ -5,10 +5,12 @@ on:
     paths:
       - '.github/workflows/keyless-circle-stark.yml'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_core_vectors.py'
   pull_request:
     paths:
       - '.github/workflows/keyless-circle-stark.yml'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_core_vectors.py'
 
 permissions:
   contents: read
@@ -33,7 +35,7 @@ jobs:
           git -C /tmp/keyless-circle checkout --detach FETCH_HEAD
           test "$(git -C /tmp/keyless-circle rev-parse HEAD)" = 9540164f243b23e4ca995c153f70ec64744df28a
           rustup toolchain install nightly-2024-11-06 --profile minimal
-      - name: Instrument byte and witness measurements only
+      - name: Export canonical code and witness bytes without changing constraints
         working-directory: /tmp/keyless-circle
         shell: bash
         run: python3 "$GITHUB_WORKSPACE/BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py" /tmp/keyless-circle
@@ -65,10 +67,12 @@ jobs:
                'sum_serialized_hint_bytes':sum(s['serialized_hint_bytes'] for s in stages),
                'sum_serialized_input_bytes':sum(s['serialized_input_bytes'] for s in stages),
                'max_witness_item_bytes':max((s['max_witness_item_bytes'] for s in stages),default=0),
-               'scope':'Real STWO proof, separately verified Script stages. Compiled programs and proof hints are exported separately. No single-transaction or payout-binding claim.',
+               'scope':'Real STWO proof, separately verified Script stages. Compiled programs and proof hints are exported separately. No composed-verifier or payout-binding claim.',
                'single_transaction_verified':False,'txcommit_integrated':False}
           pathlib.Path('circle-measurements.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
+          if not passed or not stages or len(stages)!=len(sizes):
+              raise SystemExit('Missing successful proof/stage evidence')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
@@ -78,3 +82,50 @@ jobs:
             circle-full-verifier.log
             circle-measurements.json
             circle-stages
+
+  core-stage-replay:
+    needs: real-circle-verifier
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: keyless-real-circle-results
+          path: circle-export
+      - name: Build transaction fixtures from real exported proof stages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/circle_core_vectors.py circle-export/circle-stages circle-core-vectors.json circle-core-measurements.json
+          git init /tmp/keyless-circle-core
+          git -C /tmp/keyless-circle-core remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/keyless-circle-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          git -C /tmp/keyless-circle-core checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-circle-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-circle-core
+          git -C /tmp/keyless-circle-core diff > circle-core.patch
+      - name: Build actual Bitcoin Core test binary with opt-in research flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
+          cmake -S /tmp/keyless-circle-core -B /tmp/keyless-circle-core/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=ON -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O1 -g0'
+          cmake --build /tmp/keyless-circle-core/build --target test_bitcoin -j 2
+      - name: Verify real proof-stage witness transactions and output mutations
+        env:
+          KEYLESS_CORE_VECTORS: ${{ github.workspace }}/circle-core-vectors.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/keyless-circle-core/build/bin/test_bitcoin --run_test=script_tests/keyless_research_transaction_vectors --log_level=test_suite --report_level=detailed 2>&1 | tee circle-core-results.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-circle-core-results
+          path: |
+            circle-core-vectors.json
+            circle-core-measurements.json
+            circle-core.patch
+            circle-core-results.log
