@@ -1,87 +1,110 @@
-name: Keyless Circle STARK regtest block
+name: Keyless Circle STARK regtest blocks
 
 on:
   push:
     paths:
       - '.github/workflows/keyless-circle-regtest.yml'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/regtest_circle_block.py'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_regtest_validation.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/regtest_circle_blocks.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_core.py'
   pull_request:
     paths:
       - '.github/workflows/keyless-circle-regtest.yml'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/regtest_circle_block.py'
-      - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_regtest_validation.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/regtest_circle_blocks.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_core.py'
+  workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  regtest-block:
+  regtest-blocks:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      CARGO_BUILD_JOBS: '2'
-      CARGO_HUSKY_DONT_INSTALL_HOOKS: 'true'
-      KEYLESS_EXPORT_DIR: ${{ github.workspace }}/circle-stages
+      CCACHE_DIR: /home/runner/.cache/keyless-core-ccache
+      CCACHE_MAXSIZE: 400M
     steps:
       - uses: actions/checkout@v4
-      - name: Generate and check real proof from pinned Circle-STARK source
-        shell: bash
+      - name: Fetch exact previously verified real STWO proof artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: keyless-linked-circle-chain
+          run-id: 43168685081
+          repository: patrickdugan/Spiral
+          github-token: ${{ github.token }}
+          path: proof-evidence
+      - name: Authenticate proof fixtures and check Python syntax
         run: |
           set -euo pipefail
-          git init /tmp/keyless-regtest-circle
-          git -C /tmp/keyless-regtest-circle remote add origin https://github.com/Bitcoin-Wildlife-Sanctuary/bitcoin-circle-stark.git
-          git -C /tmp/keyless-regtest-circle fetch --depth=1 origin 9540164f243b23e4ca995c153f70ec64744df28a
-          git -C /tmp/keyless-regtest-circle checkout --detach FETCH_HEAD
-          test "$(git -C /tmp/keyless-regtest-circle rev-parse HEAD)" = 9540164f243b23e4ca995c153f70ec64744df28a
-          rustup toolchain install nightly-2024-11-06 --profile minimal
-          cd /tmp/keyless-regtest-circle
-          python3 "$GITHUB_WORKSPACE/BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py" /tmp/keyless-regtest-circle
-          cargo test --locked --features assume-op-cat dsl::plonk::test::test_generate_dsl -- --exact --nocapture 2>&1 | tee "$GITHUB_WORKSPACE/regtest-proof.log"
-      - name: Patch pinned Core for explicit regtest-only experimental activation
-        shell: bash
-        run: |
-          set -euo pipefail
-          git init /tmp/keyless-regtest-core
-          git -C /tmp/keyless-regtest-core remote add origin https://github.com/bitcoin/bitcoin.git
-          git -C /tmp/keyless-regtest-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
-          git -C /tmp/keyless-regtest-core checkout --detach FETCH_HEAD
-          test "$(git -C /tmp/keyless-regtest-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
-          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-regtest-core
-          python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/keyless-regtest-core
-          git -C /tmp/keyless-regtest-core diff > regtest-core.patch
-      - name: Build actual Bitcoin Core daemon
+          echo '3d56ce8d29a2576142148f3733b29e398ad6794d74f07183d9e055ce309fbfd0  proof-evidence/circle-chain-vectors.json' | sha256sum --check
+          python3 -m py_compile BIPSpace/Keyless-CHECKSIG/core/patch_regtest_validation.py BIPSpace/Keyless-CHECKSIG/core/regtest_circle_blocks.py
+      - uses: actions/cache@v4
+        with:
+          path: /home/runner/.cache/keyless-core-ccache
+          key: keyless-regtest-core30-${{ runner.os }}-${{ hashFiles('BIPSpace/Keyless-CHECKSIG/core/patch*.py') }}
+          restore-keys: |
+            keyless-regtest-core30-${{ runner.os }}-
+      - name: Prepare pinned Core with compile-time regtest-only research rules
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
-          cmake -S /tmp/keyless-regtest-core -B /tmp/keyless-regtest-core/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O1 -g0'
-          cmake --build /tmp/keyless-regtest-core/build --target bitcoind -j 2
-      - name: Reject mutated block and accept funding plus all 72 transitions
+          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build ccache
+          git init /tmp/keyless-block-core
+          git -C /tmp/keyless-block-core remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/keyless-block-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          git -C /tmp/keyless-block-core checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-block-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-block-core
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_regtest_validation.py /tmp/keyless-block-core
+          git -C /tmp/keyless-block-core diff > keyless-regtest-core.patch
+          cmake -S /tmp/keyless-block-core -B /tmp/keyless-block-core/build -G Ninja \
+            -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O1 -g0 -DKEYLESS_RESEARCH_REGTEST=1' \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      - name: Build research bitcoind
         shell: bash
         run: |
           set -euo pipefail
-          python3 BIPSpace/Keyless-CHECKSIG/verifiers/regtest_circle_block.py /tmp/keyless-regtest-core/build/bin/bitcoind circle-stages regtest-results | tee regtest-results.log
+          cmake --build /tmp/keyless-block-core/build --target bitcoind -j 2 2>&1 | tee keyless-regtest-build.log
+          ccache --show-stats
+      - name: Mine valid proof, reject forgeries, exercise reorgs and rebuild chainstate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 BIPSpace/Keyless-CHECKSIG/core/regtest_circle_blocks.py \
+            --core /tmp/keyless-block-core \
+            --bitcoind /tmp/keyless-block-core/build/bin/bitcoind \
+            --vectors proof-evidence/circle-chain-vectors.json \
+            --output keyless-regtest-evidence 2>&1 | tee keyless-regtest-run.log
+      - name: Pin evidence hashes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p keyless-regtest-evidence
           python3 - <<'PY'
-          import hashlib,json,os,pathlib
-          p=pathlib.Path('regtest-results/regtest-circle-results.json')
-          result=json.loads(p.read_text())
-          assert result['proof_stage_count']==72 and result['block']['transactions']==74
-          assert result['block']['weight']<4_000_000 and result['connected_peers']==0
-          assert result['valid_block_submit_result'] is None
-          assert result['terminal_value_sats']==9_280_000
-          result['run_id']=int(os.environ['GITHUB_RUN_ID'])
-          result['spiral_commit']=os.environ['GITHUB_SHA']
-          result['artifact_hashes']={name:hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() for name in ('regtest-core.patch','regtest-proof.log','regtest-results/circle-chain-valid-block.hex','regtest-results/circle-chain-invalid-block.hex')}
-          p.write_text(json.dumps(result,indent=2)+'\n')
+          import hashlib,json,pathlib
+          roots=[pathlib.Path('keyless-regtest-core.patch'),pathlib.Path('keyless-regtest-build.log'),pathlib.Path('keyless-regtest-run.log')]
+          roots+=list(pathlib.Path('keyless-regtest-evidence').glob('*.blockhex'))
+          roots+=list(pathlib.Path('keyless-regtest-evidence').glob('*.hex'))
+          roots+=list(pathlib.Path('keyless-regtest-evidence').glob('results.json'))
+          hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in roots if p.exists()}
+          pathlib.Path('keyless-regtest-evidence/hashes.json').write_text(json.dumps(hashes,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: keyless-circle-regtest-block
+          name: keyless-circle-regtest-blocks
           path: |
-            regtest-results
-            regtest-results.log
-            regtest-core.patch
-            regtest-proof.log
+            keyless-regtest-evidence/results.json
+            keyless-regtest-evidence/hashes.json
+            keyless-regtest-evidence/*.blockhex
+            keyless-regtest-evidence/*.hex
+            keyless-regtest-evidence/node/console.log
+            keyless-regtest-evidence/node/regtest/debug.log
+            keyless-regtest-core.patch
+            keyless-regtest-build.log
+            keyless-regtest-run.log
