@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Replay exported real Circle-STARK stages in Core's VerifyScript.
+"""Replay real Circle-STARK stages with Script-computed transaction effects.
 
-Each fixture checks the expected stage output and an actual TapSighash. Stages
-are independent; this is deliberately not a composed proof or payout circuit.
-No network consensus flags are changed by this exporter.
+The verifier's state result becomes an actual OP_RETURN output. Script checks
+one of two recipient openings and reconstructs TapSighash from those outputs.
+Stages remain independent: cross-stage state authorization is not implemented.
 """
 from __future__ import annotations
 import argparse
@@ -13,6 +13,8 @@ import struct
 from pathlib import Path
 
 MAX_BLOCK_WEIGHT = 4_000_000
+RECIPIENTS = (bytes.fromhex('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'),
+              bytes.fromhex('c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'))
 TXCOMMIT = b'\x02' + hashlib.sha256(b'BIPSpace/Keyless-CHECKSIG/TXCOMMIT-draft').digest()
 OP_SUCCESS = {80, 98, *range(126, 130), *range(131, 135), *range(137, 139),
               *range(141, 143), *range(149, 154), *range(187, 255)}
@@ -86,8 +88,8 @@ def out(value: int, script: bytes) -> bytes:
     return struct.pack('<Q', value) + compact(len(script)) + script
 
 
-def fixture(stage: int, script: bytes, stack: list[bytes]) -> dict:
-    """A synthetic, serialized one-input transaction. No funds are broadcast."""
+def fixture(stage: int, script: bytes, stack: list[bytes], state: bytes, recipient: int = 0) -> dict:
+    """Synthetic serialized one-input transaction. No funds are broadcast."""
     leaf = tapleaf(script)
     sibling = tapleaf(b'\x6a')
     root = tagged('TapBranch', min(leaf, sibling) + max(leaf, sibling))
@@ -97,29 +99,32 @@ def fixture(stage: int, script: bytes, stack: list[bytes]) -> dict:
     sequence = struct.pack('<I', 0xfffffffd)
     header = struct.pack('<i', 2)
     locktime = bytes(4)
-    recipient = bytes.fromhex('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')
-    outputs = out(948400, b'\x51\x20' + recipient)
+    outputs = out(948400, b'\x51\x20' + RECIPIENTS[recipient]) + out(0, b'\x6a\x20' + state)
     spent_value = 949400
     message = (b'\x00\x00' + header + locktime + h(prevout)
                + h(struct.pack('<Q', spent_value)) + h(compact(len(spk)) + spk)
                + h(sequence) + h(outputs) + b'\x02' + bytes(4)
                + leaf + b'\x02' + b'\xff' * 4)
-    digest = tagged('TapSighash', message)
-    items = stack + [digest, script, control]
+    assert len(message) == 212
+    # The outputs-hash slot is omitted. Script computes it from its results.
+    prefix, suffix = message[:138], message[170:]
+    proof_stack = stack + [RECIPIENTS[recipient], h(RECIPIENTS[1-recipient]),
+                           b'' if recipient == 0 else b'\x01', prefix, suffix]
+    items = proof_stack + [script, control]
     witness = compact(len(items)) + b''.join(compact(len(i)) + i for i in items)
     ins = b'\x01' + prevout + b'\x00' + sequence
-    outs = b'\x01' + outputs
+    outs = b'\x02' + outputs
     raw = header + b'\x00\x01' + ins + outs + witness + locktime
     base_bytes = len(header + ins + outs + locktime)
     weight = 4 * base_bytes + 2 + len(witness)
     value_offset = len(header + b'\x00\x01' + ins + b'\x01')
     mutated = bytearray(raw)
     mutated[value_offset] ^= 1
-    return {'name': f'circle-stage-{stage:03}', 'tx_hex': raw.hex(),
+    return {'name': f'circle-stage-{stage:03}-recipient-{recipient}', 'tx_hex': raw.hex(),
             'spent_value': spent_value, 'spent_script': spk.hex(), 'expected': True,
             'output_mutation_hex': bytes(mutated).hex(), 'weight': weight,
-            'witness_stack_items': len(stack) + 1,
-            'max_witness_item_bytes': max([len(i) for i in stack] + [32])}
+            'witness_stack_items': len(proof_stack),
+            'max_witness_item_bytes': max(len(i) for i in proof_stack)}
 
 
 def convert(records: list[dict]) -> tuple[list[dict], dict]:
@@ -138,15 +143,36 @@ def convert(records: list[dict]) -> tuple[list[dict], dict]:
             raise ValueError('Unexpected code separator or signature opcode in proof stage')
         stack = [bytes.fromhex(v) for v in record['hint_hex'] + record['input_hex']]
         expected = [bytes.fromhex(v) for v in record['expected_output_hex']]
-        script = (b'\x6b' + program
-                  + b''.join(push(v) + b'\x88' for v in reversed(expected))
-                  + b'\x6c' + push(TXCOMMIT) + b'\xad\x51')
-        good = fixture(record['stage'], script, stack)
+        if len(expected) != 1 or len(expected[0]) != 32:
+            raise ValueError('Each stage must produce one 32-byte state commitment')
+        # Protect policy/context fields beneath the stage's temporary altstack.
+        # Expected state bytes are used ONLY to construct fixtures, never embedded
+        # in the verifier script. The output-state hash comes from execution.
+        script = (b'\x6b' * 5 + program
+                  + b'\x82' + push(b'\x20') + b'\x88'
+                  + b'\x6c' * 3
+                  + bytes([107,107,118,168,108,108,99,124,104,126,168])
+                  + push(h(h(RECIPIENTS[0]) + h(RECIPIENTS[1]))) + b'\x88'
+                  + push(b'\x51\x20') + b'\x7c\x7e'
+                  + push(struct.pack('<Q',948400)+b'\x22') + b'\x7c\x7e'
+                  + b'\x7c' + push(bytes(8)+b'\x22\x6a\x20') + b'\x7c\x7e'
+                  + b'\x7e\xa8'
+                  + b'\x6c\x7c\x7e\x6c\x7e'
+                  + push(h(b'TapSighash')*2) + b'\x7c\x7e\xa8'
+                  + push(TXCOMMIT) + b'\xad\x51')
+        good = fixture(record['stage'], script, stack, expected[0])
+        alternate = fixture(record['stage'], script, stack, expected[0], 1)
         initial_resource_ok = good['witness_stack_items'] <= 1000 and good['max_witness_item_bytes'] <= 520
-        good['expected'] = initial_resource_ok
-        bad = dict(good, name=good['name'] + '-changed-output',
+        good['expected'] = alternate['expected'] = initial_resource_ok
+        bad = dict(good, name=good['name'] + '-changed-amount',
                    tx_hex=good['output_mutation_hex'], expected=False)
-        vectors.extend([good, bad])
+        # Preserve the context preimage while changing the actual state output.
+        raw = bytearray.fromhex(good['tx_hex'])
+        state_offset = 4+2+1+36+1+4+1+43+8+1+2
+        raw[state_offset] ^= 1
+        bad_state = dict(good, name=good['name']+'-changed-state',
+                         tx_hex=bytes(raw).hex(), expected=False)
+        vectors.extend([good, alternate, bad, bad_state])
         if initial_resource_ok:
             vectors.append(dict(bad, name=good['name'] + '-old-key-type-control',
                                 disable_txcommit=True, expected=True))
@@ -158,14 +184,14 @@ def convert(records: list[dict]) -> tuple[list[dict], dict]:
                              'program_sha256': h(program).hex()})
     for vector in vectors:
         vector.pop('output_mutation_hex', None)
-    report = {'format': 'circle-core-replay-v1', 'stages': measurements,
+    report = {'format': 'circle-core-effects-v1', 'stages': measurements,
               'stage_count': len(records), 'vector_count': len(vectors),
               'sum_compiled_script_bytes': sum(m['compiled_script_bytes'] for m in measurements),
               'sum_independent_transaction_weight': sum(m['weight_units'] for m in measurements),
               'block_weight_limit': MAX_BLOCK_WEIGHT,
               'all_initial_stacks_fit': all(m['initial_resource_ok'] for m in measurements),
               'composed_verifier': False, 'payout_relation_proved': False,
-              'scope': 'Independent real-proof stage replays with fixed expected outputs and witness-supplied transaction digests. No cross-stage consistency or full L1 settlement claim.'}
+              'scope': 'Independent real-proof stage replays: Script computes the output-state commitment and enforces a two-recipient policy, then reconstructs and checks TapSighash. Cross-stage state inputs and full L1 settlement are not enforced.'}
     return vectors, report
 
 
