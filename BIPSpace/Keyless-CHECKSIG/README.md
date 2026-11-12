@@ -71,8 +71,8 @@ a real standalone Pallas IPA argument, public Nova folding-equation
 checks, and a Rust adapter to the pinned real Nova 0.76 compressed
 Spartan+IPA verifier.
 
-The added research suite passed **66 tests** on GitHub Actions:
-[CI run](https://github.com/patrickdugan/Spiral/actions/runs/43123181535).
+The added research suite passed **69 tests** on GitHub Actions:
+[CI run](https://github.com/patrickdugan/Spiral/actions/runs/43123997055).
 
 The AIR is a fully opened four-step trace, **not a scalable STARK**;
 the IPA and fold equation are **components**, not a complete native
