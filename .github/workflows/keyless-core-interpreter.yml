@@ -1,0 +1,58 @@
+name: Keyless Bitcoin Core interpreter
+
+on:
+  push:
+    paths:
+      - '.github/workflows/keyless-core-interpreter.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/core/**'
+      - 'BIPSpace/Keyless-CHECKSIG/reference.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/stark_trace.py'
+  pull_request:
+    paths:
+      - '.github/workflows/keyless-core-interpreter.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/core/**'
+
+permissions:
+  contents: read
+
+jobs:
+  core-research-flags:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Bitcoin Core v30.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/keyless-core
+          git -C /tmp/keyless-core remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/keyless-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          git -C /tmp/keyless-core checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-core
+          python3 BIPSpace/Keyless-CHECKSIG/core/export_vectors.py "$GITHUB_WORKSPACE/core-vectors.json"
+          git -C /tmp/keyless-core diff > keyless-core.patch
+      - name: Build Core interpreter unit-test binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
+          cmake -S /tmp/keyless-core -B /tmp/keyless-core/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=ON -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O1 -g0'
+          cmake --build /tmp/keyless-core/build --target test_bitcoin -j 2
+      - name: Execute real VerifyScript transaction vectors
+        shell: bash
+        env:
+          KEYLESS_CORE_VECTORS: ${{ github.workspace }}/core-vectors.json
+        run: |
+          set -euo pipefail
+          /tmp/keyless-core/build/bin/test_bitcoin --run_test=script_tests/keyless_research_transaction_vectors --log_level=test_suite --report_level=detailed 2>&1 | tee keyless-core-results.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-core-interpreter-results
+          path: |
+            core-vectors.json
+            keyless-core.patch
+            keyless-core-results.log
