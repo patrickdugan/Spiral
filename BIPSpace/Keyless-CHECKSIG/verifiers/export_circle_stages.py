@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Instrument locked DSL 0.2.0 without changing constraints or evaluation.
-Export verifier bytecode and witness separately from inline-push test code.
+"""Export the pinned Circle-STARK DSL's compiled stages for Core replay.
+
+Instrumentation only: verifier constraints and execution remain unchanged.
+Num/Str elements are converted to canonical Script stack bytes before sizing.
 """
 import json
 from pathlib import Path
@@ -8,20 +10,22 @@ import subprocess
 import sys
 
 root = Path(sys.argv[1]).resolve()
-metadata = json.loads(subprocess.check_output(['cargo','metadata','--locked','--format-version=1'],cwd=root,text=True))
-packages = [p for p in metadata['packages'] if p['name']=='bitcoin-script-dsl']
+metadata = json.loads(subprocess.check_output(
+    ['cargo', 'metadata', '--locked', '--format-version=1'], cwd=root, text=True))
+packages = [p for p in metadata['packages'] if p['name'] == 'bitcoin-script-dsl']
 if len(packages) != 1:
     raise SystemExit('Expected one locked bitcoin-script-dsl package')
 package = packages[0]
-if package['version'] != '0.2.0':
-    raise SystemExit('Unexpected DSL version')
-source = Path(package['manifest_path']).parent/'src/lib.rs'
+expected_source = 'git+https://github.com/Bitcoin-Wildlife-Sanctuary/dsl?tag=0.2.0#e6f986abd27aebfe76617e4017eb3a390a7fc984'
+if package['version'] != '0.2.0' or package['source'] != expected_source:
+    raise SystemExit('Unexpected DSL version or source revision')
+source = Path(package['manifest_path']).parent / 'src/lib.rs'
 text = source.read_text()
 anchor = '    for elem in expected_final_stack.iter().rev() {'
-if text.count(anchor) != 1:
-    raise SystemExit('Expected one measurement anchor')
+if text.count(anchor) != 1 or 'KEYLESS_STAGE' in text:
+    raise SystemExit('Expected one pristine measurement anchor')
 instrument = r'''
-    // BIPSpace measurement only; original evaluation follows unchanged.
+    // BIPSpace instrumentation only; original execution follows unchanged.
     if let Ok(directory) = std::env::var("KEYLESS_EXPORT_DIR") {
         use std::sync::atomic::{AtomicUsize, Ordering};
         use crate::constraint_system::Element;
@@ -51,7 +55,7 @@ instrument = r'''
         let input_bytes: usize = inputs.iter().map(|v| compact(v.len())+v.len()).sum();
         let items = hints.len()+inputs.len();
         let max_item = hints.iter().chain(inputs.iter()).map(|v| v.len()).max().unwrap_or(0);
-        let record = format!("{{\"stage\":{},\"script_hex\":\"{}\",\"hint_hex\":[{}],\"input_hex\":[{}],\"expected_output_hex\":[{}],\"script_bytes\":{},\"hint_items\":{},\"input_items\":{},\"witness_items_without_script_control\":{},\"serialized_hint_bytes\":{},\"serialized_input_bytes\":{},\"max_witness_item_bytes\":{}}}\n",
+        let record = format!("{{\"format\":\"circle-stage-v1\",\"stage\":{},\"script_hex\":\"{}\",\"hint_hex\":[{}],\"input_hex\":[{}],\"expected_output_hex\":[{}],\"script_bytes\":{},\"hint_items\":{},\"input_items\":{},\"witness_items_without_script_control\":{},\"serialized_hint_bytes\":{},\"serialized_input_bytes\":{},\"max_witness_item_bytes\":{}}}\n",
             stage,hex(program.script.as_bytes()),json_hexes(&hints),json_hexes(&inputs),
             json_hexes(&expected_final_stack),program.script.len(),hints.len(),inputs.len(),
             items,hint_bytes,input_bytes,max_item);
@@ -61,6 +65,7 @@ instrument = r'''
             stage,program.script.len(),hints.len(),inputs.len(),hint_bytes+input_bytes,max_item);
     }
 '''
-source.write_text(text.replace(anchor,instrument+anchor))
-print(json.dumps({'instrumented_package':package['name'],'version':package['version'],
-                  'source':package['source'],'measurement_only':True},indent=2))
+source.write_text(text.replace(anchor, instrument + anchor))
+print(json.dumps({'instrumented_package': package['name'], 'version': package['version'],
+                  'source': package['source'], 'format': 'circle-stage-v1',
+                  'measurement_only': True}, indent=2))
