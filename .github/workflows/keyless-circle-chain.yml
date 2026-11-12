@@ -1,0 +1,107 @@
+name: Keyless state-linked Circle STARK
+
+on:
+  push:
+    paths:
+      - '.github/workflows/keyless-circle-chain.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_chain.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_chain_checks.py'
+  pull_request:
+    paths:
+      - '.github/workflows/keyless-circle-chain.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_chain.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_chain_checks.py'
+
+permissions:
+  contents: read
+
+jobs:
+  linked-core-chain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_HUSKY_DONT_INSTALL_HOOKS: 'true'
+      KEYLESS_EXPORT_DIR: ${{ github.workspace }}/circle-stages
+      KEYLESS_CORE_VECTORS: ${{ github.workspace }}/circle-chain-vectors.json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate and verify real STWO proof with pinned Script compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/keyless-chain-circle
+          git -C /tmp/keyless-chain-circle remote add origin https://github.com/Bitcoin-Wildlife-Sanctuary/bitcoin-circle-stark.git
+          git -C /tmp/keyless-chain-circle fetch --depth=1 origin 9540164f243b23e4ca995c153f70ec64744df28a
+          git -C /tmp/keyless-chain-circle checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-chain-circle rev-parse HEAD)" = 9540164f243b23e4ca995c153f70ec64744df28a
+          rustup toolchain install nightly-2024-11-06 --profile minimal
+          cd /tmp/keyless-chain-circle
+          python3 "$GITHUB_WORKSPACE/BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py" /tmp/keyless-chain-circle
+          cargo test --locked --features assume-op-cat dsl::plonk::test::test_generate_dsl -- --exact --nocapture 2>&1 | tee "$GITHUB_WORKSPACE/circle-chain-proof.log"
+      - name: Compile authenticated state transitions and adversarial controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/audit_circle_continuity.py circle-stages > circle-chain-continuity.json
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/circle_chain.py circle-stages circle-chain-vectors.json circle-chain-measurements.json
+          git init /tmp/keyless-chain-core
+          git -C /tmp/keyless-chain-core remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/keyless-chain-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          git -C /tmp/keyless-chain-core checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-chain-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-chain-core
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_chain_checks.py /tmp/keyless-chain-core
+          git -C /tmp/keyless-chain-core diff > circle-chain-core.patch
+      - name: Build actual Core interpreter and chain consistency test
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
+          cmake -S /tmp/keyless-chain-core -B /tmp/keyless-chain-core/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=ON -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O1 -g0'
+          cmake --build /tmp/keyless-chain-core/build --target test_bitcoin -j 2
+      - name: Execute linked real-proof spends and adversarial state transitions
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/keyless-chain-core/build/bin/test_bitcoin --run_test=script_tests/keyless_research_transaction_vectors --log_level=test_suite --report_level=detailed 2>&1 | tee circle-chain-core.log
+      - name: Check and record evidence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path('.')
+          report=json.loads((root/'circle-chain-measurements.json').read_text())
+          vectors=json.loads((root/'circle-chain-vectors.json').read_text())
+          log=(root/'circle-chain-core.log').read_text()
+          rows=re.findall(r'KEYLESS_CORE ([^\s]+) accepted=([01]) error=([^\n]*)',log)
+          expected={v['name']:v['expected'] for v in vectors}
+          assert len(rows)==len(expected)==report['vector_count']
+          assert all(bool(int(ok))==expected[name] for name,ok,_ in rows)
+          assert 'KEYLESS_CORE_LINKED_TRANSITIONS 72' in log
+          assert report['sum_transaction_weight'] < 4_000_000
+          report['core_verified']=True
+          report['accepted_vectors']=sum(int(ok) for _,ok,_ in rows)
+          report['rejected_vectors']=sum(1-int(ok) for _,ok,_ in rows)
+          report['run_id']=int(os.environ['GITHUB_RUN_ID'])
+          report['spiral_commit']=os.environ['GITHUB_SHA']
+          report['core_revision']='d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3'
+          report['circle_revision']='9540164f243b23e4ca995c153f70ec64744df28a'
+          report['hashes']={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in ('circle-chain-vectors.json','circle-chain-core.log','circle-chain-core.patch','circle-chain-proof.log')}
+          report['scope']='72 linked synthetic transactions checked by Core VerifyScript with opt-in CAT/TXCOMMIT/restricted P2MR flags. Core independently checks every consecutive outpoint, spent output and fixed fee. No daemon, mined block, mainnet activation, IOB payout guest, production security estimate or Nova-in-Script claim.'
+          (root/'circle-chain-results.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in report.items() if k!='stages'},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-linked-circle-chain
+          path: |
+            circle-chain-proof.log
+            circle-chain-continuity.json
+            circle-chain-vectors.json
+            circle-chain-measurements.json
+            circle-chain-core.patch
+            circle-chain-core.log
+            circle-chain-results.json
