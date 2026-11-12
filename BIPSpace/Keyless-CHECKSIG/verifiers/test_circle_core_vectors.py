@@ -2,7 +2,7 @@ import unittest
 from circle_core_vectors import compact, convert, push, scan
 
 
-def stage(program='51', hints=(), inputs=(), outputs=('01',)):
+def stage(program='20'+'11'*32, hints=(), inputs=(), outputs=('11'*32,)):
     return {'format': 'circle-stage-v1', 'stage': 0, 'script_hex': program,
             'hint_hex': list(hints), 'input_hex': list(inputs),
             'expected_output_hex': list(outputs)}
@@ -20,8 +20,8 @@ class CircleCoreExportTests(unittest.TestCase):
 
     def test_push_payload_does_not_execute_success_opcode(self):
         self.assertEqual(scan(b'\x01\x50\x51'), [1, 81])
-        vectors, report = convert([stage(program='0150', outputs=('50',))])
-        self.assertEqual(len(vectors), 3)
+        vectors, report = convert([stage(program='20'+'50'*32, outputs=('50'*32,))])
+        self.assertEqual(len(vectors), 5)
         self.assertEqual(report['stage_count'], 1)
 
     def test_success_opcode_rejected(self):
@@ -60,27 +60,27 @@ class CircleCoreExportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             convert([record])
 
-    def test_three_vector_controls(self):
+    def test_five_vector_controls(self):
         vectors, report = convert([stage()])
-        self.assertEqual([v['expected'] for v in vectors], [True, False, True])
-        self.assertTrue(vectors[2]['disable_txcommit'])
-        a, b = bytes.fromhex(vectors[0]['tx_hex']), bytes.fromhex(vectors[1]['tx_hex'])
+        self.assertEqual([v['expected'] for v in vectors], [True, True, False, False, True])
+        self.assertTrue(vectors[4]['disable_txcommit'])
+        a, b = bytes.fromhex(vectors[0]['tx_hex']), bytes.fromhex(vectors[2]['tx_hex'])
         self.assertEqual(len(a), len(b))
         self.assertEqual(sum(x != y for x, y in zip(a, b)), 1)
-        self.assertEqual(vectors[1]['tx_hex'], vectors[2]['tx_hex'])
+        self.assertEqual(vectors[2]['tx_hex'], vectors[4]['tx_hex'])
         self.assertFalse(report['composed_verifier'])
         self.assertFalse(report['payout_relation_proved'])
 
     def test_initial_stack_budget_is_honest(self):
         vectors, report = convert([stage(hints=['00'] * 1000)])
-        self.assertEqual(len(vectors), 2)
-        self.assertEqual([v['expected'] for v in vectors], [False, False])
+        self.assertEqual(len(vectors), 4)
+        self.assertEqual([v['expected'] for v in vectors], [False, False, False, False])
         self.assertFalse(report['all_initial_stacks_fit'])
-        self.assertEqual(report['stages'][0]['witness_stack_items'], 1001)
+        self.assertEqual(report['stages'][0]['witness_stack_items'], 1005)
 
     def test_oversized_hint_is_expected_to_fail_in_core(self):
         vectors, report = convert([stage(hints=[bytes(521).hex()])])
-        self.assertEqual([v['expected'] for v in vectors], [False, False])
+        self.assertEqual([v['expected'] for v in vectors], [False, False, False, False])
         self.assertFalse(report['all_initial_stacks_fit'])
 
     def test_compactsize_boundaries(self):
@@ -89,6 +89,25 @@ class CircleCoreExportTests(unittest.TestCase):
         self.assertEqual(compact(65536), b'\xfe\x00\x00\x01\x00')
         with self.assertRaises(ValueError):
             compact(-1)
+
+    def test_both_recipient_choices_share_one_funding_output(self):
+        vectors, _ = convert([stage()])
+        self.assertEqual(vectors[0]['spent_script'], vectors[1]['spent_script'])
+        self.assertEqual(vectors[0]['spent_value'], vectors[1]['spent_value'])
+        self.assertEqual(bytes.fromhex(vectors[0]['tx_hex'])[7:43],
+                         bytes.fromhex(vectors[1]['tx_hex'])[7:43])
+        self.assertNotEqual(vectors[0]['tx_hex'], vectors[1]['tx_hex'])
+
+    def test_expected_state_is_not_embedded_in_verifier_script(self):
+        first, _ = convert([stage()])
+        second, _ = convert([stage(outputs=('22'*32,))])
+        self.assertEqual(first[0]['spent_script'], second[0]['spent_script'])
+        self.assertNotEqual(first[0]['tx_hex'], second[0]['tx_hex'])
+
+    def test_state_shape_is_explicit(self):
+        for outputs in ([], ['01'], ['11'*32, '22'*32]):
+            with self.assertRaises(ValueError):
+                convert([stage(outputs=outputs)])
 
 
 if __name__ == '__main__':
