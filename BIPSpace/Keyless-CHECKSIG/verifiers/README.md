@@ -13,8 +13,8 @@ experiments. These outputs must not be funded on the Bitcoin network.
 | Nova public folding | [nova_fold.py](nova_fold.py) | Pallas relaxed-instance folding equations with transcript-bound challenge. Mutated commitments and states fail. | Cross-term correctness, R1CS, Pedersen witness binding and Nova's actual transcript are unimplemented. |
 | Native compressed Nova 0.76 | [nova_native_verifier.rs](nova_native_verifier.rs), [runner](run_nova_native.sh) | Rust adapter calls the pinned existing full Nova Pallas/Vesta Spartan+IPA verification library and checks an independently pinned public-statement SHA256. | Native only, no Bitcoin consensus authorization. The runner was not executed in this session. The M12 header-chain statement does not authorize transaction outputs. |
 
-The [BIPSpace verifier CI](https://github.com/patrickdugan/Spiral/actions/runs/43123181535)
-passed **66 tests**, plus two valid 296-byte Script demonstrations. The
+The [BIPSpace verifier CI](https://github.com/patrickdugan/Spiral/actions/runs/43123997055)
+passed **69 tests**, plus two valid 296-byte Script demonstrations. The
 pre-existing [Keyless CHECKSIG CI](https://github.com/patrickdugan/Spiral/actions/runs/43047179384)
 passed 33 further tests, including seven official BIP341 hash vectors.
 
@@ -24,6 +24,8 @@ python BIPSpace/Keyless-CHECKSIG/verifiers/stark_trace.py
 python BIPSpace/Keyless-CHECKSIG/verifiers/nova_ipa.py
 python BIPSpace/Keyless-CHECKSIG/verifiers/nova_fold.py
 ~~~
+
+The Bitcoin-style serialized example uses **1,141 weight units (286 vbytes)** for the left-hand Merkle branch and **1,142 WU** for the right-hand branch. These are serialization-model calculations, not Bitcoin Core acceptance or standardness results.
 
 The research Script VM interprets only the fixture's opcodes. It omits
 complete Bitcoin validation, mempool policy, UTXO checks and activation
