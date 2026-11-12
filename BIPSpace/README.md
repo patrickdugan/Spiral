@@ -32,3 +32,21 @@ contains the current transparent Script arithmetic and Pallas/Nova
 cryptographic prototypes. Its full-trace AIR model is distinguished
 from a production STARK, and the separate Rust adapter calls the
 existing real Nova 0.76 native compressed verifier.
+
+### [Bounded-Modular-Arithmetic](Bounded-Modular-Arithmetic/)
+
+**OP_MULADDMOD: Bounded Modular Arithmetic for Tapscript**
+
+Unsubmitted soft-fork research draft for canonical modular multiply-add on
+operands up to 32 bytes. Includes the full original Python model, an
+independent C++ implementation, authenticated host-side BitVM trace disputes,
+and a conservative block-resource bound for the proposed 50-unit charge.
+
+The v0.2 local run passes 59 tests. Each GCC/Clang native build agrees with
+12,037 arithmetic vectors and rejects 293 malformed operands. All 242
+invalid traces in the 243-trace exhaustive fixture are challengeable.
+
+**Status:** standalone arithmetic and host models. Opcode allocation,
+consensus-cost calibration, Bitcoin Core integration and a Script
+commitment/dispute backend remain outstanding. The dedicated CI workflow
+reports its own run status.
