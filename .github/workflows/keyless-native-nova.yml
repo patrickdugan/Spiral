@@ -1,0 +1,62 @@
+name: Keyless real Nova verification
+
+on:
+  push:
+    paths:
+      - '.github/workflows/keyless-native-nova.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/nova_native_verifier.rs'
+  pull_request:
+    paths:
+      - '.github/workflows/keyless-native-nova.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/nova_native_verifier.rs'
+
+permissions:
+  contents: read
+
+jobs:
+  real-compressed-nova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '2'
+      RAYON_NUM_THREADS: '2'
+      CARGO_TARGET_DIR: /tmp/keyless-nova-target
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned native verifier and actual compressed proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/keyless-nova-source
+          git -C /tmp/keyless-nova-source remote add origin https://github.com/patrickdugan/zk-rusto-no-bitcoino.git
+          git -C /tmp/keyless-nova-source fetch --depth=1 origin 7893ff279dd01e581f14e3e2cbaf99c823173bae
+          git -C /tmp/keyless-nova-source checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-nova-source rev-parse HEAD)" = 7893ff279dd01e581f14e3e2cbaf99c823173bae
+          mkdir -p /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/src/bin
+          cp BIPSpace/Keyless-CHECKSIG/verifiers/nova_native_verifier.rs /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/src/bin/keyless_nova_verify.rs
+          rustup toolchain install stable --profile minimal
+          rustc +stable --version
+          cargo +stable --version
+      - name: Real Nova verification and upstream mutation suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +stable test --manifest-path /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/Cargo.toml --test k1_statement -- --test-threads=1 --nocapture 2>&1 | tee nova-fixture-tests.log
+      - name: Execute statement-pinned compressed SNARK adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +stable run --release --manifest-path /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/Cargo.toml --bin keyless_nova_verify -- /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/fixtures/testnet4-k1-0-4.nht4 --rebuild-testnet4-k1 d3b478b0ed0055bbd43a59775729c990a33d1df07bd0a66ee728a3573c832fa0 | tee nova-verified-statement.json
+      - name: Save build provenance
+        if: always()
+        shell: bash
+        run: |
+          test ! -f /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/Cargo.lock || cp /tmp/keyless-nova-source/integrations/bitvm3-nova/m12/native/Cargo.lock nova-executed-Cargo.lock
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-real-nova-results
+          path: |
+            nova-fixture-tests.log
+            nova-verified-statement.json
+            nova-executed-Cargo.lock
