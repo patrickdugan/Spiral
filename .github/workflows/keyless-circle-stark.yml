@@ -1,0 +1,67 @@
+name: Keyless real Circle STARK
+
+on:
+  push:
+    paths:
+      - '.github/workflows/keyless-circle-stark.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_measure.py'
+  pull_request:
+    paths:
+      - '.github/workflows/keyless-circle-stark.yml'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/circle_measure.py'
+
+permissions:
+  contents: read
+
+jobs:
+  real-circle-verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_HUSKY_DONT_INSTALL_HOOKS: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Circle-STARK implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/keyless-circle
+          git -C /tmp/keyless-circle remote add origin https://github.com/Bitcoin-Wildlife-Sanctuary/bitcoin-circle-stark.git
+          git -C /tmp/keyless-circle fetch --depth=1 origin 9540164f243b23e4ca995c153f70ec64744df28a
+          git -C /tmp/keyless-circle checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-circle rev-parse HEAD)" = 9540164f243b23e4ca995c153f70ec64744df28a
+          rustup toolchain install nightly-2024-11-06 --profile minimal
+      - name: Execute actual prover and all split Script verification stages
+        working-directory: /tmp/keyless-circle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --features assume-op-cat dsl::plonk::test::test_generate_dsl -- --exact --nocapture 2>&1 | tee "$GITHUB_WORKSPACE/circle-full-verifier.log"
+      - name: Record exact reported script sizes and stack usage
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,re,pathlib
+          path=pathlib.Path('circle-full-verifier.log')
+          log=path.read_text() if path.exists() else ''
+          sizes=[int(x) for x in re.findall(r'script size: (\d+)',log)]
+          stacks=[int(x) for x in re.findall(r'max stack size: (\d+)',log)]
+          passed=bool(re.search(r'test result: ok\. 1 passed; 0 failed;',log))
+          out={'source_revision':'9540164f243b23e4ca995c153f70ec64744df28a',
+               'real_proof_generated':passed,'all_split_script_stages_passed':passed,
+               'executed_script_stages':len(sizes),'reported_script_bytes':sizes,
+               'sum_reported_script_bytes':sum(sizes),'max_stack_items':max(stacks,default=0),
+               'scope':'Upstream real STWO proof; separate Script verifier stages. Sizes include inline input/hint pushes and expected-state checks.',
+               'single_transaction_verified':False,'txcommit_integrated':False}
+          pathlib.Path('circle-measurements.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-real-circle-results
+          path: |
+            circle-full-verifier.log
+            circle-measurements.json
