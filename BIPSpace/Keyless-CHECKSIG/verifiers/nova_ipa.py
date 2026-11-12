@@ -1,18 +1,18 @@
 """Research-only Pallas inner-product argument (IPA) verification kernel.
 
-This is an actual prover/verifier for a standalone Bulletproof-style IPA
-relation over the Pallas curve, using a deterministic public point generator.
-It is NOT Microsoft's Nova compressed SNARK verifier, nor Bitcoin Script.
-It tests the elliptic-curve and Fiat-Shamir work the direct Nova route needs.
+Standalone, non-zero-knowledge IPA; neither Nova's full SNARK nor Script.
+Version 2 fixes claim binding: C commits ONLY to the two vectors, and the
+verifier forms C + claim*U before folding. Binding claim in Fiat-Shamir
+alone does not enforce claim == <a,b> against a malicious prover.
 
-Relation: C = sum(a_i G_i) + sum(b_i H_i) + <a,b>U, where a,b secret,
-C, <a,b> and transaction context public.
+Relation: C = sum(a_i G_i) + sum(b_i H_i), claim = <a,b>.
+The public transaction context is included in Fiat-Shamir. Generators use
+a research-only deterministic mapping, with no secret setup material.
 """
 from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from hashlib import sha256
-from math import log2
 import struct
 
 P = int("40000000000000000000000000000000224698fc094cf91b992d30ed00000001", 16)
@@ -20,7 +20,7 @@ Q = int("40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001", 16)
 B = 5
 Point = tuple[int, int] | None
 O = None
-DOMAIN = b"BIPSpace/Keyless-CHECKSIG/IPA-demo-v1"
+DOMAIN = b"BIPSpace/Keyless-CHECKSIG/IPA-demo-v2"
 
 class Reject(ValueError):
     pass
@@ -36,7 +36,7 @@ def enc_scalar(v: int) -> bytes:
     return v.to_bytes(32, "little")
 
 def sqrt(a: int):
-    """Tonelli-Shanks, P prime and P == 1 (mod 4). Returns None if not square."""
+    """Tonelli-Shanks. Returns None if the argument is not a square."""
     a %= P
     if a == 0: return 0
     if pow(a, (P-1)//2, P) != 1: return None
@@ -114,8 +114,7 @@ def decode_point(bs: bytes) -> Point:
 
 @lru_cache(maxsize=1024)
 def generator(tag: bytes, i: int = 0) -> Point:
-    """Deterministic try-and-increment hash-to-curve for research only.
-    Production needs a standardized hash-to-curve and audited transcript."""
+    """Research try-and-increment mapping; not Nova's generator derivation."""
     require(len(tag) <= 32 and 0 <= i < 2**32, "generator_id")
     for ctr in range(256):
         x = int.from_bytes(sha(DOMAIN+b"/G/"+tag+struct.pack("<II",i,ctr)),"big") % P
@@ -155,7 +154,7 @@ class IpaProof:
     b: int
 
     def encode(self):
-        require(len(self.L) == len(self.R) and len(self.L) <= 4,"rounds")
+        require(len(self.L) == len(self.R) and 1 <= len(self.L) <= 4,"rounds")
         return (bytes([len(self.L)])+b"".join(self.L)+b"".join(self.R)
                 +enc_scalar(self.a)+enc_scalar(self.b))
 
@@ -180,7 +179,8 @@ def prove(a, b, context: bytes):
     G,H,U = basis(n)
     require(len(b)==n and all(type(s) is int and 0<=s<Q for s in a+b),"vector_inputs")
     c = inner(a,b)
-    C = add(add(msm(G,a),msm(H,b)),mul(U,c))
+    # The commitment is independent of the claimed inner product.
+    C = add(msm(G,a),msm(H,b))
     tr = transcript_init(n,C,c,context)
     aa,bb=list(a),list(b)
     Ls,Rs=[],[]
@@ -208,11 +208,12 @@ def verify(C: Point, claim: int, proof: IpaProof | bytes, context: bytes):
         enc_scalar(claim)
         if isinstance(proof,bytes): proof=IpaProof.decode(proof)
         require(isinstance(proof,IpaProof),"proof_type")
+        require(1 <= len(proof.L) <= 4 and len(proof.R)==len(proof.L),"round_count")
         n = 1 << len(proof.L)
         G,H,U = basis(n)
-        require(len(proof.R)==len(proof.L),"round_count")
         tr=transcript_init(n,C,claim,context)
-        state=C
+        # Claim binding is algebraic as well as transcript-bound.
+        state=add(C,mul(U,claim))
         for lb,rb in zip(proof.L,proof.R):
             L,R=decode_point(lb),decode_point(rb)
             tr,x=challenge(tr,L,R)
