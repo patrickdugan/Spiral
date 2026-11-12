@@ -6,11 +6,15 @@ on:
       - '.github/workflows/keyless-circle-regtest.yml'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/regtest_circle_block.py'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/test_core_regtest_patch.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_core.py'
   pull_request:
     paths:
       - '.github/workflows/keyless-circle-regtest.yml'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/regtest_circle_block.py'
       - 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py'
+      - 'BIPSpace/Keyless-CHECKSIG/verifiers/test_core_regtest_patch.py'
+      - 'BIPSpace/Keyless-CHECKSIG/core/patch_core.py'
 
 permissions:
   contents: read
@@ -25,6 +29,25 @@ jobs:
       KEYLESS_EXPORT_DIR: ${{ github.workspace }}/circle-stages
     steps:
       - uses: actions/checkout@v4
+      - name: Regress definition selection and regtest activation guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v g++
+          python3 -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p 'test_core_regtest_patch.py' -v 2>&1 | tee regtest-patcher-tests.log
+      - name: Patch pinned Core for explicit regtest-only experimental activation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/keyless-regtest-core
+          git -C /tmp/keyless-regtest-core remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/keyless-regtest-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          git -C /tmp/keyless-regtest-core checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/keyless-regtest-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
+          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-regtest-core
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/keyless-regtest-core --check
+          python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/keyless-regtest-core
+          git -C /tmp/keyless-regtest-core diff > regtest-core.patch
       - name: Generate and check real proof from pinned Circle-STARK source
         shell: bash
         run: |
@@ -38,18 +61,6 @@ jobs:
           cd /tmp/keyless-regtest-circle
           python3 "$GITHUB_WORKSPACE/BIPSpace/Keyless-CHECKSIG/verifiers/export_circle_stages.py" /tmp/keyless-regtest-circle
           cargo test --locked --features assume-op-cat dsl::plonk::test::test_generate_dsl -- --exact --nocapture 2>&1 | tee "$GITHUB_WORKSPACE/regtest-proof.log"
-      - name: Patch pinned Core for explicit regtest-only experimental activation
-        shell: bash
-        run: |
-          set -euo pipefail
-          git init /tmp/keyless-regtest-core
-          git -C /tmp/keyless-regtest-core remote add origin https://github.com/bitcoin/bitcoin.git
-          git -C /tmp/keyless-regtest-core fetch --depth=1 origin d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
-          git -C /tmp/keyless-regtest-core checkout --detach FETCH_HEAD
-          test "$(git -C /tmp/keyless-regtest-core rev-parse HEAD)" = d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3
-          python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/keyless-regtest-core
-          python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/keyless-regtest-core
-          git -C /tmp/keyless-regtest-core diff > regtest-core.patch
       - name: Build actual Bitcoin Core daemon
         shell: bash
         run: |
@@ -85,3 +96,4 @@ jobs:
             regtest-results.log
             regtest-core.patch
             regtest-proof.log
+            regtest-patcher-tests.log
