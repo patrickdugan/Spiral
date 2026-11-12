@@ -1,9 +1,11 @@
 """Research-only Pallas inner-product argument (IPA) verification kernel.
 
 Standalone, non-zero-knowledge IPA; neither Nova's full SNARK nor Script.
-Version 2 fixes claim binding: C commits ONLY to the two vectors, and the
-verifier forms C + claim*U before folding. Binding claim in Fiat-Shamir
-alone does not enforce claim == <a,b> against a malicious prover.
+Version 3 binds the inner-product generator to the public statement.
+Version 2 fixed direct claim binding: C commits ONLY to the two vectors,
+and the verifier forms C + claim*U before folding. Transcript binding of
+claim alone does not enforce claim == <a,b>. A fixed U also allows a
+chosen-commitment offset attack, prevented here by a statement challenge.
 
 Relation: C = sum(a_i G_i) + sum(b_i H_i), claim = <a,b>.
 The public transaction context is included in Fiat-Shamir. Generators use
@@ -20,7 +22,7 @@ Q = int("40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001", 16)
 B = 5
 Point = tuple[int, int] | None
 O = None
-DOMAIN = b"BIPSpace/Keyless-CHECKSIG/IPA-demo-v2"
+DOMAIN = b"BIPSpace/Keyless-CHECKSIG/IPA-demo-v3"
 
 class Reject(ValueError):
     pass
@@ -139,6 +141,15 @@ def transcript_init(n: int, C: Point, claim: int, context: bytes):
     return sha(DOMAIN+b"/statement"+struct.pack("<I",n)+encode_point(C)+
                enc_scalar(claim)+context)
 
+def bind_inner_product_generator(base: Point, transcript: bytes) -> Point:
+    """Challenge after C and claim are fixed, before IPA rounds.
+    A statement-derived U prevents shifting C by a known fixed-U multiple
+    to offset a false inner product. This remains research cryptography.
+    """
+    scale = int.from_bytes(sha(transcript+b"/inner-product-generator"),"little") % Q
+    require(scale != 0,"zero_generator_challenge")
+    return mul(base,scale)
+
 def challenge(transcript: bytes, L: Point, R: Point):
     require(L is not None and R is not None, "infinite_round_point")
     t = sha(transcript + encode_point(L) + encode_point(R))
@@ -179,9 +190,9 @@ def prove(a, b, context: bytes):
     G,H,U = basis(n)
     require(len(b)==n and all(type(s) is int and 0<=s<Q for s in a+b),"vector_inputs")
     c = inner(a,b)
-    # The commitment is independent of the claimed inner product.
     C = add(msm(G,a),msm(H,b))
     tr = transcript_init(n,C,c,context)
+    U = bind_inner_product_generator(U,tr)
     aa,bb=list(a),list(b)
     Ls,Rs=[],[]
     while len(aa)>1:
@@ -212,7 +223,7 @@ def verify(C: Point, claim: int, proof: IpaProof | bytes, context: bytes):
         n = 1 << len(proof.L)
         G,H,U = basis(n)
         tr=transcript_init(n,C,claim,context)
-        # Claim binding is algebraic as well as transcript-bound.
+        U=bind_inner_product_generator(U,tr)
         state=add(C,mul(U,claim))
         for lb,rb in zip(proof.L,proof.R):
             L,R=decode_point(lb),decode_point(rb)
