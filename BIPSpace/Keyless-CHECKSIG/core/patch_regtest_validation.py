@@ -5,6 +5,7 @@ Run patch_core.py first. Defining KEYLESS_RESEARCH_REGTEST=1 at compilation
 then enables its CAT/TXCOMMIT/restricted-P2MR rules for regtest block validation.
 Without that build define, this patch changes no network's validation flags.
 Even with it, mainnet, signet and both testnets retain their original flags.
+The experimental build also precomputes BIP341 data for witness-v2 inputs.
 This is a research activation mechanism, not a proposed deployment scheme.
 """
 from pathlib import Path
@@ -44,8 +45,23 @@ def apply(root: Path) -> None:
 #endif
     return flags;
 '''
-    path.write_text(text[:begin] + section.replace(old, addition, 1) + text[end:])
-    print('Installed compile-time opt-in, regtest-only block validation flags.')
+    validation = text[:begin] + section.replace(old, addition, 1) + text[end:]
+    interpreter_path = root / 'src/script/interpreter.cpp'
+    interpreter = interpreter_path.read_text()
+    cache_anchor = 'm_spent_outputs[inpos].scriptPubKey[0] == OP_1) {'
+    if interpreter.count(cache_anchor) != 1:
+        raise ValueError('Unexpected sighash precomputation layout')
+    cache_replacement = '''(m_spent_outputs[inpos].scriptPubKey[0] == OP_1
+#if defined(KEYLESS_RESEARCH_REGTEST) && KEYLESS_RESEARCH_REGTEST
+                // Research P2MR needs the same transaction-wide hash caches.
+                || (m_spent_outputs[inpos].scriptPubKey[0] == OP_2 &&
+                    m_spent_outputs[inpos].scriptPubKey[1] == 0x20)
+#endif
+                )) {'''
+    interpreter = interpreter.replace(cache_anchor, cache_replacement, 1)
+    path.write_text(validation)
+    interpreter_path.write_text(interpreter)
+    print('Installed regtest-only validation flags and research P2MR sighash cache detection.')
 
 
 if __name__ == '__main__':
