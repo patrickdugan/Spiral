@@ -1,0 +1,25 @@
+{
+ "network": "testnet4",
+ "payer": {
+  "pubkey": "03a45db72cb13408d46974bd4dec51ea4da1c15ff2ad4824edee46e8bf62baec97",
+  "address": "mh1oFQ8y8QcpsqN2JgaL61jeJyJ8Yrz89h"
+ },
+ "burger": {
+  "address": "tb1qg6zhe7net4vvwkdu5z4dz8h6u82ymrwr4g6sp2",
+  "script_pubkey": "001446857cfa795d58c759bca0aad11efae1d44d8dc3"
+ },
+ "vault": {
+  "address": "tb1pq7njka2euucx3g0e4lfp50nl7mt9x7320ljumay5zr8yve3zz6hsnleeau",
+  "script_pubkey": "512007a72b7559e73068a1f9afd21a3e7ff6d6537a2a7fe5cdf49410ce46662216af",
+  "leaves": [
+   "2041e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cdad20477c91e0158aba8237b03dfd0f4f740e34137c889c2c24f7a311179641d41763ac",
+   "029000b2752041e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cdac"
+  ]
+ },
+ "desk_refund": "tb1qwtrm3kvewj5geauc5dtwx3xveva95ad9vxfax9",
+ "xonly": {
+  "desk": "41e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cd",
+  "claimant": "477c91e0158aba8237b03dfd0f4f740e34137c889c2c24f7a311179641d41763",
+  "watch": "ac3e3aa3936091802c68d85095e5b0a29288c907e52522be7a9cd7fa962ec11b"
+ }
+}

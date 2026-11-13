@@ -1,0 +1,19 @@
+{
+  "accept_label_sha256": "9221a76f8be64dd6b300263490f2cff29cdd2fb5c135efa53d695735eefbd08a",
+  "ciphertext_commitment_blake3": "4e25baa7112b0f365c9404dd2f11a0f99077a9accf9c4a5df5edbe2089c57393",
+  "ciphertexts": 785442492,
+  "input_bits": 8635080,
+  "reject_label_sha256": "ea928e8226d6a33e72719cf3729edef9355b6911b3c96443a87d6f22d89e47dd",
+  "seconds": 197.694349111,
+  "seed_sha256": "7288ca1c8f7af6ec93ad2535e31204eee2657d768a24e3b36ef7d969d1d0405d",
+  "statement": {
+    "committed_values_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+    "exit_code": 0,
+    "is_complete": 1,
+    "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+    "recursion_vk_root": "7487c2175bd3256619ca0118094b8150d6df0246a1b41979a081642e5253f257",
+    "wrap_vk_sha256": "d42c63e3c873b35576b4c95fa8c41770a8c6b8a9f16ba74732c5b52a43b0b0d7"
+  },
+  "statement_sha256": "19ef0d49e62ad641dc472c6aa49ce9fb761597887d84d03eaac4104b078965ad",
+  "tool": "m14-claim setup"
+}

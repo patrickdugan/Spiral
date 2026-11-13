@@ -1,0 +1,26 @@
+{
+  "statement": {
+    "committed_values_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+    "exit_code": 0,
+    "is_complete": 1,
+    "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+    "recursion_vk_root": "7487c2175bd3256619ca0118094b8150d6df0246a1b41979a081642e5253f257",
+    "wrap_vk_sha256": "d42c63e3c873b35576b4c95fa8c41770a8c6b8a9f16ba74732c5b52a43b0b0d7"
+  },
+  "times": {
+    "shrink_execute_s": 0.0,
+    "shrink_program_build_s": 0.0,
+    "shrink_prove_s": 0.0,
+    "shrink_setup_s": 0.0,
+    "wrap_execute_s": 0.150542206,
+    "wrap_program_build_s": 0.88428937,
+    "wrap_prove_s": 70.71336464,
+    "wrap_setup_s": 8.746025962000001,
+    "wrap_verify_s": 0.024130455
+  },
+  "transcript": "v2",
+  "wrap_file_bytes": 1099173,
+  "wrap_proof_bytes": 1099069,
+  "wrap_proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+  "wrap_vk_bytes": 104
+}

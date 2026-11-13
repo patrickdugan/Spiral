@@ -1,0 +1,42 @@
+{
+  "bundle_sha256": "19dce7a793f49638421e733554402e6d51558fb6536512a973923e9edb621189",
+  "cycle_tracker": {
+    "decode_proof": 25997242,
+    "decode_vk": 2041077243,
+    "nova_verify": 16305237986,
+    "parse_and_pin": 758,
+    "sha256_vk": 2786320802,
+    "spv_payment": 164293,
+    "spv_tip": 14192
+  },
+  "elf_sha256": "bb7d51b0352db50512ce4c6485d1a0b255a97dc05c3ebaf10ef7201604584790",
+  "execute_seconds": 1265.286309145,
+  "instruction_count": 21160588597,
+  "payment_sha256": "9bb364151c064fa8f204377e74f06ff2d08ab3d2e57c364b01654b100d5515da",
+  "statement": {
+    "chainwork_hex_le": "85b852ff88105476680f00000000000000000000000000000000000000000000",
+    "k": 1,
+    "network": "NHT4",
+    "nova_proof_sha256": "6a3ac4d21e02639f3ef846ea5fd4cdd3fe16505960f4b42d93f9198162d779a6",
+    "payment": {
+      "block_hash": "000000000a1ea63ee2d4d6a97fd4b625671cdee725efe9d29c9acd272a40d190",
+      "block_height": 161011,
+      "confirmations": 6,
+      "script_bytes": 22,
+      "script_sha256": "ee87f19ee879c9f79e4cff05dfd3ae53c18ed547c888a24bfb67335c03be6715",
+      "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+      "value_sats": 11600,
+      "vout": 0
+    },
+    "public_statement_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+    "segments": 1,
+    "steps": 1016,
+    "tip_hash": "00000000027b3a9aba743bd9596b66ebd8abf8f79e3cd0ad127c8fa7c59c6fbd",
+    "tip_height": 161016,
+    "vk_sha256": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a",
+    "z0_height": 160000
+  },
+  "status": "executed_unproved",
+  "syscall_count": 307285,
+  "vk_sha256": "63f91f1ec5c6b2d19185df0578311a5dfb8404441631c1ae515d07a8198dd20e"
+}

@@ -1,0 +1,50 @@
+{
+ "statement_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+ "network_magic": "NHT4",
+ "anchor": {
+  "height": 160000,
+  "hash": "00000000000000008a2afdde1a0989dda3244912eaf994be05c952685e6bf5fd",
+  "chainwork": "0xf3abcb6e4839102f529"
+ },
+ "steps": 1016,
+ "tip": {
+  "height": 161016,
+  "hash": "00000000027b3a9aba743bd9596b66ebd8abf8f79e3cd0ad127c8fa7c59c6fbd",
+  "chainwork": "0xf6876541088ff52b885"
+ },
+ "payment": {
+  "outpoint": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e:0",
+  "block": 161011,
+  "confirmations": 6,
+  "sats": 11600
+ },
+ "payer": {
+  "pubkey": "03a45db72cb13408d46974bd4dec51ea4da1c15ff2ad4824edee46e8bf62baec97",
+  "spent_script_pubkey": "76a914106ca33d328531759efa57bac1ab54828439d37f88ac"
+ },
+ "payout": {
+  "pubkey": "03a45db72cb13408d46974bd4dec51ea4da1c15ff2ad4824edee46e8bf62baec97",
+  "tweak": "47ffc245bb83a71ad09bfe98bbe8180d50f407b9344e0780fdfef341a37943fa",
+  "derived_pubkey": "02baeed47fe68eb4bcbd85c5c7785c13895ac46fb562ccc26987871ad845fa7516",
+  "spent_script_pubkey": "76a914106ca33d328531759efa57bac1ab54828439d37f88ac",
+  "script_pubkey": "76a914afe2d0d5a3f1a3c3fc1062771f0e023c956856e288ac",
+  "address": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2"
+ },
+ "checks": {
+  "magic_testnet4": true,
+  "anchor_height_pinned": true,
+  "txid": true,
+  "vout": true,
+  "value": true,
+  "script": true,
+  "confirmations_at_least_6": true,
+  "tx_bytes_hash_to_txid": true,
+  "anchor_hash_equals_node": true,
+  "anchor_chainwork_equals_node": true,
+  "tip_hash_equals_node": true,
+  "tip_chainwork_equals_node": true,
+  "payment_block_equals_node": true,
+  "payer_is_p2pkh_key": true
+ },
+ "ok": true
+}

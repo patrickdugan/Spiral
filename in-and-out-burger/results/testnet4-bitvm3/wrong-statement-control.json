@@ -1,0 +1,35 @@
+{
+ "blake3": {
+  "merkle_leaf": {
+   "bytes": 78200,
+   "calls": 2187,
+   "compressions": 2283
+  },
+  "merkle_node": {
+   "bytes": 1932736,
+   "calls": 30199,
+   "compressions": 30199
+  },
+  "transcript": {
+   "bytes": 56778,
+   "calls": 537,
+   "compressions": 1177
+  }
+ },
+ "blake3_compressions_total": 33659,
+ "koalabear_ops": null,
+ "public_values_len": 187,
+ "seconds": 0.083267269,
+ "statement": {
+  "committed_values_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+  "exit_code": 0,
+  "is_complete": 1,
+  "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+  "recursion_vk_root": "7487c2175bd3256619ca0118094b8150d6df0246a1b41979a081642e5253f257",
+  "wrap_vk_sha256": "d42c63e3c873b35576b4c95fa8c41770a8c6b8a9f16ba74732c5b52a43b0b0d7"
+ },
+ "status": "verified",
+ "wrap_file_bytes": 1099173,
+ "wrap_proof_bytes": 1099069,
+ "proof_sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3"
+}

@@ -1,0 +1,320 @@
+{
+ "network": "testnet4",
+ "checked_at": "2026-11-13T22:56:37Z",
+ "all_pass": true,
+ "checks": [
+  {
+   "check": "testnet4 only",
+   "ok": true
+  },
+  {
+   "check": "all 14 statement checks",
+   "ok": true
+  },
+  {
+   "check": "checkpoint 160000 to 161016",
+   "ok": true
+  },
+  {
+   "check": "checkpoint still canonical",
+   "ok": true
+  },
+  {
+   "check": "proven tip still canonical",
+   "ok": true
+  },
+  {
+   "check": "native final proof verified against pinned statement",
+   "ok": true
+  },
+  {
+   "check": "compressed GPU proof verified with expected public values and program",
+   "ok": true
+  },
+  {
+   "check": "confirmed payment",
+   "ok": true,
+   "detail": {
+    "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+    "confirmations": 159
+   }
+  },
+  {
+   "check": "recorded bytes match node: payment",
+   "ok": true
+  },
+  {
+   "check": "confirmed payer_funding",
+   "ok": true,
+   "detail": {
+    "txid": "e52eae5cbe2f01cd7dd8a9ff5a1a5763f3d9812a0bb7a90e61fac651a347f754",
+    "confirmations": 159
+   }
+  },
+  {
+   "check": "confirmed vault_funding",
+   "ok": true,
+   "detail": {
+    "txid": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e",
+    "confirmations": 159
+   }
+  },
+  {
+   "check": "confirmed claim wrong-statement",
+   "ok": true,
+   "detail": {
+    "txid": "1eefeeb8e67f2f15caef5ea93c895a46adcea707ad2e599b118850684683cd49",
+    "confirmations": 22
+   }
+  },
+  {
+   "check": "recorded bytes match node: claim wrong-statement",
+   "ok": true
+  },
+  {
+   "check": "confirmed disprove wrong-statement",
+   "ok": true,
+   "detail": {
+    "txid": "88676a6ddd796e4be09aa4caf24e5c32815beb71b6c403393943f2eb6f99d14c",
+    "confirmations": 18
+   }
+  },
+  {
+   "check": "recorded bytes match node: disprove wrong-statement",
+   "ok": true
+  },
+  {
+   "check": "confirmed claim tampered-proof",
+   "ok": true,
+   "detail": {
+    "txid": "580c7d010b3e95f4e46bd4c5b92b5a29b30c5d2265078cc06ce4c85cd195dcce",
+    "confirmations": 18
+   }
+  },
+  {
+   "check": "recorded bytes match node: claim tampered-proof",
+   "ok": true
+  },
+  {
+   "check": "confirmed disprove tampered-proof",
+   "ok": true,
+   "detail": {
+    "txid": "b164f36bb5d61bf59ec6463a03f0f58af0dcded6c5749a57432d025606b1c0ee",
+    "confirmations": 13
+   }
+  },
+  {
+   "check": "recorded bytes match node: disprove tampered-proof",
+   "ok": true
+  },
+  {
+   "check": "confirmed claim honest",
+   "ok": true,
+   "detail": {
+    "txid": "d61ddbb16944af5e090ed1994143e75a7777b0977efe6451ea53ce5d8a2a9056",
+    "confirmations": 13
+   }
+  },
+  {
+   "check": "recorded bytes match node: claim honest",
+   "ok": true
+  },
+  {
+   "check": "confirmed payout honest",
+   "ok": true,
+   "detail": {
+    "txid": "a2de74eacb4a1b52aac17a6e112df219da1fed043ca06cea8b03bc7b1cdbf9ac",
+    "confirmations": 6
+   }
+  },
+  {
+   "check": "recorded bytes match node: payout honest",
+   "ok": true
+  },
+  {
+   "check": "confirmed payer_sweep honest",
+   "ok": true,
+   "detail": {
+    "txid": "0fa328ab2447db50fe5eab0b479f78857846c9ee9f1d94ccb5f74bb898a9966e",
+    "confirmations": 6
+   }
+  },
+  {
+   "check": "recorded bytes match node: payer_sweep honest",
+   "ok": true
+  },
+  {
+   "check": "independent per-claim garblings and reject labels",
+   "ok": true
+  },
+  {
+   "check": "honest: setup, garbler and evaluator commitments match",
+   "ok": true
+  },
+  {
+   "check": "honest: setup labels, statement and shape match evaluation",
+   "ok": true
+  },
+  {
+   "check": "honest: expected verifier verdict",
+   "ok": true
+  },
+  {
+   "check": "honest: output label matches committed verdict",
+   "ok": true
+  },
+  {
+   "check": "honest: claim commits IOB3 instance on chain",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: setup, garbler and evaluator commitments match",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: setup labels, statement and shape match evaluation",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: expected verifier verdict",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: output label matches committed verdict",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: claim commits IOB3 instance on chain",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: reject label spent claim output",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: payout has no spendable input",
+   "ok": true
+  },
+  {
+   "check": "tampered-proof: payout refused after disprove",
+   "ok": true,
+   "detail": {
+    "txid": "cf8d1192c534f31869a96335d09dbb66bb52f66b638950548cbd7665b857da7f",
+    "allowed": false,
+    "reject_reason": "missing-inputs"
+   }
+  },
+  {
+   "check": "tampered-proof: no payout broadcast",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: setup, garbler and evaluator commitments match",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: setup labels, statement and shape match evaluation",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: expected verifier verdict",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: output label matches committed verdict",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: claim commits IOB3 instance on chain",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: reject label spent claim output",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: payout has no spendable input",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement: payout refused after disprove",
+   "ok": true,
+   "detail": {
+    "txid": "1ca78214283492f30147d74bc7fc71fc20076268cfc7476cb2566d4ec2c5ade9",
+    "allowed": false,
+    "reject_reason": "missing-inputs"
+   }
+  },
+  {
+   "check": "wrong-statement: no payout broadcast",
+   "ok": true
+  },
+  {
+   "check": "honest evaluation used final testnet4 proof",
+   "ok": true
+  },
+  {
+   "check": "tampered evaluation flipped one proof input bit",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement control proof is natively valid for its own statement",
+   "ok": true
+  },
+  {
+   "check": "wrong-statement evaluation used valid other proof without mutation",
+   "ok": true
+  },
+  {
+   "check": "all counterexamples refused",
+   "ok": true
+  },
+  {
+   "check": "payout_before_window",
+   "ok": true
+  },
+  {
+   "check": "payout_to_payer_old_address",
+   "ok": true
+  },
+  {
+   "check": "payout_to_claimant",
+   "ok": true
+  },
+  {
+   "check": "disprove_with_random_label",
+   "ok": true
+  },
+  {
+   "check": "accept label cannot disprove honest claim",
+   "ok": true
+  },
+  {
+   "check": "bond paid derived P'",
+   "ok": true,
+   "detail": {
+    "sats": 24328,
+    "address": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2",
+    "txid": "a2de74eacb4a1b52aac17a6e112df219da1fed043ca06cea8b03bc7b1cdbf9ac"
+   }
+  },
+  {
+   "check": "payout waited six blocks",
+   "ok": true
+  },
+  {
+   "check": "payer spent P' output with derived key",
+   "ok": true
+  },
+  {
+   "check": "guest mutation suite completed",
+   "ok": true,
+   "detail": {
+    "cases": 11
+   }
+  }
+ ],
+ "proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+ "payout_sats": 24328,
+ "payout_address": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2"
+}

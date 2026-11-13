@@ -54,7 +54,7 @@ def main() -> int:
     ev = events(a.state)
     regtest = load(os.path.join(ROOT, "results", "bitvm3-regtest.json"), {})
     selftest = load(os.path.join(ROOT, "results", "m14-claim-selftest.json"), {})
-    wrap = load(os.path.join(a.state, "wrap-statement.json"))
+    wrap = load(os.path.join(a.state, "native-verify.json"), {})
 
     def last(kind, instance=None, event=None):
         hits = [e for e in ev if e.get("kind") == kind and (instance is None or e.get("instance") == instance)
@@ -100,7 +100,7 @@ def main() -> int:
         })
 
     probes = [e for e in ev if e.get("kind") in ("refusal_probe", "disprove_with_accept_label")]
-    gpu_done = bool(wrap)
+    gpu_done = wrap.get("status") == "verified" and wrap.get("statement") == fs
     st = sc or {}
     data = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

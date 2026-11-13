@@ -4,8 +4,9 @@ A payment goes **in** to a pre-programmed Bitcoin address. A zero-knowledge proo
 confirmed. Sats come **out** to whoever sent it, in an amount set by the size of the payment.
 
 The proof is the nova-bitvm3 **M16** final proof (garbled-snark-verifier `nova-bitvm3/m16`): a
-Nova proof of the whole header chain from genesis, verified inside SP1, plus an SPV payment
-under its tip, wrapped under BLAKE3 (`m13`). The burger never runs Nova. It checks the final
+Nova proof of the header chain from a pinned starting state, verified inside SP1, plus an SPV
+payment under its tip, wrapped under BLAKE3 (`m13`). The default desk policy pins genesis; the
+testnet4 bonded-payout demonstration below pins checkpoint 160,000. The burger never runs Nova. It checks the final
 proof with `kan-payment-gate` (UTXO-Ref `key-agent-net/distributed/payment-gate`, which links
 `m13-verify`), then reads the proven statement. In a BitVM3 setting, the same final verifier is
 the M14 garbled circuit.
@@ -300,6 +301,48 @@ python scripts/build_site_data.py --state C:\BitcoinTestnet\iob-bitvm3 [--gpu-ta
 
 The builder reads only public state files: never `keys.json` or `m14-seeds.json`.
 
+## Testnet4 BitVM3 bonded payout (2026-11-14)
+
+The public testnet4 demonstration is complete. M16 proves the header chain **from checkpoint
+160,000 to tip 161,016**, plus the 11,600-sat burger payment in block 161,011. This is a
+checkpoint-anchored proof, not a proof from genesis. The desk pins the checkpoint hash and
+chainwork to its own node before presigning a graph for this order.
+
+The proof's public-values SHA-256 is
+`220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43`; its M16 program key is
+`dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60`.
+The final BLAKE3 v2 wrap is included in [the public record](results/testnet4-bitvm3/), with
+SHA-256 `f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa`. The native final verifier accepts it against the pinned statement.
+
+| Instance | M14 verdict | Claim transaction | Outcome |
+| --- | --- | --- | --- |
+| honest | accept | `d61ddbb16944af5e090ed1994143e75a7777b0977efe6451ea53ce5d8a2a9056` | Payout after the window |
+| tampered-proof | reject | `580c7d010b3e95f4e46bd4c5b92b5a29b30c5d2265078cc06ce4c85cd195dcce` | Disprove `b164f36bb5d61bf59ec6463a03f0f58af0dcded6c5749a57432d025606b1c0ee` |
+| wrong-statement | reject | `1eefeeb8e67f2f15caef5ea93c895a46adcea707ad2e599b118850684683cd49` | Disprove `88676a6ddd796e4be09aa4caf24e5c32815beb71b6c403393943f2eb6f99d14c` |
+
+Payment: `11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e`. The honest vault paid **24,328 sats** to P′ at
+`mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2` in transaction `a2de74eacb4a1b52aac17a6e112df219da1fed043ca06cea8b03bc7b1cdbf9ac`.
+The payer then spent that output using p′ = p + t in transaction `0fa328ab2447db50fe5eab0b479f78857846c9ee9f1d94ccb5f74bb898a9966e`.
+Every broadcast in the record was confirmed when the final checks ran.
+
+The tampered-proof instance flips one garbled input bit of the testnet4 proof; the wrong-statement
+instance supplies the valid M16 mainnet proof to the testnet4 statement. Both evaluate to the
+committed reject label and are disproved on chain. Bitcoin also refuses an early payout,
+redirects to the old payer address or claimant, and disproves using the accept label or a random
+label. Rejected counterexample transactions were probed with `testmempoolaccept`.
+
+Checks: 78 Python unit tests; 11/11 isolated regtest graph checks; 14/14 statement checks;
+11 guest mutations refused; 63/63 final testnet4 checks.
+Each M14 setup, garbler and evaluator agrees on its ciphertext commitment and output-label hashes.
+See [checks.json](results/testnet4-bitvm3/checks.json),
+[summary.json](results/testnet4-bitvm3/summary.json), and
+[the regtest record](results/bitvm3-regtest.json).
+
+The demonstration retains FC03's T1 (garbling correctness without cut-and-choose), T2 (off-chain
+input-label delivery), and T3 (a presigned graph, with the desk as committee of one). It signs
+after the payment to fix P′ and does not demonstrate committee key deletion or trustless float
+reimbursement. Private keys and garbling seeds are excluded from the public record.
+
 ## What is missing for a trustless BitVM3 refill
 
 In this design the desk fronts every payout from its own float: once the proof checks out, the
@@ -341,8 +384,8 @@ mechanism; the general float-refill design above still requires the following wo
 
 The graph is presigned by an n-of-n MuSig2 committee that then deletes its keys. Once every
 member has signed, the graph can only be changed with all n keys, so one member who really
-deleted is enough. Everything except the keys can run as a deterministic flow, and nothing in
-this section is built here.
+deleted is enough. The multiparty signing and key-deletion flow below is
+not implemented by the committee-of-one demonstration.
 
 - **The graph is a pure function.** Its inputs are the vault UTXO, the operator's xpub index, the
   M14 circuit hash, the timelocks and the fees. Each member rebuilds the graph and computes every

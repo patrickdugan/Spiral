@@ -1,0 +1,63 @@
+{
+ "instance": {
+  "name": "tampered-proof",
+  "statement_committed_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+  "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+  "ciphertext_commitment": "4e25baa7112b0f365c9404dd2f11a0f99077a9accf9c4a5df5edbe2089c57393",
+  "accept_label_sha256": "9221a76f8be64dd6b300263490f2cff29cdd2fb5c135efa53d695735eefbd08a",
+  "reject_label_sha256": "ea928e8226d6a33e72719cf3729edef9355b6911b3c96443a87d6f22d89e47dd",
+  "payout_spk": "76a914afe2d0d5a3f1a3c3fc1062771f0e023c956856e288ac"
+ },
+ "vault_outpoint": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e:1:10000",
+ "m14_setup": {
+  "seed_sha256": "7288ca1c8f7af6ec93ad2535e31204eee2657d768a24e3b36ef7d969d1d0405d",
+  "statement_sha256": "19ef0d49e62ad641dc472c6aa49ce9fb761597887d84d03eaac4104b078965ad",
+  "input_bits": 8635080,
+  "ciphertexts": 785442492,
+  "ciphertext_commitment_blake3": "4e25baa7112b0f365c9404dd2f11a0f99077a9accf9c4a5df5edbe2089c57393",
+  "accept_label_sha256": "9221a76f8be64dd6b300263490f2cff29cdd2fb5c135efa53d695735eefbd08a",
+  "reject_label_sha256": "ea928e8226d6a33e72719cf3729edef9355b6911b3c96443a87d6f22d89e47dd",
+  "seconds": 197.694349111
+ },
+ "describe": {
+  "instance": "tampered-proof",
+  "claim_id": "4de1d09e122e376a6a3506cbe715f55c4df19348a8cf17793bd4f195dc747e37",
+  "vault": {
+   "outpoint": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e:1",
+   "sats": 10000,
+   "script_pubkey": "512007a72b7559e73068a1f9afd21a3e7ff6d6537a2a7fe5cdf49410ce46662216af",
+   "leaves": [
+    "2041e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cdad20477c91e0158aba8237b03dfd0f4f740e34137c889c2c24f7a311179641d41763ac",
+    "029000b2752041e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cdac"
+   ]
+  },
+  "claim": {
+   "txid": "580c7d010b3e95f4e46bd4c5b92b5a29b30c5d2265078cc06ce4c85cd195dcce",
+   "fee": 416,
+   "k_sats": 9584,
+   "k_script_pubkey": "51206cbc6a861ccae7d650cd162331253f7d1653c7cf6c7086d5b36723db8eb2a2de",
+   "leaves": [
+    "56b2752041e08fea392c7091eeff7a88a1fab63bd4e6d41255ea9419998774b0cb1789cdac",
+    "a820ea928e8226d6a33e72719cf3729edef9355b6911b3c96443a87d6f22d89e47dd8820ac3e3aa3936091802c68d85095e5b0a29288c907e52522be7a9cd7fa962ec11bac"
+   ]
+  },
+  "payout": {
+   "txid": "cf8d1192c534f31869a96335d09dbb66bb52f66b638950548cbd7665b857da7f",
+   "sats": 9328,
+   "to_script_pubkey": "76a914afe2d0d5a3f1a3c3fc1062771f0e023c956856e288ac",
+   "sequence": 6
+  },
+  "disprove": {
+   "sats": 9308,
+   "to_script_pubkey": "001472c7b8d99974a88cf798a356e344cccb3a5a75a5"
+  },
+  "window_blocks": 6,
+  "reclaim_blocks": 144,
+  "fee_sat_vb": 2
+ },
+ "presig": {
+  "claim_desk": "f3cf420699fba089b5e2d476aa237743a0c10c9355121a75254837ce1e05678a3a30393ae410069c8f58455538ea848a7f9f8169c31cac9bf4da2ae91daea7a4",
+  "payout_desk": "3d5d5961c90e356142eca8b9e74abb8e94ce29c21d9e90178e0b4d2922855b88176945b71c732ae28bd6c71454f11b38c2d86466921184ede4181ddcfb71864f"
+ },
+ "payout_address": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2"
+}

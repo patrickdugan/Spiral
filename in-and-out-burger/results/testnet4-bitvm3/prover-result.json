@@ -1,0 +1,20 @@
+{
+  "backend": "cuda",
+  "committed_values_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+  "elf_sha256": "bb7d51b0352db50512ce4c6485d1a0b255a97dc05c3ebaf10ef7201604584790",
+  "instructions": null,
+  "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+  "program_vkey_bytes32": "0x00bb158dbe921a6d5c5dd30252385e7ae541b9e9040e6c4edf2d5cf5e0cb5f62",
+  "proof_file_bytes": 1273861,
+  "proof_path": "/root/nb3-runs/m16-tn4.proof.bin",
+  "prove_seconds": 19702.19532488,
+  "recursion_tasks": {
+    "proved": 2716,
+    "replayed": 65
+  },
+  "shard_tasks": {
+    "proved": 6156,
+    "replayed": 2186
+  },
+  "status": "compressed_proof_verified"
+}

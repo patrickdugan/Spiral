@@ -1,0 +1,189 @@
+{
+ "network": "testnet4",
+ "recorded_at": "2026-11-13T22:56:37Z",
+ "node": "/Satoshi:31.1.0/",
+ "tip": 161169,
+ "transactions": [
+  {
+   "kind": "payment",
+   "instance": null,
+   "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+   "vsize": 188,
+   "block_height": 161011,
+   "confirmations": 159
+  },
+  {
+   "kind": "payer_funding",
+   "instance": null,
+   "txid": "e52eae5cbe2f01cd7dd8a9ff5a1a5763f3d9812a0bb7a90e61fac651a347f754",
+   "vsize": 366,
+   "block_height": 161011,
+   "confirmations": 159
+  },
+  {
+   "kind": "vault_funding",
+   "instance": null,
+   "txid": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e",
+   "vsize": 329,
+   "block_height": 161011,
+   "confirmations": 159
+  },
+  {
+   "kind": "claim",
+   "instance": "wrong-statement",
+   "txid": "1eefeeb8e67f2f15caef5ea93c895a46adcea707ad2e599b118850684683cd49",
+   "vsize": 208,
+   "block_height": 161148,
+   "confirmations": 22
+  },
+  {
+   "kind": "disprove",
+   "instance": "wrong-statement",
+   "txid": "88676a6ddd796e4be09aa4caf24e5c32815beb71b6c403393943f2eb6f99d14c",
+   "vsize": 138,
+   "block_height": 161152,
+   "confirmations": 18
+  },
+  {
+   "kind": "claim",
+   "instance": "tampered-proof",
+   "txid": "580c7d010b3e95f4e46bd4c5b92b5a29b30c5d2265078cc06ce4c85cd195dcce",
+   "vsize": 208,
+   "block_height": 161152,
+   "confirmations": 18
+  },
+  {
+   "kind": "disprove",
+   "instance": "tampered-proof",
+   "txid": "b164f36bb5d61bf59ec6463a03f0f58af0dcded6c5749a57432d025606b1c0ee",
+   "vsize": 138,
+   "block_height": 161157,
+   "confirmations": 13
+  },
+  {
+   "kind": "claim",
+   "instance": "honest",
+   "txid": "d61ddbb16944af5e090ed1994143e75a7777b0977efe6451ea53ce5d8a2a9056",
+   "vsize": 208,
+   "block_height": 161157,
+   "confirmations": 13
+  },
+  {
+   "kind": "payout",
+   "instance": "honest",
+   "txid": "a2de74eacb4a1b52aac17a6e112df219da1fed043ca06cea8b03bc7b1cdbf9ac",
+   "vsize": 128,
+   "block_height": 161164,
+   "confirmations": 6
+  },
+  {
+   "kind": "payer_sweep",
+   "instance": "honest",
+   "txid": "0fa328ab2447db50fe5eab0b479f78857846c9ee9f1d94ccb5f74bb898a9966e",
+   "vsize": 188,
+   "block_height": 161164,
+   "confirmations": 6
+  }
+ ],
+ "refusal_probes": [
+  {
+   "at": "2026-11-13T20:57:46Z",
+   "kind": "refusal_probe",
+   "instance": "honest",
+   "case": "payout_before_window",
+   "claim_confirmations": 0,
+   "txid": "a2de74eacb4a1b52aac17a6e112df219da1fed043ca06cea8b03bc7b1cdbf9ac",
+   "allowed": false,
+   "reject_reason": "non-BIP68-final"
+  },
+  {
+   "at": "2026-11-13T21:04:17Z",
+   "kind": "disprove_with_accept_label",
+   "instance": "honest",
+   "txid": "4ec753c1eadcf6e03603c3214b7bf35e078f1d36752cb41107972a4cbd0981bc",
+   "allowed": false,
+   "reject_reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+  },
+  {
+   "at": "2026-11-13T21:58:03Z",
+   "kind": "refusal_probe",
+   "instance": "honest",
+   "case": "payout_to_payer_old_address",
+   "txid": "74e234fb83c9fb9e7146f56981d3bf5c8840f94b69d10273ddd10aa487639107",
+   "allowed": false,
+   "reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+  },
+  {
+   "at": "2026-11-13T21:58:03Z",
+   "kind": "refusal_probe",
+   "instance": "honest",
+   "case": "payout_to_claimant",
+   "txid": "bf74cfb9a08417061acbabcb64711cb498b82a51dc1d0079f5aeb13f6a6484a7",
+   "allowed": false,
+   "reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+  },
+  {
+   "at": "2026-11-13T21:58:03Z",
+   "kind": "refusal_probe",
+   "instance": "honest",
+   "case": "disprove_with_random_label",
+   "txid": "4ec753c1eadcf6e03603c3214b7bf35e078f1d36752cb41107972a4cbd0981bc",
+   "allowed": false,
+   "reject_reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+  }
+ ],
+ "evaluations": [
+  {
+   "at": "2026-11-13T20:43:12Z",
+   "kind": "evaluation",
+   "instance": "wrong-statement",
+   "verdict": "reject",
+   "proof_sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3",
+   "ciphertexts": 785442492,
+   "seconds": 401.433524,
+   "output_label_sha256": "acc039a882e9c0ceeaf528a502b4c54382ba8f1fc330e0418d15886330c78b55"
+  },
+  {
+   "at": "2026-11-13T20:52:45Z",
+   "kind": "evaluation",
+   "instance": "tampered-proof",
+   "verdict": "reject",
+   "proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+   "ciphertexts": 785442492,
+   "seconds": 347.835101311,
+   "output_label_sha256": "ea928e8226d6a33e72719cf3729edef9355b6911b3c96443a87d6f22d89e47dd"
+  },
+  {
+   "at": "2026-11-13T21:04:17Z",
+   "kind": "evaluation",
+   "instance": "honest",
+   "verdict": "accept",
+   "proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+   "ciphertexts": 785442492,
+   "seconds": 365.097047106,
+   "output_label_sha256": "d9786a38dfdbd28442aab57b29bb476dfe6a34e8e0a98545585655fa036dbf61"
+  }
+ ],
+ "files": [
+  "checks.json",
+  "events.jsonl",
+  "graph-honest.json",
+  "graph-tampered-proof.json",
+  "graph-wrong-statement.json",
+  "m14-eval-honest.json",
+  "m14-eval-tampered-proof.json",
+  "m14-eval-wrong-statement.json",
+  "m14-setup-honest.json",
+  "m14-setup-tampered-proof.json",
+  "m14-setup-wrong-statement.json",
+  "native-verify.json",
+  "payment.json",
+  "prover-result.json",
+  "prover-run.json",
+  "public.json",
+  "statement-check.json",
+  "tn4-statement.json",
+  "wrap-report.json",
+  "wrong-statement-control.json"
+ ]
+}

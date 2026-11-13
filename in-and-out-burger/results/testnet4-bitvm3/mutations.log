@@ -1,0 +1,78 @@
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:317:3:
+stderr: last header is not the proven tip
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: last header is not the proven tip
+{"case":"tip header nonce flipped","error":null,"exit_code":1,"refused":true,"seconds":551.915838858}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:204:5:
+stderr: headers do not link
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: headers do not link
+{"case":"payment block's Merkle root flipped","error":null,"exit_code":1,"refused":true,"seconds":0.237260953}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:232:3:
+stderr: transaction is not in the block's Merkle tree
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: transaction is not in the block's Merkle tree
+{"case":"transaction byte flipped (output value)","error":null,"exit_code":1,"refused":true,"seconds":0.204230554}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:159:3:
+stderr: no such output
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: no such output
+{"case":"vout out of range","error":null,"exit_code":1,"refused":true,"seconds":0.180881066}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:232:3:
+stderr: transaction is not in the block's Merkle tree
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: transaction is not in the block's Merkle tree
+{"case":"index flipped","error":null,"exit_code":1,"refused":true,"seconds":0.18232365}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:219:3:
+stderr: trailing bytes in the payment input
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: trailing bytes in the payment input
+{"case":"trailing byte","error":null,"exit_code":1,"refused":true,"seconds":0.186923273}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:232:3:
+stderr: transaction is not in the block's Merkle tree
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: transaction is not in the block's Merkle tree
+{"case":"Merkle sibling flipped","error":null,"exit_code":1,"refused":true,"seconds":0.20169506}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:317:3:
+stderr: last header is not the proven tip
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: last header is not the proven tip
+{"case":"tip header dropped","error":null,"exit_code":1,"refused":true,"seconds":553.810678539}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:204:5:
+stderr: headers do not link
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: headers do not link
+{"case":"middle link broken","error":null,"exit_code":1,"refused":true,"seconds":0.355987411}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:303:45:
+stderr: Nova verifier rejects the proof: ProofVerifyError { reason: "Invalid output hash in R1CS instances" }
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: Nova verifier rejects the proof: ProofVerifyError { reason: "Invalid output hash in R1CS instances" }
+{"case":"first segment's start height altered","error":null,"exit_code":1,"refused":true,"seconds":118.81245142}
+stderr:
+stderr: thread '<unnamed>' (1) panicked at src/main.rs:303:45:
+stderr: Nova verifier rejects the proof: ProofVerifyError { reason: "Invalid output hash in R1CS instances" }
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: Nova verifier rejects the proof: ProofVerifyError { reason: "Invalid output hash in R1CS instances" }
+{"case":"first segment's proof byte flipped","error":null,"exit_code":1,"refused":true,"seconds":117.272283107}
+all mutations refused

@@ -1,0 +1,21 @@
+{
+  "sp1_version": "6.9.0",
+  "elf_sha256": "bb7d51b0352db50512ce4c6485d1a0b255a97dc05c3ebaf10ef7201604584790",
+  "inputs_sha256": [
+    "63f91f1ec5c6b2d19185df0578311a5dfb8404441631c1ae515d07a8198dd20e",
+    "19dce7a793f49638421e733554402e6d51558fb6536512a973923e9edb621189",
+    "9bb364151c064fa8f204377e74f06ff2d08ab3d2e57c364b01654b100d5515da"
+  ],
+  "element_threshold": 134217728,
+  "height_threshold": 4194304,
+  "shard_size": 16777216,
+  "minimal_trace_chunk_threshold": 16777216,
+  "trace_chunk_slots": 2,
+  "full_size_shards": false,
+  "nonce": [
+    3880900748,
+    126040869,
+    3150924763,
+    1793782367
+  ]
+}
