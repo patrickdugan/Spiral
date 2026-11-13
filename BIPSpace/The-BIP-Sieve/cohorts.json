@@ -1,0 +1,1580 @@
+{
+  "schema_version": "0.2",
+  "title": "The BIP Sieve: cohort and portfolio ledger",
+  "observed_on": "2026-11-13",
+  "paper": "paper.md",
+  "source_index": "references.json",
+  "source_pins": {
+    "bitcoin_bips": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+    "bitcoin_core_interpreter": "9183edd25e60aa410bc3e4728989a1d75c309a09",
+    "spiral_main": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+    "spiral_refresh": "76071a0195f48961386e46d56df7b5e0276637fc"
+  },
+  "sampling": {
+    "method": "Purposive descriptive cohort selected for different outcomes and useful compatibility comparisons.",
+    "primary_unit": "A design or deployment episode with a specified target and baseline.",
+    "independent_trials": false,
+    "estimated_adoption_probabilities": null,
+    "limitations": [
+      "Related BIPs, implementations and activation campaigns share causes.",
+      "Open proposals are right-censored at the observation date.",
+      "Numbered BIPs omit proposals screened out before publication.",
+      "The selected elective hard-fork campaigns cluster around the block-size controversy.",
+      "Different networks and emergency repairs have separate outcome criteria."
+    ]
+  },
+  "coding_guide": {
+    "official_status": "Current document metadata at the pinned BIPs revision; Closed can combine several historical closure reasons.",
+    "observed_outcome": "The evidenced network or campaign event, recorded separately from document status.",
+    "right_censored": "True when eventual deployment or retirement of the specified open design remains unobserved. A null value marks a new coverage row whose network-event history still needs independent coding.",
+    "mixed_lifecycle": "MAST members have different lifecycle states; member-level coding is required for any later estimator.",
+    "family_id": "A grouping aid for related episodes. Additional overlapping lineage links may be needed for statistical work.",
+    "interpretation": "An analytical inference; sources directly support the facts and attributed statements.",
+    "extra_consensus_dependencies": "Requirements for the named implementation and security profile, beyond activated baseline rules.",
+    "counts": "Records describe episodes, controls and related designs. Their count is not an adoption denominator."
+  },
+  "episodes": [
+    {
+      "episode_id": "p2sh_op_eval",
+      "family_id": "p2sh_2011_2012",
+      "role": "alternative_consensus_design",
+      "bips": [
+        {
+          "number": 12,
+          "title": "OP_EVAL",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0012.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Contemporaneous legacy Script with the proposed OP_EVAL extension slot.",
+      "observed_outcome": "closed_without_mainnet_adoption",
+      "outcome_evidence": "Current text is Closed; BIP 16 describes replacing OP_EVAL.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Same-family alternative to 16 and 17; closure does not identify a single cause.",
+      "interpretation": "Soft-fork compatibility left separate questions of recursive evaluation and review scope.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP12",
+        "BIP16"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0012.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki"
+      ],
+      "observed_on": "2026-11-13",
+      "documented_concerns": [
+        "BIP12 records objections to interpreter complexity and executing data as code; the specified OP_EVAL recursion bound is two.",
+        "BIP16 argues existing address infrastructure and statically countable signature work favored its chosen encoding."
+      ]
+    },
+    {
+      "episode_id": "p2sh_bip16",
+      "family_id": "p2sh_2011_2012",
+      "role": "consensus_carrier",
+      "bips": [
+        {
+          "number": 16,
+          "title": "Pay to Script Hash",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Contemporaneous legacy Script with hash-equality outputs accepted under older rules.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "BIP specifies enforcement from block timestamp 1333238400, April 1 2012, and has Deployed status.",
+      "right_censored": false,
+      "milestones": {
+        "rule_start": "2012-04-01",
+        "block_timestamp_threshold": 1333238400
+      },
+      "coding_note": "Use timestamp condition rather than inventing a first activation height.",
+      "interpretation": "Short addresses and limited sender infrastructure changes gave a concrete adoption case.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP16"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki"
+      ],
+      "observed_on": "2026-11-13",
+      "documented_concerns": [
+        "BIP12 records objections to interpreter complexity and executing data as code; the specified OP_EVAL recursion bound is two.",
+        "BIP16 argues existing address infrastructure and statically countable signature work favored its chosen encoding."
+      ]
+    },
+    {
+      "episode_id": "p2sh_checkhashverify",
+      "family_id": "p2sh_2011_2012",
+      "role": "alternative_consensus_design",
+      "bips": [
+        {
+          "number": 17,
+          "title": "OP_CHECKHASHVERIFY (CHV)",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0017.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Contemporaneous legacy Script with OP_NOP2.",
+      "observed_outcome": "closed_without_mainnet_adoption",
+      "outcome_evidence": "Current text is Closed and describes a competing NOP2-based P2SH design.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Compare with BIP 16 in the same design family, not as an independent trial.",
+      "interpretation": "Sharing the soft-fork route did not ensure selection among competing constructions.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP17"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0017.mediawiki"
+      ],
+      "observed_on": "2026-11-13",
+      "documented_concerns": [
+        "BIP12 records objections to interpreter complexity and executing data as code; the specified OP_EVAL recursion bound is two.",
+        "BIP16 argues existing address infrastructure and statically countable signature work favored its chosen encoding."
+      ]
+    },
+    {
+      "episode_id": "coinbase_height_bip34",
+      "family_id": "version_supermajority",
+      "role": "consensus_carrier",
+      "bips": [
+        {
+          "number": 34,
+          "title": "Block v2, Height in Coinbase",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0034.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Pre-height-commitment mainnet rules, before version-2 enforcement.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "BIP 90 records enforcement height 227931.",
+      "right_censored": false,
+      "milestones": {
+        "enforcement_height": 227931
+      },
+      "coding_note": "BIP 34 separately identifies 227835 as last v1 block.",
+      "interpretation": "Consensus maintenance supplied a bounded goal and an upgrade mechanism.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP34",
+        "BIP90"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0034.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "strict_der_bip66",
+      "family_id": "version_supermajority",
+      "role": "consensus_carrier",
+      "bips": [
+        {
+          "number": 66,
+          "title": "Strict DER signatures",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0066.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Pre-BIP66 mainnet signature-encoding rules.",
+      "observed_outcome": "mainnet_deployed_with_activation_incident",
+      "outcome_evidence": "BIP 90 records enforcement 363725; July 4 alert documents invalid forks after 95% version signaling.",
+      "right_censored": false,
+      "milestones": {
+        "enforcement_height": 363725,
+        "incident_notice": "2015-07-04"
+      },
+      "coding_note": "Operational incidents coexist with deployment success; miner signaling differs from actual validation.",
+      "interpretation": "Readiness needs enforcement checks in addition to measured signaling.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP66",
+        "BIP90",
+        "DERALERT"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0066.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki",
+        "https://bitcoin.org/en/alert/2015-07-04-spv-mining"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "absolute_timelocks_bip65",
+      "family_id": "version_supermajority",
+      "role": "consensus_carrier",
+      "bips": [
+        {
+          "number": 65,
+          "title": "OP_CHECKLOCKTIMEVERIFY",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0065.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Pre-BIP65 Script with OP_NOP2.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "BIP 90 records enforcement 388381; Core 0.11.2 release shipped CLTV rules.",
+      "right_censored": false,
+      "milestones": {
+        "enforcement_height": 388381
+      },
+      "coding_note": "NOP2 extension with escrow/refund examples; no community preference share inferred.",
+      "interpretation": "Bounded functionality can come with concrete opt-in applications.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP65",
+        "BIP90"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0065.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki",
+        "https://bitcoin.org/en/release/v0.11.2"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "csv_bundle",
+      "family_id": "csv_2016",
+      "role": "consensus_bundle",
+      "bips": [
+        {
+          "number": 68,
+          "title": "Relative lock-time using consensus-enforced sequence numbers",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0068.mediawiki"
+        },
+        {
+          "number": 112,
+          "title": "CHECKSEQUENCEVERIFY",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0112.mediawiki"
+        },
+        {
+          "number": 113,
+          "title": "Median time-past as endpoint for lock-time calculations",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0113.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Pre-CSV mainnet rules for nSequence, OP_NOP3 and locktime evaluation.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "Core miner notice records lock-in 417312 and enforcement 419328 under one BIP 9 deployment.",
+      "right_censored": false,
+      "milestones": {
+        "lock_in_height": 417312,
+        "enforcement_height": 419328
+      },
+      "coding_note": "Three BIPs share one deployment; 113 explicitly requires joint deployment.",
+      "interpretation": "Dependency-aligned bundling can make several changes reviewable as one capability.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP68",
+        "BIP112",
+        "BIP113",
+        "CSVNOTICE"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0068.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0112.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0113.mediawiki",
+        "https://bitcoincore.org/en/2016/06/21/csv-softfork-instructions/",
+        "https://bitcoincore.org/en/blog/2016/04/15/release-0.12.1/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "versionbits_bip9",
+      "family_id": "activation_methods",
+      "role": "activation_mechanism",
+      "bips": [
+        {
+          "number": 9,
+          "title": "Version bits with timeout and delay",
+          "official_status": "Deployed",
+          "official_layer": null,
+          "official_type": "Informational",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0009.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "mechanism_for_soft_forks",
+      "baseline_rules": "A deployment mechanism to apply specified additional consensus restrictions.",
+      "observed_outcome": "used_for_deployed_consensus_bundles",
+      "outcome_evidence": "Core 0.12.1 announced versionbits with CSV; 0.13.1 announced its SegWit use.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Informational mechanism; excluded from independent capability-success counts.",
+      "interpretation": "Allowing timeout and concurrent deployments changes coordination, separate from feature semantics.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP9",
+        "CORE0131"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0009.mediawiki",
+        "https://bitcoincore.org/en/blog/2016/04/15/release-0.12.1/",
+        "https://bitcoincore.org/en/2016/10/27/release-0.13.1/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit_bundle",
+      "family_id": "segwit_2016_2017",
+      "role": "consensus_bundle_with_peer_companion",
+      "bips": [
+        {
+          "number": 141,
+          "title": "Segregated Witness (Consensus layer)",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0141.mediawiki"
+        },
+        {
+          "number": 143,
+          "title": "Transaction Signature Verification for Version 0 Witness Program",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0143.mediawiki"
+        },
+        {
+          "number": 144,
+          "title": "Segregated Witness (Peer Services)",
+          "official_status": "Deployed",
+          "official_layer": "Peer Services",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0144.mediawiki"
+        },
+        {
+          "number": 147,
+          "title": "Dealing with dummy stack element malleability",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0147.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork_plus_peer_services",
+      "baseline_rules": "Pre-SegWit mainnet validation with undefined witness programs.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "Core wallet guide records enforcement 481824. Original release defined 95% signaling and 2016–2017 window.",
+      "right_censored": false,
+      "milestones": {
+        "enforcement_height": 481824
+      },
+      "coding_note": "144 is Peer Services; 147 has same deployment parameters as141/143.",
+      "interpretation": "Feature acceptance and the chosen activation route require separate explanatory evidence.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP141",
+        "BIP143",
+        "BIP144",
+        "BIP147",
+        "SEGWITGUIDE",
+        "CORE0131"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0141.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0143.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0144.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0147.mediawiki",
+        "https://bitcoincore.org/en/segwit_wallet_dev/",
+        "https://bitcoincore.org/en/2016/10/27/release-0.13.1/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit_bip91",
+      "family_id": "segwit_2016_2017",
+      "role": "activation_coordination_rule",
+      "bips": [
+        {
+          "number": 91,
+          "title": "Reduced threshold Segwit MASF",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0091.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing BIP9 SegWit deployment before lock-in.",
+      "observed_outcome": "deployed_activation_intervention",
+      "outcome_evidence": "Current BIP is Deployed and defines a 269-of-336 threshold plus mandatory existing bit 1 signaling.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Related to successful SegWit episode; text alone does not identify its marginal causal effect.",
+      "interpretation": "Reusing already shipped deployment machinery can reduce coordination and testing costs.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP91"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0091.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit_bip148",
+      "family_id": "segwit_2016_2017",
+      "role": "activation_coordination_rule",
+      "bips": [
+        {
+          "number": 148,
+          "title": "Mandatory activation of segwit deployment",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0148.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing BIP9 SegWit deployment before lock-in.",
+      "observed_outcome": "deployed_activation_intervention",
+      "outcome_evidence": "Current BIP is Deployed and specifies an August 1 2017 flag day until SegWit lock-in.",
+      "right_censored": false,
+      "milestones": {
+        "scheduled_rule_start": "2017-08-01"
+      },
+      "coding_note": "Author hoped miners would activate early; distinguish intended pressure from proved causality.",
+      "interpretation": "Economic enforcement commitments can alter activation expectations alongside miner coordination.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP148"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0148.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "taproot_bundle",
+      "family_id": "taproot_2021",
+      "role": "consensus_bundle",
+      "bips": [
+        {
+          "number": 340,
+          "title": "Schnorr Signatures for secp256k1",
+          "official_status": "Deployed",
+          "official_layer": null,
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0340.mediawiki"
+        },
+        {
+          "number": 341,
+          "title": "Taproot: SegWit version 1 spending rules",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0341.mediawiki"
+        },
+        {
+          "number": 342,
+          "title": "Validation of Taproot Scripts",
+          "official_status": "Deployed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0342.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Post-SegWit mainnet rules with undefined witness version 1.",
+      "observed_outcome": "mainnet_deployed",
+      "outcome_evidence": "BIP 341 records actual activation 709632; Core 0.21.1 specifies Speedy Trial 90% signaling and minimum height.",
+      "right_censored": false,
+      "milestones": {
+        "enforcement_height": 709632
+      },
+      "coding_note": "340 specifies cryptography and has no Layer field; 341/342 are consensus carriers.",
+      "interpretation": "The design explicitly balanced scope and integrated benefits; deployment process remained a separate negotiation.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP340",
+        "BIP341",
+        "BIP342",
+        "CORE0211",
+        "SPEEDY"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0340.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0341.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0342.mediawiki",
+        "https://bitcoincore.org/en/releases/0.21.1/",
+        "https://gnusha.org/pi/bitcoindev/20210306034343.fhwrxmq6gbb2os5m@ganymede/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "taproot_bip343",
+      "family_id": "taproot_2021",
+      "role": "alternative_activation_mechanism",
+      "bips": [
+        {
+          "number": 343,
+          "title": "Mandatory activation of taproot deployment",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "official_type": "Specification",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0343.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing Taproot deployment before lock-in.",
+      "observed_outcome": "closed_after_feature_deployed_by_other_route",
+      "outcome_evidence": "June 1 2026 changelog closes it because no longer relevant and no known deployments.",
+      "right_censored": false,
+      "milestones": {
+        "document_closed": "2026-06-01"
+      },
+      "coding_note": "Successful target feature; unused/retired mechanism. Do not code as rejected Taproot.",
+      "interpretation": "A proposal document can close while its desired capability succeeds.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP343"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0343.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "database_compatibility_2013",
+      "family_id": "emergency_controls",
+      "role": "emergency_compatibility_repair",
+      "bips": [
+        {
+          "number": 50,
+          "title": "March 2013 Chain Fork Post-Mortem",
+          "official_status": "Deployed",
+          "official_layer": null,
+          "official_type": "Informational",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0050.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "mixed_accidental_split_rollback_and_compatibility_retirement",
+      "baseline_rules": "Bitcoin 0.7 and 0.8 diverged over a database-dependent block constraint; the episode contains several transitions.",
+      "observed_outcome": "canonical_chain_restored_and_upgrade_deadline_imposed",
+      "outcome_evidence": "BIP 50 describes emergency mining rollback; 0.8.1 temporary restriction March 21–May15 and official May 15 deadline.",
+      "right_censored": false,
+      "milestones": {
+        "split": "2013-03-11",
+        "upgrade_or_configuration_deadline": "2013-05-15"
+      },
+      "coding_note": "Control outside ordinary planned proposals; BIP 50 is an Informational postmortem.",
+      "interpretation": "Shared emergency danger changes coordination incentives and complicates a single SF/HF label.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP50",
+        "CORE081",
+        "DBDEADLINE"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0050.mediawiki",
+        "https://bitcoin.org/en/release/v0.8.1",
+        "https://bitcoin.org/en/alert/2013-03-15-upgrade-deadline"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "buried_deployments_bip90",
+      "family_id": "historical_validation_controls",
+      "role": "historical_validation_simplification",
+      "bips": [
+        {
+          "number": 90,
+          "title": "Buried Deployments",
+          "official_status": "Deployed",
+          "official_layer": null,
+          "official_type": "Informational",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "history_dependent_compatibility_change",
+      "baseline_rules": "Fixed actual shared chain versus sufficiently deep hypothetical alternate histories.",
+      "observed_outcome": "deployed_implementation_simplification",
+      "outcome_evidence": "Text explicitly discusses incompatible judgments on sufficiently deep alternate histories.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Informational control outside planned capability cohorts.",
+      "interpretation": "Set-inclusion definitions need a fixed baseline and relevant shared-history domain.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP90"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "block-size-hf-campaigns-2015-2017",
+      "family_id": "base-block-capacity-increase",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 101,
+          "official_status": "Closed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0101.mediawiki"
+        },
+        {
+          "number": 102,
+          "official_status": "Closed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0102.mediawiki"
+        },
+        {
+          "number": 109,
+          "official_status": "Closed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0109.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Contemporaneous 1,000,000-byte base-block limit and associated validation rules",
+      "observed_outcome": "Proposed capacity rules did not become Bitcoin mainnet consensus",
+      "right_censored": false,
+      "milestones": {
+        "bip101_assignment": "2015-06-22",
+        "bip102_assignment": "2015-06-23",
+        "bip109_assignment": "2016-01-28",
+        "bip109_expiry": "2018-01-01"
+      },
+      "documented_concerns": [
+        "BIP101 discusses full-node cost, propagation advantage and mining concentration, plus UTXO growth.",
+        "BIP102 explicitly says old validating clients reject blocks above the old bound.",
+        "BIP109 supplies a signature-hashing cap and accurate sigop counting to address CPU exhaustion, and defines withdrawal on missing its deadline."
+      ],
+      "interpretation": "These are correlated proposals from one controversy. Their outcomes confound fork incompatibility with capacity policy and resource distribution; they cannot identify an independent HF penalty.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP101",
+        "BIP102",
+        "BIP109"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0101.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0102.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0109.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit2x-hf-suspension-2017",
+      "family_id": "base-block-capacity-increase",
+      "role": "activation_campaign",
+      "bips": [],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Post-SegWit Bitcoin; phase two proposed a base-block capacity increase",
+      "observed_outcome": "Organizers suspended the forthcoming 2MB hard fork",
+      "right_censored": false,
+      "milestones": {
+        "suspension": "2017-11-08"
+      },
+      "documented_concerns": [
+        "Organizers stated that sufficient consensus for a coordinated upgrade had not formed and that proceeding risked dividing the community."
+      ],
+      "interpretation": "Record the group's decision and stated reason. Its attribution of SegWit activation to SegWit2x is a participant claim, not established causal history.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "S2X"
+      ],
+      "source_urls": [
+        "https://lists.linuxfoundation.org/pipermail/bitcoin-segwit2x/2017-November/000685.html",
+        "https://bitcointalk.org/index.php?topic=2376285.0"
+      ],
+      "observed_on": "2026-11-13",
+      "source_provenance": "The original mailing-list endpoint was unavailable. The cited contemporaneous full copy preserves the author, timestamp and signatories."
+    },
+    {
+      "episode_id": "bitcoin-cash-separate-chain-2017",
+      "family_id": "base-block-capacity-increase",
+      "role": "intentional_separate_chain_control",
+      "bips": [],
+      "network_target": "Separate Bitcoin Cash network",
+      "compatibility_class": "hard_fork_with_additional_restrictions",
+      "baseline_rules": "Pre-split Bitcoin rules with 1MB base-block bound",
+      "observed_outcome": "A continuing separate chain was launched",
+      "right_censored": false,
+      "milestones": {
+        "specification": "2017-07-24",
+        "split": "2017-08-01"
+      },
+      "documented_concerns": [
+        "UAHF specification requires its first fork block to exceed 1MB to enforce separation.",
+        "The specification supplies replay-protected signatures and an emergency difficulty adjustment to support the independent chain."
+      ],
+      "interpretation": "Successful separate-chain launch is a distinct outcome from coordinated Bitcoin-mainnet deployment. The first-party history records the split; the contemporaneous technical spec establishes intentional incompatibility.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "UAHF",
+        "BCHHISTORY"
+      ],
+      "source_urls": [
+        "https://github.com/Bitcoin-ABC/bitcoin-abc/blob/v0.16.0/doc/abc/uahf-technical-spec.md",
+        "https://bitcoincash.org/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "mast-design-lineage-2016-2017",
+      "family_id": "merkle-script-policy",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 114,
+          "official_status": "Closed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0114.mediawiki"
+        },
+        {
+          "number": 116,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0116.mediawiki"
+        },
+        {
+          "number": 117,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0117.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "BIP114 depends on SegWit; BIP116/117 propose opcode/final-stack restrictions",
+      "observed_outcome": "Exact designs remain undeployed in inspected Core; BIP114 closed while BIP116/117 remain Draft; Taproot acknowledges earlier Merkle-branch work",
+      "right_censored": true,
+      "milestones": {
+        "bip114_assignment": "2016-04-02",
+        "bip116_assignment": "2017-08-25",
+        "bip117_assignment": "2017-08-25"
+      },
+      "documented_concerns": [
+        "BIP117 explains the restriction to one tail-call layer and its resource bounds.",
+        "BIP117 authors sought deployment independent of resolving the complete package for a new witness version."
+      ],
+      "interpretation": "Record acknowledged conceptual contribution to Taproot as a lineage edge, not a fabricated formal replacement of all earlier BIPs.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP114",
+        "BIP116",
+        "BIP117",
+        "BIP341",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0114.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0116.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0117.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0341.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13",
+      "coding_note": "Mixed lifecycle bundle: BIP114 is terminal as a document, BIP116/117 remain right-censored. Store member-level statuses if doing statistical work."
+    },
+    {
+      "episode_id": "anyprevout-tapscript",
+      "family_id": "noinput-anyprevout",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 118,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0118.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "BIP342 unknown Tapscript public-key types",
+      "observed_outcome": "Specification remains open; candidate semantics absent from inspected Core",
+      "right_censored": true,
+      "milestones": {
+        "assignment": "2017-02-28"
+      },
+      "documented_concerns": [
+        "Current design confines opt-in to tapscript paths and discusses unsafe rebinding and mitigation with relative timelocks."
+      ],
+      "interpretation": "An application can motivate a narrow signature-hash extension while rebinding semantics still require careful review. Count NOINPUT and APO as a design lineage.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP118",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0118.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "checktemplateverify",
+      "family_id": "transaction-covenants",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 119,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "OP_NOP4 upgrade slot",
+      "observed_outcome": "Specification remains open; activation logic omitted from BIP; OP_NOP4 retained as NOP in inspected Core",
+      "right_censored": true,
+      "milestones": {
+        "assignment": "2020-01-06"
+      },
+      "documented_concerns": [
+        "Variable-length transaction components must be cached to avoid repeated quadratic hashing work.",
+        "Exact template commitments constrain flexibility and multiple-input designs expose half-spend concerns.",
+        "The BIP describes finite nested template paths under hash assumptions."
+      ],
+      "interpretation": "Distinguish design, activation campaign, and application outcome. CTV supplies no basis for a halting-problem criticism.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP119",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "op-cat-tapscript",
+      "family_id": "script-byte-composition",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 347,
+          "official_status": "Complete",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0347.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Tapscript OP_SUCCESS126",
+      "observed_outcome": "Specification complete; OP_SUCCESS behavior remains in inspected Core",
+      "right_censored": true,
+      "milestones": {
+        "assignment": "2023-12-11"
+      },
+      "documented_concerns": [
+        "The proposal keeps the 520-byte stack-item limit and leaves legacy-script OP_CAT disabled.",
+        "Authors explicitly separate the concatenation proposal from any increase to stack-item size."
+      ],
+      "interpretation": "Complete describes document maturity. Compatibility depends on the chosen script context; restoring a disabled legacy opcode would alter the fork analysis.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP347",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0347.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "checksigfromstack-tapscript",
+      "family_id": "stack-signature-checking",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 348,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0348.md"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Tapscript OP_SUCCESS204",
+      "observed_outcome": "Specification remains open; deployment TBD; OP_SUCCESS behavior retained in inspected Core",
+      "right_censored": true,
+      "milestones": {
+        "assignment": "2024-11-26"
+      },
+      "documented_concerns": [
+        "Signature verification is charged to the Tapscript sigops budget.",
+        "The document compares CTV+CSFS and APO packages for Lightning Symmetry and identifies associated data-availability choices."
+      ],
+      "interpretation": "Evaluate primitive packages, because combinations can recover overlapping capabilities with different dependency and review costs.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP348",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0348.md",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13",
+      "related_family_ids": [
+        "transaction_templates_and_rebinding"
+      ]
+    },
+    {
+      "episode_id": "p2mr-witness-v2",
+      "family_id": "script-only-output",
+      "role": "consensus_design_episode",
+      "bips": [
+        {
+          "number": 360,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0360.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Currently undefined witness version 2",
+      "observed_outcome": "Specification remains open at version 0.12.1; witness-v2 semantics absent from inspected Core",
+      "right_censored": true,
+      "milestones": {
+        "assignment": "2024-12-18"
+      },
+      "documented_concerns": [
+        "The proposal removes the key path to address long-exposure attacks on exposed elliptic-curve keys.",
+        "It explicitly separates short-exposure protections and coin-burning proposals from this scope."
+      ],
+      "interpretation": "State the threat model and migration scope accurately; script-only outputs also provide a useful dependency for genuinely key-path-free application designs.",
+      "interpretation_kind": "analytical inference",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP360",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0360.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "varops_restoration_440_441",
+      "family_id": "script_execution_envelope",
+      "role": "proposed_consensus_framework_and_leaf",
+      "bips": [
+        {
+          "number": 440,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0440.mediawiki"
+        },
+        {
+          "number": 441,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0441.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Currently unassigned Taproot leaf version 0xc2.",
+      "observed_outcome": "Draft metering framework and future-leaf proposal; corresponding activation is unobserved at the cutoff.",
+      "right_censored": true,
+      "milestones": {
+        "assigned": "2026-03-25"
+      },
+      "coding_note": "BIP441 requires BIP440. BIP440 alone provides a cost framework; the future leaf carries the expanded execution semantics.",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP440",
+        "BIP441",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0440.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0441.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "templatehash_446",
+      "family_id": "transaction_templates_and_rebinding",
+      "role": "proposed_consensus_primitive",
+      "bips": [
+        {
+          "number": 446,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446.md"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Tapscript OP_SUCCESS206.",
+      "observed_outcome": "Draft template-hash primitive; relevant extension remains permissive in inspected Core.",
+      "right_censored": true,
+      "milestones": {
+        "assigned": "2026-02-06"
+      },
+      "coding_note": "A component of BIP448 and an independent dependency in the documented sibling graph.",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP446",
+        "BIP448",
+        "SIBLING",
+        "COREINTERPRETER"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md",
+        "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/in-and-out-burger/research/checksiblingverify/bip-XXXX-checksiblingverify.mediawiki",
+        "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "rebindable_bundle_448",
+      "family_id": "transaction_templates_and_rebinding",
+      "role": "proposed_consensus_bundle",
+      "bips": [
+        {
+          "number": 448,
+          "official_status": "Draft",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Tapscript extension slots used by BIP446, BIP348 and BIP349.",
+      "observed_outcome": "Draft bundle with deployment parameters to be determined.",
+      "right_censored": true,
+      "milestones": {
+        "assigned": "2026-03-11"
+      },
+      "coding_note": "BIP448 names 446/348/349 as its package. Its component rows are correlated and must share a family in any later statistical study.",
+      "include_in_elective_mainnet_capability_comparison": true,
+      "source_ids": [
+        "BIP448",
+        "BIP446",
+        "BIP348",
+        "BIP349"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0348.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0349.md"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "opt_in_rbf_125",
+      "family_id": "relay_policy",
+      "role": "nonconsensus_scope_control",
+      "bips": [
+        {
+          "number": 125,
+          "official_status": "Deployed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0125.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "nonconsensus",
+      "baseline_rules": "Transaction relay and local mempool policy.",
+      "observed_outcome": "BIP metadata records Deployed for the specified opt-in replacement policy.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Applications layer. This record does not assert that every current node uses this historical policy unchanged.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP125"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0125.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "encrypted_transport_324",
+      "family_id": "peer_transport",
+      "role": "nonconsensus_scope_control",
+      "bips": [
+        {
+          "number": 324,
+          "official_status": "Deployed",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0324.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "nonconsensus",
+      "baseline_rules": "Peer-to-peer transport.",
+      "observed_outcome": "BIP metadata records Deployed for version-2 encrypted transport.",
+      "right_censored": false,
+      "milestones": {},
+      "coding_note": "Peer Services layer; excluded from SF/HF deployment outcomes.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP324"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0324.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "elements_segwit_hf_lineage",
+      "family_id": "segwit_2016_2017",
+      "role": "cross_environment_design_lineage",
+      "bips": [],
+      "network_target": "Elements Alpha",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Elements Alpha experimental sidechain design, as described in the December 2015 roadmap.",
+      "observed_outcome": "The roadmap describes an earlier SegWit hard-fork implementation in Elements Alpha and the subsequent compatible Bitcoin proposal.",
+      "right_censored": false,
+      "milestones": {
+        "source_published": "2015-12-07"
+      },
+      "coding_note": "Different networks and implementations; provides design-lineage evidence with no controlled estimate of fork-class effects.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "ROADMAP2015"
+      ],
+      "source_urls": [
+        "https://bitcoincore.org/en/2015/12/07/roadmap/"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "p2sh_bip18_description",
+      "family_id": "p2sh_2011_2012",
+      "role": "related_protocol_description",
+      "bips": [
+        {
+          "number": 18,
+          "title": "hashScriptCheck",
+          "official_status": "Complete",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Legacy P2SH hash-equality template.",
+      "observed_outcome": "Author describes protocol identity with BIP16; current document metadata is Complete.",
+      "right_censored": false,
+      "milestones": {
+        "assigned": "2012-01-27"
+      },
+      "coding_note": "The document shares the P2SH episode; its protocol identity is attributed to its author.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP18",
+        "BIP16"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "coalescing_transactions_131",
+      "family_id": "transaction_aggregation",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 131,
+          "title": "\"Coalescing Transaction\" Specification (wildcard inputs)",
+          "official_status": "Closed",
+          "official_layer": "Consensus (hard fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Ordinary explicit UTXO inputs.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2015-11-30"
+      },
+      "coding_note": "Proposed wildcard-input aggregation broadens the frame beyond block-size limits. Closure cause remains unestablished.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP131"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "flexible_transactions_134",
+      "family_id": "transaction_serialization",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 134,
+          "title": "Flexible Transactions",
+          "official_status": "Closed",
+          "official_layer": "Consensus (hard fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Existing transaction serialization.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2016-07-27"
+      },
+      "coding_note": "Proposes version 4 compact-message serialization; older validating clients would require an upgrade. Closure cause remains unestablished.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP134"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "normalized_txid_140",
+      "family_id": "transaction_malleability",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 140,
+          "title": "Normalized TXID",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing OP_NOP4 and transaction identifiers.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2015-10-14"
+      },
+      "coding_note": "Normalized signature identifiers and additional UTXO tracking supply partially overlapping goals with BIP134 under different machinery.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP140",
+        "BIP134"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit_bip149_fallback",
+      "family_id": "segwit_2016_2017",
+      "role": "alternative_activation_mechanism",
+      "bips": [
+        {
+          "number": 149,
+          "title": "Segregated Witness (second deployment)",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing SegWit BIP9 deployment and proposed BIP8 fallback.",
+      "observed_outcome": "The conditional second-deployment document is Closed; SegWit deployed through the earlier route before the specified fallback start.",
+      "right_censored": false,
+      "milestones": {
+        "assigned": "2017-04-14"
+      },
+      "coding_note": "The specification conditions this deployment on missing the earlier November 2017 timeout; feature and fallback outcomes are separate.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP149",
+        "BIP141",
+        "SEGWITGUIDE"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0141.mediawiki",
+        "https://bitcoincore.org/en/segwit_wallet_dev/"
+      ],
+      "observed_on": "2026-11-13"
+    }
+  ],
+  "recent_portfolio": [
+    {
+      "design_id": "checksiblingverify",
+      "title": "CHECKSIBLINGVERIFY",
+      "layer": "Consensus",
+      "compatibility_class": "proposed_soft_fork",
+      "source_ids": [
+        "SIBLING",
+        "BIP446",
+        "BIP448"
+      ],
+      "source_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+      "profiles": [
+        {
+          "profile": "predicate",
+          "extra_consensus_dependencies": [
+            "CHECKSIBLINGVERIFY"
+          ]
+        },
+        {
+          "profile": "documented_finite_paired_graph",
+          "extra_consensus_dependencies": [
+            "CHECKSIBLINGVERIFY",
+            "BIP446"
+          ]
+        }
+      ],
+      "observed_evidence": "Specified same-parent outpoint predicate and a finite transaction-graph design with a stated merged-output baseline.",
+      "next_gate": "Establish an application benefit from independently useful output roles, then execute actual proof circuits and funded recovery under the matched contracts.",
+      "authority_boundary": "The predicate authenticates coin pairing. Economic claim admission, garbling assumptions and timely challenges need application evidence.",
+      "observed_on": "2026-11-13",
+      "source_urls": [
+        "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/in-and-out-burger/research/checksiblingverify/bip-XXXX-checksiblingverify.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md"
+      ],
+      "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability.",
+      "matched_experiment": "benchmarks/results.json"
+    },
+    {
+      "design_id": "muladdmod",
+      "title": "Bounded Modular Arithmetic for Tapscript",
+      "layer": "Consensus",
+      "compatibility_class": "proposed_soft_fork",
+      "source_ids": [
+        "MULADD",
+        "MULADDPR",
+        "BIP440",
+        "BIP441"
+      ],
+      "source_commit": "7f5ad9f95fce8c40919e360000ca86c7119ceb5c",
+      "implementation_commit": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "implementation_pr": 1,
+      "implementation_repository": "patrickdugan/bitcoin-rs",
+      "profiles": [
+        {
+          "profile": "primitive",
+          "extra_consensus_dependencies": [
+            "MULADDMOD"
+          ]
+        }
+      ],
+      "observed_evidence": "Research integration records bounded arithmetic vectors and funded regtest disputes.",
+      "next_gate": "Compare a complete authenticated workload against existing Script and BIP440/441, including hostile cost and missed-challenge cases.",
+      "authority_boundary": "Live beneficiary and operator signatures remain in the documented dispute fixture.",
+      "observed_on": "2026-11-13",
+      "source_urls": [
+        "https://github.com/patrickdugan/Spiral/blob/7f5ad9f95fce8c40919e360000ca86c7119ceb5c/BIPSpace/Bounded-Modular-Arithmetic/DRAFT.md",
+        "https://github.com/patrickdugan/bitcoin-rs/pull/1",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0440.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0441.mediawiki"
+      ],
+      "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability."
+    },
+    {
+      "design_id": "keyless_checksig",
+      "title": "Keyless CHECKSIG / TXCOMMIT",
+      "layer": "Consensus",
+      "compatibility_class": "proposed_soft_fork",
+      "source_ids": [
+        "KCS",
+        "KCSNATIVE",
+        "KCSRUN",
+        "KCSSTATE",
+        "BIP347",
+        "BIP360"
+      ],
+      "source_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+      "implementation_commit": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "implementation_pr": 2,
+      "implementation_repository": "patrickdugan/bitcoin-rs",
+      "profiles": [
+        {
+          "profile": "digest_primitive",
+          "extra_consensus_dependencies": [
+            "TXCOMMIT"
+          ]
+        },
+        {
+          "profile": "inspected_dynamic_NUMS_P2TR",
+          "extra_consensus_dependencies": [
+            "TXCOMMIT",
+            "BIP347"
+          ]
+        },
+        {
+          "profile": "structurally_key_path_free_dynamic_profile",
+          "extra_consensus_dependencies": [
+            "TXCOMMIT",
+            "BIP347",
+            "BIP360"
+          ]
+        }
+      ],
+      "observed_evidence": {
+        "environment": "Experimental Core regtest with proposed features enabled",
+        "circle_example_transitions": 72,
+        "full_block_weight_WU": 3439221,
+        "proof_instance": "32-row Fibonacci example with eight query groups",
+        "payout_mutation": "Rejected in inspected run"
+      },
+      "next_gate": "Independently verify transaction encoding and application statements, then exercise hostile-prefix admission and recovery at an explicit proof-security target.",
+      "authority_boundary": "NUMS P2TR retains the key-path discrete-log assumption. Complete application authority requires authenticated computation bound to the actual spend.",
+      "observed_on": "2026-11-13",
+      "source_urls": [
+        "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md",
+        "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-checksig.md",
+        "https://github.com/patrickdugan/Spiral/actions/runs/43224248696",
+        "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/BIPSpace/Keyless-CHECKSIG/state-linked-verifier.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0347.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0360.mediawiki"
+      ],
+      "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability."
+    },
+    {
+      "design_id": "provenspend",
+      "title": "ProvenSpend / P2PROOF",
+      "layer": "Consensus",
+      "compatibility_class": "candidate_soft_fork_requires_complete_compatibility_analysis",
+      "source_ids": [
+        "PROVEN",
+        "BIP360"
+      ],
+      "source_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+      "profiles": [
+        {
+          "profile": "native_proof_output_lifecycle",
+          "extra_consensus_dependencies": [
+            "ProvenSpend output type, creation hook and frozen INIT/STEP verifier package"
+          ]
+        }
+      ],
+      "observed_evidence": "Transition model uses an ideal receipt oracle; the default backend fails closed.",
+      "next_gate": "Choose a concrete transparent proof profile, implement genuine INIT/STEP receipts and measure deterministic hostile costs using an independent verifier.",
+      "authority_boundary": "Creation evidence and proof ancestry must bind claims to canonical transaction context. The witness-version placeholder requires allocation review.",
+      "observed_on": "2026-11-13",
+      "source_urls": [
+        "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/in-and-out-burger/research/provenspend/bip-provenspend.md",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0360.mediawiki"
+      ],
+      "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability."
+    },
+    {
+      "design_id": "canonical_proof_authority",
+      "title": "Canonical Proof Authority",
+      "layer": "Applications",
+      "compatibility_class": "no_additional_consensus_rule_in_application_draft",
+      "source_ids": [
+        "CPA",
+        "CPAGUIDE",
+        "CPARUN"
+      ],
+      "source_commit": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "implementation_pr": 3,
+      "implementation_repository": "patrickdugan/bitcoin-rs",
+      "base_keyless_commit": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "profiles": [
+        {
+          "profile": "inspected_disclosed_trace_NUMS_P2TR",
+          "extra_consensus_dependencies": [
+            "TXCOMMIT",
+            "BIP347"
+          ]
+        }
+      ],
+      "observed_evidence": "Disclosed NAND traces, finite precompiled successors and retained parent guards; inspected hosted research CI succeeded.",
+      "next_gate": "Publish independently implemented canonicalization vectors and a cryptographic private-witness proof with explicit clone, replay and revocation semantics.",
+      "authority_boundary": "Program identity covers defined structural normalization. Separate funding creates separate coins; credential authentication and singleton lineage remain open.",
+      "observed_on": "2026-11-13",
+      "source_urls": [
+        "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/bip-canonical-proof-authority.md",
+        "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/canonical-proof-authority.md",
+        "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348447"
+      ],
+      "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability."
+    }
+  ],
+  "hypothetical_comparisons": [
+    {
+      "design_id": "hf_checksig_variant",
+      "status": "Comparison question; no separate normative HF-only specification retrieved.",
+      "classification_condition": "A complete spend rejected by the shared baseline becomes accepted under otherwise identical valid conditions.",
+      "evidence_required": "Exact semantics, measured application benefit and resource costs, ownership effects, replay boundaries and migration."
+    }
+  ],
+  "historical_frame": "historical-frame.json",
+  "objection_ledger": "objections.json",
+  "portfolio_evidence": "portfolio-evidence.json",
+  "matched_experiment": "benchmarks/results.json"
+}

@@ -1,0 +1,664 @@
+{
+  "schema_version": "1.1",
+  "observed_on": "2026-11-13",
+  "bips_source_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+  "sources": {
+    "BIP2": {
+      "title": "Bitcoin Improvement Proposal 2",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0002.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "32255d9a57c777a98f296a5b707eed214a9f250e",
+      "observed_on": "2026-11-13"
+    },
+    "BIP3": {
+      "title": "Bitcoin Improvement Proposal 3",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0003.md",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "f89febdbf52fc110706773cd74b2426b23552e74",
+      "observed_on": "2026-11-13"
+    },
+    "BIP9": {
+      "title": "Bitcoin Improvement Proposal 9",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0009.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ca6db79568ff6787a977c269c01429ee3bac0743",
+      "observed_on": "2026-11-13"
+    },
+    "BIP12": {
+      "title": "Bitcoin Improvement Proposal 12",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0012.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "07012de44dcb68bf98abae5f766e4ec82c00a7ed",
+      "observed_on": "2026-11-13"
+    },
+    "BIP16": {
+      "title": "Bitcoin Improvement Proposal 16",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "21d0e32278fd9ad6bbd049e0836526755d155e3d",
+      "observed_on": "2026-11-13"
+    },
+    "BIP17": {
+      "title": "Bitcoin Improvement Proposal 17",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0017.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "18f5aa61c60dbdacaf533ac5d8e66f4ac7851c9a",
+      "observed_on": "2026-11-13"
+    },
+    "BIP34": {
+      "title": "Bitcoin Improvement Proposal 34",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0034.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "2924fdb920a7c80d40a6a065f22c130ae97642a1",
+      "observed_on": "2026-11-13"
+    },
+    "BIP50": {
+      "title": "Bitcoin Improvement Proposal 50",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0050.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "6c0e69d1bac9298993101773626b6dd1dd3d2247",
+      "observed_on": "2026-11-13"
+    },
+    "BIP65": {
+      "title": "Bitcoin Improvement Proposal 65",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0065.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "4bd292f8b45a2b2b68013b24f45c23e354b70e4f",
+      "observed_on": "2026-11-13"
+    },
+    "BIP66": {
+      "title": "Bitcoin Improvement Proposal 66",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0066.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "aa41b75713e0b4e7fe22318237ca568d34920cbc",
+      "observed_on": "2026-11-13"
+    },
+    "BIP68": {
+      "title": "Bitcoin Improvement Proposal 68",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0068.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "5b4c6d66311a28325cd5cb27f4977f1c137dc6ad",
+      "observed_on": "2026-11-13"
+    },
+    "BIP90": {
+      "title": "Bitcoin Improvement Proposal 90",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0090.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "3b31e84e0a524d0b98a81c826d0edea0cd1e44fb",
+      "observed_on": "2026-11-13"
+    },
+    "BIP91": {
+      "title": "Bitcoin Improvement Proposal 91",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0091.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ebdc0cdfc62acb3be9420f3048a6ac215ef90bd0",
+      "observed_on": "2026-11-13"
+    },
+    "BIP101": {
+      "title": "Bitcoin Improvement Proposal 101",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0101.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "db30145be0a446aba0522058c516f858c270311c",
+      "observed_on": "2026-11-13"
+    },
+    "BIP102": {
+      "title": "Bitcoin Improvement Proposal 102",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0102.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ab7aef5fe3460df2edf7d293a7a620df22674dc6",
+      "observed_on": "2026-11-13"
+    },
+    "BIP109": {
+      "title": "Bitcoin Improvement Proposal 109",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0109.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "c72dee05c34be891cca97ac7ff34e761acc73d7f",
+      "observed_on": "2026-11-13"
+    },
+    "BIP112": {
+      "title": "Bitcoin Improvement Proposal 112",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0112.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "085ec730fc46079c72a2931049fcd0e8d7157651",
+      "observed_on": "2026-11-13"
+    },
+    "BIP113": {
+      "title": "Bitcoin Improvement Proposal 113",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0113.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "5ae089682ec3729854e9808591a4e505a7046ed7",
+      "observed_on": "2026-11-13"
+    },
+    "BIP114": {
+      "title": "Bitcoin Improvement Proposal 114",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0114.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "c3442389b19d2ee7ea1cecd210590032de6f8f44",
+      "observed_on": "2026-11-13"
+    },
+    "BIP116": {
+      "title": "Bitcoin Improvement Proposal 116",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0116.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "3f10e01a2cef49d562f8a4588c706aae62735d37",
+      "observed_on": "2026-11-13"
+    },
+    "BIP117": {
+      "title": "Bitcoin Improvement Proposal 117",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0117.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "b301083f383951391cdffdc0a6b6473b2670256f",
+      "observed_on": "2026-11-13"
+    },
+    "BIP118": {
+      "title": "Bitcoin Improvement Proposal 118",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0118.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "695e6feb8a624c2528607603f239383cea447608",
+      "observed_on": "2026-11-13"
+    },
+    "BIP119": {
+      "title": "Bitcoin Improvement Proposal 119",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "c686db73b9385a1729049bfe7777cddcb946375a",
+      "observed_on": "2026-11-13"
+    },
+    "BIP125": {
+      "title": "Bitcoin Improvement Proposal 125",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0125.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ff54969ae4896efd294276241f852b424c21ea08",
+      "observed_on": "2026-11-13"
+    },
+    "BIP141": {
+      "title": "Bitcoin Improvement Proposal 141",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0141.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "442d9dd8bfc9816414ebc129dacd7e462f5d8c8a",
+      "observed_on": "2026-11-13"
+    },
+    "BIP143": {
+      "title": "Bitcoin Improvement Proposal 143",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0143.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "5d451c221fa9ef052325c42086b8a7097b942556",
+      "observed_on": "2026-11-13"
+    },
+    "BIP144": {
+      "title": "Bitcoin Improvement Proposal 144",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0144.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "0c555fd767007fdc97c5a8b4019a86d1fc9afcb8",
+      "observed_on": "2026-11-13"
+    },
+    "BIP147": {
+      "title": "Bitcoin Improvement Proposal 147",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0147.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "92ae72e2ad8ef9949ee5a71b69fc0fd41bf21ebc",
+      "observed_on": "2026-11-13"
+    },
+    "BIP148": {
+      "title": "Bitcoin Improvement Proposal 148",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0148.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "11aac27d8662b14b5f16e4425f87ac3988716afa",
+      "observed_on": "2026-11-13"
+    },
+    "BIP324": {
+      "title": "Bitcoin Improvement Proposal 324",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0324.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "2b3caff37f5b589d7d42eba0eaf36c42eab332c5",
+      "observed_on": "2026-11-13"
+    },
+    "BIP340": {
+      "title": "Bitcoin Improvement Proposal 340",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0340.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "f241effd77c275ee776ecf555629c9721a9d97ef",
+      "observed_on": "2026-11-13"
+    },
+    "BIP341": {
+      "title": "Bitcoin Improvement Proposal 341",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0341.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "0764e6cb762b6c17d3b3430af5532e0c63365993",
+      "observed_on": "2026-11-13"
+    },
+    "BIP342": {
+      "title": "Bitcoin Improvement Proposal 342",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0342.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "d073b701ce785ab497d5d409640a16727af3a25b",
+      "observed_on": "2026-11-13"
+    },
+    "BIP343": {
+      "title": "Bitcoin Improvement Proposal 343",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0343.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "2ef77a238e7db9b28f662917e4275c7ad957f398",
+      "observed_on": "2026-11-13"
+    },
+    "BIP347": {
+      "title": "Bitcoin Improvement Proposal 347",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0347.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "93ec871afefde68618d83de8b3c61cea8133a056",
+      "observed_on": "2026-11-13"
+    },
+    "BIP348": {
+      "title": "Bitcoin Improvement Proposal 348",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0348.md",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "15173fdca25c6c7983f301a4a298bb18441ffebf",
+      "observed_on": "2026-11-13"
+    },
+    "BIP349": {
+      "title": "Bitcoin Improvement Proposal 349",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0349.md",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "846f5eb055584bbfa44714c08710612d83eb7044",
+      "observed_on": "2026-11-13"
+    },
+    "BIP360": {
+      "title": "Bitcoin Improvement Proposal 360",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0360.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "796aa4f25c9b6706470dc71c64a33416324c8318",
+      "observed_on": "2026-11-13"
+    },
+    "BIP440": {
+      "title": "Bitcoin Improvement Proposal 440",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0440.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "7b5493ca07a3fe933116cfa1b6be5ec3a5be9538",
+      "observed_on": "2026-11-13"
+    },
+    "BIP441": {
+      "title": "Bitcoin Improvement Proposal 441",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0441.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "bb97c3a5c4751fcde834ddd047f26670f183d524",
+      "observed_on": "2026-11-13"
+    },
+    "BIP446": {
+      "title": "Bitcoin Improvement Proposal 446",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446.md",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "501a34f7e93a1ad5f782ef6d80ef1796bfd91fba",
+      "observed_on": "2026-11-13"
+    },
+    "BIP448": {
+      "title": "Bitcoin Improvement Proposal 448",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "06804e218fab55cc7fff15ec4128ef2ae43d13e9",
+      "observed_on": "2026-11-13"
+    },
+    "CORE2016": {
+      "title": "Bitcoin Core statement on consensus upgrades",
+      "url": "https://bitcoincore.org/en/2016/01/07/statement/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2016-01-07"
+    },
+    "CSVNOTICE": {
+      "title": "CSV softfork instructions",
+      "url": "https://bitcoincore.org/en/2016/06/21/csv-softfork-instructions/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2016-06-21"
+    },
+    "DERALERT": {
+      "title": "Some miners generating invalid blocks",
+      "url": "https://bitcoin.org/en/alert/2015-07-04-spv-mining",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2015-07-04"
+    },
+    "SEGWITGUIDE": {
+      "title": "Segregated Witness Wallet Development Guide",
+      "url": "https://bitcoincore.org/en/segwit_wallet_dev/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13"
+    },
+    "CORE0131": {
+      "title": "Bitcoin Core 0.13.1 released",
+      "url": "https://bitcoincore.org/en/2016/10/27/release-0.13.1/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2016-10-27"
+    },
+    "ROADMAP2015": {
+      "title": "Capacity increases for the Bitcoin system",
+      "url": "https://bitcoincore.org/en/2015/12/07/roadmap/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2015-12-07"
+    },
+    "SEGWITBENEFITS": {
+      "title": "Segregated Witness Benefits",
+      "url": "https://bitcoincore.org/en/2016/01/26/segwit-benefits/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2016-01-26"
+    },
+    "S2X": {
+      "title": "Mike Belshe et al., Segwit2x Final Steps; contemporaneous copy of original message",
+      "url": "https://bitcointalk.org/index.php?topic=2376285.0",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2017-11-08",
+      "provenance": "Contemporaneous full copy of the original signatories' message. Original mailing-list endpoint was unavailable during this review.",
+      "original_url": "https://lists.linuxfoundation.org/pipermail/bitcoin-segwit2x/2017-November/000685.html"
+    },
+    "UAHF": {
+      "title": "Bitcoin ABC v0.16.0 UAHF technical specification",
+      "url": "https://github.com/Bitcoin-ABC/bitcoin-abc/blob/v0.16.0/doc/abc/uahf-technical-spec.md",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2017-07-24"
+    },
+    "BCHHISTORY": {
+      "title": "Bitcoin Cash first-party history",
+      "url": "https://bitcoincash.org/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13"
+    },
+    "CORE0211": {
+      "title": "Bitcoin Core 0.21.1 release notes",
+      "url": "https://bitcoincore.org/en/releases/0.21.1/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDY": {
+      "title": "David A. Harding, Taproot activation proposal: Speedy Trial",
+      "url": "https://gnusha.org/pi/bitcoindev/20210306034343.fhwrxmq6gbb2os5m@ganymede/",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2021-03-06"
+    },
+    "COREINTERPRETER": {
+      "title": "Bitcoin Core interpreter at inspected revision",
+      "url": "https://github.com/bitcoin/bitcoin/blob/9183edd25e60aa410bc3e4728989a1d75c309a09/src/script/interpreter.cpp",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "9183edd25e60aa410bc3e4728989a1d75c309a09"
+    },
+    "CORE081": {
+      "title": "Bitcoin-Qt version 0.8.1 released",
+      "url": "https://bitcoin.org/en/release/v0.8.1",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13"
+    },
+    "DBDEADLINE": {
+      "title": "Bitcoin fork: March 2013 upgrade deadline",
+      "url": "https://bitcoin.org/en/alert/2013-03-15-upgrade-deadline",
+      "kind": "primary_source",
+      "observed_on": "2026-11-13",
+      "published_on": "2013-03-15"
+    },
+    "SIBLING": {
+      "title": "CHECKSIBLINGVERIFY research draft",
+      "url": "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/in-and-out-burger/research/checksiblingverify/bip-XXXX-checksiblingverify.mediawiki",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44"
+    },
+    "MULADD": {
+      "title": "Bounded Modular Arithmetic for Tapscript research draft",
+      "url": "https://github.com/patrickdugan/Spiral/blob/7f5ad9f95fce8c40919e360000ca86c7119ceb5c/BIPSpace/Bounded-Modular-Arithmetic/DRAFT.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "7f5ad9f95fce8c40919e360000ca86c7119ceb5c"
+    },
+    "MULADDPR": {
+      "title": "bitcoin-rs PR 1: bounded modular arithmetic integration",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/pull/1",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "observed_head": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "observed_state": "open, unmerged; distinct from Keyless PR 2 and CPA PR 3"
+    },
+    "KCS": {
+      "title": "Keyless CHECKSIG research draft",
+      "url": "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44"
+    },
+    "PROVEN": {
+      "title": "ProvenSpend research draft",
+      "url": "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/in-and-out-burger/research/provenspend/bip-provenspend.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44"
+    },
+    "CPA": {
+      "title": "Canonical Proof Authority research draft",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/bip-canonical-proof-authority.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "29ca519031fcd67f467881e16ba73e0eb1211759"
+    },
+    "KCSNATIVE": {
+      "title": "Keyless CHECKSIG bitcoin-rs integration guide",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-checksig.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "188e2d78fbb623a12a42772120a2aa4e437905c1"
+    },
+    "KCSRUN": {
+      "title": "Spiral Core regtest research workflow run 43224248696",
+      "url": "https://github.com/patrickdugan/Spiral/actions/runs/43224248696",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13"
+    },
+    "KCSSTATE": {
+      "title": "Keyless CHECKSIG state-linked verifier guide",
+      "url": "https://github.com/patrickdugan/Spiral/blob/cfafbec4ae072b859f0140b2487baac14fac3a44/BIPSpace/Keyless-CHECKSIG/state-linked-verifier.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44"
+    },
+    "CPAGUIDE": {
+      "title": "Canonical Proof Authority bitcoin-rs integration guide",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/canonical-proof-authority.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "29ca519031fcd67f467881e16ba73e0eb1211759"
+    },
+    "CPARUN": {
+      "title": "bitcoin-rs CPA research workflow run 43399348447",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348447",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "observed_head": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "observed_conclusion": "success"
+    },
+    "BIP18": {
+      "title": "BIP 18: hashScriptCheck",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ae1fc5fa9a230a78f3eaf266e3059a60e798f7bb",
+      "observed_on": "2026-11-13"
+    },
+    "BIP131": {
+      "title": "BIP 131: \"Coalescing Transaction\" Specification (wildcard inputs)",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "2077f634532e5b92799917727aa64de43c21b65e",
+      "observed_on": "2026-11-13"
+    },
+    "BIP134": {
+      "title": "BIP 134: Flexible Transactions",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "f34a9f6b60359b2d0e64f5ca4e90136aaeb864cf",
+      "observed_on": "2026-11-13"
+    },
+    "BIP140": {
+      "title": "BIP 140: Normalized TXID",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "983e3bf11596ab9dc982f5348fc67d9892215b65",
+      "observed_on": "2026-11-13"
+    },
+    "BIP149": {
+      "title": "BIP 149: Segregated Witness (second deployment)",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "3663dd9c93408f8d86b44107d19a3ed2df3f97d7",
+      "observed_on": "2026-11-13"
+    },
+    "BIPINDEX": {
+      "title": "Official BIP index at the historical-frame snapshot",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/README.mediawiki",
+      "kind": "official_index",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "540db221869093e6d18c2e58dedbc7eef3fd841f",
+      "observed_on": "2026-11-13"
+    },
+    "BIP446VECTORS": {
+      "title": "BIP446 basic template test vectors",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446/basics.json",
+      "kind": "official_test_vectors",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "4ed4ac04fd40051ba630ab17dfa736e4e5a5ee69",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCORALLO": {
+      "title": "Matt Corallo, reply on Speedy Trial signaling window",
+      "url": "https://gnusha.org/pi/bitcoindev/2a6955d6-d242-89f5-d622-82889d499cc0@mattcorallo.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYHARDINGREPLY": {
+      "title": "David A. Harding, reply on self-determination and timing",
+      "url": "https://gnusha.org/pi/bitcoindev/20210306202350.qdcpvxgedn6qhuxa@ganymede/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCORALLOCLARIFY": {
+      "title": "Matt Corallo, clarification of coordination objective",
+      "url": "https://gnusha.org/pi/bitcoindev/a76b9eee-0015-105c-2c8d-6131a91e95e3@mattcorallo.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCHOWPARAMS": {
+      "title": "Andrew Chow, proposed Speedy Trial parameters",
+      "url": "https://gnusha.org/pi/bitcoindev/5be46169-8f38-da73-4112-fba2aff6dfcb@achow101.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYDASHJR": {
+      "title": "Luke Dashjr, activation-window overlap concern",
+      "url": "https://gnusha.org/pi/bitcoindev/202103150251.46902.luke@dashjr.org/",
+      "published_on": "2021-03-15",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCHOWREPLY": {
+      "title": "Andrew Chow, reply on scheduling a follow-up deployment",
+      "url": "https://gnusha.org/pi/bitcoindev/f75938e8-6e81-b13b-e085-ca91971ce23f@achow101.com/",
+      "published_on": "2021-03-15",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "IOBGRAPH": {
+      "title": "Iob Graph",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/iob/bitvm3.py",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "IOBRECEIPT": {
+      "title": "Iob Receipt",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/results/bitvm3-regtest.json",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "IOBHARNESS": {
+      "title": "Iob Harness",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/scripts/bitvm3_regtest.py",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "MULADDAUDIT": {
+      "title": "Muladd Audit",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-security-audit.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "c64e452211575c7cc6e28c448ef67fae93756e82"
+    },
+    "MULADDRECEIPT": {
+      "title": "Muladd Receipt",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-audit-results.json",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "c64e452211575c7cc6e28c448ef67fae93756e82"
+    },
+    "KEYLESSSTATE": {
+      "title": "Keyless State",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-state-machine.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "188e2d78fbb623a12a42772120a2aa4e437905c1"
+    }
+  }
+}

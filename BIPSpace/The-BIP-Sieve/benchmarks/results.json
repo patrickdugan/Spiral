@@ -1,0 +1,1117 @@
+{
+  "schema_version": "0.1",
+  "experiment": "BIP-SIEVE-MATCH-01",
+  "observation_date": "2026-11-13",
+  "seed": 20261113,
+  "source_pins": {
+    "spiral_commit": "76071a0195f48961386e46d56df7b5e0276637fc",
+    "paired_model_git_blob": "17c405958854f5e5e86914997ed7da7acf024c22",
+    "bips_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+    "bip446_basics_git_blob": "4ed4ac04fd40051ba630ab17dfa736e4e5a5ee69"
+  },
+  "match_contract": {
+    "claim": "One admitted finite economic liability with predetermined settlement and liability-preserving recovery outputs.",
+    "principal": "Same P",
+    "bond": "Same B, combined with P in the merged coin",
+    "authority": "Same ideal operator signature and graph/statement/setup-bound ideal fraud predicate.",
+    "timing": "Same assertion confirmation height and block-based relative delay.",
+    "fees": "Zero-fee protected parents; separately authorized child spends a zero-value anchor and confirmed fee coin.",
+    "recovery": "Same full terminal output vector; consumes every protected claim output.",
+    "admission": "Full policy and denomination assumed checked; fresh UTXO-root construction is atomic and rejects occupied destinations. Distinct roots can still duplicate an economic claim."
+  },
+  "official_vectors": {
+    "known_template_conditions_matched": 19,
+    "upstream_annex_absent_hashes_matched": 16,
+    "scope": "Template-equality condition in the 19 simple official scripts; full Script and Taproot validation remain outside this run.",
+    "cases": [
+      {
+        "vector": 0,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 1,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 2,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 3,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 4,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 5,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 6,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 7,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 8,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": true
+      },
+      {
+        "vector": 9,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 10,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 11,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 12,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 13,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 14,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 15,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 16,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": false
+      },
+      {
+        "vector": 17,
+        "expected_template_result": true,
+        "matched": true,
+        "current_input_annex": true
+      },
+      {
+        "vector": 18,
+        "expected_template_result": false,
+        "matched": true,
+        "current_input_annex": true
+      }
+    ]
+  },
+  "graph_results": {
+    "bounded_decision_pairs": 4800,
+    "accepted_pairs": 720,
+    "differential_mismatches": 0,
+    "independent_contract_predicate_mismatches": 0,
+    "input_parameters": {
+      "principal_sats": [
+        1000,
+        1000000,
+        2099999999000000
+      ],
+      "bond_sats": [
+        1,
+        10000
+      ],
+      "delay_blocks": [
+        1,
+        6,
+        20,
+        144,
+        65535
+      ],
+      "assertion_height": 100,
+      "claim_false": [
+        false,
+        true
+      ]
+    },
+    "matched_mutation_cases": [
+      {
+        "branch": "payout",
+        "case": "redirect_principal",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "principal_to_fee",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "inflate_payout",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "append_sponsor",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "change_sequence",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "change_version",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "change_locktime",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "payout",
+        "case": "burn_all",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "redirect_principal",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "principal_to_fee",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "inflate_payout",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "append_sponsor",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "change_sequence",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "change_version",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "change_locktime",
+        "paired_rejected": true,
+        "merged_rejected": true
+      },
+      {
+        "branch": "recovery",
+        "case": "burn_all",
+        "paired_rejected": true,
+        "merged_rejected": true
+      }
+    ],
+    "terminal_traces": [
+      {
+        "first": "payout",
+        "conflicting_second_rejected": true,
+        "same_terminal_output_vector": true
+      },
+      {
+        "first": "recovery",
+        "conflicting_second_rejected": true,
+        "same_terminal_output_vector": true
+      }
+    ],
+    "fee_child_cases": [
+      {
+        "branch": "payout",
+        "fee_sats": 1000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      },
+      {
+        "branch": "payout",
+        "fee_sats": 3000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      },
+      {
+        "branch": "payout",
+        "fee_sats": 9000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      },
+      {
+        "branch": "recovery",
+        "fee_sats": 1000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      },
+      {
+        "branch": "recovery",
+        "fee_sats": 3000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      },
+      {
+        "branch": "recovery",
+        "fee_sats": 9000,
+        "protected_outputs_unchanged": true,
+        "same_child_base_size": true
+      }
+    ],
+    "synthetic_reconfirmation_age_cases": [
+      {
+        "reconfirmation_displacement": 1,
+        "height": 120,
+        "both_accept": false
+      },
+      {
+        "reconfirmation_displacement": 1,
+        "height": 121,
+        "both_accept": true
+      },
+      {
+        "reconfirmation_displacement": 6,
+        "height": 125,
+        "both_accept": false
+      },
+      {
+        "reconfirmation_displacement": 6,
+        "height": 126,
+        "both_accept": true
+      },
+      {
+        "reconfirmation_displacement": 20,
+        "height": 139,
+        "both_accept": false
+      },
+      {
+        "reconfirmation_displacement": 20,
+        "height": 140,
+        "both_accept": true
+      }
+    ],
+    "same_script_substitution": {
+      "instances": 64,
+      "combinations": 4096,
+      "intended_pairs_accepted": 64,
+      "cross_pairs_rejected": 4032
+    },
+    "duplicated_admission_principal_paid_sats": {
+      "paired": 2000000,
+      "merged": 2000000
+    },
+    "atomic_admission_cases": [
+      {
+        "route": "paired",
+        "case": "readmit_same_unspent_root",
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "paired",
+        "case": "occupied_construction_destination",
+        "destination_index": 0,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "paired",
+        "case": "occupied_construction_destination",
+        "destination_index": 1,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "paired",
+        "case": "occupied_construction_destination",
+        "destination_index": 2,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "paired",
+        "case": "occupied_construction_destination",
+        "destination_index": 3,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "merged",
+        "case": "readmit_same_unspent_root",
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "merged",
+        "case": "occupied_construction_destination",
+        "destination_index": 0,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "merged",
+        "case": "occupied_construction_destination",
+        "destination_index": 1,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      },
+      {
+        "route": "merged",
+        "case": "occupied_construction_destination",
+        "destination_index": 2,
+        "rejected": true,
+        "original_state_and_heights_preserved": true
+      }
+    ],
+    "maturity_boundary": "Both routes admit valid recovery and signed settlement at maturity; confirmed consumption excludes the other branch."
+  },
+  "serialization": {
+    "scope": "Exact byte accounting of a specified symbolic envelope; full Taproot validity and proof execution remain unmeasured.",
+    "layout": {
+      "terminal_outputs": "two 34-byte commitment-shaped scripts plus a one-byte OP_TRUE anchor",
+      "assertion_outputs": "two protected commitments in paired route, one in merged route; same anchor",
+      "tree_leaves_per_protected_coin": 2,
+      "control_block_bytes": 65,
+      "principal_leaf_bytes": 49,
+      "template_leaf_bytes": 35,
+      "sibling_chunk_bytes": 14,
+      "payout_operator_signature_bytes": 64,
+      "delay_blocks": 20,
+      "shared_assertion_witness": "64-byte opaque data,35-byte template leaf,65-byte control envelope",
+      "sibling_opcode_size_fixture": "0xbb used only to occupy one byte; no allocation or executable policy asserted"
+    },
+    "assertion": {
+      "paired": {
+        "base_bytes": 147,
+        "total_bytes": 317,
+        "weight_WU": 758,
+        "vbytes": 190,
+        "witness_bytes_including_marker_flag": 170
+      },
+      "merged": {
+        "base_bytes": 104,
+        "total_bytes": 274,
+        "weight_WU": 586,
+        "vbytes": 147,
+        "witness_bytes_including_marker_flag": 170
+      },
+      "paired_extra_WU": 172
+    },
+    "payout": {
+      "paired": {
+        "base_bytes": 188,
+        "total_bytes": 527,
+        "weight_WU": 1091,
+        "vbytes": 273,
+        "witness_bytes_including_marker_flag": 339
+      },
+      "merged": {
+        "base_bytes": 147,
+        "total_bytes": 355,
+        "weight_WU": 796,
+        "vbytes": 199,
+        "witness_bytes_including_marker_flag": 208
+      },
+      "paired_extra_WU": 295,
+      "paired_extra_vbytes": 74
+    },
+    "recovery_parameter_sweep": [
+      {
+        "shared_verifier_body_bytes": 0,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 424,
+          "weight_WU": 988,
+          "vbytes": 247,
+          "witness_bytes_including_marker_flag": 236
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 252,
+          "weight_WU": 693,
+          "vbytes": 174,
+          "witness_bytes_including_marker_flag": 105
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 0,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 457,
+          "weight_WU": 1021,
+          "vbytes": 256,
+          "witness_bytes_including_marker_flag": 269
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 285,
+          "weight_WU": 726,
+          "vbytes": 182,
+          "witness_bytes_including_marker_flag": 138
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 0,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 947,
+          "weight_WU": 1511,
+          "vbytes": 378,
+          "witness_bytes_including_marker_flag": 759
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 775,
+          "weight_WU": 1216,
+          "vbytes": 304,
+          "witness_bytes_including_marker_flag": 628
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 0,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4544,
+          "weight_WU": 5108,
+          "vbytes": 1277,
+          "witness_bytes_including_marker_flag": 4356
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4372,
+          "weight_WU": 4813,
+          "vbytes": 1204,
+          "witness_bytes_including_marker_flag": 4225
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 64,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 488,
+          "weight_WU": 1052,
+          "vbytes": 263,
+          "witness_bytes_including_marker_flag": 300
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 316,
+          "weight_WU": 757,
+          "vbytes": 190,
+          "witness_bytes_including_marker_flag": 169
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 64,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 521,
+          "weight_WU": 1085,
+          "vbytes": 272,
+          "witness_bytes_including_marker_flag": 333
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 349,
+          "weight_WU": 790,
+          "vbytes": 198,
+          "witness_bytes_including_marker_flag": 202
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 64,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1011,
+          "weight_WU": 1575,
+          "vbytes": 394,
+          "witness_bytes_including_marker_flag": 823
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 839,
+          "weight_WU": 1280,
+          "vbytes": 320,
+          "witness_bytes_including_marker_flag": 692
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 64,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4608,
+          "weight_WU": 5172,
+          "vbytes": 1293,
+          "witness_bytes_including_marker_flag": 4420
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4436,
+          "weight_WU": 4877,
+          "vbytes": 1220,
+          "witness_bytes_including_marker_flag": 4289
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 203,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 627,
+          "weight_WU": 1191,
+          "vbytes": 298,
+          "witness_bytes_including_marker_flag": 439
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 455,
+          "weight_WU": 896,
+          "vbytes": 224,
+          "witness_bytes_including_marker_flag": 308
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 203,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 660,
+          "weight_WU": 1224,
+          "vbytes": 306,
+          "witness_bytes_including_marker_flag": 472
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 488,
+          "weight_WU": 929,
+          "vbytes": 233,
+          "witness_bytes_including_marker_flag": 341
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 203,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1150,
+          "weight_WU": 1714,
+          "vbytes": 429,
+          "witness_bytes_including_marker_flag": 962
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 978,
+          "weight_WU": 1419,
+          "vbytes": 355,
+          "witness_bytes_including_marker_flag": 831
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 203,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4747,
+          "weight_WU": 5311,
+          "vbytes": 1328,
+          "witness_bytes_including_marker_flag": 4559
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4575,
+          "weight_WU": 5016,
+          "vbytes": 1254,
+          "witness_bytes_including_marker_flag": 4428
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 204,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 630,
+          "weight_WU": 1194,
+          "vbytes": 299,
+          "witness_bytes_including_marker_flag": 442
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 456,
+          "weight_WU": 897,
+          "vbytes": 225,
+          "witness_bytes_including_marker_flag": 309
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 204,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 663,
+          "weight_WU": 1227,
+          "vbytes": 307,
+          "witness_bytes_including_marker_flag": 475
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 489,
+          "weight_WU": 930,
+          "vbytes": 233,
+          "witness_bytes_including_marker_flag": 342
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 204,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1153,
+          "weight_WU": 1717,
+          "vbytes": 430,
+          "witness_bytes_including_marker_flag": 965
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 979,
+          "weight_WU": 1420,
+          "vbytes": 355,
+          "witness_bytes_including_marker_flag": 832
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 204,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4750,
+          "weight_WU": 5314,
+          "vbytes": 1329,
+          "witness_bytes_including_marker_flag": 4562
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4576,
+          "weight_WU": 5017,
+          "vbytes": 1255,
+          "witness_bytes_including_marker_flag": 4429
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 217,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 643,
+          "weight_WU": 1207,
+          "vbytes": 302,
+          "witness_bytes_including_marker_flag": 455
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 469,
+          "weight_WU": 910,
+          "vbytes": 228,
+          "witness_bytes_including_marker_flag": 322
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 217,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 676,
+          "weight_WU": 1240,
+          "vbytes": 310,
+          "witness_bytes_including_marker_flag": 488
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 502,
+          "weight_WU": 943,
+          "vbytes": 236,
+          "witness_bytes_including_marker_flag": 355
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 217,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1166,
+          "weight_WU": 1730,
+          "vbytes": 433,
+          "witness_bytes_including_marker_flag": 978
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 992,
+          "weight_WU": 1433,
+          "vbytes": 359,
+          "witness_bytes_including_marker_flag": 845
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 217,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4763,
+          "weight_WU": 5327,
+          "vbytes": 1332,
+          "witness_bytes_including_marker_flag": 4575
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4589,
+          "weight_WU": 5030,
+          "vbytes": 1258,
+          "witness_bytes_including_marker_flag": 4442
+        },
+        "paired_extra_WU": 297
+      },
+      {
+        "shared_verifier_body_bytes": 218,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 644,
+          "weight_WU": 1208,
+          "vbytes": 302,
+          "witness_bytes_including_marker_flag": 456
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 472,
+          "weight_WU": 913,
+          "vbytes": 229,
+          "witness_bytes_including_marker_flag": 325
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 218,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 677,
+          "weight_WU": 1241,
+          "vbytes": 311,
+          "witness_bytes_including_marker_flag": 489
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 505,
+          "weight_WU": 946,
+          "vbytes": 237,
+          "witness_bytes_including_marker_flag": 358
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 218,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1167,
+          "weight_WU": 1731,
+          "vbytes": 433,
+          "witness_bytes_including_marker_flag": 979
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 995,
+          "weight_WU": 1436,
+          "vbytes": 359,
+          "witness_bytes_including_marker_flag": 848
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 218,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4764,
+          "weight_WU": 5328,
+          "vbytes": 1332,
+          "witness_bytes_including_marker_flag": 4576
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4592,
+          "weight_WU": 5033,
+          "vbytes": 1259,
+          "witness_bytes_including_marker_flag": 4445
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 1024,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1450,
+          "weight_WU": 2014,
+          "vbytes": 504,
+          "witness_bytes_including_marker_flag": 1262
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 1278,
+          "weight_WU": 1719,
+          "vbytes": 430,
+          "witness_bytes_including_marker_flag": 1131
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 1024,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1483,
+          "weight_WU": 2047,
+          "vbytes": 512,
+          "witness_bytes_including_marker_flag": 1295
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 1311,
+          "weight_WU": 1752,
+          "vbytes": 438,
+          "witness_bytes_including_marker_flag": 1164
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 1024,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 1973,
+          "weight_WU": 2537,
+          "vbytes": 635,
+          "witness_bytes_including_marker_flag": 1785
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 1801,
+          "weight_WU": 2242,
+          "vbytes": 561,
+          "witness_bytes_including_marker_flag": 1654
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 1024,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 5570,
+          "weight_WU": 6134,
+          "vbytes": 1534,
+          "witness_bytes_including_marker_flag": 5382
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 5398,
+          "weight_WU": 5839,
+          "vbytes": 1460,
+          "witness_bytes_including_marker_flag": 5251
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 4096,
+        "shared_proof_bytes": 0,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4522,
+          "weight_WU": 5086,
+          "vbytes": 1272,
+          "witness_bytes_including_marker_flag": 4334
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4350,
+          "weight_WU": 4791,
+          "vbytes": 1198,
+          "witness_bytes_including_marker_flag": 4203
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 4096,
+        "shared_proof_bytes": 32,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 4555,
+          "weight_WU": 5119,
+          "vbytes": 1280,
+          "witness_bytes_including_marker_flag": 4367
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4383,
+          "weight_WU": 4824,
+          "vbytes": 1206,
+          "witness_bytes_including_marker_flag": 4236
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 4096,
+        "shared_proof_bytes": 520,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 5045,
+          "weight_WU": 5609,
+          "vbytes": 1403,
+          "witness_bytes_including_marker_flag": 4857
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 4873,
+          "weight_WU": 5314,
+          "vbytes": 1329,
+          "witness_bytes_including_marker_flag": 4726
+        },
+        "paired_extra_WU": 295
+      },
+      {
+        "shared_verifier_body_bytes": 4096,
+        "shared_proof_bytes": 4096,
+        "paired": {
+          "base_bytes": 188,
+          "total_bytes": 8642,
+          "weight_WU": 9206,
+          "vbytes": 2302,
+          "witness_bytes_including_marker_flag": 8454
+        },
+        "merged": {
+          "base_bytes": 147,
+          "total_bytes": 8470,
+          "weight_WU": 8911,
+          "vbytes": 2228,
+          "witness_bytes_including_marker_flag": 8323
+        },
+        "paired_extra_WU": 295
+      }
+    ],
+    "exact_base_byte_delta": {
+      "assertion": 43,
+      "terminal": 41,
+      "complete_path": 84
+    },
+    "two_stage_payout_path_extra_WU": 467,
+    "two_stage_recovery_path_extra_WU_values": [
+      467,
+      469
+    ],
+    "marginal_fee_scenario_sats": {
+      "1_sat_vB": 117,
+      "5_sat_vB": 585,
+      "10_sat_vB": 1170
+    },
+    "fee_scenario_note": "Ceiling-rounded sum of the two payout transactions' vbytes; fee-child layouts are identical. Market fees and relay acceptance are unmeasured.",
+    "resource_work_counts": {
+      "paired_terminal_template_checks": 2,
+      "merged_terminal_template_checks": 1,
+      "paired_sibling_checks": 2,
+      "merged_sibling_checks": 0,
+      "shared_crypto_or_authority_payload_executions_per_route": 1
+    }
+  },
+  "unmeasured": [
+    "Bitcoin Script execution, actual Taproot output/control-block commitments and native validation time.",
+    "Real BitVM garbling, proof soundness, assertion publication and cryptographic witness size.",
+    "Live node relay, fee replacement, adversarial inclusion, actual chain reorganizations and funded recovery.",
+    "Global economic claim uniqueness, reusable vaults and liabilities outside the one-shot terminal policy."
+  ],
+  "passed": true
+}
