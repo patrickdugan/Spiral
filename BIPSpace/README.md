@@ -32,3 +32,14 @@ contains the current transparent Script arithmetic and Pallas/Nova
 cryptographic prototypes. Its full-trace AIR model is distinguished
 from a production STARK, and the separate Rust adapter calls the
 existing real Nova 0.76 native compressed verifier.
+
+## Research papers
+
+### [The BIP Sieve](The-BIP-Sieve/)
+
+[How Bitcoin Upgrades Earn Consent](The-BIP-Sieve/paper.md) studies historical
+proposal outcomes, compares soft-fork and hard-fork routes, and applies an
+evidence-based review framework to Spiral's recent designs. The first draft
+includes a dated [cohort ledger](The-BIP-Sieve/cohorts.json) and pinned
+[source index](The-BIP-Sieve/references.json).
+
