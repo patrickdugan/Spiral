@@ -18,13 +18,18 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = 'fcddd4d773f52953387eed4b55beaab47c84155a'
 PROOF = '79c4af1113506bba24415d058557bba93583d5177ec074f13ba30f705c85daad'
-STATEMENT = 'ce268815e58635bb9cda91cbde3dce0fd438fd097dec1171c6df131e2d337701'
+STATEMENT = '06fa3156d86ffb98f0a853cbd350b144f81d1586c6eda7d70c436267f821b007'
 TEST = 'nova-bitvm3/m14/e2e/tests/garbled.rs'
 NAME = 'testnet4_nova_demo_accepts_and_rejects'
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def statement_sha(path):
+    # Git's Windows checkout may replace LF by CRLF. Accept only that conversion.
+    return hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
 
 
 def git(source, *arguments):
@@ -47,7 +52,7 @@ def prepare(source):
         (source / TEST).write_bytes((original + addition).encode())
     if sha(source / 'nova-bitvm3/m13/fixtures/a-wrap-blake3-v2.bin') != PROOF:
         raise ValueError('real Nova proof fixture differs')
-    if sha(source / 'nova-bitvm3/m13/fixtures/a-statement.json') != STATEMENT:
+    if statement_sha(source / 'nova-bitvm3/m13/fixtures/a-statement.json') != STATEMENT:
         raise ValueError('Testnet4 statement fixture differs')
 
 
@@ -92,6 +97,8 @@ def run(args):
     save()
     try:
         prepare(source)
+        report['statement_file_sha256'] = sha(source / 'nova-bitvm3/m13/fixtures/a-statement.json')
+        report['statement_hash_encoding'] = 'CRLF normalized to LF; otherwise exact pinned bytes'
         report['diff_sha256'] = hashlib.sha256(git(source, 'diff', '--binary')).hexdigest()
         report['overlay_sha256'] = sha(ROOT / 'nova/testnet4_garbled.rs.inc')
         toolchain = args.toolchain.resolve()

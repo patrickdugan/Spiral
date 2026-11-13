@@ -38,7 +38,7 @@ python3 scripts/check_receipts.py /path/to/fresh-stock-regtest-run/report.json
 
 ## Nova / BitVM3
 
-Use a dedicated checkout of [patrickdugan/garbled-snark-verifier](https://github.com/patrickdugan/garbled-snark-verifier/tree/fcddd4d773f52953387eed4b55beaab47c84155a) at `fcddd4d773f52953387eed4b55beaab47c84155a`. Preserve other workers' checkouts. `scripts/nova_gc.py` refuses unrelated tracked/untracked changes and appends only the supplied exact test overlay to `nova-bitvm3/m14/e2e/tests/garbled.rs`. It accepts a checkout already carrying that exact overlay. The proof SHA-256 is `79c4af1113506bba24415d058557bba93583d5177ec074f13ba30f705c85daad`; the public final statement SHA-256 is `ce268815e58635bb9cda91cbde3dce0fd438fd097dec1171c6df131e2d337701`.
+Use a dedicated checkout of [patrickdugan/garbled-snark-verifier](https://github.com/patrickdugan/garbled-snark-verifier/tree/fcddd4d773f52953387eed4b55beaab47c84155a) at `fcddd4d773f52953387eed4b55beaab47c84155a`. Preserve other workers' checkouts. `scripts/nova_gc.py` refuses unrelated tracked/untracked changes and appends only the supplied exact test overlay to `nova-bitvm3/m14/e2e/tests/garbled.rs`. It accepts a checkout already carrying that exact overlay. The proof SHA-256 is `79c4af1113506bba24415d058557bba93583d5177ec074f13ba30f705c85daad`; the public final statement SHA-256, after normalizing CRLF to LF only, is `06fa3156d86ffb98f0a853cbd350b144f81d1586c6eda7d70c436267f821b007`. The receipt separately records the actual statement file's raw hash. For WSL builds, use a Linux-filesystem checkout; transferring a Git bundle avoids slow per-file access to a Windows checkout.
 
 ```bash
 python3 scripts/nova_gc.py \
