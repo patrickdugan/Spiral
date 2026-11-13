@@ -39,7 +39,10 @@ existing real Nova 0.76 native compressed verifier.
 
 [How Bitcoin Upgrades Earn Consent](The-BIP-Sieve/paper.md) studies historical
 proposal outcomes, compares soft-fork and hard-fork routes, and applies an
-evidence-based review framework to Spiral's recent designs. The first draft
-includes a dated [cohort ledger](The-BIP-Sieve/cohorts.json) and pinned
-[source index](The-BIP-Sieve/references.json).
+evidence-based review framework to Spiral's recent designs. Version 0.2 adds a
+reproducible [historical frame](The-BIP-Sieve/historical-frame.json), a
+[versioned objection ledger](The-BIP-Sieve/objections.json) and a
+[paired-versus-merged claim experiment](The-BIP-Sieve/benchmarks/REPORT.md).
+The dated [cohort ledger](The-BIP-Sieve/cohorts.json) and pinned
+[source index](The-BIP-Sieve/references.json) preserve the evidence.
 

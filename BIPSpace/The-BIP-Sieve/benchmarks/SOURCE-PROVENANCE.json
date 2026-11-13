@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1",
+  "observed_on": "2026-11-13",
+  "sources": [
+    {
+      "local_path": "source_snapshot/upstream_sibling_model.py",
+      "repository": "patrickdugan/Spiral",
+      "source_path": "in-and-out-burger/research/checksiblingverify/sibling_model.py",
+      "commit": "76071a0195f48961386e46d56df7b5e0276637fc",
+      "git_blob": "17c405958854f5e5e86914997ed7da7acf024c22",
+      "unchanged_from_commit": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/research/checksiblingverify/sibling_model.py",
+      "modifications": "None; exact upstream bytes. The harness adds a shared assertion anchor without modifying this module."
+    },
+    {
+      "local_path": "bip446_basics.json",
+      "repository": "bitcoin/bips",
+      "source_path": "bip-0446/basics.json",
+      "commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "git_blob": "4ed4ac04fd40051ba630ab17dfa736e4e5a5ee69",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446/basics.json",
+      "modifications": "None; exact upstream bytes. Harness tests the simple scripts' template-equality condition."
+    }
+  ],
+  "harness": {
+    "file": "sibling_vs_merged.py",
+    "python": "3.11 or later",
+    "dependencies": "Python standard library",
+    "seed": 20261113,
+    "result_file": "results.json",
+    "report_file": "REPORT.md",
+    "scope": "A separately implemented merged comparator, unchanged paired validator, independent official-vector hash check and exact synthetic wire-layout accounting."
+  }
+}

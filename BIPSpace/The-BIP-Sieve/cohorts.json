@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "title": "The BIP Sieve: cohort and portfolio ledger",
   "observed_on": "2026-11-13",
   "paper": "paper.md",
@@ -7,7 +7,8 @@
   "source_pins": {
     "bitcoin_bips": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
     "bitcoin_core_interpreter": "9183edd25e60aa410bc3e4728989a1d75c309a09",
-    "spiral_main": "cfafbec4ae072b859f0140b2487baac14fac3a44"
+    "spiral_main": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+    "spiral_refresh": "76071a0195f48961386e46d56df7b5e0276637fc"
   },
   "sampling": {
     "method": "Purposive descriptive cohort selected for different outcomes and useful compatibility comparisons.",
@@ -25,7 +26,7 @@
   "coding_guide": {
     "official_status": "Current document metadata at the pinned BIPs revision; Closed can combine several historical closure reasons.",
     "observed_outcome": "The evidenced network or campaign event, recorded separately from document status.",
-    "right_censored": "True when eventual deployment or retirement of the specified open design remains unobserved.",
+    "right_censored": "True when eventual deployment or retirement of the specified open design remains unobserved. A null value marks a new coverage row whose network-event history still needs independent coding.",
     "mixed_lifecycle": "MAST members have different lifecycle states; member-level coding is required for any later estimator.",
     "family_id": "A grouping aid for related episodes. Additional overlapping lineage links may be needed for statistical work.",
     "interpretation": "An analytical inference; sources directly support the facts and attributed statements.",
@@ -1197,6 +1198,169 @@
         "https://bitcoincore.org/en/2015/12/07/roadmap/"
       ],
       "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "p2sh_bip18_description",
+      "family_id": "p2sh_2011_2012",
+      "role": "related_protocol_description",
+      "bips": [
+        {
+          "number": 18,
+          "title": "hashScriptCheck",
+          "official_status": "Complete",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Legacy P2SH hash-equality template.",
+      "observed_outcome": "Author describes protocol identity with BIP16; current document metadata is Complete.",
+      "right_censored": false,
+      "milestones": {
+        "assigned": "2012-01-27"
+      },
+      "coding_note": "The document shares the P2SH episode; its protocol identity is attributed to its author.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP18",
+        "BIP16"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "coalescing_transactions_131",
+      "family_id": "transaction_aggregation",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 131,
+          "title": "\"Coalescing Transaction\" Specification (wildcard inputs)",
+          "official_status": "Closed",
+          "official_layer": "Consensus (hard fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Ordinary explicit UTXO inputs.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2015-11-30"
+      },
+      "coding_note": "Proposed wildcard-input aggregation broadens the frame beyond block-size limits. Closure cause remains unestablished.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP131"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "flexible_transactions_134",
+      "family_id": "transaction_serialization",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 134,
+          "title": "Flexible Transactions",
+          "official_status": "Closed",
+          "official_layer": "Consensus (hard fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "hard_fork",
+      "baseline_rules": "Existing transaction serialization.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2016-07-27"
+      },
+      "coding_note": "Proposes version 4 compact-message serialization; older validating clients would require an upgrade. Closure cause remains unestablished.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP134"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "normalized_txid_140",
+      "family_id": "transaction_malleability",
+      "role": "coverage_extension",
+      "bips": [
+        {
+          "number": 140,
+          "title": "Normalized TXID",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing OP_NOP4 and transaction identifiers.",
+      "observed_outcome": "Closed document; network-event history remains to be coded independently.",
+      "right_censored": null,
+      "milestones": {
+        "assigned": "2015-10-14"
+      },
+      "coding_note": "Normalized signature identifiers and additional UTXO tracking supply partially overlapping goals with BIP134 under different machinery.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP140",
+        "BIP134"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki"
+      ],
+      "observed_on": "2026-11-13"
+    },
+    {
+      "episode_id": "segwit_bip149_fallback",
+      "family_id": "segwit_2016_2017",
+      "role": "alternative_activation_mechanism",
+      "bips": [
+        {
+          "number": 149,
+          "title": "Segregated Witness (second deployment)",
+          "official_status": "Closed",
+          "official_layer": "Consensus (soft fork)",
+          "source_url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki"
+        }
+      ],
+      "network_target": "Bitcoin mainnet",
+      "compatibility_class": "soft_fork",
+      "baseline_rules": "Existing SegWit BIP9 deployment and proposed BIP8 fallback.",
+      "observed_outcome": "The conditional second-deployment document is Closed; SegWit deployed through the earlier route before the specified fallback start.",
+      "right_censored": false,
+      "milestones": {
+        "assigned": "2017-04-14"
+      },
+      "coding_note": "The specification conditions this deployment on missing the earlier November 2017 timeout; feature and fallback outcomes are separate.",
+      "include_in_elective_mainnet_capability_comparison": false,
+      "source_ids": [
+        "BIP149",
+        "BIP141",
+        "SEGWITGUIDE"
+      ],
+      "source_urls": [
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki",
+        "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0141.mediawiki",
+        "https://bitcoincore.org/en/segwit_wallet_dev/"
+      ],
+      "observed_on": "2026-11-13"
     }
   ],
   "recent_portfolio": [
@@ -1227,7 +1391,7 @@
         }
       ],
       "observed_evidence": "Specified same-parent outpoint predicate and a finite transaction-graph design with a stated merged-output baseline.",
-      "next_gate": "Run the same economic claim under the paired-output design and the BIP446-only merged contested-output baseline; include funded recovery paths.",
+      "next_gate": "Establish an application benefit from independently useful output roles, then execute actual proof circuits and funded recovery under the matched contracts.",
       "authority_boundary": "The predicate authenticates coin pairing. Economic claim admission, garbling assumptions and timely challenges need application evidence.",
       "observed_on": "2026-11-13",
       "source_urls": [
@@ -1236,7 +1400,8 @@
         "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0448.md"
       ],
       "baseline": "Existing activated Bitcoin rules, including BIP341/342; listed dependencies are additional.",
-      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability."
+      "political_assessment_kind": "Research obligations inferred from design scope; no measured adoption probability.",
+      "matched_experiment": "benchmarks/results.json"
     },
     {
       "design_id": "muladdmod",
@@ -1407,5 +1572,9 @@
       "classification_condition": "A complete spend rejected by the shared baseline becomes accepted under otherwise identical valid conditions.",
       "evidence_required": "Exact semantics, measured application benefit and resource costs, ownership effects, replay boundaries and migration."
     }
-  ]
+  ],
+  "historical_frame": "historical-frame.json",
+  "objection_ledger": "objections.json",
+  "portfolio_evidence": "portfolio-evidence.json",
+  "matched_experiment": "benchmarks/results.json"
 }

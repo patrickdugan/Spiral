@@ -1,0 +1,491 @@
+{
+  "schema_version": "0.2",
+  "observed_on": "2026-11-13",
+  "verification_performed": [
+    "GitHub branch and pull-request metadata retrieval",
+    "Comparison of current main with paper v0.1 source pin",
+    "Specification and report inspection",
+    "Workflow/job status retrieval",
+    "Selected native workflow log inspection"
+  ],
+  "source_pins": {
+    "spiral_previous": "cfafbec4ae072b859f0140b2487baac14fac3a44",
+    "spiral_current": "76071a0195f48961386e46d56df7b5e0276637fc",
+    "muladdmod": "c64e452211575c7cc6e28c448ef67fae93756e82",
+    "keyless": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+    "cpa": "29ca519031fcd67f467881e16ba73e0eb1211759"
+  },
+  "pull_requests": [
+    {
+      "number": 1,
+      "url": "https://github.com/patrickdugan/bitcoin-rs/pull/1",
+      "head": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "head_branch": "feat/experimental-muladdmod",
+      "base": "dev",
+      "base_sha": "9b8e91ae1aadfaad08e7fccbfa895bcbf41c6620",
+      "draft": false,
+      "state": "open",
+      "merged": false,
+      "source_head_changed_since_paper_v01": false
+    },
+    {
+      "number": 2,
+      "url": "https://github.com/patrickdugan/bitcoin-rs/pull/2",
+      "head": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "head_branch": "feat/keyless-checksig-regtest",
+      "base": "dev",
+      "base_sha": "9b8e91ae1aadfaad08e7fccbfa895bcbf41c6620",
+      "draft": true,
+      "state": "open",
+      "merged": false,
+      "source_head_changed_since_paper_v01": false
+    },
+    {
+      "number": 3,
+      "url": "https://github.com/patrickdugan/bitcoin-rs/pull/3",
+      "head": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "head_branch": "feat/canonical-proof-authority-regtest",
+      "base": "feat/keyless-checksig-regtest",
+      "base_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "draft": true,
+      "state": "open",
+      "merged": false,
+      "source_head_changed_since_paper_v01": false
+    }
+  ],
+  "spiral_main_delta": {
+    "commits_ahead": 1,
+    "commits": [
+      {
+        "sha": "76071a0195f48961386e46d56df7b5e0276637fc",
+        "message": "Add BitVM3 testnet4 claim graph and verified regtest rehearsal",
+        "date": "2026-11-13T12:08:11Z"
+      }
+    ],
+    "changed_paths": [
+      "in-and-out-burger/README.md",
+      "in-and-out-burger/iob/bitvm3.py",
+      "in-and-out-burger/iob/taproot.py",
+      "in-and-out-burger/results/bitvm3-regtest.json",
+      "in-and-out-burger/scripts/bitvm3_regtest.py",
+      "in-and-out-burger/scripts/bitvm3_testnet4.py",
+      "in-and-out-burger/scripts/fetch_testnet4.py",
+      "in-and-out-burger/tests/test_bitvm3.py",
+      "in-and-out-burger/tests/test_bitvm3_driver.py"
+    ],
+    "portfolio_specifications_changed": false,
+    "source": "https://github.com/patrickdugan/Spiral/compare/cfafbec4ae072b859f0140b2487baac14fac3a44...76071a0195f48961386e46d56df7b5e0276637fc"
+  },
+  "version_updates": [
+    {
+      "design": "CHECKSIBLINGVERIFY",
+      "code_revision_change": false,
+      "notes": "The main draft and model are unchanged. Current main adds a separate presigned application graph under existing rules.",
+      "sources": [
+        "https://github.com/patrickdugan/Spiral/compare/cfafbec4ae072b859f0140b2487baac14fac3a44...76071a0195f48961386e46d56df7b5e0276637fc",
+        "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/iob/bitvm3.py"
+      ]
+    },
+    {
+      "design": "MULADDMOD",
+      "code_revision_change": false,
+      "additional_evidence_to_credit": {
+        "kind": "Previously executed campaign, inspected at existing head",
+        "four_node_checks": 38,
+        "randomized_differential_cases": 25300,
+        "full_block_selected_fixture": {
+          "accepted": true,
+          "total_ops": 73845,
+          "tx_weight": 3988196,
+          "median_wall_s": 4.9437,
+          "median_node_cpu_s": 4.9,
+          "cpu_over_baseline_s": 4.84,
+          "max_rss_hwm_kb": 149968
+        },
+        "hardware": "AMD Ryzen AI 9 365 w/ Radeon 880M"
+      },
+      "limits": [
+        "Timing is for the recorded machine, implementation, binary and constructed workload.",
+        "The paired-node campaign records deadline and reorganization failure conditions under explicit operational assumptions.",
+        "A matched full application comparison with existing Script or restored arithmetic remains open."
+      ],
+      "sources": [
+        "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-security-audit.md",
+        "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-audit-results.json"
+      ]
+    },
+    {
+      "design": "Keyless CHECKSIG",
+      "code_revision_change": false,
+      "repair_memory_resolution": "556abe519 is an earlier repaired baseline already included in head188e2d78.",
+      "additional_evidence_to_credit": {
+        "kind": "Existing native F17 state-machine evidence",
+        "confirmed_transitions": 8,
+        "paths": 4,
+        "rejections": 39,
+        "proof_kind": "Disclosed field values in a finite precompiled two-stage program",
+        "native_job": 131659008772,
+        "native_job_observation": "Log records state-machine-regtest passed."
+      },
+      "limits": [
+        "The proof checks a bounded F17 recurrence.",
+        "The compiler binds fixed transaction context and exact precompiled successor programs.",
+        "NUMS P2TR retains the key-path discrete-log assumption.",
+        "General Nova/Circle application statements and arbitrary dynamic programs remain further work."
+      ],
+      "sources": [
+        "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-state-machine.md",
+        "https://github.com/patrickdugan/bitcoin-rs/blob/556abe519be96ce75ab759efbd51cea88eee4690/docs/research/keyless-checksig-integration-repair.md"
+      ]
+    },
+    {
+      "design": "ProvenSpend",
+      "code_revision_change": false,
+      "compatibility": "Candidate soft-fork construction remains subject to complete compatibility analysis.",
+      "limits": [
+        "Concrete cryptographic profile remains unselected.",
+        "The existing transition model uses an ideal receipt oracle."
+      ],
+      "sources": [
+        "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/research/provenspend/bip-provenspend.md"
+      ]
+    },
+    {
+      "design": "Canonical Proof Authority",
+      "code_revision_change": false,
+      "ci_confirmation": {
+        "run_id": 43399348447,
+        "job_id": 131798141468,
+        "tests_from_log": 42,
+        "confirmed_transitions_from_log": 4,
+        "rejections_from_log": 49,
+        "status": "passed",
+        "fresh_hosted_build_step": "success"
+      },
+      "limits": [
+        "Application layer over the Keyless and CAT primitives.",
+        "Disclosed NAND traces and finite precompiled successors.",
+        "Private credential authentication, general revocation and singleton lineage remain further work."
+      ],
+      "sources": [
+        "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/canonical-proof-authority.md",
+        "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/bip-canonical-proof-authority.md"
+      ]
+    }
+  ],
+  "new_deployed_rules_baseline": {
+    "name": "IOB BitVM3 presigned claim graph",
+    "source_commit": "76071a0195f48961386e46d56df7b5e0276637fc",
+    "consensus_class": "application on existing deployed rules",
+    "receipt": {
+      "network": "regtest",
+      "node": "/Satoshi:31.1.0/",
+      "checks": 11,
+      "all_pass": true,
+      "kind": "Previously executed receipt committed to repository"
+    },
+    "authority_model": [
+      "Desk presigns claim and payout after recipient is fixed.",
+      "Claimant signs to start a claim.",
+      "A watcher with the instance reject label signs the disprove.",
+      "Desk key remains available in the demonstration.",
+      "Garbling correctness and off-chain label delivery remain assumptions."
+    ],
+    "scope": "The regtest harness supplies random synthetic accept/reject labels and a synthetic statement. Its receipt tests graph behavior.",
+    "observed_graph_outcomes": [
+      "Payout rejected before the six-block maturity window.",
+      "Changing the recipient breaks the committed signature.",
+      "The accept label and a random label fail the disprove leaf.",
+      "Honest payout confirms and payer sweeps the derived key.",
+      "The reject label consumes the dishonest claim output; its later payout lacks an input."
+    ],
+    "source_ids": [
+      "IOB_GRAPH",
+      "IOB_RECEIPT",
+      "IOB_HARNESS"
+    ],
+    "comparison_use": "An existing-rules authority baseline whose trust assumptions must be held explicit when comparing new covenant primitives."
+  },
+  "hf_specification_search": {
+    "scope": [
+      "Current Spiral main tree and selected Keyless, sibling and arithmetic branches",
+      "bitcoin-rs current dev and proposal PR heads1/2/3",
+      "Normative Keyless, ProvenSpend and CPA documents"
+    ],
+    "result": "No separate normative HF-only CHECKSIG specification was retrieved in this scope.",
+    "positive_findings": [
+      "Keyless draft labels the consensus change a soft fork.",
+      "ProvenSpend describes a candidate soft-fork construction.",
+      "CPA specifies the Applications layer."
+    ],
+    "limits": "The user-mentioned BitVM Arena mathematical exploration may live outside the examined repository scope. This retrieval does not establish its global absence."
+  },
+  "workflow_runs": [
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567486,
+      "name": "script-tools",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T02:56:56Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567486"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567494,
+      "name": "fuzz-lockfile",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T02:56:46Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567494"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567622,
+      "name": "ci-merge-gate",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T02:56:29Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567622"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567691,
+      "name": "template-provider-lockfile",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T02:58:45Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567691"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567484,
+      "name": "fuzz-build",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T03:02:08Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567484"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567569,
+      "name": "ci",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T03:13:17Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567569"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355567507,
+      "name": "MULADDMOD research build",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:28Z",
+      "updated_at": "2026-11-13T03:06:38Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355567507"
+    },
+    {
+      "proposal_pr": 1,
+      "run_id": 43355562743,
+      "name": "MULADDMOD research build",
+      "head_sha": "c64e452211575c7cc6e28c448ef67fae93756e82",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T02:56:25Z",
+      "updated_at": "2026-11-13T03:09:56Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43355562743"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286264,
+      "name": "template-provider-lockfile",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:04:40Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286264"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286223,
+      "name": "ci-merge-gate",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:02:55Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286223"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286168,
+      "name": "fuzz-lockfile",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:03:20Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286168"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286270,
+      "name": "script-tools",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:04:00Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286270"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286281,
+      "name": "fuzz-build",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:05:46Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286281"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286190,
+      "name": "ci",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:19:50Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286190"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356286189,
+      "name": "Keyless CHECKSIG research build",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T03:02:54Z",
+      "updated_at": "2026-11-13T03:15:45Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356286189"
+    },
+    {
+      "proposal_pr": 2,
+      "run_id": 43356280584,
+      "name": "Keyless CHECKSIG research build",
+      "head_sha": "188e2d78fbb623a12a42772120a2aa4e437905c1",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "created_at": "2026-11-13T03:02:51Z",
+      "updated_at": "2026-11-13T03:02:57Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43356280584"
+    },
+    {
+      "proposal_pr": 3,
+      "run_id": 43399348494,
+      "name": "script-tools",
+      "head_sha": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T09:12:16Z",
+      "updated_at": "2026-11-13T09:13:14Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348494"
+    },
+    {
+      "proposal_pr": 3,
+      "run_id": 43399348447,
+      "name": "Canonical Proof Authority research",
+      "head_sha": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T09:12:16Z",
+      "updated_at": "2026-11-13T09:16:19Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348447"
+    },
+    {
+      "proposal_pr": 3,
+      "run_id": 43399348587,
+      "name": "ci",
+      "head_sha": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T09:12:16Z",
+      "updated_at": "2026-11-13T09:36:49Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348587"
+    },
+    {
+      "proposal_pr": 3,
+      "run_id": 43399348636,
+      "name": "ci-merge-gate",
+      "head_sha": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-13T09:12:16Z",
+      "updated_at": "2026-11-13T09:12:17Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399348636"
+    },
+    {
+      "proposal_pr": 3,
+      "run_id": 43399247217,
+      "name": "Canonical Proof Authority research",
+      "head_sha": "29ca519031fcd67f467881e16ba73e0eb1211759",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "created_at": "2026-11-13T09:11:32Z",
+      "updated_at": "2026-11-13T09:12:34Z",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/actions/runs/43399247217"
+    }
+  ],
+  "sources": {
+    "MAIN_DELTA": "https://github.com/patrickdugan/Spiral/compare/cfafbec4ae072b859f0140b2487baac14fac3a44...76071a0195f48961386e46d56df7b5e0276637fc",
+    "IOB_GRAPH": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/iob/bitvm3.py",
+    "IOB_RECEIPT": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/results/bitvm3-regtest.json",
+    "IOB_HARNESS": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/scripts/bitvm3_regtest.py",
+    "MULADD_AUDIT": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-security-audit.md",
+    "MULADD_RECEIPT": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-audit-results.json",
+    "KEYLESS_STATE": "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-state-machine.md",
+    "KEYLESS_REPAIR": "https://github.com/patrickdugan/bitcoin-rs/blob/556abe519be96ce75ab759efbd51cea88eee4690/docs/research/keyless-checksig-integration-repair.md",
+    "CPA_GUIDE": "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/canonical-proof-authority.md",
+    "CPA_SPEC": "https://github.com/patrickdugan/bitcoin-rs/blob/29ca519031fcd67f467881e16ba73e0eb1211759/docs/research/bip-canonical-proof-authority.md",
+    "KEYLESS_SPEC": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md",
+    "PROVEN_SPEC": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/research/provenspend/bip-provenspend.md"
+  }
+}

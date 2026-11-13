@@ -1,0 +1,520 @@
+{
+  "schema_version": "0.2-candidate",
+  "title": "Versioned objection and tradeoff ledger",
+  "observed_on": "2026-11-13",
+  "bips_source_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+  "codebook": {
+    "unit": "A concern or design tradeoff tied to a specified source and affected version.",
+    "selection": "Purposive selection for comparison across the paper's cohorts; these records share sources and political episodes.",
+    "attribution": "A BIP author's report of other people's objections is coded as a report. Named participant messages are attributed only to their speakers.",
+    "dates": "For BIP text, assignment dates are stored separately. The first publication date of a specific concern remains null until source history establishes it. Message dates use UTC.",
+    "present_evidential_status": "Describes what the inspected record establishes; it does not claim a participant currently holds the same view.",
+    "evidence_that_would_address_concern": "Analytical research suggestions from this ledger; participants have not committed to changing their views after these tests.",
+    "resolution": "A specified mitigation, a deployment event and a documented withdrawal of an objection are separate observations.",
+    "limits": "No preference counts, causal adoption estimates or inferred community endorsement are derived from these records."
+  },
+  "records": [
+    {
+      "id": "OBS-001",
+      "episode_id": "p2sh_op_eval",
+      "family_id": "p2sh_2011_2012",
+      "source_authors": [
+        "Gavin Andresen"
+      ],
+      "statement_kind": "author_reports_others_objection",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2011-10-18",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP12 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The author reports concern about interpreter complexity and the security history of evaluating serialized data as code.",
+      "response_in_source": "Andresen argues that Bitcoin already interprets scripts transmitted as data; OP_EVAL changes where that script is supplied.",
+      "evidence_that_would_address_concern": "An independent interpreter specification and adversarial tests of recursive evaluation would help assess the technical concern.",
+      "present_evidential_status": "Concern and author response are documented; the identity and prevalence of the reported objectors remain unspecified.",
+      "inferential_limits": "The source supports Andresen's account of the objection. It leaves the objection's first publication date and individual speakers unidentified.",
+      "review_gates": [
+        "G1",
+        "G2"
+      ],
+      "sources": [
+        {
+          "id": "BIP12",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0012.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Rationale; specified recursion bound",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Unnamed objectors, as reported by Gavin Andresen"
+    },
+    {
+      "id": "OBS-002",
+      "episode_id": "p2sh_bip16",
+      "family_id": "p2sh_2011_2012",
+      "source_authors": [
+        "Gavin Andresen"
+      ],
+      "statement_kind": "author_reports_others_objection",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2012-01-03",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP16 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "Andresen reports a preference for giving the sender the full spending script, which would avoid the proposed script-hash address mechanism.",
+      "response_in_source": "He argues that existing address infrastructure makes the script-hash route cheaper to integrate and would accelerate multisignature support.",
+      "evidence_that_would_address_concern": "A matched wallet-and-service integration study could measure the sender changes required by each construction.",
+      "present_evidential_status": "The author states an integration tradeoff; subsequent deployment supplies a network outcome but leaves the tradeoff's causal weight unmeasured.",
+      "inferential_limits": "The phrase about several people is the author's report. The record supplies neither a list of opponents nor a count of community preferences.",
+      "review_gates": [
+        "G4",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP16",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0016.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Rationale",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Unnamed proponents of sending the full script, as reported by Gavin Andresen"
+    },
+    {
+      "id": "OBS-003",
+      "episode_id": "block-size-hf-campaigns-2015-2017",
+      "family_id": "base-block-capacity-increase",
+      "source_authors": [
+        "Gavin Andresen"
+      ],
+      "statement_kind": "author_reports_and_assesses_design_concern",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2015-06-22",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP101 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The proposal discusses whether larger blocks would accelerate a decline in reachable validating nodes and weaken network distribution.",
+      "response_in_source": "Andresen attributes much of the observed decline to lightweight wallets and changing device use.",
+      "evidence_that_would_address_concern": "A workload-matched study of node costs, operator exits and alternative explanations could distinguish these mechanisms.",
+      "present_evidential_status": "The source records competing causal explanations. This ledger adds no causal estimate of node participation.",
+      "inferential_limits": "Reachable-node counts and their interpretation are historical assertions in the proposal. The author's alternative explanation remains attributed.",
+      "review_gates": [
+        "G2",
+        "G4"
+      ],
+      "sources": [
+        {
+          "id": "BIP101",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0101.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Objections: Centralization of full nodes",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Gavin Andresen discusses a reported participation concern"
+    },
+    {
+      "id": "OBS-004",
+      "episode_id": "block-size-hf-campaigns-2015-2017",
+      "family_id": "base-block-capacity-increase",
+      "source_authors": [
+        "Gavin Andresen"
+      ],
+      "statement_kind": "author_reports_and_assesses_design_concern",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2015-06-22",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP101 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The author discusses whether larger block announcements increase the advantage of miners with better network connections.",
+      "response_in_source": "He points to relay changes as a possible mitigation and describes other factors affecting mining profitability.",
+      "evidence_that_would_address_concern": "Propagation experiments with the same topology and transaction load could measure the bandwidth-related advantage under each rule set.",
+      "present_evidential_status": "A mechanism and possible mitigation are described; the proposal's outcome leaves their individual influence unidentified.",
+      "inferential_limits": "This record concerns the original networking setting. Subsequent relay improvements require their own measurements and affected version.",
+      "review_gates": [
+        "G2",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP101",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0101.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Objections: Centralization of mining, costs and big-block attacks",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Gavin Andresen discusses a reported propagation-cost concern"
+    },
+    {
+      "id": "OBS-005",
+      "episode_id": "segwit2x-hf-suspension-2017",
+      "family_id": "base-block-capacity-increase",
+      "source_authors": [
+        "Mike Belshe",
+        "Wences Casares",
+        "Jihan Wu",
+        "Jeff Garzik",
+        "Peter Smith",
+        "Erik Voorhees"
+      ],
+      "statement_kind": "organizers_first_person_decision",
+      "source_publication_date": "2017-11-08",
+      "source_document_assigned_date": null,
+      "first_publication_date_of_specific_concern": "2017-11-08",
+      "affected_design_revision": "Scheduled SegWit2x second-phase 2 MB increase",
+      "concern": "The signatories judged support insufficient for a coordinated increase and said proceeding could divide the community.",
+      "response_in_source": "They suspended the upcoming increase while retaining their stated preference for additional on-chain capacity.",
+      "evidence_that_would_address_concern": "Evidence of support across affected implementations and users, with an agreed transition, would bear on a future coordinated attempt.",
+      "present_evidential_status": "The message directly records the organizers' decision and stated rationale.",
+      "inferential_limits": "The contemporaneous copy preserves the message because its original mailing-list endpoint was unavailable. The signatories' separate causal claim about SegWit activation remains outside this record.",
+      "review_gates": [
+        "G6"
+      ],
+      "sources": [
+        {
+          "id": "S2X",
+          "url": "https://bitcointalk.org/index.php?topic=2376285.0",
+          "repository_commit": null
+        }
+      ],
+      "source_section": "Segwit2x Final Steps, dated 16:58:41 UTC",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "The six named SegWit2x signatories"
+    },
+    {
+      "id": "OBS-006",
+      "episode_id": "taproot_bundle",
+      "family_id": "taproot_2021",
+      "source_authors": [
+        "Pieter Wuille",
+        "Jonas Nick",
+        "Anthony Towns"
+      ],
+      "statement_kind": "authors_design_tradeoff",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2020-01-19",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP341 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The authors describe how a broad package makes review harder, while excessive fragmentation loses joint benefits and imposes repeated integration work.",
+      "response_in_source": "They select related structural script improvements and reserve independently addable features for later work.",
+      "evidence_that_would_address_concern": "A dependency map and matched application measurements can show which benefits require joint deployment.",
+      "present_evidential_status": "The scope choice is explicit in a deployed design. Its contribution to adoption remains an analytical question.",
+      "inferential_limits": "The record describes the authors' design rationale. It supplies no measured optimum package size or general rule that smaller proposals win.",
+      "review_gates": [
+        "G4",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP341",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0341.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Design",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "The BIP341 authors"
+    },
+    {
+      "id": "OBS-007",
+      "episode_id": "taproot_bundle",
+      "family_id": "taproot_2021",
+      "source_authors": [
+        "David A. Harding"
+      ],
+      "statement_kind": "proponent_self_identified_risk",
+      "source_publication_date": "2021-03-06",
+      "source_document_assigned_date": null,
+      "first_publication_date_of_specific_concern": "2021-03-06",
+      "affected_design_revision": "Initial Speedy Trial description of 6 March 2021",
+      "concern": "Harding warns that a short signaling window could encourage miners to signal readiness before upgrading, exposing users to reorganization risk.",
+      "response_in_source": "The design provides time between lock-in and enforcement; Harding observes that other activation schemes also face false signaling.",
+      "evidence_that_would_address_concern": "Tests of the software paths miners run, coupled with upgrade readiness evidence, can examine whether their signals correspond to enforcement.",
+      "present_evidential_status": "The initial message records the risk and a partial timing response. It establishes a review obligation for that proposed schedule.",
+      "inferential_limits": "The message describes a possible failure mode. This record makes no claim that the predicted failure happened during Taproot activation.",
+      "review_gates": [
+        "G6"
+      ],
+      "sources": [
+        {
+          "id": "SPEEDY",
+          "url": "https://gnusha.org/pi/bitcoindev/20210306034343.fhwrxmq6gbb2os5m@ganymede/",
+          "repository_commit": null
+        }
+      ],
+      "source_section": "Additional concerns; mitigating early success",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "David A. Harding"
+    },
+    {
+      "id": "OBS-008",
+      "episode_id": "taproot_bundle",
+      "family_id": "taproot_2021",
+      "source_authors": [
+        "Matt Corallo",
+        "David A. Harding"
+      ],
+      "statement_kind": "direct_participant_exchange",
+      "source_publication_date": "2021-03-06",
+      "source_document_assigned_date": null,
+      "first_publication_date_of_specific_concern": "2021-03-06",
+      "affected_design_revision": "Three-month Speedy Trial signaling proposal discussed on 6 March 2021",
+      "concern": "Corallo argued that three months still allowed coordination around divergent activation rules and suggested fewer signaling periods beginning later.",
+      "response_in_source": "Harding defended participants' choice of enforced rules and the proposed compromise timing. Corallo clarified that he sought a schedule more likely to keep the node community together.",
+      "evidence_that_would_address_concern": "An explicit account of competing schedules and their overlap can expose coordination hazards. The objectives used to judge the schedules must also be stated.",
+      "present_evidential_status": "The exchange includes a counterargument and a clarification of intent. The ledger preserves those distinct positions.",
+      "inferential_limits": "The participants' statements establish their own concerns and aims. They leave community-wide preference shares and the causal effect of any schedule unmeasured.",
+      "review_gates": [
+        "G6"
+      ],
+      "sources": [
+        {
+          "id": "SPEEDYCORALLO",
+          "url": "https://gnusha.org/pi/bitcoindev/2a6955d6-d242-89f5-d622-82889d499cc0@mattcorallo.com/",
+          "repository_commit": null
+        },
+        {
+          "id": "SPEEDYHARDINGREPLY",
+          "url": "https://gnusha.org/pi/bitcoindev/20210306202350.qdcpvxgedn6qhuxa@ganymede/",
+          "repository_commit": null
+        },
+        {
+          "id": "SPEEDYCORALLOCLARIFY",
+          "url": "https://gnusha.org/pi/bitcoindev/a76b9eee-0015-105c-2c8d-6131a91e95e3@mattcorallo.com/",
+          "repository_commit": null
+        }
+      ],
+      "source_section": "Opening messages before quoted correspondence",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Matt Corallo, with David A. Harding responding"
+    },
+    {
+      "id": "OBS-009",
+      "episode_id": "taproot_bundle",
+      "family_id": "taproot_2021",
+      "source_authors": [
+        "Luke Dashjr",
+        "Andrew Chow"
+      ],
+      "statement_kind": "direct_participant_exchange",
+      "source_publication_date": "2021-03-15",
+      "source_document_assigned_date": null,
+      "first_publication_date_of_specific_concern": "2021-03-15",
+      "affected_design_revision": "Chow's 6 March 2021 proposed BIP8-based Speedy Trial parameters, discussed on 15 March",
+      "concern": "Dashjr identified an overlap with a BIP8(True) plan that could give the two groups different enforcement heights and suggested shifting a window.",
+      "response_in_source": "Chow preferred scheduling a follow-up around Speedy Trial and remained open to changes in the periods.",
+      "evidence_that_would_address_concern": "Enumerating lock-in outcomes across both parameter sets would check their joint compatibility and identify periods with different enforcement.",
+      "present_evidential_status": "A version-specific concern and response are documented. This record leaves the final disposition of this parameter suggestion open.",
+      "inferential_limits": "The claims concern proposed schedules in this exchange. They should stay attached to those versions when comparing them with shipped activation code.",
+      "review_gates": [
+        "G1",
+        "G5",
+        "G6"
+      ],
+      "sources": [
+        {
+          "id": "SPEEDYCHOWPARAMS",
+          "url": "https://gnusha.org/pi/bitcoindev/5be46169-8f38-da73-4112-fba2aff6dfcb@achow101.com/",
+          "repository_commit": null
+        },
+        {
+          "id": "SPEEDYDASHJR",
+          "url": "https://gnusha.org/pi/bitcoindev/202103150251.46902.luke@dashjr.org/",
+          "repository_commit": null
+        },
+        {
+          "id": "SPEEDYCHOWREPLY",
+          "url": "https://gnusha.org/pi/bitcoindev/f75938e8-6e81-b13b-e085-ca91971ce23f@achow101.com/",
+          "repository_commit": null
+        }
+      ],
+      "source_section": "Opening messages before quoted correspondence",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Luke Dashjr, with Andrew Chow responding"
+    },
+    {
+      "id": "OBS-010",
+      "episode_id": "checktemplateverify",
+      "family_id": "transaction-covenants",
+      "source_authors": [
+        "Jeremy Rubin"
+      ],
+      "statement_kind": "author_security_requirement",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2020-01-06",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP119 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "Repeated template checks can repeat transaction-length hashing unless implementations cache all variable-length components.",
+      "response_in_source": "The specification requires precomputation, including the relevant scriptSig data, and describes constant work per check after cache construction.",
+      "evidence_that_would_address_concern": "Cold-cache and repeated-check adversarial measurements can verify linear initialization and bounded reuse across validation paths.",
+      "present_evidential_status": "The specification includes a remedy. Correct implementation and measured costs remain separate evidence obligations.",
+      "inferential_limits": "The hazard concerns repeated work within finite validation. The source supplies no halting-problem claim.",
+      "review_gates": [
+        "G2"
+      ],
+      "sources": [
+        {
+          "id": "BIP119",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Specification; Denial of Service and Validation Costs",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Jeremy Rubin"
+    },
+    {
+      "id": "OBS-011",
+      "episode_id": "checktemplateverify",
+      "family_id": "transaction-covenants",
+      "source_authors": [
+        "Jeremy Rubin"
+      ],
+      "statement_kind": "author_design_hazard_and_mitigation",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2020-01-06",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP119 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "Permissive co-spending can let independently funded outputs satisfy one shared payment template, losing the intended sum of payments.",
+      "response_in_source": "The proposed template commits input count and the current input index to constrain co-spending and script reuse.",
+      "evidence_that_would_address_concern": "Repeated-funding and multi-input tests should verify the intended payment total under the application's exact template wrappers.",
+      "present_evidential_status": "The draft addresses the hazard through specified commitments; application wrappers still need their own argument.",
+      "inferential_limits": "This is a rationale for chosen fields. It should not be recorded as an unmitigated flaw in the specified CTV primitive.",
+      "review_gates": [
+        "G3",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP119",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Committing to the number of inputs; committing to the currently executing input index",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "Jeremy Rubin"
+    },
+    {
+      "id": "OBS-012",
+      "episode_id": "anyprevout-tapscript",
+      "family_id": "noinput-anyprevout",
+      "source_authors": [
+        "Christian Decker",
+        "Anthony Towns"
+      ],
+      "statement_kind": "authors_security_requirement",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2017-02-28",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP118 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "Relaxed input commitments allow a signature to authorize more than one compatible UTXO, creating replay exposure when keys are reused.",
+      "response_in_source": "The authors make the feature opt-in and require applications to ensure that any allowed replay is safe or acceptable.",
+      "evidence_that_would_address_concern": "An application-level replay analysis should enumerate compatible coins and test unintended repeated authorization.",
+      "present_evidential_status": "The security section states the exposure and assigns a key-reuse obligation to implementers.",
+      "inferential_limits": "Rebinding is part of the proposed capability. The safety of a particular use requires its protocol conditions and affected signature mode.",
+      "review_gates": [
+        "G3",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP118",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0118.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Security: Signature replay",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "The BIP118 authors"
+    },
+    {
+      "id": "OBS-013",
+      "episode_id": "op-cat-tapscript",
+      "family_id": "script-byte-composition",
+      "source_authors": [
+        "Ethan Heilman",
+        "Armin Sabouri"
+      ],
+      "statement_kind": "authors_scope_choice",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2023-12-11",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP347 version 1.0.0 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The authors separate reenabling concatenation from increasing the permitted stack-element size.",
+      "response_in_source": "The draft retains a 520-byte result limit and restricts the change to Tapscript.",
+      "evidence_that_would_address_concern": "Complete application measurements can show what the bounded operation buys and what a larger execution envelope would additionally cost.",
+      "present_evidential_status": "The specification makes the scope boundary explicit. Its current Complete metadata records document maturity.",
+      "inferential_limits": "This record supplies no claim about the community's preferred stack limit or the original reason for the 2010 opcode disablement.",
+      "review_gates": [
+        "G2",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP347",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0347.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Specification; Rationale; Backwards Compatibility",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "The BIP347 authors"
+    },
+    {
+      "id": "OBS-014",
+      "episode_id": "checksigfromstack-tapscript",
+      "family_id": "transaction_templates_and_rebinding",
+      "source_authors": [
+        "Brandon Black",
+        "Jeremy Rubin"
+      ],
+      "statement_kind": "authors_application_comparison",
+      "source_publication_date": null,
+      "source_document_assigned_date": "2024-11-26",
+      "first_publication_date_of_specific_concern": null,
+      "affected_design_revision": "BIP348 at b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "concern": "The LN Symmetry discussion compares primitive packages with different encoding costs and places to carry required data.",
+      "response_in_source": "For the described construction, CTV plus CSFS uses OP_RETURN for availability; the APO alternative uses the annex.",
+      "evidence_that_would_address_concern": "A matched channel implementation should hold recovery and data availability assumptions fixed while measuring the complete transaction graph.",
+      "present_evidential_status": "The source gives a construction-specific comparison, which motivates application-level dependency tests.",
+      "inferential_limits": "The stated package efficiencies apply to the construction discussed. A broader claim about universal minimality would need further evidence.",
+      "review_gates": [
+        "G4",
+        "G5"
+      ],
+      "sources": [
+        {
+          "id": "BIP348",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0348.md",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        },
+        {
+          "id": "BIP118",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0118.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        },
+        {
+          "id": "BIP119",
+          "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0119.mediawiki",
+          "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b"
+        }
+      ],
+      "source_section": "Applications: LN Symmetry",
+      "observed_on": "2026-11-13",
+      "direct_quote": null,
+      "concern_attribution": "The BIP348 authors"
+    }
+  ],
+  "source_index": "references.json"
+}

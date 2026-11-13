@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "observed_on": "2026-11-13",
   "bips_source_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
   "sources": {
@@ -519,6 +519,146 @@
       "observed_on": "2026-11-13",
       "observed_head": "29ca519031fcd67f467881e16ba73e0eb1211759",
       "observed_conclusion": "success"
+    },
+    "BIP18": {
+      "title": "BIP 18: hashScriptCheck",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0018.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "ae1fc5fa9a230a78f3eaf266e3059a60e798f7bb",
+      "observed_on": "2026-11-13"
+    },
+    "BIP131": {
+      "title": "BIP 131: \"Coalescing Transaction\" Specification (wildcard inputs)",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0131.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "2077f634532e5b92799917727aa64de43c21b65e",
+      "observed_on": "2026-11-13"
+    },
+    "BIP134": {
+      "title": "BIP 134: Flexible Transactions",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0134.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "f34a9f6b60359b2d0e64f5ca4e90136aaeb864cf",
+      "observed_on": "2026-11-13"
+    },
+    "BIP140": {
+      "title": "BIP 140: Normalized TXID",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0140.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "983e3bf11596ab9dc982f5348fc67d9892215b65",
+      "observed_on": "2026-11-13"
+    },
+    "BIP149": {
+      "title": "BIP 149: Segregated Witness (second deployment)",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0149.mediawiki",
+      "kind": "official_specification",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "3663dd9c93408f8d86b44107d19a3ed2df3f97d7",
+      "observed_on": "2026-11-13"
+    },
+    "BIPINDEX": {
+      "title": "Official BIP index at the historical-frame snapshot",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/README.mediawiki",
+      "kind": "official_index",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "540db221869093e6d18c2e58dedbc7eef3fd841f",
+      "observed_on": "2026-11-13"
+    },
+    "BIP446VECTORS": {
+      "title": "BIP446 basic template test vectors",
+      "url": "https://github.com/bitcoin/bips/blob/b34d9f751791d4feb22feff4f2ed00bcac83961b/bip-0446/basics.json",
+      "kind": "official_test_vectors",
+      "repository_commit": "b34d9f751791d4feb22feff4f2ed00bcac83961b",
+      "blob_sha": "4ed4ac04fd40051ba630ab17dfa736e4e5a5ee69",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCORALLO": {
+      "title": "Matt Corallo, reply on Speedy Trial signaling window",
+      "url": "https://gnusha.org/pi/bitcoindev/2a6955d6-d242-89f5-d622-82889d499cc0@mattcorallo.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYHARDINGREPLY": {
+      "title": "David A. Harding, reply on self-determination and timing",
+      "url": "https://gnusha.org/pi/bitcoindev/20210306202350.qdcpvxgedn6qhuxa@ganymede/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCORALLOCLARIFY": {
+      "title": "Matt Corallo, clarification of coordination objective",
+      "url": "https://gnusha.org/pi/bitcoindev/a76b9eee-0015-105c-2c8d-6131a91e95e3@mattcorallo.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCHOWPARAMS": {
+      "title": "Andrew Chow, proposed Speedy Trial parameters",
+      "url": "https://gnusha.org/pi/bitcoindev/5be46169-8f38-da73-4112-fba2aff6dfcb@achow101.com/",
+      "published_on": "2021-03-06",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYDASHJR": {
+      "title": "Luke Dashjr, activation-window overlap concern",
+      "url": "https://gnusha.org/pi/bitcoindev/202103150251.46902.luke@dashjr.org/",
+      "published_on": "2021-03-15",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "SPEEDYCHOWREPLY": {
+      "title": "Andrew Chow, reply on scheduling a follow-up deployment",
+      "url": "https://gnusha.org/pi/bitcoindev/f75938e8-6e81-b13b-e085-ca91971ce23f@achow101.com/",
+      "published_on": "2021-03-15",
+      "kind": "primary_participant_message",
+      "observed_on": "2026-11-13"
+    },
+    "IOBGRAPH": {
+      "title": "Iob Graph",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/iob/bitvm3.py",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "IOBRECEIPT": {
+      "title": "Iob Receipt",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/results/bitvm3-regtest.json",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "IOBHARNESS": {
+      "title": "Iob Harness",
+      "url": "https://github.com/patrickdugan/Spiral/blob/76071a0195f48961386e46d56df7b5e0276637fc/in-and-out-burger/scripts/bitvm3_regtest.py",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "76071a0195f48961386e46d56df7b5e0276637fc"
+    },
+    "MULADDAUDIT": {
+      "title": "Muladd Audit",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-security-audit.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "c64e452211575c7cc6e28c448ef67fae93756e82"
+    },
+    "MULADDRECEIPT": {
+      "title": "Muladd Receipt",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/c64e452211575c7cc6e28c448ef67fae93756e82/docs/research/muladdmod-audit-results.json",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "c64e452211575c7cc6e28c448ef67fae93756e82"
+    },
+    "KEYLESSSTATE": {
+      "title": "Keyless State",
+      "url": "https://github.com/patrickdugan/bitcoin-rs/blob/188e2d78fbb623a12a42772120a2aa4e437905c1/docs/research/keyless-state-machine.md",
+      "kind": "portfolio_primary_source",
+      "observed_on": "2026-11-13",
+      "repository_commit": "188e2d78fbb623a12a42772120a2aa4e437905c1"
     }
   }
 }
