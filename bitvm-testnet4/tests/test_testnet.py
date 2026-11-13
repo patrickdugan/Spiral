@@ -2,6 +2,8 @@ import base64
 import copy
 import hashlib
 import json
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -103,3 +105,11 @@ def test_build_only_receipt_is_never_anchorable(tmp_path):
     file = tmp_path / 'receipt.json'
     file.write_text(json.dumps(data))
     with pytest.raises(ValueError): t.nova_anchor(file)
+
+
+@pytest.mark.parametrize('stdout,expected', [('', None), ('\n', None), ('null\n', None),
+    ('{"confirmations": 2}\n', {'confirmations': 2}), ('tb1p-owned-address\n', 'tb1p-owned-address')])
+def test_cli_preserves_rpc_null_and_scalar_results(monkeypatch, stdout, expected, tmp_path):
+    monkeypatch.setattr(t.subprocess, 'run', lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout=stdout))
+    cli = t.CoreCLI(Path('bitcoin-cli'), tmp_path)
+    assert cli.call('gettxout', '12' * 32, 0) == expected

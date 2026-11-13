@@ -28,6 +28,9 @@ class CoreCLI:
         result = subprocess.run(self.argv + [method] + arguments, capture_output=True, text=True, timeout=45)
         if result.returncode:
             raise RuntimeError(f'{method}: bitcoin-cli returned exit {result.returncode}; no credentials are included in this error')
+        if not result.stdout.strip():
+            # bitcoin-cli prints no text for an RPC null, including spent gettxout results.
+            return None
         try:
             return json.loads(result.stdout)
         except json.JSONDecodeError:
