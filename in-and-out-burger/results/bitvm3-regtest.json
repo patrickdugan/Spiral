@@ -1,0 +1,132 @@
+{
+ "network": "regtest",
+ "node": "/Satoshi:31.1.0/",
+ "checks": [
+  {
+   "check": "honest: disprove with the accept label refused",
+   "ok": true,
+   "detail": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+  },
+  {
+   "check": "honest: payout at 3 confirmations of the claim refused",
+   "ok": true,
+   "detail": "non-BIP68-final"
+  },
+  {
+   "check": "honest: payout at 5 confirmations refused",
+   "ok": true,
+   "detail": "non-BIP68-final"
+  },
+  {
+   "check": "honest: payout_to_payer_old_address refused",
+   "ok": true,
+   "detail": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+  },
+  {
+   "check": "honest: payout_to_claimant refused",
+   "ok": true,
+   "detail": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+  },
+  {
+   "check": "honest: disprove_with_random_label refused",
+   "ok": true,
+   "detail": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+  },
+  {
+   "check": "honest: payout accepted at 6 confirmations",
+   "ok": true
+  },
+  {
+   "check": "honest: payout confirmed to P'",
+   "ok": true
+  },
+  {
+   "check": "honest: payer swept P' with p + t",
+   "ok": true
+  },
+  {
+   "check": "dishonest: claim output spent by the disprove",
+   "ok": true
+  },
+  {
+   "check": "dishonest: payout after the window has no input",
+   "ok": true,
+   "detail": "missing-inputs"
+  }
+ ],
+ "all_pass": true,
+ "graphs": {
+  "honest": {
+   "instance": "honest",
+   "claim_id": "4c770b8f1f9c80392a49099629699116633ef77c678af1387ba9a02ad5b8ddf0",
+   "vault": {
+    "outpoint": "09a525c8043f252c5612108c39efe14edf33360f5b691ff0b1df79f59a76646c:1",
+    "sats": 20000,
+    "script_pubkey": "51205c7150de8d6f4807c24f33cd75a2b8657b375c35bfbdc1c358ab37c7eec8e840",
+    "leaves": [
+     "2026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ad20e5af32156c72275966f97dcce3415e4012b58cc19997208810012e579a161b56ac",
+     "029000b2752026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ac"
+    ]
+   },
+   "claim": {
+    "txid": "3c3e53e9a626e0402c058d8ae42a64d917e004fca5c7a9cf09ad94c0e3b621ad",
+    "fee": 416,
+    "k_sats": 19584,
+    "k_script_pubkey": "512080c4cb33c8096b4749394133b63739479c88e735ff6dc8e162de233959d93b2f",
+    "leaves": [
+     "56b2752026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ac",
+     "a82061e17b1d3ef99a616e880aabfc74715ad03ab48cb4c7c790d63c2da37c8896558820aa458e4aae0ab7d2d4594372ee2e330080fafed4b9d646a177be60ea45321169ac"
+    ]
+   },
+   "payout": {
+    "txid": "d9a3f4625f83586c843e073664c9c0a4e139bf640bb3b009747957f36faecf6a",
+    "sats": 19328,
+    "to_script_pubkey": "76a914f873d522eba26cefd31cac3d76cf8c8f1b03119e88ac",
+    "sequence": 6
+   },
+   "disprove": {
+    "sats": 19308,
+    "to_script_pubkey": "0014d8bb9b8d87d6543fd23126b9d37dbf895cef48f9"
+   },
+   "window_blocks": 6,
+   "reclaim_blocks": 144,
+   "fee_sat_vb": 2
+  },
+  "dishonest": {
+   "instance": "dishonest",
+   "claim_id": "86307ffa587bbed41062b7bff17a033ca9c902a0077bf8247253046cd5622660",
+   "vault": {
+    "outpoint": "e8105b1fbbca84752f2ec6bcc12cb16aa8a3fd2c6d842d5f073ab643ca762e88:0",
+    "sats": 20000,
+    "script_pubkey": "51205c7150de8d6f4807c24f33cd75a2b8657b375c35bfbdc1c358ab37c7eec8e840",
+    "leaves": [
+     "2026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ad20e5af32156c72275966f97dcce3415e4012b58cc19997208810012e579a161b56ac",
+     "029000b2752026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ac"
+    ]
+   },
+   "claim": {
+    "txid": "9a19655725f5a97c2136200fe5f51c0982395304d5f8c1db4bc58c77a3c844f4",
+    "fee": 416,
+    "k_sats": 19584,
+    "k_script_pubkey": "5120293acbf8625c5fdb2af1844457f71e7fd3bfe56fb07411b1ae7cac8da7c37721",
+    "leaves": [
+     "56b2752026247e46c1160d13997c0fbab62e581e8bc6e6ae99ecad0eaf718ef83d98f200ac",
+     "a820fa69dbab69b9d3302a94998efafcb4b03907cbb165def244bde5165e125272e68820aa458e4aae0ab7d2d4594372ee2e330080fafed4b9d646a177be60ea45321169ac"
+    ]
+   },
+   "payout": {
+    "txid": "97cf6f0d5a91a47de2c7ece034f352143224219a7b4248b806cd53304032cf49",
+    "sats": 19328,
+    "to_script_pubkey": "76a914f873d522eba26cefd31cac3d76cf8c8f1b03119e88ac",
+    "sequence": 6
+   },
+   "disprove": {
+    "sats": 19308,
+    "to_script_pubkey": "0014d8bb9b8d87d6543fd23126b9d37dbf895cef48f9"
+   },
+   "window_blocks": 6,
+   "reclaim_blocks": 144,
+   "fee_sat_vb": 2
+  }
+ }
+}

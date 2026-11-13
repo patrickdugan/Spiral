@@ -293,10 +293,17 @@ mainnet.
 
 Refilling the float from a BitVM3 vault without trusting the operator still needs three things:
 
-1. **The claim transaction graph.** Claim, challenge and disprove transactions in which a
-   challenger evaluates the M14 circuit on the operator's committed proof, and a reject label
-   unlocks the disprove. nova-bitvm3 has the circuit (785,442,492 gates, garbled and evaluated
-   on real proofs) but not these transactions.
+The experimental graph here instead signs separately after the payment, fixes P′ at that
+point, and pays P′ directly from the bonded vault. It demonstrates the claim/disprove/payout
+mechanism; the general float-refill design above still requires the following work.
+
+1. **Removing the demo's trust assumptions.** The claim graph is implemented in
+   `iob/bitvm3.py`, exercised against Bitcoin Core by `scripts/bitvm3_regtest.py`, and driven
+   on testnet4 by `scripts/bitvm3_testnet4.py`. It commits to one M14 instance and its statement;
+   a reject label unlocks a disprove, while a presigned payout to P′ matures after six blocks.
+   This demonstration retains FC03's T1 (correct garbling, without cut-and-choose), T2 (input
+   labels handed over off-chain), and T3 (a presigned graph with the desk as a committee of
+   one). Keys remain available in this demo; it does not demonstrate committee key deletion.
 2. **A statement covering both legs.** The in-payment to the menu address, and the operator's
    payout to the sender, linked by IOBP. M16 proves one payment and does not apply the sender
    rule, so this needs a new guest that runs M16's check twice, plus the sender rule with its
@@ -351,6 +358,12 @@ OP_CHECKCONTRACTVERIFY could hold the connectors. None of these is active on mai
 - `iob/sender.py`: the sender rules and the sender proof.
 - `iob/ec.py`: secp256k1 point arithmetic for the payout key.
 - `iob/payout_key.py`: the derived payout key, WIF, and the payer's side.
+- `iob/taproot.py`: BIP340 signatures, BIP341 script-path spends, and P2PKH signing.
+- `iob/bitvm3.py`: the presigned vault, claim, disprove, and payout graph.
+- `scripts/bitvm3_testnet4.py`: checkpoint/payment checks, M14 claim instances, counterexamples,
+  payouts, payer sweeps, and public result recording; mainnet is refused.
+- `scripts/bitvm3_regtest.py`: the isolated Bitcoin Core rehearsal of that graph.
+- `scripts/fetch_testnet4.py`: header and payment inputs for the testnet4 proof.
 - `iob/menu.py`: the menu and pricing.
 - `iob/gate.py`: running `kan-payment-gate`.
 - `iob/ledger.py`: the served-outpoint journal.
