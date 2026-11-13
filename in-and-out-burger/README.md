@@ -28,6 +28,58 @@ lists what it needs.
 - **Dynamic amount.** The payout follows a price list: a rate per tier of payment size, a flat
   fee, a cap, and Core's dust limits.
 
+## Keyless CHECKSIG payout integration
+
+`python -m iob keyless-order` verifies the same real M16 proof through
+`kan-payment-gate`, applies the existing menu, sender and price checks, and emits
+a NUMS P2TR reserve for that approved order. The new route requires a proof,
+an IOBP link and an outgoing `regtest` menu. It has no unproven-order option.
+
+```sh
+python3 -m iob keyless-order --menu menus/m16-mainnet-replay.json \
+  --statement fixtures/m16-mainnet/statement.bin \
+  --tx fixtures/m16-mainnet/payment-tx.hex \
+  --sender-proof fixtures/m16-mainnet/sender-proof.json \
+  --proof /path/to/m16-wrap-blake3-v2.bin
+```
+
+The funding plan includes `reserve_address` and `reserve_sats`. Fund that address
+only on an isolated patched regtest node with the Keyless CHECKSIG and CAT
+features from [bitcoin-rs PR #2](https://github.com/patrickdugan/bitcoin-rs/pull/2).
+Then repeat the command with `--reserve TXID:VOUT --rpc-url URL` and RPC
+credentials. It builds and tests the payout without broadcasting. Add
+`--broadcast --ledger /path/to/served.jsonl` to serve it on that zero-peer node.
+The existing served-outpoint journal protects the order across process restarts.
+Reserve lookup checks the actual unspent script and value before spending.
+
+The reserve commits an approval annex containing a domain-separated digest of
+the exact verified proof bytes, statement, gate policy, price list, payment
+outpoint, derived recipient, payout amount, mining fee and IOBP link. The proof
+is snapshotted before verification, so its recorded digest describes the bytes
+the verifier consumed. Script reconstructs the default TapSighash with
+key_version 2. It fixes the complete two-output vector, one input's amount and
+sequence, version 2, locktime zero, input index zero and approval annex. The
+remaining witness-supplied hash fields have exact widths. Spending requires no
+reserve signature.
+
+This integrates the existing **host M16 verifier** with a **consensus-enforced
+approved payout**. The operator verifies the order before funding its reserve.
+Bitcoin Script does not run M16 or M14 in this route, and an untrusted operator
+can still fund a different policy. It does not implement the BitVM claim,
+challenge and disprove graph or a trustless vault refill. NUMS P2TR retains its
+key-path discrete-log assumption and is distinct from P2MR. The draft opcodes
+remain disabled on public Testnet4 and mainnet.
+
+The reproducible live test is `scripts/keyless_regtest_replay.py`. It requires
+explicit paths and SHA256 pins for the existing verifier, real M16 proof and
+patched node, plus the node's full source revision and bitcoin-rs fixture
+checkout. It verifies the real order before creating funds, tests malformed
+proofs and statements, rejects recipient, amount, link, annex, transaction
+context and input-layout mutations in both mempool and block validation, then
+confirms the payout and checks journal and spent-input replay after restart.
+Use `--help` for the exact arguments and a fresh `--output` directory. The
+replay neither runs Nova proving nor generates a new GPU proof.
+
 ## What an order is
 
 | Part | Size | What it is |

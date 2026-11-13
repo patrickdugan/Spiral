@@ -20,7 +20,7 @@ import argparse
 import json
 import sys
 
-from . import btc, desk, ec, menu as menu_mod, payout_key, sender, statement
+from . import btc, desk, ec, keyless, menu as menu_mod, payout_key, sender, statement
 from .errors import Refusal
 from .ledger import Ledger
 from .rpc import RPC
@@ -47,6 +47,27 @@ def cmd_order(a) -> int:
 def cmd_sender_proof(a) -> int:
     print(json.dumps(sender.build_proof(_read(a.block), a.txid), indent=1))
     return 0
+
+
+def cmd_keyless_order(a) -> int:
+    m = menu_mod.load(a.menu)
+    sp = json.loads(_read(a.sender_proof)) if a.sender_proof else None
+    order = desk.Order(_read(a.statement), _read(a.tx).decode().strip(), sp, a.proof)
+    ledger = Ledger(a.ledger)
+    try:
+        approval = keyless.prepare(m, order, ledger, a.mining_fee_sats)
+        if a.reserve:
+            txid, vout = payout_key.parse_outpoint(a.reserve)
+            rpc = RPC(a.rpc_url, cookie=a.rpc_cookie, user=a.rpc_user, password=a.rpc_password)
+            payer = keyless.KeylessPayer(rpc, approval, txid[::-1].hex(), vout, a.broadcast)
+            result = desk.serve(m, order, ledger, payer)
+            result["keyless"] = approval.record()
+        else:
+            result = approval.record()
+    except Refusal as error:
+        result = {"status": "refused", "reason": error.reason, "detail": error.detail}
+    print(json.dumps(result, sort_keys=True))
+    return 1 if result["status"] == "refused" else 0
 
 
 def cmd_tx(a) -> int:
@@ -128,6 +149,22 @@ def main(argv=None) -> int:
     o.add_argument("--allow-mainnet", action="store_true")
     o.set_defaults(fn=cmd_order)
 
+    q = sub.add_parser("keyless-order", help="verify M16 and bind a payout to a patched-regtest reserve")
+    q.add_argument("--menu", required=True)
+    q.add_argument("--statement", required=True)
+    q.add_argument("--tx", required=True)
+    q.add_argument("--sender-proof")
+    q.add_argument("--proof", required=True)
+    q.add_argument("--ledger")
+    q.add_argument("--mining-fee-sats", type=int, default=2000)
+    q.add_argument("--reserve", help="funded approved reserve, TXID:VOUT; omit to emit its funding plan")
+    q.add_argument("--rpc-url")
+    q.add_argument("--rpc-cookie")
+    q.add_argument("--rpc-user")
+    q.add_argument("--rpc-password")
+    q.add_argument("--broadcast", action="store_true", help="broadcast on isolated patched regtest")
+    q.set_defaults(fn=cmd_keyless_order)
+
     s = sub.add_parser("sender-proof")
     s.add_argument("--block", required=True)
     s.add_argument("--txid", required=True)
@@ -158,6 +195,11 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     if a.cmd == "order" and a.pay and not a.rpc_url:
         ap.error("--pay needs --rpc-url")
+    if a.cmd == "keyless-order":
+        if a.reserve and not a.rpc_url:
+            ap.error("--reserve needs --rpc-url")
+        if a.broadcast and (not a.reserve or not a.ledger):
+            ap.error("--broadcast needs --reserve and a persistent --ledger")
     return a.fn(a)
 
 
