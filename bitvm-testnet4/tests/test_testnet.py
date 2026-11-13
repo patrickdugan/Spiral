@@ -84,3 +84,22 @@ def test_signing_check_rejects_networked_signer_before_signing():
             assert method == 'getconnectioncount'
             return 1
     with pytest.raises(ValueError): t.signing_check(Stub(), {})
+
+
+def test_optional_cpu_probe_must_pass_before_anchoring(tmp_path):
+    data = receipt()
+    data['steps'].append({'name': 'cpu_probe', 'exit_code': 0})
+    file = tmp_path / 'receipt.json'
+    file.write_text(json.dumps(data))
+    assert t.nova_anchor(file) is not None
+    data['steps'][-1]['exit_code'] = 1
+    file.write_text(json.dumps(data))
+    with pytest.raises(ValueError): t.nova_anchor(file)
+
+
+def test_build_only_receipt_is_never_anchorable(tmp_path):
+    data = receipt()
+    data['status'] = 'built_not_verified'
+    file = tmp_path / 'receipt.json'
+    file.write_text(json.dumps(data))
+    with pytest.raises(ValueError): t.nova_anchor(file)

@@ -122,8 +122,9 @@ def nova_anchor(path: Path | None):
     if (receipt.get('source') != NOVA_SOURCE or receipt.get('proof_sha256') != NOVA_PROOF or
             receipt.get('statement_sha256') != NOVA_STATEMENT):
         raise ValueError('Nova source, proof or statement does not match the pinned Testnet4 fixture')
-    if (len(receipt.get('binary_sha256', '')) != 64 or
-            {item['name'] for item in receipt.get('steps', []) if item.get('exit_code') == 0} != {'rustc', 'cargo', 'build', 'transport', 'run'}):
+    steps = receipt.get('steps', [])
+    if (len(receipt.get('binary_sha256', '')) != 64 or any(item.get('exit_code') != 0 for item in steps) or
+            not {'rustc', 'cargo', 'build', 'transport', 'run'}.issubset({item['name'] for item in steps})):
         raise ValueError('Nova binary identity or successful execution steps are missing')
     cases = {item['case']: item for item in receipt['cases']}
     if set(cases) != {'real-nova-proof', 'tampered-proof-input', 'wrong-statement'}:

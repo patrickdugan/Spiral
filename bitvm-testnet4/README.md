@@ -46,10 +46,12 @@ python3 scripts/nova_gc.py \
   --toolchain /path/to/existing/rust-toolchain/bin \
   --target /path/to/dedicated-build-cache \
   --output /path/to/fresh-nova-run \
-  --jobs 2 --build-timeout 3600 --timeout 3600
+  --jobs 2 --build-timeout 3600 --timeout 3600 --aesni
 ```
 
 This builds with `--offline --locked`, records exact commands, tool versions, fixture/source/diff/binary/log digests, runs the transport integrity test and a second test containing three full evaluations. Native final verification also checks the real proof and rejects the wrong statement. A timed-out or stopped attempt is a failed attempt; reuse its cache in a **fresh** output directory. Do not report a build-only run as verification. The overlays only append tests; no upstream verifier code is changed.
+
+On x86-64, `--aesni` first compiles and executes a CPU-feature probe, checks the compiler configuration, and sets `RUSTFLAGS=-C target-feature=+aes,+sse2` for this process. The upstream implementation otherwise chooses software AES, which is much slower. The resulting binary requires those CPU features; omit this option on other hardware. `--build-only` warms the cache and returns `built_not_verified`; it cannot produce an anchorable passed receipt.
 
 The inner compressed Nova proof is a separate 12,040-byte object inside the 12,596-byte `.nht4` bundle. Its SHA-256 is `66c903b0e23876bf7c50414d6b2bfe451a256a6f44a7ba0d5b1c27e30addd7e4`; the bundle SHA-256 is `ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c`. The guest statement binds the network, k=1, four steps, checkpoint, final state, verifier key and inner proof. This demo verifies the completed wrapper; it does not regenerate that expensive proof.
 

@@ -108,6 +108,11 @@ def run(args):
                    RUSTC=str(toolchain / 'rustc'), RUSTDOC=str(toolchain / 'rustdoc'),
                    CARGO_PROFILE_TEST_DEBUG='0', CARGO_INCREMENTAL='0', CARGO_HUSKY_DONT_INSTALL_HOOKS='true',
                    RAYON_NUM_THREADS=str(args.jobs), CARGO_TERM_COLOR='never')
+        if args.aesni:
+            env.pop('CARGO_ENCODED_RUSTFLAGS', None)
+            env['RUSTFLAGS'] = '-C target-feature=+aes,+sse2'
+        report['rustflags'] = env.get('RUSTFLAGS', '')
+        report['aesni_requested'] = args.aesni
         scratch = args.target.resolve() / 'demo-ciphertexts'
         scratch.mkdir(parents=True, exist_ok=True)
         if shutil.disk_usage(scratch).free < 13_000_000_000:
@@ -117,6 +122,20 @@ def run(args):
                       transport_overlay_sha256=sha(ROOT / 'nova/disk_transport.rs.inc'))
         step('rustc', [str(toolchain / 'rustc'), '-Vv'], 30)
         step('cargo', [str(toolchain / 'cargo'), '-V'], 30)
+        if args.aesni:
+            probe = output / 'cpu_probe.rs'
+            probe.write_text('fn main() {\n'
+                '#[cfg(target_arch="x86_64")] { let a=std::is_x86_feature_detected!("aes"); '
+                'let s=std::is_x86_feature_detected!("sse2"); println!("aes={a} sse2={s}"); '
+                'assert!(a && s, "AES-NI/SSE2 unavailable"); }\n'
+                '#[cfg(not(target_arch="x86_64"))] panic!("AES-NI requires x86_64");\n}\n')
+            executable = output / ('cpu_probe.exe' if os.name == 'nt' else 'cpu_probe')
+            step('cpu_probe_build', [str(toolchain / 'rustc'), '--edition=2021', str(probe), '-o', str(executable)], 60)
+            step('cpu_probe', [str(executable)], 30)
+            step('cpu_cfg', [str(toolchain / 'rustc'), '--print', 'cfg', '-C', 'target-feature=+aes,+sse2'], 30)
+            configured = (output / 'cpu_cfg.log').read_text()
+            if 'target_feature="aes"' not in configured or 'target_feature="sse2"' not in configured:
+                raise ValueError('compiler did not enable the verified CPU AES target features')
         step('build', [str(toolchain / 'cargo'), 'test', '--offline', '--locked', '--jobs', str(args.jobs),
                        '--manifest-path', str(source / 'nova-bitvm3/m14/e2e/Cargo.toml'),
                        '--target-dir', str(args.target.resolve()), '--test', 'garbled', '--no-run',
@@ -130,6 +149,11 @@ def run(args):
         if binary is None or not binary.is_file():
             raise ValueError('cargo did not identify the actual test executable')
         report.update(binary=str(binary), binary_sha256=sha(binary))
+        if args.build_only:
+            report.update(status='built_not_verified', cases=[], finished_at=datetime.now(timezone.utc).isoformat())
+            save()
+            print(json.dumps({'status': report['status'], 'report': str(output / 'report.json')}))
+            return 0
         step('transport', [str(binary), '--exact', 'testnet4_disk_transport_roundtrip_and_truncation', '--nocapture'], 60)
         step('run', [str(binary), '--exact', NAME, '--nocapture', '--test-threads=1'], args.timeout)
         cases = [json.loads(line.split('BITVM3_DEMO ', 1)[1]) for line in (output / 'run.log').read_text().splitlines()
@@ -158,6 +182,8 @@ def main():
     parser.add_argument('--jobs', type=int, choices=range(1, 5), default=2)
     parser.add_argument('--build-timeout', type=int, default=3600)
     parser.add_argument('--timeout', type=int, default=3600)
+    parser.add_argument('--aesni', action='store_true', help='verify x86 CPU support and enable the upstream AES-NI backend')
+    parser.add_argument('--build-only', action='store_true', help='precompile only; produces built_not_verified, never a passed receipt')
     return run(parser.parse_args())
 
 
