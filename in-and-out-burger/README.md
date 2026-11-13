@@ -51,6 +51,11 @@ credentials. It builds and tests the payout without broadcasting. Add
 `--broadcast --ledger /path/to/served.jsonl` to serve it on that zero-peer node.
 The existing served-outpoint journal protects the order across process restarts.
 Reserve lookup checks the actual unspent script and value before spending.
+That journal guards this desk, while consensus prevents reusing a spent reserve.
+There is no on-chain claim-history update: separately funding the same approved
+policy twice permits the approved payout twice. Fund each approval once. The
+replay explicitly confirms that a separately funded copy remains spendable;
+the rule is per reserve, not global uniqueness of the incoming payment.
 
 The reserve's Taproot leaf commits a domain-separated digest of
 the exact verified proof bytes, statement, gate policy, price list, payment

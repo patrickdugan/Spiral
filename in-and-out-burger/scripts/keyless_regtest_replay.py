@@ -193,6 +193,11 @@ def run(args):
         require(node.start()['blocks'] == height, 'restart lost height')
         require(node.rpc('gettxout', [funding_id, 0]) is None, 'restart restored spent reserve')
         require(node.rpc('gettxout', [funding_id, 1]) is not None, 'restart lost unused reserve')
+        second_copy = approval.spend(funding_id, 1).serialize().hex()
+        second_admission = node.rpc('testmempoolaccept', [[second_copy]])[0]
+        require(second_admission['allowed'] is True, 'identical approval should authorize a separately funded reserve')
+        report['positive_controls']['separately_funded_copy'] = {'raw': second_copy, 'dry_run': second_admission,
+                                                                'scope': 'Per-reserve output policy; no consensus claim-history state'}
         require(f.satoshis(node.rpc('gettxout', [payout_id, 0])['value']) == 948400, 'restart lost payout')
         journal_after = desk.serve(m, order, Ledger(str(ledger_path)), payer)
         require(journal_after['reason'] == 'already_served', 'restart lost served order')
