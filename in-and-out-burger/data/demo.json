@@ -1,0 +1,217 @@
+{
+ "generated_at": "2026-11-13T13:00:08Z",
+ "network": "testnet4",
+ "explorer": "https://mempool.space/testnet4",
+ "source": "https://github.com/patrickdugan/Spiral/tree/main/in-and-out-burger",
+ "addresses": {
+  "burger": "tb1qg6zhe7net4vvwkdu5z4dz8h6u82ymrwr4g6sp2",
+  "vault": "tb1pq7njka2euucx3g0e4lfp50nl7mt9x7320ljumay5zr8yve3zz6hsnleeau",
+  "payer": "mh1oFQ8y8QcpsqN2JgaL61jeJyJ8Yrz89h",
+  "payout": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2"
+ },
+ "payment": {
+  "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+  "vout": 0,
+  "sats": 11600,
+  "payer_pubkey": "03a45db72cb13408d46974bd4dec51ea4da1c15ff2ad4824edee46e8bf62baec97",
+  "block": 161011,
+  "confirmations_proven": 6
+ },
+ "statement": {
+  "sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+  "magic": "NHT4",
+  "anchor": {
+   "height": 160000,
+   "hash": "00000000000000008a2afdde1a0989dda3244912eaf994be05c952685e6bf5fd",
+   "chainwork": "0xf3abcb6e4839102f529"
+  },
+  "tip": {
+   "height": 161016,
+   "hash": "00000000027b3a9aba743bd9596b66ebd8abf8f79e3cd0ad127c8fa7c59c6fbd",
+   "chainwork": "0xf6876541088ff52b885"
+  },
+  "steps": 1016,
+  "checks_passed": 14,
+  "checks": 14,
+  "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60"
+ },
+ "payout_key": {
+  "tag": "IOB/payout-key",
+  "P": "03a45db72cb13408d46974bd4dec51ea4da1c15ff2ad4824edee46e8bf62baec97",
+  "t": "47ffc245bb83a71ad09bfe98bbe8180d50f407b9344e0780fdfef341a37943fa",
+  "P_prime": "02baeed47fe68eb4bcbd85c5c7785c13895ac46fb562ccc26987871ad845fa7516",
+  "script_pubkey": "76a914afe2d0d5a3f1a3c3fc1062771f0e023c956856e288ac",
+  "address": "mwYxG4Qpth2KEEgFgwovHGGXvDbyD9xcJ2",
+  "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+  "vout": 0
+ },
+ "pipeline": {
+  "nova": {
+   "anchor": 160000,
+   "tip": 161016,
+   "steps": 1016,
+   "fold_seconds": 1155,
+   "k": 1,
+   "nova_vk": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a"
+  },
+  "m16": {
+   "instructions": 21160588597,
+   "elf_sha256": "bb7d51b0352db50512ce4c6485d1a0b255a97dc05c3ebaf10ef7201604584790",
+   "program_vk_digest": "dfc68a5d579b86244a60ba0baee7852348cf0d2a3bb13910ebb95a3e625fcb60",
+   "cpu_execute_seconds": 1279
+  },
+  "gpu": {
+   "done": false,
+   "tasks_recorded": 765
+  },
+  "m14": {
+   "gates": 785442492,
+   "input_bits": 8635080,
+   "selftest": {
+    "verdict": "accept",
+    "ciphertexts": 785442492,
+    "seconds": 3607,
+    "peak_rss_gb": 17.6,
+    "proof": "nova-bitvm3/m13/fixtures/m16-wrap-blake3-v2.bin",
+    "statement": "nova-bitvm3/m13/fixtures/m16-statement.json"
+   }
+  }
+ },
+ "instances": [
+  {
+   "name": "honest",
+   "title": "Honest claim",
+   "story": "The claimant hands over the labels of the real testnet4 proof. The circuit outputs accept, nobody can disprove, and the payout to P' matures after 6 blocks.",
+   "stage": "vault_funded",
+   "vault": {
+    "outpoint": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e:0",
+    "sats": 25000
+   },
+   "graph": null,
+   "evaluation": null,
+   "txids": {
+    "claim": null,
+    "payout": null,
+    "disprove": null,
+    "sweep": null
+   }
+  },
+  {
+   "name": "tampered-proof",
+   "title": "Tampered proof",
+   "story": "The same proof with one input bit flipped. The circuit outputs reject; the challenger spends the disprove leaf with that label and the bond goes back to the desk.",
+   "stage": "vault_funded",
+   "vault": {
+    "outpoint": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e:1",
+    "sats": 10000
+   },
+   "graph": null,
+   "evaluation": null,
+   "txids": {
+    "claim": null,
+    "payout": null,
+    "disprove": null,
+    "sweep": null
+   }
+  },
+  {
+   "name": "wrong-statement",
+   "title": "Wrong statement",
+   "story": "A valid proof of a different payment (the M16 mainnet one). The circuit pins this order's statement, so it outputs reject and the claim is disproved.",
+   "stage": "vault_funded",
+   "vault": {
+    "outpoint": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e:2",
+    "sats": 10000
+   },
+   "graph": null,
+   "evaluation": null,
+   "txids": {
+    "claim": null,
+    "payout": null,
+    "disprove": null,
+    "sweep": null
+   }
+  }
+ ],
+ "transactions": [
+  {
+   "kind": "payment",
+   "instance": null,
+   "txid": "11c18d7c51cb6c20ece374bd3b70a09aa965d31dbb1ef3e3cd504277b301aa0e",
+   "vsize": 188,
+   "note": "tb1qg6zhe7net4vvwkdu5z4dz8h6u82ymrwr4g6sp2"
+  },
+  {
+   "kind": "payer_funding",
+   "instance": null,
+   "txid": "e52eae5cbe2f01cd7dd8a9ff5a1a5763f3d9812a0bb7a90e61fac651a347f754",
+   "vsize": 366,
+   "note": "m16 wallet -> payer P2PKH, output 1 = 12,000"
+  },
+  {
+   "kind": "vault_funding",
+   "instance": null,
+   "txid": "7b4a8b64aebc14f82c6c87174652567baaa13c4e2368cbd9729bfee0e989c04e",
+   "vsize": 329,
+   "note": "m16 wallet -> vaults: 0 honest 25,000; 1 tampered-proof 10,000; 2 wrong-statement 10,000"
+  }
+ ],
+ "probes": [],
+ "regtest": {
+  "all_pass": true,
+  "node": "/Satoshi:31.1.0/",
+  "checks": [
+   {
+    "check": "honest: disprove with the accept label refused",
+    "ok": true,
+    "detail": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+   },
+   {
+    "check": "honest: payout at 3 confirmations of the claim refused",
+    "ok": true,
+    "detail": "non-BIP68-final"
+   },
+   {
+    "check": "honest: payout at 5 confirmations refused",
+    "ok": true,
+    "detail": "non-BIP68-final"
+   },
+   {
+    "check": "honest: payout_to_payer_old_address refused",
+    "ok": true,
+    "detail": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+   },
+   {
+    "check": "honest: payout_to_claimant refused",
+    "ok": true,
+    "detail": "mempool-script-verify-flag-failed (Invalid Schnorr signature)"
+   },
+   {
+    "check": "honest: disprove_with_random_label refused",
+    "ok": true,
+    "detail": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)"
+   },
+   {
+    "check": "honest: payout accepted at 6 confirmations",
+    "ok": true
+   },
+   {
+    "check": "honest: payout confirmed to P'",
+    "ok": true
+   },
+   {
+    "check": "honest: payer swept P' with p + t",
+    "ok": true
+   },
+   {
+    "check": "dishonest: claim output spent by the disprove",
+    "ok": true
+   },
+   {
+    "check": "dishonest: payout after the window has no input",
+    "ok": true,
+    "detail": "missing-inputs"
+   }
+  ]
+ }
+}
