@@ -1,4 +1,6 @@
 {
   "url": "https://raw.githubusercontent.com/bitcoin/bips/master/bip-0340/test-vectors.csv",
-  "sha256": "34c9d1d9c3a88d524bc80778540dc43f8306ec249a7485293063c376db851c2d"
+  "download_sha256": "34c9d1d9c3a88d524bc80778540dc43f8306ec249a7485293063c376db851c2d",
+  "fixture_sha256": "01c8cabba63b4c9b2f44c975902990086a4fe56eee9d265b187d1e2c1d98ccfb",
+  "normalization": "CRLF to LF only; parsed CSV rows verified unchanged"
 }

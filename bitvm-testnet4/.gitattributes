@@ -3,4 +3,5 @@
 *.json text eol=lf
 *.ps1 text eol=lf
 *.rs.inc text eol=lf
-tests/data/bip340.csv -text
+.gitattributes text eol=lf
+tests/data/bip340.csv text eol=lf
