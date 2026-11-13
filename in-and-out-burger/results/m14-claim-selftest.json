@@ -1,0 +1,21 @@
+{
+ "what": "m14-claim (nova-bitvm3/m14/e2e/src/bin/m14-claim.rs) on the M16 mainnet final proof under its own statement, garbler seed 0123456789abcdef (a test seed)",
+ "proof": "nova-bitvm3/m13/fixtures/m16-wrap-blake3-v2.bin",
+ "proof_sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3",
+ "statement": "nova-bitvm3/m13/fixtures/m16-statement.json",
+ "statement_sha256": "9f2824907a5af8bd2838f4fb3554775223cd01f8cff538d3dc3a69ee6f154528",
+ "verdict": "accept",
+ "ciphertexts": 785442492,
+ "input_bits": 8635080,
+ "seconds": 3607,
+ "peak_rss_gb": 17.6,
+ "wall": "1:00:09",
+ "garbler_commitment_blake3": "7f3bd430b701b1610a645255d4c35041b014fb75c6f5803001b9b05cc7cf4c10",
+ "evaluator_commitment_blake3": "7f3bd430b701b1610a645255d4c35041b014fb75c6f5803001b9b05cc7cf4c10",
+ "setup": {
+  "seconds": 998,
+  "peak_rss_gb": 10.1,
+  "same_commitment_and_labels": true
+ },
+ "host": "WSL2 on the 2026-11-13 laptop, shared with other jobs (wall time is not a benchmark)"
+}

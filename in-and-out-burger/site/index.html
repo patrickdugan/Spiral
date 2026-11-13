@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-and-Out-Burger</title>
+<meta name="description" content="Pay in to a testnet4 address, prove it with zero knowledge, and a BitVM vault pays you back at a key only you can spend.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 30c0-12 11-20 24-20s24 8 24 20z' fill='%23E8A33D'/%3E%3Crect x='6' y='33' width='52' height='7' rx='3' fill='%234C9A4A'/%3E%3Crect x='8' y='41' width='48' height='7' rx='3' fill='%23733F28'/%3E%3Cpath d='M8 51h48c0 5-4 7-8 7H16c-4 0-8-2-8-7z' fill='%23E8A33D'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">testnet4 · Nova + SP1 + garbled M14 · trusted BitVM setup</p>
+    <h1>In-and-Out-Burger</h1>
+    <p class="lede">Pay in to the burger's address. A zero-knowledge proof shows the payment confirmed. A BitVM vault
+      then pays the bond out to a fresh key derived from yours, one only you can spend. A fancy way of getting your money back.</p>
+    <div class="flow" id="flow" aria-label="The order's path from payment to payout"></div>
+    <p class="flow-note" id="flow-note"></p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="order">
+    <h2>The order, on testnet4</h2>
+    <p class="sub">Every transaction below is on the public testnet4 chain. Confirmations are read live from
+      <a id="explorer-link" href="https://mempool.space/testnet4" target="_blank" rel="noopener">mempool.space</a>
+      <span id="tip-pill" class="pill quiet">tip …</span></p>
+    <ol class="timeline" id="timeline"></ol>
+  </section>
+
+  <section id="claims">
+    <h2>Three claims, one verdict each</h2>
+    <p class="sub">Three vaults, three claims against the same order. The garbled verifier decides; Bitcoin enforces what follows.</p>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="claim" id="claim"></div>
+  </section>
+
+  <section id="key">
+    <h2>Your money back, at a key only you can spend</h2>
+    <p class="sub">The payer revealed a public key P when they paid. The payout goes to P′ = P + t·G, with
+      t = SHA-256 tagged hash of the payment outpoint and P. Only the payer knows p, so only they can spend at p + t.</p>
+    <div class="keybox" id="keybox"></div>
+    <button class="btn" id="recompute">Recompute in this browser</button>
+    <div class="verify" id="verify" aria-live="polite"></div>
+  </section>
+
+  <section id="refused">
+    <h2>What Bitcoin refused</h2>
+    <p class="sub">Counterexamples run against Bitcoin Core 31.1. Each was refused for the reason shown, and none of them pays P′.</p>
+    <div class="refusals" id="refusals"></div>
+  </section>
+
+  <section id="trust">
+    <h2>What you are trusting</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Bitcoin enforces</h3>
+        <ul>
+          <li>Only the claimant starts a claim, and the claim commits to the statement, the garbled circuit and the payout script.</li>
+          <li>The payout goes to P′ and nowhere else: the desk's presignature covers its outputs.</li>
+          <li>The payout waits 6 blocks after the claim.</li>
+          <li>Only this claim's reject label can spend the disprove leaf.</li>
+        </ul>
+      </div>
+      <div class="card warn">
+        <h3>Trusted setup (this demo)</h3>
+        <ul>
+          <li>The desk presigns the graph for each order, a committee of one, in place of a covenant.</li>
+          <li>Nobody checks the garbled tables are a correct garbling of M14 (no cut-and-choose).</li>
+          <li>The input labels of the proof are handed over off-chain.</li>
+          <li>The Nova chain starts from a checkpoint at block 160,000 that the desk pins against its own node, not from genesis.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Source: <a id="source-link" href="https://github.com/patrickdugan/Spiral/tree/main/in-and-out-burger">Spiral / in-and-out-burger</a>.
+    Proof stack: garbled-snark-verifier <code>nova-bitvm3</code> (M16 guest, M13 wrap, M14 garbled verifier).
+    Data <span id="generated"></span>.</p>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

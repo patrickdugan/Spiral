@@ -276,6 +276,30 @@ Linux gate from Windows through `wsl.exe`.
 
 Orders settle in hours, not minutes, because the proof dominates.
 
+## Demo page
+
+https://patrickdugan.github.io/Spiral/in-and-out-burger/ shows the testnet4 order end to end:
+- the payment to the burger address;
+- the three bonded vaults: an honest claim, a tampered proof and a wrong statement;
+- the Nova checkpoint segment and the M16 statement;
+- the garbled M14 verdict for each claim;
+- the payout to P′.
+
+The page reads `site/data/demo.json` and asks mempool.space for live testnet4 confirmations, so
+claims and payouts show up as they confirm. It recomputes t, P′ and the payout address in the
+browser with its own secp256k1, SHA-256 and RIPEMD-160 code, and lists the counterexamples Bitcoin
+Core refused. It runs on the trusted BitVM setup described below.
+
+Refresh the data after the run writes new state, then push to main;
+`.github/workflows/iob-pages.yml` copies `site/` to the `gh-pages` branch under
+`in-and-out-burger/`:
+
+```
+python scripts/build_site_data.py --state C:\BitcoinTestnet\iob-bitvm3 [--gpu-tasks N]
+```
+
+The builder reads only public state files: never `keys.json` or `m14-seeds.json`.
+
 ## What is missing for a trustless BitVM3 refill
 
 In this design the desk fronts every payout from its own float: once the proof checks out, the
@@ -364,6 +388,9 @@ OP_CHECKCONTRACTVERIFY could hold the connectors. None of these is active on mai
   payouts, payer sweeps, and public result recording; mainnet is refused.
 - `scripts/bitvm3_regtest.py`: the isolated Bitcoin Core rehearsal of that graph.
 - `scripts/fetch_testnet4.py`: header and payment inputs for the testnet4 proof.
+- `site/` (`index.html`, `style.css`, `app.js`, `data/demo.json`): the demo page;
+  `scripts/build_site_data.py` writes its data. `results/m14-claim-selftest.json`: `m14-claim`
+  on the M16 mainnet proof.
 - `iob/menu.py`: the menu and pricing.
 - `iob/gate.py`: running `kan-payment-gate`.
 - `iob/ledger.py`: the served-outpoint journal.

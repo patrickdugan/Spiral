@@ -1,0 +1,47 @@
+name: iob-pages
+
+# Publishes the In-and-Out-Burger demo page (in-and-out-burger/site) to the gh-pages branch under
+# in-and-out-burger/, served at https://patrickdugan.github.io/Spiral/in-and-out-burger/.
+# Everything else on gh-pages is left as it is.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "in-and-out-burger/site/**"
+      - ".github/workflows/iob-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iob-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+      - name: Check the page's data parses
+        run: python3 -c "import json; d = json.load(open('src/in-and-out-burger/site/data/demo.json')); assert d['network'] == 'testnet4'; print(d['generated_at'], len(d['transactions']), 'transactions')"
+      - name: Copy the site into gh-pages/in-and-out-burger
+        run: |
+          rm -rf pages/in-and-out-burger
+          mkdir -p pages/in-and-out-burger
+          cp -r src/in-and-out-burger/site/. pages/in-and-out-burger/
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A in-and-out-burger
+          if git diff --cached --quiet; then echo "page unchanged"; exit 0; fi
+          git commit -m "In-and-Out-Burger demo page from ${GITHUB_SHA::7}"
+          git push origin gh-pages
+          echo "::notice::published in-and-out-burger/ from ${GITHUB_SHA::7}"
