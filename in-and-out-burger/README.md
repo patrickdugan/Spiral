@@ -88,7 +88,7 @@ replay neither runs Nova proving nor generates a new GPU proof.
 ### Executed integration replay (2026-11-13)
 
 [The complete receipt](results/keyless-regtest-proven.json) records source
-`2836d657065a8a70e73d0c5c50b32c29e26ea2ef` and the exact node, verifier and proof
+`93f32a1c939b32357abb2a9fb81da2b764d934dc` and the exact node, verifier and proof
 digests. It used the existing real M16 wrap and an existing native bitcoin-rs
 research build at `13d3179e656a9f23b8da66625d4e16f3c064bca1`. The Rust sources under
 `crates/` and `bin/` are unchanged between that build and PR #2's `cbc0a28` head.
@@ -101,6 +101,7 @@ research build at `13d3179e656a9f23b8da66625d4e16f3c064bca1`. The Rust sources u
 | Recipient, value, link, output order, transaction context, extra input, approval commitment, annex and witness-width mutations | 16 refused by mempool and direct block validation; height stayed 102 |
 | Approved payout | 948,400 sats to `bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6`, plus IOBP, confirmed at height 103; 2,000-sat mining fee |
 | Journal and spent-input replay, before and after restart | `already_served` and `missing-inputs` |
+| Separately funded copy of the same approval | accepted by mempool; this route has no consensus claim-history state |
 | Node shutdown and network isolation | exits `[0, 0]`, zero peers |
 
 The initial annex-based representation failed standard relay policy. Its
