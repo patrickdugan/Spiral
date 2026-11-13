@@ -2,6 +2,11 @@
 
 #[test]
 fn testnet4_nova_demo_accepts_and_rejects() {
+    let selected = std::env::var("BITVM_DEMO_CASE").ok();
+    if let Some(name) = &selected {
+        assert!(["real-nova-proof", "tampered-proof-input", "wrong-statement"].contains(&name.as_str()));
+    }
+    let mut completed = 0;
     let shape = native::load(native::FIXTURE_V2);
     let proof = native::load(A_PROOF);
     let expected: m13_verify::FinalStatement = serde_json::from_slice(&std::fs::read(A_STATEMENT).unwrap()).unwrap();
@@ -19,11 +24,14 @@ fn testnet4_nova_demo_accepts_and_rejects() {
         ("tampered-proof-input", expected, tampered, false),
         ("wrong-statement", other, original, false),
     ] {
+        if selected.as_ref().is_some_and(|wanted| wanted != name) { continue; }
         let started = std::time::Instant::now();
         let (accepted, rejected, gates) = demo_disk_garble_and_evaluate(&shape, &statement, bits);
         assert_eq!(gates, 785_442_492);
         assert_eq!(accepted, wanted, "{name}");
         assert_eq!(rejected, !wanted, "{name}");
+        completed += 1;
         eprintln!("BITVM3_DEMO {}", serde_json::json!({"case":name,"accepted":accepted,"rejected":rejected,"ciphertexts":gates,"input_bits":8_635_080,"seconds":started.elapsed().as_secs_f64()}));
     }
+    assert_eq!(completed, if selected.is_some() { 1 } else { 3 });
 }

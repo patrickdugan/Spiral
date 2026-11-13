@@ -65,7 +65,9 @@ def run(args):
               'offline': True, 'gpu_proving': False, 'steps': [],
               'scope': 'Actual M14 functional garbling/evaluation; no OT, cut-and-choose or Bitcoin dispute transaction graph'}
     def save():
-        (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+        temporary = output / 'report.tmp.json'
+        temporary.write_text(json.dumps(report, indent=2) + '\n')
+        temporary.replace(output / 'report.json')
     def step(name, argv, timeout):
         log = output / (name + '.log')
         start = time.monotonic()
@@ -91,6 +93,7 @@ def run(args):
                 code = process.returncode
         report['steps'].append({'name': name, 'command': argv, 'exit_code': code,
                                 'timed_out': timed_out, 'seconds': time.monotonic() - start,
+                                'selected_case': env.get('BITVM_DEMO_CASE'),
                                 'log_sha256': sha(log)})
         save()
         if code or timed_out:
@@ -155,9 +158,19 @@ def run(args):
             print(json.dumps({'status': report['status'], 'report': str(output / 'report.json')}))
             return 0
         step('transport', [str(binary), '--exact', 'testnet4_disk_transport_roundtrip_and_truncation', '--nocapture'], 60)
-        step('run', [str(binary), '--exact', NAME, '--nocapture', '--test-threads=1'], args.timeout)
-        cases = [json.loads(line.split('BITVM3_DEMO ', 1)[1]) for line in (output / 'run.log').read_text().splitlines()
-                 if 'BITVM3_DEMO ' in line]
+        cases = []
+        case_order = ['wrong-statement', 'real-nova-proof', 'tampered-proof-input']
+        report.update(case_isolation='fresh process per full evaluation', timeout_seconds_per_case=args.timeout)
+        for case in case_order:
+            env['BITVM_DEMO_CASE'] = case
+            step('run-' + case, [str(binary), '--exact', NAME, '--nocapture', '--test-threads=1'], args.timeout)
+            observed = [json.loads(line.split('BITVM3_DEMO ', 1)[1])
+                        for line in (output / ('run-' + case + '.log')).read_text().splitlines() if 'BITVM3_DEMO ' in line]
+            if len(observed) != 1 or observed[0]['case'] != case:
+                raise ValueError('isolated process did not execute exactly the requested full case')
+            cases += observed
+            report['cases'] = cases
+            save()
         if len(cases) != 3 or {item['case'] for item in cases} != {'real-nova-proof', 'tampered-proof-input', 'wrong-statement'}:
             raise ValueError('missing verifier cases')
         for item in cases:
@@ -165,6 +178,7 @@ def run(args):
             if (item['accepted'] is not wanted or item['rejected'] is wanted or
                     item['ciphertexts'] != 785442492 or item['input_bits'] != 8635080):
                 raise ValueError('verifier result or circuit dimensions differ')
+        report['steps'].append({'name': 'run', 'exit_code': 0, 'scope': 'Aggregate of three successful isolated case processes; see run-* steps for commands'})
         report.update(status='passed', cases=cases)
     except Exception as error:
         report.update(status='blocked_or_failed', error=f'{type(error).__name__}: {error}')
