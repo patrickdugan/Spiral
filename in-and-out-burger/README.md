@@ -52,13 +52,13 @@ credentials. It builds and tests the payout without broadcasting. Add
 The existing served-outpoint journal protects the order across process restarts.
 Reserve lookup checks the actual unspent script and value before spending.
 
-The reserve commits an approval annex containing a domain-separated digest of
+The reserve's Taproot leaf commits a domain-separated digest of
 the exact verified proof bytes, statement, gate policy, price list, payment
 outpoint, derived recipient, payout amount, mining fee and IOBP link. The proof
 is snapshotted before verification, so its recorded digest describes the bytes
 the verifier consumed. Script reconstructs the default TapSighash with
 key_version 2. It fixes the complete two-output vector, one input's amount and
-sequence, version 2, locktime zero, input index zero and approval annex. The
+sequence, version 2, locktime zero, input index zero and absence of an annex. The
 remaining witness-supplied hash fields have exact widths. Spending requires no
 reserve signature.
 
@@ -74,7 +74,7 @@ The reproducible live test is `scripts/keyless_regtest_replay.py`. It requires
 explicit paths and SHA256 pins for the existing verifier, real M16 proof and
 patched node, plus the node's full source revision and bitcoin-rs fixture
 checkout. It verifies the real order before creating funds, tests malformed
-proofs and statements, rejects recipient, amount, link, annex, transaction
+proofs and statements, rejects recipient, amount, link, approval context, annex, transaction
 context and input-layout mutations in both mempool and block validation, then
 confirms the payout and checks journal and spent-input replay after restart.
 Use `--help` for the exact arguments and a fresh `--output` directory. The

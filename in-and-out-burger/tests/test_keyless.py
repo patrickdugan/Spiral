@@ -49,11 +49,11 @@ def test_transcript_matches_the_independent_bip341_reference(approved):
     spk, control = a.taproot()
     converted = reference.Tx((reference.Input(bytes.fromhex("12" * 32), 3, 950_400, spk),),
                              tuple(reference.Output(o.value, o.script_pubkey) for o in tx.outputs))
-    expected = reference.sigmsg(converted, 0, leaf=reference.tapleaf(a.script), annex=a.annex)
+    expected = reference.sigmsg(converted, 0, leaf=reference.tapleaf(a.script))
     assert a.sigmsg(tx) == expected
-    assert len(expected) == 244
+    assert len(expected) == 212
     assert expected[138:170] == a.outputs_hash
-    assert expected[175:207] == a.annex_hash
+    assert expected[170:175] == b"\x02\x00\x00\x00\x00"
     assert expected[-5:] == b"\x02\xff\xff\xff\xff"
     assert [len(v) for v in tx.inputs[0].witness[:3]] == [32, 32, 37]
     assert control[1:] == keyless.NUMS_X and len(control) == 33
@@ -67,7 +67,7 @@ def test_application_context_changes_the_funding_output(approved, field):
     record = json.loads(a.context_record)
     record[field] = "changed"
     other = replace(a, context_record=json.dumps(record, sort_keys=True, separators=(",", ":")).encode())
-    assert other.annex != a.annex and other.taproot()[0] != a.taproot()[0]
+    assert other.context != a.context and other.taproot()[0] != a.taproot()[0]
 
 
 @pytest.mark.parametrize("network", ["mainnet", "testnet4", "signet"])
@@ -152,6 +152,12 @@ def test_payer_spends_once_and_requires_exact_approved_arguments(approved):
     with pytest.raises(desk.PayError):
         payer.pay(a.recipient_script, a.payout_sats, a.link)
     assert node.calls.count("sendrawtransaction") == 1
+
+
+def test_dry_keyless_payout_does_not_claim_a_signature(approved, real_menu):
+    a, order = approved
+    result = desk.serve(real_menu, order, Ledger(None), keyless.KeylessPayer(Node(a), a, "12" * 32, 0))
+    assert result["status"] == "prepared_not_broadcast"
 
 
 def test_ambiguous_broadcast_preserves_the_ledger_reservation(approved, real_menu, tmp_path):

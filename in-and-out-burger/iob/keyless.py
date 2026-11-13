@@ -1,7 +1,7 @@
 """A verifier-approved payout reserve on isolated patched regtest.
 
 The host verifies M16 before approving this reserve. Script binds its complete
-output vector and approval annex; it does not execute the M16 or M14 verifier.
+output vector and approval commitment; it does not execute the M16 or M14 verifier.
 The NUMS P2TR reserve retains the BIP341 key-path discrete-log assumption.
 """
 from __future__ import annotations
@@ -42,10 +42,6 @@ class Approval:
         return ec.tagged_hash("IOB/Keyless-M16/v1", self.context_record)
 
     @property
-    def annex(self) -> bytes:
-        return b"\x50" + self.context
-
-    @property
     def reserve_sats(self) -> int:
         return self.payout_sats + self.mining_fee_sats
 
@@ -58,20 +54,17 @@ class Approval:
         return btc.sha256(b"".join(_output(o.value, o.script_pubkey) for o in self.outputs()))
 
     @property
-    def annex_hash(self) -> bytes:
-        return btc.sha256(btc.ser_compact(len(self.annex)) + self.annex)
-
-    @property
     def script(self) -> bytes:
         tag = btc.sha256(b"TapSighash")
         return b"".join((
+            btc.push(self.context), b"\x75",
             b"\x6b\x6b\x82", btc.push(b"\x20"), b"\x88",
             btc.push(b"\x00\x00" + struct.pack("<iI", 2, 0)), b"\x7c\x7e",
             btc.push(btc.sha256(struct.pack("<Q", self.reserve_sats))), b"\x7e\x6c\x82",
             btc.push(b"\x20"), b"\x88\x7e",
             btc.push(btc.sha256(struct.pack("<I", 0xfffffffd))), b"\x7e",
             btc.push(self.outputs_hash), b"\x7e",
-            btc.push(b"\x03\x00\x00\x00\x00" + self.annex_hash), b"\x7e\x6c\x82",
+            btc.push(b"\x02\x00\x00\x00\x00"), b"\x7e\x6c\x82",
             btc.push(b"\x25"), b"\x88\x7e", btc.push(tag + tag), b"\x7c\x7e\xa8",
             btc.push(TXCOMMIT_KEY), b"\xad\x51",
         ))
@@ -103,14 +96,14 @@ class Approval:
             btc.sha256(btc.ser_compact(len(spk)) + spk),
             btc.sha256(struct.pack("<I", item.sequence)),
             btc.sha256(b"".join(_output(o.value, o.script_pubkey) for o in tx.outputs)),
-            b"\x03\x00\x00\x00\x00", self.annex_hash,
+            b"\x02\x00\x00\x00\x00",
             self.leaf_hash, b"\x02\xff\xff\xff\xff",
         ))
 
     def witness(self, tx: btc.Tx) -> list[bytes]:
         msg = self.sigmsg(tx)
         _, control = self.taproot()
-        return [msg[10:42], msg[74:106], msg[207:], self.script, control, self.annex]
+        return [msg[10:42], msg[74:106], msg[175:], self.script, control]
 
     def spend(self, txid: str, vout: int) -> btc.Tx:
         try:
@@ -126,11 +119,11 @@ class Approval:
     def record(self) -> dict:
         spk, control = self.taproot()
         return {"status": "approved_keyless_reserve", "network": "regtest",
-                "verification": "host-M16", "consensus_policy": "fixed-approved-payout-and-annex",
+                "verification": "host-M16", "consensus_policy": "fixed-approved-payout-and-context",
                 "approval": json.loads(self.context_record), "context": self.context.hex(),
                 "reserve_sats": self.reserve_sats, "reserve_address": btc.spk_to_address(spk, "regtest"),
                 "script_pubkey": spk.hex(),
-                "script": self.script.hex(), "control": control.hex(), "annex": self.annex.hex(),
+                "script": self.script.hex(), "control": control.hex(),
                 "txcommit_key": TXCOMMIT_KEY.hex(), "key_version": 2}
 
 
@@ -198,7 +191,7 @@ class KeylessPayer:
         except (RPCError, Refusal) as error:
             raise desk.PayError(str(error), False) from None
         if not self.broadcast:
-            return {"txid": txid, "hex": raw, "broadcast": False}
+            return {"txid": txid, "hex": raw, "broadcast": False, "signed": False}
         try:
             sent = self.rpc.call("sendrawtransaction", raw)
         except RPCError as error:

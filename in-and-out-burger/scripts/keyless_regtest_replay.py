@@ -148,11 +148,13 @@ def run(args):
             tx.inputs[0].witness = approval.witness(tx)
             reject(name, tx)
         tx = clone()
-        tx.inputs[0].witness[-1] = tx.inputs[0].witness[-1][:-1] + bytes([tx.inputs[0].witness[-1][-1] ^ 1])
-        reject('approval_annex_changed', tx)
+        script = bytearray(tx.inputs[0].witness[-2])
+        script[1] ^= 1
+        tx.inputs[0].witness[-2] = bytes(script)
+        reject('approval_context_changed', tx)
         tx = clone()
-        tx.inputs[0].witness.pop()
-        reject('approval_annex_removed', tx)
+        tx.inputs[0].witness.append(b'\x50' + approval.context)
+        reject('unexpected_annex', tx)
         for name, index in [('prevouts_width', 0), ('spent_scripts_width', 1), ('extension_width', 2)]:
             tx = clone()
             tx.inputs[0].witness[index] += b'\x00'
@@ -160,13 +162,13 @@ def run(args):
         extra = f.Input(bytes.fromhex(funding_id)[::-1], 2, value - 2 * approval.reserve_sats - 2000, spk)
         two = f.Tx((f.Input(bytes.fromhex(funding_id)[::-1], 0, approval.reserve_sats, reserve_spk), extra),
                    tuple(f.Output(o.value, o.script_pubkey) for o in original.outputs))
-        msg = f.sigmsg(two, 0, leaf=f.tapleaf(approval.script), annex=approval.annex)
-        first_stack = [msg[10:42], msg[74:106], msg[207:], approval.script, approval.taproot()[1], approval.annex]
+        msg = f.sigmsg(two, 0, leaf=f.tapleaf(approval.script))
+        first_stack = [msg[10:42], msg[74:106], msg[175:], approval.script, approval.taproot()[1]]
         two_raw, _ = two.serialize([first_stack, [base.script, control]])
         reject('second_input_recommitted', btc.parse_tx(bytes.fromhex(two_raw)))
         admission = node.rpc('testmempoolaccept', [[original.serialize().hex()]])[0]
-        require(admission['allowed'] is True, 'approved payout rejected')
         report['positive_controls']['approved_payout'] = admission
+        require(admission['allowed'] is True, 'approved payout rejected')
         ledger_path = args.output / 'served.jsonl'
         rpc = RPC(f'http://127.0.0.1:{node.rpc_port}', user='research', password=node.password)
         payer = keyless.KeylessPayer(rpc, approval, funding_id, 0, True)

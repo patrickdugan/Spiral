@@ -241,5 +241,5 @@ def serve(menu: Menu, order: Order, ledger: Ledger, payer: Payer | None, *, allo
         res["status"] = "served"
     else:
         res["payout"]["hex"] = paid["hex"]
-        res["status"] = "signed_not_broadcast"
+        res["status"] = "prepared_not_broadcast" if paid.get("signed") is False else "signed_not_broadcast"
     return res
