@@ -80,6 +80,30 @@ confirms the payout and checks journal and spent-input replay after restart.
 Use `--help` for the exact arguments and a fresh `--output` directory. The
 replay neither runs Nova proving nor generates a new GPU proof.
 
+### Executed integration replay (2026-11-13)
+
+[The complete receipt](results/keyless-regtest-proven.json) records source
+`2836d657065a8a70e73d0c5c50b32c29e26ea2ef` and the exact node, verifier and proof
+digests. It used the existing real M16 wrap and an existing native bitcoin-rs
+research build at `13d3179e656a9f23b8da66625d4e16f3c064bca1`. The Rust sources under
+`crates/` and `bin/` are unchanged between that build and PR #2's `cbc0a28` head.
+
+| Check | Observed result |
+| --- | --- |
+| Python suite, including verifier process failures and unsigned payout status | 87 passed |
+| Real M16 final proof | accepted by the installed `kan-payment-gate` |
+| Missing, corrupt or truncated proof, changed statement or sender witness, policy and network mutations | 10 refused before funding |
+| Recipient, value, link, output order, transaction context, extra input, approval commitment, annex and witness-width mutations | 16 refused by mempool and direct block validation; height stayed 102 |
+| Approved payout | 948,400 sats to `bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6`, plus IOBP, confirmed at height 103; 2,000-sat mining fee |
+| Journal and spent-input replay, before and after restart | `already_served` and `missing-inputs` |
+| Node shutdown and network isolation | exits `[0, 0]`, zero peers |
+
+The initial annex-based representation failed standard relay policy. Its
+replacement commits the same approval in the Taproot leaf, so the passing run
+uses the existing relay checks. No consensus or relay rule was relaxed. The
+verifier-process regression tests first reproduced six failures, then passed
+after success responses were required to come from a successful process exit.
+
 ## What an order is
 
 | Part | Size | What it is |
