@@ -20,7 +20,7 @@ fn testnet4_nova_demo_accepts_and_rejects() {
         ("wrong-statement", other, original, false),
     ] {
         let started = std::time::Instant::now();
-        let (accepted, rejected, gates) = garble_and_evaluate(&shape, &statement, bits);
+        let (accepted, rejected, gates) = demo_disk_garble_and_evaluate(&shape, &statement, bits);
         assert_eq!(gates, 785_442_492);
         assert_eq!(accepted, wanted, "{name}");
         assert_eq!(rejected, !wanted, "{name}");

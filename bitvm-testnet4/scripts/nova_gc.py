@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import time
 
@@ -41,7 +42,7 @@ def prepare(source):
         raise ValueError('GSV source revision differs from the pinned fixture source')
     # Only the exact supplied overlay may change; preserve any other worker's files.
     original = git(source, 'show', 'HEAD:' + TEST).decode().replace('\r\n', '\n')
-    addition = (ROOT / 'nova/testnet4_garbled.rs.inc').read_text()
+    addition = (ROOT / 'nova/disk_transport.rs.inc').read_text() + (ROOT / 'nova/testnet4_garbled.rs.inc').read_text()
     current = (source / TEST).read_text()
     dirty = git(source, 'status', '--porcelain', '--untracked-files=all').decode().splitlines()
     if any(line[3:] != TEST for line in dirty):
@@ -107,6 +108,13 @@ def run(args):
                    RUSTC=str(toolchain / 'rustc'), RUSTDOC=str(toolchain / 'rustdoc'),
                    CARGO_PROFILE_TEST_DEBUG='0', CARGO_INCREMENTAL='0', CARGO_HUSKY_DONT_INSTALL_HOOKS='true',
                    RAYON_NUM_THREADS=str(args.jobs), CARGO_TERM_COLOR='never')
+        scratch = args.target.resolve() / 'demo-ciphertexts'
+        scratch.mkdir(parents=True, exist_ok=True)
+        if shutil.disk_usage(scratch).free < 13_000_000_000:
+            raise ValueError('sequential full garbling needs at least 13 GB of free scratch space')
+        env['BITVM_DEMO_CIPHERTEXT_DIR'] = str(scratch)
+        report.update(transport='temporary-file-sequential', scratch_bytes_per_case=785442492 * 16,
+                      transport_overlay_sha256=sha(ROOT / 'nova/disk_transport.rs.inc'))
         step('rustc', [str(toolchain / 'rustc'), '-Vv'], 30)
         step('cargo', [str(toolchain / 'cargo'), '-V'], 30)
         step('build', [str(toolchain / 'cargo'), 'test', '--offline', '--locked', '--jobs', str(args.jobs),
@@ -122,6 +130,7 @@ def run(args):
         if binary is None or not binary.is_file():
             raise ValueError('cargo did not identify the actual test executable')
         report.update(binary=str(binary), binary_sha256=sha(binary))
+        step('transport', [str(binary), '--exact', 'testnet4_disk_transport_roundtrip_and_truncation', '--nocapture'], 60)
         step('run', [str(binary), '--exact', NAME, '--nocapture', '--test-threads=1'], args.timeout)
         cases = [json.loads(line.split('BITVM3_DEMO ', 1)[1]) for line in (output / 'run.log').read_text().splitlines()
                  if 'BITVM3_DEMO ' in line]
@@ -148,7 +157,7 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--jobs', type=int, choices=range(1, 5), default=2)
     parser.add_argument('--build-timeout', type=int, default=3600)
-    parser.add_argument('--timeout', type=int, default=1800)
+    parser.add_argument('--timeout', type=int, default=3600)
     return run(parser.parse_args())
 
 

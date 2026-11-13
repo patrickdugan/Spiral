@@ -10,7 +10,7 @@ This directory stages three demos:
 
 The first two are fixed-claim fraud-proof primitives, not a complete BitVM bridge or dispute graph. Each wire's **claimed bit and opening hash are pinned in the funded Script**. A refutation succeeds only when the three openings match and the claimed NAND equation is false. A separate Schnorr-protected leaf refunds collateral after two blocks. Keys are generated freshly; example/public-vector keys never receive public test coins. The NUMS internal key is a Taproot construction, not P2MR.
 
-The Nova proof is real, and the M14 test runs all **785,442,492 non-free gates** with **8,635,080 input bits** in each of three cases. It uses the existing functional garbling helper's deterministic seed and streaming half-gates. It does not implement the deployed OT, cut-and-choose or Bitcoin dispute transaction graph. It reuses a completed proof and performs no GPU proving. Its optional Testnet4 `OP_RETURN` is `BVM3 || 01 || SHA256(canonical receipt)`: **a receipt commitment, not execution of Nova by Bitcoin**. Receipt format validation is not cryptographic proof authentication by the anchor.
+The Nova proof is real, and the M14 test runs all **785,442,492 non-free gates** with **8,635,080 input bits** in each of three cases. It uses the upstream deterministic seed and streaming half-gates API. To fit WSL RAM, the garbler and evaluator run sequentially through one **12,567,079,872-byte temporary ciphertext file** per case. The file is removed after each case; allow at least 13 GB of scratch disk space. A separate Rust test checks the file transport, including truncated records. Gate counts and all proof acceptance/rejection assertions remain enabled. It does not implement deployed OT, cut-and-choose or the Bitcoin dispute transaction graph. It reuses a completed proof and performs no GPU proving. Its optional Testnet4 `OP_RETURN` is `BVM3 || 01 || SHA256(canonical receipt)`: **a receipt commitment, not execution of Nova by Bitcoin**. Receipt format validation is not cryptographic proof authentication by the anchor.
 
 Public contracts use deployed opcodes and ordinary BIP340/BIP341 signatures (`key_version=0`). Experimental Keyless CHECKSIG/TXCOMMIT and CAT remain a separate patched-regtest research demo; public Testnet4 does not activate them.
 
@@ -46,10 +46,10 @@ python3 scripts/nova_gc.py \
   --toolchain /path/to/existing/rust-toolchain/bin \
   --target /path/to/dedicated-build-cache \
   --output /path/to/fresh-nova-run \
-  --jobs 2 --build-timeout 3600 --timeout 1800
+  --jobs 2 --build-timeout 3600 --timeout 3600
 ```
 
-This builds with `--offline --locked`, records exact commands, tool versions, fixture/source/diff/binary/log digests, and runs one test containing three full evaluations. Native final verification also checks the real proof and rejects the wrong statement. A timed-out build is a failed attempt; reuse its cache in a **fresh** output directory. Do not report a build-only run as verification.
+This builds with `--offline --locked`, records exact commands, tool versions, fixture/source/diff/binary/log digests, runs the transport integrity test and a second test containing three full evaluations. Native final verification also checks the real proof and rejects the wrong statement. A timed-out or stopped attempt is a failed attempt; reuse its cache in a **fresh** output directory. Do not report a build-only run as verification. The overlays only append tests; no upstream verifier code is changed.
 
 The inner compressed Nova proof is a separate 12,040-byte object inside the 12,596-byte `.nht4` bundle. Its SHA-256 is `66c903b0e23876bf7c50414d6b2bfe451a256a6f44a7ba0d5b1c27e30addd7e4`; the bundle SHA-256 is `ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c`. The guest statement binds the network, k=1, four steps, checkpoint, final state, verifier key and inner proof. This demo verifies the completed wrapper; it does not regenerate that expensive proof.
 

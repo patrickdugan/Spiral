@@ -42,7 +42,7 @@ def test_public_observer_requires_testnet4_identity_and_sync(chain, genesis, ibd
 def receipt():
     return {'status': 'passed', 'source': t.NOVA_SOURCE, 'proof_sha256': t.NOVA_PROOF,
             'statement_sha256': t.NOVA_STATEMENT, 'binary_sha256': 'ab' * 32,
-            'steps': [{'name': name, 'exit_code': 0} for name in ['rustc', 'cargo', 'build', 'run']],
+            'steps': [{'name': name, 'exit_code': 0} for name in ['rustc', 'cargo', 'build', 'transport', 'run']],
             'cases': [{'case': name, 'accepted': name == 'real-nova-proof', 'rejected': name != 'real-nova-proof',
                        'ciphertexts': 785442492, 'input_bits': 8635080}
                       for name in ['real-nova-proof', 'tampered-proof-input', 'wrong-statement']]}
