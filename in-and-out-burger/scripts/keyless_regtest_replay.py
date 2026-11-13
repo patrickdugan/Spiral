@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import platform
 import shutil
 import subprocess
 import sys
@@ -49,6 +50,8 @@ def run(args):
     report = {'status': 'running', 'started_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
               'command': sys.argv, 'binary_sha256': args.binary_sha256, 'binary_source': args.binary_source,
               'gate_sha256': args.gate_sha256, 'proof_sha256': args.proof_sha256,
+              'python': platform.python_version(), 'platform': platform.platform(),
+              'binary_version': subprocess.check_output([str(args.binary.resolve()), '--version'], text=True, timeout=30).strip(),
               'script_sha256': sha(Path(__file__)), 'helper_sha256': sha(Path(f.__file__)),
               'bitcoin_rs_checkout': subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
               'spiral_source': subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
@@ -111,7 +114,7 @@ def run(args):
         funding_block = node.rpc('generatetoaddress', [1, address])[0]
         require(funding_id in node.rpc('getblock', [funding_block])['tx'], 'funding not confirmed')
         report['funding'] = {'txid': funding_id, 'raw': funding_raw, 'block': funding_block, 'height': 102,
-                             'reserve_sats': approval.reserve_sats}
+                             'reserve_sats': approval.reserve_sats, 'block_raw': node.rpc('getblock', [funding_block, 0])}
         original = approval.spend(funding_id, 0)
         def clone():
             return btc.parse_tx(original.serialize())
@@ -183,16 +186,27 @@ def run(args):
         replay = desk.serve(m, order, Ledger(str(ledger_path)), payer)
         require(replay['reason'] == 'already_served', 'journal replay accepted')
         raw = original.serialize().hex()
-        require(node.rpc('testmempoolaccept', [[raw]])[0]['allowed'] is False, 'spent reserve replay accepted')
+        spent_before = node.rpc('testmempoolaccept', [[raw]])[0]
+        require(spent_before['allowed'] is False and spent_before['reject-reason'] == 'missing-inputs', 'spent reserve replay accepted')
         height = node.rpc('getblockcount')
         node.stop()
         require(node.start()['blocks'] == height, 'restart lost height')
         require(node.rpc('gettxout', [funding_id, 0]) is None, 'restart restored spent reserve')
         require(node.rpc('gettxout', [funding_id, 1]) is not None, 'restart lost unused reserve')
         require(f.satoshis(node.rpc('gettxout', [payout_id, 0])['value']) == 948400, 'restart lost payout')
-        require(desk.serve(m, order, Ledger(str(ledger_path)), payer)['reason'] == 'already_served', 'restart lost served order')
-        require(node.rpc('testmempoolaccept', [[raw]])[0]['allowed'] is False, 'restart accepted spent input')
+        journal_after = desk.serve(m, order, Ledger(str(ledger_path)), payer)
+        require(journal_after['reason'] == 'already_served', 'restart lost served order')
+        spent_after = node.rpc('testmempoolaccept', [[raw]])[0]
+        require(spent_after['allowed'] is False and spent_after['reject-reason'] == 'missing-inputs', 'restart accepted spent input')
+        report['replay'] = {'journal_before': replay, 'journal_after': journal_after,
+                            'spent_before': spent_before, 'spent_after': spent_after}
+        require(sha(args.binary) == args.binary_sha256 and sha(args.gate) == args.gate_sha256,
+                'executable identity changed during replay')
+        require(sha(args.proof) == args.proof_sha256, 'proof changed during replay')
+        require(not subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain'], text=True).strip(),
+                'Spiral source changed during replay')
         report.update(status='passed', served=served, payout_block=block, payout_txid=payout_id,
+                      payout_raw=raw, payout_block_raw=node.rpc('getblock', [block, 0]),
                       payout_sats=948400, final_height=height, restart_preserved=True,
                       peer_count=node.rpc('getconnectioncount'), proof_rejection_count=len(report['proof_rejections']),
                       consensus_rejection_count=len(report['consensus_rejections']))
