@@ -55,6 +55,9 @@ def main() -> int:
     regtest = load(os.path.join(ROOT, "results", "bitvm3-regtest.json"), {})
     selftest = load(os.path.join(ROOT, "results", "m14-claim-selftest.json"), {})
     wrap = load(os.path.join(a.state, "native-verify.json"), {})
+    summary = load(os.path.join(a.state, "summary.json"), {})
+    checks = load(os.path.join(a.state, "checks.json"), {})
+    receipts = {t["txid"]: t for t in summary.get("transactions", [])} if summary.get("network") == "testnet4" else {}
 
     def last(kind, instance=None, event=None):
         hits = [e for e in ev if e.get("kind") == kind and (instance is None or e.get("instance") == instance)
@@ -101,12 +104,28 @@ def main() -> int:
 
     probes = [e for e in ev if e.get("kind") in ("refusal_probe", "disprove_with_accept_label")]
     gpu_done = wrap.get("status") == "verified" and wrap.get("statement") == fs
+    transactions = [{"kind": e["kind"], "instance": e.get("instance"), "txid": e["txid"], "vsize": e.get("vsize"),
+                     "note": e.get("note") or e.get("to"),
+                     "block_height": receipts.get(e["txid"], {}).get("block_height"),
+                     "recorded_confirmations": receipts.get(e["txid"], {}).get("confirmations")}
+                    for e in ev if e.get("event") == "broadcast"]
+    final_checks = checks.get("checks", [])
+    mutations = next((c.get("detail", {}).get("cases") for c in final_checks
+                      if c["check"] == "guest mutation suite completed" and c["ok"]), None)
     st = sc or {}
     data = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "network": "testnet4",
         "explorer": EXPLORER,
         "source": "https://github.com/patrickdugan/Spiral/tree/main/in-and-out-burger",
+        "recording": {
+            "at": summary.get("recorded_at"), "tip": summary.get("tip"),
+            "complete": bool(checks.get("all_pass") and gpu_done and transactions
+                             and all((t["recorded_confirmations"] or 0) > 0 for t in transactions)),
+            "native_verified": gpu_done, "proof_sha256": checks.get("proof_sha256"),
+            "checks_passed": sum(1 for c in final_checks if c["ok"]), "checks": len(final_checks),
+            "guest_mutations_refused": mutations,
+        },
         "addresses": {
             "burger": pub["burger"]["address"],
             "vault": pub["vault"]["address"],
@@ -140,8 +159,7 @@ def main() -> int:
                     "selftest": {k: selftest.get(k) for k in ("verdict", "ciphertexts", "seconds", "peak_rss_gb", "proof", "statement")}},
         },
         "instances": instances,
-        "transactions": [{"kind": e["kind"], "instance": e.get("instance"), "txid": e["txid"], "vsize": e.get("vsize"),
-                          "note": e.get("note") or e.get("to")} for e in ev if e.get("event") == "broadcast"],
+        "transactions": transactions,
         "probes": probes,
         "regtest": {
             "all_pass": regtest.get("all_pass"), "node": regtest.get("node"),

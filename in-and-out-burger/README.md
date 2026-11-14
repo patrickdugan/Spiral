@@ -296,10 +296,14 @@ Refresh the data after the run writes new state, then push to main;
 `in-and-out-burger/`:
 
 ```
-python scripts/build_site_data.py --state C:\BitcoinTestnet\iob-bitvm3 [--gpu-tasks N]
+python scripts/build_site_data.py --state results/testnet4-bitvm3
 ```
 
 The builder reads only public state files: never `keys.json` or `m14-seeds.json`.
+The completed page lists all seven claim/disprove/payout/sweep explorer links, the final checks,
+and the derived-key spend. It uses the committed confirmation record when live explorer lookups
+are unavailable, labels those counts as recorded, and gives live status priority when available.
+For an in-progress run, pass its state directory instead of the completed public record.
 
 ## Testnet4 BitVM3 bonded payout (2026-11-14)
 

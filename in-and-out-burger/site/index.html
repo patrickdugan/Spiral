@@ -24,11 +24,25 @@
 </header>
 
 <main class="wrap">
+  <section id="results" aria-labelledby="results-title">
+    <h2 id="results-title">The testnet4 run</h2>
+    <div id="run-summary" class="card"></div>
+    <p class="sub receipt-note" id="chain-note" aria-live="polite">Loading the recorded confirmations…</p>
+    <div class="receipt-scroll">
+      <table class="receipts">
+        <caption class="sr-only">Claims, disproves, payout and derived-key sweep</caption>
+        <thead><tr><th scope="col">Transaction</th><th scope="col">Testnet4 explorer</th><th scope="col">Confirmations</th></tr></thead>
+        <tbody id="receipts"></tbody>
+      </table>
+    </div>
+    <p id="evidence" class="evidence"></p>
+  </section>
+
   <section id="order">
     <h2>The order, on testnet4</h2>
-    <p class="sub">Every transaction below is on the public testnet4 chain. Confirmations are read live from
+    <p class="sub">Every transaction below is on the public testnet4 chain. Live confirmations are read from
       <a id="explorer-link" href="https://mempool.space/testnet4" target="_blank" rel="noopener">mempool.space</a>
-      <span id="tip-pill" class="pill quiet">tip …</span></p>
+      <span id="tip-pill" class="pill quiet">tip …</span>. Recorded confirmations remain available when the explorer cannot be reached.</p>
     <ol class="timeline" id="timeline"></ol>
   </section>
 
