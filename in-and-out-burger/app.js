@@ -56,7 +56,8 @@ function knownTxids() {
 
 async function pollChain() {
   const tip = await fetch(`${API()}/blocks/tip/height`).then((r) => (r.ok ? r.text() : null)).catch(() => null);
-  if (tip) live.tip = Number(tip);
+  live.tip = tip && Number.isInteger(Number(tip)) ? Number(tip) : null;
+  live.tx = {};
   await Promise.all(knownTxids().map(async (txid) => {
     const s = await getJSON(`${API()}/tx/${txid}/status`);
     if (s) live.tx[txid] = s;
@@ -67,9 +68,14 @@ async function pollChain() {
 
 function confs(txid) {
   const s = live.tx[txid];
-  if (!s) return null;
-  if (!s.confirmed) return 0;
-  return live.tip ? live.tip - s.block_height + 1 : 1;
+  if (s && !s.confirmed) return 0;
+  if (s && live.tip !== null && live.tip >= s.block_height) return live.tip - s.block_height + 1;
+  return D.transactions.find((t) => t.txid === txid)?.recorded_confirmations ?? null;
+}
+
+function hasLiveStatus(txid) {
+  const s = live.tx[txid];
+  return !!s && (!s.confirmed || (live.tip !== null && live.tip >= s.block_height));
 }
 
 function confPill(txid) {
@@ -78,18 +84,27 @@ function confPill(txid) {
 }
 
 function renderLive() {
-  $("#tip-pill").textContent = live.tip ? `tip ${fmt(live.tip)}` : "live data unavailable";
+  $("#tip-pill").textContent = live.tip ? `live tip ${fmt(live.tip)}` : D.recording?.tip ? `recorded tip ${fmt(D.recording.tip)}` : "live data unavailable";
+  const recordedAt = D.recording?.at?.replace("T", " ").replace("Z", " UTC");
+  $("#chain-note").textContent = live.tip
+    ? "Live confirmations from mempool.space. Individual lookups fall back to the labelled recorded count when unavailable."
+    : recordedAt ? `Recorded confirmations as of ${recordedAt}. Live explorer data is unavailable.` : "Live explorer data is unavailable; no recorded confirmations are available.";
   document.querySelectorAll("[data-conf]").forEach((el) => {
     const txid = el.getAttribute("data-conf");
     const c = confs(txid);
-    if (c === null) { el.textContent = "not seen yet"; el.className = "pill wait"; }
-    else if (c === 0) { el.textContent = "in mempool"; el.className = "pill wait"; }
-    else { el.textContent = `${fmt(c)} conf`; el.className = "pill ok"; }
+    const source = hasLiveStatus(txid) ? "live" : "recorded";
+    el.title = source === "live" ? "Current explorer status" : `Snapshot from ${recordedAt || "the run record"}`;
+    if (c === null) { el.textContent = "status unavailable"; el.className = "pill quiet"; }
+    else if (c === 0) { el.textContent = source === "live" ? "in mempool" : "unconfirmed · recorded"; el.className = "pill wait"; }
+    else { el.textContent = `${fmt(c)} conf${source === "recorded" ? " · recorded" : ""}`; el.className = "pill ok"; }
   });
   const a = live.addr.payout;
   const bal = $("#payout-balance");
   if (bal) {
-    if (!a) bal.textContent = "–";
+    if (!a) {
+      const honest = D.instances.find((i) => i.name === "honest");
+      bal.textContent = honest?.txids.payout ? `${fmt(honest.graph.payout_sats)} sats in the recorded payout` : "–";
+    }
     else {
       const got = a.chain_stats.funded_txo_sum + a.mempool_stats.funded_txo_sum;
       bal.textContent = got ? `${fmt(got)} sats received (${a.chain_stats.tx_count + a.mempool_stats.tx_count} tx)` : "nothing yet";
@@ -115,6 +130,7 @@ function stages() {
     { t: "GPU proof", s: D.pipeline.gpu.done ? "proved and wrapped" : "proving", st: D.pipeline.gpu.done ? "done" : "run" },
     { t: "Garbled M14", s: `${(D.pipeline.m14.gates / 1e6).toFixed(0)}M gates`, st: honest && honest.evaluation ? (honest.evaluation.verdict === "accept" ? "done" : "bad") : (D.pipeline.gpu.done ? "run" : "wait") },
     { t: "BitVM payout", s: "to P′", st: payoutTx ? (payoutConf > 0 ? "done" : "run") : honest && honest.txids.claim ? "run" : "wait" },
+    { t: "Derived-key spend", s: "payer uses p + t", st: honest?.txids.sweep ? (confs(honest.txids.sweep) > 0 ? "done" : "run") : "wait" },
   ];
 }
 
@@ -126,6 +142,7 @@ const NOTES = [
   "SP1 proves that run on the GPU; M13 wraps it under BLAKE3 for the garbled verifier.",
   "M14 is that final verifier as one garbled circuit; the statement is a constant, the proof bits are the input.",
   "If no reject label turns up within 6 blocks of the claim, the presigned payout pays the bond to P′.",
+  "The payer spends the P′ output with p′ = p + t, demonstrating control of the derived key on chain.",
 ];
 
 let flowTimer = null;
@@ -161,6 +178,33 @@ function showNote(i) { $("#flow-note").textContent = `${i + 1}. ${NOTES[i]}`; }
 
 function txLine(label, txid) {
   return [h("dt", {}, label), h("dd", {}, h("a", { href: txUrl(txid), target: "_blank", rel: "noopener", class: "mono" }, short(txid, 10)), " ", confPill(txid))];
+}
+
+function renderResults() {
+  const r = D.recording || {};
+  const honest = D.instances.find((i) => i.name === "honest");
+  $("#results-title").textContent = r.complete ? "Completed on testnet4" : "The testnet4 run";
+  $("#run-summary").replaceChildren(
+    h("p", { class: "result-total" }, honest?.txids.payout ? `${fmt(honest.graph.payout_sats)} sats paid to P′` : "The three-claim demonstration"),
+    h("p", {}, r.complete ? "Both invalid claims were disproved. The honest payout and the payer’s derived-key sweep were confirmed." : "Follow the honest claim and its two counterexamples through the same verifier and claim graph."),
+    h("div", { class: "result-checks" }, pill(r.native_verified ? "Native proof verified" : "Proof pending", r.native_verified ? "ok" : "wait"),
+      ...(r.checks ? [pill(`${r.checks_passed}/${r.checks} final checks`, r.checks_passed === r.checks ? "ok" : "bad")] : []),
+      ...(r.guest_mutations_refused ? [pill(`${r.guest_mutations_refused} guest mutations refused`, "ok")] : []),
+      ...(D.regtest.checks.length ? [pill(`${D.regtest.checks.filter((c) => c.ok).length}/${D.regtest.checks.length} regtest checks`, D.regtest.all_pass ? "ok" : "bad")] : [])),
+    h("p", { class: "record-anchor" }, `Proof anchored at checkpoint ${fmt(D.statement.anchor.height)} → ${fmt(D.statement.tip.height)}. The committee-of-one trust assumptions below still apply.`));
+  const names = Object.fromEntries(D.instances.map((i) => [i.name, i.title]));
+  const labels = { claim: "claim", disprove: "disprove", payout: "Payout to P′", payer_sweep: "Derived-key sweep" };
+  const receipts = D.transactions.filter((t) => Object.hasOwn(labels, t.kind));
+  $("#receipts").replaceChildren(...receipts.map((t) => {
+    const label = ["claim", "disprove"].includes(t.kind) ? `${names[t.instance]} · ${labels[t.kind]}` : labels[t.kind];
+    return h("tr", { "data-kind": t.kind, "data-instance": t.instance },
+      h("th", { scope: "row" }, label),
+      h("td", {}, h("a", { href: txUrl(t.txid), target: "_blank", rel: "noopener", class: "mono", title: t.txid, "aria-label": `View ${label} on the testnet4 explorer` }, short(t.txid, 10))),
+      h("td", {}, confPill(t.txid)));
+  }));
+  const recordUrl = `${D.source}/results/testnet4-bitvm3`;
+  $("#evidence").replaceChildren(h("a", { href: recordUrl, target: "_blank", rel: "noopener" }, "Public proof and transaction record"),
+    ...(r.checks ? [" · ", h("a", { href: `${recordUrl}/checks.json`, target: "_blank", rel: "noopener" }, "Final verification checks")] : []));
 }
 
 function renderTimeline() {
@@ -247,7 +291,7 @@ function renderClaim() {
     h("div", { class: "script mono" }, `OP_SHA256 <${i.graph ? short(i.graph.reject_label_sha256, 6) : "H(reject label)"}> OP_EQUALVERIFY <watchtower> OP_CHECKSIG`));
   const graph = h("div", { class: "graph" }, vault, h("div", {}, h("div", { class: "arrow" }, "→"), claim), h("div", { class: "leaves" }, pay, dis));
 
-  const step = (label, status, detail) => h("li", {}, status, h("span", {}, h("b", {}, label), " ", detail || ""));
+  const step = (label, status, ...detail) => h("li", {}, status, h("span", {}, h("b", {}, label), " ", ...detail));
   const txa = (txid) => (txid ? [h("a", { href: txUrl(txid), target: "_blank", rel: "noopener", class: "mono" }, short(txid, 8)), " ", confPill(txid)] : []);
   const steps = h("ul", { class: "steps" },
     step("Graph signed", i.graph ? pill("done", "ok") : pill("pending", "wait"),
@@ -397,6 +441,7 @@ async function main() {
   $("#explorer-link").href = D.explorer;
   $("#source-link").href = D.source;
   $("#generated").textContent = `refreshed ${D.generated_at.replace("T", " ").replace("Z", " UTC")}`;
+  renderResults();
   renderTimeline();
   renderTabs();
   renderClaim();
