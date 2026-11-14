@@ -28,6 +28,88 @@ lists what it needs.
 - **Dynamic amount.** The payout follows a price list: a rate per tier of payment size, a flat
   fee, a cap, and Core's dust limits.
 
+## Keyless CHECKSIG payout integration
+
+`python -m iob keyless-order` verifies the same real M16 proof through
+`kan-payment-gate`, applies the existing menu, sender and price checks, and emits
+a NUMS P2TR reserve for that approved order. The new route requires a proof,
+an IOBP link and an outgoing `regtest` menu. It has no unproven-order option.
+
+```sh
+python3 -m iob keyless-order --menu menus/m16-mainnet-replay.json \
+  --statement fixtures/m16-mainnet/statement.bin \
+  --tx fixtures/m16-mainnet/payment-tx.hex \
+  --sender-proof fixtures/m16-mainnet/sender-proof.json \
+  --proof /path/to/m16-wrap-blake3-v2.bin
+```
+
+The funding plan includes `reserve_address` and `reserve_sats`. Fund that address
+only on an isolated patched regtest node with the Keyless CHECKSIG and CAT
+features from [bitcoin-rs PR #2](https://github.com/patrickdugan/bitcoin-rs/pull/2).
+Then repeat the command with `--reserve TXID:VOUT --rpc-url URL` and RPC
+credentials. It builds and tests the payout without broadcasting. Add
+`--broadcast --ledger /path/to/served.jsonl` to serve it on that zero-peer node.
+The existing served-outpoint journal protects the order across process restarts.
+Reserve lookup checks the actual unspent script and value before spending.
+That journal guards this desk, while consensus prevents reusing a spent reserve.
+There is no on-chain claim-history update: separately funding the same approved
+policy twice permits the approved payout twice. Fund each approval once. The
+replay explicitly confirms that a separately funded copy remains spendable;
+the rule is per reserve, not global uniqueness of the incoming payment.
+
+The reserve's Taproot leaf commits a domain-separated digest of
+the exact verified proof bytes, statement, gate policy, price list, payment
+outpoint, derived recipient, payout amount, mining fee and IOBP link. The proof
+is snapshotted before verification, so its recorded digest describes the bytes
+the verifier consumed. Script reconstructs the default TapSighash with
+key_version 2. It fixes the complete two-output vector, one input's amount and
+sequence, version 2, locktime zero, input index zero and absence of an annex. The
+remaining witness-supplied hash fields have exact widths. Spending requires no
+reserve signature.
+
+This integrates the existing **host M16 verifier** with a **consensus-enforced
+approved payout**. The operator verifies the order before funding its reserve.
+Bitcoin Script does not run M16 or M14 in this route, and an untrusted operator
+can still fund a different policy. It does not implement the BitVM claim,
+challenge and disprove graph or a trustless vault refill. NUMS P2TR retains its
+key-path discrete-log assumption and is distinct from P2MR. The draft opcodes
+remain disabled on public Testnet4 and mainnet.
+
+The reproducible live test is `scripts/keyless_regtest_replay.py`. It requires
+explicit paths and SHA256 pins for the existing verifier, real M16 proof and
+patched node, plus the node's full source revision and bitcoin-rs fixture
+checkout. It verifies the real order before creating funds, tests malformed
+proofs and statements, rejects recipient, amount, link, approval context, annex, transaction
+context and input-layout mutations in both mempool and block validation, then
+confirms the payout and checks journal and spent-input replay after restart.
+Use `--help` for the exact arguments and a fresh `--output` directory. The
+replay neither runs Nova proving nor generates a new GPU proof.
+
+### Executed integration replay (2026-11-13)
+
+[The complete receipt](results/keyless-regtest-proven.json) records source
+`93f32a1c939b32357abb2a9fb81da2b764d934dc` and the exact node, verifier and proof
+digests. It used the existing real M16 wrap and an existing native bitcoin-rs
+research build at `13d3179e656a9f23b8da66625d4e16f3c064bca1`. The Rust sources under
+`crates/` and `bin/` are unchanged between that build and PR #2's `cbc0a28` head.
+
+| Check | Observed result |
+| --- | --- |
+| Python suite, including verifier process failures and unsigned payout status | 87 passed |
+| Real M16 final proof | accepted by the installed `kan-payment-gate` |
+| Missing, corrupt or truncated proof, changed statement or sender witness, policy and network mutations | 10 refused before funding |
+| Recipient, value, link, output order, transaction context, extra input, approval commitment, annex and witness-width mutations | 16 refused by mempool and direct block validation; height stayed 102 |
+| Approved payout | 948,400 sats to `bcrt1qf33qwl5845afqf28e9jedrvjfajtgg0g0slpt6`, plus IOBP, confirmed at height 103; 2,000-sat mining fee |
+| Journal and spent-input replay, before and after restart | `already_served` and `missing-inputs` |
+| Separately funded copy of the same approval | accepted by mempool; this route has no consensus claim-history state |
+| Node shutdown and network isolation | exits `[0, 0]`, zero peers |
+
+The initial annex-based representation failed standard relay policy. Its
+replacement commits the same approval in the Taproot leaf, so the passing run
+uses the existing relay checks. No consensus or relay rule was relaxed. The
+verifier-process regression tests first reproduced six failures, then passed
+after success responses were required to come from a successful process exit.
+
 ## What an order is
 
 | Part | Size | What it is |

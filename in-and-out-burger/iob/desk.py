@@ -19,6 +19,7 @@ import os
 import struct
 import tempfile
 from dataclasses import dataclass
+from typing import Protocol
 
 from . import btc, gate, payout_key, policy, sender, statement
 from .errors import Refusal
@@ -167,6 +168,10 @@ class PayError(Exception):
         self.broadcast_attempted = broadcast_attempted
 
 
+class Payer(Protocol):
+    def pay(self, spk: bytes, sats: int, link: bytes | None) -> dict: ...
+
+
 class CorePayer:
     """Pays from a Bitcoin Core wallet: fund, sign, check the transaction pays exactly what the
     desk priced, test mempool acceptance, then broadcast. Mainnet broadcast needs
@@ -211,7 +216,7 @@ class CorePayer:
         return {"txid": sent, "hex": raw, "broadcast": True}
 
 
-def serve(menu: Menu, order: Order, ledger: Ledger, payer: CorePayer | None, *, allow_unproven: bool = False) -> dict:
+def serve(menu: Menu, order: Order, ledger: Ledger, payer: Payer | None, *, allow_unproven: bool = False) -> dict:
     """evaluate(), then reserve the outpoint and pay. Without a payer, stop at the priced order."""
     try:
         res = evaluate(menu, order, ledger, allow_unproven=allow_unproven)
@@ -236,5 +241,5 @@ def serve(menu: Menu, order: Order, ledger: Ledger, payer: CorePayer | None, *, 
         res["status"] = "served"
     else:
         res["payout"]["hex"] = paid["hex"]
-        res["status"] = "signed_not_broadcast"
+        res["status"] = "prepared_not_broadcast" if paid.get("signed") is False else "signed_not_broadcast"
     return res

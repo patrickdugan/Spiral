@@ -30,12 +30,17 @@ def _run(menu: Menu, args: list, timeout: int) -> dict:
         cp = subprocess.run(list(menu.gate_argv) + args, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as e:
         raise Refusal("gate_unavailable", str(e)) from None
-    if cp.returncode == 2 or not cp.stdout.strip():
+    if cp.returncode not in (0, 1) or not cp.stdout.strip():
         raise Refusal("gate_error", (cp.stderr or cp.stdout).strip()[:500])
     try:
-        return json.loads(cp.stdout.strip().splitlines()[-1])
+        out = json.loads(cp.stdout.strip().splitlines()[-1])
     except json.JSONDecodeError:
         raise Refusal("gate_error", cp.stdout.strip()[:500]) from None
+    if not isinstance(out, dict):
+        raise Refusal("gate_error", "verifier returned a non-object JSON value")
+    if cp.returncode != 0 and out.get("status") in ("accepted", "parsed"):
+        raise Refusal("gate_error", "verifier returned success with a nonzero exit status")
+    return out
 
 
 def check(menu: Menu, proof_path: str, statement_path: str, timeout: int = 600) -> dict:
