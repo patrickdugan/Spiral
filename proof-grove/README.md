@@ -5,9 +5,9 @@ A local Ark and Cashu proof desk built from the Nova/BitVM payment contract used
 [Open Proof Grove](https://patrickdugan.github.io/Spiral/proof-grove/).
 The connected build uses your authenticated backend for current chainstate, native
 proof checks and configured Ark/Cashu providers. Fixture examples are separate at
-`demo/`. See [hosting](docs/hosting.md) and the [VPS deployment plan](deploy/README.md).
+`demo/`. See [hosting](docs/hosting.md) and the [VPS deployment](deploy/README.md).
 
-**This is a working proof admission, Cashu issuance/withdrawal, Ark refresh and offline exit prototype.** The encrypted wallet can obtain and verify Cashu ecash after a bound deposit is admitted, then redeem it into an Ark wallet. It reserves selected proofs and saves change secrets before submitting a payment, with no automatic HTTP replay. The caretaker checks Bark VTXO anchors with Core and reconciles delegated refreshes. An independent watcher advances saved exits using Core alone; the owner signs the final claim. Ark execution is restricted to regtest because the released refresh REST API lacks a signing-time fee cap. The default dashboard uses fixtures; native M16 and real isolated regtest admission are separate configured paths.
+**This is a working proof admission, Cashu issuance/withdrawal, Ark refresh and offline exit prototype.** The encrypted wallet can obtain and verify Cashu ecash after a bound deposit is admitted, then redeem it into an Ark wallet. It reserves selected proofs and saves change secrets before submitting a payment, with no automatic HTTP replay. The caretaker checks Bark VTXO anchors with Core and reconciles delegated refreshes. An independent watcher advances saved exits using Core alone; the owner signs the final claim. Ark execution is restricted to regtest because the released refresh REST API lacks a signing-time fee cap. The hosted dashboard connects to the live testnet4 verifier and a separate persistent Ark/Cashu regtest backend; fixture examples remain under `demo/`. Testnet4 proof checks never fund the regtest mint.
 
 ## Run
 

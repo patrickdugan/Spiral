@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "tested_at": "2026-11-16T04:10:01.736812+00:00",
+  "https_origins": [
+    "https://proof-grove.170-75-168-145.sslip.io",
+    "https://proof-grove-regtest.170-75-168-145.sslip.io"
+  ],
+  "unauthenticated_status": 401,
+  "testnet4_height": 161609,
+  "native_recorded_proof_verified": true,
+  "historical_payment_admitted": false,
+  "existing_testnet4_pid_unchanged": true,
+  "cashu_ark_network": "regtest",
+  "deposit_sats": 25000,
+  "cashu_dleq_verified": true,
+  "cashu_to_ark_sats": 10000,
+  "cashu_change_sats": 15000,
+  "melt_fee_sats": 0,
+  "recipient_vtxos": [
+    "3d22e25a933195d6004d7475e5e046bc6ee96bcdedf3a6e0cbd20246418a73f0:0"
+  ],
+  "refresh_confirmed": true,
+  "ark_after_refresh_sats": 9770,
+  "refresh_fee_sats": 230,
+  "anchors": [
+    {
+      "block_hash": "5d9dfb957c2025b3066b32b183dfe8ac7ee7ef4f9539574a14ccdf6b9e7f1238",
+      "confirmations": 2,
+      "height": 142,
+      "outpoint": "f4b319ea4cc6b31c9173370d9b6a9ba67e2ac6161b037ff117b97956cb9d48a1:0"
+    }
+  ],
+  "testnet4_payment_funded_regtest": false,
+  "limits": [
+    "Valueless regtest payment uses Core evidence, not a new ZK proof.",
+    "Historical testnet4 proof is verified separately and cannot mint here.",
+    "Cashu custody and Ark expiry/operator liveness remain."
+  ]
+}

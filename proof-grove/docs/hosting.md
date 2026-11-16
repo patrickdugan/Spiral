@@ -37,10 +37,20 @@ are disabled by default; existing wallet signatures and regtest execution
 restrictions still apply when an operator enables them. The CLI wallet uses
 `PROOF_GROVE_DESK_TOKEN` for the same protected desk.
 
-The VPS preparation and proposed service/proxy files are in [deploy](../deploy/README.md).
-System package/service installation is pending explicit approval after automatic
-review rejected that persistent server change. No deployment is implied by the
-local checks alone.
+The approved VPS deployment is running on `170.75.168.145`. The app offers two
+authenticated profiles: live testnet4 Core/native verification at
+`https://proof-grove.170-75-168-145.sslip.io`, and persistent regtest Core/Bark/CDK
+at `https://proof-grove-regtest.170-75-168-145.sslip.io`. The latter uses real
+services and valueless test coins, not fixture responses. It does not accept
+testnet4 proofs as funding. See [deployment details](../deploy/README.md) and the
+[actual HTTPS/payment check](hosted-backend-check.json).
+
+Retrieve the operator token on the owner's machine with
+`ssh tradelayer-witness 'cat /opt/proof-grove/config/operator.env'`, then paste
+only its value into the app's password field. Both profiles use this credential.
+Disconnect before changing profiles; switching clears the previous credential
+and rejects late responses from that connection. The mint and Bark RPC ports
+are loopback-only. The encrypted CLI wallet runs beside these private providers.
 
 Build into a new/empty output directory:
 

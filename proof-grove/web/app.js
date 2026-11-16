@@ -113,6 +113,7 @@ $('load-ark').addEventListener('click', async () => {
   try {
     const wallet = await api('/api/ark/wallet');
     if (wallet.evidence_level === 'not-connected') throw new Error('Configure a local Bark wallet and Core node first.');
+    $('ark-vtxo-panel').hidden=false;
     $('ark-notice').textContent = wallet.meaning;
     $('ark-wallet-status').textContent = wallet.network + ' · Core block ' + wallet.tip_height.toLocaleString('en-US') + ' · ' + wallet.vtxos.length + ' VTXOs. ' + wallet.fee_limit + '.';
     $('tip-slider').disabled = true;
@@ -299,7 +300,8 @@ async function initialize() {
     const url = new URL(item.url); if (url.protocol === 'https:') { link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     left.append(link); if (item.pin) left.append(element('small', '', item.pin)); row.append(left, element('p', '', item.use)); return row;
   }));
-  if (location.hash === '#evidence') tab('evidence');
+  if(globalThis.ProofGroveConnection)tab('payments');
+  else if (location.hash === '#evidence') tab('evidence');
   if(status.mode!=='demo'){
     await loadChainstate();
     if(status.mode==='live'){

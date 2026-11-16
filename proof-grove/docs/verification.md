@@ -2,7 +2,22 @@
 
 Checked locally on November 15, 2026. Commands and reproducible test scripts are in the repository.
 
-## Authenticated backend preparation, November 16, 2026 (Singapore time)
+## Live authenticated deployment, November 16, 2026 (Singapore time)
+
+After explicit approval, Caddy, Docker and the dedicated Proof Grove services
+were installed on the VPS. The [actual hosted check](hosted-backend-check.json)
+used both public HTTPS origins, verified the real recorded testnet4 proof against
+Core at height 161,609, and confirmed unauthenticated requests return 401. The
+existing testnet4 Core process remained unchanged. No historical payment was
+admitted.
+
+The persistent, isolated CDK 0.18.3/Bark 0.8.1 backend admitted an actual 25,000
+sat regtest deposit, issued DLEQ-verified Cashu proofs, and paid 10,000 sats into
+the recipient Bark wallet. The wallet retained 15,000 sats of Cashu change.
+Refreshing the received VTXO left 9,770 sats and a 230 sat fee; Core confirmed
+the successor anchor. The payment uses regtest Core evidence, not a new ZK proof;
+testnet4 proof verification is a separate read-only path. Services stayed running.
+The pinned native processor unit suite passed all 33 tests.
 
 The [VPS read-only check](vps-readonly-proof-check.json) ran the actual
 transcript-v2 native verifier on `170.75.168.145` and checked the real public
@@ -27,10 +42,8 @@ and claim-once rules have not been relaxed.
   memory-only access tokens. See [UI result](connected-hosting-browser-check.json).
 - The fixture examples passed separately at `/demo/` at 1440 and 390 px.
 
-The authenticated client, API, service unit and proxy configuration are prepared.
-Persistent VPS package/service installation is pending explicit approval after
-automatic review rejected the Caddy/Docker installation. The hosted production
-URL has not yet been switched to this prepared backend.
+The preparation-only checks above preceded the approved installation and the
+live HTTPS/payment test. They remain recorded separately for provenance.
 
 ## Static Pages export, November 16, 2026 (Singapore time)
 

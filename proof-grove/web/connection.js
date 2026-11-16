@@ -26,12 +26,14 @@
     let response;
     try{response=await fetch(endpoint+path,{method:body===undefined?'GET':'POST',mode:'cors',credentials:'omit',cache:'no-store',redirect:'error',
       headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','X-Proof-Grove':'1'},
-      body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/proofs/check'||path==='/api/verify'?180_000:30_000)});}
+      body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(path.startsWith('/api/proofs/')||path==='/api/verify'?180_000:30_000)});}
     catch{throw new Error('Backend unreachable. Check its HTTPS address, allowed origin and service status.');}
     if(started!==generation)throw new Error('Backend connection changed; discard the previous response.');
     if(response.status===401){disconnect('Backend authentication failed. Reconnect with the operator token.');throw new Error('Backend authentication failed.');}
     if(!response.ok){let code='backend_request_failed';try{code=(await response.json()).error||code;}catch{}throw new Error(code);}
-    return blob?response.blob():response.json();
+    const value=blob?await response.blob():await response.json();
+    if(started!==generation)throw new Error('Backend connection changed; discard the previous response.');
+    return value;
   }
   const api=(path,body)=>request(path,body);api.archive=()=>request('/api/archive',undefined,true);
   globalThis.ProofGroveHosted=api;globalThis.ProofGroveConnection=connection;

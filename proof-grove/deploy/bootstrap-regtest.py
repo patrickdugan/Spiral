@@ -21,6 +21,12 @@ DOMAIN='proof-grove-regtest.170-75-168-145.sslip.io'
 CORE='bitcoin/bitcoin@sha256:a1d05be6939b5c85132a761d2b795f5b8a2612ce53782263da4939778e461792'
 ARK='secondark/captaind@sha256:837e433aabbd275c2ae0b3376cd06bc4a0e07d8a9445d40c6dfed9e9bf16eb9b'
 LABEL='proof-grove.deployment'
+BINARIES={
+ 'barkd-0.8.1-linux-x86_64':'e634724a17796de352beb2e28808059dd3d0aef1beb3afd358ee3a582c20c85c',
+ 'cdk-mintd-0.18.3-x86_64':'3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af',
+ 'cdk-payment-processor-bark-linux-x86_64':'9ed182b22eed04c9d4f2eaee315c459ddd9a0f3fd41fdb40e1ca37eb9535d7ec',
+ 'regtest-liquidity-linux-x86_64':'3a03b724305e8cf9e73dab54ac7fbe96151fd01e33f19aad25742aea853201e1',
+}
 
 
 def run(*command):return subprocess.check_output(command,text=True,stderr=subprocess.STDOUT).strip()
@@ -68,6 +74,9 @@ Environment=PATH=/home/ubuntu/node24/node-v24.22.1-linux-x64/bin:/usr/local/bin:
 
 
 def main():
+    for name,sha in BINARIES.items():
+        if hashlib.sha256((BIN/name).read_bytes()).hexdigest()!=sha:
+            raise RuntimeError('Deployment binary hash mismatch: '+name)
     os.umask(0o077);R.mkdir(exist_ok=True)
     private=R/'private.json'
     fresh=not private.exists()
@@ -92,7 +101,6 @@ server=1
 txindex=1
 blockfilterindex=1
 listen=0
-connect=0
 dnsseed=0
 discover=0
 dbcache=64
@@ -101,6 +109,7 @@ fallbackfee=0.00001
 rpcuser=proofgrove
 rpcpassword={password}
 [regtest]
+connect=0
 rpcbind=0.0.0.0
 rpcallowip=0.0.0.0/0
 ''')
@@ -114,7 +123,7 @@ rpcallowip=0.0.0.0/0
         docker('run','-d','--name',prefix+'-core','--label',LABEL+'='+owner,'--network',prefix,'--network-alias','bitcoind',
             *limits,'--memory','256m','--cpus','0.4','-p','127.0.0.1:28743:18443','-v',prefix+'-core:/home/bitcoin/.bitcoin',
             '--mount',f'type=bind,src={coreconf},dst=/config/bitcoin.conf,readonly',CORE,'bitcoind','-conf=/config/bitcoin.conf')
-    else:docker('start',prefix+'-core')
+    else:docker('restart',prefix+'-core')
     authorization={'Authorization':'Basic '+base64.b64encode(('proofgrove:'+password).encode()).decode()}
     def rpc(method,params,wallet=False):
         value=http('http://127.0.0.1:28743','/wallet/proof-grove-sandbox-miner' if wallet else '',

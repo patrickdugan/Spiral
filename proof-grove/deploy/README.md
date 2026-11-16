@@ -7,7 +7,7 @@ deployment. Read its rotating cookie from
 `/home/ubuntu/rehearsal/btc-data/testnet4/.cookie`; do not copy the cookie into
 the published website or a committed configuration.
 
-The prepared deployment uses:
+The approved deployment is running and uses:
 
 - `/opt/proof-grove/current`: a reviewed application release.
 - `/opt/proof-grove/bin/m13-verify`: the SHA-256-pinned transcript-v2 verifier.
@@ -38,15 +38,39 @@ it must not become a fresh mint deposit or a second payout. The deployed record
 check never reserves a payment. Its proving tip is older than the current node;
 normal admission freshness rules remain unchanged.
 
-Ark/Cashu requires a separate, explicitly identified backend and network. The
-currently ported Bark backend supports mainnet, signet/testnet and regtest; it is
-not a testnet4 Ark deployment. A separately labelled persistent regtest stack can
-serve the existing tested Ark/Cashu flow after approval to install its container
-runtime. Testnet4 deposits must never be credited as mainnet Ark funds. This
-package does not silently invent a funded mint or an Ark operator.
+Ark/Cashu runs on a separate persistent regtest backend at
+`https://proof-grove-regtest.170-75-168-145.sslip.io`. Bark 0.8.1 does not support
+testnet4. This backend uses valueless regtest funds and never credits testnet4
+payments. Its dedicated Core/Ark containers use digest-pinned images, ownership
+labels, persistent volumes, bounded memory/CPU and rotating logs. Core, Bark,
+CDK and the payment processor listen only on loopback or the private Docker
+network. Only Caddy's authenticated HTTPS API is public.
 
-Installing Caddy/Docker and adding system services are persistent server
-changes. Automatic approval review currently requires explicit user approval
-for that step. The source, unit, proxy configuration and verification checks can
-be prepared before it. No package installation or service configuration has been
-performed by the rejected command.
+Dedicated units are `proof-grove-bark`, `proof-grove-processor`,
+`proof-grove-mint`, `proof-grove-regtest-api`, and `proof-grove-regtest-miner.timer`.
+The sandbox miner generates a test block every 30 seconds and checks the network
+before doing so. The regtest API allows owner-authenticated mutations; private
+exit bundle downloads and exit broadcasting remain disabled. Fresh BIP39 seeds
+come from Linux OS randomness. Credentials and databases stay under the private
+`/opt/proof-grove/regtest` tree; the public fixture mnemonics are not used.
+
+The owner explicitly approved Caddy, Docker and these services. Installation
+uses `install-api.py --release GIT_ID --qa-directory OWNED_QA_DIRECTORY` after
+staging the committed `app/` archive and pinned verifier/record files. It uses
+the server's existing Node 24.22.1 and installs the locked Cashu SDK with
+pnpm 11.25.0. `bootstrap-regtest.py` validates all binary hashes before starting
+the isolated stack; rerunning retains databases and restarts only its own
+regtest Core container. It never restarts the existing testnet4 node.
+
+Run `python3 /opt/proof-grove/current/deploy/check-hosted.py` on the VPS to check
+both public HTTPS origins and a fresh 25,000 sat regtest deposit through Cashu,
+Ark receipt and refresh. The check retains its encrypted wallet and password in
+a private `regtest/qa-*` directory and writes only a sanitized report to
+`state/hosted-backend-check.json`. It does not stop the persistent providers.
+See the committed [live check](../docs/hosted-backend-check.json).
+
+Use `ssh tradelayer-witness 'cat /opt/proof-grove/config/operator.env'` privately
+to retrieve the operator credential. Paste only its value into the hosted app.
+Both profiles use that token; it is never bundled into Pages. Back up the private
+regtest tree, volumes and encrypted owner vaults to retain test wallet recovery.
+Proof checks do not remove Cashu custody or Ark expiry/liveness requirements.

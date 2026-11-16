@@ -24,7 +24,8 @@ SANDBOX='https://proof-grove-regtest.170-75-168-145.sslip.io'
 def http(base,path,body=None,headers=None):
     request=urllib.request.Request(base+path,data=json.dumps(body).encode() if body is not None else None,
         headers={'Content-Type':'application/json',**(headers or {})})
-    with urllib.request.urlopen(request,timeout=180) as response:return json.load(response)
+    with urllib.request.urlopen(request,timeout=180) as response:raw=response.read()
+    return json.loads(raw) if raw else None
 
 
 def wait(check,label,seconds=180):
