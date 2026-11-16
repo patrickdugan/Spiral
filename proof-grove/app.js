@@ -23,6 +23,7 @@ async function api(path, body) {
 function error(message) { $('app-error').textContent = message; $('app-error').hidden = false; }
 function clearError() { $('app-error').hidden = true; }
 function tab(id) {
+  if(globalThis.ProofGroveConnection&&!globalThis.ProofGroveConnection.connected)return;
   if (!Object.hasOwn(labels, id)) return;
   document.querySelectorAll('.page').forEach(page => { page.hidden = page.id !== id; });
   document.querySelectorAll('[data-tab]').forEach(button => { button.classList.toggle('active', button.dataset.tab === id); if (button.dataset.tab === id) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
@@ -112,6 +113,7 @@ $('load-ark').addEventListener('click', async () => {
   try {
     const wallet = await api('/api/ark/wallet');
     if (wallet.evidence_level === 'not-connected') throw new Error('Configure a local Bark wallet and Core node first.');
+    $('ark-vtxo-panel').hidden=false;
     $('ark-notice').textContent = wallet.meaning;
     $('ark-wallet-status').textContent = wallet.network + ' · Core block ' + wallet.tip_height.toLocaleString('en-US') + ' · ' + wallet.vtxos.length + ' VTXOs. ' + wallet.fee_limit + '.';
     $('tip-slider').disabled = true;
@@ -123,10 +125,10 @@ $('load-ark').addEventListener('click', async () => {
       row.append(id, element('td', '', v.amount_sat.toLocaleString('en-US') + ' sats'), element('td', '', v.remaining_blocks + ' blocks'), element('td', '', v.anchor_error || 'Anchor confirmed'), element('td', '', v.state.type)); return row;
     }));
     const spendable = wallet.vtxos.filter(v => v.state.type === 'spendable' && !v.anchor_error);
-    $('ark-refresh-form').hidden = !wallet.regtest_execution || !spendable.length;
+    $('ark-refresh-form').hidden = !wallet.regtest_execution || !spendable.length || state.hostedMutations===false;
     $('ark-input').replaceChildren(...spendable.map(v => {const option = element('option', '', v.id.slice(0, 12) + '… · ' + v.amount_sat.toLocaleString('en-US') + ' sats'); option.value = v.id; return option;}));
     $('ark-height').value = wallet.tip_height + 1;
-    $('exit-prepare-form').hidden = !wallet.regtest_execution || !spendable.length;
+    $('exit-prepare-form').hidden = !wallet.regtest_execution || !spendable.length || state.hostedMutations===false;
     $('exit-input').replaceChildren(...spendable.map(v => {const option = element('option', '', v.id.slice(0, 12) + '… · ' + v.amount_sat.toLocaleString('en-US') + ' sats'); option.value = v.id; return option;}));
     const operations = await api('/api/ark/operations');
     if (operations.operations.length) renderArkOperation(operations.operations.at(-1));
@@ -208,6 +210,24 @@ $('download-archive').addEventListener('click', async () => {
   } catch (e) { error(e.message); }
 });
 async function bytesBase64(file) { const bytes = new Uint8Array(await file.arrayBuffer()); let text = ''; for (let i = 0; i < bytes.length; i += 8192) text += String.fromCharCode(...bytes.subarray(i, i + 8192)); return btoa(text); }
+function renderProofCheck(result){
+  state.current=null;state.receiptText=JSON.stringify(result,null,2);
+  $('inspect-receipt').disabled=false;$('receipt-json').textContent=state.receiptText;
+  $('raw-evidence').textContent=state.receiptText;
+  $('decision-symbol').textContent='✓';$('decision-label').textContent='NATIVE M16 PROOF VERIFIED';
+  $('decision-heading').textContent='Proof checked without a claim.';
+  $('decision-detail').textContent=result.chain_observation?'Core also checked the payment block and proof tip. This check does not admit a payment or issue ecash.':'Current chain context is unavailable: '+result.chain_error+'. No payment was admitted.';
+  $('metric-amount').textContent=result.evidence.value_sats.toLocaleString('en-US');
+  $('metric-state').textContent='Verified only';$('decision-settlement').textContent='Not requested';
+  $('metric-phase-label').textContent='Proof verification';$('metric-phase-detail').textContent='No payment reserved or signatures requested';
+  $('steps').replaceChildren();
+}
+$('check-recorded-proof').addEventListener('click',async()=>{
+  const button=$('check-recorded-proof');button.disabled=true;clearError();
+  try{renderProofCheck(await api('/api/proofs/recorded/check',{}));}
+  catch(problem){error(problem.message);}
+  finally{button.disabled=false;}
+});
 $('live-controls').addEventListener('submit', async event => {
   event.preventDefault(); clearError(); const button = event.target.querySelector('button'); button.disabled = true;
   try {
@@ -216,7 +236,9 @@ $('live-controls').addEventListener('submit', async event => {
     }
     const statement = $('statement-file').files[0], proof = $('proof-file').files[0];
     if (!statement || statement.size !== 1292 || !proof || proof.size > 4 * 1024 * 1024 || proof.size === 0) throw new Error('Choose a 1,292 byte statement and a final proof of at most 4 MiB.');
-    const result = await api('/api/verify', { intent_id: $('intent-select').value, statement_base64: await bytesBase64(statement), proof_base64: await bytesBase64(proof) });
+    const payload={intent_id:$('intent-select').value,statement_base64:await bytesBase64(statement),proof_base64:await bytesBase64(proof)};
+    if(!$('intent-select').value){renderProofCheck(await api('/api/proofs/check',payload));return;}
+    const result = await api('/api/verify', payload);
     renderRun(result);
   } catch (e) { renderRun({ simulation: false, decision: { accepted: false, code: e.message }, evidence_level: 'rejected', steps: [{ name: 'Payment verification', state: 'rejected', detail: e.message }, { name: 'Settlement', state: 'blocked', detail: 'No new request prepared by this attempt. Existing reservations are retained.' }] }); error(e.message); }
   finally { button.disabled = false; }
@@ -224,9 +246,25 @@ $('live-controls').addEventListener('submit', async event => {
 for (const [button, path] of [['read-cashu', '/api/cashu/info'], ['read-bark', '/api/bark/history'],['read-issuance','/api/cashu/operations']]) {
   $(button).addEventListener('click', async () => { $(button).disabled = true; try { $('provider-report').textContent = JSON.stringify(await api(path), null, 2); } catch (e) { error(e.message); } finally { $(button).disabled = false; } });
 }
+async function loadChainstate(){
+  if(state.mode==='demo')return;
+  $('chainstate-panel').hidden=false;
+  try{
+    const value=await api('/api/chainstate');$('chainstate-json').textContent=JSON.stringify(value,null,2);
+    $('network-label').textContent=value.network+' · Core block '+value.blocks.toLocaleString('en-US');
+    $('chainstate-status').textContent=value.network+' · block '+value.blocks.toLocaleString('en-US')+' · observed '+new Date(value.observed_at*1000).toLocaleTimeString()+(value.initialblockdownload?' · node still syncing':' · configured Core observation');
+  }catch(error){$('chainstate-status').textContent='Chain observer unavailable: '+error.message;$('chainstate-json').textContent='';}
+}
+$('refresh-chainstate').addEventListener('click',loadChainstate);
 async function initialize() {
   const [status, cases, vtxos, sources] = await Promise.all(['/api/status', '/api/cases', '/api/vtxos', '/api/sources'].map(path => api(path)));
   state.mode = status.mode; state.cases = cases.cases; state.vtxos = vtxos.vtxos; state.planRequest = 0;
+  state.hostedMutations=!status.hosted_access?.enabled||status.hosted_access.mutations;
+  $('proof-files').hidden=status.mode==='regtest';
+  $('statement-file').required=status.mode==='live';$('proof-file').required=status.mode==='live';
+  $('regtest-fields').hidden=status.mode!=='regtest';$('regtest-txid').required=status.mode==='regtest';
+  $('check-recorded-proof').hidden=true;$('recorded-proof-status').hidden=true;
+  $('ark-connection').hidden=!status.ark_wallet_configured;$('ark-vtxo-panel').hidden=true;
   $('mode-badge').textContent = status.mode === 'demo' ? 'DEMO · NO FUNDS' : status.mode==='regtest' ? 'REGTEST · TEST COINS' : 'CONNECTED · PROOF GATE';
   if (status.mode !== 'demo') {
     $('ark-demo-clock').hidden = true;
@@ -238,9 +276,15 @@ async function initialize() {
       $('proof-files').hidden=true;$('statement-file').required=false;$('proof-file').required=false;
       $('regtest-fields').hidden=false;$('regtest-txid').required=true;
       $('verification-help').textContent='Uses the configured isolated regtest Core node. No fixture or browser-supplied verification flag is accepted.';
-    }
+    }else $('verification-help').textContent='Checks native proof bytes and active testnet4 chain context. Historical verification creates no new payment credit.';
     $('network-label').textContent = status.intents[0]?.network || 'No intents configured';
     $('intent-select').replaceChildren(...status.intents.map(intent => { const option = element('option', '', intent.id + ' · ' + intent.amount_sats.toLocaleString('en-US') + ' sats'); option.value = intent.id; return option; }));
+    if(status.mode==='live'){
+      const option=element('option','','Verify native proof only — no payment claim');option.value='';$('intent-select').prepend(option);
+      if(!status.intents.length)$('intent-select').value='';
+      $('intent-select').required=false;
+      if(!state.hostedMutations){$('intent-select').value='';[...$('intent-select').options].filter(option=>option.value).forEach(option=>option.disabled=true);}
+    }
     $('tip-slider').disabled = true; $('metric-state').textContent = 'Awaiting proof'; $('metric-amount').textContent = '—';
     $('decision-symbol').textContent = '○'; $('decision-label').textContent = status.mode==='regtest' ? 'AWAITING REGTEST PAYMENT' : 'AWAITING NATIVE PROOF'; $('decision-heading').textContent = 'Choose an intent.'; $('decision-detail').textContent = status.mode==='regtest' ? 'Enter a confirmed regtest transaction and output index for a configured intent.' : 'Import a statement and its final proof to check a configured payment.';
     $('inspect-receipt').disabled = true;
@@ -256,6 +300,23 @@ async function initialize() {
     const url = new URL(item.url); if (url.protocol === 'https:') { link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     left.append(link); if (item.pin) left.append(element('small', '', item.pin)); row.append(left, element('p', '', item.use)); return row;
   }));
-  if (location.hash === '#evidence') tab('evidence');
+  if(globalThis.ProofGroveConnection)tab('payments');
+  else if (location.hash === '#evidence') tab('evidence');
+  if(status.mode!=='demo'){
+    await loadChainstate();
+    if(status.mode==='live'){
+      try{
+        const record=await api('/api/proofs/recorded');$('check-recorded-proof').hidden=false;
+        $('recorded-proof-status').hidden=false;$('recorded-proof-status').textContent=record.name+' · checking this record does not claim its historical payment.';
+      }catch{$('check-recorded-proof').hidden=true;}
+    }
+  }
 }
-initialize().catch(e => error('Workspace could not load: ' + e.message));
+if(globalThis.ProofGroveConnection){
+  globalThis.ProofGroveConnection.onConnect=initialize;
+  globalThis.ProofGroveConnection.onDisconnect=()=>{
+    state.current=null;state.receiptText='';state.vtxos=[];state.cases=[];state.mode='disconnected';
+    for(const id of ['receipt-json','raw-evidence','provider-report','ark-operation','exit-observation','chainstate-json'])$(id).textContent='';
+    $('receipt-dialog').close();$('inspect-receipt').disabled=true;$('app-error').hidden=true;
+  };
+}else initialize().catch(e => error('Workspace could not load: ' + e.message));
