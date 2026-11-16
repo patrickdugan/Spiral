@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "width": 1440,
+      "cases": 8,
+      "dialog": true,
+      "planner": true,
+      "download": true,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "cases": 8,
+      "dialog": true,
+      "planner": true,
+      "download": true,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": []
+}

@@ -1,0 +1,191 @@
+{
+  "reviewed_on": "2026-11-15",
+  "scope": "Metadata enumeration; selected relevant READMEs inspected, not a full code audit.",
+  "repositories": [
+    {
+      "name": "mvuk/nostr-pix-frontend",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nostr-pix-frontend"
+    },
+    {
+      "name": "mvuk/cdk-payment-processors",
+      "branch": "main",
+      "url": "https://github.com/mvuk/cdk-payment-processors"
+    },
+    {
+      "name": "mvuk/lightning-piggy-mobile",
+      "branch": "main",
+      "url": "https://github.com/mvuk/lightning-piggy-mobile"
+    },
+    {
+      "name": "mvuk/mvuk",
+      "branch": "master",
+      "url": "https://github.com/mvuk/mvuk"
+    },
+    {
+      "name": "mvuk/voice-vocabulary",
+      "branch": "main",
+      "url": "https://github.com/mvuk/voice-vocabulary"
+    },
+    {
+      "name": "mvuk/hawkwallet-backend",
+      "branch": "main",
+      "url": "https://github.com/mvuk/hawkwallet-backend"
+    },
+    {
+      "name": "mvuk/modelcontextprotocol",
+      "branch": "main",
+      "url": "https://github.com/mvuk/modelcontextprotocol"
+    },
+    {
+      "name": "mvuk/transaction-decoder",
+      "branch": "main",
+      "url": "https://github.com/mvuk/transaction-decoder"
+    },
+    {
+      "name": "mvuk/nostr-rs-relay",
+      "branch": "master",
+      "url": "https://github.com/mvuk/nostr-rs-relay"
+    },
+    {
+      "name": "mvuk/bithoven",
+      "branch": "main",
+      "url": "https://github.com/mvuk/bithoven"
+    },
+    {
+      "name": "mvuk/bip448-dotgithub",
+      "branch": "main",
+      "url": "https://github.com/mvuk/bip448-dotgithub"
+    },
+    {
+      "name": "mvuk/strfry-bark-paid-writes",
+      "branch": "main",
+      "url": "https://github.com/mvuk/strfry-bark-paid-writes"
+    },
+    {
+      "name": "mvuk/nwc",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nwc"
+    },
+    {
+      "name": "mvuk/strfry",
+      "branch": "master",
+      "url": "https://github.com/mvuk/strfry"
+    },
+    {
+      "name": "mvuk/cdk",
+      "branch": "main",
+      "url": "https://github.com/mvuk/cdk"
+    },
+    {
+      "name": "mvuk/bitcoinix",
+      "branch": "master",
+      "url": "https://github.com/mvuk/bitcoinix"
+    },
+    {
+      "name": "mvuk/nip11-sync",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nip11-sync"
+    },
+    {
+      "name": "mvuk/nostrcheck-server",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nostrcheck-server"
+    },
+    {
+      "name": "mvuk/personal-website",
+      "branch": "main",
+      "url": "https://github.com/mvuk/personal-website"
+    },
+    {
+      "name": "mvuk/rbitcoin",
+      "branch": "master",
+      "url": "https://github.com/mvuk/rbitcoin"
+    },
+    {
+      "name": "mvuk/bitcointranscripts",
+      "branch": "master",
+      "url": "https://github.com/mvuk/bitcointranscripts"
+    },
+    {
+      "name": "mvuk/accounting-formulas",
+      "branch": "main",
+      "url": "https://github.com/mvuk/accounting-formulas"
+    },
+    {
+      "name": "mvuk/lumilumi",
+      "branch": "main",
+      "url": "https://github.com/mvuk/lumilumi"
+    },
+    {
+      "name": "mvuk/nostr-zap",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nostr-zap"
+    },
+    {
+      "name": "mvuk/mvuk.github.io",
+      "branch": "master",
+      "url": "https://github.com/mvuk/mvuk.github.io"
+    },
+    {
+      "name": "mvuk/blossom",
+      "branch": "master",
+      "url": "https://github.com/mvuk/blossom"
+    },
+    {
+      "name": "mvuk/cdk-bark-payment-procssor",
+      "branch": "main",
+      "url": "https://github.com/mvuk/cdk-bark-payment-procssor"
+    },
+    {
+      "name": "mvuk/nips",
+      "branch": "master",
+      "url": "https://github.com/mvuk/nips"
+    },
+    {
+      "name": "mvuk/cagliostr",
+      "branch": "main",
+      "url": "https://github.com/mvuk/cagliostr"
+    },
+    {
+      "name": "mvuk/bitcointranscripts-metadata",
+      "branch": "main",
+      "url": "https://github.com/mvuk/bitcointranscripts-metadata"
+    },
+    {
+      "name": "mvuk/bedrock-fund",
+      "branch": "main",
+      "url": "https://github.com/mvuk/bedrock-fund"
+    },
+    {
+      "name": "mvuk/frostsnap",
+      "branch": "master",
+      "url": "https://github.com/mvuk/frostsnap"
+    },
+    {
+      "name": "mvuk/bitcoin-node-data-pipeline",
+      "branch": "main",
+      "url": "https://github.com/mvuk/bitcoin-node-data-pipeline"
+    },
+    {
+      "name": "mvuk/cashu.me",
+      "branch": "main",
+      "url": "https://github.com/mvuk/cashu.me"
+    },
+    {
+      "name": "mvuk/templatehash-playground",
+      "branch": "main",
+      "url": "https://github.com/mvuk/templatehash-playground"
+    },
+    {
+      "name": "mvuk/plebscan_flask",
+      "branch": "main",
+      "url": "https://github.com/mvuk/plebscan_flask"
+    },
+    {
+      "name": "mvuk/nostr-relay",
+      "branch": "main",
+      "url": "https://github.com/mvuk/nostr-relay"
+    }
+  ]
+}

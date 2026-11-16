@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "width": 1440,
+      "actual_regtest_admission": true,
+      "issuance_state_visible": true,
+      "archive_download": true,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "actual_regtest_admission": true,
+      "issuance_state_visible": true,
+      "archive_download": true,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": [],
+  "evidence": "Real isolated regtest stack; not M16/ZK"
+}

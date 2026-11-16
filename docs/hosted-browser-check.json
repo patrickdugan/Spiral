@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "base": "http://127.0.0.1:8899/Spiral/proof-grove/",
+  "checks": [
+    {
+      "width": 1440,
+      "cases": 8,
+      "planner": true,
+      "archive_sha256_verified": true,
+      "public_report": true,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "cases": 8,
+      "planner": true,
+      "archive_sha256_verified": true,
+      "public_report": true,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": [],
+  "local_api_requests": 0
+}

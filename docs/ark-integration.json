@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "tested_at": "2026-11-15T18:27:45.941295+00:00",
+  "network": "isolated regtest",
+  "bark_version": "0.8.1",
+  "core_version": "31.0",
+  "board_amount_sats": 500000,
+  "input_vtxo": "2dc4301afc20bacc489b5bad7dd3ac071c5cfff98570298598004c8ad82995b5:0",
+  "successor_vtxos": [
+    "77bc1123d0ebfbce461cc69f8bcd0b0b8fc4c5e81a54cef4d7da5cb6d01dddd5:0"
+  ],
+  "input_expiry_height": 400,
+  "successor_expiry_heights": [
+    414
+  ],
+  "fee_sats": 2148,
+  "desk_restart_recovery": true,
+  "successor_reorg_detected": true,
+  "refresh_posts": 1,
+  "dropped_replies": 1,
+  "evidence_level": "bark-wallet-validation+core-anchor-observation",
+  "limits": [
+    "Regtest execution only; REST API has no signing-time fee cap.",
+    "Ark signature and ownership validation is performed by Bark, not independently by this Python desk.",
+    "No Cashu-to-Ark melt or presigned exit broadcast in this test."
+  ]
+}

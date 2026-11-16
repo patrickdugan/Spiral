@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "historical-mainnet-proof",
+      "outcome": "proof-verified",
+      "seconds": 0.816
+    },
+    {
+      "name": "flipped-proof-byte",
+      "outcome": "proof_rejected",
+      "seconds": 0.928
+    },
+    {
+      "name": "truncated-proof",
+      "outcome": "proof_rejected",
+      "seconds": 1.271
+    },
+    {
+      "name": "changed-payment-amount",
+      "outcome": "proof_rejected",
+      "seconds": 0.809
+    }
+  ],
+  "binary_sha256": "2344753bc291b611bcffb74e04bcabd0e9b92a3832e7a95132641ef752602f56",
+  "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+  "proof_sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3",
+  "evidence": {
+    "network": "mainnet",
+    "txid": "a652ab0cf381413ae854a86bb7e4784811b2d4158a65f26ff64a69eb3eb20045",
+    "vout": 0,
+    "value_sats": 940000,
+    "script_sha256": "58432f41ce2b63d9a8e65e9b5bed183cd2ed12a03fe2b6020cda00235c147283",
+    "block_hash": "000000000000000000017809af97fdd5530149e411b2ab091db4f405e355fe22",
+    "block_height": 975067,
+    "tip_hash": "000000000000000000013ec209c5510205d35f80f657c20ef1ea16f73f6ff792",
+    "tip_height": 975072,
+    "tip_chainwork": 106081747320409284823605768801,
+    "confirmations": 6,
+    "statement_sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+    "proof_sha256": "97871e86cd0809e4b21d744343c43737cb56073f65e671da727e9db6051326e3",
+    "kind": "m16-verified"
+  },
+  "settlement": "not executed",
+  "meaning": "Historical public mainnet proof verified with the actual native gate. No live payment reserved."
+}
