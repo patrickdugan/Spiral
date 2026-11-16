@@ -84,6 +84,9 @@ def main():
     for name in ('core','ark','postgres'):
         if not owned('volume',prefix+'-'+name):docker('volume','create','--label',LABEL+'='+owner,prefix+'-'+name)
     coreconf=R/'bitcoin.conf'
+    if coreconf.exists():
+        run('sudo','-n','chown','ubuntu:ubuntu',str(coreconf))
+        run('sudo','-n','chmod','0600',str(coreconf))
     write(coreconf,f'''regtest=1
 server=1
 txindex=1
@@ -101,6 +104,10 @@ rpcpassword={password}
 rpcbind=0.0.0.0
 rpcallowip=0.0.0.0/0
 ''')
+    # This pinned Core image drops to bitcoin uid 101. Keep the RPC secret
+    # unreadable by other host users while allowing that container uid to read.
+    run('sudo','-n','chown','101:101',str(coreconf))
+    run('sudo','-n','chmod','0400',str(coreconf))
     limits=['--restart','unless-stopped','--log-opt','max-size=10m','--log-opt','max-file=3','--pids-limit','256']
     if not owned('container',prefix+'-core'):
         print('Starting isolated Core 31 container',flush=True)
