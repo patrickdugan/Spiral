@@ -1,0 +1,16 @@
+# Set PROOF_GROVE_API_DOMAIN to the approved public hostname in Caddy's service.
+{$PROOF_GROVE_API_DOMAIN} {
+    @api path /api/*
+    handle @api {
+        reverse_proxy 127.0.0.1:8767 {
+            transport http {
+                max_conns_per_host 16
+                dial_timeout 3s
+                response_header_timeout 180s
+            }
+        }
+    }
+    handle {
+        respond "Proof Grove authenticated API. Use the hosted application." 404
+    }
+}

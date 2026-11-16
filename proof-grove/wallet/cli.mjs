@@ -11,7 +11,7 @@ let vault;
 try {
   if(!options.vault||!options.mint||!options.desk)throw new Error('Use --vault FILE --mint URL --desk URL');
   vault=new Vault(resolve(options.vault),process.env.PROOF_GROVE_WALLET_PASSWORD);
-  const wallet=new ProofWallet({mintUrl:options.mint,deskUrl:options.desk,vault});
+  const wallet=new ProofWallet({mintUrl:options.mint,deskUrl:options.desk,vault,deskToken:process.env.PROOF_GROVE_DESK_TOKEN});
   let result;
   if(command==='deposit')result=await wallet.createDeposit(Number(options.amount));
   else if(command==='bind')result=await wallet.bind(options.id);

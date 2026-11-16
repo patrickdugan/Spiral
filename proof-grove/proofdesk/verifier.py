@@ -35,7 +35,7 @@ def _point(raw: bytes) -> tuple[int, str, int]:
     return struct.unpack_from("<I", raw)[0], internal[::-1].hex(), int.from_bytes(raw[96:128], "little")
 
 
-def parse_statement(raw: bytes) -> dict:
+def parse_statement(raw: bytes, anchor: dict | None = None) -> dict:
     if len(raw) != STATEMENT_SIZE:
         raise Refused("statement_length", "M16 requires exactly 1,292 bytes, including PAY1.")
     network = {b"NHC1": "mainnet", b"NHT4": "testnet4"}.get(raw[:4])
@@ -45,12 +45,14 @@ def parse_statement(raw: bytes) -> dict:
         raise Refused("wrong_fold_width")
     if raw[1164:1168] != b"PAY1":
         raise Refused("payment_record_magic")
-    start_height, start_hash, _ = _point(raw[12:556])
+    start_height, start_hash, start_work = _point(raw[12:556])
     tip_height, tip_hash, work = _point(raw[556:1100])
     genesis = {"mainnet": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
                "testnet4": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043"}
-    if start_height != 0 or start_hash != genesis[network]:
-        raise Refused("wrong_genesis")
+    if anchor is None:
+        if start_height != 0 or start_hash != genesis[network]:raise Refused('wrong_genesis')
+    elif start_height!=anchor['height'] or start_hash!=anchor['hash'] or start_work!=int(anchor['chainwork'],16):
+        raise Refused('checkpoint_mismatch')
     segments, height = struct.unpack_from("<II", raw, 1168)
     confirmations = struct.unpack_from("<I", raw, 1208)[0]
     vout, value, script_len = struct.unpack_from("<IQI", raw, 1244)
@@ -81,6 +83,12 @@ def validate_policy(policy: dict) -> None:
         raise Refused("missing_verifier_pins")
     for key, value in pins.items():
         hash32(value, key)
+    if 'anchor' in policy:
+        anchor=policy['anchor']
+        if not isinstance(anchor,dict) or set(anchor)!={'height','hash','chainwork'}:raise Refused('invalid_checkpoint')
+        positive(anchor['height'],'checkpoint_height',2**32-1);hash32(anchor['hash'],'checkpoint_hash')
+        try:positive(int(anchor['chainwork'],16),'checkpoint_chainwork',2**256-1)
+        except (TypeError,ValueError):raise Refused('invalid_checkpoint') from None
     scripts = policy.get("scripts", [])
     if not scripts:
         raise Refused("missing_registered_script")
@@ -90,6 +98,7 @@ def validate_policy(policy: dict) -> None:
 
 
 class M16Gate:
+    checkpoint_support=False
     def __init__(self, argv: list[str], binary_sha256: str, policy: dict, timeout: int = 600):
         native = len(argv) == 1
         wsl = len(argv) == 3 and argv[0].lower() == "wsl.exe" and argv[1] == "--exec"
@@ -120,8 +129,15 @@ class M16Gate:
         if actual != self.expected_hash:
             raise Refused("verifier_binary_mismatch")
 
-    def verify(self, statement: bytes, proof: bytes) -> Evidence:
-        parsed = parse_statement(statement)
+    def check_anchor(self,core):
+        anchor=self.policy.get('anchor')
+        if anchor:
+            if core.rpc('getblockhash',[anchor['height']])!=anchor['hash']:raise Refused('checkpoint_not_active')
+            header=core.rpc('getblockheader',[anchor['hash']])
+            if int(header['chainwork'],16)!=int(anchor['chainwork'],16):raise Refused('checkpoint_chainwork_mismatch')
+
+    def check_public(self, statement: bytes, proof: bytes) -> dict:
+        parsed = parse_statement(statement,self.policy.get('anchor') if self.checkpoint_support else None)
         if not proof or len(proof) > PROOF_LIMIT:
             raise Refused("artifact_size")
         if parsed["network"] != self.policy["network"]:
@@ -138,6 +154,10 @@ class M16Gate:
         if not any(s["script_sha256"] == parsed["script_sha256"] and s["min_value_sats"] <= parsed["value_sats"]
                    for s in self.policy["scripts"]):
             raise Refused("unregistered_payment")
+        return parsed
+
+    def verify(self, statement: bytes, proof: bytes) -> Evidence:
+        parsed=self.check_public(statement,proof)
         try:
             self._check_binary()
             artifact_root = Path.cwd() / ".runtime" / "verifier"
@@ -166,3 +186,29 @@ class M16Gate:
         evidence = Evidence(**parsed, proof_sha256=hashlib.sha256(proof).hexdigest(), kind="m16-verified")
         evidence.validate()
         return evidence
+
+
+class NativeFinalGate(M16Gate):
+    """Pinned m13 final verifier, with explicit M16 policy/checkpoint bindings."""
+    checkpoint_support=True
+
+    def verify(self,statement:bytes,proof:bytes)->Evidence:
+        parsed=self.check_public(statement,proof)
+        expected={key:self.policy['pins'][key] for key in ('wrap_vk_sha256','recursion_vk_root','program_vk_digest')}
+        expected.update(committed_values_sha256=parsed['statement_sha256'],exit_code=0,is_complete=1)
+        try:
+            self._check_binary()
+            root=Path.cwd()/'.runtime/verifier';root.mkdir(parents=True,exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix='final-',dir=root) as directory:
+                wrap=Path(directory)/'proof.bin';pins=Path(directory)/'expected.json'
+                wrap.write_bytes(proof);pins.write_text(json.dumps(expected),encoding='utf-8')
+                cp=subprocess.run(self.argv+['verify-v2',self._path(str(wrap)),self._path(str(pins))],
+                    stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=self.timeout,check=False)
+                if cp.returncode:raise Refused('proof_rejected')
+                try:result=json.loads(cp.stdout)
+                except ValueError:raise Refused('gate_response_invalid') from None
+                if result.get('status')!='verified':raise Refused('proof_rejected')
+                if any(result.get('statement',{}).get(key)!=value for key,value in expected.items()):raise Refused('gate_statement_mismatch')
+        except (OSError,subprocess.TimeoutExpired):raise Refused('verifier_unavailable') from None
+        evidence=Evidence(**parsed,proof_sha256=hashlib.sha256(proof).hexdigest(),kind='m16-verified')
+        evidence.validate();return evidence

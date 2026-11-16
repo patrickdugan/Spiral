@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "backend": "mocked HTTPS UI contract only",
+  "checks": [
+    {
+      "width": 1440,
+      "authenticated_reads": true,
+      "fixture_backend_refused": true,
+      "proof_check_ui": true,
+      "outage_not_fixtures": true,
+      "token_not_persisted": true,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "authenticated_reads": true,
+      "fixture_backend_refused": true,
+      "proof_check_ui": true,
+      "outage_not_fixtures": true,
+      "token_not_persisted": true,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": []
+}

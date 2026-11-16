@@ -2,6 +2,36 @@
 
 Checked locally on November 15, 2026. Commands and reproducible test scripts are in the repository.
 
+## Authenticated backend preparation, November 16, 2026 (Singapore time)
+
+The [VPS read-only check](vps-readonly-proof-check.json) ran the actual
+transcript-v2 native verifier on `170.75.168.145` and checked the real public
+Burger testnet4 proof against its existing Core node. Core was at height 161,603
+for that observation. The checkpoint at 160,000, payment block 161,011 and proven
+tip 161,016 were all active. The proof verified; no payment was admitted, no
+packages were installed and no services were started by the check.
+
+The [native verifier check](testnet4-native-verifier-check.json) also refused a
+flipped proof, a truncated proof and altered payment bytes. The verifier binary
+is SHA-256 pinned; the checkpoint is explicit and Core rechecks its hash and
+chainwork. The original genesis-only payment-gate path retains its defaults.
+The recorded payment is historical, not a fresh mint deposit. Admission freshness
+and claim-once rules have not been relaxed.
+
+- Python checks: 88 passed, including bearer/CORS enforcement, checkpoint
+  substitution, rotating node cookies and connected/static build separation.
+- Wallet checks: 12 passed, including desk-only operator authorization that is
+  not persisted in wallet state.
+- Connected desktop/phone UI checks passed against an explicitly mocked HTTPS
+  backend, covering disconnect, outage handling, no fixture fallback and
+  memory-only access tokens. See [UI result](connected-hosting-browser-check.json).
+- The fixture examples passed separately at `/demo/` at 1440 and 390 px.
+
+The authenticated client, API, service unit and proxy configuration are prepared.
+Persistent VPS package/service installation is pending explicit approval after
+automatic review rejected the Caddy/Docker installation. The hosted production
+URL has not yet been switched to this prepared backend.
+
 ## Static Pages export, November 16, 2026 (Singapore time)
 
 The public exporter packages only its listed assets, precomputed Python fixture

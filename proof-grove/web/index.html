@@ -19,6 +19,7 @@
 <div class="workspace">
   <header class="topbar"><span>Personal workspace <span class="slash">/</span> <strong id="breadcrumb">Payment gate</strong></span><span class="badge" id="mode-badge">Loading…</span></header>
   <main id="main">
+    <section class="panel" id="chainstate-panel" hidden><div class="panel-head"><h2>Bitcoin Core chainstate</h2><button class="secondary" id="refresh-chainstate">Refresh observation</button></div><p class="help" id="chainstate-status">No chain observation loaded.</p><details><summary>Inspect node observation</summary><pre id="chainstate-json"></pre></details></section>
     <section class="page" id="payments">
       <div class="heading-row"><div><p class="eyebrow">PROOF BEFORE PERMISSION</p><h1>Let the evidence decide.</h1><p class="lede">A payment in. A policy check. One settlement request out.</p></div><div class="network-tag"><span class="dot"></span><span id="network-label">Regtest fixtures</span></div></div>
       <div class="notice" id="mode-notice"><span class="notice-icon">i</span><p><strong>Demo workspace.</strong> All payment and VTXO data here are fixtures. No native proof is verified, no ecash is issued, and no transaction is sent.</p></div>
@@ -28,6 +29,7 @@
           <div class="panel-head"><div><p class="eyebrow">THE PAYMENT PATH</p><h2 id="flow-title">Evidence → action</h2></div><span class="pill">01 / POLICY GATE</span></div>
           <div id="demo-controls"><label for="case-select">Choose a case</label><div class="case-controls"><select id="case-select"></select><button class="primary" id="run-case">Run case <span>↗</span></button></div><p class="help" id="case-description"></p></div>
           <form id="live-controls" hidden><label for="intent-select">Configured payment intent</label><select id="intent-select" required></select><div class="file-inputs" id="proof-files"><label>M16 statement (.bin)<input type="file" id="statement-file" accept=".bin" required></label><label>Final proof (.bin)<input type="file" id="proof-file" accept=".bin" required></label></div><div id="regtest-fields" hidden><label for="regtest-txid">Confirmed regtest transaction ID</label><input id="regtest-txid" type="text" pattern="[0-9a-f]{64}" maxlength="64"><label for="regtest-vout">Output index</label><input id="regtest-vout" type="number" min="0" value="0"></div><button class="primary" type="submit">Verify & prepare <span>↗</span></button><p class="help" id="verification-help">Runs the pinned native verifier and checks the active chain through your local Bitcoin Core.</p></form>
+          <button class="secondary" id="check-recorded-proof" hidden>Verify the configured payment proof</button><p class="help" id="recorded-proof-status" hidden></p>
           <ol id="steps" class="steps" aria-label="Payment decision stages"></ol>
           <details class="raw-details"><summary>Inspect payment evidence <span>+</span></summary><pre id="raw-evidence"></pre></details>
         </section>

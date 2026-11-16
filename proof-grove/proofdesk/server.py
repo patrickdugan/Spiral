@@ -7,6 +7,7 @@ import json
 import mimetypes
 import threading
 import time
+import hashlib
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,7 +21,8 @@ from .ark import ArkCaretaker
 from .exits import ExitRecovery
 from .domain import Ledger, Refused, Rules, canonical, plan_vtxo
 from .regtest import payment_from_regtest
-from .verifier import M16Gate, PROOF_LIMIT, STATEMENT_SIZE
+from .verifier import M16Gate, PROOF_LIMIT, STATEMENT_SIZE, read_bounded
+from .access import HostedAccess, AccessDenied
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 
@@ -47,6 +49,52 @@ class Desk:
                 "settlement": "proof-gated Cashu issuance" if self.cashu else "preparation only", "custody": "Cashu remains mint-custodial; Ark retains expiry and operator liveness requirements.",
                 "intents": [asdict(self.ledger.intent(r[0])) for r in self.ledger.db.execute("SELECT id FROM intents")] if self.ledger else []}
 
+    def chainstate(self) -> dict:
+        if not self.core:raise Refused('core_not_configured')
+        info=self.core.rpc('getblockchaininfo',[])
+        if not isinstance(info,dict):raise Refused('core_response_invalid')
+        network={'main':'mainnet','testnet4':'testnet4','regtest':'regtest'}.get(info.get('chain'))
+        if not network:raise Refused('unsupported_chain')
+        expected='regtest' if self.mode=='regtest' else (self.gate.policy['network'] if self.gate else None)
+        if expected and network!=expected:raise Refused('core_network_mismatch')
+        return {'evidence_level':'bitcoin-core','network':network,'observed_at':int(time.time()),
+                **{k:info.get(k) for k in ('blocks','headers','bestblockhash','chainwork','mediantime','verificationprogress','initialblockdownload')},
+                'meaning':'Fresh configured Core observation; this response is not a new ZK proof.'}
+
+    def proof_check(self,body) -> dict:
+        if self.mode!='live' or not self.gate:raise Refused('live_verifier_not_configured')
+        try:
+            statement=base64.b64decode(body.get('statement_base64',''),validate=True)
+            proof=base64.b64decode(body.get('proof_base64',''),validate=True)
+        except (ValueError,TypeError,binascii.Error):raise Refused('invalid_artifact_encoding') from None
+        if len(statement)!=STATEMENT_SIZE or not 0<len(proof)<=PROOF_LIMIT:raise Refused('artifact_size')
+        evidence=self.gate.verify(statement,proof)
+        # A proof check has no recipient or issuance side effect. Admission uses
+        # the original intent-bound endpoint and its stricter freshness policy.
+        observation=None;chain_error=None
+        if self.core:
+            try:
+                self.gate.check_anchor(self.core)
+                observation=asdict(self.core.view_for(evidence))
+            except Refused as error:chain_error=error.code
+        else:chain_error='core_not_configured'
+        return {'schema':'proof-grove/proof-check/v1','proof_verified':True,'evidence':asdict(evidence),
+                'chain_observation':observation,'chain_error':chain_error,'payment_admitted':False,
+                'meaning':'Native proof verified. No payment reserved, blind signatures requested or transaction signed.'}
+
+    def recorded_proof(self):
+        record=self.config.get('recorded_proof')
+        if not isinstance(record,dict):raise Refused('recorded_proof_not_configured')
+        return record
+
+    def check_recorded_proof(self):
+        record=self.recorded_proof()
+        statement=read_bounded(record['statement_file'],STATEMENT_SIZE)
+        proof=read_bounded(record['proof_file'],PROOF_LIMIT)
+        for key,raw in (('statement',statement),('proof',proof)):
+            if hashlib.sha256(raw).hexdigest()!=record[key+'_sha256']:raise Refused('recorded_artifact_changed')
+        return self.proof_check({'statement_base64':base64.b64encode(statement).decode(),'proof_base64':base64.b64encode(proof).decode()})
+
     def verify(self, body: dict) -> dict:
         if self.mode not in ("live","regtest") or not self.core or not self.ledger:
             raise Refused("live_verifier_not_configured")
@@ -68,6 +116,7 @@ class Desk:
             evidence = M16Gate(self.gate.argv,self.gate.expected_hash,policy,self.gate.timeout).verify(statement,proof)
             rules = Rules(policy["network"],policy["min_confirmations"],int(policy["min_tip_chainwork"],16),
                           self.config.get("max_tip_lag",12),self.config.get("max_view_age_seconds",120),"live")
+        if self.mode=='live':self.gate.check_anchor(self.core)
         chain = self.core.view_for(evidence)
         receipt = self.ledger.prepare(intent.id, evidence, chain, rules, int(time.time()))
         return {"decision": {"accepted": True, "code": "prepared", "receipt": receipt},
@@ -75,18 +124,25 @@ class Desk:
                 "receipts": self.ledger.receipts()}
 
 
-def make_server(desk: Desk, port: int = 8765) -> ThreadingHTTPServer:
+def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = None,
+                bind: str = '127.0.0.1') -> ThreadingHTTPServer:
+    if access and desk.mode=='demo':raise Refused('hosted_gateway_requires_connected_mode')
+    if bind not in ('127.0.0.1','0.0.0.0') or (bind!='127.0.0.1' and not access):raise Refused('hosted_access_required_for_remote_bind')
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, format, *args):
             pass  # Paths may contain private quote identifiers.
 
-        def _guard(self, mutation: bool = False):
+        def _guard(self, mutation: bool = False, preflight: bool = False):
             hosts = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+            if access:hosts.update(access.hosts)
             if self.headers.get("Host") not in hosts:
                 raise Refused("invalid_host")
             origin = self.headers.get("Origin")
-            if origin and origin not in {"http://" + host for host in hosts}:
+            origins=set(access.origins) if access else {"http://" + host for host in hosts}
+            if origin and origin not in origins:
                 raise Refused("invalid_origin")
+            if access and not preflight and urlsplit(self.path).path.startswith('/api/'):
+                access.authorize(self.headers,urlsplit(self.path).path,mutation)
             if mutation and self.headers.get("X-Proof-Grove") != "1":
                 raise Refused("same_origin_header_required")
 
@@ -105,15 +161,32 @@ def make_server(desk: Desk, port: int = 8765) -> ThreadingHTTPServer:
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
+            if access:
+                self.send_header('Vary','Origin')
+                if self.headers.get('Origin') in access.origins:
+                    self.send_header('Access-Control-Allow-Origin',self.headers['Origin'])
+                    self.send_header('Access-Control-Allow-Methods','GET, POST, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers','Authorization, Content-Type, X-Proof-Grove')
             self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
             self.end_headers()
             self.wfile.write(payload)
 
         def _error(self, exc: Exception):
             if isinstance(exc, Refused):
-                self._send(400, canonical({"error": exc.code, "detail": exc.detail}))
+                self._send(exc.status if isinstance(exc,AccessDenied) else 400, canonical({"error": exc.code, "detail": exc.detail}))
             else:
                 self._send(500, canonical({"error": "internal_error"}))
+
+        def do_OPTIONS(self):
+            try:
+                if not access:raise Refused('cors_not_enabled')
+                self._guard(preflight=True)
+                if self.headers.get('Origin') not in access.origins:raise Refused('invalid_origin')
+                if self.headers.get('Access-Control-Request-Method') not in ('GET','POST'):raise Refused('invalid_preflight_method')
+                requested={x.strip().lower() for x in self.headers.get('Access-Control-Request-Headers','').split(',') if x.strip()}
+                if not requested<={'authorization','content-type','x-proof-grove'}:raise Refused('invalid_preflight_headers')
+                self._send(204,b'')
+            except Exception as exc:self._error(exc)
 
         def do_GET(self):
             try:
@@ -123,6 +196,13 @@ def make_server(desk: Desk, port: int = 8765) -> ThreadingHTTPServer:
                 with desk.lock:
                     if path == "/api/status":
                         value = desk.status()
+                        value['hosted_access']={'enabled':bool(access),'mutations':bool(access and access.mutations),
+                                                'private_bundles':bool(access and access.private_bundles)}
+                    elif path == '/api/chainstate':
+                        value=desk.chainstate()
+                    elif path == '/api/proofs/recorded':
+                        record=desk.recorded_proof()
+                        value={k:record[k] for k in ('name','statement_sha256','proof_sha256')}
                     elif path == "/api/cases":
                         value = {"cases": demo.CASES if desk.mode == "demo" else [], "current": desk.last}
                     elif path == "/api/receipts":
@@ -187,6 +267,11 @@ def make_server(desk: Desk, port: int = 8765) -> ThreadingHTTPServer:
                     if self.path == "/api/run" and desk.mode == "demo":
                         desk.last = demo.run_case(body.get("case", ""))
                         value = desk.last
+                    elif self.path == '/api/proofs/check':
+                        value=desk.proof_check(body)
+                    elif self.path == '/api/proofs/recorded/check':
+                        if body:raise Refused('recorded_proof_parameters_not_allowed')
+                        value=desk.check_recorded_proof()
                     elif self.path == "/api/verify":
                         value = desk.verify(body)
                     elif self.path == "/api/cashu/bind":
@@ -222,4 +307,4 @@ def make_server(desk: Desk, port: int = 8765) -> ThreadingHTTPServer:
             except Exception as exc:
                 self._error(exc)
 
-    return ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    return ThreadingHTTPServer((bind, port), Handler)

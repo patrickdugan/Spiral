@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "network": "testnet4",
+  "core_height": 161603,
+  "core_observed_at": 1794799147,
+  "checkpoint_height": 160000,
+  "proven_tip": 161016,
+  "payment_block": 161011,
+  "payment_sats": 11600,
+  "statement_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+  "proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+  "native_verifier_sha256": "4ffe8241b0dddfde808366f865a551d75e726489c300cb4d720027820159897c",
+  "active_checkpoint_checked": true,
+  "active_payment_and_tip_checked": true,
+  "payment_admitted": false,
+  "packages_installed": false,
+  "services_started": false
+}

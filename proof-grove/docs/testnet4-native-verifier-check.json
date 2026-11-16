@@ -1,0 +1,38 @@
+{
+  "status": "passed",
+  "verifier": "m13-verify transcript v2",
+  "verifier_source_commit": "fcddd4d",
+  "binary_sha256": "4ffe8241b0dddfde808366f865a551d75e726489c300cb4d720027820159897c",
+  "statement_sha256": "220205b4e5826bc0f3423abf39feb52c66bd4c081a1b617b85ce909c5719fc43",
+  "proof_sha256": "f5123369c8795d698510955d33b22e9118f7206ef8622e2e679dab3833a24faa",
+  "checkpoint_height": 160000,
+  "checks": [
+    {
+      "case": "authentic-proof",
+      "status": "verified",
+      "network": "testnet4",
+      "tip_height": 161016,
+      "value_sats": 11600
+    },
+    {
+      "case": "flipped-proof",
+      "status": "refused",
+      "reason": "proof_rejected"
+    },
+    {
+      "case": "truncated-proof",
+      "status": "refused",
+      "reason": "proof_rejected"
+    },
+    {
+      "case": "altered-payment",
+      "status": "refused",
+      "reason": "proof_rejected"
+    }
+  ],
+  "seconds": 79.422,
+  "limits": [
+    "Native cryptographic verification, not a new issuance or payout.",
+    "Active-chain observations are tested separately against the VPS node."
+  ]
+}

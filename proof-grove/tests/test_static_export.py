@@ -6,7 +6,9 @@ import tempfile
 import unittest
 
 ROOT=Path(__file__).resolve().parent.parent
-export_pages=runpy.run_path(str(ROOT/'scripts/build-pages.py'))['export_pages']
+EXPORTERS=runpy.run_path(str(ROOT/'scripts/build-pages.py'))
+export_pages=EXPORTERS['export_pages']
+export_fixtures=EXPORTERS['export_fixtures']
 
 
 class StaticExportTests(unittest.TestCase):
@@ -18,7 +20,7 @@ class StaticExportTests(unittest.TestCase):
         (ROOT/'.runtime').mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT/'.runtime') as directory:
             target=Path(directory)/'site'
-            export_pages(target)
+            export_fixtures(target)
             self.assertEqual({p.relative_to(target).as_posix() for p in target.rglob('*') if p.is_file()},
                 {'index.html','styles.css','icon.svg','app.js','hosted.js','demo-data.json','.nojekyll',
                  'results/cashu-ark-integration.json','results/cashu-ark-exit-integration.json'})
@@ -40,3 +42,16 @@ class StaticExportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'empty'):
                 export_pages(target)
             self.assertEqual(private.read_bytes(),b'private')
+
+    def test_primary_site_requires_a_real_authenticated_backend(self):
+        with tempfile.TemporaryDirectory(dir=ROOT/'.runtime') as directory:
+            target=Path(directory)/'connected';export_pages(target)
+            html=(target/'index.html').read_text(encoding='utf-8')
+            self.assertIn('./connection.js',html);self.assertNotIn('./hosted.js',html)
+            self.assertIn('id="payments" hidden',html)
+            self.assertIn('id="backend-token" type="password"',html)
+            self.assertIn('href="./demo/"',html)
+            self.assertFalse((target/'demo-data.json').exists())
+            self.assertTrue((target/'demo/demo-data.json').exists())
+            config=json.loads((target/'backend-config.json').read_text())
+            self.assertNotIn('token',config)

@@ -9,16 +9,21 @@ const hex = bytes => Buffer.from(bytes).toString('hex');
 const normalizeUrl = value => { const url=new URL(value); if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)throw new Error('Invalid wallet endpoint'); if(url.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(url.hostname))throw new Error('Remote endpoints require HTTPS'); return url.href.replace(/\/$/,''); };
 
 export class ProofWallet {
-  constructor({mintUrl,deskUrl,vault}) { this.mintUrl=normalizeUrl(mintUrl);this.deskUrl=normalizeUrl(deskUrl);this.vault=vault; }
+  constructor({mintUrl,deskUrl,vault,deskToken}) {
+    this.mintUrl=normalizeUrl(mintUrl);this.deskUrl=normalizeUrl(deskUrl);this.vault=vault;
+    if(deskToken!==undefined&&!/^[A-Za-z0-9_-]{43,128}$/.test(deskToken))throw new Error('Invalid backend operator token');
+    this.deskToken=deskToken;
+  }
+  deskHeaders(){return {'Content-Type':'application/json','X-Proof-Grove':'1',...(this.deskToken?{Authorization:'Bearer '+this.deskToken}:{})};}
   async request(path,body) {
-    const response=await fetch(this.deskUrl+path,{method:'POST',redirect:'error',headers:{'Content-Type':'application/json','X-Proof-Grove':'1'},body:JSON.stringify(body),signal:AbortSignal.timeout(90_000)});
+    const response=await fetch(this.deskUrl+path,{method:'POST',redirect:'error',headers:this.deskHeaders(),body:JSON.stringify(body),signal:AbortSignal.timeout(90_000)});
     const data=await response.json();
     if(!response.ok)throw new Error(data.error||'Proof desk request failed');
     return data;
   }
   async wallet() { const wallet=new Wallet(new Mint(this.mintUrl,{customRequest:singleAttemptRequest}));await wallet.loadMint();return wallet; }
   async read(path) {
-    const response=await fetch(this.deskUrl+path,{redirect:'error',signal:AbortSignal.timeout(30_000)});
+    const response=await fetch(this.deskUrl+path,{redirect:'error',headers:this.deskHeaders(),signal:AbortSignal.timeout(30_000)});
     if(!response.ok)throw new Error('Proof desk read failed');return response.json();
   }
   createArkPayment(id,destination,amount,maxFee){return createArkPayment(this,id,destination,amount,maxFee);}

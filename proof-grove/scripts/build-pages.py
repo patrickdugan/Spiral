@@ -1,4 +1,4 @@
-"""Export an allowlisted static fixture demo; never export local wallet state."""
+"""Export the authenticated backend client and separate public fixture examples."""
 import argparse
 import json
 import re
@@ -13,7 +13,7 @@ from proofdesk.archive import bundle
 from proofdesk.server import Desk
 
 
-def export_pages(output:Path):
+def export_fixtures(output:Path):
     output=output.resolve()
     if output.exists() and any(output.iterdir()):
         raise ValueError('Static export requires a new or empty output directory')
@@ -52,6 +52,31 @@ def export_pages(output:Path):
     (output/'index.html').write_text(html,encoding='utf-8')
     (output/'.nojekyll').touch()
     return {'output':str(output),'cases':len(runs),'heights':len(payload['plans']),'mode':'static-fixtures'}
+
+
+def export_pages(output:Path):
+    output=output.resolve()
+    if output.exists() and any(output.iterdir()):
+        raise ValueError('Static export requires a new or empty output directory')
+    output.mkdir(parents=True,exist_ok=True)
+    export_fixtures(output/'demo')
+    for name in ('styles.css','app.js','icon.svg','connection.js','backend-config.json'):
+        shutil.copyfile(ROOT/'web'/name,output/name)
+    html=(ROOT/'web/index.html').read_text(encoding='utf-8')
+    for name in ('styles.css','app.js','icon.svg'):
+        html=html.replace('"/'+name+'"','"./'+name+'"')
+    html=html.replace('href="/"','href="./"').replace('<script src="./app.js" defer>',
+        '<script src="./connection.js" defer></script><script src="./app.js" defer>')
+    for name in ('payments','caretaker','evidence'):
+        html=html.replace('id="'+name+'"','id="'+name+'" hidden',1)
+    html=html.replace('v0.4 · local build','v0.5 · authenticated backend')
+    html=html.replace('Local workspace <small>Python · no dependencies</small>',
+        'Hosted workspace <small>Authenticated backend required</small>')
+    connection='''<section class="panel" id="hosted-connection"><div class="panel-head"><h2>Connect your Proof Grove backend</h2><button class="secondary" id="disconnect-backend" hidden>Disconnect</button></div><p id="backend-status" class="help" aria-live="polite">No backend connected. No payment or chain data is being fetched.</p><form id="backend-form"><div class="file-inputs"><label>Backend HTTPS origin<input id="backend-url" type="url" placeholder="https://api.example.com" required></label><label>Operator token<input id="backend-token" type="password" autocomplete="off" minlength="43" maxlength="128" required></label></div><button class="primary" id="connect-backend" type="submit">Connect backend</button><p class="help">The token stays in this tab's memory. Native verification, Core reads and wallet calls run on your backend.</p></form><p class="help"><a href="./demo/">Open fixture examples ↗</a> · <a href="https://github.com/patrickdugan/Spiral/tree/main/proof-grove">Backend setup and source ↗</a></p></section>'''
+    html=html.replace('<main id="main">','<main id="main">'+connection,1)
+    (output/'index.html').write_text(html,encoding='utf-8')
+    (output/'.nojekyll').touch()
+    return {'output':str(output),'mode':'authenticated-backend','fixture_examples':'demo/'}
 
 
 if __name__=='__main__':

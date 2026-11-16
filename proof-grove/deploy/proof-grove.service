@@ -1,0 +1,26 @@
+[Unit]
+Description=Proof Grove authenticated native proof and chainstate API
+After=network-online.target rehearsal-bitcoind.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/proof-grove/state
+Environment=PYTHONPATH=/opt/proof-grove/current
+EnvironmentFile=/opt/proof-grove/config/operator.env
+ExecStart=/usr/bin/python3 -m proofdesk serve --config /opt/proof-grove/config/testnet4.local.json --hosted --port 8767
+Restart=on-failure
+RestartSec=5
+MemoryMax=384M
+TasksMax=64
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/proof-grove/state
+
+[Install]
+WantedBy=multi-user.target

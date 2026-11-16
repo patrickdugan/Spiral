@@ -10,6 +10,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 from .domain import ChainView, Evidence, Refused
 
@@ -58,12 +59,26 @@ class CoreClient:
             raise Refused("core_loopback_required")
         auth = base64.b64encode(f"{username}:{password}".encode()).decode()
         self.http = HTTP(url, {"Authorization": f"Basic {auth}"})
+        self.cookie_file=None
+
+    @classmethod
+    def from_config(cls,config):
+        if config.get('cookie_file'):
+            client=cls(config['url'],'','');client.cookie_file=Path(config['cookie_file']);return client
+        import os
+        return cls(config['url'],config['username'],os.environ[config['password_env']])
 
     def rpc(self, method: str, params: list) -> object:
         # This explicit list cannot sign or broadcast.
         if method not in ("getblockchaininfo", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
                           "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept"):
             raise Refused("rpc_not_allowed")
+        if self.cookie_file:
+            try:
+                credential=self.cookie_file.read_bytes().strip()
+                if not credential or b':' not in credential:raise OSError('invalid cookie')
+                self.http.headers['Authorization']='Basic '+base64.b64encode(credential).decode()
+            except OSError:raise Refused('core_cookie_unavailable') from None
         record = self.http.request("", {"jsonrpc": "2.0", "id": "proof-grove", "method": method, "params": params})
         if isinstance(record, dict) and isinstance(record.get("error"), dict) and type(record["error"].get("code")) is int:
             raise CoreRPCError(record["error"]["code"])

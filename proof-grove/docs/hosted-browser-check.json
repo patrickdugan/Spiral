@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "base": "http://127.0.0.1:8899/Spiral/proof-grove/",
+  "base": "http://127.0.0.1:8899/Spiral/proof-grove/demo/",
   "checks": [
     {
       "width": 1440,

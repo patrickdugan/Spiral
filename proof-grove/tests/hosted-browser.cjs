@@ -6,7 +6,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 
 (async()=>{
-  const base=process.env.PROOF_GROVE_BASE||'http://127.0.0.1:8899/Spiral/proof-grove/';
+  const base=process.env.PROOF_GROVE_BASE||'http://127.0.0.1:8899/Spiral/proof-grove/demo/';
   const browser=await chromium.launch({headless:true,executablePath:process.env.PROOF_GROVE_BROWSER||undefined});
   const errors=[],requests=[],checks=[];
   const output=path.resolve('.runtime/hosted-browser');fs.mkdirSync(output,{recursive:true});
@@ -14,9 +14,10 @@ const crypto=require('node:crypto');
     for(const width of [1440,390]){
       const context=await browser.newContext({viewport:{width,height:width===390?844:1100},reducedMotion:'reduce'});
       const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+      page.setDefaultNavigationTimeout(60_000);
       page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
       page.on('request',request=>requests.push(request.url()));
-      await page.goto(base,{waitUntil:'networkidle'});
+      await page.goto(base,{waitUntil:'domcontentloaded'});
       await page.locator('#case-select option').first().waitFor({state:'attached'});
       assert.equal(await page.locator('#case-select option').count(),8);
       assert.match(await page.locator('#mode-notice').textContent(),/Hosted fixture demo/);
