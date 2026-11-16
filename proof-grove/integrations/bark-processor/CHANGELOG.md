@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Add a regtest-only seed helper using the existing BIP39 and OS-seeded rand
+  libraries, so the persistent sandbox never reuses public fixture mnemonics.
+
 - Proof Grove integration: pin CDK 0.18.3 and Bark 0.8.1 for the native Ark/Cashu stack.
 - Adapt typed block heights, arkoor movement IDs and offboard results to Bark 0.8.1.
 - Add an optional loopback Core source using an environment-named RPC password.

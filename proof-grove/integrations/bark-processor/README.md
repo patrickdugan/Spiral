@@ -60,6 +60,10 @@ Cleartext gRPC is explicitly enabled for this loopback fixture. Upstream mTLS su
 
 ## Fixture liquidity helper
 
+The `seed` operation generates a private BIP39 mnemonic for an isolated regtest
+deployment using the existing cryptographic libraries. Capture its JSON directly
+into private server state; do not print it in deployment logs or publish it.
+
 The explicit `regtest-control` feature exposes `regtest-liquidity` as a local example binary, not as a gRPC method. It refuses non-regtest configurations and requires the local Core profile before opening a wallet. It supports `address`, `board AMOUNT_SATS` and `status`. Run it only while the processor is stopped; never let both processes mutate the same wallet.
 
 See [withdrawal guide](../../docs/cashu-ark-withdrawal.md) for the owned Core/Ark/CDK supervisor, lost-response recovery and recipient validation. A mint payment string such as `arkoor-movement-123` is a local receipt identifier, not proof of Bitcoin settlement or a recipient VTXO. Cashu stays custodial until redemption; this port supplies no solvency proof.

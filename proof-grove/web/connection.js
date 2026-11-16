@@ -2,9 +2,10 @@
 // Endpoint configuration is public. The operator token exists only in this tab.
 (() => {
   const $=id=>document.getElementById(id);
-  let endpoint='',token='';
+  let endpoint='',token='',profiles=[],generation=0;
   const connection={connected:false,onConnect:null,onDisconnect:null};
   function disconnect(message='Disconnected. No backend data is being fetched.'){
+    generation++;
     endpoint='';token='';connection.connected=false;$('backend-token').value='';
     $('backend-form').hidden=false;$('disconnect-backend').hidden=true;
     $('backend-status').textContent=message;$('mode-badge').textContent='BACKEND DISCONNECTED';
@@ -19,6 +20,7 @@
     return url.origin;
   }
   async function request(path,body,blob=false){
+    const started=generation;
     if(!endpoint||!token)throw new Error('Connect an authenticated backend first.');
     if(!path.startsWith('/api/'))throw new Error('Unsupported backend route');
     let response;
@@ -26,6 +28,7 @@
       headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','X-Proof-Grove':'1'},
       body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/proofs/check'||path==='/api/verify'?180_000:30_000)});}
     catch{throw new Error('Backend unreachable. Check its HTTPS address, allowed origin and service status.');}
+    if(started!==generation)throw new Error('Backend connection changed; discard the previous response.');
     if(response.status===401){disconnect('Backend authentication failed. Reconnect with the operator token.');throw new Error('Backend authentication failed.');}
     if(!response.ok){let code='backend_request_failed';try{code=(await response.json()).error||code;}catch{}throw new Error(code);}
     return blob?response.blob():response.json();
@@ -48,8 +51,19 @@
     finally{button.disabled=false;}
   });
   $('disconnect-backend').addEventListener('click',()=>disconnect());
+  $('backend-profile').addEventListener('change',event=>{
+    disconnect();
+    const profile=profiles.find(item=>item.id===event.target.value);
+    if(profile){$('backend-url').value=profile.api_url;$('backend-status').textContent=profile.description;}
+  });
   fetch(new URL('./backend-config.json',document.baseURI),{cache:'no-store'})
-    .then(response=>response.json()).then(config=>{if(config.api_url)$('backend-url').value=normalizeEndpoint(config.api_url);})
+    .then(response=>response.json()).then(config=>{
+      profiles=(config.profiles||[]).map(profile=>({...profile,api_url:normalizeEndpoint(profile.api_url)}));
+      for(const profile of profiles){const option=document.createElement('option');option.value=profile.id;option.textContent=profile.label;$('backend-profile').append(option);}
+      if(config.api_url)$('backend-url').value=normalizeEndpoint(config.api_url);
+      const selected=profiles.find(profile=>profile.api_url===$('backend-url').value);
+      if(selected){$('backend-profile').value=selected.id;$('backend-status').textContent=selected.description;}
+    })
     .catch(()=>{$('backend-status').textContent='Enter your backend HTTPS origin and operator token to connect.';});
   disconnect();
 })();

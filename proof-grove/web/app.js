@@ -259,6 +259,11 @@ async function initialize() {
   const [status, cases, vtxos, sources] = await Promise.all(['/api/status', '/api/cases', '/api/vtxos', '/api/sources'].map(path => api(path)));
   state.mode = status.mode; state.cases = cases.cases; state.vtxos = vtxos.vtxos; state.planRequest = 0;
   state.hostedMutations=!status.hosted_access?.enabled||status.hosted_access.mutations;
+  $('proof-files').hidden=status.mode==='regtest';
+  $('statement-file').required=status.mode==='live';$('proof-file').required=status.mode==='live';
+  $('regtest-fields').hidden=status.mode!=='regtest';$('regtest-txid').required=status.mode==='regtest';
+  $('check-recorded-proof').hidden=true;$('recorded-proof-status').hidden=true;
+  $('ark-connection').hidden=!status.ark_wallet_configured;$('ark-vtxo-panel').hidden=true;
   $('mode-badge').textContent = status.mode === 'demo' ? 'DEMO · NO FUNDS' : status.mode==='regtest' ? 'REGTEST · TEST COINS' : 'CONNECTED · PROOF GATE';
   if (status.mode !== 'demo') {
     $('ark-demo-clock').hidden = true;
@@ -270,7 +275,7 @@ async function initialize() {
       $('proof-files').hidden=true;$('statement-file').required=false;$('proof-file').required=false;
       $('regtest-fields').hidden=false;$('regtest-txid').required=true;
       $('verification-help').textContent='Uses the configured isolated regtest Core node. No fixture or browser-supplied verification flag is accepted.';
-    }
+    }else $('verification-help').textContent='Checks native proof bytes and active testnet4 chain context. Historical verification creates no new payment credit.';
     $('network-label').textContent = status.intents[0]?.network || 'No intents configured';
     $('intent-select').replaceChildren(...status.intents.map(intent => { const option = element('option', '', intent.id + ' · ' + intent.amount_sats.toLocaleString('en-US') + ' sats'); option.value = intent.id; return option; }));
     if(status.mode==='live'){

@@ -5,6 +5,7 @@
     {
       "width": 1440,
       "authenticated_reads": true,
+      "profile_switch_clears_token": true,
       "fixture_backend_refused": true,
       "proof_check_ui": true,
       "outage_not_fixtures": true,
@@ -14,6 +15,7 @@
     {
       "width": 390,
       "authenticated_reads": true,
+      "profile_switch_clears_token": true,
       "fixture_backend_refused": true,
       "proof_check_ui": true,
       "outage_not_fixtures": true,

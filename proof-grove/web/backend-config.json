@@ -1,1 +1,17 @@
-{"api_url":null}
+{
+  "api_url": "https://proof-grove.170-75-168-145.sslip.io",
+  "profiles": [
+    {
+      "id": "testnet4",
+      "label": "Testnet4 \u2014 live Core + native proof verifier",
+      "api_url": "https://proof-grove.170-75-168-145.sslip.io",
+      "description": "Live testnet4 node and recorded folding/payment proof. Historical verification is read only; it creates no new payment credit."
+    },
+    {
+      "id": "regtest",
+      "label": "Regtest \u2014 real Ark + Cashu test services",
+      "api_url": "https://proof-grove-regtest.170-75-168-145.sslip.io",
+      "description": "Isolated Bitcoin regtest, Bark 0.8.1 and CDK 0.18.3. These are valueless test coins; testnet4 proofs cannot mint here."
+    }
+  ]
+}

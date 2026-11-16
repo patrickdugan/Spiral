@@ -14,3 +14,19 @@
         respond "Proof Grove authenticated API. Use the hosted application." 404
     }
 }
+
+proof-grove-regtest.170-75-168-145.sslip.io {
+    @api path /api/*
+    handle @api {
+        reverse_proxy 127.0.0.1:8768 {
+            transport http {
+                max_conns_per_host 16
+                dial_timeout 3s
+                response_header_timeout 180s
+            }
+        }
+    }
+    handle {
+        respond "Proof Grove authenticated regtest API. Use the hosted application." 404
+    }
+}
