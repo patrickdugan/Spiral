@@ -13,7 +13,7 @@ verification and wallet operations run in the local app. See [hosting](docs/host
 The dashboard and proof service require Python 3.11 or newer and no Python dependencies. The optional Cashu wallet uses Node 24 and the pinned official SDK.
 
 ```powershell
-cd C:\Users\patri\Documents\Codex\2026-11-15\new-chat\outputs\ark-cashu-proofdesk
+cd proof-grove
 python -m proofdesk serve
 ```
 

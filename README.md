@@ -1,11 +1,12 @@
 # Spiral
 
-Lightning Network liquidity as a capital problem for populations of autonomous agents: a conservation bound on directional channel capacity that no routing policy relaxes, where that bound goes under a server-mediated settlement object of the Ark type and under the multiparty channels that the BIP 448 soft-fork proposal would make practical, a claim-once reward registry that needs no identities, and what a population of agents under common control can do with each. The work is defensive and non-operational. Nothing here connects to a wallet, node, chain RPC, or live Lightning Network; every result is from a simulator on sampled public topology or from a reference model with a simulated proof system.
+Lightning Network liquidity as a capital problem for populations of autonomous agents: a conservation bound on directional channel capacity that no routing policy relaxes, where that bound goes under a server-mediated settlement object of the Ark type and under the multiparty channels that the BIP 448 soft-fork proposal would make practical, a claim-once reward registry that needs no identities, and what a population of agents under common control can do with each. The paper research is defensive and non-operational: its simulator and reference-model results do not connect to wallets or live Lightning. The separately scoped `proof-grove/` prototype includes local native verification, configured wallet/Core adapters and isolated regtest integration tests; its public website uses fixtures.
 
 ## What is here
 
 | Path | Contents |
 |---|---|
+| `proof-grove/` | Ark/Cashu proof-admission and recovery prototype, encrypted local wallet, native regtest integration and [public fixture demo](https://patrickdugan.github.io/Spiral/proof-grove/). Native signing and verification run locally. |
 | `paper/tex/` | The current paper, *Where the Capital Bound Moves* (`main.tex`, compiled `main.pdf`). `grid.tex` is generated from the reference model. |
 | `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. The automated tests witness the propositions on finite cases. |
 | `src/spiral_ln/` | Python simulator: directional balance algebra, typed connectors, routing and placement campaigns on sampled public topology, coalition fixtures. |

@@ -10,6 +10,10 @@ export_pages=runpy.run_path(str(ROOT/'scripts/build-pages.py'))['export_pages']
 
 
 class StaticExportTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        (ROOT/'.runtime').mkdir(exist_ok=True)
+
     def test_public_export_is_allowlisted_and_works_under_a_project_subpath(self):
         (ROOT/'.runtime').mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT/'.runtime') as directory:

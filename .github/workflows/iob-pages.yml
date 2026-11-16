@@ -1,19 +1,20 @@
 name: iob-pages
 
-# Publishes the In-and-Out-Burger demo page (in-and-out-burger/site) to the gh-pages branch under
-# in-and-out-burger/, served at https://patrickdugan.github.io/Spiral/in-and-out-burger/.
-# Everything else on gh-pages is left as it is.
+# Publishes both demos into their own directories. All other gh-pages content
+# is retained. The explicit build request also publishes GITHUB_TOKEN commits.
 
 on:
   push:
     branches: [main]
     paths:
       - "in-and-out-burger/site/**"
+      - "proof-grove/**"
       - ".github/workflows/iob-pages.yml"
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: iob-pages
@@ -32,16 +33,30 @@ jobs:
           path: pages
       - name: Check the page's data parses
         run: python3 -c "import json; d = json.load(open('src/in-and-out-burger/site/data/demo.json')); assert d['network'] == 'testnet4'; print(d['generated_at'], len(d['transactions']), 'transactions')"
-      - name: Copy the site into gh-pages/in-and-out-burger
+      - name: Check Proof Grove's static export contract
+        working-directory: src/proof-grove
+        run: python3 -m unittest discover -s tests -p test_static_export.py -q
+      - name: Build the public fixture demo
+        run: python3 src/proof-grove/scripts/build-pages.py --output built-proof-grove
+      - name: Update both demo directories on gh-pages
         run: |
           rm -rf pages/in-and-out-burger
           mkdir -p pages/in-and-out-burger
           cp -r src/in-and-out-burger/site/. pages/in-and-out-burger/
+          rm -rf pages/proof-grove
+          mkdir -p pages/proof-grove
+          cp -r built-proof-grove/. pages/proof-grove/
           cd pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A in-and-out-burger
-          if git diff --cached --quiet; then echo "page unchanged"; exit 0; fi
-          git commit -m "In-and-Out-Burger demo page from ${GITHUB_SHA::7}"
+          git add -A in-and-out-burger proof-grove
+          if git diff --cached --quiet; then echo "demos unchanged"; exit 0; fi
+          git commit -m "Spiral demos from ${GITHUB_SHA::7}"
           git push origin gh-pages
-          echo "::notice::published in-and-out-burger/ from ${GITHUB_SHA::7}"
+          echo "::notice::published both demos from ${GITHUB_SHA::7}"
+      - name: Request the Pages build
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const result = await github.request('POST /repos/{owner}/{repo}/pages/builds', context.repo);
+            core.info(`Pages build: ${result.data.status}`);
