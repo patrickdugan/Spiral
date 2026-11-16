@@ -36,7 +36,7 @@ jobs:
       - name: Check Proof Grove's static export contract
         working-directory: src/proof-grove
         run: python3 -m unittest discover -s tests -p test_static_export.py -q
-      - name: Build the public fixture demo
+      - name: Build the authenticated app and fixture examples
         run: python3 src/proof-grove/scripts/build-pages.py --output built-proof-grove
       - name: Update both demo directories on gh-pages
         run: |

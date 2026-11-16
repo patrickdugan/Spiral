@@ -19,6 +19,14 @@ the successor anchor. The payment uses regtest Core evidence, not a new ZK proof
 testnet4 proof verification is a separate read-only path. Services stayed running.
 The pinned native processor unit suite passed all 33 tests.
 
+The [actual published browser check](live-hosting-browser-check.json) passed at
+1440 and 390 px against GitHub Pages and the real public HTTPS services, with no
+route mocks. It verified the native recorded proof at testnet4 height 161,614,
+read three real Bark VTXOs with Core anchors, read CDK mint metadata, reconnected
+across profiles and checked that credentials were not persisted. There were no
+JavaScript errors or horizontal overflow. The existing Burger page's text was
+unchanged by the shared deployment.
+
 The [VPS read-only check](vps-readonly-proof-check.json) ran the actual
 transcript-v2 native verifier on `170.75.168.145` and checked the real public
 Burger testnet4 proof against its existing Core node. Core was at height 161,603

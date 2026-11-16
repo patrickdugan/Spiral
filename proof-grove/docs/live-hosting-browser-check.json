@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "tested_at": "2026-11-16T04:22:58.570Z",
+  "url": "https://patrickdugan.github.io/Spiral/proof-grove/",
+  "backend": "actual public HTTPS services; no route mocks",
+  "checks": [
+    {
+      "width": 1440,
+      "testnet4": "testnet4 · block 161,614 · observed 12:22:14 PM · configured Core observation",
+      "ark": "regtest · Core block 166 · 3 VTXOs. preflight only; production dispatch disabled.",
+      "actual_native_proof": true,
+      "actual_cashu_provider": true,
+      "actual_core_anchors": true,
+      "profile_reconnect_resets_controls": true,
+      "credential_persisted": false,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "testnet4": "testnet4 · block 161,614 · observed 12:22:42 PM · configured Core observation",
+      "ark": "regtest · Core block 167 · 3 VTXOs. preflight only; production dispatch disabled.",
+      "actual_native_proof": true,
+      "actual_cashu_provider": true,
+      "actual_core_anchors": true,
+      "profile_reconnect_resets_controls": true,
+      "credential_persisted": false,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": []
+}
