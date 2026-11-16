@@ -1,0 +1,125 @@
+{
+  "schema": "proof-grove/sources/v1",
+  "reviewed_on": "2026-11-16",
+  "integrations": [
+    {
+      "symbol": "zk",
+      "name": "Nova / BitVM M16",
+      "description": "Pinned kan-payment-gate process verifies PAY1 statement bytes. Bitcoin Core rechecks active-chain context before reservation.",
+      "status": "IMPLEMENTED ADAPTER \u00b7 REAL-PROOF QA SEPARATE FROM DEMO"
+    },
+    {
+      "symbol": "A",
+      "name": "Ark / Bark",
+      "description": "Bark VTXO monitoring and delegated regtest refresh, plus saved exit packages and an independent Core-only broadcaster/watcher. Core checks actual package admission, confirmations and owner claim; production dispatch remains disabled.",
+      "status": "REGTEST REFRESH + OFFLINE EXIT RECOVERY VERIFIED"
+    },
+    {
+      "symbol": "C",
+      "name": "Cashu / CDK",
+      "description": "Wallet-owned quote registration, proof-gated NUT-30 issuance, encrypted local secrets, and NUT-09 recovery. Real CDK/BDK regtest issuance and DLEQ verification tested.",
+      "status": "ISSUANCE + RESTART RECOVERY IMPLEMENTED \u00b7 VERIFIED ON REGTEST"
+    },
+    {
+      "symbol": "F",
+      "name": "Filecoin / IPFS",
+      "description": "Export redacted receipts as an exact CIDv1 raw SHA-256 block. Upload, CAR packaging and storage deals remain separate.",
+      "status": "LOCAL CONTENT EXPORT \u00b7 NO DEAL SUBMITTED"
+    },
+    {
+      "symbol": "P",
+      "name": "p2poolv2",
+      "description": "An on-chain mining payout can use the same M16 payment contract. A sharechain or wallet report alone never counts as a confirmed payment.",
+      "status": "REUSABLE PAYMENT CONTRACT \u00b7 DIRECT POOL ADAPTER PENDING"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Matt Vuk \u00b7 Bark payment processor",
+      "url": "https://github.com/mvuk/cdk-payment-processors/tree/main/crates/bark",
+      "pin": "README blob 16ed32d7f38f9bf6a952c43c35b9b8b7fe76fc3c",
+      "use": "Baseline for Bark-backed Cashu payment methods and persistent payment intents. Upstream cashubtc/cdk-payment-processors supplies the current integration contract."
+    },
+    {
+      "name": "Matt Vuk \u00b7 paid relay writes",
+      "url": "https://github.com/mvuk/strfry-bark-paid-writes",
+      "pin": "README blob 4f0f9cb8c75508d91c20dd8f0bb290061aad66e6",
+      "use": "Baseline for fixed beneficiaries, credit-once accounting and explicit operator-reported Bark history. This app does not install a relay."
+    },
+    {
+      "name": "Matt Vuk \u00b7 Blossom specifications",
+      "url": "https://github.com/mvuk/blossom",
+      "pin": "README blob 14be92767d38bae6b91c8da738e52b5b3df48571",
+      "use": "Content-addressing lineage. Public HTTP storage specifications, not a verified November hackathon implementation."
+    },
+    {
+      "name": "Spiral \u00b7 In-and-Out Burger",
+      "url": "https://github.com/patrickdugan/Spiral/tree/46f8f4f4395d5afa819c2d7727c7120e0efa6e9c/in-and-out-burger",
+      "pin": "46f8f4f4395d5afa819c2d7727c7120e0efa6e9c",
+      "use": "PAY1 byte layout, gate invocation, verifier pins and proof-to-payment binding. One public statement fixture is retained for parser compatibility tests."
+    },
+    {
+      "name": "Bitcoin proof sidecar",
+      "url": "https://github.com/patrickdugan/zk-rusto-no-bitcoino",
+      "pin": "Local checkout 6505a57ce6517c8a486ee8496f790d5cc19498ee",
+      "use": "Separates chain context, receipts, proof verification and future Ark validation. Source URL follows its README; this build adds an independent local Core observer."
+    },
+    {
+      "name": "Bark / Cashu Payjoin boards",
+      "url": "https://second.tech/blog/payjoin-boards-board-psbt/",
+      "use": "Matt\u00e2\u20ac\u2122s documented direction for a mint funded by VTXOs. Payjoin negotiation and board_psbt are outside this app\u00e2\u20ac\u2122s current implementation."
+    },
+    {
+      "name": "Cashu NUT-04 / NUT-05",
+      "url": "https://github.com/cashubtc/nuts",
+      "use": "Method-specific mint and melt states remain provider operations. This app never treats a quote response as a verified blind signature or proof of reserves."
+    },
+    {
+      "name": "p2poolv2",
+      "url": "https://github.com/patrickdugan/p2poolv2",
+      "use": "Located the repository; README and code were not recovered in this session. Direct integration remains unverified."
+    },
+    {
+      "name": "Nut November",
+      "url": "https://nutnovember.org/",
+      "use": "Official event page lists November 1\u00e2\u20ac\u201c27, 2026. The exact project Matt intends to submit was not independently identified."
+    },
+    {
+      "name": "Cashu SDK 4.13.1",
+      "url": "https://github.com/cashubtc/cashu-ts/tree/v4.13.1",
+      "pin": "npm SHA-512 pinned in wallet/pnpm-lock.yaml",
+      "use": "Official wallet cryptography, prepared mint outputs, persisted blinding data, DLEQ verification and token encoding/decoding."
+    },
+    {
+      "name": "CDK mint 0.18.3",
+      "url": "https://github.com/cashubtc/cdk/releases/tag/v0.18.3",
+      "pin": "Linux x86_64 SHA-256 3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af",
+      "use": "Real BDK-backed isolated regtest mint used for deposit-to-ecash and lost-reply recovery verification. The fake-wallet backend was not used."
+    },
+    {
+      "name": "Cashu NUT-30 and NUT-09",
+      "url": "https://github.com/cashubtc/nuts",
+      "use": "On-chain quote ownership/payment eligibility and restoration of the same blinded outputs after an uncertain issuance response."
+    },
+    {
+      "name": "Bark 0.8.1 released REST API and wallet source",
+      "url": "https://gitlab.com/ark-bitcoin/bark/-/tree/bark-0.8.1",
+      "pin": "303682063ed7559b06dcf37c5cb37bb7037b943f",
+      "use": "Exact delegated refresh, round/history, VTXO and fee contracts. Native regtest test uses the released wallet and server, plus Core 31."
+    },
+    {
+      "name": "Core 31 package submission",
+      "url": "https://bitcoincore.org/en/doc/31.0.0/rpc/rawtransactions/submitpackage/",
+      "pin": "Core 31.0 image pinned in tests/run-ark-stack.py",
+      "use": "Combined-fee admission for a signed zero-fee exit parent and its CPFP child. Confirmation and owner-claim checks follow submission."
+    }
+  ],
+  "notes": [
+    "Enumerated 37 mvuk repository metadata records and read selected relevant READMEs; this is not an audit of every repository.",
+    "The legacy mvuk/cdk-bark-payment-procssor README describes an unfinished template. Use the current upstream crates/bark contract instead.",
+    "Filecoin integration source from prior work was not recovered. Export is implemented; storage assurance is not.",
+    "Rolling is interpreted as Ark VTXO refresh/rollover. Proofs inform automation without removing timelocks.",
+    "No executable code was copied from the upstream projects; the PAY1 parser independently implements the inspected public binary contract."
+  ],
+  "updated_on": "2026-11-16"
+}

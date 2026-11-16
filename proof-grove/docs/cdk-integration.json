@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "tested_at": "2026-11-15T16:33:14.437016+00:00",
+  "network": "regtest",
+  "payment_evidence": "core-regtest",
+  "zk_verified": false,
+  "mint": "CDK 0.18.3 with real BDK/Bitcoin Core backend",
+  "cashu_sdk": "4.13.1",
+  "amount_sats": 25000,
+  "proof_count": 6,
+  "token_sha256": "59b2b252d4216c15490e73e209539938a35873cb1f99a119b0b518c89dee6141",
+  "dleq_verified": true,
+  "wallet_restarted_between_attempts": true,
+  "no_second_issuance": true,
+  "counts": {
+    "mint_requests": 1,
+    "restore_requests": 1,
+    "dropped_replies": 1
+  },
+  "seconds": 82.938,
+  "meaning": "Actual regtest deposit issued real Cashu cryptographic proofs. Test coins have no monetary value. No Ark transfer or mainnet issuance tested."
+}

@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/cashubtc/cdk-payment-processors",
+  "commit": "d7244e261506b51d5b309a558bf19cd4ffc32f13",
+  "path": "crates/bark",
+  "license": "MIT OR Apache-2.0",
+  "adaptation": "Proof Grove port to CDK 0.18.3 and Bark 0.8.1; see CHANGELOG.md.",
+  "bark_commit": "303682063ed7559b06dcf37c5cb37bb7037b943f"
+}

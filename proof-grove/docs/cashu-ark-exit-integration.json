@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "tested_at": "2026-11-15T19:36:49.849227+00:00",
+  "network": "isolated regtest",
+  "input_vtxos": [
+    "7b177b7d84971e1d5a70540c409ed1f2ec020ebe9c743d89fb83f9534fd31a19:0"
+  ],
+  "input_value_sats": 9810,
+  "bundle_id": "e448e3c3ca8b324b56f70d4f58b85b22c3f9c7a64ad17e400e7be9fa7e5ef18d",
+  "waves": 2,
+  "saved_cpfp_fee_sats": 3180,
+  "ark_server_offline": true,
+  "owner_wallet_paused_during_broadcast": true,
+  "independent_broadcaster_has_no_bark_config": true,
+  "cli_export_import": true,
+  "independent_watcher_process": true,
+  "preconfirmed_parent_missing_child_recovered": true,
+  "altered_witness_rejected_by_core": true,
+  "invalid_package_parent_not_accepted": true,
+  "lost_submission_reply_recovered_after_process_restart": true,
+  "confirmed_wave_reorg_detected": true,
+  "submit_posts": 2,
+  "dropped_replies": 1,
+  "owner_claim_state": "claimed",
+  "owner_claim_txid": "4f57aa6afa4a0bbcaedf3b4b9cce06bd54782af485b87fad7c9101e497ce598d",
+  "owner_destination_verified_in_core": true,
+  "owner_claim_value_sats": 9165,
+  "owner_claim_fee_sats": 645,
+  "limits": [
+    "Regtest only.",
+    "CPFP funds are not reserved by Bark and can be spent elsewhere.",
+    "Final owner claim fee is additional to the saved CPFP budget."
+  ]
+}

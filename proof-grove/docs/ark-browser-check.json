@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "width": 1440,
+      "real_bark_vtxos": true,
+      "core_anchors": true,
+      "saved_refresh_visible": true,
+      "reconciled": true,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 390,
+      "real_bark_vtxos": true,
+      "core_anchors": true,
+      "saved_refresh_visible": true,
+      "reconciled": true,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "javascript_errors": []
+}

@@ -1,0 +1,8 @@
+{
+  "file": "m16-mainnet-statement.bin",
+  "bytes": 1292,
+  "sha256": "cae6068f7ad8c4891cb3220702a88b0bc3df54013f45e65df11a9ced531bc869",
+  "source_commit": "46f8f4f4395d5afa819c2d7727c7120e0efa6e9c",
+  "source_path": "in-and-out-burger/fixtures/m16-mainnet/statement.bin",
+  "meaning": "Public M16 payment statement only; no final proof bundled. Parsing does not verify it."
+}
