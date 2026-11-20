@@ -1,0 +1,67 @@
+{
+  "config": {
+    "runId": "finite-budget-demo",
+    "holders": [
+      "a",
+      "b"
+    ],
+    "budgetSat": 1600,
+    "frontingSat": 800,
+    "quantumSat": 100,
+    "lifetimeBlocks": 10,
+    "roundInterval": 2,
+    "spendLock": "expiry",
+    "arrivalHorizonBlocks": 10,
+    "secondsPerBlock": 600
+  },
+  "requests": [
+    {
+      "invoiceId": "a-in",
+      "atBlock": 0,
+      "holder": "a",
+      "direction": "receive",
+      "amountSat": 500
+    },
+    {
+      "invoiceId": "b-in-capacity",
+      "atBlock": 0,
+      "holder": "b",
+      "direction": "receive",
+      "amountSat": 400
+    },
+    {
+      "invoiceId": "a-out",
+      "atBlock": 1,
+      "holder": "a",
+      "direction": "send",
+      "amountSat": 500
+    },
+    {
+      "invoiceId": "b-in",
+      "atBlock": 2,
+      "holder": "b",
+      "direction": "receive",
+      "amountSat": 400
+    },
+    {
+      "invoiceId": "b-out-before-sweep",
+      "atBlock": 3,
+      "holder": "b",
+      "direction": "send",
+      "amountSat": 400
+    },
+    {
+      "invoiceId": "b-out-after-sweep",
+      "atBlock": 10,
+      "holder": "b",
+      "direction": "send",
+      "amountSat": 400
+    }
+  ],
+  "proofMarkers": [
+    {
+      "proofId": "synthetic-proof-before-sweep",
+      "atBlock": 2
+    }
+  ]
+}

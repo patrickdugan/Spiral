@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Registry, SettledSet, commit, prf, type Statement, type Witness } from "./registry.ts";
+import { Registry, SettledSet, commit, prf, settlementCommitment, type Statement, type Witness } from "./registry.ts";
 
 // NOTE: the proof system is simulated (see registry.ts). These tests witness the registry logic
 // under the assumption that a real knowledge-sound proof would accept exactly what verifyCapClaim accepts.
@@ -139,4 +139,220 @@ test("S3: a distinct live object cannot be overwritten by id reuse", () => {
   assert.throws(() => set.add({ id: "a", value: 100, authorityKey: "k" }), /duplicate|already/);
   const copy = set.snapshot();
   assert.throws(() => copy.add({ id: "a", value: 100, authorityKey: "k" }), /duplicate|already/);
+});
+
+test("registry rejects negative, fractional, nonfinite and unsafe weights without consuming the claim", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 10, authorityKey: "ka" });
+  set.add({ id: "b", value: 10, authorityKey: "kb" });
+  const R = new Registry(set);
+  assert.equal(R.submit(...claim(R, set, "a", "alice", 10)), "accepted");
+  for (const invalid of [-9, -1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(R.submit(...claim(R, set, "b", "bob", invalid)), "invalid");
+    assert.equal(R.totalWeight(), 10);
+  }
+  assert.equal(R.submit(...claim(R, set, "b", "bob", 10)), "accepted");
+  const receipt = R.settleEpoch(set, 100);
+  assert.equal(receipt.allocated, 100);
+  assert.deepEqual(new Map(receipt.payouts.map((p) => [p.cm, p.amount])), new Map([
+    [commit("alice"), 50], [commit("bob"), 50],
+  ]));
+});
+
+test("registry bounds aggregate weight exactly and leaves an overflowing submission retryable", () => {
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const set = new SettledSet();
+  set.add({ id: "a", value: maximum, authorityKey: "ka" });
+  set.add({ id: "b", value: 1, authorityKey: "kb" });
+  const R = new Registry(set);
+  assert.equal(R.submit(...claim(R, set, "a", "alice", maximum)), "accepted");
+  assert.equal(R.submit(...claim(R, set, "b", "bob", 1)), "invalid");
+  assert.equal(R.submit(...claim(R, set, "b", "bob", 0)), "accepted");
+  assert.equal(R.totalWeight(), maximum);
+  const receipt = R.settleEpoch(set, maximum);
+  assert.equal(receipt.totalWeight, maximum);
+  assert.equal(receipt.allocated, maximum);
+  assert.equal(receipt.unallocated, 0);
+});
+
+test("allocation keeps exact floors when safe inputs have an unsafe intermediate product", () => {
+  const pool = 9_007_199_254_740_990;
+  const weights = [1_033_873_937_146_939, 159_637_918_172_065];
+  const set = new SettledSet();
+  for (let i = 0; i < weights.length; i++) set.add({ id: `u:${i}`, value: weights[i], authorityKey: `k${i}` });
+  const R = new Registry(set);
+  for (let i = 0; i < weights.length; i++) assert.equal(R.submit(...claim(R, set, `u:${i}`, `id-${i}`, weights[i])), "accepted");
+  const receipt = R.settleEpoch(set, pool);
+  const payouts = new Map(receipt.payouts.map((p) => [p.cm, p.amount]));
+  assert.equal(payouts.get(commit("id-0")), 7_802_443_280_864_630);
+  assert.equal(Math.floor(pool * weights[0] / (weights[0] + weights[1])), 7_802_443_280_864_631);
+  const total = weights.reduce((sum, value) => sum + BigInt(value), 0n);
+  for (let i = 0; i < weights.length; i++) {
+    assert.equal(payouts.get(commit(`id-${i}`)), Number(BigInt(pool) * BigInt(weights[i]) / total));
+  }
+  assert.equal(receipt.allocated + receipt.unallocated, pool);
+  assert.ok(receipt.unallocated >= 0);
+});
+
+test("empty and zero-weight epochs preserve the entire unallocated pool", () => {
+  for (const count of [0, 2]) {
+    const set = new SettledSet();
+    for (let i = 0; i < count; i++) set.add({ id: `u:${i}`, value: 5, authorityKey: `k${i}` });
+    const R = new Registry(set);
+    for (let i = 0; i < count; i++) assert.equal(R.submit(...claim(R, set, `u:${i}`, `id-${i}`, 0)), "accepted");
+    assert.ok([...R.previewAllocation(7).values()].every((amount) => amount === 0));
+    const receipt = R.settleEpoch(set, 7);
+    assert.equal(receipt.totalWeight, 0);
+    assert.equal(receipt.allocated, 0);
+    assert.equal(receipt.unallocated, 7);
+    assert.ok(receipt.payouts.every((p) => p.amount === 0));
+  }
+});
+
+test("failed pool validation preserves the epoch, frozen root, claims and nullifiers", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 10, authorityKey: "ka" });
+  set.add({ id: "b", value: 10, authorityKey: "kb" });
+  const R = new Registry(set);
+  const first = claim(R, set, "a", "alice", 10);
+  const second = claim(R, set, "b", "bob", 10);
+  R.submit(...first);
+  R.submit(...second);
+  const root = R.root;
+  set.remove("a");
+  for (const invalid of [-1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => R.previewAllocation(invalid), /reward pool/);
+    assert.throws(() => R.allocate(invalid), /reward pool/);
+    assert.throws(() => R.settleEpoch(set, invalid), /reward pool/);
+    assert.equal(R.epoch, 0);
+    assert.equal(R.root, root);
+    assert.equal(R.totalWeight(), 20);
+    assert.equal(R.submit(...first), "duplicate");
+    assert.equal(R.lastSettlement, undefined);
+  }
+  const receipt = R.settleEpoch(set, 10);
+  assert.equal(receipt.totalWeight, 10);
+  assert.equal(receipt.payouts[0].cm, commit("bob"));
+  assert.equal(receipt.payouts[0].amount, 10);
+});
+
+test("a failed live snapshot leaves settlement untouched", () => {
+  class UnavailableSet extends SettledSet {
+    override snapshot(): SettledSet { throw new Error("live snapshot unavailable"); }
+  }
+  const set = new SettledSet();
+  set.add({ id: "a", value: 3, authorityKey: "ka" });
+  const R = new Registry(set);
+  const input = claim(R, set, "a", "alice", 3);
+  R.submit(...input);
+  const before = R.root;
+  assert.throws(() => R.settleEpoch(new UnavailableSet(), 5), /snapshot unavailable/);
+  assert.equal(R.epoch, 0);
+  assert.equal(R.root, before);
+  assert.equal(R.totalWeight(), 3);
+  assert.equal(R.submit(...input), "duplicate");
+  assert.equal(R.lastSettlement, undefined);
+  assert.equal(R.settleEpoch(set, 5).allocated, 5);
+});
+
+test("atomic settlement fixes eligible payouts and revoked decisions before starting the next epoch", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 3, authorityKey: "ka" });
+  set.add({ id: "b", value: 2, authorityKey: "kb" });
+  set.add({ id: "c", value: 5, authorityKey: "kc" });
+  const R = new Registry(set);
+  for (const [id, value] of [["a", 3], ["b", 2], ["c", 5]] as const) R.submit(...claim(R, set, id, id, value));
+  const openRoot = R.root;
+  set.refresh("a", "a:next");
+  set.transfer("b", "b:next", "other");
+  set.remove("c");
+  const receipt = R.settleEpoch(set, 11);
+  assert.equal(receipt.epoch, 0);
+  assert.equal(receipt.rootAtOpen, openRoot);
+  assert.equal(receipt.rootAtClose, set.root());
+  assert.equal(receipt.totalWeight, 3);
+  assert.deepEqual(receipt.payouts, [{ cm: commit("a"), amount: 11 }]);
+  assert.deepEqual(receipt.claims.filter((c) => c.status === "eligible").map((c) => c.descendantId), ["a:next"]);
+  assert.equal(receipt.claims.filter((c) => c.status === "revoked").length, 2);
+  assert.equal(R.totalWeight(), 0);
+  assert.equal(R.epoch, 1);
+  assert.equal(R.lastSettlement, receipt);
+  assert.equal(R.submit(...claim(R, set, "a:next", "a", 3)), "accepted");
+  const next = R.settleEpoch(set, 7);
+  assert.equal(next.epoch, 1);
+  assert.equal(next.allocated, 7);
+  assert.equal(R.epoch, 2);
+  assert.equal(receipt.allocated, 11);
+  assert.equal(receipt.commitment, settlementCommitment(receipt));
+});
+
+test("settlement preserves per-object flooring and records the undistributed remainder", () => {
+  const set = new SettledSet();
+  for (let i = 0; i < 3; i++) set.add({ id: `u:${i}`, value: 1, authorityKey: `k${i}` });
+  const R = new Registry(set);
+  R.submit(...claim(R, set, "u:0", "alice", 1));
+  R.submit(...claim(R, set, "u:1", "alice", 1));
+  R.submit(...claim(R, set, "u:2", "bob", 1));
+  const receipt = R.settleEpoch(set, 5);
+  const payouts = new Map(receipt.payouts.map((p) => [p.cm, p.amount]));
+  assert.equal(payouts.get(commit("alice")), 2);
+  assert.equal(payouts.get(commit("bob")), 1);
+  assert.equal(receipt.allocated, 3);
+  assert.equal(receipt.unallocated, 2);
+});
+
+test("settlement receipts are deeply immutable and canonical across submission order", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 3, authorityKey: "ka" });
+  set.add({ id: "b", value: 2, authorityKey: "kb" });
+  const left = new Registry(set);
+  const right = new Registry(set);
+  for (const [R, ids] of [[left, ["a", "b"]], [right, ["b", "a"]]] as const) {
+    for (const id of ids) R.submit(...claim(R, set, id, id, set.get(id)!.value));
+  }
+  const receipt = left.settleEpoch(set, 7);
+  const encoded = JSON.stringify(receipt);
+  assert.deepEqual(receipt, right.settleEpoch(set, 7));
+  assert.throws(() => Object.assign(receipt, { pool: 100 }), TypeError);
+  assert.throws(() => Object.assign(receipt.payouts[0], { amount: 100 }), TypeError);
+  assert.throws(() => Object.assign(receipt.claims[0], { value: 100 }), TypeError);
+  assert.throws(() => (receipt.payouts as unknown[]).push({}), TypeError);
+  assert.throws(() => (receipt.claims as unknown[]).pop(), TypeError);
+  assert.equal(JSON.stringify(receipt), encoded);
+  assert.equal(left.lastSettlement?.commitment, settlementCommitment(receipt));
+  assert.notEqual(settlementCommitment({ ...receipt, unallocated: receipt.unallocated + 1 }), receipt.commitment);
+});
+
+test("legacy close followed by allocation fails clearly and retains the zero-reward receipt", () => {
+  const set = new SettledSet();
+  set.add({ id: "a", value: 10, authorityKey: "ka" });
+  const R = new Registry(set);
+  R.submit(...claim(R, set, "a", "alice", 10));
+  assert.equal(R.closeEpoch(set), 10);
+  assert.throws(() => R.allocate(100), /settleEpoch/);
+  assert.equal(R.lastSettlement?.pool, 0);
+  assert.equal(R.lastSettlement?.totalWeight, 10);
+  assert.equal(R.lastSettlement?.allocated, 0);
+});
+
+test("settled object accessors cannot mutate stored value, authority, identity or successor state", () => {
+  const set = new SettledSet();
+  const input = { id: "a", value: 10, authorityKey: "ka" };
+  set.add(input);
+  const initialRoot = set.root();
+  input.value = 999;
+  Object.assign(set.get("a")!, { id: "forged", value: -1, authorityKey: "attacker" });
+  assert.equal(set.root(), initialRoot);
+  assert.deepEqual(set.get("a"), { id: "a", value: 10, authorityKey: "ka" });
+  const refreshed = set.refresh("a", "a:next");
+  const refreshedRoot = set.root();
+  Object.assign(refreshed, { value: 999, authorityKey: "attacker" });
+  Object.assign(set.descendant("a")!, { value: -1, id: "forged" });
+  assert.equal(set.root(), refreshedRoot);
+  assert.deepEqual(set.descendant("a"), { id: "a:next", value: 10, authorityKey: "ka" });
+  const transferred = set.transfer("a:next", "a:last", "kb");
+  const transferredRoot = set.root();
+  Object.assign(transferred, { value: 999, authorityKey: "attacker" });
+  assert.equal(set.root(), transferredRoot);
+  assert.deepEqual(set.get("a:last"), { id: "a:last", value: 10, authorityKey: "kb" });
 });

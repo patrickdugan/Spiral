@@ -1,0 +1,109 @@
+{
+  "schema": "capital-bound/nova-adapter/v1",
+  "run_id": "capital-bound-nova-v2-smoke",
+  "status": "limited_nova_relation_verified",
+  "relation": "lnmarkets/sha256-transcript-accounting/v2",
+  "proof_cryptographically_verified": true,
+  "evidence_verified": false,
+  "native_authorization_verified_by_adapter": false,
+  "native_receipt_bound_but_unauthenticated": true,
+  "bitcoin_spendability_proved": false,
+  "capital_release_authorized": false,
+  "started_at_utc": "2026-11-20T17:20:31.861725+00:00",
+  "observed_at_utc": "2026-11-20T17:21:05.197084+00:00",
+  "verifier_executable_sha256": "1581a2624e6fd88dfd7b5fc29dc33c886fa1fe0d95c708c98930e90de8a6f263",
+  "expected_file_sha256": "17c2b3b9533f6d227b9859e7bdd0d667498e7474b70eb97c14a98381563ae043",
+  "native_receipt_sha256": "b57396b491c796ec1f99fd567e002270586540ae428af2648380283e757b915e",
+  "source_artifacts": {
+    "manifest.json": {
+      "bytes": 1767,
+      "sha256": "86ef6ee9f91836f37b91edf84d9cf8b525860fc82607f55463c25d81d5859f70"
+    },
+    "journal.bin": {
+      "bytes": 276,
+      "sha256": "492c7f9631bed7a9be3ae5273fa562b3888674f9ce14abc22e91a733ff21b555"
+    },
+    "proof.bin": {
+      "bytes": 12376,
+      "sha256": "ab7717d32423c46b08b886785eba8778e35000d578e6a08ee6e238afc4a160a3"
+    }
+  },
+  "verifier_receipt_sha256": "56b3ed598e0c98964c4961f9004d6571637ae26c86892038488cda899768cd8a",
+  "verifier_receipt": {
+    "bitcoin_spendability_proved": false,
+    "compressed_bytes": 12376,
+    "compressed_verify_seconds": 1.7933486269999999,
+    "final_state": [
+      "0200000000000000000000000000000000000000000000000000000000000000",
+      "643f0c0000000000000000000000000000000000000000000000000000000000",
+      "94370c0000000000000000000000000000000000000000000000000000000000",
+      "d007000000000000000000000000000000000000000000000000000000000000",
+      "4a30ae377559a64040d930f1377b405005c29e7e93e086902d52e402d0891d39",
+      "492c7f9631bed7a9be3ae5273fa562b300000000000000000000000000000000",
+      "888674f9ce14abc22e91a733ff21b55500000000000000000000000000000000",
+      "0100000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "independently_supplied_expectations_matched": true,
+    "native_journal_sha256": "492c7f9631bed7a9be3ae5273fa562b3888674f9ce14abc22e91a733ff21b555",
+    "native_signature_checks_in_this_process": false,
+    "nova_augmented_constraints_primary": 275234,
+    "nova_augmented_constraints_secondary": 10349,
+    "nova_augmented_variables_primary": 274962,
+    "nova_augmented_variables_secondary": 10331,
+    "nova_compressed_verified": true,
+    "nova_public_params_digest": "1369c01b913e2dbc916d7ef38845e74a2a61cb1e6beda47e551457e0d43d3b02",
+    "nova_version": "0.76.0",
+    "proof_sha256": "ab7717d32423c46b08b886785eba8778e35000d578e6a08ee6e238afc4a160a3",
+    "relation": "lnmarkets/sha256-transcript-accounting/v2",
+    "rows": 2,
+    "schema": "lnmarkets-nova-verification/v2",
+    "standalone_signature_snark_proved": false,
+    "status": "compressed_verified_limited_relation",
+    "verifier_key_rebuilt_from_current_circuit": true,
+    "verifier_key_serialized_bytes": 101826448,
+    "verifier_key_sha256": "4eafbd223936cc3c1e9b16e750f1946a57cd5413f86578f6f1d37d9abb53e38b",
+    "verifier_setup_seconds": 31.466617698
+  },
+  "resources": {
+    "wall_seconds": 33.34132396099449,
+    "user_cpu_seconds": 60.601363,
+    "system_cpu_seconds": 0.9441149999999999,
+    "child_max_rss_kib_linux": 500352,
+    "rss_scope": "child high-water mark for this adapter process; use a fresh CLI process",
+    "address_space_limit_bytes": 2147483648,
+    "cpu_limit_seconds": 180,
+    "timeout_seconds": 180,
+    "rayon_threads": 2,
+    "gpu_used": false
+  },
+  "events": [
+    {
+      "kind": "proof_verified",
+      "proof_id": "nova:ab7717d32423c46b08b886785eba8778e35000d578e6a08ee6e238afc4a160a3",
+      "height": 0,
+      "time_s": 1795195265,
+      "run_id": "capital-bound-nova-v2-smoke",
+      "proof_scope": "lnmarkets/sha256-transcript-accounting/v2",
+      "source_receipt_sha256": "56b3ed598e0c98964c4961f9004d6571637ae26c86892038488cda899768cd8a",
+      "chain_height_is_caller_metadata": true,
+      "capital_release_authorized": false
+    }
+  ],
+  "source_context": {
+    "repository": "patrickdugan/zk-rusto-no-bitcoino",
+    "inspected_commit": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+    "artifact_source": "existing synthetic two-contract bundle; no proof generation in this run",
+    "adapter_sha256": "badfe95159f4d5cef7ca0e90b93a2e28650211b8ff9be43442043d3f3bdda02c",
+    "verifier_executable_sha256": "1581a2624e6fd88dfd7b5fc29dc33c886fa1fe0d95c708c98930e90de8a6f263",
+    "expected_file_sha256": "17c2b3b9533f6d227b9859e7bdd0d667498e7474b70eb97c14a98381563ae043"
+  },
+  "previous_attempt": {
+    "status": "bounded_verifier_failed",
+    "returncode": -9,
+    "stderr": "",
+    "cpu_limit_seconds": 120,
+    "address_space_limit_bytes": 2147483648,
+    "resources_collected": false,
+    "events_emitted": 0
+  }
+}

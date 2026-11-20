@@ -43,6 +43,20 @@ interface Vtxo {
 
 export type VolumeBasis = "out" | "both";
 
+/** Model clock events. These are simulated sweeps, never Bitcoin confirmation receipts. */
+export interface ServerCapitalEvent {
+  kind: "fronting_locked" | "fronting_recovered";
+  height: number;
+  objectId: string;
+  amountSat: number;
+  recoveryHeight: number;
+}
+
+export interface SpendOptions {
+  /** The finite-budget runner rejects expired claims; historical paper witnesses retain their old semantics. */
+  requireUnexpired?: boolean;
+}
+
 export class ArkServer {
   readonly params: ServerParams;
   readonly capital: number;    // B_S
@@ -65,10 +79,13 @@ export class ArkServer {
   readonly aggregateSteps: Array<{ in: number; out: number }> = [];
   private stepIn = 0;
   private stepOut = 0;
+  private readonly observeCapital?: (event: Readonly<ServerCapitalEvent>) => void;
 
-  constructor(capital: number, params: ServerParams = DEFAULT_SERVER) {
+  constructor(capital: number, params: ServerParams = DEFAULT_SERVER,
+    observeCapital?: (event: Readonly<ServerCapitalEvent>) => void) {
     this.capital = capital;
     this.params = params;
+    this.observeCapital = observeCapital;
   }
 
   get uncommitted(): number {
@@ -98,7 +115,11 @@ export class ArkServer {
       .sort((a, b) => a - b);
     for (const h of sweeps) {
       this.lockedIntegral += this.committed * (h - cursor);
-      for (const v of this.sweepAt.get(h)!) this.committed -= v.value;
+      for (const v of this.sweepAt.get(h)!) {
+        this.committed -= v.value;
+        this.observeCapital?.({ kind: "fronting_recovered", height: h, objectId: v.id,
+          amountSat: v.value, recoveryHeight: h });
+      }
       this.sweepAt.delete(h);
       cursor = h;
     }
@@ -133,7 +154,14 @@ export class ArkServer {
     this.live.delete(v.id);
     this.byHolder.get(v.holder)?.delete(v.id);
     const at = Math.min(sweepHeight, v.expiresAt);
-    if (at <= this.height) { this.committed -= v.value; return true; } // already sweepable
+    this.observeCapital?.({ kind: "fronting_locked", height: this.height, objectId: v.id,
+      amountSat: v.value, recoveryHeight: Math.max(at, this.height) });
+    if (at <= this.height) {
+      this.committed -= v.value;
+      this.observeCapital?.({ kind: "fronting_recovered", height: this.height, objectId: v.id,
+        amountSat: v.value, recoveryHeight: this.height });
+      return true;
+    } // already sweepable
     if (!this.sweepAt.has(at)) this.sweepAt.set(at, []);
     this.sweepAt.get(at)!.push(v);
     return true;
@@ -166,17 +194,29 @@ export class ArkServer {
     return s;
   }
 
-  /** Spend outward over Lightning. The server fronts the HTLC from uncommitted capital (S2 aggregate constraint). */
-  spendLightning(holder: string, amount: number): boolean {
-    if (!Number.isInteger(amount) || amount <= 0) throw new Error("amount must be a positive integer");
-    if (this.holderValue(holder) < amount) return false;
+  private lightningInputs(holder: string, amount: number, options: SpendOptions): Vtxo[] | undefined {
+    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("amount must be a positive safe integer");
     const inputs: Vtxo[] = [];
     let total = 0;
     for (const id of this.byHolder.get(holder) ?? []) {
       if (total >= amount) break;
       const v = this.live.get(id)!;
+      if (options.requireUnexpired && v.expiresAt <= this.height) continue;
       inputs.push(v); total += v.value;
     }
+    return total >= amount ? inputs : undefined;
+  }
+
+  /** Gross selected input value, including change to reissue; undefined means insufficient eligible holdings. */
+  frontingRequired(holder: string, amount: number, options: SpendOptions = {}): number | undefined {
+    return this.lightningInputs(holder, amount, options)?.reduce((sum, v) => sum + v.value, 0);
+  }
+
+  /** Spend outward over Lightning. The server fronts the HTLC from uncommitted capital (S2 aggregate constraint). */
+  spendLightning(holder: string, amount: number, options: SpendOptions = {}): boolean {
+    const inputs = this.lightningInputs(holder, amount, options);
+    if (!inputs) return false;
+    const total = inputs.reduce((sum, v) => sum + v.value, 0);
     if (total > this.uncommitted) return false; // all-or-nothing check before any mutation
     const sweep = this.params.spendLock === "round" ? this.height + this.params.roundInterval : Number.POSITIVE_INFINITY;
     for (const v of inputs) this.forfeit(v, sweep);
@@ -392,6 +432,10 @@ export interface CornerResult {
   hyperedge: Array<{ k: number; dH: number; failures: number; locked: number }>;
 }
 
+/**
+ * Historical paper grid: Ark admission uses an unconstrained fronting budget and server-tier
+ * failures are accounted afterward. For enforced fixed budgets use model/capital-bound.ts.
+ */
 export function runCorner(p: CornerParams): CornerResult {
   const r = rng(p.seed);
   const lifetime = p.lifetime ?? 4032;

@@ -1,0 +1,861 @@
+{
+  "schema": "babe-pilot/funded-regtest/v1",
+  "status": "passed",
+  "network": "regtest",
+  "core": {
+    "evidence_kind": "trusted-ci-source-build",
+    "source_commit": "9be056a8a72b624dae9623b2f7bded92c2a21c91",
+    "source_tree": "109dc8b3413dae47f00add3e30e50cde454c6f8c",
+    "source_git_url": "https://github.com/bitcoin/bitcoin.git",
+    "tracked_source_sha256": "1f2c9ae4223f467f6ab101ad94c7f306a8a7cbc51598a1a56b224e96a472467c",
+    "tracked_source_files": 2923,
+    "cmake_cache_sha256": "3e7b71bdabaf372ce202ab362abbc8d7eb431c6d9d4481832c93b6de1deab19c",
+    "build_info_sha256": "ee3c1b909a3286c7053a48ad89e28efa2de0bc1afadaad9b7792b67e07ea3449",
+    "configure_argv": [
+      "cmake",
+      "-S",
+      "/home/runner/work/_temp/babe-core-source",
+      "-B",
+      "/home/runner/work/_temp/babe-core-source/build",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O2",
+      "-DCMAKE_C_FLAGS_RELEASE=-O2",
+      "-DCMAKE_C_FLAGS_RELWITHDEBINFO=-O2",
+      "-DBUILD_DAEMON=ON",
+      "-DBUILD_CLI=ON",
+      "-DENABLE_WALLET=ON",
+      "-DBUILD_TESTS=OFF",
+      "-DBUILD_GUI=OFF",
+      "-DBUILD_BENCH=OFF",
+      "-DBUILD_FUZZ_BINARY=OFF",
+      "-DBUILD_BITCOIN_BIN=OFF",
+      "-DBUILD_TX=OFF",
+      "-DBUILD_UTIL=OFF",
+      "-DBUILD_WALLET_TOOL=OFF",
+      "-DENABLE_IPC=OFF",
+      "-DWITH_CCACHE=OFF"
+    ],
+    "build_argv": [
+      "cmake",
+      "--build",
+      "/home/runner/work/_temp/babe-core-source/build",
+      "--target",
+      "bitcoind",
+      "bitcoin-cli",
+      "--parallel",
+      "4"
+    ],
+    "compiler_path": "/usr/bin/c++",
+    "compiler_version": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "bitcoind_sha256": "d0ac0fe60508f608e9de441cbec5e50d8074949dea3a79bbd82d5d8bd3d03ffc",
+    "bitcoin_cli_sha256": "3fea62741b6628b65e2b3316ed3ef03eccdf32fe54ac5c9ac5f9b5659c810421",
+    "trust_basis": "Pinned official source and measured local build artifacts from the trusted CI workflow; these hashes do not prove that a compiler used the recorded source or commands.",
+    "version": "Bitcoin Core daemon version v31.1.0 bitcoind"
+  },
+  "source_sha256": {
+    "src/bin/babe-pilot-bench.rs": "4751487e4e108ef61810c4ef62723cdc7a846f8e32665129673a116746846b93",
+    "src/bin/babe-regtest-graph.rs": "459e0628f79eb54a6cae8e5e58d5a219ce07e0861eb20a3102b6a34a8a7f5141",
+    "src/bin/babe-session-fixtures.rs": "a88238fda4d40982cb0436ae5a893baee960b81eda01a467a98cad5b4816716f",
+    "src/bin/babe-trace-m14.rs": "b3512b5f6671d64c045be9967a1917567cf0da8dedb776ecbd5841b75321ce66",
+    "src/bitcoin_script.rs": "9f057d355df50b1c279230c09faa2538d5343d01f87c25f39f5c4020461fe011",
+    "src/challenge.rs": "1e4e0c2b00e75eff4cf495f6073e027ab0231f721f4f31fdce71f6682fffab03",
+    "src/dispute_circuit.rs": "5b34be1740789bbc4c9f0df1279f17df0bb9c672ddb6cae8a1ce9bc8ff11082c",
+    "src/durable.rs": "39c7ad77b70b07a1fa79c33e447bfa5d5fc9826983103eb84bf95a2ef07fe0a3",
+    "src/elem.rs": "32204d5d0b1bda9b5d2e5b30632609383a1917972db155bc0385fd0b6f4a881b",
+    "src/gates.rs": "5c3ffdf0c93be5b8baa7a086e60f6f38d787fe5e7728597fc35a4cbdb69fd40f",
+    "src/journal.rs": "c6217cb8c3d18541a3c74a5764362fa358534d041c792af68a9a6449ff57988c",
+    "src/lib.rs": "4b7e9e9dc46290397d722fed4b90607c8470db20833f4bb9dc72f03bc4dfcb8b",
+    "src/program.rs": "2fe2edb8df215c747fc5ff93bd83a1bf007be01c44bdd17a06e9f9d85b63d782",
+    "src/protocol.rs": "3a4ebbc7ae5acb926dcdc25d021f92bb2eecf105360fd3101e458dec62b6db90",
+    "src/protocol_hardening_tests.rs": "225518b84bd5ccd5a56c34c62a2850e0e5a384d2235362264dc3ff1a9c0eefc3",
+    "src/soldering.rs": "369845b961b1b68d430ea1af760fbcfe26f4026478b19c04a8eb4fc4e2858339",
+    "src/trace.rs": "6a1a48549844d6a2405b5c8d86db51db7dc620216cbc85a65b11fa67ae3ef087",
+    "src/transaction_graph.rs": "67b4a5e2e6b97d33dd9e7a508de9a87913ed6c02aabd7306d4e2f08c974c4f60",
+    "Cargo.toml": "3e0a67228c085bc36fa2ecf81c317cd5a1bc7abffdf2ac44168c6d848bc3b638",
+    "Cargo.lock": "ecd10660e4ac6e95a7a08f49a1488b0bc273cf5edf0932d1edaa93cfc7214200",
+    "scripts/run-regtest.py": "c800d6d4034f42b6118d941833795d9501aba59cd08621af496a20b0b0b20f2f"
+  },
+  "source_git": {
+    "commit": "e4a2f74d09177ba96e62fc19d362e3545dac012a",
+    "crate_working_tree_dirty": true
+  },
+  "graph_binary_sha256": "5d6452631cd41dfabb3b74da18e08ff2a9a924f509295f1f08e155b1d9e7870f",
+  "release_binary_sha256": "2db606c940d695870d38f6fa0c22049144d2d96f3b0c62f2c051d7533ff761e8",
+  "public_fixture_sha256": {
+    "honest": "a58db10253c2994bfa1cbdc286cc91c6854a7667e9ce1f6cf1dee5d2b8c3f8c5",
+    "invalid": "7b2c98e02d1e4cf770e359b502befcd068280f1b7aac179be9fbc06db5f87859"
+  },
+  "scenarios": [
+    {
+      "name": "assertion_timeout",
+      "terminal": "assertion_timeout",
+      "confirmed": true,
+      "choices": 16
+    },
+    {
+      "name": "withheld_labels",
+      "terminal": "withholding",
+      "selected_index": 3,
+      "confirmed": true
+    },
+    {
+      "name": "honest_claim",
+      "terminal": "operator_payout",
+      "selected_index": 3,
+      "confirmed": true,
+      "response_vsize": 1826,
+      "response_witness_items": 132
+    },
+    {
+      "name": "invalid_committed_claim",
+      "terminal": "disprove",
+      "selected_index": 5,
+      "confirmed": true,
+      "response_vsize": 1826,
+      "response_witness_items": 132
+    }
+  ],
+  "events": [
+    {
+      "event": "all_connectors_verified_before_funding",
+      "height": 101,
+      "scenario": "assertion_timeout",
+      "graph_digest": "96469c17736775cc5f10e3cc1e385cff808a70c39d400eb0ad2aabcf71a38bbc",
+      "funding_outpoint": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba:1",
+      "choices": 16
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 101,
+      "check": "assertion_timeout_funding",
+      "expected": true,
+      "result": {
+        "txid": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba",
+        "wtxid": "7a54f846a34b84b6bef11788573d897cd725f4571c9775c109befb32ecd97f9e",
+        "allowed": true,
+        "vsize": 165,
+        "fees": {
+          "base": 3.3e-06,
+          "effective-feerate": 2e-05,
+          "effective-includes": [
+            "7a54f846a34b84b6bef11788573d897cd725f4571c9775c109befb32ecd97f9e"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 102,
+      "check": "assertion_timeout_funding",
+      "txid": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba",
+      "block_hash": "22e7659edcf23b5fd241d56dd35a9b8a9e3f99402705631c5c7de3259fa54f65",
+      "vsize": 165,
+      "weight_wu": 657
+    },
+    {
+      "event": "funding_confirmed_before_selection",
+      "height": 102,
+      "scenario": "assertion_timeout",
+      "funding_outpoint": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba:1",
+      "block_hash": "22e7659edcf23b5fd241d56dd35a9b8a9e3f99402705631c5c7de3259fa54f65"
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 112,
+      "check": "assertion_timeout_one_block_early",
+      "expected": false,
+      "result": {
+        "txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+        "wtxid": "49e53c21ad75e6a079411ffaa1853d8037579bb125567b422cc4459825c6e8ea",
+        "allowed": false,
+        "reject-reason": "non-BIP68-final",
+        "reject-details": "non-BIP68-final"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 113,
+      "check": "assertion_timeout_first_valid_block",
+      "expected": true,
+      "result": {
+        "txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+        "wtxid": "49e53c21ad75e6a079411ffaa1853d8037579bb125567b422cc4459825c6e8ea",
+        "allowed": true,
+        "vsize": 134,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00014925,
+          "effective-includes": [
+            "49e53c21ad75e6a079411ffaa1853d8037579bb125567b422cc4459825c6e8ea"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 114,
+      "check": "assertion_timeout_first_valid_block",
+      "txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+      "block_hash": "333064875cca216157b46af50eb3fab98fe3ba9347996ce256efa2f026f520b6",
+      "vsize": 134,
+      "weight_wu": 533
+    },
+    {
+      "event": "all_connectors_verified_before_funding",
+      "height": 114,
+      "scenario": "withheld_labels",
+      "graph_digest": "96469c17736775cc5f10e3cc1e385cff808a70c39d400eb0ad2aabcf71a38bbc",
+      "funding_outpoint": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7:1",
+      "choices": 16
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 114,
+      "check": "withheld_labels_funding",
+      "expected": true,
+      "result": {
+        "txid": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7",
+        "wtxid": "393890c6f8caf596bd8c0f5467909a5e9a8dad432a371c926e8a1787de43345e",
+        "allowed": true,
+        "vsize": 165,
+        "fees": {
+          "base": 3.3e-06,
+          "effective-feerate": 2e-05,
+          "effective-includes": [
+            "393890c6f8caf596bd8c0f5467909a5e9a8dad432a371c926e8a1787de43345e"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 115,
+      "check": "withheld_labels_funding",
+      "txid": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7",
+      "block_hash": "6d35640db9472bb722a15c9336026ff22f6fec17a4416c3164b322ed7cf677db",
+      "vsize": 165,
+      "weight_wu": 657
+    },
+    {
+      "event": "funding_confirmed_before_selection",
+      "height": 115,
+      "scenario": "withheld_labels",
+      "funding_outpoint": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7:1",
+      "block_hash": "6d35640db9472bb722a15c9336026ff22f6fec17a4416c3164b322ed7cf677db"
+    },
+    {
+      "event": "challenge_selected_after_funding",
+      "height": 115,
+      "scenario": "withheld_labels",
+      "selected_index": 3,
+      "choices": 16,
+      "funding_height": 115
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 115,
+      "check": "withheld_labels_challenge",
+      "expected": true,
+      "result": {
+        "txid": "d5ee521c8cd0edd9936b50eef92fd5b16bf552fe648fe5804fdbc6807149b48c",
+        "wtxid": "c5df8a2fde4eea2542b870e96798588d25f4777956a5436550fd3234fe236483",
+        "allowed": true,
+        "vsize": 170,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00011764,
+          "effective-includes": [
+            "c5df8a2fde4eea2542b870e96798588d25f4777956a5436550fd3234fe236483"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 116,
+      "check": "withheld_labels_challenge",
+      "txid": "d5ee521c8cd0edd9936b50eef92fd5b16bf552fe648fe5804fdbc6807149b48c",
+      "block_hash": "21db941cc794445c41b1fc95567b67c75b337569e0b856fc87b280bbdfef6266",
+      "vsize": 170,
+      "weight_wu": 678
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 116,
+      "check": "withheld_labels_competing_challenge_spent_input",
+      "expected": false,
+      "result": {
+        "txid": "4253669aa30dee4d1b1f55445b7757174c029472c6daad30553ccb20a93806c4",
+        "wtxid": "0b2c86fa8408f012eaa6cd73182277382f17c2e2b5e0ed83d319addea55c0f1b",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 118,
+      "check": "withheld_labels_one_block_early",
+      "expected": false,
+      "result": {
+        "txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+        "wtxid": "e6f299a63e9b4304b747688743d62a2301e0eddaff2798c8edc0e492e50c27b4",
+        "allowed": false,
+        "reject-reason": "non-BIP68-final",
+        "reject-details": "non-BIP68-final"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 119,
+      "check": "withheld_labels_first_valid_block",
+      "expected": true,
+      "result": {
+        "txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+        "wtxid": "e6f299a63e9b4304b747688743d62a2301e0eddaff2798c8edc0e492e50c27b4",
+        "allowed": true,
+        "vsize": 126,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00015873,
+          "effective-includes": [
+            "e6f299a63e9b4304b747688743d62a2301e0eddaff2798c8edc0e492e50c27b4"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 120,
+      "check": "withheld_labels_first_valid_block",
+      "txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+      "block_hash": "71b2272740b5493923a324df7a0c25230eaab14de45b0f94b68cc1621c2175bb",
+      "vsize": 126,
+      "weight_wu": 501
+    },
+    {
+      "event": "all_connectors_verified_before_funding",
+      "height": 120,
+      "scenario": "honest_claim",
+      "graph_digest": "96469c17736775cc5f10e3cc1e385cff808a70c39d400eb0ad2aabcf71a38bbc",
+      "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1",
+      "choices": 16
+    },
+    {
+      "event": "graph_reserved_in_trusted_authority_before_funding",
+      "height": 120,
+      "scenario": "honest_claim",
+      "graph_digest": "96469c17736775cc5f10e3cc1e385cff808a70c39d400eb0ad2aabcf71a38bbc",
+      "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1",
+      "receipt": {
+        "commit1": "8c3e7b32d3e547f99b8b55813b4672baca856dc3a7e6af60c1f4b4af091cd72a",
+        "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1",
+        "graph_bound_before_release": true,
+        "graph_digest": "96469c17736775cc5f10e3cc1e385cff808a70c39d400eb0ad2aabcf71a38bbc",
+        "input_released": false
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 120,
+      "check": "honest_claim_funding",
+      "expected": true,
+      "result": {
+        "txid": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973",
+        "wtxid": "1a32eb59aa86307ec201427071d9cba2efc332ea6cdfcfb295c2462a5d52892f",
+        "allowed": true,
+        "vsize": 165,
+        "fees": {
+          "base": 3.3e-06,
+          "effective-feerate": 2e-05,
+          "effective-includes": [
+            "1a32eb59aa86307ec201427071d9cba2efc332ea6cdfcfb295c2462a5d52892f"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 121,
+      "check": "honest_claim_funding",
+      "txid": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973",
+      "block_hash": "056e8f733170c5fa32309df782333dbfb954564ff71c5af3e6ade44de8814fe9",
+      "vsize": 165,
+      "weight_wu": 657
+    },
+    {
+      "event": "funding_confirmed_before_selection",
+      "height": 121,
+      "scenario": "honest_claim",
+      "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1",
+      "block_hash": "056e8f733170c5fa32309df782333dbfb954564ff71c5af3e6ade44de8814fe9"
+    },
+    {
+      "event": "challenge_selected_after_funding",
+      "height": 121,
+      "scenario": "honest_claim",
+      "selected_index": 3,
+      "choices": 16,
+      "funding_height": 121
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 121,
+      "check": "honest_claim_challenge",
+      "expected": true,
+      "result": {
+        "txid": "bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34",
+        "wtxid": "3e9f03fe9db960931cce917738b3e0b61c1681bf3aade2a673d4a01c0df84be1",
+        "allowed": true,
+        "vsize": 170,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00011764,
+          "effective-includes": [
+            "3e9f03fe9db960931cce917738b3e0b61c1681bf3aade2a673d4a01c0df84be1"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 122,
+      "check": "honest_claim_challenge",
+      "txid": "bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34",
+      "block_hash": "5bdfd5f94f37c4ee757dc56b3a7de478b523fa52598d6a9c7903dca4d4e0ed83",
+      "vsize": 170,
+      "weight_wu": 678
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 122,
+      "check": "honest_claim_competing_challenge_spent_input",
+      "expected": false,
+      "result": {
+        "txid": "2e563d0dcd0a17a541fdaee341657afd866bcd98f1194f7044dce1171ea0232c",
+        "wtxid": "15067faff3f797f4896af5f12226c6ef1d7fca7da3c6a2c24ac1282da21ebf3f",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "durable_release_rejected",
+      "height": 122,
+      "check": "honest_claim_unconfirmed_alternative",
+      "reason": "Error: Core getrawtransaction failed: error code: -5\nerror message:\nNo such mempool or blockchain transaction. Use gettransaction for wallet transactions.\n\n"
+    },
+    {
+      "event": "durable_release_rejected",
+      "height": 122,
+      "check": "honest_claim_changed_catalogue",
+      "reason": "Error: release graph differs from independent pre-funding reservation\n"
+    },
+    {
+      "event": "durable_labels_released_after_confirmed_challenge",
+      "height": 122,
+      "scenario": "honest_claim",
+      "selected_index": 3,
+      "challenge_txid": "bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34",
+      "label_count": 128
+    },
+    {
+      "event": "exact_release_retry_after_process_restart",
+      "height": 122,
+      "scenario": "honest_claim",
+      "selected_index": 3,
+      "identical_delivery": true
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 122,
+      "check": "honest_claim_wrong_input_label",
+      "expected": false,
+      "result": {
+        "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+        "wtxid": "90234cd984dc44fdb1c83f3e53f103659572ce1163cf700b5e56a9a329da2335",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 0 of f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3 (wtxid 90234cd984dc44fdb1c83f3e53f103659572ce1163cf700b5e56a9a329da2335), spending bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34:0"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 122,
+      "check": "honest_claim_operator_redirect",
+      "expected": false,
+      "result": {
+        "txid": "c5870f9d50947d2c56cfb5c4922106c365686316a0abb1a0679d13a63371beaa",
+        "wtxid": "833ef0d9f46947f6c0a9ef8d91d11de2754b27888fdf8c1262331c00cfe161a9",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "reject-details": "mempool-script-verify-flag-failed (Invalid Schnorr signature), input 0 of c5870f9d50947d2c56cfb5c4922106c365686316a0abb1a0679d13a63371beaa (wtxid 833ef0d9f46947f6c0a9ef8d91d11de2754b27888fdf8c1262331c00cfe161a9), spending bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34:0"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 122,
+      "check": "honest_claim_response",
+      "expected": true,
+      "result": {
+        "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+        "wtxid": "292dc14063f55aad8eb35928555dc5b66698e0076bab9ad0914998c7a2fb22f2",
+        "allowed": true,
+        "vsize": 1826,
+        "fees": {
+          "base": 5e-05,
+          "effective-feerate": 2.738e-05,
+          "effective-includes": [
+            "292dc14063f55aad8eb35928555dc5b66698e0076bab9ad0914998c7a2fb22f2"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 123,
+      "check": "honest_claim_response",
+      "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+      "block_hash": "3f5420f69017f635749595256eedf7df720c7abdb9340000c06e1be4580d4972",
+      "vsize": 1826,
+      "weight_wu": 7304
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 123,
+      "check": "honest_claim_withholding_after_response",
+      "expected": false,
+      "result": {
+        "txid": "6dfb58a9503228227d50a3a1bd914b8cbb5cb3fc17a17c1580b76fa120f3597e",
+        "wtxid": "1cd7ea9084d895e94be9233267940862bab2424dcdc9cc418cb41ca3d06507b0",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 126,
+      "check": "honest_claim_payout_one_block_early",
+      "expected": false,
+      "result": {
+        "txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+        "wtxid": "c2998575f15ff963783e5b01c89303564055c1bfc76ed069a6c06f845eca7532",
+        "allowed": false,
+        "reject-reason": "non-BIP68-final",
+        "reject-details": "non-BIP68-final"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 127,
+      "check": "honest_claim_payout_first_valid_block",
+      "expected": true,
+      "result": {
+        "txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+        "wtxid": "c2998575f15ff963783e5b01c89303564055c1bfc76ed069a6c06f845eca7532",
+        "allowed": true,
+        "vsize": 134,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00014925,
+          "effective-includes": [
+            "c2998575f15ff963783e5b01c89303564055c1bfc76ed069a6c06f845eca7532"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 128,
+      "check": "honest_claim_payout_first_valid_block",
+      "txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+      "block_hash": "4351ec6bee839937d6310d5a6199e89198ff3802c8fc13653a8b25772198790f",
+      "vsize": 134,
+      "weight_wu": 533
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 128,
+      "check": "honest_claim_replayed_response",
+      "expected": false,
+      "result": {
+        "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+        "wtxid": "292dc14063f55aad8eb35928555dc5b66698e0076bab9ad0914998c7a2fb22f2",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "all_connectors_verified_before_funding",
+      "height": 128,
+      "scenario": "invalid_committed_claim",
+      "graph_digest": "d031837e5d85ca0fb91c183fce41f2c7c9b1fd57ee8d38b25967918e9e38296e",
+      "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1",
+      "choices": 16
+    },
+    {
+      "event": "graph_reserved_in_trusted_authority_before_funding",
+      "height": 128,
+      "scenario": "invalid_committed_claim",
+      "graph_digest": "d031837e5d85ca0fb91c183fce41f2c7c9b1fd57ee8d38b25967918e9e38296e",
+      "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1",
+      "receipt": {
+        "commit1": "958c7ab2571cfc525ef1fa024072f3edc4e5ab1f08f90fadbfaf870ed78add36",
+        "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1",
+        "graph_bound_before_release": true,
+        "graph_digest": "d031837e5d85ca0fb91c183fce41f2c7c9b1fd57ee8d38b25967918e9e38296e",
+        "input_released": false
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 128,
+      "check": "invalid_committed_claim_funding",
+      "expected": true,
+      "result": {
+        "txid": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c",
+        "wtxid": "b2f6117581ea15eb9d6baeb6a70a82ca27871b284011e166761c91fe351f934d",
+        "allowed": true,
+        "vsize": 232,
+        "fees": {
+          "base": 4.64e-06,
+          "effective-feerate": 2e-05,
+          "effective-includes": [
+            "b2f6117581ea15eb9d6baeb6a70a82ca27871b284011e166761c91fe351f934d"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 129,
+      "check": "invalid_committed_claim_funding",
+      "txid": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c",
+      "block_hash": "667e37aa5fc77016a5683528778778f1d8a8fd82435ce7c60a1b3d5f2ce3fcb8",
+      "vsize": 232,
+      "weight_wu": 928
+    },
+    {
+      "event": "funding_confirmed_before_selection",
+      "height": 129,
+      "scenario": "invalid_committed_claim",
+      "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1",
+      "block_hash": "667e37aa5fc77016a5683528778778f1d8a8fd82435ce7c60a1b3d5f2ce3fcb8"
+    },
+    {
+      "event": "challenge_selected_after_funding",
+      "height": 129,
+      "scenario": "invalid_committed_claim",
+      "selected_index": 5,
+      "choices": 16,
+      "funding_height": 129
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 129,
+      "check": "invalid_committed_claim_challenge",
+      "expected": true,
+      "result": {
+        "txid": "f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497",
+        "wtxid": "63e03b0bbe3105406ef685c0ab8254002f626da7a1ad5fae719260f92d6cc015",
+        "allowed": true,
+        "vsize": 170,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00011764,
+          "effective-includes": [
+            "63e03b0bbe3105406ef685c0ab8254002f626da7a1ad5fae719260f92d6cc015"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 130,
+      "check": "invalid_committed_claim_challenge",
+      "txid": "f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497",
+      "block_hash": "0432999cbdea346f7cfb710e69b00c5124c4d1842ec0680946c6c4650de4be55",
+      "vsize": 170,
+      "weight_wu": 678
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 130,
+      "check": "invalid_committed_claim_competing_challenge_spent_input",
+      "expected": false,
+      "result": {
+        "txid": "9c74483ae7ff5ab5b90509a0d8c47249eec340cab1e6c4849ec548a7f9035535",
+        "wtxid": "3cd9a8b1feb86007a6de94c2c519f2cb487df3b83a2c5c5ec5af350305bc0183",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "durable_release_rejected",
+      "height": 130,
+      "check": "invalid_committed_claim_unconfirmed_alternative",
+      "reason": "Error: Core getrawtransaction failed: error code: -5\nerror message:\nNo such mempool or blockchain transaction. Use gettransaction for wallet transactions.\n\n"
+    },
+    {
+      "event": "durable_release_rejected",
+      "height": 130,
+      "check": "invalid_committed_claim_changed_catalogue",
+      "reason": "Error: release graph differs from independent pre-funding reservation\n"
+    },
+    {
+      "event": "durable_labels_released_after_confirmed_challenge",
+      "height": 130,
+      "scenario": "invalid_committed_claim",
+      "selected_index": 5,
+      "challenge_txid": "f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497",
+      "label_count": 128
+    },
+    {
+      "event": "exact_release_retry_after_process_restart",
+      "height": 130,
+      "scenario": "invalid_committed_claim",
+      "selected_index": 5,
+      "identical_delivery": true
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 130,
+      "check": "invalid_committed_claim_wrong_input_label",
+      "expected": false,
+      "result": {
+        "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+        "wtxid": "0608dc2a963e15ff9885e1363df0fd7a270b5fa59e2d8981ac9dd16daff468c8",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 0 of ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18 (wtxid 0608dc2a963e15ff9885e1363df0fd7a270b5fa59e2d8981ac9dd16daff468c8), spending f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497:0"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 130,
+      "check": "invalid_committed_claim_operator_redirect",
+      "expected": false,
+      "result": {
+        "txid": "160f469944ae0e621d600de85e5175050ac00d1660387bba169428a106f62a70",
+        "wtxid": "0c5fa012460320ab947dbf3a1e388e5d6e3c67417ce75734f03b5d7dc75c3ba1",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "reject-details": "mempool-script-verify-flag-failed (Invalid Schnorr signature), input 0 of 160f469944ae0e621d600de85e5175050ac00d1660387bba169428a106f62a70 (wtxid 0c5fa012460320ab947dbf3a1e388e5d6e3c67417ce75734f03b5d7dc75c3ba1), spending f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497:0"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 130,
+      "check": "invalid_committed_claim_response",
+      "expected": true,
+      "result": {
+        "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+        "wtxid": "1507346f0151052cececb93407a49d6824832d7bf9100d4a112c89e41921547c",
+        "allowed": true,
+        "vsize": 1826,
+        "fees": {
+          "base": 5e-05,
+          "effective-feerate": 2.738e-05,
+          "effective-includes": [
+            "1507346f0151052cececb93407a49d6824832d7bf9100d4a112c89e41921547c"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 131,
+      "check": "invalid_committed_claim_response",
+      "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+      "block_hash": "3ec67452c5d41acc139b3026dc797593050c6407c9e9a0c26e6c564e55dd4c68",
+      "vsize": 1826,
+      "weight_wu": 7304
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 131,
+      "check": "invalid_committed_claim_withholding_after_response",
+      "expected": false,
+      "result": {
+        "txid": "9d69db21a3a2351ad745ee88f5eac6dbc2201ee0bcf795e0cf402c4797ca3d16",
+        "wtxid": "564acf6a272b5d172ff3f3e6fa4e1229d21d91b43ebed1e2fa8fd8c21f3c5a85",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 131,
+      "check": "invalid_committed_claim_wrong_refutation_label",
+      "expected": false,
+      "result": {
+        "txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+        "wtxid": "fd23c37688502f7d1b115bc1c8197cdc518505303bb22b3ca6ea4a1696b5a49d",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 0 of c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015 (wtxid fd23c37688502f7d1b115bc1c8197cdc518505303bb22b3ca6ea4a1696b5a49d), spending ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18:0"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 131,
+      "check": "invalid_committed_claim_disprove",
+      "expected": true,
+      "result": {
+        "txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+        "wtxid": "702fa40a2f53aa5bc8c6d364b67a0a8b603412df5d118a79db0c5ddaa4d8cfc8",
+        "allowed": true,
+        "vsize": 146,
+        "fees": {
+          "base": 2e-05,
+          "effective-feerate": 0.00013698,
+          "effective-includes": [
+            "702fa40a2f53aa5bc8c6d364b67a0a8b603412df5d118a79db0c5ddaa4d8cfc8"
+          ]
+        }
+      }
+    },
+    {
+      "event": "confirmed_spend",
+      "height": 132,
+      "check": "invalid_committed_claim_disprove",
+      "txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+      "block_hash": "7ccfed8cd4721d808dad382e22f40a27ec773ebefe0f919e17e3e368124868c3",
+      "vsize": 146,
+      "weight_wu": 582
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 132,
+      "check": "invalid_committed_claim_payout_after_disprove",
+      "expected": false,
+      "result": {
+        "txid": "9d3ce078cb515ad8f933af0207a9a172be6c12527a6e1a3a6d60efdc4439b33a",
+        "wtxid": "46203e5baf3cb2a54f0ba6a4775940afe9c5cd613ad23320926232a3e9360e08",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    },
+    {
+      "event": "mempool_acceptance",
+      "height": 132,
+      "check": "invalid_committed_claim_replayed_response",
+      "expected": false,
+      "result": {
+        "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+        "wtxid": "1507346f0151052cececb93407a49d6824832d7bf9100d4a112c89e41921547c",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      }
+    }
+  ],
+  "scope": {
+    "real_protocol_labels": true,
+    "all_connectors_verified_before_funding": true,
+    "dynamic_choice_after_funding": true,
+    "durable_release_after_core_confirmation": true,
+    "mempool_policy_executed": true,
+    "valid_spends_mined": true,
+    "full_application_withdrawal": false,
+    "reorg_rollback_exercised": false,
+    "independent_operator_challenger_processes": false
+  }
+}

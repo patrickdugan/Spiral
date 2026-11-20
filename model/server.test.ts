@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ArkServer, DEFAULT_SERVER, runCorner, type CornerParams } from "./server.ts";
+import { ArkServer, DEFAULT_SERVER, runCorner, type CornerParams, type ServerCapitalEvent } from "./server.ts";
 
 test("S2: per-holder and aggregate bounds hold; a coalition cannot exceed server capital by coordinating", () => {
   const S = new ArkServer(1_300_000, { ...DEFAULT_SERVER, refreshLead: Number.NEGATIVE_INFINITY }); // holders never refresh: isolate the sweep clock
@@ -134,4 +134,32 @@ test("S2: capital-time accrues only until the sweep height inside a long advance
     // must split the time interval at the actual capital release event.
     assert.equal(S.lockedIntegralBlocks(), 100 * (spendLock === "round" ? 3 : 5));
   }
+});
+
+test("S2: observer events name gross fronting and exact recovery heights inside a long advance", () => {
+  const events: ServerCapitalEvent[] = [];
+  const S = new ArkServer(500, { lifetimeBlocks: 10, roundInterval: 3,
+    refreshLead: Number.NEGATIVE_INFINITY, spendLock: "round" }, (event) => events.push({ ...event }));
+  S.receive("h", 400);
+  assert.equal(S.frontingRequired("h", 300, { requireUnexpired: true }), 400);
+  assert.ok(S.spendLightning("h", 300, { requireUnexpired: true }));
+  S.advance(20);
+  assert.deepEqual(events, [
+    { kind: "fronting_locked", height: 0, objectId: "v0", amountSat: 400, recoveryHeight: 3 },
+    { kind: "fronting_recovered", height: 3, objectId: "v0", amountSat: 400, recoveryHeight: 3 },
+  ]);
+  assert.equal(S.lockedIntegralBlocks(), 1200);
+});
+
+test("S2: unexpired selection skips an expired input and preserves atomic funding rejection", () => {
+  const S = new ArkServer(100, { lifetimeBlocks: 5, roundInterval: 1,
+    refreshLead: Number.NEGATIVE_INFINITY, spendLock: "expiry" });
+  S.receive("h", 100);
+  S.advance(4);
+  S.receive("h", 200);
+  S.advance(1);
+  assert.equal(S.frontingRequired("h", 100, { requireUnexpired: true }), 200);
+  assert.equal(S.spendLightning("h", 100, { requireUnexpired: true }), false);
+  assert.equal(S.holderValue("h"), 300);
+  assert.equal(S.committed, 0);
 });

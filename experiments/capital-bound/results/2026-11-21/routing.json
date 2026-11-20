@@ -1,0 +1,96 @@
+{
+  "all_cut_conservation": {
+    "checked_cut_state_pairs": 98,
+    "nontrivial_cuts_per_state": 14,
+    "passed": true
+  },
+  "assumptions": [
+    "integer amounts",
+    "zero fees",
+    "sequential requests",
+    "no capacity changes",
+    "atomic simple-path payments"
+  ],
+  "conclusion": "The conservation bound survives routing choice; single-path deliverability can still depend on earlier route selection.",
+  "evidence_level": "simulation",
+  "first_route_via_a": {
+    "retry_limit": "any finite or infinite unchanged-state retry budget",
+    "second_payment_admissible_paths": [],
+    "state_after_first": {
+      "a->s": 1,
+      "a->t": 1,
+      "b->s": 0,
+      "b->t": 2,
+      "s->a": 1,
+      "s->b": 2,
+      "t->a": 1,
+      "t->b": 0
+    },
+    "unsplit_settled_payments": 1
+  },
+  "first_route_via_b": {
+    "final_state": {
+      "a->s": 0,
+      "a->t": 0,
+      "b->s": 1,
+      "b->t": 1,
+      "s->a": 2,
+      "s->b": 1,
+      "t->a": 2,
+      "t->b": 1
+    },
+    "unsplit_settled_payments": 2
+  },
+  "initial_capacity": {
+    "a->s": 0,
+    "a->t": 2,
+    "b->s": 0,
+    "b->t": 2,
+    "s->a": 2,
+    "s->b": 2,
+    "t->a": 0,
+    "t->b": 0
+  },
+  "mpp_rescue_after_route_a": {
+    "final_state": {
+      "a->s": 0,
+      "a->t": 0,
+      "b->s": 1,
+      "b->t": 1,
+      "s->a": 2,
+      "s->b": 1,
+      "t->a": 2,
+      "t->b": 1
+    },
+    "parts": [
+      {
+        "amount": 1,
+        "path": [
+          "a",
+          "t"
+        ]
+      },
+      {
+        "amount": 1,
+        "path": [
+          "a",
+          "s",
+          "b",
+          "t"
+        ]
+      }
+    ]
+  },
+  "requests": [
+    {
+      "amount": 1,
+      "source": "s",
+      "target": "t"
+    },
+    {
+      "amount": 2,
+      "source": "a",
+      "target": "t"
+    }
+  ]
+}

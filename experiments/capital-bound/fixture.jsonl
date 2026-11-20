@@ -1,0 +1,16 @@
+{"kind":"run_start","run_id":"synthetic-two-reserve-accounting","evidence_level":"simulation","height":0,"time_s":0}
+{"kind":"lot_open","lot_id":"lot-A","reserve_id":"canonical-reserve-A","amount_sat":100,"owner":"operator","state":"unavailable","height":0,"time_s":0}
+{"kind":"lot_open","lot_id":"lot-B","reserve_id":"canonical-reserve-B","amount_sat":50,"owner":"challenger","state":"available","height":0,"time_s":0}
+{"kind":"payment_offered","invoice_id":"sale-1","amount_sat":60,"purpose":"application","height":0,"time_s":0}
+{"kind":"payment_offered","invoice_id":"sale-2","amount_sat":40,"purpose":"application","height":0,"time_s":0}
+{"kind":"payment_offered","invoice_id":"refresh-1","amount_sat":100,"purpose":"refresh","height":0,"time_s":0}
+{"kind":"lot_state","lot_id":"lot-A","state":"pending_recovery","cause":"payment_complete_recovery_pending","height":2,"time_s":20}
+{"kind":"proof_verified","proof_id":"synthetic-proof-A","height":2,"time_s":20}
+{"kind":"payment_settled","invoice_id":"sale-1","amount_sat":60,"receipt":"synthetic-sale-1","height":3,"time_s":30}
+{"kind":"payment_settled","invoice_id":"refresh-1","amount_sat":100,"receipt":"synthetic-refresh-1","height":3,"time_s":30}
+{"kind":"lot_state","lot_id":"lot-B","state":"unavailable","cause":"challenge_bond_reserved","height":3,"time_s":30}
+{"kind":"lot_state","lot_id":"lot-A","state":"available","cause":"simulation_release","release_receipt":"synthetic-release-A","height":4,"time_s":40}
+{"kind":"payment_settled","invoice_id":"sale-2","amount_sat":40,"receipt":"synthetic-sale-2","height":4,"time_s":40}
+{"kind":"lot_state","lot_id":"lot-B","state":"released","cause":"simulation_release","release_receipt":"synthetic-release-B","height":7,"time_s":70}
+{"kind":"fee_paid","transaction_id":"synthetic-settlement-tx","amount_sat":2,"height":7,"time_s":70}
+{"kind":"run_end","height":10,"time_s":100}

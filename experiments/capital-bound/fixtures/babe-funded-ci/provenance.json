@@ -1,0 +1,157 @@
+{
+  "schema": "capital-bound/babe-ci-import-provenance/v1",
+  "repository": "patrickdugan/zk-rusto-no-bitcoino",
+  "workflow_run_id": 44376453388,
+  "workflow_head_sha": "b404ea4566c7ac28b702f8e0d4c0f1fded3b5691",
+  "artifact_id": 14462214463,
+  "artifact_name": "nova-babe-pilot-e4a2f74d09177ba96e62fc19d362e3545dac012a",
+  "artifact_archive_sha256": "da3165dcb9cfd5404b5297871efc6db3c93f7b48f87152aeb5228aac8aba03af",
+  "archive_hash_verified_against_github_metadata": true,
+  "receipt_source_git": {
+    "commit": "e4a2f74d09177ba96e62fc19d362e3545dac012a",
+    "crate_working_tree_dirty": true
+  },
+  "source_audit": [
+    {
+      "path": "src/bin/babe-pilot-bench.rs",
+      "expected_sha256": "4751487e4e108ef61810c4ef62723cdc7a846f8e32665129673a116746846b93",
+      "source_sha256": "4751487e4e108ef61810c4ef62723cdc7a846f8e32665129673a116746846b93",
+      "matches": true
+    },
+    {
+      "path": "src/bin/babe-regtest-graph.rs",
+      "expected_sha256": "459e0628f79eb54a6cae8e5e58d5a219ce07e0861eb20a3102b6a34a8a7f5141",
+      "source_sha256": "459e0628f79eb54a6cae8e5e58d5a219ce07e0861eb20a3102b6a34a8a7f5141",
+      "matches": true
+    },
+    {
+      "path": "src/bin/babe-session-fixtures.rs",
+      "expected_sha256": "a88238fda4d40982cb0436ae5a893baee960b81eda01a467a98cad5b4816716f",
+      "source_sha256": "a88238fda4d40982cb0436ae5a893baee960b81eda01a467a98cad5b4816716f",
+      "matches": true
+    },
+    {
+      "path": "src/bin/babe-trace-m14.rs",
+      "expected_sha256": "b3512b5f6671d64c045be9967a1917567cf0da8dedb776ecbd5841b75321ce66",
+      "source_sha256": "b3512b5f6671d64c045be9967a1917567cf0da8dedb776ecbd5841b75321ce66",
+      "matches": true
+    },
+    {
+      "path": "src/bitcoin_script.rs",
+      "expected_sha256": "9f057d355df50b1c279230c09faa2538d5343d01f87c25f39f5c4020461fe011",
+      "source_sha256": "9f057d355df50b1c279230c09faa2538d5343d01f87c25f39f5c4020461fe011",
+      "matches": true
+    },
+    {
+      "path": "src/challenge.rs",
+      "expected_sha256": "1e4e0c2b00e75eff4cf495f6073e027ab0231f721f4f31fdce71f6682fffab03",
+      "source_sha256": "1e4e0c2b00e75eff4cf495f6073e027ab0231f721f4f31fdce71f6682fffab03",
+      "matches": true
+    },
+    {
+      "path": "src/dispute_circuit.rs",
+      "expected_sha256": "5b34be1740789bbc4c9f0df1279f17df0bb9c672ddb6cae8a1ce9bc8ff11082c",
+      "source_sha256": "5b34be1740789bbc4c9f0df1279f17df0bb9c672ddb6cae8a1ce9bc8ff11082c",
+      "matches": true
+    },
+    {
+      "path": "src/durable.rs",
+      "expected_sha256": "39c7ad77b70b07a1fa79c33e447bfa5d5fc9826983103eb84bf95a2ef07fe0a3",
+      "source_sha256": "39c7ad77b70b07a1fa79c33e447bfa5d5fc9826983103eb84bf95a2ef07fe0a3",
+      "matches": true
+    },
+    {
+      "path": "src/elem.rs",
+      "expected_sha256": "32204d5d0b1bda9b5d2e5b30632609383a1917972db155bc0385fd0b6f4a881b",
+      "source_sha256": "32204d5d0b1bda9b5d2e5b30632609383a1917972db155bc0385fd0b6f4a881b",
+      "matches": true
+    },
+    {
+      "path": "src/gates.rs",
+      "expected_sha256": "5c3ffdf0c93be5b8baa7a086e60f6f38d787fe5e7728597fc35a4cbdb69fd40f",
+      "source_sha256": "5c3ffdf0c93be5b8baa7a086e60f6f38d787fe5e7728597fc35a4cbdb69fd40f",
+      "matches": true
+    },
+    {
+      "path": "src/journal.rs",
+      "expected_sha256": "c6217cb8c3d18541a3c74a5764362fa358534d041c792af68a9a6449ff57988c",
+      "source_sha256": "c6217cb8c3d18541a3c74a5764362fa358534d041c792af68a9a6449ff57988c",
+      "matches": true
+    },
+    {
+      "path": "src/lib.rs",
+      "expected_sha256": "4b7e9e9dc46290397d722fed4b90607c8470db20833f4bb9dc72f03bc4dfcb8b",
+      "source_sha256": "4b7e9e9dc46290397d722fed4b90607c8470db20833f4bb9dc72f03bc4dfcb8b",
+      "matches": true
+    },
+    {
+      "path": "src/program.rs",
+      "expected_sha256": "2fe2edb8df215c747fc5ff93bd83a1bf007be01c44bdd17a06e9f9d85b63d782",
+      "source_sha256": "2fe2edb8df215c747fc5ff93bd83a1bf007be01c44bdd17a06e9f9d85b63d782",
+      "matches": true
+    },
+    {
+      "path": "src/protocol.rs",
+      "expected_sha256": "3a4ebbc7ae5acb926dcdc25d021f92bb2eecf105360fd3101e458dec62b6db90",
+      "source_sha256": "3a4ebbc7ae5acb926dcdc25d021f92bb2eecf105360fd3101e458dec62b6db90",
+      "matches": true
+    },
+    {
+      "path": "src/protocol_hardening_tests.rs",
+      "expected_sha256": "225518b84bd5ccd5a56c34c62a2850e0e5a384d2235362264dc3ff1a9c0eefc3",
+      "source_sha256": "225518b84bd5ccd5a56c34c62a2850e0e5a384d2235362264dc3ff1a9c0eefc3",
+      "matches": true
+    },
+    {
+      "path": "src/soldering.rs",
+      "expected_sha256": "369845b961b1b68d430ea1af760fbcfe26f4026478b19c04a8eb4fc4e2858339",
+      "source_sha256": "369845b961b1b68d430ea1af760fbcfe26f4026478b19c04a8eb4fc4e2858339",
+      "matches": true
+    },
+    {
+      "path": "src/trace.rs",
+      "expected_sha256": "6a1a48549844d6a2405b5c8d86db51db7dc620216cbc85a65b11fa67ae3ef087",
+      "source_sha256": "6a1a48549844d6a2405b5c8d86db51db7dc620216cbc85a65b11fa67ae3ef087",
+      "matches": true
+    },
+    {
+      "path": "src/transaction_graph.rs",
+      "expected_sha256": "67b4a5e2e6b97d33dd9e7a508de9a87913ed6c02aabd7306d4e2f08c974c4f60",
+      "source_sha256": "67b4a5e2e6b97d33dd9e7a508de9a87913ed6c02aabd7306d4e2f08c974c4f60",
+      "matches": true
+    },
+    {
+      "path": "Cargo.toml",
+      "expected_sha256": "3e0a67228c085bc36fa2ecf81c317cd5a1bc7abffdf2ac44168c6d848bc3b638",
+      "source_sha256": "3e0a67228c085bc36fa2ecf81c317cd5a1bc7abffdf2ac44168c6d848bc3b638",
+      "matches": true
+    },
+    {
+      "path": "Cargo.lock",
+      "expected_sha256": "ecd10660e4ac6e95a7a08f49a1488b0bc273cf5edf0932d1edaa93cfc7214200",
+      "source_sha256": "ecd10660e4ac6e95a7a08f49a1488b0bc273cf5edf0932d1edaa93cfc7214200",
+      "matches": true
+    },
+    {
+      "path": "scripts/run-regtest.py",
+      "expected_sha256": "c800d6d4034f42b6118d941833795d9501aba59cd08621af496a20b0b0b20f2f",
+      "source_sha256": "c800d6d4034f42b6118d941833795d9501aba59cd08621af496a20b0b0b20f2f",
+      "matches": true
+    }
+  ],
+  "all_recorded_source_hashes_match_pinned_head": true,
+  "receipt_sha256": "b9e280b1421c312b8dfe3a2b4905a6dcbb0bfecd6ae828823d0fc93788805e25",
+  "transactions_sha256": "8f5be34f4cb0c9fff5c464dfa4cb80a125373a0abb1087f85e69ad45f9699e64",
+  "adapter_sha256": "b3f6981b9c5ddc5ad964649b4732f4bfd95ced8cb1049cc3358123d0055f7ae0",
+  "imported_observations_sha256": "31a8e10ab59e6916ebb020cc0478c28cb4d2f9ecaf4f29dc3825cb179f293aca",
+  "evidence_verified": false,
+  "scope": "Archive provenance and source/receipt consistency; no new graph execution or independent chain authentication.",
+  "artifact_metadata_url": "https://api.github.com/repos/patrickdugan/zk-rusto-no-bitcoino/actions/artifacts/14462214463",
+  "workflow_url": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/actions/runs/44376453388",
+  "archive_size_bytes": 70718,
+  "archive_transport": "public nightly.link mirror; exact ZIP SHA256 checked against GitHub artifact metadata before extraction",
+  "copied_files_only": [
+    "receipt.json",
+    "transactions.json"
+  ]
+}
