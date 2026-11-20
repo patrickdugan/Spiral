@@ -1,0 +1,86 @@
+{
+  "attempt_failures": 0,
+  "conserved_replacements": [],
+  "encumbered_duration_blocks": {
+    "decimal": 0.0,
+    "denominator": 1,
+    "numerator": 0
+  },
+  "encumbered_duration_seconds": {
+    "decimal": 0.0,
+    "denominator": 1,
+    "numerator": 0
+  },
+  "encumbered_sat_blocks": 0,
+  "encumbered_sat_seconds": 0,
+  "evidence_level_as_supplied": "simulation",
+  "evidence_verified": false,
+  "fees_paid_sat": 0,
+  "fully_recovered": true,
+  "funded_duration_blocks": {
+    "decimal": 12.307692307692308,
+    "denominator": 13,
+    "numerator": 160
+  },
+  "funded_duration_seconds": {
+    "decimal": 7384.615384615385,
+    "denominator": 13,
+    "numerator": 96000
+  },
+  "funded_sat_blocks": 32000,
+  "funded_sat_seconds": 19200000,
+  "horizon_blocks": 20,
+  "horizon_seconds": 12000,
+  "liquidity_duration_alias_definition": "legacy alias for encumbered duration only; use funded_duration for the paper's provisioned-capital comparison",
+  "liquidity_duration_blocks": {
+    "decimal": 0.0,
+    "denominator": 1,
+    "numerator": 0
+  },
+  "liquidity_duration_seconds": {
+    "decimal": 0.0,
+    "denominator": 1,
+    "numerator": 0
+  },
+  "offered_application_invoices": 6,
+  "offered_application_volume_sat": 2600,
+  "peak_encumbered_sat": 0,
+  "peak_funded_sat": 1600,
+  "run_id": "finite-budget-demo:lightning",
+  "settled_application_invoice_fraction": {
+    "decimal": 1.0,
+    "denominator": 1,
+    "numerator": 1
+  },
+  "settled_application_invoices": 6,
+  "settled_application_latency_seconds": {
+    "by_invoice": {
+      "a-in": 0,
+      "a-out": 0,
+      "b-in": 0,
+      "b-in-capacity": 0,
+      "b-out-after-sweep": 0,
+      "b-out-before-sweep": 0
+    },
+    "p50_nearest_rank": 0,
+    "p95_nearest_rank": 0,
+    "p99_nearest_rank": 0,
+    "sample_count": 6
+  },
+  "settled_application_value_fraction": {
+    "decimal": 1.0,
+    "denominator": 1,
+    "numerator": 1
+  },
+  "settled_application_volume_sat": 2600,
+  "terminal_encumbered_lots": [],
+  "terminal_encumbered_sat": 0,
+  "terminal_state_value_sat": {
+    "available": 1600,
+    "pending_recovery": 0,
+    "released": 0,
+    "unavailable": 0
+  },
+  "unsettled_application_invoice_ids": [],
+  "validation_scope": "event schema and arithmetic only; node, proof, and receipt authentication require external adapters"
+}

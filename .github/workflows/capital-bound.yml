@@ -1,0 +1,97 @@
+name: Capital-bound accounting and recovery
+
+on:
+  pull_request:
+    paths:
+      - 'model/**'
+      - 'experiments/capital-bound/**'
+      - '.github/workflows/capital-bound.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  models-and-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check reference models and arithmetic adapters
+        run: |
+          node --experimental-strip-types --test 'model/*.test.ts'
+          python -m unittest discover -s experiments/capital-bound -p 'test_*.py' -v
+      - name: Replay identical demand under enforced budgets
+        run: |
+          node model/capital-bound.ts --out run-results/finite
+          python experiments/capital-bound/lab.py counterexample > run-results/routing.json
+          python experiments/capital-bound/lab.py analyze run-results/finite/ark.jsonl > run-results/finite/ark-analysis.json
+          python experiments/capital-bound/lab.py analyze run-results/finite/lightning.jsonl > run-results/finite/lightning-analysis.json
+      - name: Fetch checksum-pinned Bitcoin Core 31.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl --fail --location --retry 3 --output bitcoin-31.1-x86_64-linux-gnu.tar.gz https://bitcoincore.org/bin/bitcoin-core-31.1/bitcoin-31.1-x86_64-linux-gnu.tar.gz
+          printf '%s\n' 'b80d9c3e04da78fb6f0569685673418cf686fadba9042d926d13fb87ff503f9e  bitcoin-31.1-x86_64-linux-gnu.tar.gz' > bitcoin-core.sha256
+          sha256sum --check bitcoin-core.sha256
+          tar --extract --gzip --file bitcoin-31.1-x86_64-linux-gnu.tar.gz
+      - name: Mine signed CSV recovery and actual output reuse
+        run: python experiments/capital-bound/core_regtest.py --bitcoind "$RUNNER_TEMP/bitcoin-31.1/bin/bitcoind" --output run-results/core-regtest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capital-bound-models-and-core
+          path: run-results/
+
+  nova-existing-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '2'
+      RAYON_NUM_THREADS: '2'
+      CARGO_TARGET_DIR: ${{ github.workspace }}/nova-target
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch pinned verifier source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/capital-bound-nova-source"
+          git -C "$RUNNER_TEMP/capital-bound-nova-source" remote add origin https://github.com/patrickdugan/zk-rusto-no-bitcoino.git
+          git -C "$RUNNER_TEMP/capital-bound-nova-source" fetch --depth=1 origin f6a8d129285869f339c86f1e2e7f1124bc09c37a
+          git -C "$RUNNER_TEMP/capital-bound-nova-source" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/capital-bound-nova-source" rev-parse HEAD)" = f6a8d129285869f339c86f1e2e7f1124bc09c37a
+          rustup toolchain install stable --profile minimal
+      - name: Build the CPU verifier with the pinned lockfile
+        run: cargo +stable build --locked --release --manifest-path "$RUNNER_TEMP/capital-bound-nova-source/LNMarkets/nova/Cargo.toml" --bin lnm-nova
+      - name: Verify the existing two-contract proof in a separate process
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p run-results
+          VERIFIER_PATH="$CARGO_TARGET_DIR/release/lnm-nova"
+          VERIFIER_SHA="$(sha256sum "$VERIFIER_PATH" | cut -d ' ' -f 1)"
+          python experiments/capital-bound/proof_adapter.py verify-nova \
+            --verifier "$VERIFIER_PATH" --verifier-sha256 "$VERIFIER_SHA" \
+            --bundle experiments/capital-bound/fixtures/nova-v2/bundle \
+            --expect experiments/capital-bound/fixtures/nova-v2/expected.json \
+            --expect-sha256 17c2b3b9533f6d227b9859e7bdd0d667498e7474b70eb97c14a98381563ae043 \
+            --native-receipt experiments/capital-bound/fixtures/nova-v2/native-prepare.json \
+            --run-id capital-bound-ci --timeout 180 --out run-results/nova-verification.json
+          cp "$RUNNER_TEMP/capital-bound-nova-source/LNMarkets/nova/Cargo.lock" run-results/Cargo.lock
+          rustc +stable --version > run-results/rustc-version.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capital-bound-nova-verification
+          path: run-results/

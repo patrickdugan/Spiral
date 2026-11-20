@@ -1,0 +1,78 @@
+{
+  "schema": "capital-bound/stage0-results/v1",
+  "date_local": "2026-11-21",
+  "timezone": "Asia/Singapore",
+  "baseline_spiral_commit": "df00b03b1727b6f5e7275d5f3f34ab822c5149f9",
+  "files": {
+    "bitvm/babe-ci-observations.json": {
+      "bytes": 24852,
+      "sha256": "31a8e10ab59e6916ebb020cc0478c28cb4d2f9ecaf4f29dc3825cb179f293aca"
+    },
+    "core-regtest/analysis.json": {
+      "bytes": 2395,
+      "sha256": "b60b327c445e873de49d8bb5e83276e8193a51924dea353586de3c61ab444310"
+    },
+    "core-regtest/events.jsonl": {
+      "bytes": 1838,
+      "sha256": "799f07d74ede7c3ef3beb6122415015f368896e185e98be4653893e3626aa93f"
+    },
+    "core-regtest/observations.json": {
+      "bytes": 2285,
+      "sha256": "cc308e09155b06aec8ac2b4285bb3a7985d8391e9e5956f2edbdfd12508330a2"
+    },
+    "core-regtest/recovery-receipt.json": {
+      "bytes": 582,
+      "sha256": "3f962ca6b265082bf93ef1b2a03f6eb0245078b317b9b40294ace9ac49ef5f2e"
+    },
+    "core-regtest/report.json": {
+      "bytes": 1299,
+      "sha256": "cedbe7b0e0a6412e46397cdb740c47fade2e3947fa2738894f4a0ddfa61d5d04"
+    },
+    "core-regtest/reuse-receipt.json": {
+      "bytes": 586,
+      "sha256": "cec94cd65546366a5c7d33beddb27f592e665f74346f1ecd7927162f4c99f861"
+    },
+    "finite/ark-analysis.json": {
+      "bytes": 2394,
+      "sha256": "745fea86a3ed8b016f5e39722c21b904ceec3b6a29058a5e8f581f09d69a2e2e"
+    },
+    "finite/ark.jsonl": {
+      "bytes": 8131,
+      "sha256": "d469290c7b879532d4868c2a1e559b6e4ca3c612a57f1694d5b18dbeacc332a4"
+    },
+    "finite/lightning-analysis.json": {
+      "bytes": 2298,
+      "sha256": "7917956fc1aa517db34bd22288897745306106f33126d80048c6f3fa15375307"
+    },
+    "finite/lightning.jsonl": {
+      "bytes": 5053,
+      "sha256": "dc3b4fee4883b75b325fe39a09a80bdac5e12c4aca84f7f9b86ab49ffa68c176"
+    },
+    "finite/scenario.json": {
+      "bytes": 1266,
+      "sha256": "2467a12067f482ee476c03bc41d241a555a8ca4474d0e5b6351dee95c42d4e39"
+    },
+    "finite/summary.json": {
+      "bytes": 4514,
+      "sha256": "fe25ca1023d313b946bc962aeda78fc6d513408bb5434e17d910ece6a4f20cf7"
+    },
+    "nova/nova-v2-verifier-attempt.json": {
+      "bytes": 4983,
+      "sha256": "a316463d1723ae6a0a9b604af3cb55616f7b87806b96ae7073a79d5de94d450c"
+    },
+    "nova/nova-v2-verifier-source.py": {
+      "bytes": 23103,
+      "sha256": "badfe95159f4d5cef7ca0e90b93a2e28650211b8ff9be43442043d3f3bdda02c"
+    },
+    "routing.json": {
+      "bytes": 1783,
+      "sha256": "84857f346e94879ab4420be173fed20fc191dd4e38e7a8f969e0f4888eede33d"
+    }
+  },
+  "current_source_sha256": {
+    "lab.py": "77d79c6ebfb90dc790939f70a70650f8af6d587c07c1a416643aa2c4b0827d54",
+    "core_regtest.py": "ca40217c12e83f1c567240ad738b92b6efbe958ec50e8246a92cce9fd86b7ec0",
+    "proof_adapter.py": "b3f6981b9c5ddc5ad964649b4732f4bfd95ced8cb1049cc3358123d0055f7ae0"
+  },
+  "source_note": "Current integration sources. The measured Nova run carries its own exact historical adapter snapshot and hash; later changes concern importer validation and failed-attempt recording."
+}

@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "program": "Capital Bound Moves: settlement and proof experiment",
+  "status": "Stage 0 implemented; finite-budget simulation, actual Core CSV probe and existing Nova v2 proof verification executed. Full Ark/BitVM lifecycle and public Testnet4 pilot pending.",
+  "source": {
+    "repository": "https://github.com/patrickdugan/Spiral",
+    "commit": "df00b03b1727b6f5e7275d5f3f34ab822c5149f9",
+    "paper": "paper/tex/main.tex"
+  },
+  "live_run_bounds": {
+    "network": "testnet4",
+    "max_offered_application_payments": 200,
+    "arrival_window_hours": 48,
+    "recovery_tail": "continue observation until every commitment recovers; report unresolved exposure at any forced stop",
+    "proposed_max_funding_sat": 2000000,
+    "proposed_max_fees_sat": 100000,
+    "max_simultaneous_bitvm_assertions": 4,
+    "budget_gate": "dry-run graph and relay checks must fit limits before funding; full dispute graphs exceeding limits remain on regtest",
+    "mainnet_enabled": false
+  },
+  "accounting": {
+    "primary_endpoint": "minimum external capital achieving prespecified delivery SLO on the same offered invoice trace",
+    "delivery_slo": {
+      "settled_invoice_fraction": 0.99,
+      "settled_value_fraction": 0.99,
+      "proposed_common_application_deadline_seconds": 3600,
+      "latency_deadline": "one common application deadline across compared arms, fixed before running; record protocol confirmation and final capital recovery separately",
+      "settlement_semantics": "the same recipient-usable security condition across compared arms; report provisional acceptance separately"
+    },
+    "paper_duration_endpoint": "funded capital-time divided by settled unique application value; report encumbered capital-time duration separately",
+    "secondary_endpoints": [
+      "unique application sat delivered",
+      "encumbered sat-seconds",
+      "encumbered sat-blocks",
+      "funded sat-seconds",
+      "peak encumbered sat",
+      "peak funded sat",
+      "payment latency",
+      "capital recovery latency",
+      "unresolved terminal commitments",
+      "chain fees",
+      "serialized transaction weight",
+      "proof setup/prove/verify time",
+      "peak CPU RAM"
+    ],
+    "counting_rule": "one canonical reserve lot per economic funding source; virtual claims alias backing and add no second lot",
+    "volume_exclusions": [
+      "self transfers",
+      "refreshes",
+      "rebalances",
+      "funding transactions",
+      "duplicate invoice receipts"
+    ],
+    "cost_sensitivity": {
+      "sat_per_vbyte": [
+        2,
+        10,
+        50
+      ],
+      "annual_capital_cost_btc": [
+        0.0025,
+        0.02,
+        0.1
+      ]
+    },
+    "proof_completion_releases_capital": false
+  },
+  "arms": [
+    {
+      "id": "LN",
+      "description": "four-node diamond with explicit routes, finite channels, reserves and pending HTLC accounting",
+      "first_environment": "native_regtest"
+    },
+    {
+      "id": "ARK",
+      "description": "pinned unmodified Ark server with actual issuance pool, confirmed recovery, and Lightning ingress/egress",
+      "first_environment": "native_regtest"
+    },
+    {
+      "id": "ARK_NOVA_AUDIT",
+      "description": "same Ark transaction/state rules with transparent Nova audit proofs; isolate proof overhead and audit benefit",
+      "first_environment": "native_regtest"
+    },
+    {
+      "id": "BITVM_BATCH_ESCROW",
+      "description": "batch claim or withdrawal proof with authenticated public inputs and Bitcoin-enforced payout/dispute graph; enable only after binding and recovery gates",
+      "first_environment": "native_regtest"
+    },
+    {
+      "id": "KEYLESS_PROPOSAL",
+      "description": "modified-consensus research lane for the proposed keyless verifier; separate results from public testnet4 consensus",
+      "first_environment": "patched_regtest_only"
+    }
+  ],
+  "experiments": [
+    {
+      "id": "CBM-01",
+      "question": "Does route history change unsplittable delivery while every cut remains conserved?",
+      "fixture": "diamond requests s->t=1 then a->t=2; compare first path via a/b and MPP rescue",
+      "environment": "simulation"
+    },
+    {
+      "id": "CBM-02",
+      "question": "When is each Ark-funded sat spendable again?",
+      "checks": [
+        "incoming HTLC issuance pool decrement",
+        "outgoing gross-input lock and change",
+        "refresh",
+        "expiry",
+        "confirmed sweep",
+        "full drain recovery"
+      ],
+      "environment": "native_regtest"
+    },
+    {
+      "id": "CBM-03",
+      "question": "Which object meets the same SLO with the least funded capital?",
+      "demand": [
+        "independent zero drift",
+        "shared drift",
+        "bursts",
+        "correlated shocks",
+        "few recurring counterparties",
+        "changing demand after placement"
+      ],
+      "group_sizes": [
+        1,
+        5,
+        20,
+        200
+      ],
+      "reserve_modes": [
+        "zero starting balance",
+        "signed imbalance with separately charged starting reserves"
+      ],
+      "environment": "simulation_then_native_regtest"
+    },
+    {
+      "id": "CBM-04",
+      "question": "What does batching save after proof, queue and dispute costs?",
+      "initial_batch_sizes": [
+        1,
+        2,
+        8,
+        32
+      ],
+      "scaling_batch_sizes": [
+        128
+      ],
+      "same_enforcement_ablation": [
+        "audit disabled",
+        "Nova audit enabled"
+      ],
+      "separate_enforcement_arm": "BitVM claim/withdrawal escrow",
+      "environment": "native_regtest"
+    },
+    {
+      "id": "CBM-05",
+      "question": "Can invalid claims or unavailable data cause release or indefinite capital lock?",
+      "environment": "native_regtest",
+      "cases": [
+        "wrong network/genesis",
+        "wrong funded outpoint",
+        "wrong prior state root",
+        "wrong next state root",
+        "wrong recipient",
+        "wrong payout amount",
+        "wrong residual output",
+        "wrong DLC/CET binding",
+        "duplicate nullifier",
+        "split/merge lineage inflation",
+        "spend-and-reclaim inside epoch",
+        "two simultaneous assertions on one reserve",
+        "negative/fractional/overflow claim weight",
+        "reward allocation after epoch close",
+        "stale assertion",
+        "proof substitution",
+        "withheld data",
+        "prover timeout",
+        "challenger offline",
+        "fee spike",
+        "reorg",
+        "deadline boundary"
+      ]
+    },
+    {
+      "id": "CBM-06",
+      "question": "Do pinned standard-consensus transactions relay, confirm and recover on public testnet4?",
+      "network_gate": "actual binary supports testnet4 and every script passes the unmodified node's testmempoolaccept",
+      "environment": "public_testnet4",
+      "inference_limit": "transport, script, timing and receipts; test coins provide no evidence about real capital prices"
+    }
+  ],
+  "paired_design": {
+    "simulation_seeds": 30,
+    "unit_of_replication": "independent topology and demand seed; invoices are repeated observations within a run",
+    "hold_fixed": [
+      "offered invoice trace",
+      "total external funding",
+      "fee budget",
+      "initial reserve ownership",
+      "allowed information",
+      "retry budget",
+      "arrival order",
+      "deadline policy"
+    ],
+    "oracle": "separate hindsight upper-bound arm; deployment policies use past observations only",
+    "analysis": "paired differences and cluster bootstrap over seeds; show service and cost jointly; live pilot is feasibility evidence"
+  },
+  "promotion_gates": [
+    {
+      "to": "native_regtest",
+      "require": [
+        "all-cut and reserve conservation",
+        "strict positive integer monetary values",
+        "same canonical reserve never double-counted",
+        "exact invoice and fee deduplication",
+        "terminal obligations reported"
+      ]
+    },
+    {
+      "to": "BITVM_BATCH_ESCROW",
+      "require": [
+        "proof verifies on the exact public statement",
+        "fixed funded outpoint survives all mutation tests",
+        "honest payout observed",
+        "invalid payout rejected by actual transaction path",
+        "challenge/refund paths observed",
+        "data availability and watcher duty declared",
+        "payout and residual authority pinned"
+      ]
+    },
+    {
+      "to": "public_testnet4",
+      "require": [
+        "unmodified consensus compatibility",
+        "pinned node and proof binaries",
+        "standard relay checks",
+        "bounded funding and fees",
+        "complete regtest dispute receipts",
+        "prover, verifier and challenger run as separate processes with independently checked statement and receipt inputs",
+        "reorg rollback, restart and recovery exercised on native regtest with no stale-root or duplicate payout acceptance",
+        "safe time windows and recovery plan"
+      ]
+    },
+    {
+      "to": "paper claim of capital improvement",
+      "require": [
+        "same offered workload and common application delivery deadline and settlement semantics",
+        "at least 10 percent reduction in encumbered capital-time as proposed practical threshold",
+        "peak external funded capital and funded capital-time do not increase; otherwise publish a Pareto tradeoff instead of an unqualified capital improvement",
+        "paired uncertainty interval excludes no improvement",
+        "fees and proof costs reported",
+        "recovery tail included",
+        "no outstanding unsafe-release failure"
+      ]
+    }
+  ],
+  "evidence_labels": {
+    "simulation": "synthetic ledger and routing arithmetic; no Bitcoin spend or cryptographic security claim",
+    "native_regtest": "unmodified Bitcoin node mined transaction receipts plus separately named local proof checks",
+    "public_testnet4": "public transaction identifiers, block inclusion, node version and receipts; off-chain proof verification identified separately",
+    "patched_regtest_only": "experimental consensus; cannot promote to public testnet4 through passing local tests"
+  },
+  "claim_weight_regression": {
+    "reject": [
+      {
+        "weights": [
+          10,
+          -9
+        ],
+        "pool": 100
+      },
+      {
+        "weights": [
+          1.5,
+          10
+        ],
+        "pool": 100
+      }
+    ],
+    "accept": {
+      "frozen_weights": {
+        "alpha": 10,
+        "beta": 10
+      },
+      "pool": 100,
+      "expected": {
+        "alpha": 50,
+        "beta": 50
+      }
+    },
+    "epoch_order": "freeze eligible claims, validate, compute distribution, persist payout commitment, then retire mutable epoch state"
+  },
+  "implementation": {
+    "baseline_commit": "df00b03b1727b6f5e7275d5f3f34ab822c5149f9",
+    "registry_api": "Registry.settleEpoch(liveSet, pool)",
+    "finite_budget_runner": "model/capital-bound.ts",
+    "capital_ledger": "experiments/capital-bound/lab.py",
+    "core_probe": "experiments/capital-bound/core_regtest.py",
+    "proof_adapter": "experiments/capital-bound/proof_adapter.py",
+    "nova_source_commit": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+    "native_probe_scope": "signed CSV recovery and output reuse on isolated regtest; faucet excluded; no Ark or BitVM graph claim",
+    "observed_results": "results/2026-11-21/"
+  }
+}

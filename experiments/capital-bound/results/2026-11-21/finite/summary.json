@@ -1,0 +1,173 @@
+{
+  "schema_version": "capital-bound-finite-budget/v1",
+  "evidence_level": "simulation",
+  "evidence_verified": false,
+  "configuration_sha256": "dd99d1d5d5698fa54449f13b2757f6c5ba95f74a041de13b3afbced9c8a854ec",
+  "offered_trace_sha256": "3fe32f33a114d4b4f7636956cffbd8539814b32402231135b393e5b9fb15d8d8",
+  "config": {
+    "runId": "finite-budget-demo",
+    "holders": [
+      "a",
+      "b"
+    ],
+    "budgetSat": 1600,
+    "frontingSat": 800,
+    "quantumSat": 100,
+    "lifetimeBlocks": 10,
+    "roundInterval": 2,
+    "spendLock": "expiry",
+    "arrivalHorizonBlocks": 10,
+    "secondsPerBlock": 600
+  },
+  "end_block": 20,
+  "drain_blocks": 10,
+  "funding_policy": {
+    "total_per_arm_sat": 1600,
+    "ln_channel_capacity_sat": {
+      "a": 800,
+      "b": 800
+    },
+    "ark_channel_capacity_sat": 800,
+    "ark_disjoint_fronting_reserve_sat": 800
+  },
+  "assumptions": [
+    "zero fees",
+    "instantaneous accepted application payments",
+    "fixed denomination",
+    "fixed channel capacity",
+    "Ark channel and fronting reserves are disjoint",
+    "automatic refresh disabled",
+    "expired VTXOs ineligible for new spends",
+    "spendLock is a model parameter",
+    "fixed synthetic seconds per block",
+    "remaining channel capital stays funded through the drain"
+  ],
+  "limitations": [
+    "no node, transaction, signature, proof, script, mempool, reorg, or finality verification",
+    "no route search, HTLC in-flight duration, queue, retry, rebalancing, or dynamic funding",
+    "the drain covers fronting locks; remaining holder liabilities and channel exits are not modeled",
+    "the disjoint Ark reserve policy requires validation against an actual implementation balance sheet"
+  ],
+  "lightning": {
+    "offered_invoices": 6,
+    "settled_invoices": 6,
+    "offered_value_sat": 2600,
+    "settled_value_sat": 2600,
+    "failure_counts": {},
+    "outcomes": [
+      {
+        "invoiceId": "a-in",
+        "atBlock": 0,
+        "holder": "a",
+        "direction": "receive",
+        "amountSat": 500,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-in-capacity",
+        "atBlock": 0,
+        "holder": "b",
+        "direction": "receive",
+        "amountSat": 400,
+        "settled": true
+      },
+      {
+        "invoiceId": "a-out",
+        "atBlock": 1,
+        "holder": "a",
+        "direction": "send",
+        "amountSat": 500,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-in",
+        "atBlock": 2,
+        "holder": "b",
+        "direction": "receive",
+        "amountSat": 400,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-out-before-sweep",
+        "atBlock": 3,
+        "holder": "b",
+        "direction": "send",
+        "amountSat": 400,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-out-after-sweep",
+        "atBlock": 10,
+        "holder": "b",
+        "direction": "send",
+        "amountSat": 400,
+        "settled": true
+      }
+    ]
+  },
+  "ark": {
+    "offered_invoices": 6,
+    "settled_invoices": 4,
+    "offered_value_sat": 2600,
+    "settled_value_sat": 1800,
+    "failure_counts": {
+      "server_channel_inbound_capacity": 1,
+      "fronting_capacity": 1
+    },
+    "outcomes": [
+      {
+        "invoiceId": "a-in",
+        "atBlock": 0,
+        "holder": "a",
+        "direction": "receive",
+        "amountSat": 500,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-in-capacity",
+        "atBlock": 0,
+        "holder": "b",
+        "direction": "receive",
+        "amountSat": 400,
+        "settled": false,
+        "reason": "server_channel_inbound_capacity"
+      },
+      {
+        "invoiceId": "a-out",
+        "atBlock": 1,
+        "holder": "a",
+        "direction": "send",
+        "amountSat": 500,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-in",
+        "atBlock": 2,
+        "holder": "b",
+        "direction": "receive",
+        "amountSat": 400,
+        "settled": true
+      },
+      {
+        "invoiceId": "b-out-before-sweep",
+        "atBlock": 3,
+        "holder": "b",
+        "direction": "send",
+        "amountSat": 400,
+        "settled": false,
+        "reason": "fronting_capacity"
+      },
+      {
+        "invoiceId": "b-out-after-sweep",
+        "atBlock": 10,
+        "holder": "b",
+        "direction": "send",
+        "amountSat": 400,
+        "settled": true
+      }
+    ]
+  },
+  "terminal_ark_fronting_locked_sat": 0,
+  "terminal_ark_server_channel_local_sat": 0,
+  "terminal_ark_holder_claims_sat": 0
+}

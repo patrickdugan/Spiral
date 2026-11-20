@@ -1,0 +1,34 @@
+{
+  "schema": "capital-bound/nova-public-fixture/v1",
+  "source_repository": "patrickdugan/zk-rusto-no-bitcoino",
+  "source_commit": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+  "generated_relation": "lnmarkets/sha256-transcript-accounting/v2",
+  "source_data": "demo_batch(2), synthetic public test fixture",
+  "private_witness_included": false,
+  "private_keys_included": false,
+  "verifier_binary_included": false,
+  "source_crate_license": "GPL-3.0-only",
+  "files": {
+    "bundle/proof.bin": {
+      "bytes": 12376,
+      "sha256": "ab7717d32423c46b08b886785eba8778e35000d578e6a08ee6e238afc4a160a3"
+    },
+    "bundle/journal.bin": {
+      "bytes": 276,
+      "sha256": "492c7f9631bed7a9be3ae5273fa562b3888674f9ce14abc22e91a733ff21b555"
+    },
+    "bundle/manifest.json": {
+      "bytes": 1767,
+      "sha256": "86ef6ee9f91836f37b91edf84d9cf8b525860fc82607f55463c25d81d5859f70"
+    },
+    "expected.json": {
+      "bytes": 1570,
+      "sha256": "17c2b3b9533f6d227b9859e7bdd0d667498e7474b70eb97c14a98381563ae043"
+    },
+    "native-prepare.json": {
+      "bytes": 1590,
+      "sha256": "b57396b491c796ec1f99fd567e002270586540ae428af2648380283e757b915e"
+    }
+  },
+  "receiver_expectations_origin": "separate native prepare process before proving; see native-prepare.json and the pinned source local-v2 results"
+}

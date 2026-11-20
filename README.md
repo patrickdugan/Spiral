@@ -9,6 +9,7 @@ Lightning Network liquidity as a capital problem for populations of autonomous a
 | `proof-grove/` | Ark/Cashu proof-admission and recovery prototype, encrypted local wallet, native regtest integration and [public fixture demo](https://patrickdugan.github.io/Spiral/proof-grove/). Native signing and verification run locally. |
 | `paper/tex/` | The current paper, *Where the Capital Bound Moves* (`main.tex`, compiled `main.pdf`). `grid.tex` is generated from the reference model. |
 | `model/` | TypeScript reference model behind the paper: clocked settlement ledger, Ark server liquidity ledger under both recovery readings, the multiparty channel (hyperedge) on the same demand, epoched claim-once registry, escrow state machine, warden statistics. The automated tests witness the propositions on finite cases. |
+| `experiments/capital-bound/` | Enforced finite-budget replay, exact epoch payout repair, capital-lineage recorder, signed Core regtest recovery probe, and a CPU adapter for the existing Nova v2 batch proof. [Run instructions](experiments/capital-bound/README.md). |
 | `src/spiral_ln/` | Python simulator: directional balance algebra, typed connectors, routing and placement campaigns on sampled public topology, coalition fixtures. |
 | `paper/` | Earlier manuscripts and their audit, plus design documents from other programs; [`paper/README.md`](paper/README.md) says which is which. |
 | `audit/` | Reproducible adversarial audit of the first manuscript; start from [`audit/README.md`](audit/README.md). |
@@ -47,6 +48,8 @@ node --experimental-strip-types model/grid.ts > paper/tex/grid.tex
 The second command regenerates every number in the liquidity-duration grid, its accounting variants, the failed-events table, and the multiparty-channel tables of the BIP 448 section; nothing in those tables is hand-edited, and the generator asserts the facts their layouts rely on, including that a multiparty channel of one agent is the two-party channel exactly. `paper/tex/main.tex` compiles with any current TeX distribution; the committed `main.pdf` was built with Tectonic 0.17. The proof system is simulated: the registry verifies a simulated attestation behind the interface a verifier would expose, and the BitVM3 figures are an implementer's published numbers at a stated date.
 
 `paper/where_the_capital_bound_moves.md` is the superseded working draft and is kept as it was.
+
+The [November 21 executable follow-up](experiments/capital-bound/README.md) adds a separately labeled finite-budget entry point, `node model/capital-bound.ts --out output/capital-bound`. The historical grid still reproduces its original unconstrained Ark admission accounting. The registry's authoritative epoch result now comes from `settleEpoch(liveSet, pool)`, which commits validated payouts before advancing. Current experiment receipts distinguish simulation, actual regtest recovery and verification of a limited Nova relation.
 
 ## Simulator campaigns
 
@@ -139,4 +142,4 @@ The blue-team sandbagging evaluation and its graded arena, the evaluation design
 
 ## Scope
 
-Synthetic evidence in this repository illustrates mechanisms and falsifiable claims. It is not a measurement of current mainnet topology, an implementation of BOLT routing, or a production liquidity marketplace. Local zero-knowledge proving is intentionally disabled in the Python package, because the recovered task recorded repeated out-of-memory failures, and the TypeScript model simulates its proof system; no proof in this repository has been generated or verified by a real prover.
+Synthetic evidence in this repository illustrates mechanisms and falsifiable claims. It is not a measurement of current mainnet topology, an implementation of BOLT routing, or a production liquidity marketplace. Local zero-knowledge proving remains disabled in the Python routing package because the recovered task recorded repeated out-of-memory failures. The TypeScript registry simulates proof acceptance. Separately, `experiments/capital-bound/proof_adapter.py` verifies an existing compressed Nova proof with a pinned native CPU verifier; its receipt identifies the limited relation and does not authorize a Bitcoin spend.

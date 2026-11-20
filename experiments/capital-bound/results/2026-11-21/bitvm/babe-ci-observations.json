@@ -1,0 +1,701 @@
+{
+  "schema": "capital-bound/bitvm-observations/v1",
+  "network_as_supplied": "regtest",
+  "evidence_verified": false,
+  "bitcoin_spendability_proved": false,
+  "capital_release_authorized": false,
+  "capital_events": [],
+  "source_scope": {
+    "real_protocol_labels": true,
+    "all_connectors_verified_before_funding": true,
+    "dynamic_choice_after_funding": true,
+    "durable_release_after_core_confirmation": true,
+    "mempool_policy_executed": true,
+    "valid_spends_mined": true,
+    "full_application_withdrawal": false,
+    "reorg_rollback_exercised": false,
+    "independent_operator_challenger_processes": false
+  },
+  "observations": [
+    {
+      "source_index": 0,
+      "source_event": "all_connectors_verified_before_funding",
+      "height": 101,
+      "observation_authenticated": false,
+      "scenario": "assertion_timeout"
+    },
+    {
+      "source_index": 1,
+      "source_event": "mempool_acceptance",
+      "height": 101,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 2,
+      "source_event": "confirmed_spend",
+      "height": 102,
+      "observation_authenticated": false,
+      "txid": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba",
+      "check": "assertion_timeout_funding",
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "22e7659edcf23b5fd241d56dd35a9b8a9e3f99402705631c5c7de3259fa54f65",
+      "transaction_bytes_sha256": "bd7cd0db9a6a6254cd2e24508db297579d8f69fac6e889034e973398060fc7a5",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 3,
+      "source_event": "funding_confirmed_before_selection",
+      "height": 102,
+      "observation_authenticated": false,
+      "scenario": "assertion_timeout",
+      "funding_outpoint": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba:1"
+    },
+    {
+      "source_index": 4,
+      "source_event": "mempool_acceptance",
+      "height": 112,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 5,
+      "source_event": "mempool_acceptance",
+      "height": 113,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 6,
+      "source_event": "confirmed_spend",
+      "height": 114,
+      "observation_authenticated": false,
+      "txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+      "check": "assertion_timeout_first_valid_block",
+      "vsize": 134,
+      "weight_wu": 533,
+      "block_hash": "333064875cca216157b46af50eb3fab98fe3ba9347996ce256efa2f026f520b6",
+      "transaction_bytes_sha256": "d23e738191618c5b53cae1a960ad6a9bb9ddea4d68d28b71056b368b63962fa4",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 7,
+      "source_event": "all_connectors_verified_before_funding",
+      "height": 114,
+      "observation_authenticated": false,
+      "scenario": "withheld_labels"
+    },
+    {
+      "source_index": 8,
+      "source_event": "mempool_acceptance",
+      "height": 114,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 9,
+      "source_event": "confirmed_spend",
+      "height": 115,
+      "observation_authenticated": false,
+      "txid": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7",
+      "check": "withheld_labels_funding",
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "6d35640db9472bb722a15c9336026ff22f6fec17a4416c3164b322ed7cf677db",
+      "transaction_bytes_sha256": "b5007ba3b85fba40bfae635ac229b860ff06264846f5be619857ff9d1edaa90b",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 10,
+      "source_event": "funding_confirmed_before_selection",
+      "height": 115,
+      "observation_authenticated": false,
+      "scenario": "withheld_labels",
+      "funding_outpoint": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7:1"
+    },
+    {
+      "source_index": 11,
+      "source_event": "challenge_selected_after_funding",
+      "height": 115,
+      "observation_authenticated": false,
+      "scenario": "withheld_labels"
+    },
+    {
+      "source_index": 12,
+      "source_event": "mempool_acceptance",
+      "height": 115,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 13,
+      "source_event": "confirmed_spend",
+      "height": 116,
+      "observation_authenticated": false,
+      "txid": "d5ee521c8cd0edd9936b50eef92fd5b16bf552fe648fe5804fdbc6807149b48c",
+      "check": "withheld_labels_challenge",
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "21db941cc794445c41b1fc95567b67c75b337569e0b856fc87b280bbdfef6266",
+      "transaction_bytes_sha256": "f0a356b343a705385292ab0f4a599464b2bd30aa0bddbdaa3e4f7d641e6f1138",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 14,
+      "source_event": "mempool_acceptance",
+      "height": 116,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 15,
+      "source_event": "mempool_acceptance",
+      "height": 118,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 16,
+      "source_event": "mempool_acceptance",
+      "height": 119,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 17,
+      "source_event": "confirmed_spend",
+      "height": 120,
+      "observation_authenticated": false,
+      "txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+      "check": "withheld_labels_first_valid_block",
+      "vsize": 126,
+      "weight_wu": 501,
+      "block_hash": "71b2272740b5493923a324df7a0c25230eaab14de45b0f94b68cc1621c2175bb",
+      "transaction_bytes_sha256": "8247f6cfa392446905118b5f5994dd1e400ff7d2a1fb0a8d1dee7385adc6fc3b",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 18,
+      "source_event": "all_connectors_verified_before_funding",
+      "height": 120,
+      "observation_authenticated": false,
+      "scenario": "honest_claim"
+    },
+    {
+      "source_index": 19,
+      "source_event": "graph_reserved_in_trusted_authority_before_funding",
+      "height": 120,
+      "observation_authenticated": false,
+      "scenario": "honest_claim"
+    },
+    {
+      "source_index": 20,
+      "source_event": "mempool_acceptance",
+      "height": 120,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 21,
+      "source_event": "confirmed_spend",
+      "height": 121,
+      "observation_authenticated": false,
+      "txid": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973",
+      "check": "honest_claim_funding",
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "056e8f733170c5fa32309df782333dbfb954564ff71c5af3e6ade44de8814fe9",
+      "transaction_bytes_sha256": "fce8c543490f8b7a3ddc84826fac6d8650720d700a97b5c6451c602e456fefa8",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 22,
+      "source_event": "funding_confirmed_before_selection",
+      "height": 121,
+      "observation_authenticated": false,
+      "scenario": "honest_claim",
+      "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1"
+    },
+    {
+      "source_index": 23,
+      "source_event": "challenge_selected_after_funding",
+      "height": 121,
+      "observation_authenticated": false,
+      "scenario": "honest_claim"
+    },
+    {
+      "source_index": 24,
+      "source_event": "mempool_acceptance",
+      "height": 121,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 25,
+      "source_event": "confirmed_spend",
+      "height": 122,
+      "observation_authenticated": false,
+      "txid": "bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34",
+      "check": "honest_claim_challenge",
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "5bdfd5f94f37c4ee757dc56b3a7de478b523fa52598d6a9c7903dca4d4e0ed83",
+      "transaction_bytes_sha256": "bc97263b9f3c159d38e39ac43217a79695c6994a23afa2df7842a4f3c8f72273",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 26,
+      "source_event": "mempool_acceptance",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 27,
+      "source_event": "durable_release_rejected",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 28,
+      "source_event": "durable_release_rejected",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 29,
+      "source_event": "durable_labels_released_after_confirmed_challenge",
+      "height": 122,
+      "observation_authenticated": false,
+      "scenario": "honest_claim",
+      "capital_release_authorized": false
+    },
+    {
+      "source_index": 30,
+      "source_event": "exact_release_retry_after_process_restart",
+      "height": 122,
+      "observation_authenticated": false,
+      "scenario": "honest_claim"
+    },
+    {
+      "source_index": 31,
+      "source_event": "mempool_acceptance",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 32,
+      "source_event": "mempool_acceptance",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 33,
+      "source_event": "mempool_acceptance",
+      "height": 122,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 34,
+      "source_event": "confirmed_spend",
+      "height": 123,
+      "observation_authenticated": false,
+      "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+      "check": "honest_claim_response",
+      "vsize": 1826,
+      "weight_wu": 7304,
+      "block_hash": "3f5420f69017f635749595256eedf7df720c7abdb9340000c06e1be4580d4972",
+      "transaction_bytes_sha256": "b567a21c480a16d2ce0e86e0cf6081a03b08da115c71767caa6a1b9ef670e374",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 35,
+      "source_event": "mempool_acceptance",
+      "height": 123,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 36,
+      "source_event": "mempool_acceptance",
+      "height": 126,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 37,
+      "source_event": "mempool_acceptance",
+      "height": 127,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 38,
+      "source_event": "confirmed_spend",
+      "height": 128,
+      "observation_authenticated": false,
+      "txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+      "check": "honest_claim_payout_first_valid_block",
+      "vsize": 134,
+      "weight_wu": 533,
+      "block_hash": "4351ec6bee839937d6310d5a6199e89198ff3802c8fc13653a8b25772198790f",
+      "transaction_bytes_sha256": "a6340dde556906382de4c2f468356315f68b575f419f12fb96d82422fa58cb84",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 39,
+      "source_event": "mempool_acceptance",
+      "height": 128,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 40,
+      "source_event": "all_connectors_verified_before_funding",
+      "height": 128,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim"
+    },
+    {
+      "source_index": 41,
+      "source_event": "graph_reserved_in_trusted_authority_before_funding",
+      "height": 128,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim"
+    },
+    {
+      "source_index": 42,
+      "source_event": "mempool_acceptance",
+      "height": 128,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 43,
+      "source_event": "confirmed_spend",
+      "height": 129,
+      "observation_authenticated": false,
+      "txid": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c",
+      "check": "invalid_committed_claim_funding",
+      "vsize": 232,
+      "weight_wu": 928,
+      "block_hash": "667e37aa5fc77016a5683528778778f1d8a8fd82435ce7c60a1b3d5f2ce3fcb8",
+      "transaction_bytes_sha256": "0f4d20c15678ccd41468d7a0ffc6f9facbd81bd143401fcec8158bce52b56e8a",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 44,
+      "source_event": "funding_confirmed_before_selection",
+      "height": 129,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim",
+      "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1"
+    },
+    {
+      "source_index": 45,
+      "source_event": "challenge_selected_after_funding",
+      "height": 129,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim"
+    },
+    {
+      "source_index": 46,
+      "source_event": "mempool_acceptance",
+      "height": 129,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 47,
+      "source_event": "confirmed_spend",
+      "height": 130,
+      "observation_authenticated": false,
+      "txid": "f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497",
+      "check": "invalid_committed_claim_challenge",
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "0432999cbdea346f7cfb710e69b00c5124c4d1842ec0680946c6c4650de4be55",
+      "transaction_bytes_sha256": "e74c7eb1215d618eb2d3446915f9722e62c72fb33e9cb21421fc93d6cd559578",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 48,
+      "source_event": "mempool_acceptance",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 49,
+      "source_event": "durable_release_rejected",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 50,
+      "source_event": "durable_release_rejected",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 51,
+      "source_event": "durable_labels_released_after_confirmed_challenge",
+      "height": 130,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim",
+      "capital_release_authorized": false
+    },
+    {
+      "source_index": 52,
+      "source_event": "exact_release_retry_after_process_restart",
+      "height": 130,
+      "observation_authenticated": false,
+      "scenario": "invalid_committed_claim"
+    },
+    {
+      "source_index": 53,
+      "source_event": "mempool_acceptance",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 54,
+      "source_event": "mempool_acceptance",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 55,
+      "source_event": "mempool_acceptance",
+      "height": 130,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 56,
+      "source_event": "confirmed_spend",
+      "height": 131,
+      "observation_authenticated": false,
+      "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+      "check": "invalid_committed_claim_response",
+      "vsize": 1826,
+      "weight_wu": 7304,
+      "block_hash": "3ec67452c5d41acc139b3026dc797593050c6407c9e9a0c26e6c564e55dd4c68",
+      "transaction_bytes_sha256": "89ee14cc6a14d8d893d2fb5e539f6e4f967e430419772279da6b14c83dc5df49",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 57,
+      "source_event": "mempool_acceptance",
+      "height": 131,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 58,
+      "source_event": "mempool_acceptance",
+      "height": 131,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 59,
+      "source_event": "mempool_acceptance",
+      "height": 131,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 60,
+      "source_event": "confirmed_spend",
+      "height": 132,
+      "observation_authenticated": false,
+      "txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+      "check": "invalid_committed_claim_disprove",
+      "vsize": 146,
+      "weight_wu": 582,
+      "block_hash": "7ccfed8cd4721d808dad382e22f40a27ec773ebefe0f919e17e3e368124868c3",
+      "transaction_bytes_sha256": "1b62e78d6b0e5d38c36544ec2eba4db311b670de3fdaadd1abb0c97e5cb31d3e",
+      "transaction_id_recomputed": false
+    },
+    {
+      "source_index": 61,
+      "source_event": "mempool_acceptance",
+      "height": 132,
+      "observation_authenticated": false
+    },
+    {
+      "source_index": 62,
+      "source_event": "mempool_acceptance",
+      "height": 132,
+      "observation_authenticated": false
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "assertion_timeout",
+      "terminal": "assertion_timeout",
+      "height": 102,
+      "funding_outpoint": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba:1",
+      "terminal_height": 114,
+      "terminal_txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+      "funding_to_terminal_blocks_as_reported": 12,
+      "capital_recovered_sat": null,
+      "elapsed_observer_seconds": null
+    },
+    {
+      "name": "withheld_labels",
+      "terminal": "withholding",
+      "height": 115,
+      "funding_outpoint": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7:1",
+      "terminal_height": 120,
+      "terminal_txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+      "funding_to_terminal_blocks_as_reported": 5,
+      "capital_recovered_sat": null,
+      "elapsed_observer_seconds": null
+    },
+    {
+      "name": "honest_claim",
+      "terminal": "operator_payout",
+      "height": 121,
+      "funding_outpoint": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973:1",
+      "terminal_height": 128,
+      "terminal_txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+      "funding_to_terminal_blocks_as_reported": 7,
+      "capital_recovered_sat": null,
+      "elapsed_observer_seconds": null
+    },
+    {
+      "name": "invalid_committed_claim",
+      "terminal": "disprove",
+      "height": 129,
+      "funding_outpoint": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c:1",
+      "terminal_height": 132,
+      "terminal_txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+      "funding_to_terminal_blocks_as_reported": 3,
+      "capital_recovered_sat": null,
+      "elapsed_observer_seconds": null
+    }
+  ],
+  "source_git_as_supplied": {
+    "commit": "e4a2f74d09177ba96e62fc19d362e3545dac012a",
+    "crate_working_tree_dirty": true
+  },
+  "graph_binary_sha256_as_supplied": "5d6452631cd41dfabb3b74da18e08ff2a9a924f509295f1f08e155b1d9e7870f",
+  "release_binary_sha256_as_supplied": "2db606c940d695870d38f6fa0c22049144d2d96f3b0c62f2c051d7533ff761e8",
+  "mined_transactions_as_reported": [
+    {
+      "txid": "f6249457beff39dc28cd6d9e46092a1e7c3b15f4dcce54265ff036fd4fddefba",
+      "check": "assertion_timeout_funding",
+      "height": 102,
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "22e7659edcf23b5fd241d56dd35a9b8a9e3f99402705631c5c7de3259fa54f65",
+      "transaction_bytes_sha256": "bd7cd0db9a6a6254cd2e24508db297579d8f69fac6e889034e973398060fc7a5",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "8f816da43c99cede71a716bcc0ea566dd7820d4f6ad15cd065c4a78a6fd58e80",
+      "check": "assertion_timeout_first_valid_block",
+      "height": 114,
+      "vsize": 134,
+      "weight_wu": 533,
+      "block_hash": "333064875cca216157b46af50eb3fab98fe3ba9347996ce256efa2f026f520b6",
+      "transaction_bytes_sha256": "d23e738191618c5b53cae1a960ad6a9bb9ddea4d68d28b71056b368b63962fa4",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "d06311cc7c71aaab9e3c5e463bf1c1477f53dd06747f30d726767169bac197b7",
+      "check": "withheld_labels_funding",
+      "height": 115,
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "6d35640db9472bb722a15c9336026ff22f6fec17a4416c3164b322ed7cf677db",
+      "transaction_bytes_sha256": "b5007ba3b85fba40bfae635ac229b860ff06264846f5be619857ff9d1edaa90b",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "d5ee521c8cd0edd9936b50eef92fd5b16bf552fe648fe5804fdbc6807149b48c",
+      "check": "withheld_labels_challenge",
+      "height": 116,
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "21db941cc794445c41b1fc95567b67c75b337569e0b856fc87b280bbdfef6266",
+      "transaction_bytes_sha256": "f0a356b343a705385292ab0f4a599464b2bd30aa0bddbdaa3e4f7d641e6f1138",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "e29beb0bd99c46857ec258c4b67306116bd5d3ecf51b53a30e77e39389725aad",
+      "check": "withheld_labels_first_valid_block",
+      "height": 120,
+      "vsize": 126,
+      "weight_wu": 501,
+      "block_hash": "71b2272740b5493923a324df7a0c25230eaab14de45b0f94b68cc1621c2175bb",
+      "transaction_bytes_sha256": "8247f6cfa392446905118b5f5994dd1e400ff7d2a1fb0a8d1dee7385adc6fc3b",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "485ae346d732cf66c0b8438eeba8629b434cbbaae6a6597411aae064aa57d973",
+      "check": "honest_claim_funding",
+      "height": 121,
+      "vsize": 165,
+      "weight_wu": 657,
+      "block_hash": "056e8f733170c5fa32309df782333dbfb954564ff71c5af3e6ade44de8814fe9",
+      "transaction_bytes_sha256": "fce8c543490f8b7a3ddc84826fac6d8650720d700a97b5c6451c602e456fefa8",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "bbc7f7f34df35506b869a2a1691e55785cb92fd56286391cb49ded98fd255d34",
+      "check": "honest_claim_challenge",
+      "height": 122,
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "5bdfd5f94f37c4ee757dc56b3a7de478b523fa52598d6a9c7903dca4d4e0ed83",
+      "transaction_bytes_sha256": "bc97263b9f3c159d38e39ac43217a79695c6994a23afa2df7842a4f3c8f72273",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "f1136289df2a51b2b317ac324eabad950993c9d1ee47f78b708191f78a9bf7e3",
+      "check": "honest_claim_response",
+      "height": 123,
+      "vsize": 1826,
+      "weight_wu": 7304,
+      "block_hash": "3f5420f69017f635749595256eedf7df720c7abdb9340000c06e1be4580d4972",
+      "transaction_bytes_sha256": "b567a21c480a16d2ce0e86e0cf6081a03b08da115c71767caa6a1b9ef670e374",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "9eb1de8d90e22e4a373a3e58cfbc5e2f58997082fc50705bf5f89d5845bba61f",
+      "check": "honest_claim_payout_first_valid_block",
+      "height": 128,
+      "vsize": 134,
+      "weight_wu": 533,
+      "block_hash": "4351ec6bee839937d6310d5a6199e89198ff3802c8fc13653a8b25772198790f",
+      "transaction_bytes_sha256": "a6340dde556906382de4c2f468356315f68b575f419f12fb96d82422fa58cb84",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "98c4d8cf4d23bd272643125631acc6c33b0b36078d86e53d4b144483ba21899c",
+      "check": "invalid_committed_claim_funding",
+      "height": 129,
+      "vsize": 232,
+      "weight_wu": 928,
+      "block_hash": "667e37aa5fc77016a5683528778778f1d8a8fd82435ce7c60a1b3d5f2ce3fcb8",
+      "transaction_bytes_sha256": "0f4d20c15678ccd41468d7a0ffc6f9facbd81bd143401fcec8158bce52b56e8a",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "f01fbb3a1442dbbc40f84f6666be70a0ccdcb21db255435b4c9cb5e232195497",
+      "check": "invalid_committed_claim_challenge",
+      "height": 130,
+      "vsize": 170,
+      "weight_wu": 678,
+      "block_hash": "0432999cbdea346f7cfb710e69b00c5124c4d1842ec0680946c6c4650de4be55",
+      "transaction_bytes_sha256": "e74c7eb1215d618eb2d3446915f9722e62c72fb33e9cb21421fc93d6cd559578",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "ca55f5e1c3bd526956897774b86e239248a994e29f4ec16658cb46ff2d29df18",
+      "check": "invalid_committed_claim_response",
+      "height": 131,
+      "vsize": 1826,
+      "weight_wu": 7304,
+      "block_hash": "3ec67452c5d41acc139b3026dc797593050c6407c9e9a0c26e6c564e55dd4c68",
+      "transaction_bytes_sha256": "89ee14cc6a14d8d893d2fb5e539f6e4f967e430419772279da6b14c83dc5df49",
+      "transaction_id_recomputed": false
+    },
+    {
+      "txid": "c2e6763d75d94b9d18f9e17a71f9727d1b847fde5700e88f5192c9e1f953b015",
+      "check": "invalid_committed_claim_disprove",
+      "height": 132,
+      "vsize": 146,
+      "weight_wu": 582,
+      "block_hash": "7ccfed8cd4721d808dad382e22f40a27ec773ebefe0f919e17e3e368124868c3",
+      "transaction_bytes_sha256": "1b62e78d6b0e5d38c36544ec2eba4db311b670de3fdaadd1abb0c97e5cb31d3e",
+      "transaction_id_recomputed": false
+    }
+  ],
+  "total_mined_vsize_as_reported": 5429,
+  "limits": "Imported receipt consistency only. Observer timestamps, canonical backing lineage, amounts, fees, active-chain authentication and actual reuse require the node adapter.",
+  "source_receipt_sha256": "b9e280b1421c312b8dfe3a2b4905a6dcbb0bfecd6ae828823d0fc93788805e25",
+  "source_transactions_sha256": "8f5be34f4cb0c9fff5c464dfa4cb80a125373a0abb1087f85e69ad45f9699e64"
+}
