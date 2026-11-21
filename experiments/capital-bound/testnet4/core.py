@@ -54,6 +54,11 @@ def wallet_names(campaign):
     return f"cbm-{campaign}-payer", f"cbm-{campaign}-recipient"
 
 
+class DenyRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        raise Gate("Bitcoin Core RPC endpoint returned an unexpected redirect")
+
+
 class Core:
     def __init__(self, network, datadir, port=None):
         self.network = network
@@ -61,7 +66,7 @@ class Core:
         self.port = PORT[network] if port is None else port
         if not 1 <= self.port <= 65535:
             raise Gate("Invalid RPC port")
-        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), DenyRedirect())
 
     def rpc(self, method, params=None, wallet=None):
         try:
@@ -169,6 +174,8 @@ def inspect(core, campaign, confirmations):
                 raise Gate("Each campaign wallet must be a dedicated signing descriptor wallet")
             if info.get("scanning") or info.get("unlocked_until") == 0:
                 raise Gate("Campaign wallets must be available for signing")
+            if name == recipient:
+                receipt["recipient_wallet_transactions"] = info["txcount"]
         funds = spendable(core, payer, confirmations)
         receipt["eligible_utxo_count"] = len(funds)
         receipt["eligible_funds_sat"] = sum(row["sat"] for row in funds)

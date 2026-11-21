@@ -1,0 +1,15 @@
+{
+  "blockers": [
+    "Bitcoin Core cookie is unavailable for the selected network"
+  ],
+  "confirmations_required": 2,
+  "genesis": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043",
+  "network": "testnet4",
+  "ready": false,
+  "environment": "local Windows host",
+  "default_rpc_listener_found": false,
+  "wsl_node_availability": "WSL access denied",
+  "sent_testnet4_transactions": 0,
+  "testnet4_sats_funded": 0,
+  "testnet4_fees_sat": 0
+}

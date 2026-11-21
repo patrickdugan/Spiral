@@ -7,18 +7,31 @@ import time
 from pathlib import Path
 
 from campaign import main
-from core import Core, wallet_names
+from core import wallet_names
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from core_regtest import OwnedRegtest
 
 
 def case(binary, root, profile):
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as view:
         node = OwnedRegtest(binary, Path(tmp))
+        observer = None
         try:
             node.start()
             rpc = node.rpc
+            if profile == "canary":
+                observer = OwnedRegtest(binary, Path(view))
+                observer.start()
+
+            def sync_observer():
+                if observer is None:
+                    return
+                before = observer.rpc("getblockcount")
+                for height in range(before + 1, rpc("getblockcount") + 1):
+                    blockhash = rpc("getblockhash", [height])
+                    assert observer.rpc("submitblock", [rpc("getblock", [blockhash, 0])]) is None
+
             payer, recipient = wallet_names(profile)
             for name in ("faucet", payer, recipient):
                 rpc("createwallet", [name, False, False, "", False, True, True])
@@ -30,6 +43,8 @@ def case(binary, root, profile):
             vout = rpc("listunspent", [2], wallet=payer)[0]["vout"]
             commands = ["--network", "regtest", "--campaign", profile, "--state", str(root),
                         "--datadir", tmp, "--rpcport", str(node.port)]
+            if observer:
+                commands += ["--observer-datadir", view, "--observer-port", str(observer.port)]
 
             def run(*cmd, expect=0):
                 status = main([*commands, *cmd])
@@ -47,30 +62,38 @@ def case(binary, root, profile):
             # A direct send may be evicted by an intentional no-mempool restart.
             run("broadcast-canary", "--broadcast", "--retry-same")
             blocks = rpc("generatetoaddress", [2, miner])
+            sync_observer()
             run("reconcile")
             get = lambda: json.loads((root / "results.json").read_text(encoding="utf-8"))
             before = get()
             assert len(before["confirmed_txids"]) == 1 and before["terminal_unavailable_sat"] == 0
+            run("broadcast-canary", "--advance", "--broadcast", "--retry-same")
             rpc("invalidateblock", [blocks[0]])
+            if observer:
+                observer.rpc("invalidateblock", [blocks[0]])
             run("reconcile")
             reverted = get()
             assert reverted["confirmed_application_sat"] == 0
             assert reverted["terminal_unavailable_sat"] == 100_000
             rpc("reconsiderblock", [blocks[0]])
+            if observer:
+                observer.rpc("reconsiderblock", [blocks[0]])
             run("observe")
-            phases = 6 if profile == "individual" else 3
+            phases = {"individual": 6, "batched": 3, "canary": 2}[profile]
             for _ in range(phases - 1):
                 # The synthetic trace spans four seconds and uses a common arrival clock.
-                time.sleep(1.6)
+                time.sleep(2.1 if profile == "canary" else 1.6)
                 run("dry-run", "--advance")
                 run("broadcast-canary", "--advance", "--broadcast")
                 rpc("generatetoaddress", [2, miner])
+                sync_observer()
                 run("observe")
             run("reconcile")
             result = get()
             assert len(result["confirmed_txids"]) == phases
-            assert result["settled_by_deadline_count"] == 6
-            assert result["settled_by_deadline_sat"] == 11_400
+            assert result["settled_by_deadline_count"] == (2 if observer else 6)
+            assert result["settled_by_deadline_sat"] == (2_800 if observer else 11_400)
+            assert result["native_merkle_receipts"] == (4 if observer else phases)
             assert result["peak_funded_sat"] == 100_000
             assert result["confirmed_fees_sat"] == phases * 400
             assert len(result["recovery_and_reuse"]) == phases
@@ -79,6 +102,8 @@ def case(binary, root, profile):
             return result
         finally:
             node.stop()
+            if observer:
+                observer.stop()
 
 
 def check_artifacts(directory):
@@ -94,7 +119,7 @@ def check_artifacts(directory):
 
 def run(args):
     rows = {}
-    for profile in ("individual", "batched"):
+    for profile in ("individual", "batched", "canary"):
         location = args.out / profile
         rows[profile] = case(args.bitcoind, location, profile)
         check_artifacts(location)
@@ -107,7 +132,10 @@ def run(args):
         "source_sha": args.source_sha,
         "baseline": baseline,
         "batched": batch,
+        "independent_canary": rows["canary"],
         "batch_fee_savings_sat_at_fixed_fee_per_transaction": 1_200,
+        "batch_settlement_virtual_bytes_saved": (baseline["settlement_virtual_bytes"]
+                                                  - batch["settlement_virtual_bytes"]),
         "unavailable_sat_blocks_difference": (baseline["unavailable_sat_blocks"]
                                               - batch["unavailable_sat_blocks"]),
         "matched_pairs": 1,

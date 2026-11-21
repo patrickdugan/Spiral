@@ -40,7 +40,7 @@ class CampaignTests(unittest.TestCase):
         plan = {"started_at": 10, "initial_height": 100, "funding": funding,
                 "groups": [[invoice]]}
         draft = {"txid": "b", "change": {"txid": "b", "vout": 1, "sat": 98_200},
-                 "payments": [invoice], "fee_sat": 400}
+                 "payments": [invoice], "fee_sat": 400, "vsize": 141}
         good = {"event_order": 2, "at": 20, "height": 102, "tip": "good", "phases": [
             {"position": 0, "txid": "b", "status": "recovered", "blockhash": "good"}]}
         bad = {"event_order": 3, "at": 30, "height": 100, "tip": "other", "reorg": True,

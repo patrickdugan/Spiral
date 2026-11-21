@@ -79,7 +79,7 @@ def groups(profile):
 
 class Journal:
     def __init__(self, directory):
-        directory.mkdir(parents=True, exist_ok=True)
+        directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.db = sqlite3.connect(directory / "campaign.sqlite3", isolation_level=None, timeout=25)
         self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, data TEXT)")
@@ -126,7 +126,7 @@ def make_plan(args, core, journal):
     if not ready["ready"]:
         raise Gate("; ".join(ready["blockers"]))
     payer, recipient = wallet_names(args.campaign)
-    if ready.get("recipient_has_outputs"):
+    if ready.get("recipient_wallet_transactions") != 0:
         raise Gate("A new campaign requires a fresh recipient wallet")
     funds = spendable(core, payer, args.confirmations)
     if len(funds) != 1 or (funds[0]["txid"], funds[0]["vout"]) != (funding_txid, funding_vout):
@@ -194,6 +194,12 @@ def checked_relay(core, raw, txid, fee_sat):
 
 def prepare(args, core, journal, plan):
     drafts = journal.data("drafts")
+    if getattr(args, "retry_same", False):
+        position = len(drafts) - 1 if args.advance else 0
+        attempted = journal.db.execute("SELECT 1 FROM attempts WHERE position=?", (position,)).fetchone()
+        if not attempted:
+            raise Gate("The requested phase has no submitted transaction to retry")
+        return drafts[position]
     position = len(drafts)
     if drafts and not args.advance:
         return drafts[0]
@@ -430,8 +436,6 @@ def cli(argv=None):
 
 def main(argv=None):
     args = cli(argv)
-    if __name__ == "__main__":
-        sys.modules.setdefault("campaign", sys.modules[__name__])
     if not CAMPAIGN.fullmatch(args.campaign):
         print("Campaign ID must use 1-32 lowercase ASCII letters, digits or hyphens.", file=sys.stderr)
         return 2

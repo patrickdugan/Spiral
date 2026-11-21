@@ -80,24 +80,28 @@ def timeline(plan, drafts, attempts, observations):
     arrived = [item for group in plan["groups"] for item in group
                if item["arrival_seconds"] <= cutoff - start]
     offered_sat = sum(item["sat"] for item in arrived)
-    paid_sat = paid_count = fee_sat = 0
+    attempts_by_pos = {pos: at for pos, at, _, _ in attempts}
+    paid_sat = paid_count = fee_sat = settled_vbytes = 0
     settled = []
     for pos, draft in enumerate(drafts):
         if pos not in confirmations:
             break
         paid_at = confirmations[pos][0]
         fee_sat += draft["fee_sat"]
+        settled_vbytes += draft["vsize"]
         for item in draft["payments"]:
             latency = paid_at - start - item["arrival_seconds"]
             by_deadline = 0 <= latency <= item["deadline_seconds"]
             if by_deadline:
                 paid_sat += item["sat"]
                 paid_count += 1
+            queued = attempts_by_pos.get(pos)
             settled.append({"invoice": item["id"], "txid": draft["txid"], "sat": item["sat"],
+                            "queue_seconds": (None if queued is None else
+                                              queued - start - item["arrival_seconds"]),
                             "latency_seconds": latency, "by_deadline": by_deadline})
     if sum(item["sat"] for item in settled) + fee_sat + funded != funding["sat"]:
         raise ValueError("Confirmed chain and capital conservation disagree")
-    attempts_by_pos = {pos: at for pos, at, _, _ in attempts}
     latencies = []
     for phase in latest["phases"]:
         pos = phase["position"]
@@ -113,6 +117,7 @@ def timeline(plan, drafts, attempts, observations):
     result = {"initial_funding_sat": funding["sat"], "confirmed_fees_sat": fee_sat,
               "signed_fee_budget_sat": active_fee_reserved, "attempted_fee_budget_sat": attempted_fee_budget,
               "terminal_funded_sat": funded, "terminal_unavailable_sat": unavailable,
+              "settlement_virtual_bytes": settled_vbytes,
               "offered_invoices": len(arrived), "offered_sat": offered_sat,
               "attempted_invoices": sum(len(drafts[pos]["payments"]) for pos, _, _, _ in attempts),
               "confirmed_invoice_count": len(settled), "confirmed_application_sat": sum(
@@ -125,6 +130,7 @@ def timeline(plan, drafts, attempts, observations):
               "delivery_slo_met_for_arrived_invoices": bool(arrived and
                   100 * paid_count >= 99 * len(arrived) and 100 * paid_sat >= 99 * offered_sat),
               "confirmed_txids": latest_confirmed_ids, "settlements": settled,
+              "observed_seconds": cutoff - start,
               "recovery_and_reuse": latencies, "sample_end": cutoff, **metrics}
     return result, events
 
@@ -183,6 +189,7 @@ Campaign `{result['campaign']}` used the `{result['profile']}` profile on `{resu
 | --- | ---: |
 | Initial funding, sats | {result['initial_funding_sat']} |
 | Confirmed miner fees, sats | {result['confirmed_fees_sat']} |
+| Confirmed settlement virtual bytes | {result['settlement_virtual_bytes']} |
 | Offered invoices | {result['offered_invoices']} |
 | Invoices settled by deadline | {result['settled_by_deadline_count']} |
 | Value settled by deadline, sats | {result['settled_by_deadline_sat']} |
