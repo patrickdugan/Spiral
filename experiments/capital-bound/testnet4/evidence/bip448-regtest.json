@@ -1,0 +1,49 @@
+{
+  "claim": "BIP 448 makes a k-party channel (hyperedge) practical: one aggregate signature per state, later states replace earlier ones without per-state penalty data.",
+  "environment": "patched regtest only; BIP 448 is not active on any public network",
+  "implementation": {
+    "repository": "https://github.com/patrickdugan/bitcoin-rs",
+    "merged_into": "dev",
+    "merge_commit": "d48670f79ec21ebd869878e98c26bb8341521941",
+    "branch": "feat/bip448-regtest",
+    "branch_head": "c2ee52ab1",
+    "spec": "bitcoin/bips b34d9f751791d4feb22feff4f2ed00bcac83961b (BIP 446, 348, 349, 448)",
+    "activation": "bitcoin-rs --network regtest --bip448 (VerifyFlags::BIP448, default off; non-regtest networks refuse the switch)",
+    "docs": "docs/bip448-regtest.md"
+  },
+  "verification_run": {
+    "host": "WSL Ubuntu-24.04, cargo -j 6",
+    "results": [
+      {"command": "cargo test -p bitcoin-rs-script", "passed": "34 lib + 64 suite", "includes": "BIP 446 basics.json and script_assets_test.json vectors, 19 BIP 340 vectors through CSFS, existing Core script vectors"},
+      {"command": "cargo test -p bitcoin-rs-consensus --lib bip448", "passed": 1},
+      {"command": "cargo test -p bitcoin-rs --test suite bip448_regtest -- --test-threads=1", "passed": 2}
+    ]
+  },
+  "e2e_three_party_channel": {
+    "internal_key": "flat 3-party MuSig2 aggregate (tools/nested-musig2)",
+    "update_leaf": "OP_TEMPLATEHASH / OP_INTERNALKEY / OP_CHECKSIGFROMSTACK rebindable update per the BIP 448 LN-Symmetry description",
+    "transactions": [
+      {"tx": "funding (p2pkh to p2tr)", "vsize": 201, "weight": 804},
+      {"tx": "update state 1, spends funding", "vsize": 131, "weight": 521, "witness_bytes": 143},
+      {"tx": "update state 3, spends state 1", "vsize": 131, "weight": 521, "witness_bytes": 143},
+      {"tx": "settlement state 3, 3 outputs, CSV 10", "vsize": 171, "weight": 684, "witness_bytes": 106}
+    ],
+    "rejections": [
+      "tampered template: script-verify-flag-failed",
+      "tampered signature: script-verify-flag-failed",
+      "stale state-2 update over state 3: script-verify-flag-failed",
+      "settlement before the CSV delay: non-BIP68-final",
+      "same spend without --bip448: mempool script-verify-flag-failed (opcodes stay OP_SUCCESS)"
+    ]
+  },
+  "not_covered": [
+    "public-network activation (BIP 9 / height deployment parameters)",
+    "the libbitcoinkernel validation engine path",
+    "fee anchors and fee bumping on update transactions",
+    "channel sizes above 3 parties"
+  ],
+  "interpretation_notes": [
+    "CSFS with a non-empty signature requires exactly 64 bytes (BIP 348 does not state a length rule).",
+    "CSFS unknown public key types follow BIP 342's DISCOURAGE_UPGRADABLE_PUBKEYTYPE policy."
+  ]
+}

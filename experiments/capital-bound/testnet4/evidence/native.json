@@ -1,0 +1,299 @@
+{
+  "source_head_sha": "e5e9f7080c1a6a84eaf1cdcd6ec3b285ab35102c",
+  "ci_run": 44857583026,
+  "artifact_id": 14688133044,
+  "artifact_sha256": "336234f084eb83de52478674d4b8697674cbdc4f2029fdee347a9f23373660bc",
+  "receipt": {
+    "scope": "isolated regtest, one matched workload",
+    "source_sha": "db85ae323a32b0aac8174d1c222732ad83595ae8",
+    "baseline": {
+      "attempted_fee_budget_sat": 2400,
+      "attempted_invoices": 6,
+      "campaign": "individual",
+      "confirmed_application_sat": 11400,
+      "confirmed_fees_sat": 2400,
+      "confirmed_invoice_count": 6,
+      "confirmed_txids": [
+        "45ac5f63db14bae4f0bff7130828630d1f7f89e37596ab3b59c78bdec435cecd",
+        "057152096752e5610632cecadf14f72de600fb617b1f74e7444a2662e129a487",
+        "26fbe5b81c6711fa2c253a3d3ee28ab135d8d3d93cf1687a5776beafbcc755cb",
+        "dfdd6af38111b2df25626e7a24ad5b3718d04ad98ba7579740b1206dc13cd03b",
+        "ada1c06d49cdd9c53056db63b55eefdacda643ecab9c3b7eaad225e2bac4c7c0",
+        "9e3144910e4990927b02b53a2f070fa5c6e46f8ccc2b38a8dc819978039ea5bc"
+      ],
+      "delivery_slo_met_for_arrived_invoices": true,
+      "expired_unsettled_count": 0,
+      "fresh_nova_proof_receipts": 0,
+      "funded_sat_blocks": 1129200,
+      "funded_sat_seconds": 936400,
+      "initial_funding_sat": 100000,
+      "initial_tip": "0b9c6b8d06960dab83e6527092bc35e79024c637f86cadce601938491dbc73d4",
+      "native_merkle_receipts": 6,
+      "observed_tip": "5522de24fae3a2d1b6bcf85375082dfc357a012676ad15b0b10e12893455e3fb",
+      "offered_invoices": 6,
+      "offered_sat": 11400,
+      "peak_funded_sat": 100000,
+      "peak_unavailable_sat": 100000,
+      "pinned_sources": {
+        "babe_funded": {
+          "ci": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/actions/runs/44376453388",
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/26",
+          "sha": "b404ea4566c7ac28b702f8e0d4c0f1fded3b5691"
+        },
+        "lnmarkets_nova_v2": {
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/28",
+          "sha": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+          "statement": "lnm-nova-v2"
+        },
+        "spiral_stage0": {
+          "ci": "https://github.com/patrickdugan/Spiral/actions/runs/44784246434",
+          "pr": "https://github.com/patrickdugan/Spiral/pull/17",
+          "sha": "1ddbc68f5988101cd5ba04678789c271ef7043a2"
+        },
+        "testnet4_genesis_circuit": {
+          "bundle_sha256": "ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c",
+          "reference_end_height": 4,
+          "sha": "de607d3db17d400dd6c2923d357f1d4a7bf233c7",
+          "statement": "nova_header_chain_statement_v1",
+          "vk_sha256": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a"
+        },
+        "testnet4_spv": {
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/14",
+          "sha": "6600ce819c3e4d6340268029de793d8a7fc4981a"
+        },
+        "zk_main": {
+          "sha": "a183eeffe63715cedca729100a1f74267a68200d"
+        }
+      },
+      "plan_sha256": "45347c46509fc716b63e524f61dedff8e83b40b792d291962c6e9624b183acbf",
+      "profile": "individual",
+      "recovery_and_reuse": [
+        {
+          "recovery_seconds": 1,
+          "reuse_after_recovery_seconds": 2,
+          "txid": "45ac5f63db14bae4f0bff7130828630d1f7f89e37596ab3b59c78bdec435cecd"
+        },
+        {
+          "recovery_seconds": 0,
+          "reuse_after_recovery_seconds": 2,
+          "txid": "057152096752e5610632cecadf14f72de600fb617b1f74e7444a2662e129a487"
+        },
+        {
+          "recovery_seconds": 0,
+          "reuse_after_recovery_seconds": 1,
+          "txid": "26fbe5b81c6711fa2c253a3d3ee28ab135d8d3d93cf1687a5776beafbcc755cb"
+        },
+        {
+          "recovery_seconds": 0,
+          "reuse_after_recovery_seconds": 2,
+          "txid": "dfdd6af38111b2df25626e7a24ad5b3718d04ad98ba7579740b1206dc13cd03b"
+        },
+        {
+          "recovery_seconds": 0,
+          "reuse_after_recovery_seconds": 2,
+          "txid": "ada1c06d49cdd9c53056db63b55eefdacda643ecab9c3b7eaad225e2bac4c7c0"
+        },
+        {
+          "recovery_seconds": 0,
+          "txid": "9e3144910e4990927b02b53a2f070fa5c6e46f8ccc2b38a8dc819978039ea5bc"
+        }
+      ],
+      "sample_end": 1795229140,
+      "scope": "regtest",
+      "settled_by_deadline_count": 6,
+      "settled_by_deadline_sat": 11400,
+      "settlements": [
+        {
+          "by_deadline": true,
+          "invoice": "invoice-0-0",
+          "latency_seconds": 1,
+          "sat": 1400,
+          "txid": "45ac5f63db14bae4f0bff7130828630d1f7f89e37596ab3b59c78bdec435cecd"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-0-1",
+          "latency_seconds": 3,
+          "sat": 2800,
+          "txid": "057152096752e5610632cecadf14f72de600fb617b1f74e7444a2662e129a487"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-1-0",
+          "latency_seconds": 3,
+          "sat": 1800,
+          "txid": "26fbe5b81c6711fa2c253a3d3ee28ab135d8d3d93cf1687a5776beafbcc755cb"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-1-1",
+          "latency_seconds": 4,
+          "sat": 1800,
+          "txid": "dfdd6af38111b2df25626e7a24ad5b3718d04ad98ba7579740b1206dc13cd03b"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-2-0",
+          "latency_seconds": 4,
+          "sat": 2200,
+          "txid": "ada1c06d49cdd9c53056db63b55eefdacda643ecab9c3b7eaad225e2bac4c7c0"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-2-1",
+          "latency_seconds": 6,
+          "sat": 1400,
+          "txid": "9e3144910e4990927b02b53a2f070fa5c6e46f8ccc2b38a8dc819978039ea5bc"
+        }
+      ],
+      "signed_fee_budget_sat": 2400,
+      "terminal_funded_sat": 86200,
+      "terminal_unavailable_sat": 0,
+      "unavailable_sat_blocks": 1129200,
+      "unavailable_sat_seconds": 100000,
+      "unsettled_by_deadline_count": 0
+    },
+    "batched": {
+      "attempted_fee_budget_sat": 1200,
+      "attempted_invoices": 6,
+      "campaign": "batched",
+      "confirmed_application_sat": 11400,
+      "confirmed_fees_sat": 1200,
+      "confirmed_invoice_count": 6,
+      "confirmed_txids": [
+        "2ff8a8592aad611426dd041c66298de45267fb35d6e4caa87c467ae65f0c67ab",
+        "88a1281e5cf55283f2b53b7e7279ee52aa46127abccb6d91c6143056d2f23beb",
+        "8a028ad48358ef3cc851cfa0658f573684703e3c4bbbb8c619c263fa388dd522"
+      ],
+      "delivery_slo_met_for_arrived_invoices": true,
+      "expired_unsettled_count": 0,
+      "fresh_nova_proof_receipts": 0,
+      "funded_sat_blocks": 573600,
+      "funded_sat_seconds": 382200,
+      "initial_funding_sat": 100000,
+      "initial_tip": "39858fc04f9ada2a7b9902566aa81118359a5dae19755407808fcd6aa38d4491",
+      "native_merkle_receipts": 3,
+      "observed_tip": "49e2ceabfab6ad9e721a9186ae0b9b58c179bce9302e9032ebf99861673c472f",
+      "offered_invoices": 6,
+      "offered_sat": 11400,
+      "peak_funded_sat": 100000,
+      "peak_unavailable_sat": 100000,
+      "pinned_sources": {
+        "babe_funded": {
+          "ci": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/actions/runs/44376453388",
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/26",
+          "sha": "b404ea4566c7ac28b702f8e0d4c0f1fded3b5691"
+        },
+        "lnmarkets_nova_v2": {
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/28",
+          "sha": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+          "statement": "lnm-nova-v2"
+        },
+        "spiral_stage0": {
+          "ci": "https://github.com/patrickdugan/Spiral/actions/runs/44784246434",
+          "pr": "https://github.com/patrickdugan/Spiral/pull/17",
+          "sha": "1ddbc68f5988101cd5ba04678789c271ef7043a2"
+        },
+        "testnet4_genesis_circuit": {
+          "bundle_sha256": "ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c",
+          "reference_end_height": 4,
+          "sha": "de607d3db17d400dd6c2923d357f1d4a7bf233c7",
+          "statement": "nova_header_chain_statement_v1",
+          "vk_sha256": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a"
+        },
+        "testnet4_spv": {
+          "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/14",
+          "sha": "6600ce819c3e4d6340268029de793d8a7fc4981a"
+        },
+        "zk_main": {
+          "sha": "a183eeffe63715cedca729100a1f74267a68200d"
+        }
+      },
+      "plan_sha256": "5d729a050fa5f835dd41bf82a8b0a46865ea063f5c2bf854aaa6783fec2b68b5",
+      "profile": "batched",
+      "recovery_and_reuse": [
+        {
+          "recovery_seconds": 1,
+          "reuse_after_recovery_seconds": 2,
+          "txid": "2ff8a8592aad611426dd041c66298de45267fb35d6e4caa87c467ae65f0c67ab"
+        },
+        {
+          "recovery_seconds": 0,
+          "reuse_after_recovery_seconds": 1,
+          "txid": "88a1281e5cf55283f2b53b7e7279ee52aa46127abccb6d91c6143056d2f23beb"
+        },
+        {
+          "recovery_seconds": 0,
+          "txid": "8a028ad48358ef3cc851cfa0658f573684703e3c4bbbb8c619c263fa388dd522"
+        }
+      ],
+      "sample_end": 1795229146,
+      "scope": "regtest",
+      "settled_by_deadline_count": 6,
+      "settled_by_deadline_sat": 11400,
+      "settlements": [
+        {
+          "by_deadline": true,
+          "invoice": "invoice-0-0",
+          "latency_seconds": 1,
+          "sat": 1400,
+          "txid": "2ff8a8592aad611426dd041c66298de45267fb35d6e4caa87c467ae65f0c67ab"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-0-1",
+          "latency_seconds": 1,
+          "sat": 2800,
+          "txid": "2ff8a8592aad611426dd041c66298de45267fb35d6e4caa87c467ae65f0c67ab"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-1-0",
+          "latency_seconds": 1,
+          "sat": 1800,
+          "txid": "88a1281e5cf55283f2b53b7e7279ee52aa46127abccb6d91c6143056d2f23beb"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-1-1",
+          "latency_seconds": 1,
+          "sat": 1800,
+          "txid": "88a1281e5cf55283f2b53b7e7279ee52aa46127abccb6d91c6143056d2f23beb"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-2-0",
+          "latency_seconds": 0,
+          "sat": 2200,
+          "txid": "8a028ad48358ef3cc851cfa0658f573684703e3c4bbbb8c619c263fa388dd522"
+        },
+        {
+          "by_deadline": true,
+          "invoice": "invoice-2-1",
+          "latency_seconds": 0,
+          "sat": 1400,
+          "txid": "8a028ad48358ef3cc851cfa0658f573684703e3c4bbbb8c619c263fa388dd522"
+        }
+      ],
+      "signed_fee_budget_sat": 1200,
+      "terminal_funded_sat": 87400,
+      "terminal_unavailable_sat": 0,
+      "unavailable_sat_blocks": 573600,
+      "unavailable_sat_seconds": 100000,
+      "unsettled_by_deadline_count": 0
+    },
+    "batch_fee_savings_sat_at_fixed_fee_per_transaction": 1200,
+    "unavailable_sat_blocks_difference": 555600,
+    "matched_pairs": 1,
+    "confidence_interval": null,
+    "regtest_checks": [
+      "explicit broadcast",
+      "same-transaction retry",
+      "node restart",
+      "confirmed rollback",
+      "recovery",
+      "actual reuse",
+      "artifact digests"
+    ]
+  }
+}

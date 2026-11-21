@@ -1,0 +1,99 @@
+{
+  "attempted_fee_budget_sat": 800,
+  "attempted_invoices": 2,
+  "campaign": "pilot01",
+  "confirmed_application_sat": 2800,
+  "confirmed_fees_sat": 800,
+  "confirmed_invoice_count": 2,
+  "confirmed_txids": [
+    "a97c0ea8f6c88a78bb6ccdef62e9acf3629f750f0162f98eab4529b24c060f00",
+    "d8c5cbdf4a7d94ebe53f91ad5d5a8aebc1474a5b23c4d97478075003378d1a6b"
+  ],
+  "delivery_slo_met_for_arrived_invoices": false,
+  "expired_unsettled_count": 1,
+  "fresh_nova_proof_receipts": 0,
+  "funded_sat_blocks": 1438596,
+  "funded_sat_seconds": 1580052906,
+  "initial_funding_sat": 360549,
+  "initial_tip": "00000000005cfd7da602d9eca6385261a76207c32df1a0e63602e0de2546815a",
+  "native_merkle_receipts": 4,
+  "observed_seconds": 4394,
+  "observed_tip": "000000000050038625b5cca3204c95f3bc583105077fffd54696b2dcbecda6a6",
+  "offered_invoices": 2,
+  "offered_sat": 2800,
+  "peak_funded_sat": 360549,
+  "peak_unavailable_sat": 360549,
+  "pinned_sources": {
+    "babe_funded": {
+      "ci": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/actions/runs/44376453388",
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/26",
+      "sha": "b404ea4566c7ac28b702f8e0d4c0f1fded3b5691"
+    },
+    "lnmarkets_nova_v2": {
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/28",
+      "sha": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+      "statement": "lnm-nova-v2"
+    },
+    "spiral_stage0": {
+      "ci": "https://github.com/patrickdugan/Spiral/actions/runs/44784246434",
+      "pr": "https://github.com/patrickdugan/Spiral/pull/17",
+      "sha": "1ddbc68f5988101cd5ba04678789c271ef7043a2"
+    },
+    "testnet4_genesis_circuit": {
+      "bundle_sha256": "ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c",
+      "reference_end_height": 4,
+      "sha": "de607d3db17d400dd6c2923d357f1d4a7bf233c7",
+      "statement": "nova_header_chain_statement_v1",
+      "vk_sha256": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a"
+    },
+    "testnet4_spv": {
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/14",
+      "sha": "6600ce819c3e4d6340268029de793d8a7fc4981a"
+    },
+    "zk_main": {
+      "sha": "a183eeffe63715cedca729100a1f74267a68200d"
+    }
+  },
+  "plan_sha256": "95a9db3ed6a014bcf7b040a89269b51cb6e92012116ab4b1633adde453703d43",
+  "profile": "canary",
+  "recovery_and_reuse": [
+    {
+      "recovery_seconds": 1730,
+      "reuse_after_recovery_seconds": 2333,
+      "txid": "a97c0ea8f6c88a78bb6ccdef62e9acf3629f750f0162f98eab4529b24c060f00"
+    },
+    {
+      "recovery_seconds": 2290,
+      "txid": "d8c5cbdf4a7d94ebe53f91ad5d5a8aebc1474a5b23c4d97478075003378d1a6b"
+    }
+  ],
+  "sample_end": 1795263282,
+  "scope": "testnet4",
+  "settled_by_deadline_count": 1,
+  "settled_by_deadline_sat": 1400,
+  "settlement_virtual_bytes": 282,
+  "settlements": [
+    {
+      "by_deadline": true,
+      "invoice": "invoice-0-0",
+      "latency_seconds": 2061,
+      "queue_seconds": 331,
+      "sat": 1400,
+      "txid": "a97c0ea8f6c88a78bb6ccdef62e9acf3629f750f0162f98eab4529b24c060f00"
+    },
+    {
+      "by_deadline": false,
+      "invoice": "invoice-1-0",
+      "latency_seconds": 4392,
+      "queue_seconds": 2102,
+      "sat": 1400,
+      "txid": "d8c5cbdf4a7d94ebe53f91ad5d5a8aebc1474a5b23c4d97478075003378d1a6b"
+    }
+  ],
+  "signed_fee_budget_sat": 800,
+  "terminal_funded_sat": 356949,
+  "terminal_unavailable_sat": 0,
+  "unavailable_sat_blocks": 1438596,
+  "unavailable_sat_seconds": 1445284980,
+  "unsettled_by_deadline_count": 1
+}

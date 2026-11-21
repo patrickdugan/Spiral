@@ -1,0 +1,102 @@
+name: Capital Bound Testnet4 staging
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/capital-bound/**'
+      - '.github/workflows/capital-bound-testnet4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-regtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests for the campaign
+        run: python -m unittest discover -s experiments/capital-bound/testnet4 -v
+      - name: Fetch checksum-pinned Bitcoin Core 31.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          archive=bitcoin-31.1-x86_64-linux-gnu.tar.gz
+          curl --fail --location --retry 3 --output "$archive" "https://bitcoincore.org/bin/bitcoin-core-31.1/$archive"
+          printf '%s  %s\n' b80d9c3e04da78fb6f0569685673418cf686fadba9042d926d13fb87ff503f9e "$archive" | sha256sum -c -
+          tar -xzf "$archive"
+      - name: Mine the matched native workloads
+        run: |
+          set -euo pipefail
+          mkdir -p run-results
+          python experiments/capital-bound/testnet4/native_regtest.py \
+            --bitcoind "$RUNNER_TEMP/bitcoin-31.1/bin/bitcoind" \
+            --source-sha "$(git rev-parse HEAD)" --out run-results/native \
+            | tee run-results/native-stdout.jsonl
+      - name: Collect public receipts
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p sanitized
+          if [ -d run-results/native ]; then
+            find run-results/native -type f \( -name '*.json' -o -name '*.jsonl' -o -name 'report.md' \) \
+              -exec cp --parents {} sanitized/ \;
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capital-bound-native-regtest
+          path: sanitized/
+
+  genesis-nova-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ZK_SOURCE: b404ea4566c7ac28b702f8e0d4c0f1fded3b5691
+      CARGO_BUILD_JOBS: '2'
+      RAYON_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Fetch exact M12 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/zk"
+          git -C "$RUNNER_TEMP/zk" remote add origin https://github.com/patrickdugan/zk-rusto-no-bitcoino.git
+          git -C "$RUNNER_TEMP/zk" fetch --depth=1 origin "$ZK_SOURCE"
+          git -C "$RUNNER_TEMP/zk" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/zk" rev-parse HEAD)" = "$ZK_SOURCE"
+          rustup toolchain install stable --profile minimal
+      - name: Verify the existing genesis-anchored proof and mutated statements
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p run-results/genesis
+          native="$RUNNER_TEMP/zk/integrations/bitvm3-nova/m12/native"
+          fixture="$native/../fixtures/testnet4-k1-0-4.nht4"
+          printf '%s  %s\n' ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c "$fixture" | sha256sum -c -
+          cargo +stable build --locked --release --manifest-path "$native/Cargo.toml" --bin m12
+          m12="$native/target/release/m12"
+          /usr/bin/time -f 'elapsed_seconds=%e peak_rss_kib=%M' -o run-results/genesis/setup-resources.txt \
+            "$m12" vk-export testnet4 1 "$RUNNER_TEMP/k1.vk" > run-results/genesis/setup.json
+          printf '%s  %s\n' 6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a "$RUNNER_TEMP/k1.vk" | sha256sum -c -
+          /usr/bin/time -f 'elapsed_seconds=%e peak_rss_kib=%M' -o run-results/genesis/verify-resources.txt \
+            "$m12" verify "$fixture" "$RUNNER_TEMP/k1.vk" > run-results/genesis/verify.json
+          cargo +stable test --locked --release --manifest-path "$native/Cargo.toml" \
+            --test k1_statement -- --test-threads=1 | tee run-results/genesis/statement-tests.txt
+          git -C "$RUNNER_TEMP/zk" rev-parse HEAD > run-results/genesis/source-sha.txt
+          sha256sum "$m12" | cut -d ' ' -f 1 > run-results/genesis/verifier-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capital-bound-genesis-nova-proof
+          path: run-results/genesis/

@@ -1,0 +1,86 @@
+{
+  "campaign": "pilot01",
+  "network": "testnet4",
+  "recorded_at": "2026-11-21T11:10:00Z",
+  "host": {
+    "executor": "Windows PowerShell outside the Codex sandbox",
+    "outbound_tcp_48333": {
+      "method": "System.Net.Sockets.TcpClient to DNS-seed addresses (seed.testnet4.bitcoin.sprovoost.nl, seed.testnet4.wiz.biz) plus one address from the earlier failing log",
+      "connected": 8,
+      "timed_out": 1,
+      "winsock_errors": 0
+    },
+    "winsock_10013_diagnosis": "The 790 'connect() ... failed after wait (10013)' lines in the campaign node's debug.log are dated 2026-11-21T05:33Z onward, from the run inside the Codex Windows sandbox. The same bitcoind binary and datadir started from the native host at 10:58Z logged no new 10013 lines and reached 4 peers within 40 s and 10 by preflight."
+  },
+  "nodes": {
+    "campaign": {
+      "core": "v31.1.0, bitcoind.exe SHA-256 f79eeb94e1379986df9f7be4c78c8fc8e18dc9be64a31cbaa8acad249d3db77a",
+      "previous_shutdown": "clean ('Shutdown done' 2026-11-21T10:20:43Z) at height 162565",
+      "start": "native P2P, prune=4096, listen=0, RPC 127.0.0.1:48332",
+      "height": 162572,
+      "headers": 162572,
+      "tip": "00000000005cfd7da602d9eca6385261a76207c32df1a0e63602e0de2546815a",
+      "peers_at_preflight": 10,
+      "initial_block_download": false
+    },
+    "observer": {
+      "role": "independent Core instance for the second canary payment (--observer-datadir/--observer-port 48342)",
+      "datadir": "separate chainstate, last tip 162098 on 2026-11-18, synced over native P2P",
+      "height": 162572,
+      "headers": 162572,
+      "peers": 10,
+      "initial_block_download": false
+    }
+  },
+  "funding_reconciliation": {
+    "outpoint": "20936a30e4a18a3f72dfb614183698bf92185968598242c0040454b12cb039a3:1",
+    "sat": 360549,
+    "address": "tb1q2hr245hqn9qkeyg6fljextja862c9plh3hjhqj",
+    "block_height": 162549,
+    "blockhash": "000000000f80d738dda1915c5db0cb7c51a27fb5623edbbda069177069c153f5",
+    "confirmations_at_check": 24,
+    "wallet": "cbm-pilot01-payer",
+    "spendable": true,
+    "solvable": true,
+    "safe": true,
+    "recipient_wallet_txcount": 0
+  },
+  "preflight": {
+    "ready": true,
+    "blockers": [],
+    "eligible_utxo_count": 1,
+    "eligible_funds_sat": 360549,
+    "receipt": "testnet4-readiness.json"
+  },
+  "plan": {
+    "plan_sha256": "95a9db3ed6a014bcf7b040a89269b51cb6e92012116ab4b1633adde453703d43",
+    "profile": "canary",
+    "started_at": 1795258888,
+    "initial_height": 162572,
+    "confirmations": 2,
+    "fee_sat": 400,
+    "groups": [
+      [{"id": "invoice-0-0", "from": "s", "to": "t", "sat": 1400, "arrival_seconds": 0, "deadline_seconds": 3600}],
+      [{"id": "invoice-1-0", "from": "b", "to": "t", "sat": 1400, "arrival_seconds": 2, "deadline_seconds": 3600}]
+    ],
+    "ceilings": {"funding_sat": 2000000, "fees_sat": 100000, "payments": 200, "arrival_seconds": 172800, "simultaneous_assertions": 4}
+  },
+  "reserved_phase_0": {
+    "txid": "a97c0ea8f6c88a78bb6ccdef62e9acf3629f750f0162f98eab4529b24c060f00",
+    "source": "20936a30e4a18a3f72dfb614183698bf92185968598242c0040454b12cb039a3:1 (360549 sat)",
+    "payment": {"invoice": "invoice-0-0", "sat": 1400, "script": "0014a054b44770dd2b01d935db0e3855f074d3388bf8"},
+    "change": {"vout": 1, "sat": 358749},
+    "fee_sat": 400,
+    "vsize": 141,
+    "testmempoolaccept": "allowed, base fee 400 sat",
+    "signed_bytes": "held only in the private campaign journal"
+  },
+  "broadcast": {
+    "status": "not_submitted",
+    "reason": "The Claude Code auto-mode classifier denied 'campaign.py broadcast-canary --broadcast' before it ran.",
+    "journal_attempts": 0,
+    "mempool": "getmempoolentry a97c0ea8... returned RPC -5 (not present)",
+    "resume": "broadcast-canary --broadcast submits the reserved bytes above; the 48-hour arrival window runs from started_at 1795258888"
+  },
+  "capital_reuse": "not measured: phase 0 has not been submitted, so no change has been recovered or reused"
+}

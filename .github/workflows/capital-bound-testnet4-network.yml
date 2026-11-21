@@ -1,0 +1,94 @@
+name: Capital Bound live Testnet4 observer
+
+on:
+  push:
+    branches: ['research/capital-bound-testnet4']
+    paths: ['.github/workflows/capital-bound-testnet4-network.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capital-bound-testnet4-observer
+  cancel-in-progress: false
+
+jobs:
+  connected-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start checksum-pinned Bitcoin Core on Testnet4
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          a=bitcoin-31.1-x86_64-linux-gnu.tar.gz
+          curl --fail --location --retry 3 --max-time 120 --output "$a" "https://bitcoincore.org/bin/bitcoin-core-31.1/$a"
+          printf '%s  %s\n' b80d9c3e04da78fb6f0569685673418cf686fadba9042d926d13fb87ff503f9e "$a" | sha256sum -c -
+          tar -xzf "$a"
+          mkdir -m 700 cbm-node
+          bitcoin-31.1/bin/bitcoind -datadir="$RUNNER_TEMP/cbm-node" -testnet4 -server=1 \
+            -disablewallet=1 -listen=0 -prune=8192 -dbcache=1536 -par=2 -daemonwait
+      - name: Validate and catch up to the live Bitcoin network
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p live-evidence
+          cli=("$RUNNER_TEMP/bitcoin-31.1/bin/bitcoin-cli" -testnet4 "-datadir=$RUNNER_TEMP/cbm-node")
+          genesis=$("${cli[@]}" getblockhash 0)
+          test "$genesis" = 00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043
+          echo "$genesis" > live-evidence/genesis.txt
+          for i in $(seq 1 30); do
+            chain=$("${cli[@]}" getblockchaininfo)
+            if echo "$chain" | jq -e '.headers >= 120000' >/dev/null; then break; fi
+            sleep 5
+          done
+          if echo "$chain" | jq -e '.headers >= 120000 and .blocks < 120000' >/dev/null; then
+            snapshot="$RUNNER_TEMP/testnet4-120000-utxos.dat"
+            if curl --fail --location --retry 1 --max-time 240 --max-filesize 943718400 \
+                --output "$snapshot" https://utxo.download/testnet4-120000-utxos.dat; then
+              if "${cli[@]}" -rpcclienttimeout=180 loadtxoutset "$snapshot" > "$RUNNER_TEMP/snapshot-result.json"; then
+                jq '{coins_loaded,base_height,base_hash}' "$RUNNER_TEMP/snapshot-result.json" > live-evidence/snapshot.json
+              fi
+            fi
+          fi
+          for i in $(seq 1 85); do
+            chain=$("${cli[@]}" getblockchaininfo)
+            peers=$("${cli[@]}" getconnectioncount)
+            jq -c --argjson peers "$peers" \
+              '{chain,blocks,headers,bestblockhash,time,verificationprogress,initialblockdownload,chainwork,pruned,pruneheight,
+                peers:$peers, sample_utc:(now | floor)}' <<<"$chain" | tee -a live-evidence/sync.jsonl
+            if jq -e --argjson peers "$peers" '.blocks == .headers and $peers > 0 and (.initialblockdownload | not) and (now - .time < 7200)' \
+                <<<"$chain" >/dev/null; then
+              break
+            fi
+            sleep 15
+          done
+          tail -1 live-evidence/sync.jsonl > live-evidence/tip.json
+          "${cli[@]}" getchainstates | jq '{headers,chainstates:[.chainstates[] | {blocks,bestblockhash,validated}]}' \
+            > live-evidence/chainstates.json
+          jq -e '.blocks == .headers and .peers > 0 and (.initialblockdownload | not) and (now - .time < 7200)' live-evidence/tip.json
+      - name: Export public blocks and a fresh tip for the local HTTPS signer
+        shell: bash
+        run: |
+          python3 experiments/capital-bound/testnet4/export_chain_delta.py \
+            --datadir "$RUNNER_TEMP/cbm-node" --out live-delta \
+            --base-height 157300 \
+            --base-hash 00000000f6232dac6ea1b1c591442d43a4de4629e902f22700479cbb79ea882f
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capital-bound-testnet4-block-delta
+          path: |
+            live-delta/testnet4-blocks.dat.gz
+            live-delta/manifest.json
+          compression-level: 0
+      - name: Publish chain observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capital-bound-live-testnet4
+          path: live-evidence/
