@@ -89,4 +89,30 @@ The Nova application proof and Bitcoin header proof have different statements. S
 
 Checked reports from the first public run and the local Testnet4 readiness check are in `evidence/`. The artifact IDs and SHA-256 digests identify the exact source receipts.
 
+## MuSig2 shared-capital pool
+
+`musig_regtest.py` funds a `tr(musig(A,B)/0/*)` pool on isolated regtest. It settles two invoices plus pool change through Core's two-round MuSig2 PSBT flow, then spends the same batch from P2WSH 2-of-2 and single-key P2TR for comparison.
+
+~~~sh
+python experiments/capital-bound/testnet4/musig_regtest.py \
+  --bitcoind /path/to/bitcoin-31.1/bin/bitcoind --out evidence/musig2-regtest.json
+~~~
+
+`musig_testnet4.py` stages the same pool on Testnet4 (`setup`, `fund`, `settle`, `observe`). It uses a private journal, an explicit `--broadcast` and `--retry-same` for identical bytes. It funds the pool from the dedicated payer's single confirmed output, so run it only after the canary is reconciled.
+
+## BIP 448 on patched regtest
+
+BIP 448 is not active on Testnet4. OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK and OP_INTERNALKEY run in `patrickdugan/bitcoin-rs` `dev` (merges `d48670f7`, `dd6c2040`) behind `--network regtest --bip448`. `evidence/bip448-regtest.json` records the test commands and the three-party LN-Symmetry update, replacement and settlement run.
+
+## Results, 2026-11-21
+
+| Stage | Network | Result |
+|---|---|---|
+| pilot01 canary | Testnet4, native P2P | `a97c0ea8` and `d8c5cbdf` confirmed. The second spends the first's recovered change. There are 4 Core Merkle receipts from two nodes. 2,800 sat delivered, 800 sat fees. Recovery took 1,730 s and reuse came 2,333 s later. invoice-1-0 settled at 4,392 s, past its 3,600 s deadline, after a ~35 min block gap. |
+| MuSig2 pool | regtest, Core 31.1 | 2-of-2 key path: 197 vB, one 64-byte signature, 2 signing rounds. Single-key P2TR: 197 vB. P2WSH 2-of-2: 235 vB. |
+| MuSig2 pool | Testnet4 | Funding `fb68d5ff` (100,000 sat) and settlement `70890635` (197 vB, 2 invoices plus pool change) in `evidence/musig01-testnet4.json`. |
+| BIP 448 hyperedge channel | patched regtest (bitcoin-rs) | 3-party update 131 vB, CSV settlement 171 vB. A later state replaces an earlier one. Stale state, tampered template, tampered signature and early settlement are rejected. |
+
+Evidence for each row is in `evidence/`.
+
 The upstream BABE receipts cover the funded indexed dispute relation on regtest. A complete M14-backed funded dispute suite and application payout and recovery composition are required for public BitVM3 settlement. Keyless-CHECKSIG and BIP 448-dependent constructions belong to patched regtest.

@@ -1,0 +1,76 @@
+{
+  "campaign": "musig01",
+  "confirmations_required": 2,
+  "network": "testnet4",
+  "pool_address": "tb1pvstxzk9xn8vy8aumftupcy7n3l58u2g37ckflfe5u5xdewdrvp2szz60uu",
+  "pool_descriptor_public": "tr(musig(tpubD6NzVbkrYhZ4XTNWyPvvMBhL6aHKH9X3gBXT9QGdZbSmfhTQPEyz99H9ziUSGLhswJECMsw8ubEUSCV6M6LLtsPgRbN9E7BJSiGFqFMV2ma,tpubD6NzVbkrYhZ4XMZ17hRLseQtpqiPMtB1rjH6DYPNm6h7V38NtKUJa8TEfHg8i1rmZiKCFn2D5zCYscK73wjZrqnzAvwUAVBTjH1Gt3efCtG)/0/*)",
+  "pool_sat": 100000,
+  "stages": {
+    "fund": {
+      "attempt_height": 162576,
+      "attempted_at": 1795263325,
+      "confirmations": 9,
+      "fee_sat": 400,
+      "independent_inclusion": {
+        "block_timestamp": 1795271651,
+        "blockhash": "0000000000336b91a9b1db20cdd5b8d7e7c5441cd44ee4231cc2f66253b6c4d4",
+        "confirmations": 9,
+        "height": 162577,
+        "kind": "core_merkle_inclusion",
+        "scope": "Bitcoin Core active-chain inclusion",
+        "txid": "fb68d5fff4a97aadae48281dbd327a67692e65e5ac0e15872196aca9b7eb1ff8"
+      },
+      "payer_change_sat": 256549,
+      "pool_vout": 0,
+      "receipt": {
+        "block_timestamp": 1795271651,
+        "blockhash": "0000000000336b91a9b1db20cdd5b8d7e7c5441cd44ee4231cc2f66253b6c4d4",
+        "confirmations": 9,
+        "height": 162577,
+        "kind": "core_merkle_inclusion",
+        "merkle_proof": "0060b520a6a6cdbedcb29646d5ff7f07053158bcf3954c20a3ccb5258603500000000000eadbc78660bbd5a73146d20ee73f38b8cfc3922b6fea495820e8de38f2594502e3ab016bffff001df00157a60e00000005369cdc4ac32b59a79f4f6887c7a18f2085f3575230fac5702463551c710dbd46063cf8e70cd02a465ed09a9fbeac7ca5291a95fa630fcb3a251b925c7d8fec5ff81febb7a9ac962187150eace5652e69677a32bd1d2848aead7aa9f4ffd568fbefb0404ebc683631f17436a4be8716b5fa53a8d37b5bbbbf3e948024074ef21c7e981c151ee438268c10fde8acf4dae03d3cefe79a30a5df8d0d85d4c67ffe97026b00",
+        "scope": "Bitcoin Core active-chain inclusion",
+        "txid": "fb68d5fff4a97aadae48281dbd327a67692e65e5ac0e15872196aca9b7eb1ff8"
+      },
+      "source": "d8c5cbdf4a7d94ebe53f91ad5d5a8aebc1474a5b23c4d97478075003378d1a6b:1",
+      "source_sat": 356949,
+      "txid": "fb68d5fff4a97aadae48281dbd327a67692e65e5ac0e15872196aca9b7eb1ff8",
+      "vsize": 153
+    },
+    "settle": {
+      "attempt_height": 162583,
+      "attempted_at": 1795265286,
+      "confirmations": 2,
+      "fee_sat": 400,
+      "independent_inclusion": {
+        "block_timestamp": 1795272942,
+        "blockhash": "00000000007c96a56a9ec3a9c44f67d1a752172c3ff8415ad72bbcbca12bab1b",
+        "confirmations": 2,
+        "height": 162584,
+        "kind": "core_merkle_inclusion",
+        "scope": "Bitcoin Core active-chain inclusion",
+        "txid": "70890635794b97d8faefb0afe146b98b2cde1d094dfa613a5b9197730864597c"
+      },
+      "invoices_sat": [
+        1400,
+        1400
+      ],
+      "pool_change_sat": 96800,
+      "receipt": {
+        "block_timestamp": 1795272942,
+        "blockhash": "00000000007c96a56a9ec3a9c44f67d1a752172c3ff8415ad72bbcbca12bab1b",
+        "confirmations": 2,
+        "height": 162584,
+        "kind": "core_merkle_inclusion",
+        "merkle_proof": "00c0122065f092c82f5766096ce7bdcf11efdd2f5606c6e03663965927e75d0c00000000be10d390c8e9163c72c2df367c76a7cae7c71ae65f54aac35a9a48ac547353e1eeb0016bffff001d0d84507511000000061ce195594bca6daa7d2ea7544502aa978b1b30b4be18f7cfe7f3c327bddf4933a4b43919f3b408319d26a2914f4b97057601fd4209d6c5a0d1b9f8a99c8d47297c5964087397915b3a61fa4d091dde2c8bb946e1afb0effad8974b79350689706732e9808b25719d53eded21afec93b2eaec250ca0dc3c58a7feb1d5cd1f39c518ed8fe0e4892f7f362470188998a259f061ace4df6853394a1baa6ee9d6c5e602d49a42aa9ebc5a054e8e45cac6b832a24d9e6d24b62962a7b15fdf661e61dd02bb00",
+        "scope": "Bitcoin Core active-chain inclusion",
+        "txid": "70890635794b97d8faefb0afe146b98b2cde1d094dfa613a5b9197730864597c"
+      },
+      "signing_rounds": 2,
+      "source": "fb68d5fff4a97aadae48281dbd327a67692e65e5ac0e15872196aca9b7eb1ff8:0",
+      "txid": "70890635794b97d8faefb0afe146b98b2cde1d094dfa613a5b9197730864597c",
+      "vsize": 197,
+      "weight": 788
+    }
+  }
+}

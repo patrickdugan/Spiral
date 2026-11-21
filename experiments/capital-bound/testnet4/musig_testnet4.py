@@ -154,6 +154,17 @@ def sign_settle(core, journal):
             "vsize": decoded["vsize"], "weight": decoded["weight"]}
 
 
+def wallet_tx(core, txid):
+    """Find a transaction through the campaign wallets; the pruned node has no txindex."""
+    for wallet in (PAYER, WALLETS["pool_a"], RECIPIENT):
+        try:
+            return core.rpc("gettransaction", [txid], wallet=wallet)
+        except RPCError as failure:
+            if failure.code != -5:
+                raise
+    return None
+
+
 def submit(core, journal, stage, args):
     entry = journal.data.get(stage)
     if entry is None:
@@ -161,12 +172,9 @@ def submit(core, journal, stage, args):
         journal.data[stage] = entry
         journal.save()
     txid = entry["txid"]
-    try:
-        seen = core.rpc("getrawtransaction", [txid, True])
-        if seen:
-            return {"stage": stage, "txid": txid, "submission": "already_observed"}
-    except RPCError:
-        pass
+    seen = wallet_tx(core, txid)
+    if seen and (seen["confirmations"] > 0 or core.rpc("getrawmempool").count(txid)):
+        return {"stage": stage, "txid": txid, "submission": "already_observed"}
     verdict = core.rpc("testmempoolaccept", [[entry["raw"]]])[0]
     if not verdict.get("allowed") or sats(verdict["fees"]["base"]) != entry["fee_sat"]:
         raise Gate(f"Core policy rejected the signed {stage} transaction")
@@ -188,9 +196,10 @@ def observe(core, observer, journal, out):
         entry = journal.data.get(stage)
         if not entry:
             continue
-        tx = core.rpc("getrawtransaction", [entry["txid"], True])
+        tx = wallet_tx(core, entry["txid"]) or {}
         row = {k: v for k, v in entry.items() if k != "raw"}
-        if tx.get("blockhash"):
+        row["confirmations"] = tx.get("confirmations", 0)
+        if tx.get("blockhash") and tx["confirmations"] > 0:
             row["receipt"] = inclusion(core, entry["txid"], tx["blockhash"])
             if observer is not None:
                 chain_tip(observer)
