@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "spiral_stage0": {
+      "sha": "1ddbc68f5988101cd5ba04678789c271ef7043a2",
+      "pr": "https://github.com/patrickdugan/Spiral/pull/17",
+      "ci": "https://github.com/patrickdugan/Spiral/actions/runs/44784246434"
+    },
+    "zk_main": {
+      "sha": "a183eeffe63715cedca729100a1f74267a68200d"
+    },
+    "lnmarkets_nova_v2": {
+      "sha": "f6a8d129285869f339c86f1e2e7f1124bc09c37a",
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/28",
+      "statement": "lnm-nova-v2"
+    },
+    "babe_funded": {
+      "sha": "b404ea4566c7ac28b702f8e0d4c0f1fded3b5691",
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/26",
+      "ci": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/actions/runs/44376453388"
+    },
+    "testnet4_spv": {
+      "sha": "6600ce819c3e4d6340268029de793d8a7fc4981a",
+      "pr": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/pull/14"
+    },
+    "testnet4_genesis_circuit": {
+      "sha": "de607d3db17d400dd6c2923d357f1d4a7bf233c7",
+      "statement": "nova_header_chain_statement_v1",
+      "bundle_sha256": "ffa1fdbc8a7ef712941434db51c2c780232f5a2190f225bca640ab5a4d6c5f3c",
+      "vk_sha256": "6894f4903a9ff9713111bb1076b61663ac3592ad3d51b697d58125403fc5c12a",
+      "reference_end_height": 4
+    }
+  },
+  "capabilities": [
+    {
+      "id": "native_individual",
+      "status": "implemented",
+      "gate": "native-regtest workflow",
+      "environment": [
+        "stock_regtest",
+        "stock_testnet4"
+      ],
+      "public_scope": "bounded canary"
+    },
+    {
+      "id": "native_batch",
+      "status": "implemented",
+      "gate": "native-regtest workflow",
+      "environment": [
+        "stock_regtest"
+      ],
+      "public_scope": "pending independent canary confirmation and campaign expansion"
+    },
+    {
+      "id": "nova_existing_application_fixture",
+      "status": "tested_stage0",
+      "environment": [
+        "cpu_verifier"
+      ],
+      "scope": "existing fixed LNMarkets transcript and batch accounting fixture; native authorization is documented separately"
+    },
+    {
+      "id": "nova_live_batch",
+      "status": "pending",
+      "environment": [
+        "regtest_first"
+      ],
+      "blocker": "New circuit-constrained statement must commit the funding outpoints, externally agreed pre-state, batch commitment, fees and exact Bitcoin payout outputs; external authorization and UTXO history must be checked independently."
+    },
+    {
+      "id": "babe_funded_dispute",
+      "status": "tested_upstream_regtest",
+      "environment": [
+        "funded_regtest"
+      ],
+      "scope": "honest, timeout, withheld labels, and authenticated refutation in the pinned indexed relation"
+    },
+    {
+      "id": "m14_complete_garbled_verifier",
+      "status": "tested_offchain",
+      "environment": [
+        "offchain"
+      ],
+      "scope": "Pinned verifier for an SP1 BLAKE3 wrap proof; upstream reports 785442492 gates and approximately 12.6 GB ciphertext per circuit."
+    },
+    {
+      "id": "babe_application_settlement",
+      "status": "pending",
+      "environment": [
+        "regtest_first"
+      ],
+      "blocker": "Complete funded selector for M14, application proof to payout binding, durable dispute orchestration, and full recovery graph."
+    },
+    {
+      "id": "genesis_nova_header_fixture",
+      "status": "tested_upstream",
+      "environment": [
+        "cpu_verifier"
+      ],
+      "scope": "Genesis through Testnet4 height 4; campaign CI rebuilds the pinned native verifier key."
+    },
+    {
+      "id": "fresh_canary_recursive_spv",
+      "status": "pending",
+      "environment": [
+        "stock_testnet4"
+      ],
+      "blocker": "Requires a confirmed canary transaction, a pinned authenticated checkpoint or suitable genesis chain proof, continuation to a live tip and a bounded prover run."
+    },
+    {
+      "id": "core_merkle_inclusion",
+      "status": "implemented",
+      "environment": [
+        "stock_regtest",
+        "stock_testnet4"
+      ],
+      "scope": "Active-chain Merkle proof verified by Core; spendability uses separate active-chain plus wallet evidence."
+    },
+    {
+      "id": "keyless_checksig_and_bip448_constructions",
+      "status": "unsupported_stock_consensus",
+      "environment": [
+        "patched_regtest_only"
+      ]
+    }
+  ]
+}
