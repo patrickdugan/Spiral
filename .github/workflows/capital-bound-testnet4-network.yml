@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Start checksum-pinned Bitcoin Core on Testnet4
         shell: bash
         run: |
@@ -69,6 +72,20 @@ jobs:
           "${cli[@]}" getchainstates | jq '{headers,chainstates:[.chainstates[] | {blocks,bestblockhash,validated}]}' \
             > live-evidence/chainstates.json
           jq -e '.blocks == .headers and .peers > 0 and (.initialblockdownload | not) and (now - .time < 7200)' live-evidence/tip.json
+      - name: Export the public blocks missing from the Windows node
+        shell: bash
+        run: |
+          python3 experiments/capital-bound/testnet4/export_chain_delta.py \
+            --datadir "$RUNNER_TEMP/cbm-node" --out live-delta \
+            --base-height 157300 \
+            --base-hash 00000000f6232dac6ea1b1c591442d43a4de4629e902f22700479cbb79ea882f
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capital-bound-testnet4-block-delta
+          path: |
+            live-delta/testnet4-blocks.dat.gz
+            live-delta/manifest.json
+          compression-level: 0
       - name: Publish chain observations
         if: always()
         uses: actions/upload-artifact@v4
