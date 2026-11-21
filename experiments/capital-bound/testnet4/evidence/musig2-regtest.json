@@ -1,0 +1,65 @@
+{
+  "core_version": "/Satoshi:31.1.0/",
+  "fee_sat_per_settlement": 400,
+  "musig2_vs_p2wsh_vbytes_saved": 38,
+  "musig2_vs_single_key_vbytes": 0,
+  "pool_descriptor": "tr([65fbf6f9/0/0]ec7138b9d9a8318eb9df09bb77bd6a1462396b207ba0f0b2efafd9f54db158b3)",
+  "pool_sat": 100000,
+  "scope": "isolated regtest, Bitcoin Core native MuSig2 PSBT signing",
+  "settlements": {
+    "musig2_keypath": {
+      "blockhash": "3b97fd52ab89dec67286bfcc8c88fdfbf9833eb917be0f003d1e0249fd7aead8",
+      "change_back_in_pool": true,
+      "change_sat": 96800,
+      "fee_sat": 400,
+      "invoices_sat": [
+        1400,
+        1400
+      ],
+      "outputs": 3,
+      "signing_rounds": 2,
+      "source": "48cfd017c6774c37db76c9e2f4429465b49ce5809a271c278135fffa750ac661:0",
+      "txid": "2122220f41ae5f2f319086becd0a7310e1c176a5a8a2d3ef0c0fae1e2694e093",
+      "vsize": 197,
+      "weight": 788,
+      "witness_bytes": 64,
+      "witness_items": 1
+    },
+    "p2tr_single_key": {
+      "blockhash": "238587351ed074aad31640df04f3b2d7b63aa938a66af95b3f3c4bf9b8c733c3",
+      "change_back_in_pool": true,
+      "change_sat": 96800,
+      "fee_sat": 400,
+      "invoices_sat": [
+        1400,
+        1400
+      ],
+      "outputs": 3,
+      "signing_rounds": 1,
+      "source": "8a894edb6dbaacb57f1ba38cfca5d46e3191df41764ac691a0611cdc8894411d:0",
+      "txid": "f065b969e9076db23fc8a138c9e4345d06cc7683f2a4e43aeda0b485e030d807",
+      "vsize": 197,
+      "weight": 788,
+      "witness_bytes": 64,
+      "witness_items": 1
+    },
+    "p2wsh_2of2": {
+      "blockhash": "7eaba9e3880e356011c237b65cc32b62b9763bdd139078950481be9b830a0473",
+      "change_back_in_pool": true,
+      "change_sat": 96800,
+      "fee_sat": 400,
+      "invoices_sat": [
+        1400,
+        1400
+      ],
+      "outputs": 3,
+      "signing_rounds": 1,
+      "source": "1532ff1304b7fabe40aaae00d6457835c6e6fe4288e0d87749ec93d411c01f44:0",
+      "txid": "4b7b1c0eeed51a0237b4b199277cc6cdce4d6f705a7d01cccd90375dbd0d028c",
+      "vsize": 235,
+      "weight": 940,
+      "witness_bytes": 213,
+      "witness_items": 4
+    }
+  }
+}
