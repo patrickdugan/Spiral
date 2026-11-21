@@ -1,0 +1,31 @@
+{
+  "block_timestamp": 1795265646,
+  "blockers": [],
+  "chainwork": "000000000000000000000000000000000000000000000fbc0ce399568aa32736",
+  "confirmations_required": 2,
+  "eligible_funds_sat": 360549,
+  "eligible_utxo_count": 1,
+  "genesis": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043",
+  "headers": 162572,
+  "height": 162572,
+  "incremental_sat_per_kvb": 100,
+  "initial_download": false,
+  "median_time": 1795262043,
+  "mempool_sat_per_kvb": 100,
+  "network": "testnet4",
+  "peers": 10,
+  "policy_minimum_output_sat": 600,
+  "ready": true,
+  "recipient_wallet_transactions": 0,
+  "relay": "p2p",
+  "relay_sat_per_kvb": 100,
+  "resources": {
+    "cpu_count": 20,
+    "data_volume_free_bytes": 73006059520,
+    "memory_available_bytes": 1125146624
+  },
+  "signed_candidate_relay_check_required": true,
+  "tip": "00000000005cfd7da602d9eca6385261a76207c32df1a0e63602e0de2546815a",
+  "tip_age_seconds": -6777,
+  "version": 310100
+}

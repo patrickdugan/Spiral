@@ -1,0 +1,9 @@
+{
+  "capability-matrix.json": "3a6cf71188a08bb240ce83ca83ff653a1e474184654f9269268a1c8a7159a695",
+  "capital-ledger.jsonl": "89ca72d3f626481dfc5dd89df9b7a19bb03b8a3fedb9f47e90b3cc7c9fa0d60a",
+  "failure-ledger.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "proof-receipts.jsonl": "fb1e35113335b852692e5ea21f88db225e0a1792936ee29e6de6d885555e2eff",
+  "report.md": "f2e511f777e88ec25eee09373191a1518ac41adb250d3921a58dcfe7d06c314f",
+  "results.json": "7c0e01483153390f1484c69705ef417c7faeb20f46929e45a1ea75d75dd535f8",
+  "transactions.jsonl": "d88937d9e3e78dd525913330f0104a4ea802cb21f2fa311f5acd69445c8f731e"
+}
