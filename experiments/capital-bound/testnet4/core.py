@@ -126,9 +126,10 @@ def chain_tip(core):
     return chain
 
 
-def inspect(core, campaign, confirmations):
+def inspect(core, campaign, confirmations, relay="p2p", observer_tip=None):
     receipt = {"network": core.network, "genesis": GENESIS[core.network],
-               "confirmations_required": confirmations, "ready": False, "blockers": []}
+               "confirmations_required": confirmations, "relay": relay, "ready": False,
+               "blockers": []}
     try:
         minimum = 2 if core.network == "testnet4" else 1
         if not minimum <= confirmations <= 12:
@@ -159,10 +160,22 @@ def inspect(core, campaign, confirmations):
         if core.network == "testnet4":
             checks.extend([
                 (chain["blocks"] > 0 and not chain["initialblockdownload"], "Testnet4 is syncing"),
-                (net["connections"] > 0, "Testnet4 node has no peers"),
                 (-7200 <= age <= MAX_TIP_AGE and chain["mediantime"] <= now + 7200,
                  "Testnet4 tip timestamps are outside the configured window"),
             ])
+            if relay == "p2p":
+                checks.append((net["connections"] > 0, "Testnet4 node has no peers"))
+            else:
+                tip_matches = (
+                    observer_tip is not None and observer_tip.get("network") == "testnet4"
+                    and observer_tip.get("genesis") == GENESIS["testnet4"]
+                    and observer_tip.get("tip_height") == chain["blocks"]
+                    and observer_tip.get("tip_hash") == chain["bestblockhash"]
+                    and observer_tip.get("tip_chainwork") == chain["chainwork"]
+                    and type(observer_tip.get("observed_at")) is int
+                    and 0 <= now - observer_tip["observed_at"] <= 1800
+                )
+                checks.append((tip_matches, "HTTPS relay requires a matching Testnet4 observer tip sampled within 30 minutes"))
         receipt["blockers"].extend(message for ok, message in checks if not ok)
         payer, recipient = wallet_names(campaign)
         loaded = core.rpc("listwallets")

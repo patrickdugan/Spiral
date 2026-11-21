@@ -120,9 +120,24 @@ class Journal:
                         (dump({"at": stamp(), "command": command, "error": str(error)}),))
 
 
+def readiness(args, core, confirmations):
+    observed = None
+    if args.observer_tip is not None:
+        try:
+            data = args.observer_tip.read_bytes()
+            if len(data) > 8192:
+                raise ValueError()
+            observed = json.loads(data)
+            if not isinstance(observed, dict):
+                raise ValueError()
+        except (OSError, ValueError):
+            raise Gate("Cannot read the Testnet4 observer tip receipt") from None
+    return inspect(core, args.campaign, confirmations, args.relay, observed)
+
+
 def make_plan(args, core, journal):
     funding_txid, funding_vout = funding_reference(args.funding)
-    ready = inspect(core, args.campaign, args.confirmations)
+    ready = readiness(args, core, args.confirmations)
     if not ready["ready"]:
         raise Gate("; ".join(ready["blockers"]))
     payer, recipient = wallet_names(args.campaign)
@@ -365,7 +380,7 @@ def submit(args, core, journal, plan):
         draft = prepare(args, core, journal, plan)
     position, txid = draft["position"], draft["txid"]
     with journal.locked():
-        ready = inspect(core, args.campaign, plan["confirmations"])
+        ready = readiness(args, core, plan["confirmations"])
         known = wallet_transaction(core, txid, plan["wallets"][0])
         if (known and known["confirmations"] > 0) or in_mempool(core, txid):
             return {"txid": txid, "submission": "already_observed"}
@@ -390,13 +405,28 @@ def submit(args, core, journal, plan):
         if not attempted:
             journal.db.execute("INSERT INTO attempts VALUES (?, ?, ?, ?)",
                                (position, stamp(), ready["height"], journal.next_event()))
-    try:
-        observed = core.rpc("sendrawtransaction", [draft["raw"]])
-    except Gate:
-        raise Gate("Submission outcome uncertain; observe the reserved transaction before retry") from None
+    if args.relay == "https":
+        if args.signed_out is not None:
+            # A browser or an approved HTTPS client can submit these exact bytes.
+            # The relay attempt already exists in the durable journal.
+            try:
+                with args.signed_out.open("x", encoding="ascii") as signed:
+                    signed.write(draft["raw"] + "\n")
+            except OSError:
+                raise Gate("Could not create the private signed relay file; use --retry-same") from None
+            return {"txid": txid, "submission": "awaiting_https_relay", "fee_sat": draft["fee_sat"]}
+        from https_relay import broadcast
+
+        observed = broadcast(draft["raw"], txid)
+    else:
+        try:
+            observed = core.rpc("sendrawtransaction", [draft["raw"]])
+        except Gate:
+            raise Gate("Submission outcome uncertain; observe the reserved transaction before retry") from None
     if observed != txid:
-        raise Gate("Bitcoin Core returned a different transaction ID")
-    return {"txid": txid, "submission": "accepted", "fee_sat": draft["fee_sat"]}
+        raise Gate("Relay returned a different transaction ID")
+    return {"txid": txid, "submission": "accepted", "fee_sat": draft["fee_sat"],
+            "relay": args.relay}
 
 
 def emit_report(directory, journal, plan):
@@ -413,6 +443,8 @@ def cli(argv=None):
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--datadir", type=Path)
     parser.add_argument("--rpcport", type=int)
+    parser.add_argument("--relay", choices=("https", "p2p"), default="p2p")
+    parser.add_argument("--observer-tip", type=Path)
     parser.add_argument("--observer-datadir", type=Path)
     parser.add_argument("--observer-port", type=int)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -428,6 +460,7 @@ def cli(argv=None):
     broadcast.add_argument("--broadcast", action="store_true")
     broadcast.add_argument("--advance", action="store_true")
     broadcast.add_argument("--retry-same", action="store_true")
+    broadcast.add_argument("--signed-out", type=Path)
     commands.add_parser("observe")
     commands.add_parser("reconcile")
     commands.add_parser("report")
@@ -442,6 +475,10 @@ def main(argv=None):
     args.state = args.state.resolve()
     journal = Journal(args.state)
     try:
+        if args.relay == "https" and args.network != "testnet4":
+            raise Gate("HTTPS relay is available only on public Testnet4")
+        if getattr(args, "signed_out", None) is not None and args.relay != "https":
+            raise Gate("--signed-out requires Testnet4 HTTPS relay")
         if args.command == "report":
             result = emit_report(args.state, journal, journal.plan(args))
         else:
@@ -450,7 +487,7 @@ def main(argv=None):
             args.datadir = args.datadir.resolve()
             core = Core(args.network, args.datadir, args.rpcport)
             if args.command == "preflight":
-                result = inspect(core, args.campaign, args.confirmations)
+                result = readiness(args, core, args.confirmations)
                 output(args.state / "testnet4-readiness.json", result)
                 print(dump(result))
                 return 0 if result["ready"] else 2

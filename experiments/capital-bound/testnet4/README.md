@@ -70,6 +70,19 @@ Public GitHub jobs run without a funded wallet. The manual workflow dispatch run
 
 ## Read the receipts
 
+For an isolated Windows signer, pass `--relay https --observer-tip /private/path/manifest.json`
+before the subcommand. Use the manifest from the connected Core export and import its blocks
+through local Core first. The manifest must match the locally validated height, hash and chainwork
+and be under 30 minutes old. The HTTPS mode keeps the confirmation, funding, budget and Core
+mempool-policy checks. The native relay continues to require Testnet4 peers.
+
+`broadcast-canary --broadcast` submits the reserved bytes to Mempool's Testnet4 HTTPS relay.
+When the shell cannot access that endpoint, add `--signed-out /private/path/canary.hex` and submit
+the file's content at [Mempool Testnet4 Broadcast Transaction](https://mempool.space/testnet4/tx/push).
+Check the returned transaction ID against the journal. An uncertain submission can be retried
+with `--retry-same`. Local Core confirms settlement after importing the relevant blocks. The
+second payment still requires an independent Core observation of the first.
+
 The runner exports testnet4-readiness.json, capability-matrix.json, transactions.jsonl, capital-ledger.jsonl, proof-receipts.jsonl, failure-ledger.json, results.json, report.md and a digest manifest. The native node launcher uses only isolated regtest funds. Testnet4 requires a current tip, peers, the pinned genesis and separate campaign wallets. Accounting integrates using observed times and heights, preserving a reorg-aware view of the active reserve. It counts Bitcoin inclusion and confirmed wallet-backed change separately. Reconcile until pending commitments resolve, including past the arrival window if needed.
 
 The Nova application proof and Bitcoin header proof have different statements. Stage 0 independently verified a fixed LNMarkets batch-accounting fixture. Its Pallas transcript constrains funding outpoints and amounts. A fresh campaign batch needs an independently agreed journal and matching native pre-state, payout scripts, authorization and funding evidence. The historical header proof ends at height 4. The canary's Core Merkle receipt uses the current active chain. A fresh recursive SPV receipt needs a sufficiently recent authenticated checkpoint, the payment and continuation proof and a bounded proving run.

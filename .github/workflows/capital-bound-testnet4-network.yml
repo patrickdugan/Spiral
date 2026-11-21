@@ -72,7 +72,7 @@ jobs:
           "${cli[@]}" getchainstates | jq '{headers,chainstates:[.chainstates[] | {blocks,bestblockhash,validated}]}' \
             > live-evidence/chainstates.json
           jq -e '.blocks == .headers and .peers > 0 and (.initialblockdownload | not) and (now - .time < 7200)' live-evidence/tip.json
-      - name: Export the public blocks missing from the Windows node
+      - name: Export public blocks and a fresh tip for the local HTTPS signer
         shell: bash
         run: |
           python3 experiments/capital-bound/testnet4/export_chain_delta.py \

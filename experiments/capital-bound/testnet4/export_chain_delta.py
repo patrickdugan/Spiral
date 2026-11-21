@@ -5,6 +5,7 @@ import gzip
 import hashlib
 import json
 import struct
+import time
 import urllib.request
 from pathlib import Path
 
@@ -100,6 +101,7 @@ def export(args):
         "base_hash": args.base_hash, "tip_height": tip_height, "tip_hash": prev,
         "tip_chainwork": chain["chainwork"], "blocks": tip_height - args.base_height,
         "size_bytes": raw_size, "sha256": raw_hash.hexdigest(), "gzip_sha256": file_digest(archive),
+        "observed_at": int(time.time()),
     }
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(manifest))
