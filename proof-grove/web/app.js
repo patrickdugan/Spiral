@@ -300,6 +300,21 @@ async function initialize() {
     const url = new URL(item.url); if (url.protocol === 'https:') { link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     left.append(link); if (item.pin) left.append(element('small', '', item.pin)); row.append(left, element('p', '', item.use)); return row;
   }));
+  if ($('load-ark-zk')) {
+    $('load-ark-zk').onclick = async () => {
+      try {
+        const cat = await api('/api/ark/proofs');
+        const stwo = cat.gates?.shinigami_stwo_exit || {};
+        const nova = cat.gates?.ark_transition_nova || {};
+        $('ark-zk-status').textContent =
+          `Shinigami Stwo (${stwo.configured ? 'verifier pinned' : 'catalog mode'}, ${stwo.core_consensus_vectors}) · ` +
+          `Nova ArkTransitionV1 (${nova.configured ? 'verifier pinned' : 'catalog mode'}, ${nova.proof_bytes} B, ${nova.negative_controls})`;
+        $('ark-zk-json').textContent = JSON.stringify(cat, null, 2);
+      } catch (e) {
+        error('Could not load Ark ZK proof gates: ' + e.message);
+      }
+    };
+  }
   if(globalThis.ProofGroveConnection)tab('payments');
   else if (location.hash === '#evidence') tab('evidence');
   if(status.mode!=='demo'){

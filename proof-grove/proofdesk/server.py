@@ -18,6 +18,14 @@ from .adapters import BarkClient, CashuClient
 from .archive import bundle
 from .cashu import CashuBridge
 from .ark import ArkCaretaker
+from .ark_zk import (
+    ARK_NOVA_PROOF_LIMIT,
+    STWO_PROOF_LIMIT,
+    ArkTransitionNovaGate,
+    VtxoExitStarkGate,
+    decode_base64_bounded,
+    recorded_ark_proof_catalog,
+)
 from .exits import ExitRecovery
 from .domain import Ledger, Refused, Rules, canonical, plan_vtxo
 from .regtest import payment_from_regtest
@@ -40,6 +48,30 @@ class Desk:
         self.ark = ArkCaretaker(ledger, BarkClient(self.config["bark_url"], self.config.get("bark_bearer", "")), core,
                                allow_regtest=self.config.get("ark_regtest_execution") is True) if ledger and core and self.config.get("bark_url") else None
         self.exits = ExitRecovery(ledger, core, broadcaster=self.config.get("ark_regtest_exit_broadcast") is True) if ledger and core else None
+        self.stwo_exit_gate = (
+            VtxoExitStarkGate(self.config["shinigami_verifier_argv"], self.config["shinigami_verifier_sha256"])
+            if self.config.get("shinigami_verifier_argv") and self.config.get("shinigami_verifier_sha256")
+            else VtxoExitStarkGate()
+        )
+        self.ark_nova_gate = (
+            ArkTransitionNovaGate(self.config["ark_nova_verifier_argv"], self.config["ark_nova_verifier_sha256"])
+            if self.config.get("ark_nova_verifier_argv") and self.config.get("ark_nova_verifier_sha256")
+            else ArkTransitionNovaGate()
+        )
+
+    def ark_proofs_catalog(self) -> dict:
+        return recorded_ark_proof_catalog(
+            stwo_configured=bool(self.stwo_exit_gate.argv and self.stwo_exit_gate.expected_hash),
+            nova_configured=bool(self.ark_nova_gate.argv and self.ark_nova_gate.expected_hash),
+        )
+
+    def check_ark_vtxo_exit_proof(self, body: dict) -> dict:
+        proof_bytes = decode_base64_bounded(body.get("proof_base64"), STWO_PROOF_LIMIT)
+        return self.stwo_exit_gate.verify(body.get("statement"), proof_bytes, core=self.core)
+
+    def check_ark_round_nova_proof(self, body: dict) -> dict:
+        proof_bytes = decode_base64_bounded(body.get("proof_base64"), ARK_NOVA_PROOF_LIMIT)
+        return self.ark_nova_gate.verify(body.get("public"), proof_bytes)
 
     def status(self) -> dict:
         return {"app": "Proof Grove", "version": "0.4.0", "mode": self.mode,
@@ -239,6 +271,8 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                     elif path == "/api/ark/exits/bundle":
                         if not desk.exits:raise Refused("exit_not_configured")
                         value = desk.exits.bundle(parse_qs(url.query).get("id", [""])[0])
+                    elif path == "/api/ark/proofs":
+                        value = desk.ark_proofs_catalog()
                     elif path == "/api/sources":
                         value = json.loads((WEB.parent / "docs" / "sources.json").read_text(encoding="utf-8"))
                     elif path in ("/", "/index.html", "/styles.css", "/app.js", "/icon.svg"):
@@ -299,6 +333,10 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                     elif self.path == "/api/ark/exits/advance":
                         if not desk.exits:raise Refused("exit_not_configured")
                         value = desk.exits.advance(body.get("id"), broadcast=body.get("broadcast") is True)
+                    elif self.path == "/api/ark/vtxo-proof/check":
+                        value = desk.check_ark_vtxo_exit_proof(body)
+                    elif self.path == "/api/ark/round/check":
+                        value = desk.check_ark_round_nova_proof(body)
                     else:
                         raise Refused("operation_not_available")
                     self._send(200, canonical(value))
