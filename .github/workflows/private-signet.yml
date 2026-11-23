@@ -2,7 +2,11 @@ name: Private Signet and Keyless-CHECKSIG A/B
 
 on:
   push:
-    branches: [research/private-signet-keyless-ab]
+    branches: [main, research/private-signet-keyless-ab]
+    paths:
+      - "Private Signet/**"
+      - "BIPSpace/Keyless-CHECKSIG/**"
+      - ".github/workflows/private-signet.yml"
   pull_request:
     paths:
       - "Private Signet/**"
