@@ -60,6 +60,7 @@ python3 "Private Signet/lab.py" mine --blocks 101
 python3 "Private Signet/lab.py" agree          # genesis, height, every hash, chainwork
 python3 "Private Signet/lab.py" fund-demo      # fresh wallet, signed payment, mined, UTXO on both nodes
 python3 "Private Signet/ab/run_signet_dlc.py"  # vanilla adaptor DLC settled on the Signet
+python3 "Private Signet/ab/run_signet_rollover.py"  # Alice/Bob -> Carol/Bob on-chain; reject old CET
 python3 "Private Signet/lab.py" destroy        # stop both nodes, delete the lab home
 ~~~
 
@@ -99,6 +100,17 @@ receipts.
 | `-rpcwait` does not wait for the cookie file | observer start failed intermittently | wait for `.cookie` first |
 | Miner backdates blocks; a fresh descriptor wallet skips blocks before its birth time | 101 blocks mined, 24 coinbases credited, "Insufficient funds" | `rescanblockchain` after mining |
 | `bitcoin-util` was mandatory | mining impossible without it | optional; the miner grinds itself |
+
+## Follow-on: exclusive payout rights after an on-chain rollover
+
+[ROLLOVER_DESIGN.md](ROLLOVER_DESIGN.md) defines a fresh Carol/Bob Taproot
+DLC funded by an Alice/Bob-signed transition. The integration runner checks
+that Alice's original valid CET is rejected once that original outpoint is
+confirmed spent, the former Alice/Bob key pair cannot sign the successor,
+and a fresh Carol/Bob adaptor CET pays the buyer. This needs Bob's
+cooperation and an on-chain confirmation, with a possible race before
+confirmation and chain-reorganization risk afterward. It is a baseline
+for investigating a stronger off-chain or keyless transfer mechanism.
 
 ## Static validation
 
