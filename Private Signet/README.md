@@ -24,6 +24,13 @@ harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
   verified in script, and Alice transferred her payout to Carol without Bob.
   A second assignment to another buyer was rejected once the first
   confirmed. 55 regtest trials match their expected verdicts.
+- **SatsHedgeZero:**
+  - SHZ's own 3-party clearing ran on the stock private Signet.
+  - **SHZ-K1**, the same inverse DLC (949 CET leaves, per-digit oracle
+    signatures checked by CSFS) with no settlement keys, settled a position
+    sold to Carol without Bob on the patched Signet. A 1-sat shave was
+    rejected by the patched nodes and forked the stock one.
+  - 19 regtest trials match their expected verdicts.
 
 Results, measurements and the security analysis are in [RESULTS.md](RESULTS.md),
 and the raw receipts in [evidence/](evidence/).
@@ -96,6 +103,16 @@ export SPIRAL_SIGNET_BITCOIND_ARGS=-keylessresearch=1 BITCOIND_LEGACY=<stock bit
 python3 "Private Signet/lab.py" init
 python3 "Private Signet/lab.py" mine --blocks 101
 SPIRAL_SIGNET_CSFS=1 python3 "Private Signet/ab/run_signet_keyless.py"   # K4, C1, K3, arm C; all nodes agree
+python3 "Private Signet/ab/run_signet_shz_k1.py"                          # SHZ-K1 transfer, double sale, split
+python3 "Private Signet/ab/run_shz_k1_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output shz-k1.json
+~~~
+
+SatsHedgeZero prototype on the stock private Signet (build `shz` from
+patrickdugan/SatsHedgeZero with `cargo build --release -p shz-cli`):
+
+~~~bash
+python3 "Private Signet/lab.py" init && python3 "Private Signet/lab.py" mine --blocks 101
+python3 "Private Signet/ab/run_signet_shz_prototype.py" --shz <SatsHedgeZero>/target/release/shz
 ~~~
 
 `SPIRAL_SIGNET_PORT_BASE` moves all loopback ports (default 39432). The

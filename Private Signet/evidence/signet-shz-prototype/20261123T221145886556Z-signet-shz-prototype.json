@@ -1,0 +1,393 @@
+{
+  "agreement": true,
+  "challenge": "2103b6532eb910a776db42dbcb3ccecad7766bb829fa44cad19b7eb853a3dbb702deac",
+  "clearing_outputs": [
+    {
+      "address": "tb1p8w4uw2lky9jmn0nd538yrkac7wfl0mc5vxha24stwlwhknlnpmrqufayfz",
+      "n": 0,
+      "sats": 1250,
+      "unspent_on": [
+        "miner",
+        "observer"
+      ]
+    },
+    {
+      "address": "tb1pwcqekfkz37mc2g6pjvl5yyjqjd2pgeuq44kvvqqmjkju726nsppst07ffd",
+      "n": 1,
+      "sats": 1475,
+      "unspent_on": [
+        "miner",
+        "observer"
+      ]
+    },
+    {
+      "address": "tb1pu0r570rksjhd68d7uk5sdgg9vfnqr4lu4mkm03nsztw826hr703ql22ntc",
+      "n": 2,
+      "sats": 990,
+      "unspent_on": [
+        "miner",
+        "observer"
+      ]
+    },
+    {
+      "address": "tb1plvx22gc58zatzx2ne9nwndpsza3n67uwc3az6cffkksp7w4yfuzs6pupe2",
+      "n": 3,
+      "sats": 825,
+      "unspent_on": [
+        "miner",
+        "observer"
+      ]
+    }
+  ],
+  "clearing_txid": "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec",
+  "clearing_vsize": 505,
+  "confirmations": {
+    "miner": {
+      "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70": 1,
+      "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec": 1
+    },
+    "observer": {
+      "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70": 1,
+      "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec": 1
+    }
+  },
+  "funding_txid": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+  "kind": "signet-shz-prototype",
+  "probes": [
+    {
+      "core_accepted": false,
+      "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+      "probe_id": "testnet4-shave-bob-freed-collateral-by-1-sat"
+    },
+    {
+      "core_accepted": false,
+      "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+      "probe_id": "testnet4-shave-alice-routed-pnl-by-1-sat"
+    }
+  ],
+  "settlement_block": "00000258153c694f51954619d18432b0cae9d23854ed43631442c7eeeca8a42d",
+  "shz_binary_sha256": "67873aae0858aae6b32200f6a4ab95fafb20f357b71985408ce2bd0cb876181e",
+  "shz_receipt": {
+    "adversarial_probes_live_testnet4": [
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Live Testnet4 mempool probe: shave 1 sat from Bob's 1,250 freed sats",
+        "probe_id": "testnet4-shave-bob-freed-collateral-by-1-sat"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Live Testnet4 mempool probe: shave 1 sat from Winner Alice's 1,475 cleared sats",
+        "probe_id": "testnet4-shave-alice-routed-pnl-by-1-sat"
+      }
+    ],
+    "atomic_clearing_tx_explorer_uri": "",
+    "atomic_clearing_txid": "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec",
+    "atomic_clearing_vsize": 505,
+    "atomic_clearing_wtxid": "a88cf69249e69f4c7b93584f05edcfce4cf65fb44eced1577a03fdd05f1bf7fe",
+    "clearing_report": {
+      "atomic_clearing_outputs_sats": [
+        1250,
+        1475,
+        990,
+        825
+      ],
+      "atomic_clearing_raw_segwit_tx_hex": "0200000000010370ebdc7eb979124bca8bbc871fad27c992dcc823857103cf8ebcb1fe9c54222a0100000000fdffffff70ebdc7eb979124bca8bbc871fad27c992dcc823857103cf8ebcb1fe9c54222a0200000000fdffffff70ebdc7eb979124bca8bbc871fad27c992dcc823857103cf8ebcb1fe9c54222a0300000000fdffffff04e2040000000000002251203babc72bf62165b9be6da44e41dbb8f393f7ef1461afd5560b77dd7b4ff30ec6c30500000000000022512076019b26c28fb7852341933f4212409354146780ad6cc6001b95a5cf2b538043de03000000000000225120e3c74f3c7684aedd1dbee5a906a105626601d7fcaeedb7c67012dc756ae3f3e23903000000000000225120fb0ca5231438bab11953c966e9b43017633d7b8ec47a2d6129b5a01f3aa44f050440f0892f2852542d39d76aeb96be63598031b0c1cb57ea6d9e2d69f783796dd64c549758a632baa0129542d642810186095fec3ca7e45a89021903964db691da4c40ce64739ece94ba7c2579ebe319552c38e9e0ad898a18075c004a80030be7a3f7913347c29d7bf2dc65b6f50f3dd995fd3dc1274e8d99bff0036ae2db909188164420466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f27ad204f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aaac41c1c99e9965166e7ff80516494709db8fdfdc31b0626500bb70dc3652fc2ff584ab7ab1909922217ba6118796e4a597f0d789245e2d59f8a48ed60ce9b478d48c1704407411f2bdb030c00539750539b8877fc42c5ba59a0328ffe182a6b98c38a4b734a4e1d56f5009ed8c723897cc2f3b7c2c1138b59327fb09e8bc428cf3031a45cf40be389e9e216debbd8214e23e40121591a4233897aa0edfe2002f8fc1e2f99ab0d1aa4b4c13fbd77042b10705e88f21dddbeebc0ed492b326a8310daaf8bdb6634420466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f27ad20e11f40af6b41f494bfbc27c47a178ce572e8b8ca687cc67e1298514861ac5e48ac41c0c99e9965166e7ff80516494709db8fdfdc31b0626500bb70dc3652fc2ff584ab36fa3a7d6fcbecdc2d5778280af1193f51bedc4d4492f3df5ef7685b928a22e80440ac3660c4e977d8413a9f4943452a0b8d27bca6fdab8cca0987ef77bad0aecfaf622fbef5a3593b23577757440b2c7f7d6e6eea609594f8257b8ca9e6a53aeb1740a5bd349f1d6948b068405a8ba1569a979c454fd59a758e8dc53c06fa0a3783e166846b3e82f6fbf0b0271cb8b125533a6f490593a2f01dcb2c8840b43da92c4f44204f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aaad20e11f40af6b41f494bfbc27c47a178ce572e8b8ca687cc67e1298514861ac5e48ac41c0c99e9965166e7ff80516494709db8fdfdc31b0626500bb70dc3652fc2ff584ab1500330dbb077539eca074f360f9ebdd70090292f636348311f966a5db58aafe66000000",
+      "atomic_clearing_txid_hex": "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec",
+      "atomic_clearing_vsize": 505,
+      "atomic_clearing_wtxid_hex": "a88cf69249e69f4c7b93584f05edcfce4cf65fb44eced1577a03fdd05f1bf7fe",
+      "batch_witness_bytes_len": 28058,
+      "bitvm3_testnet4_statement": {
+        "assertion_txid_hex": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+        "assertion_vout": 1,
+        "chain_genesis_hash_hex": "00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043",
+        "commitment_hash_hex": "72e8f143be2d4a779c53e8260ef0590e2911cbee2d76d7c8b6109a0d2fd97517",
+        "contract_id_hex": "c614d50107a760deddf0f3428c7fe913d8b2cb96967abcda12ea19875f7cf4f4",
+        "encoded_len": 304,
+        "epoch_id": 102,
+        "honesty": {
+          "bitvm3_onchain_verified": false,
+          "native_statement_verified": true,
+          "nova_snark_verified": false,
+          "production_ready": false
+        },
+        "magic": "UTXOREF_L2_SETTLEMENT_GROTH16_V0\\0",
+        "network_code": "Testnet4",
+        "policy_hash_hex": "2a7ce9880e60cde190625e851f5f897f1838114c99cc4a2036b08e0eedbd7389",
+        "program_hash_hex": "7e4f3f5f73a6d5e86e955d985fc43787355414160992fb1dabcf99d96e8132d7",
+        "public_input_limbs_be_dec": [
+          "71282628555118625918587764392264788392",
+          "186149800175300332847644381927726708105"
+        ],
+        "public_input_limbs_be_hex": [
+          "35a088ee3764f7907d801394b7c8e9a8",
+          "8c0b25bdf7cca0b605be018bcd30f589"
+        ],
+        "settlement_txid_hex": "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec",
+        "statement_304b_hex": "5554584f5245465f4c325f534554544c454d454e545f47524f544831365f56300000000100000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043c614d50107a760deddf0f3428c7fe913d8b2cb96967abcda12ea19875f7cf4f472e8f143be2d4a779c53e8260ef0590e2911cbee2d76d7c8b6109a0d2fd975172a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec7e4f3f5f73a6d5e86e955d985fc43787355414160992fb1dabcf99d96e8132d74eafbd223936cc3c1e9b16e750f1946a57cd5413f86578f6f1d37d9abb53e38b2a7ce9880e60cde190625e851f5f897f1838114c99cc4a2036b08e0eedbd7389660000000000000001000000",
+        "statement_sha256_hex": "35a088ee3764f7907d801394b7c8e9a88c0b25bdf7cca0b605be018bcd30f589",
+        "verifying_key_hash_hex": "4eafbd223936cc3c1e9b16e750f1946a57cd5413f86578f6f1d37d9abb53e38b"
+      },
+      "clearing_mark_price_usd": 125000,
+      "external_nova_snark_receipt": null,
+      "frost_group_pubkey_x_hex": "7962d45b38e8bcf82fa8efa8432a01f20c9a53e24c7d3f11df197cb8e70926da",
+      "frost_quorum_signers": [
+        1,
+        3,
+        5
+      ],
+      "honesty": {
+        "bitvm3_onchain_verified": false,
+        "native_statement_verified": true,
+        "nova_snark_verified": false,
+        "production_ready": false
+      },
+      "journal": {
+        "accepted_contracts_root_hex": "8bea000e93fa800b57d7faac4b3bc39c38e9bde15c26a9291e78eb8fe065efef",
+        "batch_id_hex": "95659e4e96636e622ffa8f0a762cbf5462bae9072cebbb6eead5149153213907",
+        "batch_tx_digest_hex": "0d452dac3e9a4bf451aacebd8eb27ab4e34066ed924137ced5d0ac67ca63789b",
+        "batch_txid_hex": "cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec",
+        "domain_hex": "0100a2e3e51cff5c0f3508db3ac37c7abc6ff197a60619eac57d0fccd79854c7",
+        "epoch": 102,
+        "evaluation_height": 102,
+        "journal_276b_hex": "4c4e4d4a4e4c30310100a2e3e51cff5c0f3508db3ac37c7abc6ff197a60619eac57d0fccd79854c7660000000000000095659e4e96636e622ffa8f0a762cbf5462bae9072cebbb6eead514915321390766000000f6000000030000008bea000e93fa800b57d7faac4b3bc39c38e9bde15c26a9291e78eb8fe065efeffb9b9574129f8a7293bc6eaed63b9acbe67de7980493e83307c1bc16b2ea87cc074e23fc84346d689ebda4d8109f3aa5a5174a206b07c596a5685a6687cd9adf0d452dac3e9a4bf451aacebd8eb27ab4e34066ed924137ced5d0ac67ca63789bcb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec6013000000000000bc11000000000000a401000000000000",
+        "journal_sha256_hex": "72e8f143be2d4a779c53e8260ef0590e2911cbee2d76d7c8b6109a0d2fd97517",
+        "new_nullifier_root_hex": "074e23fc84346d689ebda4d8109f3aa5a5174a206b07c596a5685a6687cd9adf",
+        "old_nullifier_root_hex": "fb9b9574129f8a7293bc6eaed63b9acbe67de7980493e83307c1bc16b2ea87cc",
+        "row_count": 3,
+        "total_collateral_sats": 4960,
+        "total_fee_sats": 420,
+        "total_payout_sats": 4540,
+        "valid_until_height": 246
+      },
+      "network": "bitcoin-testnet4",
+      "nova_expected_statement": {
+        "final_state": {
+          "count": 3,
+          "epoch": 102,
+          "journal_sha_high128_le": "31184147646318829125772945890080395561",
+          "journal_sha_low128_le": "19076175260938869486262580060462639218",
+          "total_collateral": 4960,
+          "total_fee": 420,
+          "total_payout": 4540,
+          "transcript_chain_digest_hex": "e06102201d61125ece0c2226f9f3c4c0d332682f5cf1195ac7a9a4cf2634a568"
+        },
+        "final_state_fields": [
+          "3",
+          "4960",
+          "4540",
+          "420",
+          "e06102201d61125ece0c2226f9f3c4c0d332682f5cf1195ac7a9a4cf2634a568",
+          "19076175260938869486262580060462639218",
+          "31184147646318829125772945890080395561",
+          "102"
+        ],
+        "honesty": {
+          "bitvm3_onchain_verified": false,
+          "native_statement_verified": true,
+          "nova_snark_verified": false,
+          "production_ready": false
+        },
+        "initial_state": {
+          "count": 0,
+          "epoch": 102,
+          "journal_sha_high128_le": "31184147646318829125772945890080395561",
+          "journal_sha_low128_le": "19076175260938869486262580060462639218",
+          "total_collateral": 0,
+          "total_fee": 0,
+          "total_payout": 0,
+          "transcript_chain_digest_hex": "f0593194ce40273abc197cc2ff645c9ab46c0aa6ab472bd668b68b5390271350"
+        },
+        "initial_state_fields": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "f0593194ce40273abc197cc2ff645c9ab46c0aa6ab472bd668b68b5390271350",
+          "19076175260938869486262580060462639218",
+          "31184147646318829125772945890080395561",
+          "102"
+        ],
+        "journal_len": 276,
+        "journal_sha256_hex": "72e8f143be2d4a779c53e8260ef0590e2911cbee2d76d7c8b6109a0d2fd97517",
+        "relation_version": "lnmarkets/sha256-transcript-accounting/v2",
+        "row_transcript_digests_hex": [
+          "df7e466e0ebb492a71f846000228e5e031bd24b3b1a92bcbf7e13d7925158a81",
+          "acb6d82b23c14fdf19490fd8d6199e49638b71553db806c42331017ea6bb59c3",
+          "b71100f9557c7830d11cde693f3c6d9ff6c180a800b19653fd900cc663981502"
+        ],
+        "step_count": 3,
+        "verifier_key_pin_hex": "4eafbd223936cc3c1e9b16e750f1946a57cd5413f86578f6f1d37d9abb53e38b"
+      },
+      "party_accounting": [
+        {
+          "final_cleared_payout_sats": 1475,
+          "freed_collateral_returned_sats": 1025,
+          "net_realized_pnl_sats": 450,
+          "net_usd_delta_after_trade3": 0,
+          "party": "Alice",
+          "payout_script_pubkey_hex": "512076019b26c28fb7852341933f4212409354146780ad6cc6001b95a5cf2b538043",
+          "role": "Winner (Opened Long @ $80k, Closed on 3rd Trade @ $125k)",
+          "routed_pnl_received_sats": 450,
+          "total_posted_margin_sats": 1025
+        },
+        {
+          "final_cleared_payout_sats": 1250,
+          "freed_collateral_returned_sats": 1250,
+          "net_realized_pnl_sats": -250,
+          "net_usd_delta_after_trade3": 0,
+          "party": "Bob",
+          "payout_script_pubkey_hex": "51203babc72bf62165b9be6da44e41dbb8f393f7ef1461afd5560b77dd7b4ff30ec6",
+          "role": "Loser (Short @ $80k, Flattened @ $100k; 83.33% Margin Freed)",
+          "routed_pnl_received_sats": 0,
+          "total_posted_margin_sats": 1500
+        },
+        {
+          "final_cleared_payout_sats": 825,
+          "freed_collateral_returned_sats": 825,
+          "net_realized_pnl_sats": -200,
+          "net_usd_delta_after_trade3": 0,
+          "party": "Carol",
+          "payout_script_pubkey_hex": "5120fb0ca5231438bab11953c966e9b43017633d7b8ec47a2d6129b5a01f3aa44f05",
+          "role": "Market-Maker (Short @ $100k, Closed @ $125k; Remaining Margin Freed)",
+          "routed_pnl_received_sats": 0,
+          "total_posted_margin_sats": 1025
+        }
+      ],
+      "protocol": "SatsHedgeZero Live Bitcoin Testnet4 3-Party DLC + BitVM3 Nova Clearing v0.3.0",
+      "row_transcripts_600b_hex": [
+        "5554584f5265662f4c4e4d61726b6574732f4e6f76612f76616c6964617465642d7369676e65642d726f772f7631696f55f7c3b2825149e4616aa0f1e794c2cce86f1fec0d95d231921f6304e8926cb0512f183a9f6840b28c0595ea457624438bc260f0ee77f7ced9a4a6169542a98c33826e850c30885c3d94f00530b687a0b95466918a8132d6e29c1ed69e840e6f5895f2d8ebc7724cf922f0eaaf4758907c93c80dc34ab3d0cea6506432457031a662eb845d8c8589332deb443a90a0197a8254839035edccd646bc8881f2ff2be5bc72d15dec3a8a4aa2b180c4e632af6247bec2b124c3621a60d26b5929e8fa45c72fec3419a53967bf6bb4563220799042671c75ec3b3cd46f48e46b4a213983af22f314d9b43b7a2b5769d0a72dcdcfc8eb76d4477541328e3abb2f3f9cb8b0dd2588558e06db919721e2789ff9d0e42b191f6c315d9c224015c4f6103f54034ec3cf4bdd4d7c6777a77dc57d9ccdeff98ff572fec2a11b5d2831b0ac00cdfc76e80a1926cf1e18e399d59913c725000fb7e195cd849788ef60ad48ef6afbdfe0343c3ad56222423a6059a5a376712bb0af155c94c4d69a4c9ff677c2830296c65dba8f3533783ff4073b17537588d07e8dc0b1d0dd9cf6b906a95622c709adee5aaf66686a27ddad634759a08ba33617312842f0c1ec27cd77d119996b150300000078b691681c8d06d6bb7727bf8b1ab4af7aae49807d4ec2eaee8872be56223f9e330400000000000026020000000000004a010000000000008c000000000000002a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb7001000000",
+        "5554584f5265662f4c4e4d61726b6574732f4e6f76612f76616c6964617465642d7369676e65642d726f772f7631aca94712150ed5d688d950b94850a13fef9406ccbba1a92cb7137064c6b9f3bf676ee3a245eaa39d0136bb0ac87835757d995a371117e3044ec4dd3112527e4ead8a833d51e2abe27842ac4e52fdb5f55422ef2b490570799e99f23d664af22141e34b83488353f1d02dcaf6c4734bc84a68716112e7df55d990019d57968ebe26cde64e7e869eb86013cabfeada778aa8fcb0f59ab2242e439a8cc943397f6011fe3e9e729ea92d9f8bc17a85bbef6ed735a0123763bf7b9fbabdd4a32710a9bc378d53d9973680939425f607949474f1179fa14765aaa8c5c0c338ec0a403ccff3eebff033249b318762c54316af14919dbd269f48bc152f4302ebdbf8adb47e35847c709ea8e0460a421a8fcb7fdf6afa4c71c6d9dcb3abc5e67d863ec4eed1a71b60cb4083b059508dbbf55b44d931df5ad044ca7ab9e01274fbffdf3d4c00e6bb771edf6f371327481d3a3fa8195287d337c08255390ad0614e1c6d47b049e034cfa54c5d1817b97dc6ce3803d37061f4299bb0f8ebc7366bb49d8adcb2e4027f0809b2a4155f87cdf14f02e8fad717a995700b6fef6b095cc630c8689acea750d49a7fa0eb9df605967a7162ff46a4f2d7efa3a14425f9e6365e2cfc98a40c030000003c0ab54c31ac8dda42745f17187994227416fa41a1c275b582864d855b9bcaafbc02000000000000a9010000000000004a010000000000008c000000000000002a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb7002000000",
+        "5554584f5265662f4c4e4d61726b6574732f4e6f76612f76616c6964617465642d7369676e65642d726f772f7631a38685d750e89bb8b78317fb82a5c2a23804e4fe1d478fe1d871348b4cadc599765d8c8b46b7e975416cec6d22d01af0f906b6c6f2cda20f765a07600c755fd56749c0ca787123ffb07bcb6778c6a6632223e4b374e8539114f5da71035c9bb62a19c2e530e46c42667b8f2219afc327a545249a98d8df26581b3da3a7826499489affba5cae9876abf50966f6d30dce83041dadbfa2e395434a04c812445bfa28e225ae56a58903b08a098709c40ea03ee563a82ed2932b66b32cf5ff765784630be199181b5c79ee73e37d0a81af092c295adb52639a9995180df0afdb92ead6a2521b5c4d50c803476f9e5456ce732fbfb2ac6c7a7ce6cb562903a9a451ac890d2de6cbd0e62d1a7dcdf8e29b007275310df41b0f872d2eb83bba5b4b28233977c67a11b7e2af1fdc02681db0e114b56956b3437697937a043b4e2d10504c0047d3e282cae96d476871f7dd76a7010c820c34acde2bd276a0aae71ae50f4fd9e3de07e557c8c0f1ce75c7cd1efb7052672187da5cb6304e9ea787417847c1d6024c49c0ec8e875bbf61959d7dc710ecf5915706ce4cf6be3aec1267902527a7414d7aa7b27124897dc2dbd7d6115152476fc554516e552b6ce8da21037fd66575030000005785e7f781420ed8491c160045edb963629ca0992da47c66b5f2f47139a98d2d900100000000000090010000000000004a010000000000008c000000000000002a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb7003000000"
+      ],
+      "secq_claims_verified_count": 18,
+      "testnet4_anchor_block_hash_hex": "0000006226ba8afab5bd63c41ea8eabc84827939dbd701104e97a57198e93519",
+      "testnet4_anchor_height": 102,
+      "trades": [
+        {
+          "bilateral_long_payout_sats": 1075,
+          "bilateral_realized_long_pnl_sats": 450,
+          "bilateral_short_payout_sats": 550,
+          "clearing_mark_price_usd": 125000,
+          "execution_price_usd": 80000,
+          "funding_script_pubkey_hex": "5120d7e2cd2705cf579bf1a80529376108c9698aaba95837780115b0fdf436a6ca0a",
+          "funding_txid_hex": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+          "funding_vout": 1,
+          "label": "Trade 1 (Testnet4): Alice Long $1 vs Bob Short $1 @ $80,000",
+          "long_margin_sats": 625,
+          "long_party": "Alice",
+          "match_id_hex": "c614d50107a760deddf0f3428c7fe913d8b2cb96967abcda12ea19875f7cf4f4",
+          "protocol_fee_sats": 0,
+          "short_margin_sats": 1000,
+          "short_party": "Bob",
+          "total_utxo_sats": 2095,
+          "trade_no": 1,
+          "usd_notional": 1
+        },
+        {
+          "bilateral_long_payout_sats": 700,
+          "bilateral_realized_long_pnl_sats": 200,
+          "bilateral_short_payout_sats": 425,
+          "clearing_mark_price_usd": 125000,
+          "execution_price_usd": 100000,
+          "funding_script_pubkey_hex": "5120ebc8999b31455716e96e4a3e6cf053f2e55a44ce7a99f749fc10a81d99fb151b",
+          "funding_txid_hex": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+          "funding_vout": 2,
+          "label": "Trade 2 (Testnet4): Bob Long $1 vs Carol Short $1 @ $100,000 (Bob Flattens)",
+          "long_margin_sats": 500,
+          "long_party": "Bob",
+          "match_id_hex": "95ebd8de30f2b75aa63d7c9e7d0296c37e540015a9acd3c8f6f0eb5c35591a48",
+          "protocol_fee_sats": 0,
+          "short_margin_sats": 625,
+          "short_party": "Carol",
+          "total_utxo_sats": 1595,
+          "trade_no": 2,
+          "usd_notional": 1
+        },
+        {
+          "bilateral_long_payout_sats": 400,
+          "bilateral_realized_long_pnl_sats": 0,
+          "bilateral_short_payout_sats": 400,
+          "clearing_mark_price_usd": 125000,
+          "execution_price_usd": 125000,
+          "funding_script_pubkey_hex": "512068423968f3632cca440b61c5776046be0137f002c6b06d92d4af58597cc65498",
+          "funding_txid_hex": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+          "funding_vout": 3,
+          "label": "Trade 3 (Testnet4): Carol Long $1 vs Alice Short $1 @ $125,000 (Alice Closes)",
+          "long_margin_sats": 400,
+          "long_party": "Carol",
+          "match_id_hex": "3f3538f9ed3eb38ee892591fb61f009a858dbb216cba75135915de3d56e43eb0",
+          "protocol_fee_sats": 0,
+          "short_margin_sats": 400,
+          "short_party": "Alice",
+          "total_utxo_sats": 1270,
+          "trade_no": 3,
+          "usd_notional": 1
+        }
+      ],
+      "utxoref_pnl_clearing": {
+        "alice_total_cleared_payout_sats": 1475,
+        "bob_freed_collateral_bps": 8333,
+        "bob_freed_collateral_sats": 1250,
+        "bob_locked_margin_before_clearing_sats": 1500,
+        "bob_to_alice_routed_pnl_sats": 250,
+        "carol_freed_collateral_sats": 825,
+        "carol_to_alice_routed_pnl_sats": 200,
+        "durable_book_final_head_hash_hex": "376c3a85dce7f3c4a3b318765761a8634c02ffb7e8519d2072202f975f2ed8f4",
+        "durable_book_settled_epoch": 1,
+        "next_accounting_state_root_hex": "e2cfb648d72e2eab999bec5fb8794f93f2c8e068562a66b606604f4fa8716ddd",
+        "snapshot_hash_hex": "c6f8301006ebc214c2f92a43fceb497f83954a25f7f746059f1acd9b52563bdb",
+        "total_winner_routed_pnl_sats": 450
+      }
+    },
+    "core_version": "Bitcoin Core v310100 (/Satoshi:31.1.0/)",
+    "funded_dlc_utxos": [
+      {
+        "label": "DLC-1-TESTNET4-ALICE-LONG-BOB-SHORT-80K",
+        "sats": 2095,
+        "script_pubkey_hex": "5120d7e2cd2705cf579bf1a80529376108c9698aaba95837780115b0fdf436a6ca0a",
+        "trade_no": 1,
+        "txid": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+        "vout": 1
+      },
+      {
+        "label": "DLC-2-TESTNET4-BOB-LONG-CAROL-SHORT-100K",
+        "sats": 1595,
+        "script_pubkey_hex": "5120ebc8999b31455716e96e4a3e6cf053f2e55a44ce7a99f749fc10a81d99fb151b",
+        "trade_no": 2,
+        "txid": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+        "vout": 2
+      },
+      {
+        "label": "DLC-3-TESTNET4-CAROL-LONG-ALICE-SHORT-125K",
+        "sats": 1270,
+        "script_pubkey_hex": "512068423968f3632cca440b61c5776046be0137f002c6b06d92d4af58597cc65498",
+        "trade_no": 3,
+        "txid": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+        "vout": 3
+      }
+    ],
+    "funding_tx_explorer_uri": "",
+    "funding_txid": "2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70",
+    "mempool_accepted_live_testnet4": true,
+    "net_network_miner_fee_cost_sats": 661,
+    "network": "bitcoin-signet",
+    "nova_compressed_snark_verified": false,
+    "production_ready": false,
+    "scenario": "Live 3-Party, 3-Trade ($80k -> $100k -> $125k) Collated DLC Margin Clearing + BitVM3 Nova CompressedSNARK (non-testnet4 chain; see network)",
+    "testnet4_tip_block_hash": "0000006226ba8afab5bd63c41ea8eabc84827939dbd701104e97a57198e93519",
+    "testnet4_tip_height": 102,
+    "wallet_balance_after_sats": 99339,
+    "wallet_balance_before_sats": 100000
+  },
+  "synced": {
+    "height": 103,
+    "tip": "00000258153c694f51954619d18432b0cae9d23854ed43631442c7eeeca8a42d"
+  },
+  "versions": {
+    "miner": "/Satoshi:31.1.0/",
+    "observer": "/Satoshi:31.1.0/"
+  },
+  "wallet_funding_block": "0000006226ba8afab5bd63c41ea8eabc84827939dbd701104e97a57198e93519"
+}

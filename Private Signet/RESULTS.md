@@ -322,6 +322,121 @@ and the Signet legacy node:
 - **Double sale:** `54e65c77…f57a` rejected on every node.
 - **K4, C1 and K3:** repeated, and all three nodes agree.
 
+## SatsHedgeZero on the private Signet
+
+Runs of 2026-11-24 against SatsHedgeZero `5ca390e` plus the shz-cli change
+below. Two parts: the SHZ prototype as it is, then SHZ-K1, the same contract
+moved onto the keyless rules.
+
+### The prototype as it is (stock Core 31.1)
+
+`shz testnet4-live` is SHZ's live flow. It funds three NUMS P2TR DLC outputs
+(2,095 / 1,595 / 1,270 sats) in one wallet transaction, pre-signs one
+3-input, 4-output collated clearing transaction ($80k → $100k → $125k, +450
+sats to Alice), probes the mempool with two 1-sat shaves, and broadcasts.
+
+Until now it could only reach Testnet4 through `wsl bitcoin-cli -testnet4`.
+SatsHedgeZero now reads `SHZ_CHAIN` (default `testnet4`),
+`SHZ_BITCOIN_CLI_DIRECT=1` and `SHZ_BITCOIN_CLI_EXTRA_ARGS`; explorer links
+are left empty off Testnet4. `ab/run_signet_shz_prototype.py` points it at
+the lab miner (`evidence/signet-shz-prototype/`).
+
+| Step | Result |
+|---|---|
+| Funding | `2a22549cfeb1bc8ecf03718523c8dc92c927ad1f87bc8bca4b1279b97edceb70` |
+| Clearing | `cb2430ff487199f4233a437beb2176309c85c6e649c731db35d25645baa7deec`, 505 vB, same size as the Testnet4 run |
+| Block | both in signed block `00000258153c694f51954619d18432b0cae9d23854ed43631442c7eeeca8a42d`, one confirmation on miner and observer |
+| Outputs | 1,250 (Bob), 1,475 (Alice), 990 (anchor), 825 (Carol) sats, unspent on both nodes |
+| Probes | both 1-sat shaves refused: `mempool-script-verify-flag-failed (Invalid Schnorr signature)` |
+| Agreement | both nodes agree |
+
+**Mislabelled report.** The clearing report SHZ embeds still says
+`bitcoin-testnet4` and `network_code: Testnet4`, because the ceremony
+builder hard-codes them, while its anchor is Signet block 102. The 304-byte
+BitVM3 statement from this run therefore names the wrong network and must
+not be presented as a Testnet4 statement. The outer receipt's `network` is
+`bitcoin-signet`.
+
+**Lab note.** The Signet miner backdates only 100 block
+intervals, so `mine --blocks 110` waits in real time after block 101. The
+first try was stopped there (its mining receipt is not kept); the run above
+mines 101.
+
+### SHZ-K1: the same contract, settled by script
+
+`ab/shz_margin.py` ports SHZ's contract maths from Rust: InverseContractSpec,
+payouts, liquidation prices, the dyadic `compress_cet_ranges` and
+`oracle_digit_message`. `ab/test_shz.py` checks the crate's own test vectors
+(643 CETs; liquidation 83,333 / 90,909 / 111,112) and values printed by the
+Rust crates for trade 1 (949 CETs, the $125k range, the digit message).
+
+`ab/shz_k1.py` keeps the contract, the oracle message format and the
+compression unchanged, and replaces the 2-of-2 adaptor CETs with one P2MR
+leaf per CET range. Each leaf:
+
+1. **Checks each prefix digit's oracle signature.** For each digit the leaf
+   rebuilds `R_j‖s_j` from the announced nonce `R_j` (in the script) and the
+   scalar `s_j` (in the witness), then checks it with CSFS against SHZ's
+   digit message. Pinning `R_j` keeps SHZ's equivocation deterrent: signing
+   both bit values under one nonce reveals the oracle key.
+2. **Checks one assignment per side.** Each side's owner signs
+   `SHA256(cid‖recipient)` once. The same assignment works in every range
+   and in the refund, so a position can be sold without the counterparty.
+3. **Binds the outputs.** It rebuilds the range's long and short outputs
+   with OP_CAT and binds them with TXCOMMIT.
+
+A further leaf refunds both margins after CSV 144, with the same assignment
+checks. No party key can move the funds.
+
+Trade 1 (Alice long $1 at 2x, Bob short $1 at 1.25x, entry $80,000) at a
+maximum error of 1 sat:
+
+- 949 CET leaves and the refund leaf; tree depth 10, control block 321 bytes.
+- The $125k range is prefix `000111101000` (12 digits), paying 1,075 / 550
+  sats, exactly the prototype's +450.
+- Each digit costs 103 bytes of leaf and 33 bytes of witness. The earlier
+  estimate of about 70 left out the pinned nonce.
+- The longest leaf (15 digits) is 1,833 bytes.
+- A two-output settlement is 3,176 WU (794 vB); one-sided settlements are
+  2,272 and 1,728 WU, and the refund 1,549 WU.
+
+**Regtest** (`evidence/regtest/shz-k1-regtest.json`): all 19 trials match.
+
+| Pattern (new / old-flag / old-stock) | Cases |
+|---|---|
+| accepted everywhere | $125k self-assigned; long sold to Carol with no Bob; short sold to Mallory with no Alice; a second sale of the long side (valid alone); $50k (long liquidated, short-only output); $500k (short liquidated, long-only output); refund after CSV 144; refund to Carol after the transfer |
+| rejected only by `new` | 1-sat shave with a stale witness; 1-sat shave with a fresh witness (TXCOMMIT matches, the leaf amounts do not); $100k attestation on the $125k leaf; forged digit scalar; a digit signed under an unannounced nonce; Mallory paid while Carol's assignment is presented; Mallory paid with Carol's assignment; long assignment signed by Bob; assignment replayed from another contract; refund with a 1-sat shave |
+| rejected everywhere | refund before CSV 144 (`bad-txns-nonfinal`: BIP68, consensus on every node) |
+
+**Patched custom Signet** (`evidence/signet-shz-k1/`): patched miner and
+observer with CSFS, stock Core 31.1 legacy node.
+
+| Step | Result |
+|---|---|
+| Funding | two K1 outputs, `tb1zmjqy0jjynp70rn0jlw6drs0w9aj5thcclj9nlxh6hxup30ft4w6synnazt`, 2,625 sats each |
+| Transfer | oracle attests $125,000; Alice's long sold to Carol. Settlement `81aaa23b09ed02bca64bd390172d242ec5493f1fa1d42e35ba951aca4f706427` (1,075 to Carol, 550 to Bob) is refused by both mempools (`bad-txns-nonstandard-inputs`), included in signed block `00000334e621cdd612db3499edf60e655f62f565f89bd982c93b81d2084754db`, and accepted by all three nodes |
+| Double sale | Alice's second assignment, `a118b872…d6b4`: miner `bad-txns-inputs-missingorspent`, observer and legacy `duplicate-invalid` |
+| Split | a 1-sat shave with a fresh witness, `89fc2c0f…15e2`, in signed block `0000014e5b6658bd6d5b75163722dd9dbffb64a5b3075cabeccf8642e8a00a45`: invalid on both patched nodes, active on the legacy node, then invalidated there |
+| Final | all three nodes agree |
+
+**What changes relative to SHZ**
+
+- **Gone:** the parties' settlement keys and every pre-signed CET. Setup
+  needs no signature exchange, and no party has to be online at maturity.
+- **Transfer without the counterparty.** MNR-05 needs novation or a
+  ClearingGuard; here one owner signature is enough.
+- **Kept:** the oracle trust (the FROST quorum signs the same messages) and
+  the exact contract maths. The lab oracle is one key; FROST produces the
+  same BIP340 signatures.
+- **Lost:** SHZ's cooperative collated clearing (three trades in 505 vB).
+  K1 settles each trade on its own (794 vB), with no Nova/BitVM3 batch
+  statement.
+- **Unsolved:** the double sale, as in arm C. Both assignments verify until
+  one settles.
+- **Not run on Signet:** the CSV 144 refund. The miner mines in real time
+  after block 101, so 144 more blocks take about a day; the refund runs on
+  regtest only.
+
 ## Phase 5: does keyless reduce the trusted computing base?
 
 | Threat | Arm A | Arm B | Evidence |
@@ -372,9 +487,9 @@ it.
 - **CSFS message length.** The lab restricts CSFS to 32-byte messages.
   BIP348 allows any length; supporting that needs a variable-length
   `VerifySchnorr` in the pinned Core.
-- **Numeric DLCs.** SatsHedgeZero's digit attestations would need one CSFS
-  check per digit, adding about 70 bytes of leaf and 50 units of budget each.
-  This was not measured.
+- **Collated keyless clearing.** SHZ-K1 settles one trade per transaction.
+  Netting several trades keylessly, as SHZ's 3-party clearing does with
+  signatures, has not been designed.
 - **bitcoin-rs.** No TXCOMMIT, OP_CAT or P2MR; the Core patch is the only
   implementation of the rules.
 - **Validation cost.** The `submitblock` latency at this size does not
