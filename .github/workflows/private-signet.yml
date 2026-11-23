@@ -39,13 +39,13 @@ jobs:
     needs: static
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      SPIRAL_SIGNET_HOME: ${{ runner.temp }}/private-signet
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Lab home
+        run: echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/private-signet" >> "$GITHUB_ENV"
       - name: Fetch SHA256-pinned Bitcoin Core and the matching Signet miner
         run: |
           curl -fsSL --retry 3 -o /tmp/core.tgz "https://bitcoincore.org/bin/bitcoin-core-$CORE_VERSION/bitcoin-$CORE_VERSION-x86_64-linux-gnu.tar.gz"
