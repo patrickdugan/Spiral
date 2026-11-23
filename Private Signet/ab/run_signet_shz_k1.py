@@ -46,8 +46,23 @@ def main() -> None:
     # sendmany refuses a duplicate address; fund the second output separately.
     funding_txid = lab.cli("miner", "sendtoaddress", addr, amount, wallet="funds")
     second_txid = lab.cli("miner", "sendtoaddress", addr, amount, wallet="funds")
-    fund_block = lab.mine(1)
-    raws = [lab.rpc("miner", "getrawtransaction", t, "1", fund_block["tip"]) for t in (funding_txid, second_txid)]
+    # Run straight after run_signet_keyless.py (whose last block was rejected,
+    # so the tip did not move), the next block omitted both transactions, on
+    # the CI runner and locally: getblocktemplate reuses its cached template
+    # while the tip is unchanged and the mempool changed under 5 s ago. Mine
+    # until the wallet sees both confirmed; look each up in its own block.
+    fund_attempts = []
+    for _ in range(4):
+        fund_block = lab.mine(1)
+        fund_attempts.append(fund_block["tip"])
+        info = {t: lab.rpc("miner", "gettransaction", t, wallet="funds") for t in (funding_txid, second_txid)}
+        if all(i.get("blockhash") for i in info.values()):
+            break
+    else:
+        raise SystemExit(f"funding not confirmed after {len(fund_attempts)} blocks: "
+                         + json.dumps({"mempool": lab.rpc("miner", "getrawmempool"), "blocks": fund_attempts,
+                                       "wallet": {t: i.get("confirmations") for t, i in info.items()}}))
+    raws = [lab.rpc("miner", "getrawtransaction", t, "1", info[t]["blockhash"]) for t in (funding_txid, second_txid)]
     vouts = [next(o["n"] for o in r["vout"] if o["scriptPubKey"]["hex"] == k1.spk.hex()) for r in raws]
 
     x = p.x
@@ -64,7 +79,8 @@ def main() -> None:
                                           "entry_price_usd": spec.entry_price_usd},
               "oracle": oracle.announcement(), "settle_price_usd": SETTLE_PRICE,
               "funding": {"address": addr, "txids": [funding_txid, second_txid], "vouts": vouts,
-                          "block": fund_block["tip"]}}
+                          "blocks": [info[t]["blockhash"] for t in (funding_txid, second_txid)],
+                          "blocks_mined": fund_attempts}}
 
     # Transfer: Carol is paid the long side, without Bob.
     settle = k1.spend(funding_txid, vouts[0], i125, to_carol, att)
