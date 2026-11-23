@@ -1,0 +1,76 @@
+{
+  "address": "tb1pgcze8tpu4nthltn74ap8dqgqg79yr3cxy3r4zxsjpyepvd5gyu0qax5swt",
+  "amount": "1.0",
+  "block": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41",
+  "confirmed_on_both": true,
+  "fee_btc": -1.65e-06,
+  "height": 102,
+  "kind": "wallet-transaction",
+  "mempool_entry": {
+    "ancestorcount": 1,
+    "ancestorsize": 165,
+    "bip125-replaceable": true,
+    "chunkweight": 657,
+    "depends": [],
+    "descendantcount": 1,
+    "descendantsize": 165,
+    "fees": {
+      "ancestor": 1.65e-06,
+      "base": 1.65e-06,
+      "chunk": 1.65e-06,
+      "descendant": 1.65e-06,
+      "modified": 1.65e-06
+    },
+    "height": 101,
+    "spentby": [],
+    "time": 1795423981,
+    "unbroadcast": true,
+    "vsize": 165,
+    "weight": 657,
+    "wtxid": "bfe86797a607bdf5847f9c4c2cfedaf85a551f5d68a34ebce35a9f7fefd55631"
+  },
+  "raw_tx": "02000000000101897aa02232669ea20bfe731ade023475e61e222dd52b8098c6dcb4c0f857edca0000000000fdffffff025b10102401000000225120189b85c5ef1e8fc893615c53fdb4b33604a1bb729801c14b79ec33d5ca5d355900e1f50500000000225120460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e024730440220217b171ef99dc46b735afb81526e8ce50ce9e3efec2487e85a886ec834fbf2b702205b4b19f05109eba0b3241a0ccaffba0663994c4e7c22371d7ed40496b5ceba7a01210339f3389c7e61609eba16036c33b76afcc8c1508110de9968330c541ed37e3f4565000000",
+  "txid": "b2b803e817d8ab317510e7f37fa67874ae53c3538e7675732b0c3721184f8483",
+  "utxo": {
+    "miner": {
+      "bestblock": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41",
+      "coinbase": false,
+      "confirmations": 1,
+      "scriptPubKey": {
+        "address": "tb1pgcze8tpu4nthltn74ap8dqgqg79yr3cxy3r4zxsjpyepvd5gyu0qax5swt",
+        "asm": "1 460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e",
+        "desc": "rawtr(460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e)#mgkucvm2",
+        "hex": "5120460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e",
+        "type": "witness_v1_taproot"
+      },
+      "value": 1.0
+    },
+    "observer": {
+      "bestblock": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41",
+      "coinbase": false,
+      "confirmations": 1,
+      "scriptPubKey": {
+        "address": "tb1pgcze8tpu4nthltn74ap8dqgqg79yr3cxy3r4zxsjpyepvd5gyu0qax5swt",
+        "asm": "1 460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e",
+        "desc": "rawtr(460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e)#mgkucvm2",
+        "hex": "5120460593ac3cacd77fae7eaf42768100478a41c7062447511a120932163688271e",
+        "type": "witness_v1_taproot"
+      },
+      "value": 1.0
+    }
+  },
+  "vout": 1,
+  "wallet": "demo-20261123T085300",
+  "wallet_balance": {
+    "lastprocessedblock": {
+      "hash": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41",
+      "height": 102
+    },
+    "mine": {
+      "immature": 0.0,
+      "trusted": 1.0,
+      "untrusted_pending": 0.0
+    }
+  },
+  "weight": 657
+}

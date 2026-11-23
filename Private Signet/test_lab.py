@@ -36,6 +36,25 @@ class StaticHarnessTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             lab.descriptors_for_import({"descriptors": []})
 
+    def test_challenge_key_descriptor(self):
+        export = {"descriptors": [
+            {"desc": "tr([d34db33f/86h/1h/0h]tprvKEY/0/*)#aaaa", "range": [0, 999]},
+            {"desc": "wpkh([d34db33f/84h/1h/0h]tprvKEY/1/*)#bbbb", "range": [0, 999]},
+            {"desc": "wpkh([d34db33f/84h/1h/0h]tprvKEY/0/*)#cccc", "range": [0, 999]},
+        ]}
+        self.assertEqual(lab.challenge_key_descriptor(export, "m/84h/1h/0h/0/0"),
+                         "pk([d34db33f/84h/1h/0h]tprvKEY/0/0)")
+        self.assertEqual(lab.challenge_key_descriptor(export, "m/84h/1h/0h/0/17"),
+                         "pk([d34db33f/84h/1h/0h]tprvKEY/0/17)")
+        with self.assertRaises(ValueError):
+            lab.challenge_key_descriptor(export, "m/86h/1h/0h/0/0")
+        with self.assertRaises(RuntimeError):
+            lab.challenge_key_descriptor({"descriptors": []}, "m/84h/1h/0h/0/0")
+
+    def test_ports_are_distinct(self):
+        ports = [p for pair in lab.PORTS.values() for p in pair]
+        self.assertEqual(len(ports), len(set(ports)))
+
     def test_hex_validation(self):
         self.assertEqual(lab.validate_txhex("AA" * 10 + "\n"), "aa" * 10)
         for raw in ("invalid", "abc", "", "aa" * 4, "gg" * 10):

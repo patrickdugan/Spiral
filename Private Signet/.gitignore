@@ -11,3 +11,4 @@ PRIVATE-*.json
 *.sqlite-wal
 bitcoin.conf
 *.env
+__pycache__/

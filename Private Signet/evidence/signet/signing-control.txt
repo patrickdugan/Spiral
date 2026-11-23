@@ -1,0 +1,7 @@
+Control run, 2026-11-23, Core 31.1, same private Signet (challenge in state.json):
+signer wallet "nopk" holding ONLY the bootstrap wallet's ranged wpkh/tr/pkh/sh-wpkh
+descriptors (the original lab.py import), official contrib/signet/miner v31.1:
+  INFO Using nbits=1e0377ae
+  PSBT signing failed
+height before 106, after 106. With the added pk() descriptor (lab.py init) the
+same miner signs every block.

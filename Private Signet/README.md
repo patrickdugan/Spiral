@@ -1,149 +1,115 @@
 # Private Signet: Keyless-CHECKSIG / BitVM experiment
 
-This is a **local, self-mined Bitcoin Core custom Signet** with an authorized
-block-signing key, a miner and a separate validation peer. The Python harness
-generates a fresh signer key through an isolated temporary Signet wallet,
-creates a unique P2PK OP_CHECKSIG challenge, imports the secret descriptors
-into the final Signet signer, and starts both nodes on loopback.
+A **local, self-mined Bitcoin Core custom Signet**: a miner node holding a
+disposable block-signing key, an observer node that validates independently,
+and Bitcoin Core's official `contrib/signet/miner`. On top of it, an A/B
+harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
+(TXCOMMIT) construction, the latter on a patched Bitcoin Core regtest.
 
-**Status:** infrastructure scaffold, static tests only. The Keyless-CHECKSIG
-research BIP is *not* a Bitcoin Core consensus implementation. This lab has
-not yet produced a signed block in CI or on a local Bitcoin Core installation.
+**Status (2026-11-23):** working.
 
-The working spec is
-[BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md](../BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md).
-It describes an unallocated Tapscript unknown-key type, proposed TXCOMMIT
-digest comparison, and an illustrative Script that also depends on separately
-proposed OP_CAT/P2MR semantics. **Funding a TXCOMMIT-only script on Bitcoin's
-existing rules could be anyone-can-spend.** All funds here must be valueless
-test coins and fresh test-only keys.
+- **Private Signet:** 101 signed blocks mined, observer agreement on every
+  hash and on chainwork, and a wallet transaction confirmed.
+- **Vanilla DLC:** an adaptor-signature DLC was settled on the private Signet
+  under stock consensus.
+- **Keyless-CHECKSIG A/B:** 37 trials on three regtest validators (patched
+  Core with the rules on, the same binary with them off, and stock Core) all
+  match their expected verdicts.
+
+Results, measurements and the security analysis are in [RESULTS.md](RESULTS.md),
+and the raw receipts in [evidence/](evidence/).
+
+Keyless-CHECKSIG is **not** active on any public network. A stock node does
+not enforce its commitment semantics: on stock rules every witness-v2 (P2MR)
+spend is valid, theft included. Use valueless test coins and disposable keys
+only.
 
 ## Requirements
 
-- Linux, macOS, or WSL2 shell with Python 3.10+ (Python standard library only).
-- Bitcoin Core bitcoind, bitcoin-cli and bitcoin-util on PATH, or provide
-  BITCOIND, BITCOIN_CLI, BITCOIN_UTIL as absolute executable paths.
-- A matching Bitcoin Core source checkout with its official
-  contrib/signet/miner script and test/functional/test_framework module.
-- Bitcoin Core descriptor wallet support. Use a coherent Core source/binary
-  version rather than mixing a recent Signet miner with old RPCs.
-
-The harness keeps node data under
-~/.local/share/spiral-private-signet/ by default. Set
-SPIRAL_SIGNET_HOME to another **empty, private directory** if desired.
-Never point it at existing Bitcoin Core data. Neither production wallets
-nor mainnet/Testnet4 nodes are opened.
-
-Example paths, from the Spiral repository root:
+- Linux or WSL2 with Python 3.10+ (standard library only).
+- Bitcoin Core `bitcoind` and `bitcoin-cli` on PATH, or as absolute paths in
+  `BITCOIND` and `BITCOIN_CLI`. `bitcoin-util` (`BITCOIN_UTIL`) is optional:
+  without it the official miner grinds proof-of-work itself, which takes about
+  12 s per block at Signet's minimum difficulty.
+- The official Signet miner from the **same** Core version (`SIGNET_MINER`).
+  A sparse checkout is enough:
 
 ~~~bash
-export SIGNET_MINER="$HOME/src/bitcoin/contrib/signet/miner"
-python3 "Private Signet/lab.py" init
-python3 "Private Signet/lab.py" status
+git clone --depth 1 --branch v31.1 --filter=blob:none --sparse https://github.com/bitcoin/bitcoin.git core-src
+git -C core-src sparse-checkout set contrib/signet test/functional/test_framework
+export SIGNET_MINER=$PWD/core-src/contrib/signet/miner
+~~~
+
+Pinned versions used for the recorded runs:
+
+| Component | Local run | CI |
+|---|---|---|
+| Bitcoin Core | 31.1 (`/Satoshi:31.1.0/`) | 30.2 release tarball, SHA256 `6aa7bb4f…75d8` |
+| Signet miner | v31.1 tag `9be056a8`, miner SHA256 `2df980a4…dffe` | v30.2 tag |
+| Python | 3.12.3 | 3.12 |
+| Patched Core (A/B) | `d0f6d995` (v30.0) + Spiral patch, diff SHA256 `e6b3e5db…2bc6` | same, built in CI |
+
+## Run
+
+From the Spiral repository root:
+
+~~~bash
+export SPIRAL_SIGNET_HOME=$HOME/.local/share/spiral-private-signet   # empty, private
+python3 "Private Signet/lab.py" init           # bootstrap key, miner + observer
 python3 "Private Signet/lab.py" mine --blocks 101
-python3 "Private Signet/lab.py" status
-python3 "Private Signet/lab.py" stop
+python3 "Private Signet/lab.py" agree          # genesis, height, every hash, chainwork
+python3 "Private Signet/lab.py" fund-demo      # fresh wallet, signed payment, mined, UTXO on both nodes
+python3 "Private Signet/ab/run_signet_dlc.py"  # vanilla adaptor DLC settled on the Signet
+python3 "Private Signet/lab.py" destroy        # stop both nodes, delete the lab home
 ~~~
 
-Init starts a local-only temporary OP_TRUE Signet *solely* to generate
-the signer key. It stops that temporary node and starts the real custom
-Signet using a script of the form PUSH33 <compressed-pubkey> OP_CHECKSIG.
-The challenge is unique to this laboratory and can only be satisfied by the
-generated signing key, assuming that key stays private.
+Patched-Core A/B on regtest (build steps are in `.github/workflows/private-signet.yml`):
 
-Mine uses Bitcoin Core's **official Signet miner**. The 101-block example
-is meant to generate a spendable coinbase balance, with the first 100 blocks
-required for maturity. The --min-nbits option requests Signet's minimum
-difficulty. There is no GPU mining. Bitcoin Core's Signet miner requires a signet
-signature as well as a valid proof-of-work header.
+~~~bash
+python3 BIPSpace/Keyless-CHECKSIG/core/patch_core.py <core-d0f6d995>
+python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py <core-d0f6d995>
+# build bitcoind, then:
+python3 "Private Signet/ab/run_ab_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output ab.json
+~~~
 
-The raw private extended-key descriptors are retained in
-PRIVATE-descriptor-backup.json under the local lab home, with mode 0600.
-That file and the node wallets **must never be committed, shared, or copied
-into public CI**. State.json holds a public challenge, genesis hash,
-reward address, and chosen ports. Restarting init against existing data
-is intentionally blocked.
+`SPIRAL_SIGNET_PORT_BASE` moves all six loopback ports (default 39432). The
+lab never opens public seeds, mainnet, Testnet4 or another node's data
+directory.
 
-## What is running?
+## What is running
 
-| Node | RPC on localhost | P2P on localhost | Purpose |
+| Node | RPC | P2P | Purpose |
 |---|---:|---:|---|
-| Bootstrap (stopped after init) | 39432 | 39433 | Generate signer key in an isolated temporary Signet |
-| Miner | 39442 | 39443 | Hold signing wallet and issue signed blocks |
-| Observer | 39452 | 39453 | Independent Bitcoin Core validation and mempool behavior |
+| Bootstrap (stopped after init) | base | base+1 | Generate the signer key in a throwaway OP_TRUE Signet |
+| Miner | base+10 | base+11 | Signer wallet `signer`, reward wallet `funds` |
+| Observer | base+20 | base+21 | Independent validation; connects only to the miner |
 
-The observer connects only to the miner. Both share the challenge and
-genesis hash. The signer RPC and P2P listeners remain on loopback. The
-default miner does not connect to public Signet seeds.
+The challenge is `PUSH33 <signer pubkey> OP_CHECKSIG`. The signer's private
+descriptors stay in `PRIVATE-descriptor-backup.json` under the lab home
+(mode 0600). They must never be committed; `evidence/` holds only public
+receipts.
 
-### Probe a real raw transaction
+## Defects fixed in the scaffold
 
-~~~bash
-# File contains exactly one fully serialized, signed transaction in hex.
-python3 "Private Signet/lab.py" probe --txhex-file /tmp/signet-spend.hex
-~~~
-
-This calls testmempoolaccept independently on miner and observer and
-writes the raw RPC observations to the local receipts/ directory.
-It leaves the mempool unchanged.
-
-For a deliberately broadcast experiment, after inspecting the transaction:
-
-~~~bash
-python3 "Private Signet/lab.py" probe \
-  --txhex-file /tmp/signet-spend.hex --broadcast
-python3 "Private Signet/lab.py" mine --blocks 1
-~~~
-
-Broadcast is sent only to the isolated miner node. Both nodes presently
-enforce the **same stock Bitcoin Core consensus rules**. Peer-to-peer relay
-is not the same as inclusion in a valid block, and testmempoolaccept
-includes mempool policy constraints. Inspect reject-reason and use
-independent block validation to resolve policy-versus-consensus disputes.
-
-The receipts include block heights, hashes, Core versions, elapsed mining
-time, RPC responses and errors. All receipts are local, with no token or
-private-key material. Inspect them before publishing.
-
-## Adding a real consensus experiment
-
-There are two deliberately separate research lanes.
-
-**A. Stock-core lane:** demonstrate a vanilla BitVM/DLC settlement on this
-self-mined Signet. This answers questions about transaction construction,
-policy, relay and independent acceptance on existing consensus.
-
-**B. Modified-core lane:** write or import a reviewed Bitcoin Core patch
-that recognizes the draft Keyless-CHECKSIG selector, computes the actual
-BIP341 Tapscript digest and aborts on mismatch. OP_CAT and P2MR are separate
-consensus changes. Pin each patch and activation height in a run manifest.
-First test on disposable **regtest** data directories under explicit
-activation, then set up a separately identified *patched custom Signet*.
-Both miners and validators must enforce the same candidate rules when
-asserting a valid upgraded chain.
-
-Never infer successful TXCOMMIT enforcement from acceptance on stock Core:
-the unknown-key path currently accepts nonempty candidates without this
-digest comparison. Do not use a stock chain to claim a secure keyless vault.
-
-See [AB_TEST_PLAN.md](AB_TEST_PLAN.md) for falsifiable controls and
-requirements for evidence that can be shown to reviewers.
+| Defect | Effect | Fix |
+|---|---|---|
+| `init` called the miner RPC through `read_state()` before `state.json` existed | `init` aborted after starting the miner | pass the challenge explicitly; write a provisional state |
+| Miner `--cli` lacked `-signet` | bitcoin-cli would not address the Signet node | add `-signet` |
+| Bare P2PK challenge, but only `wpkh`/`tr`/… ranges imported | `PSBT signing failed`; no block (control run in `evidence/signet/signing-control.txt`) | import a private `pk()` descriptor for the challenge key |
+| `-rpcwait` does not wait for the cookie file | observer start failed intermittently | wait for `.cookie` first |
+| Miner backdates blocks; a fresh descriptor wallet skips blocks before its birth time | 101 blocks mined, 24 coinbases credited, "Insufficient funds" | `rescanblockchain` after mining |
+| `bitcoin-util` was mandatory | mining impossible without it | optional; the miner grinds itself |
 
 ## Static validation
 
 ~~~bash
-python3 -m unittest discover -s "Private Signet" -p 'test_lab.py' -v
-python3 -m py_compile "Private Signet/lab.py"
+python3 -m unittest discover -s "Private Signet" -p test_lab.py -v
+python3 -m unittest discover -s "Private Signet/ab" -p test_ab.py -v
 ~~~
-
-These tests run without Bitcoin Core and cover challenge serialization,
-descriptor-import request construction and input validation. Full
-end-to-end tests require local Core binaries and the upstream miner.
 
 ## References
 
 - [BIP325, Signet](https://bips.dev/325/)
-- [Bitcoin Core's official Signet miner instructions](https://github.com/bitcoin/bitcoin/blob/master/contrib/signet/README.md)
-- [Bitcoin Core Signet miner](https://github.com/bitcoin/bitcoin/blob/master/contrib/signet/miner)
-- [Bitcoin Core data-directory conventions](https://github.com/bitcoin/bitcoin/blob/master/doc/files.md)
+- [Bitcoin Core Signet miner](https://github.com/bitcoin/bitcoin/blob/master/contrib/signet/README.md)
 - [Keyless-CHECKSIG research BIP](../BIPSpace/Keyless-CHECKSIG/bip-keyless-checksig.md)
+- [A/B protocol](AB_TEST_PLAN.md)

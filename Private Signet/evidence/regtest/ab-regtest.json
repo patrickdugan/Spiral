@@ -1,0 +1,1227 @@
+{
+  "experiment": "Private Signet A/B: vanilla adaptor DLC vs Keyless-CHECKSIG",
+  "nodes": {
+    "new": {
+      "version": "/Satoshi:30.0.0/",
+      "cmdline": [
+        "/root/psig/core-keyless/build/bin/bitcoind",
+        "-datadir=/tmp/ab-regtest-7r25tzq3/new",
+        "-rpcport=43411",
+        "-port=59557",
+        "-listen=0",
+        "-connect=0",
+        "-dnsseed=0",
+        "-server=1",
+        "-rpcbind=127.0.0.1",
+        "-rpcallowip=127.0.0.1",
+        "-printtoconsole=0",
+        "-disablewallet=1",
+        "-keylessresearch=1"
+      ]
+    },
+    "old-flag": {
+      "version": "/Satoshi:30.0.0/",
+      "cmdline": [
+        "/root/psig/core-keyless/build/bin/bitcoind",
+        "-datadir=/tmp/ab-regtest-7r25tzq3/oldflag",
+        "-rpcport=54841",
+        "-port=43029",
+        "-listen=0",
+        "-connect=0",
+        "-dnsseed=0",
+        "-server=1",
+        "-rpcbind=127.0.0.1",
+        "-rpcallowip=127.0.0.1",
+        "-printtoconsole=0",
+        "-disablewallet=1"
+      ]
+    },
+    "old-stock": {
+      "version": "/Satoshi:31.1.0/",
+      "cmdline": [
+        "/root/ark-nm2/core/bin/bitcoind",
+        "-datadir=/tmp/ab-regtest-7r25tzq3/oldstock",
+        "-rpcport=59539",
+        "-port=59155",
+        "-listen=0",
+        "-connect=0",
+        "-dnsseed=0",
+        "-server=1",
+        "-rpcbind=127.0.0.1",
+        "-rpcallowip=127.0.0.1",
+        "-printtoconsole=0",
+        "-disablewallet=1"
+      ]
+    }
+  },
+  "funding_txid": "2040aa172e4eccc97bed7cdb78e0dbba2ad1e78485301bb46a7d6bd78fa2e4c4",
+  "funding_block": "0750c0ef1d45c2480fdb8c2a3c59f4d3d508d783fdc8e4348e8db7ee9575bc16",
+  "funding_sats_per_arm": 1000000,
+  "payout_sats": 998000,
+  "fee_sats": 2000,
+  "oracle": {
+    "P": "01ef4070af94e2cf9e4c41066dc23b964aae4dda6362faecef9cb13f0fee1d3f",
+    "R": "11ad45cadecc6c3d0c0b6854d097d26ef3ed75e690e329937ccd04e9597268f3",
+    "commitments": {
+      "ALICE_WINS": "2ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661",
+      "BOB_WINS": "1545afce796899f8b53177eb3182d35c0e56255e1513b16ddd0b23e40bfbed98"
+    }
+  },
+  "arm_a_leaf": "2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac",
+  "arm_b_leaves": {
+    "ALICE_WINS": "a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad51",
+    "BOB_WINS": "a8201545afce796899f8b53177eb3182d35c0e56255e1513b16ddd0b23e40bfbed98886b6b76a86c6c637c687ea8209444ebada103c3e16fc0d5301c8f161d3c5c178759c060e5e770977eaf07a1aa887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad51"
+  },
+  "arm_b_spk": "52207278a44935b5f79480257a75fdadef95f28171082b9f40fd79e16756a7253e77",
+  "trials": [
+    {
+      "arm": "A",
+      "case": "settle ALICE_WINS -> alice",
+      "txid": "caf5fe197a1286c906423e70a3cc8d64881031c9c4c933ef3f1cf2dcec360732",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.12,
+        "old-flag": 4.15,
+        "old-stock": 3.49
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "settle BOB_WINS -> bob (counterfactual outcome)",
+      "txid": "60b23d4a73a28d0331308a96a69a474863a06fcee7521d6c0ddf1445fc82dd97",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.64,
+        "old-flag": 3.62,
+        "old-stock": 4.22
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f0000000000225120ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60c0440644df0a4722642e29d61274a47950941093954a3a29e7e85bbc6efafbc40cb0d5c8f180ba3c482c3517e627d5e0df6bb99859fe11a0c2a3397e84bf079d8fb2140fd29bfcbae3b50d07c1d3ab3e9535095d8accb03aca17fb3aa7df9f6438f9d21f35d4c00a5b54fddc6e0d5a13ff1f29267c2db8a553232340d56091bc878f4c8442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered recipient (mallory), honest sigs",
+      "txid": "13ef6a853dca049e8fc19c3542d8b1e760503b991f08c9c62d689911508270af",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 4.0,
+        "old-flag": 3.04,
+        "old-stock": 3.75
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c5255900440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered amount (-1000 sats)",
+      "txid": "0a5d254acf819f85f5891b9f0ac5e2bf3563fdcae9a19505ff28fb4ab02e4f25",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 4.38,
+        "old-flag": 3.49,
+        "old-stock": 4.92
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff0188360f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered input outpoint (twin funding)",
+      "txid": "a97db4d38374e9c0626f791a0ff1848c0db1c9c758a224de49eeebef205de52a",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 2.62,
+        "old-flag": 3.58,
+        "old-stock": 3.7
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200100000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered version 2 -> 3",
+      "txid": "0b4128bd9176e9d2559d0cb9f6f0a3c227503c4616ce28def02f54e4408c9d47",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 4.1,
+        "old-flag": 3.64,
+        "old-stock": 4.48
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "03000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered sequence",
+      "txid": "8c550a7bd7d780cc12ba9610706cabb9656115cc0e3521d48f068cb07fe18227",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 5.04,
+        "old-flag": 7.63,
+        "old-stock": 4.19
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000feffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered locktime",
+      "txid": "1682367470b4eddfed77fdb27ce60f9879724b219dd26a6aa6f6e1d200ed7585",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 4.0,
+        "old-flag": 4.16,
+        "old-stock": 4.79
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac001000000"
+    },
+    {
+      "arm": "A",
+      "case": "altered tapleaf script",
+      "txid": "caf5fe197a1286c906423e70a3cc8d64881031c9c4c933ef3f1cf2dcec360732",
+      "weight": 613,
+      "vsize": 154,
+      "witness_bytes": 230,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Witness program hash mismatch)",
+        "old-flag": "block-script-verify-flag-failed (Witness program hash mismatch)",
+        "old-stock": "block-script-verify-flag-failed (Witness program hash mismatch)"
+      },
+      "submit_ms": {
+        "new": 6.48,
+        "old-flag": 4.8,
+        "old-stock": 3.38
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e452096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac5121c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "invalid proof: decrypted with BOB_WINS attestation",
+      "txid": "caf5fe197a1286c906423e70a3cc8d64881031c9c4c933ef3f1cf2dcec360732",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-stock": "block-script-verify-flag-failed (Invalid Schnorr signature)"
+      },
+      "submit_ms": {
+        "new": 6.68,
+        "old-flag": 5.42,
+        "old-stock": 5.17
+      },
+      "expected": {
+        "new": false,
+        "old-flag": false,
+        "old-stock": false
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b46651943da5fd8fa37583cc236c134a7a9d929cdac3d682013673cffd4916df73f8407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a3881c5a04e86844a5e9a0044bc72526f88c875a731bfaedea17612fd6a7822f5c704442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "compromised: both funding keys sign to mallory",
+      "txid": "13ef6a853dca049e8fc19c3542d8b1e760503b991f08c9c62d689911508270af",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.76,
+        "old-flag": 3.71,
+        "old-stock": 3.9
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "setup-key compromise redirects funds under every rule set",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590044024cdc4331fc21835baa2027b62ea61c589808253e8dc01b439313eb770012fe94b77ce90a4b2d804661299686eb4728c66c55d5a0b4ad2f25d1fe2a3862346f740b7c347abee323a0f0d72b41cffc449d0b53709778ecea4615eefd2b6d62833fe472664ececfe88a1c5cea09744d3057982c39b549342bb4e4bd29b13e8646454442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "B",
+      "case": "settle ALICE_WINS -> alice",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.99,
+        "old-flag": 3.81,
+        "old-stock": 3.98
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "settle ALICE_WINS -> carol (selected at settlement)",
+      "txid": "aa7fdfd1cfd2feb5b5797e677b6e7fed0a5d7a51a4913a92e7599f92b82bc6ee",
+      "weight": 909,
+      "vsize": 228,
+      "witness_bytes": 522,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 4.23,
+        "old-flag": 3.35,
+        "old-stock": 3.33
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512068f1454ec1072ede9888a944d5f79351fe67e749d53bb2f5a1db81891be68264088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2068f1454ec1072ede9888a944d5f79351fe67e749d53bb2f5a1db81891be68264203b1491c751cc7590111e6053d6e6f754143c5afd5a8025dc4a4ac7ae551604f6010120f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "settle BOB_WINS -> bob (counterfactual outcome)",
+      "txid": "0e2b1be61edbae282dc3702add05f0d7d919a211db27bde0c574b4c52426fabb",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.89,
+        "old-flag": 4.04,
+        "old-stock": 5.01
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f0000000000225120ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60c088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a020000000079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf02ffffffff20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60c20a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f92313800206b686bc4d4db0b26df32fa7c36038fffc858dc04e50f1acd6a00b43f5ae567ced4a8201545afce796899f8b53177eb3182d35c0e56255e1513b16ddd0b23e40bfbed98886b6b76a86c6c637c687ea8209444ebada103c3e16fc0d5301c8f161d3c5c178759c060e5e770977eaf07a1aa887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c0150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered recipient (mallory), stale witness",
+      "txid": "ec77f18dafc22fcda6c8350a240dcec61675e7970916e566e68223e78c385ca9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.7,
+        "old-flag": 3.18,
+        "old-stock": 2.62
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered recipient (mallory), fresh witness",
+      "txid": "ec77f18dafc22fcda6c8350a240dcec61675e7970916e566e68223e78c385ca9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.26,
+        "old-flag": 3.95,
+        "old-stock": 3.55
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c52559020a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered amount (-1000), stale witness",
+      "txid": "21bca24e479d18f4c05c28fdc37c1e967b8ff083c14ede5549bb2f4edd21eab1",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.66,
+        "old-flag": 4.56,
+        "old-stock": 3.32
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff0188360f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered amount (-1000), fresh witness",
+      "txid": "21bca24e479d18f4c05c28fdc37c1e967b8ff083c14ede5549bb2f4edd21eab1",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 6.36,
+        "old-flag": 4.82,
+        "old-stock": 4.53
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "amount is a constant in the leaf; a re-derived witness cannot change it",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff0188360f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered input outpoint, stale witness",
+      "txid": "f6aab0f61fe189fbe5af19a94d551f2a49b579184379fafaa861cc48b067cd67",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.42,
+        "old-flag": 4.4,
+        "old-stock": 6.41
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200300000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered input outpoint, fresh witness",
+      "txid": "f6aab0f61fe189fbe5af19a94d551f2a49b579184379fafaa861cc48b067cd67",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 5.33,
+        "old-flag": 2.79,
+        "old-stock": 3.87
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "policy does not name the outpoint: any coin with this script settles the same way",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200300000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a000002000000000000009f97fad51e5445d8de843fc039edffb9da0bb10300164abc27dfa325a52210a44f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered version 2 -> 3, stale witness",
+      "txid": "3c6d6560f53a130f82d94cdafb1bbeb38a03a9184dde20957714437d07a3b73b",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.31,
+        "old-flag": 4.4,
+        "old-stock": 4.05
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "03000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered version 2 -> 3, fresh witness",
+      "txid": "3c6d6560f53a130f82d94cdafb1bbeb38a03a9184dde20957714437d07a3b73b",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.98,
+        "old-flag": 3.22,
+        "old-stock": 2.37
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "field is bound to the actual tx but not constrained by policy",
+      "raw_tx": "03000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000030000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered sequence, stale witness",
+      "txid": "648796fc6759f70ffcc411b96c927025f8e409e07b5220fd0501f9980212fa88",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.59,
+        "old-flag": 3.98,
+        "old-stock": 2.64
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000feffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered sequence, fresh witness",
+      "txid": "648796fc6759f70ffcc411b96c927025f8e409e07b5220fd0501f9980212fa88",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.19,
+        "old-flag": 2.07,
+        "old-stock": 3.19
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "field is bound to the actual tx but not constrained by policy",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000feffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab9533742b4248c210a2905b94345e1a8414d0e12efcfb2f4f0f2397159a71283397a0ccd2a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered locktime, stale witness",
+      "txid": "80e9623e2ea3cc9c0d148f5e8a25db3799147c19143a4459318d22fb8b28d71d",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.35,
+        "old-flag": 3.11,
+        "old-stock": 3.44
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf01000000"
+    },
+    {
+      "arm": "B",
+      "case": "altered locktime, fresh witness",
+      "txid": "80e9623e2ea3cc9c0d148f5e8a25db3799147c19143a4459318d22fb8b28d71d",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.13,
+        "old-flag": 3.71,
+        "old-stock": 3.62
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "field is bound to the actual tx but not constrained by policy",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000100000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf01000000"
+    },
+    {
+      "arm": "B",
+      "case": "tapleaf: ALICE_WINS witness under BOB_WINS leaf",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.23,
+        "old-flag": 3.71,
+        "old-stock": 3.41
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8201545afce796899f8b53177eb3182d35c0e56255e1513b16ddd0b23e40bfbed98886b6b76a86c6c637c687ea8209444ebada103c3e16fc0d5301c8f161d3c5c178759c060e5e770977eaf07a1aa887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c0150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be00000000"
+    },
+    {
+      "arm": "B",
+      "case": "tapleaf: leaf not in the committed tree",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 909,
+      "vsize": 228,
+      "witness_bytes": 522,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Witness program hash mismatch)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.26,
+        "old-flag": 2.32,
+        "old-stock": 3.03
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d5a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad515121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "invalid proof: BOB_WINS attestation on ALICE leaf",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.13,
+        "old-flag": 3.34,
+        "old-stock": 4.29
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f92313800206b686bc4d4db0b26df32fa7c36038fffc858dc04e50f1acd6a00b43f5ae567ced4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "invalid proof: no attestation",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 875,
+      "vsize": 219,
+      "witness_bytes": 489,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 4.04,
+        "old-flag": 4.7,
+        "old-stock": 6.16
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72078a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f92313800d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "B",
+      "case": "old/new: honest witness, unchanged",
+      "txid": "8b6a2f2315a5c0034757cf62f19f37786ad7f5d7d476e30054a423072a80f0f9",
+      "weight": 908,
+      "vsize": 227,
+      "witness_bytes": 521,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 4.63,
+        "old-flag": 4.9,
+        "old-stock": 3.95
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200200000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72088a0000020000000000000001befa99e5f8097c600c0186f54764ff6cbb25878ad02266649ab5bd29b80fb74f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4cafa394157ead2d3c383ca56a79b8c102d3ccfeba522a1cb8b9f138ab953374223e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000150ca15c607ef1abd41b37ac6814494fb0400322e2226a7067ca305e98c4b7be02ffffffff2096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be7220a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f9231380020f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea82067bf1a1c5ce2fb3c65b5aab460b22e3824a3236ec11e36d52b5088836117aad4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c079333579598788c5a639b2926164bac7164f0ef2a8768532e5238ea78c4006bf00000000"
+    },
+    {
+      "arm": "K3",
+      "case": "unconstrained TXCOMMIT: thief pays itself",
+      "txid": "c2f1d0140c0a18759855dd3204dce3e6ddfe0c7341532c6c41f6415296baca6c",
+      "weight": 483,
+      "vsize": 121,
+      "witness_bytes": 101,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.22,
+        "old-flag": 4.6,
+        "old-stock": 3.7
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "a bare TXCOMMIT check is anyone-can-spend under the new rules too",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200400000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c5255900320e70e93943d2131dbe422401233cdc095ccc77a3c3da132b57a63a3cfc1db9d14242102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c06f467850a668a5a9dd107dd2436d9159ccf61b57410a73fa0ff579e22a1df3c700000000"
+    },
+    {
+      "arm": "K3",
+      "case": "unconstrained TXCOMMIT: 31-byte digest",
+      "txid": "c2f1d0140c0a18759855dd3204dce3e6ddfe0c7341532c6c41f6415296baca6c",
+      "weight": 482,
+      "vsize": 121,
+      "witness_bytes": 100,
+      "accepted": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "block-script-verify-flag-failed (Invalid Schnorr signature size)",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.19,
+        "old-flag": 3.97,
+        "old-stock": 3.66
+      },
+      "expected": {
+        "new": false,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200400000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590031f00000000000000000000000000000000000000000000000000000000000000242102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c06f467850a668a5a9dd107dd2436d9159ccf61b57410a73fa0ff579e22a1df3c700000000"
+    },
+    {
+      "arm": "NO",
+      "case": "no oracle gate: settle before attestation",
+      "txid": "5720104dae899624e25906dceb50e7ffaad181a7bc915428c2612b48f75e5343",
+      "weight": 840,
+      "vsize": 210,
+      "witness_bytes": 454,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.05,
+        "old-flag": 3.52,
+        "old-stock": 3.11
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "omitting the oracle check lets anyone pick the outcome",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200500000000fdffffff01703a0f0000000000225120ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60c078a000002000000000000000662576bf7c96e1085063f17b57c641370b371d63fad39b664e96265489f0a584f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d49dab1a13932b1ab6052afc07e10cf68638d675f8122f98f87361196454c3460923e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000718fd7f33c7a24b7d38a1aa0bb45530847e6a638d70eafcb9fa05fd67fb541d102ffffffff20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60c20a6bb86ecd6a5ecfb1722f7fc9a41b07ea881023325667430484f86d14f92313800b16b6b76a86c6c637c687ea8209444ebada103c3e16fc0d5301c8f161d3c5c178759c060e5e770977eaf07a1aa887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c01c54f674d55413ff443da1b966c3ff6b680b560ff03e2f7e8c80564aa5c9034f00000000"
+    },
+    {
+      "arm": "BB",
+      "case": "compromised builder: allowlist holds mallory",
+      "txid": "f2adf5dc7a9b68c387523275ce9753fa61ada76d35fce5901235129618142afd",
+      "weight": 909,
+      "vsize": 228,
+      "witness_bytes": 522,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 3.36,
+        "old-flag": 3.57,
+        "old-stock": 3.32
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "the trust moves to whoever compiles the leaf and its allowlist",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200600000000fdffffff01703a0f00000000002251203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590088a0000020000000000000047ebe7e927a6a48f81f8b7e8caad1f26db77e63ddb1df6a1e1bac822ab73494e4f973621fe8403b6facae9abab80d863a847d3fb007ba2f9830f8e16e6e9b4d4c618e9b4b071f717b6e591b6c9b9aa54944f513b722ddd938d9be43f7c2b622823e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d22a0200000000bb4f1220b61c471fa86b034a1b57e5274be1e821d77a3a667310c55c8ce8269802ffffffff203e8379ab2a410fcbbeffa99241e99410246d5fbbb439f055e5817b746c525590203b1491c751cc7590111e6053d6e6f754143c5afd5a8025dc4a4ac7ae551604f6010120f79405d92fcc02205862c1ee572ef716bc1dc15d3cfd44a22777f37e2a587889d4a8202ef6353f1c6f8a47679fb41b0586b6e29639619890720e7058ecbfc38752f661886b6b76a86c6c637c687ea820ce4178cbfa448da0680882aa99df630156c8dfe1bd15c46bbebe7a7fb784e6e4887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad5121c0795d45aad026467aa8fceccadf7f89609d7a4fc428e3d35f25e17fb4529ff90500000000"
+    },
+    {
+      "arm": "A",
+      "case": "transfer: novated CET pays carol",
+      "txid": "0b2051502b20b5590fcd6431b4c41092cc8ecf554556b723176258981ce3b109",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 4.47,
+        "old-flag": 4.14,
+        "old-stock": 3.91
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "requires Bob online to re-sign",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512068f1454ec1072ede9888a944d5f79351fe67e749d53bb2f5a1db81891be6826404403ba2f3de902a20e5273602c2cd1aa2c6371afdd9df9628f006c4f5758269e4df89025c108bee9a31326738528c31c3e4361cae319ad4f088de234e97dd2d9ea840e40c320a88b5e7e63eb4185d3752f3cf4065979510eeb9932bcad32bdf5a720c91a9ed2578aa0f7cdd62418e25d781d12de029766b65d896ecfa6ace95e175e6442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    },
+    {
+      "arm": "A",
+      "case": "transfer: superseded CET still pays alice",
+      "txid": "caf5fe197a1286c906423e70a3cc8d64881031c9c4c933ef3f1cf2dcec360732",
+      "weight": 612,
+      "vsize": 153,
+      "witness_bytes": 229,
+      "accepted": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "reasons": {
+        "new": "accepted",
+        "old-flag": "accepted",
+        "old-stock": "accepted"
+      },
+      "submit_ms": {
+        "new": 2.85,
+        "old-flag": 3.05,
+        "old-stock": 2.67
+      },
+      "expected": {
+        "new": true,
+        "old-flag": true,
+        "old-stock": true
+      },
+      "matches_expectation": true,
+      "note": "off-chain novation cannot revoke the old CET; Carol must trust Alice",
+      "raw_tx": "02000000000101c4e4a28fd76b7d6ab41b308584e7d12abadbe078db7ced7bc9cc4e2e17aa40200000000000fdffffff01703a0f000000000022512096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be720440c677da41e027050e17d41c94f6755843a0eb61e27fff941473101159fd51b466ddbfd7ba58809a6efcfbeade3475e1b48661c01c2e702b0b31473c87e65284b3407bc7424f43425c647df60eba1fb3815cc1210ad7d594f2580659176cab4a388151cbe89adf3b5593797483e4739aefe0aebd3a3157842b0f10a24b2a2232967e442096c08bece7a749fe4fa7aa0309e0114e37ecd378ca4eef598f1dfb422a10be72ad20ff2c4b709acf5ec339b384c8a1153a4dc45b77b797771af9b30c43036315f60cac21c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac000000000"
+    }
+  ],
+  "mismatches": [],
+  "seconds": 12.7
+}

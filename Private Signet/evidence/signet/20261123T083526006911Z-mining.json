@@ -1,0 +1,20 @@
+{
+  "before": {
+    "height": 0,
+    "tip": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6"
+  },
+  "blocks_requested": 1,
+  "elapsed_seconds": 11.901,
+  "grinder": "miner-python",
+  "height": 1,
+  "kind": "mining",
+  "miner_sha256": "2df980a48e688a9e1b54f1764772edd941c0e7008bcc99faa65546d263e8dffe",
+  "observer": {
+    "height": 1,
+    "tip": "0000031ab5ebada2560dbd6fb178853aca48078157a9cf32a6b4e56facf193a1"
+  },
+  "returncode": 0,
+  "stderr": "2026-11-23 16:35:14 INFO Using nbits=1e0377ae\n2026-11-23 16:35:14 INFO Backdating time for first block to 1000 minutes ago\n2026-11-23 16:35:25 INFO Mined block at height 1; next in -16h30m41s (mine)\n",
+  "stdout": "",
+  "tip": "0000031ab5ebada2560dbd6fb178853aca48078157a9cf32a6b4e56facf193a1"
+}

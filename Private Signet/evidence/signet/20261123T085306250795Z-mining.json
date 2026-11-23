@@ -1,0 +1,29 @@
+{
+  "before": {
+    "height": 101,
+    "tip": "00000238294abc67a468f9d3438383426987a5a4349101b449b2a96de56181a3"
+  },
+  "blocks_requested": 1,
+  "elapsed_seconds": 4.607,
+  "funds_balances": {
+    "immature": 5000.00000165,
+    "trusted": 98.99999835,
+    "untrusted_pending": 0.0
+  },
+  "funds_rescan": {
+    "start_height": 102,
+    "stop_height": 102
+  },
+  "grinder": "miner-python",
+  "height": 102,
+  "kind": "mining",
+  "miner_sha256": "2df980a48e688a9e1b54f1764772edd941c0e7008bcc99faa65546d263e8dffe",
+  "observer": {
+    "height": 102,
+    "tip": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41"
+  },
+  "returncode": 0,
+  "stderr": "2026-11-23 16:53:01 INFO Using nbits=1e0377ae\n2026-11-23 16:53:06 INFO Mined block at height 102; next in 1m38s (mine)\n",
+  "stdout": "",
+  "tip": "000001f7a6e42f7fc9d419d9a79a964702ed52d0421a4b32f0e51cdbbb7aae41"
+}
