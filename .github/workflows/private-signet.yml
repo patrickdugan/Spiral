@@ -66,6 +66,7 @@ jobs:
           python "Private Signet/lab.py" fund-demo --amount 1.0
           python "Private Signet/ab/run_signet_dlc.py"
           python "Private Signet/ab/run_signet_rollover.py"
+          python "Private Signet/ab/run_rollover_regtest.py" --stock "$BITCOIND" --output /tmp/rollover-regtest.json
           python "Private Signet/lab.py" agree
       - name: Publish Signet verdicts as public annotations
         if: always()
@@ -76,6 +77,7 @@ jobs:
           mkdir -p /tmp/signet-receipts
           cp "$SPIRAL_SIGNET_HOME"/receipts/*.json /tmp/signet-receipts/ 2>/dev/null || true
           cp "$SPIRAL_SIGNET_HOME"/state.json /tmp/signet-receipts/ 2>/dev/null || true
+          cp /tmp/rollover-regtest.json /tmp/signet-receipts/ 2>/dev/null || true
           (cd /tmp/signet-receipts && sha256sum *.json > SHA256SUMS) || true
       - uses: actions/upload-artifact@v4
         if: always()
