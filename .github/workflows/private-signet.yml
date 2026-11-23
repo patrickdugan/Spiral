@@ -1,0 +1,148 @@
+name: Private Signet and Keyless-CHECKSIG A/B
+
+on:
+  push:
+    branches: [research/private-signet-keyless-ab]
+  pull_request:
+    paths:
+      - "Private Signet/**"
+      - "BIPSpace/Keyless-CHECKSIG/**"
+      - ".github/workflows/private-signet.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CORE_VERSION: "30.2"
+  CORE_SHA256: "6aa7bb4feb699c4c6262dd23e4004191f6df7f373b5d5978b5bcdd4bb72f75d8"
+  PATCH_BASE: "d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3"
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Harness and A/B unit tests (stdlib only)
+        run: |
+          python -m unittest discover -s "Private Signet" -p test_lab.py -v
+          python -m unittest discover -s "Private Signet/ab" -p test_ab.py -v
+          python -m unittest discover -s "Private Signet/ab" -p test_rollover.py -v
+          python -m unittest discover -s BIPSpace/Keyless-CHECKSIG -p test_reference.py
+      - name: Patch anchors still match the pinned Core source
+        run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p test_core_regtest_patch.py
+
+  signet:
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Lab home
+        run: echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/private-signet" >> "$GITHUB_ENV"
+      - name: Fetch SHA256-pinned Bitcoin Core and the matching Signet miner
+        run: |
+          curl -fsSL --retry 3 -o /tmp/core.tgz "https://bitcoincore.org/bin/bitcoin-core-$CORE_VERSION/bitcoin-$CORE_VERSION-x86_64-linux-gnu.tar.gz"
+          echo "$CORE_SHA256  /tmp/core.tgz" | sha256sum -c -
+          tar -xzf /tmp/core.tgz -C /tmp
+          git clone -q --depth 1 --branch "v$CORE_VERSION" --filter=blob:none --sparse https://github.com/bitcoin/bitcoin.git /tmp/core-src
+          git -C /tmp/core-src sparse-checkout set contrib/signet test/functional/test_framework
+          git -C /tmp/core-src rev-parse HEAD
+          sha256sum /tmp/core-src/contrib/signet/miner
+      - name: Init, mine 101 signed blocks, check agreement, wallet transaction
+        run: |
+          export BITCOIND=/tmp/bitcoin-$CORE_VERSION/bin/bitcoind BITCOIN_CLI=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-cli
+          export BITCOIN_UTIL=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-util SIGNET_MINER=/tmp/core-src/contrib/signet/miner
+          python "Private Signet/lab.py" init
+          python "Private Signet/lab.py" mine --blocks 101
+          python "Private Signet/lab.py" agree
+          python "Private Signet/lab.py" fund-demo --amount 1.0
+          python "Private Signet/ab/run_signet_dlc.py"
+          python "Private Signet/ab/run_signet_rollover.py"
+          python "Private Signet/ab/run_rollover_regtest.py" --stock "$BITCOIND" --output /tmp/rollover-regtest.json
+          python "Private Signet/lab.py" agree
+      - name: Publish Signet verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" signet "$SPIRAL_SIGNET_HOME/receipts"
+      - name: Collect public receipts (no private descriptors)
+        if: always()
+        run: |
+          mkdir -p /tmp/signet-receipts
+          cp "$SPIRAL_SIGNET_HOME"/receipts/*.json /tmp/signet-receipts/ 2>/dev/null || true
+          cp "$SPIRAL_SIGNET_HOME"/state.json /tmp/signet-receipts/ 2>/dev/null || true
+          cp /tmp/rollover-regtest.json /tmp/signet-receipts/ 2>/dev/null || true
+          (cd /tmp/signet-receipts && sha256sum *.json > SHA256SUMS) || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: private-signet-receipts
+          path: /tmp/signet-receipts/
+      - name: Teardown
+        if: always()
+        run: |
+          export BITCOIN_CLI=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-cli
+          python "Private Signet/lab.py" destroy || true
+
+  keyless-ab:
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch SHA256-pinned stock Bitcoin Core (old-node reference)
+        run: |
+          curl -fsSL --retry 3 -o /tmp/core.tgz "https://bitcoincore.org/bin/bitcoin-core-$CORE_VERSION/bitcoin-$CORE_VERSION-x86_64-linux-gnu.tar.gz"
+          echo "$CORE_SHA256  /tmp/core.tgz" | sha256sum -c -
+          tar -xzf /tmp/core.tgz -C /tmp
+      - name: Fetch pinned Core source and apply the Keyless research patches
+        run: |
+          git init -q /tmp/kcore
+          git -C /tmp/kcore remote add origin https://github.com/bitcoin/bitcoin.git
+          git -C /tmp/kcore fetch -q --depth=1 origin "$PATCH_BASE"
+          git -C /tmp/kcore checkout -q --detach FETCH_HEAD
+          test "$(git -C /tmp/kcore rev-parse HEAD)" = "$PATCH_BASE"
+          python BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/kcore
+          python BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/kcore
+          git -C /tmp/kcore diff > /tmp/keyless-core.patch
+          sha256sum /tmp/keyless-core.patch
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/kcore/build
+          key: keyless-core-${{ env.PATCH_BASE }}-${{ hashFiles('BIPSpace/Keyless-CHECKSIG/core/patch_core.py', 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py') }}
+      - name: Build patched bitcoind and test_bitcoin
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
+          cmake -S /tmp/kcore -B /tmp/kcore/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF -DBUILD_TESTS=ON -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/kcore/build --target bitcoind test_bitcoin -j "$(nproc)"
+      - name: Interpreter vectors in patched Core
+        run: |
+          python BIPSpace/Keyless-CHECKSIG/core/export_vectors.py /tmp/keyless-vectors.json
+          KEYLESS_CORE_VECTORS=/tmp/keyless-vectors.json /tmp/kcore/build/bin/test_bitcoin \
+            --run_test=script_tests/keyless_research_transaction_vectors --log_level=test_suite | tee /tmp/keyless-vectors.log
+      - name: A/B trials on new, old-flag and old-stock validators
+        run: |
+          python "Private Signet/ab/run_ab_regtest.py" --patched /tmp/kcore/build/bin/bitcoind \
+            --stock /tmp/bitcoin-$CORE_VERSION/bin/bitcoind --output /tmp/ab-regtest.json
+      - name: Publish A/B verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" ab /tmp/ab-regtest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyless-ab
+          path: |
+            /tmp/ab-regtest.json
+            /tmp/keyless-core.patch
+            /tmp/keyless-vectors.log

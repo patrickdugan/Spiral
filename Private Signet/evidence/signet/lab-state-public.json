@@ -1,0 +1,63 @@
+{
+  "bitcoind_sha256": "986e63b3c8770f08d0059820ad3dd085d1ab9e1bea23946c243f858a06888a08",
+  "challenge": "2102c181c98bb1da78ed0ad4f8f5941e9f20f2528507d3c8cd6afc0b85e32a5943afac",
+  "commands": {
+    "miner": [
+      "/root/ark-nm2/core/bin/bitcoind",
+      "-datadir=<lab>/miner",
+      "-signet",
+      "-signetchallenge=2102c181c98bb1da78ed0ad4f8f5941e9f20f2528507d3c8cd6afc0b85e32a5943afac",
+      "-rpcport=39442",
+      "-port=39443",
+      "-server=1",
+      "-daemon",
+      "-dnsseed=0",
+      "-fixedseeds=0",
+      "-fallbackfee=0.00001",
+      "-rpcbind=127.0.0.1",
+      "-rpcallowip=127.0.0.1",
+      "-listen=1",
+      "-bind=127.0.0.1",
+      "-connect=0"
+    ],
+    "observer": [
+      "/root/ark-nm2/core/bin/bitcoind",
+      "-datadir=<lab>/observer",
+      "-signet",
+      "-signetchallenge=2102c181c98bb1da78ed0ad4f8f5941e9f20f2528507d3c8cd6afc0b85e32a5943afac",
+      "-rpcport=39452",
+      "-port=39453",
+      "-server=1",
+      "-daemon",
+      "-dnsseed=0",
+      "-fixedseeds=0",
+      "-fallbackfee=0.00001",
+      "-rpcbind=127.0.0.1",
+      "-rpcallowip=127.0.0.1",
+      "-listen=1",
+      "-bind=127.0.0.1",
+      "-connect=127.0.0.1:39443"
+    ]
+  },
+  "core_subversion": "/Satoshi:31.1.0/",
+  "core_version": 310100,
+  "genesis_hash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+  "ports": {
+    "bootstrap": [
+      39432,
+      39433
+    ],
+    "miner": [
+      39442,
+      39443
+    ],
+    "observer": [
+      39452,
+      39453
+    ]
+  },
+  "reward_address": "tb1qrl3jtad8g5l5m7nhreuaxfqd3gtm4mxmu06jnx",
+  "schema": "spiral-private-signet/2",
+  "scope": "localhost-only; stock Bitcoin Core consensus; experimental patch not installed",
+  "signer_address": "tb1qv6qemq0vurcp0r8atv49ssmhrumh8v5hqjqph5"
+}
