@@ -6,6 +6,27 @@ block hash below is in the receipts under [evidence/](evidence/).
 Nothing here was run on a public network. Keyless-CHECKSIG is enforced only
 by the patched regtest node started with `-keylessresearch=1`.
 
+## CI confirmation
+
+[Run 45143128356](https://github.com/patrickdugan/Spiral/actions/runs/45143128356)
+on commit `69959b6` passed all three jobs. The values below come from its
+public notice annotations.
+
+- **signet** (Core 30.2 release tarball and the v30.2 miner, with
+  `bitcoin-util` grinding):
+  - 101 signed blocks in 204 s, tip `000000ef40849c78238060c1c6c529cd4f4c30daa107d461720e1d68b55af046`;
+  - wallet transaction `6d671db326d9ce51b873f3d8f4433bfb54af09d1a2959eb62bc15c1e1f488404`
+    confirmed on both nodes;
+  - vanilla DLC funding `fec151d7…856d` and CET
+    `ae0a509f4b9857a425124ec32abb725d3500a667478c5fc5016fc286c4ae22a2`
+    confirmed on both nodes in block
+    `00000329fb51ad1441beba4e38079862b84e26c74b5b5843f9dba6fd356b2b84`;
+  - both nodes agree at height 104, chainwork `…1e47fc34`.
+- **keyless-ab:**
+  - patched Core `d0f6d995` built on the runner, interpreter vectors pass;
+  - 37 trials, 0 mismatches, with `new` and `old-flag` on the patched v30.0
+    build and `old-stock` on Core 30.2.
+
 ## Phase 1: the private Signet works
 
 | Step | Result | Receipt |
