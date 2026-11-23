@@ -103,6 +103,19 @@ Receipt: `evidence/signet-keyless/20261123T134349654392Z-signet-keyless-k4.json`
 | K3 | bare-TXCOMMIT output taken by a thief, `68d23dea…386d`, in block `00000308…4327`, accepted by all three nodes |
 | Final | all three nodes agree at height 112, chainwork `…20969cd4` |
 
+CI repeated K4, C1 and K3 in
+[run 45187341988](https://github.com/patrickdugan/Spiral/actions/runs/45187341988)
+on commit `6d9e880`, with the patched v30.0 node as miner and observer and
+stock Core 30.2 as the legacy node:
+
+- **K4:** settlement `6450a38eaa6926ce55f58534534a1b210312991a97f91b02255365d74574a3bb`
+  in signed block `000001797096633084ca340c97963310c39f63b2e5043258ef05d63447fec31b`,
+  accepted by all three nodes.
+- **C1:** block `000002dd…1e32` is invalid on the miner and the observer and
+  active on the legacy node.
+- **K3:** the theft is accepted by all three nodes.
+- **Final:** all three nodes agree.
+
 C1 shows how the split happens in practice. The patched miner announced the
 invalid block to its high-bandwidth compact-block peers **before script
 validation**, which is ordinary BIP152 behaviour. The observer then answered
