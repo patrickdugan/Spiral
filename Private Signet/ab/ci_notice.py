@@ -30,6 +30,12 @@ def signet(receipts: Path):
     for d in rows.get("signet-vanilla-dlc", []):
         out.append(f"vanilla DLC funding {d['funding_txid']} CET {d['cet_txid']} block {d['settlement_block']} "
                    f"confirmed_on_both={d['confirmed_on_both']} weight={d['cet_weight']} mempool={d['testmempoolaccept']['miner'][0].get('allowed')}")
+    for t in rows.get("signet-dlc-ownership-rollover", []):
+        out.append(
+            f"rollover={t['rollover_txid']} height={t['rollover_height']} "
+            f"former_owner_rejected={all(not x.get('allowed') for x in t['old_cet_rejected_after_rollover'].values())} "
+            f"buyer_cet={t['buyer_cet_txid']} buyer_confirmed={t['confirmed_new_owner_payout']}"
+        )
     emit(out or ["no receipts"])
 
 
