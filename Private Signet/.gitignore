@@ -1,0 +1,13 @@
+# Never commit any generated signer material, wallet database, RPC cookie or receipt.
+.local/
+data/
+receipts/
+state.json
+PRIVATE-*.json
+*.cookie
+*.dat
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+bitcoin.conf
+*.env
