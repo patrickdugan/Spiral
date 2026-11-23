@@ -21,6 +21,8 @@ env:
   CORE_VERSION: "30.2"
   CORE_SHA256: "6aa7bb4feb699c4c6262dd23e4004191f6df7f373b5d5978b5bcdd4bb72f75d8"
   PATCH_BASE: "d0f6d9953a15d7c7111d46dcb76ab2bb18e5dee3"
+  # patrickdugan/SatsHedgeZero commit whose shz-cli live flow takes SHZ_CHAIN.
+  SHZ_REF: "33e3a6bd680b876e7f9e2dbd0a6529b7967c04ab"
 
 jobs:
   static:
@@ -38,6 +40,7 @@ jobs:
           python -m unittest discover -s "Private Signet/core" -p test_patch_core_signet.py -v
           python -m unittest discover -s "Private Signet/core" -p test_patch_core_csfs.py -v
           python -m unittest discover -s "Private Signet/ab" -p test_rollover.py -v
+          python -m unittest discover -s "Private Signet/ab" -p test_shz.py -v
           python -m unittest discover -s BIPSpace/Keyless-CHECKSIG -p test_reference.py
       - name: Patch anchors still match the pinned Core source
         run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p test_core_regtest_patch.py
@@ -146,7 +149,13 @@ jobs:
       - name: Publish A/B verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" ab /tmp/ab-regtest.json
-      - name: Patched custom Signet (K4, C1, K3) with a stock legacy node
+      - name: SHZ-K1 trials (SatsHedgeZero trade 1 as a keyless numeric DLC)
+        run: |
+          python "Private Signet/ab/run_shz_k1_regtest.py" --patched /tmp/kcore/build/bin/bitcoind             --stock /tmp/bitcoin-$CORE_VERSION/bin/bitcoind --output /tmp/shz-k1-regtest.json
+      - name: Publish SHZ-K1 verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" ab /tmp/shz-k1-regtest.json
+      - name: Patched custom Signet (K4, C1, K3, arm C, SHZ-K1) with a stock legacy node
         run: |
           echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet" >> "$GITHUB_ENV"
           export SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet SPIRAL_SIGNET_PORT_BASE=39532
@@ -161,6 +170,7 @@ jobs:
           python "Private Signet/lab.py" mine --blocks 101
           python "Private Signet/lab.py" agree
           python "Private Signet/ab/run_signet_keyless.py"
+          python "Private Signet/ab/run_signet_shz_k1.py"
       - name: Publish patched-Signet verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" keyless "$SPIRAL_SIGNET_HOME/receipts"
@@ -170,6 +180,61 @@ jobs:
           name: keyless-ab
           path: |
             /tmp/ab-regtest.json
+            /tmp/shz-k1-regtest.json
             /tmp/keyless-core.patch
             /tmp/keyless-vectors.log
             ${{ runner.temp }}/keyless-signet/receipts/
+
+  shz-prototype:
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: patrickdugan/SatsHedgeZero
+          ref: ${{ env.SHZ_REF }}
+          path: shz
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            shz/target
+          key: shz-cli-${{ env.SHZ_REF }}
+      - name: Build the SatsHedgeZero CLI
+        run: cargo build --release --locked -p shz-cli --manifest-path shz/Cargo.toml
+      - name: Fetch SHA256-pinned Bitcoin Core and the matching Signet miner
+        run: |
+          curl -fsSL --retry 3 -o /tmp/core.tgz "https://bitcoincore.org/bin/bitcoin-core-$CORE_VERSION/bitcoin-$CORE_VERSION-x86_64-linux-gnu.tar.gz"
+          echo "$CORE_SHA256  /tmp/core.tgz" | sha256sum -c -
+          tar -xzf /tmp/core.tgz -C /tmp
+          git clone -q --depth 1 --branch "v$CORE_VERSION" --filter=blob:none --sparse https://github.com/bitcoin/bitcoin.git /tmp/core-src
+          git -C /tmp/core-src sparse-checkout set contrib/signet test/functional/test_framework
+      - name: SHZ prototype dry run on a private custom Signet
+        run: |
+          echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/shz-signet" >> "$GITHUB_ENV"
+          export SPIRAL_SIGNET_HOME=$RUNNER_TEMP/shz-signet SPIRAL_SIGNET_PORT_BASE=39632
+          export BITCOIND=/tmp/bitcoin-$CORE_VERSION/bin/bitcoind BITCOIN_CLI=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-cli
+          export BITCOIN_UTIL=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-util SIGNET_MINER=/tmp/core-src/contrib/signet/miner
+          python "Private Signet/lab.py" init
+          python "Private Signet/lab.py" mine --blocks 101
+          python "Private Signet/ab/run_signet_shz_prototype.py" --shz shz/target/release/shz
+      - name: Publish SHZ prototype verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" shz "$SPIRAL_SIGNET_HOME/receipts"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shz-prototype-signet
+          path: ${{ runner.temp }}/shz-signet/receipts/
+      - name: Teardown
+        if: always()
+        run: |
+          export BITCOIN_CLI=/tmp/bitcoin-$CORE_VERSION/bin/bitcoin-cli
+          python "Private Signet/lab.py" destroy || true

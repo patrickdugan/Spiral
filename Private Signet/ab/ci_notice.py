@@ -56,14 +56,21 @@ def ab(path: Path):
 
 
 def keyless(receipts: Path):
-    out = []
+    out, mining = [], []
     k4_files = sorted(receipts.glob("*signet-keyless-k4.json"))
     for f in sorted(receipts.glob("*.json")):
         d = json.loads(f.read_text())
         if d.get("kind") == "signet-keyless-k4" and f != k4_files[-1]:
             continue   # report the latest K4 run only
         if d.get("kind") == "mining":
-            out.append(f"mined {d['blocks_requested']} -> height {d['height']} tip {d['tip']} rc={d['returncode']}")
+            mining.append(f"mined {d['blocks_requested']} -> height {d['height']} tip {d['tip']} rc={d['returncode']}")
+        elif d.get("kind") == "signet-shz-k1":
+            t, s, x = d["transfer"], d["split"], d["double_sale"]
+            out.append(f"SHZ-K1 transfer to carol {t['txid']} outputs={t['outputs']} vsize={t['vsize']} in {t['block']} "
+                       f"accepted_by_all={t['accepted_by_all']}; double sale rejected_everywhere={x['rejected_everywhere']}")
+            out.append(f"SHZ-K1 1-sat shave block {s['block']}: "
+                       + ", ".join(f"{n}={(c or {}).get('status')}" for n, c in s["chaintips"].items())
+                       + f"; legacy_forked={s['legacy_forked']} patched_rejected={s['patched_rejected']}; agreement={d['agreement']}")
         elif d.get("kind") == "signet-keyless-k4":
             k4, c1, k3 = d["k4"], d["c1"], d["k3"]
             out.append(f"K4 arm B settlement {k4['txid']} in signed block {k4['block']} accepted_by_all={k4['accepted_by_all']} "
@@ -78,8 +85,20 @@ def keyless(receipts: Path):
                 out.append(f"arm C transfer to carol {c['transfer_txid']} in {c['transfer_block']} accepted_by_all="
                            f"{c['accepted_by_all']}; double sale {c['double_sale_txid']}: "
                            + ", ".join(f"{n}={v['result'][:40]}" for n, v in c["double_sale_verdicts"].items()))
-    emit(out[:2] + out[-4:] if len(out) > 6 else out or ["no receipts"])
+    emit(mining[:2] + out or ["no receipts"])
+
+
+def shz(receipts: Path):
+    out = []
+    for f in sorted(receipts.glob("*signet-shz-prototype.json")):
+        d = json.loads(f.read_text())
+        out.append(f"SHZ prototype on private Signet: funding {d['funding_txid']} clearing {d['clearing_txid']} "
+                   f"vsize={d['clearing_vsize']} block {d['settlement_block']} confirmations={d['confirmations']}")
+        out.append("clearing outputs " + ", ".join(f"{o['sats']} sats unspent on {len(o['unspent_on'])}" for o in d["clearing_outputs"])
+                   + "; probes " + ", ".join(f"{p['probe_id']}={p['core_reject_reason']}" for p in d["probes"])
+                   + f"; agreement={d['agreement']}")
+    emit(out or ["no receipts"])
 
 
 if __name__ == "__main__":
-    {"signet": signet, "ab": ab, "keyless": keyless}[sys.argv[1]](Path(sys.argv[2]))
+    {"signet": signet, "ab": ab, "keyless": keyless, "shz": shz}[sys.argv[1]](Path(sys.argv[2]))
