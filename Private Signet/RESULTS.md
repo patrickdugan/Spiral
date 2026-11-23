@@ -328,6 +328,31 @@ Runs of 2026-11-24 against SatsHedgeZero `5ca390e` plus the shz-cli change
 below. Two parts: the SHZ prototype as it is, then SHZ-K1, the same contract
 moved onto the keyless rules.
 
+**CI confirmation.** [Run 45282607416](https://github.com/patrickdugan/Spiral/actions/runs/45282607416)
+on commit `edd4b53` passed all four jobs: the stock Core 30.2 runner and
+the patched v30.0 build, built from source. The values come from its public
+notice annotations.
+
+- **shz-prototype** (SatsHedgeZero `33e3a6b`, Core 30.2): funding
+  `0dfccb2d…6970` and clearing
+  `a401222c5c8ee776ccff42313a7e3da7175e54c540b8d3ab8aa850d9c05ac283`
+  (505 vB) confirmed on both nodes in block `00000279…3f07`; the four
+  outputs are unspent on both nodes; both 1-sat shaves were refused.
+- **keyless-ab, regtest:** SHZ-K1 19 trials, 0 mismatches, with
+  `old-stock` on Core 30.2.
+- **keyless-ab, patched Signet** (with K4, C1, K3 and arm C in the same
+  lab):
+  - transfer to Carol
+    `f325ace6792ed2a677e3769532f899b946dd7c9ecb3c1d08be3a343fa11a1fbe`
+    (1,075 / 550, 794 vB) accepted by all three nodes;
+  - the double sale rejected everywhere;
+  - the 1-sat-shave block `0000007b…5e5b` invalid on both patched nodes and
+    active on the 30.2 legacy node;
+  - all nodes agree at the end.
+- **What it took:** the first attempt (run 45278249742) failed because the
+  block after the K4 run omitted SHZ-K1's funding. The runner now mines
+  until the wallet sees the funding confirmed.
+
 ### The prototype as it is (stock Core 31.1)
 
 `shz testnet4-live` is SHZ's live flow. It funds three NUMS P2TR DLC outputs
