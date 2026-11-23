@@ -310,6 +310,18 @@ miner and observer run with CSFS, alongside a stock Core 31.1 legacy node.
 | K4, C1, K3 | repeated: K4 `ec598857…b4d4` accepted by all; C1 block `00000362…1eda` invalid on both patched nodes and active on the legacy node; K3 theft `8b7002d4…1c8a` accepted by all |
 | Final | all three nodes agree |
 
+CI repeated this in
+[run 45209526517](https://github.com/patrickdugan/Spiral/actions/runs/45209526517)
+on commit `13f6a45`, with stock Core 30.2 as both the old-stock regtest node
+and the Signet legacy node:
+
+- **Regtest:** 55 trials, 0 mismatches.
+- **Transfer to Carol:** `28eea7850a5cf94e840881e39ef39ce12c8ed7c02cb206a51adc5070fb585473`
+  in block `00000204025135e75f41456182068bc5f6473b73a2eff75a77a838d95ab74c42`,
+  accepted by all three nodes.
+- **Double sale:** `54e65c77…f57a` rejected on every node.
+- **K4, C1 and K3:** repeated, and all three nodes agree.
+
 ## Phase 5: does keyless reduce the trusted computing base?
 
 | Threat | Arm A | Arm B | Evidence |
