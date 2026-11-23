@@ -170,7 +170,10 @@ jobs:
           python "Private Signet/lab.py" mine --blocks 101
           python "Private Signet/lab.py" agree
           python "Private Signet/ab/run_signet_keyless.py"
-          python "Private Signet/ab/run_signet_shz_k1.py"
+          # Job logs need authentication; a failure's tail goes to a public annotation.
+          python "Private Signet/ab/run_signet_shz_k1.py" > /tmp/shz-k1.out 2>&1 || {
+            echo "::error title=shz-k1::$(tail -c 1500 /tmp/shz-k1.out | tr '\n' ' ' | sed 's/%/%25/g')"; exit 1; }
+          cat /tmp/shz-k1.out
       - name: Publish patched-Signet verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" keyless "$SPIRAL_SIGNET_HOME/receipts"
