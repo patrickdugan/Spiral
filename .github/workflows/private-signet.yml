@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m unittest discover -s "Private Signet" -p test_lab.py -v
           python -m unittest discover -s "Private Signet/ab" -p test_ab.py -v
+          python -m unittest discover -s "Private Signet/ab" -p test_rollover.py -v
           python -m unittest discover -s BIPSpace/Keyless-CHECKSIG -p test_reference.py
       - name: Patch anchors still match the pinned Core source
         run: python -m unittest discover -s BIPSpace/Keyless-CHECKSIG/verifiers -p test_core_regtest_patch.py
@@ -64,6 +65,7 @@ jobs:
           python "Private Signet/lab.py" agree
           python "Private Signet/lab.py" fund-demo --amount 1.0
           python "Private Signet/ab/run_signet_dlc.py"
+          python "Private Signet/ab/run_signet_rollover.py"
           python "Private Signet/lab.py" agree
       - name: Publish Signet verdicts as public annotations
         if: always()
