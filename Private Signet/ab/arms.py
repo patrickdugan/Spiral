@@ -231,3 +231,102 @@ class UnsafeUnconstrained:
         tx = Tx((TxIn(funding_txid, vout),), (TxOut(PAYOUT_SATS, p2tr_key_spk(thief_x)),))
         digest = sighash_scriptpath(tx, 0, [Prevout(FUNDING_SATS, self.spk)], self.leaf, key_version=2)
         return tx.with_witness(0, [digest, self.leaf, self.control])
+
+
+# --- Arm C: CSFS oracle check + owner-assigned recipient + TXCOMMIT ---------
+
+OP_CSFS, OP_OVER, OP_VERIFY = 0xCC, 0x78, 0x69
+
+
+def contract_id(label: str, outcome: str) -> bytes:
+    return hashlib.sha256(f"spiral-armC/{label}/{outcome}".encode()).digest()
+
+
+def assignment_message(cid: bytes, recipient_x: bytes) -> bytes:
+    return hashlib.sha256(cid + recipient_x).digest()
+
+
+def csfs_leaf(oracle_msg: bytes, oracle_x: bytes, cid: bytes, owner_x: bytes, amount: int) -> bytes:
+    """Witness, bottom to top: prefix, suffix, recipient_x, owner_sig, oracle_sig.
+
+    1. The oracle's BIP340 attestation for this outcome (x(R)||s_m) verifies
+       under the oracle key; no hash pre-commitment is needed.
+    2. The position owner signed SHA256(cid || recipient_x); any recipient,
+       chosen after funding, without the counterparty.
+    3. The single output pays `amount` to P2TR(recipient_x), bound to the
+       actual transaction through TXCOMMIT.
+    """
+    tag = hashlib.sha256(b"TapSighash").digest()
+    return b"".join((
+        push(oracle_msg), push(oracle_x), bytes([OP_CSFS, OP_VERIFY]),
+        bytes([OP_OVER]), push(cid), bytes([SWAP, CAT, OP_SHA256]), push(owner_x), bytes([OP_CSFS, OP_VERIFY]),
+        bytes([ROT, TOALT, SWAP, TOALT]),
+        push(b"\x51\x20"), bytes([SWAP, CAT]),
+        push(struct.pack("<Q", amount) + b"\x22"),
+        bytes([SWAP, CAT, OP_SHA256]),
+        bytes([FROMALT, FROMALT, ROT, ROT, CAT, CAT]),
+        push(tag + tag), bytes([SWAP, CAT, OP_SHA256]),
+        push(ref.TXCOMMIT_KEY), bytes([OP_CHECKSIGVERIFY, TRUE]),
+    ))
+
+
+class ArmC:
+    name = "C-CSFS-oracle-owner-assignment"
+
+    def __init__(self, parties: Parties, label: str = "v1",
+                 owners: dict[str, str] | None = None):
+        self.p, self.label = parties, label
+        self.owners = owners or {"ALICE_WINS": "alice", "BOB_WINS": "bob"}
+        self.cid = {m: contract_id(label, m) for m in OUTCOMES}
+        self.leaves = {m: csfs_leaf(Oracle.message(m), parties.oracle.P, self.cid[m],
+                                    parties.x(self.owners[m]), PAYOUT_SATS) for m in OUTCOMES}
+        a, b = self.leaves[OUTCOMES[0]], self.leaves[OUTCOMES[1]]
+        self.spk = p2mr_spk(a, b)
+        self.controls = {OUTCOMES[0]: p2mr_control(b), OUTCOMES[1]: p2mr_control(a)}
+
+    @property
+    def funding_spk(self) -> bytes:
+        return self.spk
+
+    def oracle_sig(self, outcome: str, attestation: int) -> bytes:
+        return self.p.oracle.R + attestation.to_bytes(32, "big")
+
+    def assign(self, outcome: str, recipient: str, signer: str | None = None, cid: bytes | None = None) -> bytes:
+        """Owner's off-chain assignment of the payout to `recipient`."""
+        who = signer or self.owners[outcome]
+        msg = assignment_message(cid or self.cid[outcome], self.p.x(recipient))
+        return secp.sign(getattr(self.p, who), msg)
+
+    def settlement(self, funding_txid: str, vout: int, outcome: str, payee: str, oracle_sig: bytes,
+                   assignment: bytes, *, proof_payee: str | None = None, amount: int = PAYOUT_SATS,
+                   witness_for: Tx | None = None, **tx_fields) -> Tx:
+        tx = Tx((TxIn(funding_txid, vout, tx_fields.pop("sequence", 0xFFFFFFFD)),),
+                (TxOut(amount, p2tr_key_spk(self.p.x(payee))),), **tx_fields)
+        basis = witness_for or tx
+        leaf = self.leaves[outcome]
+        msg = sigmsg_scriptpath(basis, 0, [Prevout(FUNDING_SATS, self.spk)], leaf, key_version=2)
+        recipient = self.p.x(proof_payee or payee)
+        witness = [msg[:138], msg[170:], recipient, assignment, oracle_sig]
+        return tx.with_witness(0, witness + [leaf, self.controls[outcome]])
+
+    setup_keys = 0
+    setup_messages = "standard DLC announcement (oracle key + nonce); owners hold their position keys"
+
+
+class CsfsProbe:
+    """P2TR fixture: leaf `<msg> <key> OP_CHECKSIGFROMSTACK`. On old rules
+    0xcc is OP_SUCCESS204, so every spend is valid; on new rules it is a
+    BIP340 check whose result is the script's final stack element."""
+
+    def __init__(self, msg: bytes, key: bytes):
+        self.msg, self.key = msg, key
+        self.leaf = push(msg) + push(key) + bytes([OP_CSFS])
+        self.tree = taproot_output(NUMS, [self.leaf])
+
+    @property
+    def funding_spk(self) -> bytes:
+        return self.tree["spk"]
+
+    def spend(self, funding_txid: str, vout: int, sig: bytes, payee_x: bytes) -> Tx:
+        tx = Tx((TxIn(funding_txid, vout),), (TxOut(PAYOUT_SATS, p2tr_key_spk(payee_x)),))
+        return tx.with_witness(0, [sig, self.leaf, self.tree["controls"][0]])

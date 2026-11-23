@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import secp  # noqa: E402
-from arms import (FUNDING_SATS, OUTCOMES, PAYOUT_SATS, SETTLE_FEE_SATS, ArmA, ArmB,  # noqa: E402
+from arms import (FUNDING_SATS, OUTCOMES, PAYOUT_SATS, SETTLE_FEE_SATS, ArmA, ArmB, ArmC, CsfsProbe,  # noqa: E402
                   Parties, UnsafeUnconstrained, p2tr_key_spk, keyless_leaf)
 from nodes import Faucet, Node, build_block, coinbase_coin, submit_all  # noqa: E402
 from txlib import Tx, TxIn, TxOut, ref  # noqa: E402
@@ -103,12 +103,21 @@ def run(args) -> dict:
                         TxOut(FUNDING_SATS, arm_b.funding_spk), TxOut(FUNDING_SATS, arm_b.funding_spk),
                         TxOut(FUNDING_SATS, unsafe_k3.funding_spk), TxOut(FUNDING_SATS, no_oracle.funding_spk),
                         TxOut(FUNDING_SATS, bad_builder.funding_spk)]
+        arm_c = ArmC(p) if args.csfs else None
+        probe_msg = hashlib.sha256(b"csfs probe").digest()
+        probes = {}
+        if arm_c:
+            probes = {"bip340": CsfsProbe(probe_msg, p.x("alice")),
+                      "msg31": CsfsProbe(probe_msg[:31], p.x("alice")),
+                      "unknown_key": CsfsProbe(probe_msg, b"\x02" + p.x("alice"))}
+            fund_outputs += [TxOut(FUNDING_SATS, arm_c.funding_spk)] + \
+                            [TxOut(FUNDING_SATS, pr.funding_spk) for pr in probes.values()]
         coin = coinbase_coin(lab.new, blocks[0])
         change = coin["value"] - FUNDING_SATS * len(fund_outputs) - 5_000
         funding = faucet.spend(coin, fund_outputs + [TxOut(change, faucet.spk)])
         funding_block = lab.extend([funding], "funding")
         F = funding.txid
-        A1, A2, B1, B2, K3, NO, BB = range(7)
+        A1, A2, B1, B2, K3, NO, BB, C1, PR_SIG, PR_31, PR_UNK = range(11)
         s_alice, s_bob = p.oracle.attest("ALICE_WINS"), p.oracle.attest("BOB_WINS")
 
         # --- Arm A ----------------------------------------------------------
@@ -178,6 +187,43 @@ def run(args) -> dict:
         lab.trial("BB", "compromised builder: allowlist holds mallory", bad_builder.settlement(F, BB, "ALICE_WINS", "mallory", s_alice), ALL(True),
                   "the trust moves to whoever compiles the leaf and its allowlist")
 
+        # --- Arm C: CSFS oracle + owner assignment + TXCOMMIT ------------------
+        if arm_c:
+            osig = arm_c.oracle_sig("ALICE_WINS", s_alice)
+            self_assign = arm_c.assign("ALICE_WINS", "alice")
+            to_carol = arm_c.assign("ALICE_WINS", "carol")
+            to_dave = arm_c.assign("ALICE_WINS", "mallory")   # a second buyer
+            good_c = arm_c.settlement(F, C1, "ALICE_WINS", "alice", osig, self_assign)
+            lab.trial("C", "settle ALICE_WINS -> alice (owner self-assigns)", good_c, ALL(True))
+            lab.trial("C", "transfer: Alice assigns to carol, no Bob", arm_c.settlement(F, C1, "ALICE_WINS", "carol", osig, to_carol), ALL(True),
+                      "transfer without the counterparty; one signature from the position owner")
+            lab.trial("C", "double sale: Alice also assigns to a second buyer", arm_c.settlement(F, C1, "ALICE_WINS", "mallory", osig, to_dave), ALL(True),
+                      "both assignments are valid; the first settlement mined wins")
+            lab.trial("C", "unassigned recipient (carol's assignment, mallory paid)",
+                      arm_c.settlement(F, C1, "ALICE_WINS", "mallory", osig, to_carol, proof_payee="carol"), FORK)
+            lab.trial("C", "recipient key without assignment", arm_c.settlement(F, C1, "ALICE_WINS", "mallory", osig, to_carol), FORK)
+            lab.trial("C", "assignment signed by Bob (not the owner)",
+                      arm_c.settlement(F, C1, "ALICE_WINS", "carol", osig, arm_c.assign("ALICE_WINS", "carol", signer="bob")), FORK)
+            other_cid = hashlib.sha256(b"another contract").digest()
+            lab.trial("C", "assignment replayed from another contract",
+                      arm_c.settlement(F, C1, "ALICE_WINS", "carol", osig, arm_c.assign("ALICE_WINS", "carol", cid=other_cid)), FORK)
+            lab.trial("C", "BOB_WINS attestation on ALICE leaf",
+                      arm_c.settlement(F, C1, "ALICE_WINS", "alice", arm_c.oracle_sig("ALICE_WINS", s_bob), self_assign), FORK)
+            lab.trial("C", "forged oracle signature", arm_c.settlement(F, C1, "ALICE_WINS", "alice", bytes(range(64)), self_assign), FORK)
+            lab.trial("C", "63-byte oracle signature", arm_c.settlement(F, C1, "ALICE_WINS", "alice", osig[:63], self_assign), FORK)
+            lab.trial("C", "empty oracle signature (CSFS pushes false)", arm_c.settlement(F, C1, "ALICE_WINS", "alice", b"", self_assign), FORK)
+            lab.trial("C", "amount -1000, stale witness",
+                      arm_c.settlement(F, C1, "ALICE_WINS", "alice", osig, self_assign, amount=PAYOUT_SATS - 1000, witness_for=good_c), FORK)
+            # Plain Taproot CSFS probes: OP_SUCCESS204 on old rules.
+            probe_sig = secp.sign(p.alice, probe_msg)
+            lab.trial("CS", "CSFS valid BIP340 signature", probes["bip340"].spend(F, PR_SIG, probe_sig, p.x("carol")), ALL(True))
+            lab.trial("CS", "CSFS wrong signature", probes["bip340"].spend(F, PR_SIG, secp.sign(p.bob, probe_msg), p.x("carol")), FORK)
+            lab.trial("CS", "CSFS 63-byte signature", probes["bip340"].spend(F, PR_SIG, probe_sig[:63], p.x("carol")), FORK)
+            lab.trial("CS", "CSFS empty signature (false result)", probes["bip340"].spend(F, PR_SIG, b"", p.x("carol")), FORK)
+            lab.trial("CS", "CSFS 31-byte message (lab restriction)", probes["msg31"].spend(F, PR_31, probe_sig, p.x("carol")), FORK)
+            lab.trial("CS", "CSFS 33-byte key type, any non-empty sig", probes["unknown_key"].spend(F, PR_UNK, b"\x01", p.x("carol")), ALL(True),
+                      "unknown key types stay upgradable, as in BIP342/BIP348")
+
         # --- Phase 4: transfer --------------------------------------------------
         # Vanilla: Alice sells her ALICE_WINS position to Carol. Bob and Alice
         # re-sign a CET paying Carol (novation). The old CET still exists.
@@ -196,6 +242,7 @@ def run(args) -> dict:
                        "commitments": {m: p.oracle.hash_commitment(m).hex() for m in OUTCOMES}},
             "arm_a_leaf": arm_a.leaf.hex(), "arm_b_leaves": {m: l.hex() for m, l in arm_b.leaves.items()},
             "arm_b_spk": arm_b.funding_spk.hex(),
+            "arm_c_leaves": {m: l.hex() for m, l in arm_c.leaves.items()} if arm_c else None,
             "trials": lab.trials,
             "mismatches": [t for t in lab.trials if not t["matches_expectation"]],
         }
@@ -210,6 +257,8 @@ def main():
     ap.add_argument("--patched", type=Path, required=True, help="bitcoind built with the Keyless patch")
     ap.add_argument("--stock", type=Path, required=True, help="unmodified bitcoind")
     ap.add_argument("--output", type=Path, required=True)
+    ap.add_argument("--csfs", action="store_true",
+                    help="patched build includes core/patch_core_csfs.py: run arm C and CSFS probes")
     ap.add_argument("--mechanics-only", action="store_true",
                     help="omit -keylessresearch (harness check against stock binaries; fork rows will mismatch)")
     args = ap.parse_args()

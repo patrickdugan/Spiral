@@ -20,6 +20,10 @@ harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
   by a stock legacy node. A forbidden spend in a correctly signed block was
   rejected by both patched nodes; the stock node accepted it and forked
   (RESULTS.md, K4 / C1).
+- **Arm C with research OP_CHECKSIGFROMSTACK:** the oracle's attestation is
+  verified in script, and Alice transferred her payout to Carol without Bob.
+  A second assignment to another buyer was rejected once the first
+  confirmed. 55 regtest trials match their expected verdicts.
 
 Results, measurements and the security analysis are in [RESULTS.md](RESULTS.md),
 and the raw receipts in [evidence/](evidence/).
@@ -56,6 +60,7 @@ Pinned versions used for the recorded runs:
 | Python | 3.12.3 | 3.12 |
 | Patched Core (A/B) | `d0f6d995` (v30.0) + Spiral patch, diff SHA256 `e6b3e5db…2bc6` | same, built in CI |
 | Patched Core (Signet, with wallet) | same + `core/patch_core_signet.py`, diff SHA256 `6eb2ae41…ebcf1` | same, built in CI |
+| Patched Core (Signet + CSFS) | same + `core/patch_core_csfs.py`, diff SHA256 `0c1e9512…e47f` | same, built in CI |
 
 ## Run
 
@@ -81,8 +86,8 @@ python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py <core-d0f6d995
 python3 "Private Signet/ab/run_ab_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output ab.json
 ~~~
 
-Patched custom Signet with a stock legacy node (apply `core/patch_core_signet.py`
-too and build with the wallet):
+Patched custom Signet with a stock legacy node (also apply `core/patch_core_signet.py`
+and `core/patch_core_csfs.py`, and build with the wallet):
 
 ~~~bash
 export SPIRAL_SIGNET_HOME=$HOME/.local/share/spiral-keyless-signet SPIRAL_SIGNET_PORT_BASE=39532
@@ -90,7 +95,7 @@ export BITCOIND=<patched bitcoind> BITCOIN_CLI=<patched bitcoin-cli> BITCOIN_UTI
 export SPIRAL_SIGNET_BITCOIND_ARGS=-keylessresearch=1 BITCOIND_LEGACY=<stock bitcoind>
 python3 "Private Signet/lab.py" init
 python3 "Private Signet/lab.py" mine --blocks 101
-python3 "Private Signet/ab/run_signet_keyless.py"   # K4, C1, K3; then all nodes agree
+SPIRAL_SIGNET_CSFS=1 python3 "Private Signet/ab/run_signet_keyless.py"   # K4, C1, K3, arm C; all nodes agree
 ~~~
 
 `SPIRAL_SIGNET_PORT_BASE` moves all loopback ports (default 39432). The

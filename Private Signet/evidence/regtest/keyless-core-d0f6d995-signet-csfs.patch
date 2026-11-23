@@ -1,0 +1,339 @@
+diff --git a/src/chainparams.cpp b/src/chainparams.cpp
+index eb915b0..4b39e4a 100644
+--- a/src/chainparams.cpp
++++ b/src/chainparams.cpp
+@@ -39,10 +39,15 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
+         }
+         options.challenge.emplace(*val);
+     }
++    options.keyless_research = args.GetBoolArg("-keylessresearch", false);
++    if (options.keyless_research && !options.challenge) {
++        throw std::runtime_error("-keylessresearch on signet requires a custom -signetchallenge");
++    }
+ }
+ 
+ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
+ {
++    options.keyless_research = args.GetBoolArg("-keylessresearch", false);
+     if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
+     if (HasTestOption(args, "bip94")) options.enforce_bip94 = true;
+ 
+diff --git a/src/consensus/params.h b/src/consensus/params.h
+index 6344349..f928818 100644
+--- a/src/consensus/params.h
++++ b/src/consensus/params.h
+@@ -81,6 +81,7 @@ struct BIP9Deployment {
+  * Parameters that influence chain consensus.
+  */
+ struct Params {
++    bool keyless_research{false}; // Explicit regtest research only.
+     uint256 hashGenesisBlock;
+     int nSubsidyHalvingInterval;
+     /**
+diff --git a/src/init.cpp b/src/init.cpp
+index 02e5f2a..dca3eee 100644
+--- a/src/init.cpp
++++ b/src/init.cpp
+@@ -452,6 +452,7 @@ static void registerSignalHandler(int signal, void(*handler)(int))
+ 
+ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
+ {
++    argsman.AddArg("-keylessresearch", "Enable experimental CAT/TXCOMMIT/P2MR block rules on isolated regtest or a custom -signetchallenge signet only", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+     SetupHelpOptions(argsman);
+     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
+ 
+diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
+index 3955794..44eb2f3 100644
+--- a/src/kernel/chainparams.cpp
++++ b/src/kernel/chainparams.cpp
+@@ -443,6 +443,7 @@ public:
+ 
+         m_chain_type = ChainType::SIGNET;
+         consensus.signet_blocks = true;
++        consensus.keyless_research = options.keyless_research && options.challenge.has_value();
+         consensus.signet_challenge.assign(bin.begin(), bin.end());
+         consensus.nSubsidyHalvingInterval = 210000;
+         consensus.BIP34Height = 1;
+@@ -519,6 +520,7 @@ public:
+     explicit CRegTestParams(const RegTestOptions& opts)
+     {
+         m_chain_type = ChainType::REGTEST;
++        consensus.keyless_research = opts.keyless_research;
+         consensus.signet_blocks = false;
+         consensus.signet_challenge.clear();
+         consensus.nSubsidyHalvingInterval = 150;
+diff --git a/src/kernel/chainparams.h b/src/kernel/chainparams.h
+index 77991d4..ad97bbe 100644
+--- a/src/kernel/chainparams.h
++++ b/src/kernel/chainparams.h
+@@ -123,6 +123,7 @@ public:
+      */
+     struct SigNetOptions {
+         std::optional<std::vector<uint8_t>> challenge{};
++        bool keyless_research{false};
+         std::optional<std::vector<std::string>> seeds{};
+     };
+ 
+@@ -139,6 +140,7 @@ public:
+      * RegTestOptions holds configurations for creating a regtest CChainParams.
+      */
+     struct RegTestOptions {
++        bool keyless_research{false};
+         std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+         std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+         bool fastprune{false};
+diff --git a/src/script/interpreter.cpp b/src/script/interpreter.cpp
+index 07fda48..ef8f6c6 100644
+--- a/src/script/interpreter.cpp
++++ b/src/script/interpreter.cpp
+@@ -343,6 +343,8 @@ static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPu
+     return true;
+ }
+ 
++static const valtype RESEARCH_TXCOMMIT_KEY{0x2,0xa8,0x6c,0x31,0xa6,0x24,0x71,0x63,0x38,0x27,0x9c,0x99,0xe4,0xa1,0xf8,0xc2,0x19,0x15,0xb0,0x80,0x33,0x5d,0xac,0x54,0xe9,0x57,0xed,0x20,0x53,0xb8,0xe7,0x67,0x76};
++
+ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& success)
+ {
+     assert(sigversion == SigVersion::TAPSCRIPT);
+@@ -369,6 +371,8 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
+         if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror)) {
+             return false; // serror is set
+         }
++    } else if ((flags & SCRIPT_VERIFY_RESEARCH_TXCOMMIT) && pubkey == RESEARCH_TXCOMMIT_KEY) {
++        if (success && !checker.CheckSchnorrSignature(sig, pubkey, SigVersion::TAPSCRIPT_TXCOMMIT, execdata, serror)) return false;
+     } else {
+         /*
+          *  New public key version softforks should be defined before this `else` block.
+@@ -453,7 +457,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript&
+                 }
+             }
+ 
+-            if (opcode == OP_CAT ||
++            if ((opcode == OP_CAT && !(sigversion == SigVersion::TAPSCRIPT && (flags & SCRIPT_VERIFY_RESEARCH_CAT))) ||
+                 opcode == OP_SUBSTR ||
+                 opcode == OP_LEFT ||
+                 opcode == OP_RIGHT ||
+@@ -485,6 +489,15 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript&
+                 //
+                 // Push value
+                 //
++                case OP_CAT: {
++                    if (!(sigversion == SigVersion::TAPSCRIPT && (flags & SCRIPT_VERIFY_RESEARCH_CAT))) return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE);
++                    if (stack.size() < 2) return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
++                    const auto tail = stack.back();
++                    popstack(stack);
++                    if (stack.back().size()+tail.size() > MAX_SCRIPT_ELEMENT_SIZE) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
++                    stack.back().insert(stack.back().end(),tail.begin(),tail.end());
++                    break;
++                }
+                 case OP_1NEGATE:
+                 case OP_1:
+                 case OP_2:
+@@ -1101,6 +1114,34 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript&
+                 }
+                 break;
+ 
++                case static_cast<opcodetype>(0xcc): // research OP_CHECKSIGFROMSTACK (BIP348, 32-byte msg)
++                {
++                    if (sigversion != SigVersion::TAPSCRIPT || !(flags & SCRIPT_VERIFY_RESEARCH_CSFS)) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
++                    if (stack.size() < 3) return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
++                    const valtype& sig = stacktop(-3);
++                    const valtype& msg = stacktop(-2);
++                    const valtype& pubkey = stacktop(-1);
++                    if (pubkey.size() == 0) return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
++                    const bool success = !sig.empty();
++                    if (success) {
++                        assert(execdata.m_validation_weight_left_init);
++                        execdata.m_validation_weight_left -= VALIDATION_WEIGHT_PER_SIGOP_PASSED;
++                        if (execdata.m_validation_weight_left < 0) return set_error(serror, SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT);
++                        if (pubkey.size() == 32) {
++                            if (sig.size() != 64) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_SIZE);
++                            if (msg.size() != 32) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
++                            if (!XOnlyPubKey{std::span<const unsigned char>{pubkey}}.VerifySchnorr(uint256{std::span<const unsigned char>{msg}}, sig)) {
++                                return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
++                            }
++                        }
++                    }
++                    popstack(stack);
++                    popstack(stack);
++                    popstack(stack);
++                    stack.push_back(success ? vchTrue : vchFalse);
++                }
++                break;
++
+                 case OP_CHECKMULTISIG:
+                 case OP_CHECKMULTISIGVERIFY:
+                 {
+@@ -1411,7 +1452,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
+     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
+         if (!txTo.vin[inpos].scriptWitness.IsNull()) {
+             if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
+-                m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
++                (m_spent_outputs[inpos].scriptPubKey[0] == OP_1 || m_spent_outputs[inpos].scriptPubKey[0] == OP_2)) {
+                 // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
+                 // spend. This only works if spent_outputs was provided as well, but if it wasn't, actual validation
+                 // will fail anyway. Note that this branch may trigger for scriptPubKeys that aren't actually segwit
+@@ -1479,6 +1520,10 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
+ {
+     uint8_t ext_flag, key_version;
+     switch (sigversion) {
++    case SigVersion::TAPSCRIPT_TXCOMMIT:
++        ext_flag = 1;
++        key_version = 2;
++        break;
+     case SigVersion::TAPROOT:
+         ext_flag = 0;
+         // key_version is not used and left uninitialized.
+@@ -1551,8 +1596,8 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
+         ss << execdata.m_output_hash.value();
+     }
+ 
+-    // Additional data for BIP 342 signatures
+-    if (sigversion == SigVersion::TAPSCRIPT) {
++    // Additional data for BIP342 signatures and research digest checks.
++    if (sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::TAPSCRIPT_TXCOMMIT) {
+         assert(execdata.m_tapleaf_hash_init);
+         ss << execdata.m_tapleaf_hash;
+         ss << key_version;
+@@ -1711,6 +1756,14 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
+ template <class T>
+ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_in, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const
+ {
++    if (sigversion == SigVersion::TAPSCRIPT_TXCOMMIT) {
++        if (sig.size() != 32) return set_error(serror,SCRIPT_ERR_SCHNORR_SIG_SIZE);
++        uint256 actual;
++        if (!this->txdata) return HandleMissingData(m_mdb);
++        if (!SignatureHashSchnorr(actual,execdata,*txTo,nIn,SIGHASH_DEFAULT,sigversion,*this->txdata,m_mdb)) return set_error(serror,SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
++        if (!std::equal(sig.begin(),sig.end(),actual.begin())) return set_error(serror,SCRIPT_ERR_SCHNORR_SIG);
++        return true;
++    }
+     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+     // Schnorr signatures have 32-byte public keys. The caller is responsible for enforcing this.
+     assert(pubkey_in.size() == 32);
+@@ -1838,7 +1891,8 @@ static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, con
+                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+             }
+             // New opcodes will be listed here. May use a different sigversion to modify existing opcodes.
+-            if (IsOpSuccess(opcode)) {
++            if (IsOpSuccess(opcode) && !(opcode == OP_CAT && (flags & SCRIPT_VERIFY_RESEARCH_CAT)) &&
++                !(opcode == 0xcc && (flags & SCRIPT_VERIFY_RESEARCH_CSFS))) {
+                 if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
+                     return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
+                 }
+@@ -1915,6 +1969,24 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion,
+     std::span stack{witness.stack};
+     ScriptExecutionData execdata;
+ 
++    // Restricted fixture path: positive-depth c0 P2MR with no annex.
++    if (witversion == 2 && program.size() == 32 && !is_p2sh && (flags & SCRIPT_VERIFY_RESEARCH_P2MR)) {
++        if (stack.size() < 2) return set_error(serror,SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
++        const valtype& control = SpanPopBack(stack);
++        const valtype& script = SpanPopBack(stack);
++        if (control.size() < 33 || control.size() > 4097 || (control.size()-1)%32 != 0 || control[0] != 0xc0) return set_error(serror,SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
++        execdata.m_tapleaf_hash = ComputeTapleafHash(0xc0,script);
++        execdata.m_tapleaf_hash_init = true;
++        uint256 root = execdata.m_tapleaf_hash;
++        for (size_t pos=1;pos<control.size();pos+=32) root = ComputeTapbranchHash(root,std::span{control}.subspan(pos,32));
++        if (!std::equal(program.begin(),program.end(),root.begin())) return set_error(serror,SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
++        execdata.m_annex_init = true;
++        execdata.m_annex_present = false;
++        execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack)+VALIDATION_WEIGHT_OFFSET;
++        execdata.m_validation_weight_left_init = true;
++        exec_script = CScript(script.begin(),script.end());
++        return ExecuteWitnessScript(stack,exec_script,flags,SigVersion::TAPSCRIPT,checker,execdata,serror);
++    }
+     if (witversion == 0) {
+         if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+             // BIP141 P2WSH: 32-byte witness v0 program (which encodes SHA256(script))
+diff --git a/src/script/interpreter.h b/src/script/interpreter.h
+index 2108e39..bd83c79 100644
+--- a/src/script/interpreter.h
++++ b/src/script/interpreter.h
+@@ -143,6 +143,12 @@ enum : uint32_t {
+     // Making unknown public key versions (in BIP 342 scripts) non-standard
+     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
+ 
++    // Research only: never selected by a network's default flags.
++    SCRIPT_VERIFY_RESEARCH_TXCOMMIT = (1U << 21),
++    SCRIPT_VERIFY_RESEARCH_CAT = (1U << 22),
++    SCRIPT_VERIFY_RESEARCH_P2MR = (1U << 23),
++    SCRIPT_VERIFY_RESEARCH_CSFS = (1U << 24),
++
+     // Constants to point to the highest flag in use. Add new flags above this line.
+     //
+     SCRIPT_VERIFY_END_MARKER
+@@ -189,6 +195,7 @@ struct PrecomputedTransactionData
+ 
+ enum class SigVersion
+ {
++    TAPSCRIPT_TXCOMMIT = 4, // Research sighash domain only.
+     BASE = 0,        //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
+     WITNESS_V0 = 1,  //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
+     TAPROOT = 2,     //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
+diff --git a/src/test/script_tests.cpp b/src/test/script_tests.cpp
+index 5d75930..278f58f 100644
+--- a/src/test/script_tests.cpp
++++ b/src/test/script_tests.cpp
+@@ -24,6 +24,9 @@
+ #include <util/strencodings.h>
+ 
+ #include <cstdint>
++#include <cstdlib>
++#include <iostream>
++#include <iterator>
+ #include <fstream>
+ #include <string>
+ #include <vector>
+@@ -1706,4 +1709,35 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
+     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, std::span(script)), tlc2);
+ }
+ 
++
++BOOST_AUTO_TEST_CASE(keyless_research_transaction_vectors)
++{
++    const char* path = std::getenv("KEYLESS_CORE_VECTORS");
++    BOOST_REQUIRE(path != nullptr);
++    std::ifstream file(path);
++    BOOST_REQUIRE(file.good());
++    std::string data((std::istreambuf_iterator<char>(file)),std::istreambuf_iterator<char>());
++    UniValue vectors;
++    BOOST_REQUIRE(vectors.read(data));
++    size_t total = 0;
++    for (const UniValue& v : vectors.getValues()) {
++        CMutableTransaction tx;
++        BOOST_REQUIRE(DecodeHexTx(tx,v["tx_hex"].get_str()));
++        const auto spk = ParseHex(v["spent_script"].get_str());
++        const CTxOut spent(v["spent_value"].getInt<int64_t>(),CScript(spk.begin(),spk.end()));
++        PrecomputedTransactionData precomputed;
++        precomputed.Init(tx,std::vector<CTxOut>{spent},true);
++        MutableTransactionSignatureChecker checker(&tx,0,spent.nValue,precomputed,MissingDataBehavior::FAIL);
++        const unsigned base = SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_TAPROOT|SCRIPT_VERIFY_MINIMALDATA;
++        unsigned flags = base|SCRIPT_VERIFY_RESEARCH_P2MR|SCRIPT_VERIFY_RESEARCH_CAT;
++        if (!v.exists("disable_txcommit") || !v["disable_txcommit"].get_bool()) flags |= SCRIPT_VERIFY_RESEARCH_TXCOMMIT;
++        ScriptError error;
++        const bool ok = VerifyScript(tx.vin[0].scriptSig,spent.scriptPubKey,&tx.vin[0].scriptWitness,flags,checker,&error);
++        std::cout << "KEYLESS_CORE " << v["name"].get_str() << " accepted=" << ok << " error=" << ScriptErrorString(error) << std::endl;
++        BOOST_CHECK_MESSAGE(ok == v["expected"].get_bool(),v["name"].get_str());
++        ++total;
++    }
++    std::cout << "KEYLESS_CORE_VECTOR_COUNT " << total << std::endl;
++}
++
+ BOOST_AUTO_TEST_SUITE_END()
+diff --git a/src/validation.cpp b/src/validation.cpp
+index 3f77955..ae0cbc7 100644
+--- a/src/validation.cpp
++++ b/src/validation.cpp
+@@ -2368,6 +2368,12 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
+         flags |= SCRIPT_VERIFY_NULLDUMMY;
+     }
+ 
++    if (consensusparams.keyless_research &&
++        (chainman.GetParams().GetChainType() == ChainType::REGTEST ||
++         chainman.GetParams().GetChainType() == ChainType::SIGNET)) {
++        flags |= SCRIPT_VERIFY_RESEARCH_TXCOMMIT | SCRIPT_VERIFY_RESEARCH_CAT | SCRIPT_VERIFY_RESEARCH_P2MR |
++                 SCRIPT_VERIFY_RESEARCH_CSFS;
++    }
+     return flags;
+ }
+ 

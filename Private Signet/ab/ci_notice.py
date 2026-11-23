@@ -40,17 +40,18 @@ def signet(receipts: Path):
 
 
 def ab(path: Path):
+    """One line per arm (GitHub keeps 10 notices per step)."""
     r = json.loads(path.read_text())
     t = r["trials"]
     out = [f"{len(t)} trials, {len(r['mismatches'])} mismatches; nodes " +
            ", ".join(f"{k}={v['version']}" for k, v in r["nodes"].items())]
-    by = {}
+    arms = {}
     for row in t:
-        key = (row["arm"], tuple(row["accepted"].values()))
-        by.setdefault(key, []).append(row["case"])
-    for (arm, verdict), cases in sorted(by.items()):
-        tag = "/".join("A" if v else "r" for v in verdict)
-        out.append(f"{arm} new/old-flag/old-stock={tag}: " + "; ".join(cases)[:900])
+        tag = "/".join("A" if v else "r" for v in row["accepted"].values())
+        arms.setdefault(row["arm"], {}).setdefault(tag, []).append(row["case"])
+    for arm, groups in arms.items():
+        out.append(f"{arm} (new/old-flag/old-stock): " + " | ".join(
+            f"{tag} x{len(cases)}: " + "; ".join(cases) for tag, cases in sorted(groups.items()))[:1000])
     emit(out)
 
 
@@ -72,7 +73,12 @@ def keyless(receipts: Path):
                        + f"; legacy_forked={c1['legacy_forked']} patched_rejected={c1['patched_rejected']}")
             out.append(f"K3 bare TXCOMMIT theft {k3['txid']} in {k3['block']} on all nodes="
                        f"{all(u is not None for u in k3['thief_utxo'].values())}; agreement={d['agreement']}")
-    emit(out[:2] + out[-3:] if len(out) > 5 else out or ["no receipts"])
+            if d.get("armC"):
+                c = d["armC"]
+                out.append(f"arm C transfer to carol {c['transfer_txid']} in {c['transfer_block']} accepted_by_all="
+                           f"{c['accepted_by_all']}; double sale {c['double_sale_txid']}: "
+                           + ", ".join(f"{n}={v['result'][:40]}" for n, v in c["double_sale_verdicts"].items()))
+    emit(out[:2] + out[-4:] if len(out) > 6 else out or ["no receipts"])
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import secp  # noqa: E402
-from arms import (FUNDING_SATS, PAYOUT_SATS, ArmA, ArmB, Parties, UnsafeUnconstrained,  # noqa: E402
-                  allowlist_root)
+from arms import (FUNDING_SATS, PAYOUT_SATS, ArmA, ArmB, ArmC, Parties, UnsafeUnconstrained,  # noqa: E402
+                  allowlist_root, assignment_message)
 from txlib import Prevout, ref, ref_tx, segwit_address, sighash_keypath, taproot_output, NUMS  # noqa: E402
 
 VECTORS = Path(__file__).resolve().parents[2] / "BIPSpace" / "Keyless-CHECKSIG" / "bip341-vectors.json"
@@ -90,6 +90,35 @@ class Arms(unittest.TestCase):
     def test_arm_a_funding_has_no_key_path(self):
         tree = taproot_output(NUMS, [ArmA(self.p).leaf])
         self.assertEqual(tree["controls"][0][1:33], NUMS)
+
+
+class ArmCTests(unittest.TestCase):
+    def setUp(self):
+        self.p = Parties.fixture("unit")
+        self.c = ArmC(self.p)
+
+    def test_oracle_attestation_is_a_bip340_signature(self):
+        s = self.p.oracle.attest("ALICE_WINS")
+        sig = self.c.oracle_sig("ALICE_WINS", s)
+        self.assertTrue(secp.verify(self.p.oracle.P, secp.Oracle.message("ALICE_WINS"), sig))
+        self.assertFalse(secp.verify(self.p.oracle.P, secp.Oracle.message("BOB_WINS"), sig))
+
+    def test_assignment_binds_contract_and_recipient(self):
+        a = self.c.assign("ALICE_WINS", "carol")
+        msg = assignment_message(self.c.cid["ALICE_WINS"], self.p.x("carol"))
+        self.assertTrue(secp.verify(self.p.x("alice"), msg, a))
+        self.assertFalse(secp.verify(self.p.x("alice"), assignment_message(self.c.cid["BOB_WINS"], self.p.x("carol")), a))
+        self.assertFalse(secp.verify(self.p.x("alice"), assignment_message(self.c.cid["ALICE_WINS"], self.p.x("mallory")), a))
+
+    def test_leaf_layout(self):
+        leaf = self.c.leaves["ALICE_WINS"]
+        self.assertEqual(len(leaf), 272)
+        self.assertEqual(leaf.count(bytes([0xCC])) >= 2, True)
+        tx = self.c.settlement("aa" * 32, 0, "ALICE_WINS", "carol",
+                               self.c.oracle_sig("ALICE_WINS", self.p.oracle.attest("ALICE_WINS")),
+                               self.c.assign("ALICE_WINS", "carol"))
+        self.assertEqual(len(tx.vin[0].witness), 7)
+        self.assertEqual(tx.vin[0].witness[2], self.p.x("carol"))
 
 
 if __name__ == "__main__":

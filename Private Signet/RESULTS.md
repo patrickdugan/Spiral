@@ -260,6 +260,56 @@ What this means for the two arms:
   verify the digit signatures themselves, with no hash pre-commitment. That
   is one more consensus change.
 
+## Arm C: oracle signature in script and owner-assigned transfer
+
+`core/patch_core_csfs.py` adds research **OP_CHECKSIGFROMSTACK** (opcode
+`0xcc`, Tapscript only), following BIP348:
+
+- It is enabled with the other research flags by `-keylessresearch`.
+- It charges the 50-unit budget per non-empty signature.
+- A bad signature with a 32-byte key fails the script; an empty signature
+  pushes false; other key types stay upgradable.
+- **Lab restriction:** messages must be exactly 32 bytes, because the pinned
+  Core's `VerifySchnorr` takes a `uint256`.
+- Without the flag, `0xcc` remains OP_SUCCESS204, so this is a soft fork.
+
+The combined patch is 9 files (+135/−5), recorded as
+`evidence/regtest/keyless-core-d0f6d995-signet-csfs.patch`.
+
+**Arm C** is a 272-byte leaf per outcome. It checks three things:
+
+1. The oracle's standard DLC attestation `x(R)‖s_m` is a valid BIP340
+   signature on the outcome message under the oracle key. No per-outcome
+   hash commitment is needed: the oracle publishes only the usual key and
+   nonce announcement.
+2. The position owner (Alice for `ALICE_WINS`) signed
+   `SHA256(contract_id ‖ recipient)`, so the recipient can be anyone and
+   needs no counterparty.
+3. TXCOMMIT binds that recipient and the fixed amount to the real
+   transaction.
+
+Settlement weight is 1,033 WU, against 612 for arm A and 908 for arm B.
+
+**Regtest.** All 55 trials match (`evidence/regtest/ab-regtest-csfs.json`).
+
+| Pattern (new / old-flag / old-stock) | Arm C | CSFS probes on plain P2TR |
+|---|---|---|
+| accepted everywhere | self-assigned settlement; **Alice → Carol with no Bob**; second assignment to another buyer (each valid alone) | valid BIP340 signature; 33-byte (unknown) key type |
+| rejected only by `new` | 9: Carol's assignment but another recipient paid; recipient without assignment; assignment signed by Bob; assignment replayed from another contract; BOB_WINS attestation; forged oracle signature; 63-byte signature; empty oracle signature (CSFS false, then `VERIFY`); stale witness with the amount changed | 4: wrong signature, 63-byte signature, empty signature (false result), 31-byte message |
+
+On old rules every probe is accepted, because `0xcc` is OP_SUCCESS there.
+That is the soft-fork property on a standard output type.
+
+**Patched custom Signet** (`evidence/signet-keyless-csfs/`): the patched
+miner and observer run with CSFS, alongside a stock Core 31.1 legacy node.
+
+| Step | Result |
+|---|---|
+| Transfer | Alice assigns her ALICE_WINS payout to Carol. Settlement `3a07a8068bca236126167d0baa882ed89a091f6ddc41be87fd99678fb46316a7` is refused by the mempool (`bad-txns-nonstandard-inputs`), included by the signer in block `000000192fa89c3fa6c77fe5b3ae9680b4c9e0ccba967b9316df0f421d8778d0`, and accepted by all three nodes |
+| Double sale | Alice had also signed an assignment to a second buyer. That settlement, `8f8a9d5b…0df8`, in signed block `000002b0…d6bc`, is rejected on every node: the miner says `bad-txns-inputs-missingorspent`, the observer and the legacy node `duplicate-invalid` after receiving it by relay |
+| K4, C1, K3 | repeated: K4 `ec598857…b4d4` accepted by all; C1 block `00000362…1eda` invalid on both patched nodes and active on the legacy node; K3 theft `8b7002d4…1c8a` accepted by all |
+| Final | all three nodes agree |
+
 ## Phase 5: does keyless reduce the trusted computing base?
 
 | Threat | Arm A | Arm B | Evidence |
@@ -271,6 +321,19 @@ What this means for the two arms:
 | Compromised transaction / leaf builder | parties check each CET sighash before pre-signing | **trust moves here**: a leaf with an attacker in the allowlist, or no oracle gate, settles under the new rules | BB and NO accepted on `new` |
 | Script bug | stock opcodes only | a bare TXCOMMIT leaf is anyone-can-spend even after the soft fork | K3 theft accepted on `new` |
 | Validator implementation bug | mature consensus code | new consensus code; non-upgraded miners accept every forbidden spend | 12 + 1 rows `r/A/A` |
+
+**Arm C.**
+
+- OP_CHECKSIGFROMSTACK removes the oracle's hash pre-commitment: the leaf
+  checks the same BIP340 attestation arm A uses as its adaptor secret.
+- It removes the counterparty from transfers: one owner signature, checked
+  on-chain, redirects the payout.
+- It does **not** stop the owner from selling the same position twice. Both
+  assignments are valid until one settles, so the buyer bears seller risk
+  until confirmation.
+- Exclusive transfer still needs an on-chain step: Patrick's rollover
+  ([ROLLOVER_DESIGN.md](ROLLOVER_DESIGN.md)), or a spent-outpoint check
+  inside the program.
 
 **Conclusion.** Keyless-CHECKSIG removes the settlement keys, and with them
 the pre-signature ceremony, from the trusted computing base. It relocates
@@ -291,10 +354,15 @@ it.
 - **Mempool relay of keyless spends.** Arm B settlements reach blocks only
   through the block signer (K4). Relay policy is untouched, and so is the
   pre-validation compact-block relay that carried C1 to the legacy node.
-- **Oracle authenticity in script.** Arm B uses per-outcome hash commitments.
-  Checking the oracle's signature directly needs OP_CHECKSIGFROMSTACK.
-- **Transfer to an arbitrary holder.** Needs holder consent checked in
-  script. Not built.
+- **Exclusive off-chain transfer.** Arm C transfers without the
+  counterparty, but the owner can sign two buyers. Exclusivity still needs
+  an on-chain rollover or a revocation mechanism.
+- **CSFS message length.** The lab restricts CSFS to 32-byte messages.
+  BIP348 allows any length; supporting that needs a variable-length
+  `VerifySchnorr` in the pinned Core.
+- **Numeric DLCs.** SatsHedgeZero's digit attestations would need one CSFS
+  check per digit, adding about 70 bytes of leaf and 50 units of budget each.
+  This was not measured.
 - **bitcoin-rs.** No TXCOMMIT, OP_CAT or P2MR; the Core patch is the only
   implementation of the rules.
 - **Validation cost.** The `submitblock` latency at this size does not
