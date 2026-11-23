@@ -15,11 +15,18 @@ harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
 - **Keyless-CHECKSIG A/B:** 37 trials on three regtest validators (patched
   Core with the rules on, the same binary with them off, and stock Core) all
   match their expected verdicts.
+- **Keyless-CHECKSIG on a patched custom Signet:** an arm B settlement was
+  included by the authorized signer and accepted by the patched observer and
+  by a stock legacy node. A forbidden spend in a correctly signed block was
+  rejected by both patched nodes; the stock node accepted it and forked
+  (RESULTS.md, K4 / C1).
 
 Results, measurements and the security analysis are in [RESULTS.md](RESULTS.md),
 and the raw receipts in [evidence/](evidence/).
 
-Keyless-CHECKSIG is **not** active on any public network. A stock node does
+Keyless-CHECKSIG is **not** active on any public network. The patched
+build refuses `-keylessresearch` on the default Signet; it needs a custom
+`-signetchallenge`. A stock node does
 not enforce its commitment semantics: on stock rules every witness-v2 (P2MR)
 spend is valid, theft included. Use valueless test coins and disposable keys
 only.
@@ -48,6 +55,7 @@ Pinned versions used for the recorded runs:
 | Signet miner | v31.1 tag `9be056a8`, miner SHA256 `2df980a4…dffe` | v30.2 tag |
 | Python | 3.12.3 | 3.12 |
 | Patched Core (A/B) | `d0f6d995` (v30.0) + Spiral patch, diff SHA256 `e6b3e5db…2bc6` | same, built in CI |
+| Patched Core (Signet, with wallet) | same + `core/patch_core_signet.py`, diff SHA256 `6eb2ae41…ebcf1` | same, built in CI |
 
 ## Run
 
@@ -73,7 +81,19 @@ python3 BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py <core-d0f6d995
 python3 "Private Signet/ab/run_ab_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output ab.json
 ~~~
 
-`SPIRAL_SIGNET_PORT_BASE` moves all six loopback ports (default 39432). The
+Patched custom Signet with a stock legacy node (apply `core/patch_core_signet.py`
+too and build with the wallet):
+
+~~~bash
+export SPIRAL_SIGNET_HOME=$HOME/.local/share/spiral-keyless-signet SPIRAL_SIGNET_PORT_BASE=39532
+export BITCOIND=<patched bitcoind> BITCOIN_CLI=<patched bitcoin-cli> BITCOIN_UTIL=<patched bitcoin-util>
+export SPIRAL_SIGNET_BITCOIND_ARGS=-keylessresearch=1 BITCOIND_LEGACY=<stock bitcoind>
+python3 "Private Signet/lab.py" init
+python3 "Private Signet/lab.py" mine --blocks 101
+python3 "Private Signet/ab/run_signet_keyless.py"   # K4, C1, K3; then all nodes agree
+~~~
+
+`SPIRAL_SIGNET_PORT_BASE` moves all loopback ports (default 39432). The
 lab never opens public seeds, mainnet, Testnet4 or another node's data
 directory.
 
@@ -84,6 +104,7 @@ directory.
 | Bootstrap (stopped after init) | base | base+1 | Generate the signer key in a throwaway OP_TRUE Signet |
 | Miner | base+10 | base+11 | Signer wallet `signer`, reward wallet `funds` |
 | Observer | base+20 | base+21 | Independent validation; connects only to the miner |
+| Legacy (optional, `BITCOIND_LEGACY`) | base+30 | — | Stock binary, old rules; follows the miner, no listener |
 
 The challenge is `PUSH33 <signer pubkey> OP_CHECKSIG`. The signer's private
 descriptors stay in `PRIVATE-descriptor-backup.json` under the lab home

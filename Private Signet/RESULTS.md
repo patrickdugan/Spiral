@@ -67,6 +67,50 @@ funding.
 
 Receipt: `evidence/signet/20261123T085407112454Z-signet-vanilla-dlc.json`.
 
+## K4 / C1: Keyless-CHECKSIG on a patched custom Signet
+
+`core/patch_core_signet.py` extends Spiral's regtest-only activation to a
+**custom** Signet:
+
+- `-keylessresearch` is read into the Signet options too.
+- The flag is refused without `-signetchallenge`, so the default public
+  Signet can never run the rules. That refusal is recorded in
+  `evidence/signet-keyless/default-signet-refusal.txt`.
+- `GetBlockScriptFlags` enables the research flags on REGTEST or SIGNET when
+  the flag is set.
+
+The combined patch is 9 files (+104/−5), recorded as
+`evidence/signet-keyless/keyless-core-d0f6d995-with-signet.patch`. It was
+rebuilt with the wallet enabled, which the signer needs.
+
+The lab ran with three nodes:
+
+- miner and observer on the patched build with `-keylessresearch=1`;
+- a `legacy` node on stock Core 31.1, following the miner.
+
+Arm B spends are non-standard, so `lab.mine_with()` puts them into a block
+through the official miner's `genpsbt`/`solvepsbt` and the signer wallet.
+The result is a correctly signed Signet block with whatever transactions the
+experiment needs.
+
+Receipt: `evidence/signet-keyless/20261123T134349654392Z-signet-keyless-k4.json`.
+
+| Step | Result |
+|---|---|
+| Network | 101 signed blocks, tip `0000021c…fa20`; all three nodes agree on every hash and chainwork |
+| K4 | arm B settlement `d4ee81fbc0b8e961f66937da9e00bad4389676d897d73a218e3b1496cc2fed1f` (ALICE_WINS paid to Carol, chosen at settlement). Both mempools refused it with `bad-txns-nonstandard-inputs`. The authorized signer included it in block `000001f8636c6b14d54b46a653fec05739c007d88b1a8c9c2e672695ecd95c01`; miner, observer and legacy all accepted it |
+| C1 | stale-witness theft to Mallory, `ef63c4a3…7b69`, in the correctly signed block `00000011cf160cb49e0b363ab3a8fe027cebaa34ee8f887a10ee6a44917d18e7`. The patched miner rejected it with `Invalid Schnorr signature` (the TXCOMMIT mismatch); chain tips show miner **invalid**, observer **invalid**, legacy **active**. The legacy node forked, and invalidating the block there restored it |
+| K3 | bare-TXCOMMIT output taken by a thief, `68d23dea…386d`, in block `00000308…4327`, accepted by all three nodes |
+| Final | all three nodes agree at height 112, chainwork `…20969cd4` |
+
+C1 shows how the split happens in practice. The patched miner announced the
+invalid block to its high-bandwidth compact-block peers **before script
+validation**, which is ordinary BIP152 behaviour. The observer then answered
+`duplicate-invalid` and the legacy node `duplicate`: the legacy node had
+already received the block that way and accepted it. No special wiring is
+needed for a non-upgraded node to follow a block the upgraded network
+rejects.
+
 ## Phase 2: what exists and the minimum consensus patch
 
 | Capability | bitcoin-rs `dev` `dd6c2040` | Spiral Core patch (`BIPSpace/Keyless-CHECKSIG`) |
@@ -231,9 +275,9 @@ it.
 
 ## Unresolved
 
-- **TXCOMMIT on the private Signet.** The patch activates only on regtest.
-  Doing this on the Signet needs a separately identified patched custom
-  Signet with both miner and observer running the patched build. Not done.
+- **Mempool relay of keyless spends.** Arm B settlements reach blocks only
+  through the block signer (K4). Relay policy is untouched, and so is the
+  pre-validation compact-block relay that carried C1 to the legacy node.
 - **Oracle authenticity in script.** Arm B uses per-outcome hash commitments.
   Checking the oracle's signature directly needs OP_CHECKSIGFROMSTACK.
 - **Transfer to an arbitrary holder.** Needs holder consent checked in

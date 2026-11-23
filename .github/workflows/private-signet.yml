@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m unittest discover -s "Private Signet" -p test_lab.py -v
           python -m unittest discover -s "Private Signet/ab" -p test_ab.py -v
+          python -m unittest discover -s "Private Signet/core" -p test_patch_core_signet.py -v
           python -m unittest discover -s "Private Signet/ab" -p test_rollover.py -v
           python -m unittest discover -s BIPSpace/Keyless-CHECKSIG -p test_reference.py
       - name: Patch anchors still match the pinned Core source
@@ -113,19 +114,20 @@ jobs:
           test "$(git -C /tmp/kcore rev-parse HEAD)" = "$PATCH_BASE"
           python BIPSpace/Keyless-CHECKSIG/core/patch_core.py /tmp/kcore
           python BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py /tmp/kcore
+          python "Private Signet/core/patch_core_signet.py" /tmp/kcore
           git -C /tmp/kcore diff > /tmp/keyless-core.patch
           sha256sum /tmp/keyless-core.patch
       - uses: actions/cache@v4
         with:
           path: /tmp/kcore/build
-          key: keyless-core-${{ env.PATCH_BASE }}-${{ hashFiles('BIPSpace/Keyless-CHECKSIG/core/patch_core.py', 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py') }}
-      - name: Build patched bitcoind and test_bitcoin
+          key: keyless-core-wallet-${{ env.PATCH_BASE }}-${{ hashFiles('BIPSpace/Keyless-CHECKSIG/core/patch_core.py', 'BIPSpace/Keyless-CHECKSIG/verifiers/patch_core_regtest.py', 'Private Signet/core/patch_core_signet.py') }}
+      - name: Build patched bitcoind (with wallet, for the Signet signer) and test_bitcoin
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libboost-dev libevent-dev ninja-build
-          cmake -S /tmp/kcore -B /tmp/kcore/build -G Ninja -DENABLE_WALLET=OFF -DENABLE_IPC=OFF \
+          sudo apt-get install -y -qq libboost-dev libevent-dev libsqlite3-dev ninja-build
+          cmake -S /tmp/kcore -B /tmp/kcore/build -G Ninja -DENABLE_WALLET=ON -DENABLE_IPC=OFF \
             -DBUILD_GUI=OFF -DBUILD_TESTS=ON -DBUILD_BENCH=OFF -DCMAKE_BUILD_TYPE=Release
-          cmake --build /tmp/kcore/build --target bitcoind test_bitcoin -j "$(nproc)"
+          cmake --build /tmp/kcore/build --target bitcoind bitcoin-cli bitcoin-util test_bitcoin -j "$(nproc)"
       - name: Interpreter vectors in patched Core
         run: |
           python BIPSpace/Keyless-CHECKSIG/core/export_vectors.py /tmp/keyless-vectors.json
@@ -138,6 +140,23 @@ jobs:
       - name: Publish A/B verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" ab /tmp/ab-regtest.json
+      - name: Patched custom Signet (K4, C1, K3) with a stock legacy node
+        run: |
+          echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet" >> "$GITHUB_ENV"
+          export SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet SPIRAL_SIGNET_PORT_BASE=39532
+          export BITCOIND=/tmp/kcore/build/bin/bitcoind BITCOIN_CLI=/tmp/kcore/build/bin/bitcoin-cli
+          export BITCOIN_UTIL=/tmp/kcore/build/bin/bitcoin-util SIGNET_MINER=/tmp/kcore/contrib/signet/miner
+          export SPIRAL_SIGNET_BITCOIND_ARGS=-keylessresearch=1 BITCOIND_LEGACY=/tmp/bitcoin-$CORE_VERSION/bin/bitcoind
+          mkdir -p "$RUNNER_TEMP/refuse"
+          if /tmp/kcore/build/bin/bitcoind -signet -keylessresearch=1 -datadir="$RUNNER_TEMP/refuse" 2>&1 | grep -q "requires a custom -signetchallenge"; then
+            echo "default signet refused"; else echo "default signet NOT refused" >&2; exit 1; fi
+          python "Private Signet/lab.py" init
+          python "Private Signet/lab.py" mine --blocks 101
+          python "Private Signet/lab.py" agree
+          python "Private Signet/ab/run_signet_keyless.py"
+      - name: Publish patched-Signet verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" keyless "$SPIRAL_SIGNET_HOME/receipts"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -146,3 +165,4 @@ jobs:
             /tmp/ab-regtest.json
             /tmp/keyless-core.patch
             /tmp/keyless-vectors.log
+            ${{ runner.temp }}/keyless-signet/receipts/

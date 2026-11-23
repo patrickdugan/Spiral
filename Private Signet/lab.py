@@ -30,7 +30,9 @@ BOOTSTRAP = ROOT / "bootstrap"
 MINER_DATA = ROOT / "miner"
 OBSERVER_DATA = ROOT / "observer"
 RECEIPTS = ROOT / "receipts"
-DATADIRS = {"bootstrap": BOOTSTRAP, "miner": MINER_DATA, "observer": OBSERVER_DATA}
+LEGACY_DATA = ROOT / "legacy"
+DATADIRS = {"bootstrap": BOOTSTRAP, "miner": MINER_DATA, "observer": OBSERVER_DATA,
+            "legacy": LEGACY_DATA}
 
 # Distinct data directories and non-default ports keep the lab away from any
 # other regtest/Testnet4/Signet process. SPIRAL_SIGNET_PORT_BASE moves all six.
@@ -39,7 +41,12 @@ PORTS = {
     "bootstrap": (_BASE, _BASE + 1),
     "miner": (_BASE + 10, _BASE + 11),
     "observer": (_BASE + 20, _BASE + 21),
+    "legacy": (_BASE + 30, _BASE + 31),
 }
+# Extra daemon arguments for miner and observer, e.g. "-keylessresearch=1"
+# with a patched build. BITCOIND_LEGACY (optional) adds a third node on a
+# different (stock) binary that follows the miner with the old rules.
+NODE_ARGS = shlex.split(os.environ.get("SPIRAL_SIGNET_BITCOIND_ARGS", ""))
 BOOTSTRAP_CHALLENGE = "51"   # OP_TRUE: a throwaway signet used only to mint the signer key
 
 
@@ -92,16 +99,19 @@ def spawn(node: str, challenge: str) -> list[str]:
     datadir = DATADIRS[node]
     rpcport, p2pport = PORTS[node]
     datadir.mkdir(parents=True, exist_ok=True, mode=0o700)
-    cmd = [binary("bitcoind", "BITCOIND"), f"-datadir={datadir}", "-signet",
+    exe = binary("bitcoind", "BITCOIND_LEGACY") if node == "legacy" else binary("bitcoind", "BITCOIND")
+    cmd = [exe, f"-datadir={datadir}", "-signet",
            f"-signetchallenge={challenge}", f"-rpcport={rpcport}", f"-port={p2pport}",
            "-server=1", "-daemon", "-dnsseed=0", "-fixedseeds=0", "-fallbackfee=0.00001",
            "-rpcbind=127.0.0.1", "-rpcallowip=127.0.0.1"]
     if node == "bootstrap":
         cmd += ["-listen=0", "-connect=0"]
     elif node == "miner":
-        cmd += ["-listen=1", "-bind=127.0.0.1", "-connect=0"]
-    else:
-        cmd += ["-listen=1", "-bind=127.0.0.1", f"-connect=127.0.0.1:{PORTS['miner'][1]}"]
+        cmd += ["-listen=1", "-bind=127.0.0.1", "-connect=0"] + NODE_ARGS
+    elif node == "observer":
+        cmd += ["-listen=1", "-bind=127.0.0.1", f"-connect=127.0.0.1:{PORTS['miner'][1]}"] + NODE_ARGS
+    else:   # legacy: old rules, follows the miner only
+        cmd += ["-listen=0", f"-connect=127.0.0.1:{PORTS['miner'][1]}", "-disablewallet=1"]
     run(cmd)
     # -rpcwait does not wait for the cookie file itself: a call made before
     # the daemon writes it fails at once with "Could not locate RPC credentials".
@@ -213,6 +223,7 @@ def init() -> None:
     cli("miner", "createwallet", "funds", challenge=challenge)
     reward = cli("miner", "getnewaddress", "", "bech32", wallet="funds", challenge=challenge)
     observer_cmd = spawn("observer", challenge)
+    legacy_cmd = spawn("legacy", challenge) if os.environ.get("BITCOIND_LEGACY") else None
     genesis_a = cli("miner", "getblockhash", "0", challenge=challenge)
     genesis_b = cli("observer", "getblockhash", "0", challenge=challenge)
     if genesis_a != genesis_b:
@@ -228,8 +239,12 @@ def init() -> None:
         "core_subversion": network["subversion"],
         "bitcoind_sha256": sha256_file(binary("bitcoind", "BITCOIND")),
         "ports": PORTS,
-        "commands": {"miner": redact(miner_cmd), "observer": redact(observer_cmd)},
-        "scope": "localhost-only; stock Bitcoin Core consensus; experimental patch not installed",
+        "commands": {"miner": redact(miner_cmd), "observer": redact(observer_cmd),
+                     **({"legacy": redact(legacy_cmd)} if legacy_cmd else {})},
+        "nodes": ["miner", "observer"] + (["legacy"] if legacy_cmd else []),
+        "node_args": NODE_ARGS,
+        "scope": ("localhost-only; miner/observer args " + (" ".join(NODE_ARGS) or "(none)") +
+                  ("; legacy node on " + os.environ["BITCOIND_LEGACY"] if legacy_cmd else "")),
     }
     tmp = STATE.with_suffix(".tmp")
     safe_json_write(tmp, public)
@@ -247,14 +262,14 @@ def sha256_file(path: str | Path) -> str:
 
 
 def wait_synced(timeout: float = 120.0) -> dict:
-    """Wait until the observer's tip equals the miner's tip."""
+    """Wait until every other node's tip equals the miner's tip."""
     end = time.time() + timeout
     while True:
-        a, b = cli("miner", "getbestblockhash"), cli("observer", "getbestblockhash")
-        if a == b:
-            return {"tip": a, "height": rpc("miner", "getblockcount")}
+        tips = {n: cli(n, "getbestblockhash") for n in nodes()}
+        if len(set(tips.values())) == 1:
+            return {"tip": tips["miner"], "height": rpc("miner", "getblockcount")}
         if time.time() > end:
-            raise RuntimeError(f"Observer did not reach miner tip {a} (observer at {b})")
+            raise RuntimeError(f"Nodes did not reach the miner tip: {tips}")
         time.sleep(0.5)
 
 
@@ -300,35 +315,79 @@ def mine(blocks: int) -> dict:
     return entry
 
 
+def mine_with(tx_hexes: list[str]) -> dict:
+    """Signed block containing the miner's template plus `tx_hexes`.
+
+    Uses contrib/signet/miner genpsbt / solvepsbt and the signer wallet, so the
+    block carries a valid Signet solution even for transactions the mempool
+    refuses (non-standard spends). Returns {"hex", "hash", "template_height"}
+    without submitting it anywhere.
+    """
+    state = read_state()
+    script = os.environ.get("SIGNET_MINER")
+    if not script or not Path(script).is_file():
+        raise RuntimeError("Set SIGNET_MINER=/absolute/path/to/bitcoin/contrib/signet/miner")
+    tmpl = rpc("miner", "getblocktemplate", json.dumps({"rules": ["signet", "segwit"]}))
+    tmpl["transactions"] = list(tmpl["transactions"]) + [{"data": h} for h in tx_hexes]
+    # genpsbt resolves the reward address with getaddressinfo, which needs the
+    # wallet that owns it when several wallets are loaded.
+    miner_cli = shlex.join(base_cli("miner", state["challenge"]) + ["-rpcwallet=funds"])
+    base = [sys.executable, str(Path(script).resolve()), "--cli=" + miner_cli]
+    psbt = run(base + ["genpsbt", f"--address={state['reward_address']}"], stdin=json.dumps(tmpl))
+    signed = rpc("miner", "walletprocesspsbt", psbt, wallet="signer")
+    utility = binary("bitcoin-util", "BITCOIN_UTIL", required=False)
+    solve = base + ["solvepsbt"] + (["--grind-cmd=" + shlex.join([utility, "grind"])] if utility else [])
+    block_hex = run(solve, stdin=signed["psbt"], timeout=600)
+    header = bytes.fromhex(block_hex[:160])
+    return {"hex": block_hex, "hash": hashlib.sha256(hashlib.sha256(header).digest()).digest()[::-1].hex(),
+            "template_height": tmpl["height"], "signed_complete": signed.get("complete")}
+
+
+def submit_block(block: dict, to: list[str]) -> dict:
+    """submitblock on each node; returns per-node verdict and resulting tip."""
+    out = {}
+    for n in to:
+        # bitcoin-cli prints nothing on success and the bare reason string
+        # (e.g. "block-script-verify-flag-failed (...)") on rejection.
+        try:
+            r = cli(n, "submitblock", block["hex"])
+        except RuntimeError as exc:
+            r = "rpc-error: " + str(exc).splitlines()[-1]
+        out[n] = {"result": "accepted" if r == "" else r, "tip": cli(n, "getbestblockhash")}
+    return out
+
+
 def agree() -> dict:
-    """Both nodes: same genesis, height, every block hash and chainwork."""
+    """Every node: same genesis, height, every block hash and chainwork."""
     state = read_state()
     sync = wait_synced()
-    info = {n: rpc(n, "getblockchaininfo") for n in ("miner", "observer")}
+    names = nodes()
+    info = {n: rpc(n, "getblockchaininfo") for n in names}
     height = info["miner"]["blocks"]
     mismatches = []
     hashes = []
     for h in range(height + 1):
-        a, b = cli("miner", "getblockhash", str(h)), cli("observer", "getblockhash", str(h))
-        hashes.append(a)
-        if a != b:
-            mismatches.append({"height": h, "miner": a, "observer": b})
+        row = {n: cli(n, "getblockhash", str(h)) for n in names}
+        hashes.append(row["miner"])
+        if len(set(row.values())) != 1:
+            mismatches.append({"height": h, **row})
     report = {
         "kind": "agreement",
         "challenge": state["challenge"],
-        "genesis": {n: cli(n, "getblockhash", "0") for n in info},
-        "height": {n: info[n]["blocks"] for n in info},
-        "bestblockhash": {n: info[n]["bestblockhash"] for n in info},
-        "chainwork": {n: info[n]["chainwork"] for n in info},
+        "genesis": {n: cli(n, "getblockhash", "0") for n in names},
+        "height": {n: info[n]["blocks"] for n in names},
+        "bestblockhash": {n: info[n]["bestblockhash"] for n in names},
+        "chainwork": {n: info[n]["chainwork"] for n in names},
         "tip_header": rpc("miner", "getblockheader", info["miner"]["bestblockhash"]),
         "block_hashes": hashes,
         "hash_mismatches": mismatches,
         "observer_peers": len(rpc("observer", "getpeerinfo")),
-        "versions": {n: rpc(n, "getnetworkinfo")["subversion"] for n in info},
+        "versions": {n: rpc(n, "getnetworkinfo")["subversion"] for n in names},
     }
-    report["agree"] = (report["genesis"]["miner"] == report["genesis"]["observer"] == state["genesis_hash"]
-                       and report["height"]["miner"] == report["height"]["observer"]
-                       and report["chainwork"]["miner"] == report["chainwork"]["observer"]
+    report["agree"] = (len(set(report["genesis"].values())) == 1
+                       and report["genesis"]["miner"] == state["genesis_hash"]
+                       and len(set(report["height"].values())) == 1
+                       and len(set(report["chainwork"].values())) == 1
                        and not mismatches)
     path = receipt(report)
     print(json.dumps({"receipt": str(path), "agree": report["agree"], "height": report["height"],
@@ -412,9 +471,13 @@ def probe(path: Path, broadcast: bool) -> None:
     print(json.dumps({"receipt": str(output), "observations": entry["observations"]}, indent=2))
 
 
+def nodes() -> list[str]:
+    return read_state().get("nodes", ["miner", "observer"])
+
+
 def stop() -> None:
     read_state()
-    for node in ("observer", "miner"):
+    for node in reversed(nodes()):
         try:
             print(f"{node}: {cli(node, 'stop')}")
         except Exception as exc:

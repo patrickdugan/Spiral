@@ -1,0 +1,1 @@
+Error: -keylessresearch on signet requires a custom -signetchallenge

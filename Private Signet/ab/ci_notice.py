@@ -54,5 +54,26 @@ def ab(path: Path):
     emit(out)
 
 
+def keyless(receipts: Path):
+    out = []
+    k4_files = sorted(receipts.glob("*signet-keyless-k4.json"))
+    for f in sorted(receipts.glob("*.json")):
+        d = json.loads(f.read_text())
+        if d.get("kind") == "signet-keyless-k4" and f != k4_files[-1]:
+            continue   # report the latest K4 run only
+        if d.get("kind") == "mining":
+            out.append(f"mined {d['blocks_requested']} -> height {d['height']} tip {d['tip']} rc={d['returncode']}")
+        elif d.get("kind") == "signet-keyless-k4":
+            k4, c1, k3 = d["k4"], d["c1"], d["k3"]
+            out.append(f"K4 arm B settlement {k4['txid']} in signed block {k4['block']} accepted_by_all={k4['accepted_by_all']} "
+                       f"mempool={ {n: v.get('reject-reason') for n, v in d['k4_mempool'].items()} } versions={d['versions']}")
+            out.append(f"C1 forbidden spend {c1['txid']} block {c1['block']}: "
+                       + ", ".join(f"{n}={(t or {}).get('status')}" for n, t in c1.get('chaintips', {}).items())
+                       + f"; legacy_forked={c1['legacy_forked']} patched_rejected={c1['patched_rejected']}")
+            out.append(f"K3 bare TXCOMMIT theft {k3['txid']} in {k3['block']} on all nodes="
+                       f"{all(u is not None for u in k3['thief_utxo'].values())}; agreement={d['agreement']}")
+    emit(out[:2] + out[-3:] if len(out) > 5 else out or ["no receipts"])
+
+
 if __name__ == "__main__":
-    {"signet": signet, "ab": ab}[sys.argv[1]](Path(sys.argv[2]))
+    {"signet": signet, "ab": ab, "keyless": keyless}[sys.argv[1]](Path(sys.argv[2]))
