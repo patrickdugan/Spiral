@@ -42,9 +42,23 @@ def port():
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));return sock.getsockname()[1]
 def wait_url(url,body=None,headers=None,process=None):
     for _ in range(60):
-        if process and process.poll() is not None:raise RuntimeError('The test mint exited; inspect its runtime log.')
-        try:return json.load(urllib.request.urlopen(urllib.request.Request(url,data=body,headers=headers or {}),timeout=2))
-        except OSError:time.sleep(1)
+        if process and process.poll() is not None:
+            raise RuntimeError('The test service exited during startup; inspect its runtime log.')
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url,data=body,headers=headers or {}),timeout=2) as response:
+                data = json.load(response)
+        except OSError:
+            time.sleep(1)
+            continue
+        if body is None:
+            return data
+        error = data.get('error')
+        if error is None and 'result' in data:
+            return data
+        # With JSON-RPC 2.0, Core can reply HTTP 200 with only a warmup error.
+        if not isinstance(error, dict) or error.get('code') != -28:
+            raise RuntimeError(f'Bitcoin Core readiness RPC failed: {error}')
+        time.sleep(1)
     raise RuntimeError('An existing test process did not become ready; inspect it before any restart.')
 
 (ROOT/'.runtime').mkdir(exist_ok=True)

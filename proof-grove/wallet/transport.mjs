@@ -1,5 +1,16 @@
 import {JSONInt,MintOperationError,HttpResponseError,NetworkError} from '@cashu/cashu-ts';
 
+export function normalizeWalletUrl(value) {
+  const url = new URL(value);
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+    throw new Error('Invalid wallet endpoint');
+  }
+  if (url.protocol === 'http:' && !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)) {
+    throw new Error('Remote endpoints require HTTPS');
+  }
+  return url.href.replace(/\/$/, '');
+}
+
 // NUT-19 advertises retryable endpoints. A durable local payment reservation
 // deliberately uses one attempt, then reconciles the saved quote after restart.
 export async function singleAttemptRequest(options){

@@ -67,6 +67,13 @@ def check_normal_melt(node, root, mint, vault, operation, bundle, environment, c
     return json.loads(result.stdout)
 
 
+def verify_certificate(node, root, certificate, bundle, legacy_melt):
+    return json.loads(subprocess.check_output([
+        node, str(root / 'wallet/test-verify-protected-issuance.mjs'), str(certificate),
+        bundle['bundle_id'], legacy_melt['certificate_sha256'], str(bundle['plan']['reserve_sats']),
+    ], cwd=root, text=True, timeout=45))
+
+
 def cooperate(core, rpc, client, operation, runtime, mining_address, bundle):
     bundle_id = bundle['bundle_id']
     outpoint = bundle['funding']
@@ -195,8 +202,7 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
     offline = client('protected-audit', '--id', operation)
     assert offline['offline_keyset_audit'] and offline['dleq_verified']
     assert offline['proofs_sha256'] == issuance['proofs_sha256']
-    independent = json.loads(subprocess.check_output([node,str(root/'wallet/test-verify-protected-issuance.mjs'),
-        str(certificate),bundle['bundle_id'],legacy_melt['certificate_sha256']],cwd=root,text=True,timeout=30))
+    independent = verify_certificate(node, root, certificate, bundle, legacy_melt)
     assert independent['proofs_sha256'] == offline['proofs_sha256'] and independent['changed_secret_rejected']
     outpoint, plan = bundle['funding'], bundle['plan']
     preflight = protected_reserve.unsigned_psbt(core, bundle, bundle['bundle_id'], 'holder')

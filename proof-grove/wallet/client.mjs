@@ -3,15 +3,13 @@ import { Wallet, Mint, OutputData, createRandomSecretKey, getPubKeyFromPrivKey,
 import { randomUUID } from 'node:crypto';
 import { authorizeIssue,authorizeBinding } from './authorization.mjs';
 import {createArkPayment,payArk,reconcileArk,listArkPayments} from './ark-payments.mjs';
-import {singleAttemptRequest} from './transport.mjs';
-import {auditProtected, issueIntentDomain, observeProtection, requireProtectedSecrets} from './protected.mjs';
+import {normalizeWalletUrl, singleAttemptRequest} from './transport.mjs';
+import {auditProtected, exportProtectedReceipt, issueIntentDomain, observeProtection, requireProtectedSecrets} from './protected.mjs';
 
 const hex = bytes => Buffer.from(bytes).toString('hex');
-const normalizeUrl = value => { const url=new URL(value); if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)throw new Error('Invalid wallet endpoint'); if(url.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(url.hostname))throw new Error('Remote endpoints require HTTPS'); return url.href.replace(/\/$/,''); };
-
 export class ProofWallet {
   constructor({mintUrl,deskUrl,vault,deskToken}) {
-    this.mintUrl=normalizeUrl(mintUrl);this.deskUrl=normalizeUrl(deskUrl);this.vault=vault;
+    this.mintUrl=normalizeWalletUrl(mintUrl);this.deskUrl=normalizeWalletUrl(deskUrl);this.vault=vault;
     if(deskToken!==undefined&&!/^[A-Za-z0-9_-]{43,128}$/.test(deskToken))throw new Error('Invalid backend operator token');
     this.deskToken=deskToken;
   }
@@ -132,6 +130,7 @@ export class ProofWallet {
     });
   }
   protectedAudit(id) { return auditProtected(this.operation(this.state(), id), this.mintUrl); }
+  protectedReceipt(id) { return exportProtectedReceipt(this.operation(this.state(), id), this.mintUrl); }
   protectedMelt(id, action, bundle, psbt) {
     const operation = this.operation(this.state(), id);
     if (operation.state !== 'protected-issued' || !operation.protection ||

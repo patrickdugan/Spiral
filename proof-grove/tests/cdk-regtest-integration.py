@@ -161,12 +161,14 @@ try:
         client('export','--id',operation,'--output',str(runtime/'refused-token'),expect_error='No spendable token for this operation')
         certificate=args.protected_handoff/'issuance-certificate.json'
         legacy_melt=cdk_protected_fixture.check_normal_melt(args.node,ROOT,args.mint,runtime/'wallet.sqlite',operation,bundle,environment,certificate)
+        portable=args.protected_handoff/'protected-issuance-receipt.json'
+        offered_pin=client('protected-export-receipt','--id',operation,'--output',str(portable))
+        trusted_pin=client('protected-pin-mint','--keysets',','.join(offered_pin['keyset_ids']))
+        assert trusted_pin==offered_pin
+        (args.protected_handoff/'protected-mint-pin.json').write_text(json.dumps(trusted_pin),encoding='utf-8')
         if args.cooperative:
             payout=cdk_protected_fixture.cooperate(core,rpc,client,operation,runtime,mining_address,bundle)
-            independent = json.loads(subprocess.check_output([
-                args.node, str(ROOT/'wallet/test-verify-protected-issuance.mjs'), str(certificate),
-                bundle['bundle_id'], legacy_melt['certificate_sha256']
-            ], cwd=ROOT, text=True, timeout=30))
+            independent=cdk_protected_fixture.verify_certificate(args.node,ROOT,certificate,bundle,legacy_melt)
             assert independent['proofs_sha256'] == audit['proofs_sha256'] and independent['changed_secret_rejected']
             payout.update(cdk_issuance=independent,legacy_cdk_melt=legacy_melt,funding_transaction=funding_hex)
             filename='cdk-protected-cooperative-report.json'

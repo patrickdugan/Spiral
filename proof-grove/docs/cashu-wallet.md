@@ -37,7 +37,19 @@ node wallet/cli.mjs protected-claim --id OPERATION_ID --vault VAULT --mint MINT 
 node wallet/cli.mjs protected-audit --id OPERATION_ID --vault VAULT --mint MINT --desk DESK
 ```
 
-`CORE_CONFIG` selects the independent loopback Bitcoin Core observer used by the Python holder tools. The wallet binds each note's P2PK guard to the reserve bundle and archives the mint keyset in the encrypted vault. The Bitcoin reserve is the settlement instrument. Export and standard Cashu melts are unavailable for protected notes. See [the protected profile](cashu-protected-profile.md) for claim consumption and the independent evidence.
+`CORE_CONFIG` selects the independent loopback Bitcoin Core observer used by the Python holder tools. The wallet binds each note's P2PK guard to the reserve bundle and archives the mint keyset in the encrypted vault. The Bitcoin reserve is the settlement instrument. Protected notes can be exported as an issuance receipt for verification. The standard Cashu token export and melt commands refuse those notes. See [the protected profile](cashu-protected-profile.md) for claim consumption and the independent evidence.
+
+```bash
+node wallet/cli.mjs protected-export-receipt --id OPERATION_ID --vault VAULT \
+  --mint MINT --desk DESK --output issuance.json
+
+node wallet/cli.mjs protected-pin-mint --mint MINT --keysets KEYSET_ID[,KEYSET_ID]
+
+node wallet/cli.mjs protected-verify-receipt --receipt issuance.json --mint MINT \
+  --bundle-id VERIFIED_BUNDLE_ID --amount RESERVE_SATS --keysets-sha256 TRUSTED_KEYSETS_SHA256
+```
+
+The exporter lists the keyset IDs. As an observer, fetch their pin directly from your configured mint before going offline. Use your own Core observation to pin the bundle ID and reserve amount. The receipt verifier needs neither a wallet vault nor a live mint. It verifies the presented notes' DLEQ signatures, reserve lock, uniqueness and total. The receipt contains the notes, so share it only with the intended observer.
 
 For a cooperative melt, a regtest desk can configure `protected_melt_wallet` with the name of a dedicated Core wallet holding only the mint's reserve key. Core 31.0 needs `-txospenderindex=1`. The named wallet must have the matching descriptor for the issued reserve. Use the same vault, mint and desk options as at issuance.
 
@@ -77,7 +89,7 @@ python3 tests/run-regtest-stack.py --protected --node /path/to/node \
   --cdk /path/to/cdk-mintd --bitcoind /path/to/bitcoind
 ```
 
-The supervisor saves the holder's receipt at `.runtime/cdk-protected-report.json` and the certificate under the run's `protected-handoff/` directory. Match the certificate SHA-256 against the receipt. To recheck it independently with the mint stopped, pass the reported bundle ID and certificate digest to `node wallet/test-verify-protected-issuance.mjs CERTIFICATE BUNDLE_ID CERTIFICATE_SHA256`. The certificate contains the locked fixture notes and public keysets.
+The supervisor saves the holder's receipt at `.runtime/cdk-protected-report.json`. The run's `protected-handoff/` directory contains the legacy certificate, the portable issuance receipt and the mint keyset pin obtained independently before shutdown. The offline verifier checks the receipt after CDK stops. Its adversarial checks cover a substituted key, mint, bundle or amount, a changed note secret, and a repeated note.
 
 Use `--protected-cooperative` in place of `--protected` to run the cooperative wallet and reorg assertions on a fresh chain. Its receipt is `.runtime/cdk-protected-cooperative-report.json`.
 
