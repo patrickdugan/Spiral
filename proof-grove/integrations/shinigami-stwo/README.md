@@ -66,6 +66,43 @@ Submit the raw candidate JSON to the existing exact audit as
 mutations of all 24 Cairo public output cells. The exact historical chain
 check also requires the original regtest blocks and an independent checkpoint.
 
+## CUDA batches for the archived prover
+
+The Linux disk overlay can hash bounded leaf and parent batches with the
+VortexSTARK kernels pinned below. It keeps the archived Cairo AIR, transcript,
+dependency lock, and proof serializer. The CUDA bridge uses at most 8,192
+leaves and 64 MiB of input words per batch. The existing disk store holds the
+full tree. Trace generation, polynomial evaluation, and FRI use the archived
+Stwo implementation.
+
+Set `INTEGRATION` to this directory's absolute path and `VORTEX` to a source
+tree at `1e88c31974bcb9906274d7a129bd9f2902d7ae2e`. Run the following after
+installing the JSON CLI in `STAGED`.
+
+```sh
+python3 "$INTEGRATION/stage.py" --install-cuda-merkle "$STAGED"
+nvcc -shared --cudart shared -Xcompiler=-fPIC -O1 \
+    -gencode arch=compute_86,code=sm_86 "$INTEGRATION/disk-merkle-cuda.cu" \
+    "$VORTEX/cuda/merkle_leaves_lifted.cu" "$VORTEX/cuda/blake2s.cu" -o "$CUDA_MERKLE_BRIDGE"
+cd "$STAGED/cairo/stwo_cairo_prover"
+cargo +nightly-2025-06-23 build --locked --release -j1 \
+    -p stwo-cairo-prover --bin prove-json --features disk-prove-cli,stwo/cuda-disk-merkle
+export STWO_MERKLE_DISK_DIR STWO_CUDA_DISK_MERKLE_LIBRARY="$CUDA_MERKLE_BRIDGE"
+```
+
+Use absolute paths for `CUDA_MERKLE_BRIDGE` and `STWO_MERKLE_DISK_DIR`, and
+make the selected toolkit's CUDA runtime available to the dynamic loader.
+The disk library path enables CUDA for supported plain Blake2s commitments.
+A CUDA error aborts the affected commitment. The stock verifier remains the
+acceptance gate for the resulting proof.
+
+On the RTX 3050, all 65,535 nodes of a lift-15 tree matched the independent
+layout across 20 CUDA launches. The four leaf batches covered raw field-zero
+aliases, nonzero batch offsets, repeated short columns, and full-height
+copies. The archived Stwo tests separately matched in-memory roots, every
+stored node, and openings with the CUDA bridge loaded. The Blake2s-M31
+control kept the archive's normal backend.
+
 ## CUDA compatibility adapter
 
 The published CUDA proof of concept at Cairo
