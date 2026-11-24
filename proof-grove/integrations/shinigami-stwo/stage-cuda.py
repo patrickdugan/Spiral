@@ -18,6 +18,7 @@ VORTEX_BUILD_RS_BLOB = 'ba2e6b225bf42a54e4a106ea042fa89f2dec107c'
 VORTEX_GIT = f'git = "{VORTEX_URL}", rev = "{VORTEX_REV}"'
 VORTEX_LOCK_SOURCE = f'source = "git+{VORTEX_URL}?rev={VORTEX_REV}#{VORTEX_REV}"\n'.encode()
 VORTEX_PACKAGES = {'vortexstark': '', 'vortex-cuda-backend': '/crates/cuda-backend'}
+NATIVE_FAMILIES = {'sm_80': 'Ampere', 'sm_86': 'Ampere', 'sm_120': 'Blackwell'}
 
 
 def install_adapter(cairo):
@@ -53,7 +54,7 @@ def install_adapter(cairo):
             'prover_manifest_sha256': hashlib.sha256(package.read_bytes()).hexdigest()}
 
 
-def stage_sm86(cairo, vortex):
+def stage_native(cairo, vortex, architecture):
     build_path = vortex / 'build.rs'
     original = build_path.read_bytes()
     git_blob = hashlib.sha1(f'blob {len(original)}\0'.encode() + original).hexdigest()
@@ -63,8 +64,11 @@ def stage_sm86(cairo, vortex):
     start = original.index(b'        // GPU architectures\r\n')
     last_arch = b'        cmd.args(["-gencode", "arch=compute_89,code=compute_89"]);\r\n'
     end = original.index(last_arch, start) + len(last_arch)
-    patched = (original[:start] + b'        // Ampere native cubin\r\n'
-               b'        cmd.args(["-gencode", "arch=compute_86,code=sm_86"]);\r\n' + original[end:])
+    family = NATIVE_FAMILIES[architecture]
+    compute = architecture.replace('sm_', 'compute_', 1)
+    target = (f'        // {family} native cubin\r\n'
+              f'        cmd.args(["-gencode", "arch={compute},code={architecture}"]);\r\n').encode()
+    patched = original[:start] + target + original[end:]
 
     prover = cairo / 'crates/prover/Cargo.toml'
     dev_utils = cairo / 'crates/dev_utils/Cargo.toml'
@@ -97,7 +101,7 @@ def stage_sm86(cairo, vortex):
     for path, manifest in staged_manifests.items():
         path.write_bytes(manifest)
     lock_path.write_bytes(lock)
-    return {'cuda_architecture': 'sm_86', 'vortex_build_rs_original_git_blob': git_blob,
+    return {'cuda_architecture': architecture, 'vortex_build_rs_original_git_blob': git_blob,
             'vortex_build_rs_original_sha256': hashlib.sha256(original).hexdigest(),
             'vortex_build_rs_staged_sha256': hashlib.sha256(patched).hexdigest(),
             'staged_cairo_lock_sha256': hashlib.sha256(lock).hexdigest(),
@@ -108,17 +112,21 @@ def stage_sm86(cairo, vortex):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cuda-cairo-git', type=Path, required=True)
-    parser.add_argument('--vortex-sm86-git', type=Path, help='archive the pinned Vortex checkout and target SM86')
+    parser.add_argument('--vortex-git', '--vortex-sm86-git', type=Path,
+                        help='archive the pinned Vortex checkout for a native CUDA target')
+    parser.add_argument('--cuda-arch', choices=NATIVE_FAMILIES, help='native CUDA target, defaults to sm_86')
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
+    if args.cuda_arch and not args.vortex_git:
+        parser.error('--cuda-arch requires --vortex-git')
     target = args.out.resolve()
     archive_tree(args.cuda_cairo_git.resolve(), CAIRO_REV, target)
     cairo = target / 'stwo_cairo_prover'
     report = install_adapter(cairo)
-    if args.vortex_sm86_git:
+    if args.vortex_git:
         vortex = target / 'vortex'
-        archive_tree(args.vortex_sm86_git.resolve(), VORTEX_REV, vortex)
-        report.update(stage_sm86(cairo, vortex))
+        archive_tree(args.vortex_git.resolve(), VORTEX_REV, vortex)
+        report.update(stage_native(cairo, vortex, args.cuda_arch or 'sm_86'))
     (target / 'cuda-source-pins.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report))
 
