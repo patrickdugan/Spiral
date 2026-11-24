@@ -43,8 +43,16 @@ The desk checks them in this order. Each refusal has its own reason code:
 1. **The statement parses.** This mirrors `kan-payment-gate`'s `statement.rs`; the desk compares
    its parse with the gate's whenever the gate is available.
 2. **The proof verifies.** `kan-payment-gate check` verifies it in `m13_verify::verify_final`'s
-   order: wrap key, BLAKE3 STARK, exit code, M16 program key, recursion root, statement digest.
-   The policy it checks is derived from the menu.
+   order: wrap key, BLAKE3 STARK, public-values digest, exit code, M16 program key, recursion
+   root, statement digest. The policy it checks is derived from the menu.
+
+   The desk has no proof code of its own: this step is exactly as sound as the gate binary the
+   menu's `gate.argv` names. **Use a gate built from UTXO-Ref `5bd12b0` or later.** Earlier
+   gates, including the `fc69bba` build behind the recorded runs below, skip the public-values
+   digest. SP1's wrap machine constrains only that digest, so they accept a wrap proof whose
+   program key and statement digest a prover replaced before proving, and the desk then pays
+   for a payment that never happened. A gate that refuses such a proof reports
+   `proof_public_values_digest`. The desk cannot tell an old binary from a new one.
 3. **The menu's policy holds** (`iob/policy.py`, the same rules as the gate's): network,
    k = 1, genesis z0 pin and genesis hash, Nova key, chainwork floor, confirmations, the
    pre-programmed script, minimum value.
@@ -341,6 +349,14 @@ Each M14 setup, garbler and evaluator agrees on its ciphertext commitment and ou
 See [checks.json](results/testnet4-bitvm3/checks.json),
 [summary.json](results/testnet4-bitvm3/summary.json), and
 [the regtest record](results/bitvm3-regtest.json).
+
+The M14 instances of this demonstration were garbled from garbled-snark-verifier `04b6d3e`,
+whose circuit (785,442,492 gates) has the same gap as the old gate: it compares the program key
+and statement digest with its pins without the public-values digest that binds them to the
+proof. A claimant holding a wrap proof with replaced public values would have obtained the
+**accept** label, and no disprove exists for that. The demonstration did not try it. The circuit
+is fixed in garbled-snark-verifier `c39a3ec` (792,546,673 gates); vaults garbled from an earlier
+build must not hold value.
 
 The demonstration retains FC03's T1 (garbling correctness without cut-and-choose), T2 (off-chain
 input-label delivery), and T3 (a presigned graph, with the desk as committee of one). It signs
