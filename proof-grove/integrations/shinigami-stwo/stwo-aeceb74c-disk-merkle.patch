@@ -1,0 +1,566 @@
+diff --git a/crates/stwo/Cargo.toml b/crates/stwo/Cargo.toml
+index dc0597c..87f5b94 100644
+--- a/crates/stwo/Cargo.toml
++++ b/crates/stwo/Cargo.toml
+@@ -22,6 +22,7 @@ std = [
+     "stwo-std-shims/std",
+ ]
+ prover = ["std", "tracing/attributes"]
++disk-merkle = ["prover"]
+ parallel = ["rayon", "indexmap/rayon"]
+ slow-tests = []
+ tracing = []
+diff --git a/crates/stwo/src/prover/backend/simd/blake2s_lifted.rs b/crates/stwo/src/prover/backend/simd/blake2s_lifted.rs
+index a03395a..3b29863 100644
+--- a/crates/stwo/src/prover/backend/simd/blake2s_lifted.rs
++++ b/crates/stwo/src/prover/backend/simd/blake2s_lifted.rs
+@@ -36,6 +36,21 @@ const LOG_N_HASHES_PER_SIMD_STATE: u32 = 4;
+ impl<const IS_M31_OUTPUT: bool> MerkleOpsLifted<Blake2sMerkleHasherGeneric<IS_M31_OUTPUT>>
+     for SimdBackend
+ {
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    fn disk_hash_codec() -> Option<crate::prover::vcs_lifted::ops::DiskHashCodec<Blake2sHash>> {
++        if IS_M31_OUTPUT {
++            return None;
++        }
++        Some((|hash| hash.0, Blake2sHash))
++    }
++
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    fn disk_leaf_value(column: &BaseColumn, index: usize) -> BaseField {
++        // Both the SIMD leaf path and its small-column fallback hash raw words.
++        // Column::at() reduces a packed word equal to P to zero.
++        column.as_slice()[index]
++    }
++
+     /// See the docs of [`crate::prover::backend::cpu::blake2s_lifted`].
+     ///
+     /// This function assumes that `columns` is sorted increasingly by column length.
+diff --git a/crates/stwo/src/prover/mod.rs b/crates/stwo/src/prover/mod.rs
+index b613075..03e26ea 100644
+--- a/crates/stwo/src/prover/mod.rs
++++ b/crates/stwo/src/prover/mod.rs
+@@ -87,9 +87,7 @@ pub fn prove_ex<B: BackendForChannel<MC>, MC: MerkleChannel>(
+         .last()
+         .unwrap()
+         .commitment
+-        .layers
+-        .len() as u32
+-        - 1;
++        .log_size();
+ 
+     // If `self.config.lifting_log_size` is None, the lifting size is the length of the split
+     // composition polynomials' domain.
+@@ -100,9 +98,7 @@ pub fn prove_ex<B: BackendForChannel<MC>, MC: MerkleChannel>(
+         // or equal to the preprocessed log size.
+         let preprocessed_log_size = commitment_scheme.trees[PREPROCESSED_TRACE_IDX]
+             .commitment
+-            .layers
+-            .len() as u32
+-            - 1;
++            .log_size();
+         assert!(lifting_log_size >= preprocessed_log_size);
+     }
+     let max_log_degree_bound =
+diff --git a/crates/stwo/src/prover/pcs/mod.rs b/crates/stwo/src/prover/pcs/mod.rs
+index 35f89f2..07f13fb 100644
+--- a/crates/stwo/src/prover/pcs/mod.rs
++++ b/crates/stwo/src/prover/pcs/mod.rs
+@@ -185,7 +185,7 @@ impl<'a, B: BackendForChannel<MC>, MC: MerkleChannel> CommitmentSchemeProver<'a,
+         )
+         .entered();
+ 
+-        let lifting_log_size = self.trees.last().unwrap().commitment.layers.len() as u32 - 1;
++        let lifting_log_size = self.trees.last().unwrap().commitment.log_size();
+         let weights_hash_map = if self.store_polynomials_coefficients {
+             None
+         } else {
+@@ -255,7 +255,7 @@ impl<'a, B: BackendForChannel<MC>, MC: MerkleChannel> CommitmentSchemeProver<'a,
+         let preprocessed_query_positions = prepare_preprocessed_query_positions(
+             &query_positions,
+             lifting_log_size,
+-            self.trees[0].commitment.layers.len() as u32 - 1,
++            self.trees[0].commitment.log_size(),
+         );
+         let query_positions_tree = TreeVec::new(
+             self.trees
+diff --git a/crates/stwo/src/prover/vcs_lifted/disk.rs b/crates/stwo/src/prover/vcs_lifted/disk.rs
+new file mode 100644
+index 0000000..28c8b4c
+--- /dev/null
++++ b/crates/stwo/src/prover/vcs_lifted/disk.rs
+@@ -0,0 +1,158 @@
++use std::fs::{remove_file, File, OpenOptions};
++use std::io::{self, ErrorKind, Write};
++use std::os::unix::fs::{FileExt, OpenOptionsExt};
++use std::path::Path;
++use std::sync::atomic::{AtomicU64, Ordering};
++
++#[cfg(feature = "parallel")]
++use rayon::prelude::*;
++
++use super::ops::{DiskHashCodec, MerkleOpsLifted};
++use crate::core::fields::m31::BaseField;
++use crate::core::vcs::hash::Hash;
++use crate::core::vcs_lifted::merkle_hasher::MerkleHasherLifted;
++use crate::prover::backend::{Col, Column};
++
++const HASH_BYTES: usize = 32;
++const NODES_PER_BATCH: usize = 8 * 1024;
++const SYNC_INTERVAL_BYTES: usize = 64 * 1024 * 1024;
++
++#[derive(Debug)]
++pub(super) struct DiskMerkleLayers<T: Hash> {
++    file: File,
++    offsets: Vec<u64>,
++    decode: fn([u8; HASH_BYTES]) -> T,
++}
++
++impl<T: Hash> DiskMerkleLayers<T> {
++    pub(super) fn commit<B, H>(
++        directory: &Path,
++        columns: &[&Col<B, BaseField>],
++        log_size: u32,
++        (encode, decode): DiskHashCodec<T>,
++    ) -> io::Result<Self>
++    where
++        B: MerkleOpsLifted<H>,
++        H: MerkleHasherLifted<Hash = T>,
++    {
++        assert!(!columns.is_empty());
++        assert!(columns
++            .iter()
++            .all(|col| col.len().is_power_of_two() && col.len() > 1));
++        let leaves = 1_usize
++            .checked_shl(log_size)
++            .and_then(|n| n.checked_mul(HASH_BYTES * 2).map(|_| n))
++            .ok_or_else(|| io::Error::new(ErrorKind::InvalidInput, "Merkle tree too large"))?;
++        let shifts: Vec<_> = columns
++            .iter()
++            .map(|col| {
++                log_size
++                    .checked_sub(col.len().ilog2())
++                    .expect("column exceeds lifting size")
++            })
++            .collect();
++        let mut file = open_anonymous_file(directory)?;
++        let mut encoded = vec![0; HASH_BYTES * NODES_PER_BATCH];
++        let mut children = vec![0; HASH_BYTES * 2 * NODES_PER_BATCH];
++        let mut dirty_bytes = 0;
++
++        for first in (0..leaves).step_by(NODES_PER_BATCH) {
++            let count = (leaves - first).min(NODES_PER_BATCH);
++            let bytes = &mut encoded[..count * HASH_BYTES];
++            #[cfg(feature = "parallel")]
++            let records = bytes.par_chunks_exact_mut(HASH_BYTES);
++            #[cfg(not(feature = "parallel"))]
++            let records = bytes.chunks_exact_mut(HASH_BYTES);
++            records.enumerate().for_each(|(relative, record)| {
++                let index = first + relative;
++                let mut hasher = H::default();
++                for (col, shift) in columns.iter().zip(&shifts) {
++                    // This is the stock mixed-height leaf projection. Lifting keeps the
++                    // parity of the leaf and replicates adjacent pairs in bit-reversed order.
++                    let source = (index >> (*shift + 1) << 1) + (index & 1);
++                    hasher.update_leaf(&[<B as MerkleOpsLifted<H>>::disk_leaf_value(col, source)]);
++                }
++                record.copy_from_slice(&encode(hasher.finalize()));
++            });
++            append(&mut file, bytes, &mut dirty_bytes)?;
++        }
++
++        let mut offsets = vec![0];
++        let mut end = (leaves * HASH_BYTES) as u64;
++        for height in (0..log_size).rev() {
++            let child_offset = *offsets.last().unwrap();
++            offsets.push(end);
++            let width = 1_usize << height;
++            for first in (0..width).step_by(NODES_PER_BATCH) {
++                let count = (width - first).min(NODES_PER_BATCH);
++                let inputs = &mut children[..count * HASH_BYTES * 2];
++                file.read_exact_at(inputs, child_offset + (first * HASH_BYTES * 2) as u64)?;
++                let bytes = &mut encoded[..count * HASH_BYTES];
++                for (record, pair) in bytes
++                    .chunks_exact_mut(HASH_BYTES)
++                    .zip(inputs.chunks_exact(HASH_BYTES * 2))
++                {
++                    let left = decode(pair[..HASH_BYTES].try_into().unwrap());
++                    let right = decode(pair[HASH_BYTES..].try_into().unwrap());
++                    record.copy_from_slice(&encode(H::hash_children((left, right))));
++                }
++                append(&mut file, bytes, &mut dirty_bytes)?;
++            }
++            end += (width * HASH_BYTES) as u64;
++        }
++        file.sync_data()?;
++        offsets.reverse();
++        Ok(Self {
++            file,
++            offsets,
++            decode,
++        })
++    }
++
++    pub(super) fn log_size(&self) -> u32 {
++        (self.offsets.len() - 1) as u32
++    }
++
++    pub(super) fn hash_at(&self, height: usize, index: usize) -> io::Result<T> {
++        assert!(height < self.offsets.len() && index < 1_usize << height);
++        let mut bytes = [0; HASH_BYTES];
++        self.file.read_exact_at(
++            &mut bytes,
++            self.offsets[height] + (index * HASH_BYTES) as u64,
++        )?;
++        Ok((self.decode)(bytes))
++    }
++}
++
++fn open_anonymous_file(directory: &Path) -> io::Result<File> {
++    static NEXT_FILE: AtomicU64 = AtomicU64::new(0);
++    loop {
++        let id = NEXT_FILE.fetch_add(1, Ordering::Relaxed);
++        let path = directory.join(format!(".stwo-merkle-{}-{id}.tmp", std::process::id()));
++        match OpenOptions::new()
++            .create_new(true)
++            .read(true)
++            .write(true)
++            .mode(0o600)
++            .open(&path)
++        {
++            Ok(file) => {
++                // Unix keeps the data available to this descriptor until it closes.
++                remove_file(&path)?;
++                return Ok(file);
++            }
++            Err(error) if error.kind() == ErrorKind::AlreadyExists => {}
++            Err(error) => return Err(error),
++        }
++    }
++}
++
++fn append(file: &mut File, bytes: &[u8], dirty_bytes: &mut usize) -> io::Result<()> {
++    file.write_all(bytes)?;
++    *dirty_bytes += bytes.len();
++    if *dirty_bytes >= SYNC_INTERVAL_BYTES {
++        file.sync_data()?;
++        *dirty_bytes = 0;
++    }
++    Ok(())
++}
+diff --git a/crates/stwo/src/prover/vcs_lifted/mod.rs b/crates/stwo/src/prover/vcs_lifted/mod.rs
+index 6e45c7c..10c2351 100644
+--- a/crates/stwo/src/prover/vcs_lifted/mod.rs
++++ b/crates/stwo/src/prover/vcs_lifted/mod.rs
+@@ -1,2 +1,4 @@
++#[cfg(all(unix, feature = "disk-merkle"))]
++mod disk;
+ pub mod ops;
+ pub mod prover;
+diff --git a/crates/stwo/src/prover/vcs_lifted/ops.rs b/crates/stwo/src/prover/vcs_lifted/ops.rs
+index 50be50d..55a5d34 100644
+--- a/crates/stwo/src/prover/vcs_lifted/ops.rs
++++ b/crates/stwo/src/prover/vcs_lifted/ops.rs
+@@ -5,6 +5,11 @@ use crate::core::fields::qm31::SECURE_EXTENSION_DEGREE;
+ use crate::core::vcs_lifted::merkle_hasher::MerkleHasherLifted;
+ use crate::core::vcs_lifted::verifier::PACKED_LEAF_SIZE;
+ use crate::prover::backend::{Col, ColumnOps};
++#[cfg(all(unix, feature = "disk-merkle"))]
++use crate::prover::backend::Column;
++
++#[cfg(all(unix, feature = "disk-merkle"))]
++pub type DiskHashCodec<T> = (fn(T) -> [u8; 32], fn([u8; 32]) -> T);
+ 
+ /// Trait for performing Merkle operations on a commitment scheme.
+ pub trait MerkleOpsLifted<H: MerkleHasherLifted>:
+@@ -17,6 +22,17 @@ pub trait MerkleOpsLifted<H: MerkleHasherLifted>:
+     /// Given a layer of hashes as input, computes a new layer by hashing pairs
+     /// of adjacent elements of the input, as in a standard Merkle tree.
+     fn build_next_layer(prev_layer: &Col<Self, H::Hash>) -> Col<Self, H::Hash>;
++
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    fn disk_hash_codec() -> Option<DiskHashCodec<H::Hash>> {
++        None
++    }
++
++    /// Returns the exact word committed by the backend's stock leaf hasher.
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    fn disk_leaf_value(column: &Col<Self, BaseField>, index: usize) -> BaseField {
++        column.at(index)
++    }
+ }
+ 
+ pub trait PackLeavesOps: ColumnOps<BaseField> {
+diff --git a/crates/stwo/src/prover/vcs_lifted/prover.rs b/crates/stwo/src/prover/vcs_lifted/prover.rs
+index a6cdbcf..1444444 100644
+--- a/crates/stwo/src/prover/vcs_lifted/prover.rs
++++ b/crates/stwo/src/prover/vcs_lifted/prover.rs
+@@ -2,6 +2,8 @@ use hashbrown::HashMap;
+ use itertools::Itertools;
+ use tracing::{span, Level};
+ 
++#[cfg(all(unix, feature = "disk-merkle"))]
++use super::disk::DiskMerkleLayers;
+ use super::ops::MerkleOpsLifted;
+ use crate::core::fields::m31::BaseField;
+ use crate::core::vcs_lifted::merkle_hasher::MerkleHasherLifted;
+@@ -16,7 +18,11 @@ use crate::prover::backend::{Col, Column};
+ pub struct MerkleProverLifted<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> {
+     /// Layers of the Merkle tree, sorted by increasing length.
+     /// The first layer is a column of length 1, containing the root commitment.
++    /// Use `log_size()` for the tree depth in both storage modes.
++    /// This vector remains empty when the Unix disk backend is selected.
+     pub layers: Vec<Col<B, H::Hash>>,
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    disk_layers: Option<DiskMerkleLayers<H::Hash>>,
+ }
+ 
+ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+@@ -33,15 +39,31 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+     pub fn commit(columns: Vec<&Col<B, BaseField>>, lifting_log_size: u32) -> Self {
+         let _span = span!(Level::TRACE, "Merkle", class = "MerkleCommitment").entered();
+         if columns.is_empty() {
+-            return Self {
+-                layers: vec![B::build_leaves(&[], lifting_log_size)],
+-            };
++            return Self::in_memory(vec![B::build_leaves(&[], lifting_log_size)]);
+         }
+ 
+         let columns = &mut columns.into_iter().sorted_by_key(|c| c.len()).collect_vec();
+ 
+         let max_log_size = columns.last().unwrap().len().ilog2();
+         assert!(lifting_log_size >= max_log_size);
++        #[cfg(all(unix, feature = "disk-merkle"))]
++        if let (Some(codec), Some(directory)) = (
++            B::disk_hash_codec(),
++            std::env::var_os("STWO_MERKLE_DISK_DIR"),
++        ) {
++            let disk_layers = DiskMerkleLayers::commit::<B, H>(
++                std::path::Path::new(&directory),
++                columns,
++                lifting_log_size,
++                codec,
++            )
++            .expect("could not build disk-backed lifted Merkle tree");
++            return Self {
++                layers: Vec::new(),
++                disk_layers: Some(disk_layers),
++            };
++        }
++
+         let mut layers: Vec<Col<B, H::Hash>> = Vec::new();
+         layers.push(B::build_leaves(columns, lifting_log_size));
+ 
+@@ -50,7 +72,33 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+         });
+         layers.reverse();
+ 
+-        Self { layers }
++        Self::in_memory(layers)
++    }
++
++    fn in_memory(layers: Vec<Col<B, H::Hash>>) -> Self {
++        Self {
++            layers,
++            #[cfg(all(unix, feature = "disk-merkle"))]
++            disk_layers: None,
++        }
++    }
++
++    pub fn log_size(&self) -> u32 {
++        #[cfg(all(unix, feature = "disk-merkle"))]
++        if let Some(layers) = &self.disk_layers {
++            return layers.log_size();
++        }
++        (self.layers.len() - 1) as u32
++    }
++
++    fn hash_at(&self, layer_log_size: usize, index: usize) -> H::Hash {
++        #[cfg(all(unix, feature = "disk-merkle"))]
++        if let Some(layers) = &self.disk_layers {
++            return layers
++                .hash_at(layer_log_size, index)
++                .expect("could not read lifted Merkle hash from disk");
++        }
++        self.layers[layer_log_size].at(index)
+     }
+ 
+     /// Decommits to columns on the given queries.
+@@ -81,7 +129,7 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+         let mut all_node_values: Vec<HashMap<usize, <H as MerkleHasherLifted>::Hash>> = vec![];
+ 
+         // Compute the queried values.
+-        let max_log_size = self.layers.len() - 1;
++        let max_log_size = self.log_size() as usize;
+         for col in columns.iter() {
+             let log_size = col.len().ilog2() as usize;
+             let shift = max_log_size - log_size;
+@@ -94,10 +142,8 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+ 
+         let mut prev_layer_queries = query_positions.to_vec();
+         prev_layer_queries.dedup();
+-        // The largest log size of a layer is equal to `self.layers.len() - 1`. We start iterating
+-        // from the layer of log size `self.layers.len() - 2` so that we always have a previous
+-        // layer available for the computation.
+-        for layer_log_size in (0..self.layers.len() - 1).rev() {
++        // The first parent layer is one level above the leaves.
++        for layer_log_size in (0..max_log_size).rev() {
+             let mut all_node_values_for_layer =
+                 HashMap::<usize, <H as MerkleHasherLifted>::Hash>::new();
+             // Prepare write buffer for queries to the current layer. This will propagate to the
+@@ -106,7 +152,6 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+ 
+             // Each layer node is a hash of column values as previous layer hashes.
+             // Prepare the previous layer hashes to read from.
+-            let prev_layer_hashes = self.layers.get(layer_log_size + 1).unwrap();
+             // All chunks have either length 1 (only one child is present) or 2 (both children are
+             // present).
+             for queries_chunk in prev_layer_queries.as_slice().chunk_by(|a, b| a ^ 1 == *b) {
+@@ -115,16 +160,20 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+                 if queries_chunk.len() == 1 {
+                     decommitment
+                         .hash_witness
+-                        .push(prev_layer_hashes.at(first ^ 1))
++                        .push(self.hash_at(layer_log_size + 1, first ^ 1))
+                 }
+                 let curr_index = first >> 1;
+                 curr_layer_queries.push(curr_index);
+ 
+                 // Add the previous layer hashes to all_node_values.
+-                all_node_values_for_layer
+-                    .insert(2 * curr_index, prev_layer_hashes.at(2 * curr_index));
+-                all_node_values_for_layer
+-                    .insert(2 * curr_index + 1, prev_layer_hashes.at(2 * curr_index + 1));
++                all_node_values_for_layer.insert(
++                    2 * curr_index,
++                    self.hash_at(layer_log_size + 1, 2 * curr_index),
++                );
++                all_node_values_for_layer.insert(
++                    2 * curr_index + 1,
++                    self.hash_at(layer_log_size + 1, 2 * curr_index + 1),
++                );
+             }
+             // Propagate queries to the next layer.
+             prev_layer_queries = curr_layer_queries;
+@@ -141,7 +190,7 @@ impl<B: MerkleOpsLifted<H>, H: MerkleHasherLifted> MerkleProverLifted<B, H> {
+     }
+ 
+     pub fn root(&self) -> H::Hash {
+-        self.layers.first().unwrap().at(0)
++        self.hash_at(0, 0)
+     }
+ }
+ 
+@@ -300,4 +349,112 @@ mod test {
+             .for_each(|layer| expected.push(HashMap::from_iter([(0, layer[0]), (1, layer[1])])));
+         assert_eq!(expected, aux.all_node_values);
+     }
++
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    #[test]
++    fn disk_blake2s_matches_simd_root_opening_and_lookup() {
++        // Cover the packed path, the small-column CPU fallback, and the
++        // smallest supported non-empty tree.
++        for (widths, log_size) in [([32, 16, 32, 64], 14), ([16, 2, 8, 16], 9), ([2; 4], 1)] {
++            check_disk_blake2s(widths, log_size);
++        }
++    }
++
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    #[test]
++    fn disk_blake2s_m31_keeps_the_stock_backend() {
++        use crate::core::vcs_lifted::blake2_merkle::Blake2sM31MerkleHasher;
++        use crate::prover::backend::simd::SimdBackend;
++
++        assert!(
++            <SimdBackend as MerkleOpsLifted<Blake2sM31MerkleHasher>>::disk_hash_codec().is_none()
++        );
++    }
++
++    #[cfg(all(unix, feature = "disk-merkle"))]
++    fn check_disk_blake2s(widths: [u32; 4], log_size: u32) {
++        use crate::core::fields::m31::P;
++        use crate::prover::backend::simd::SimdBackend;
++        type Tree = MerkleProverLifted<SimdBackend, Blake2sMerkleHasher>;
++
++        let columns: Vec<Col<SimdBackend, BaseField>> = (0..34)
++            .map(|column| {
++                let len = widths[column % 4];
++                (0..len)
++                    .map(|row| {
++                        if row == 0 {
++                            BaseField::from_u32_unchecked(P)
++                        } else {
++                            BaseField::from(column as u32 * 64 + row)
++                        }
++                    })
++                    .collect()
++            })
++            .collect();
++        assert_eq!(columns[0].as_slice()[0].0, P);
++        assert_eq!(columns[0].at(0), BaseField::zero());
++        let input: Vec<_> = columns.iter().collect();
++        let sorted: Vec<_> = input
++            .iter()
++            .copied()
++            .sorted_by_key(|col| col.len())
++            .collect();
++        let codec =
++            <SimdBackend as MerkleOpsLifted<Blake2sMerkleHasher>>::disk_hash_codec().unwrap();
++        let disk = Tree {
++            layers: Vec::new(),
++            disk_layers: Some(
++                DiskMerkleLayers::commit::<SimdBackend, Blake2sMerkleHasher>(
++                    &std::env::temp_dir(),
++                    &sorted,
++                    log_size,
++                    codec,
++                )
++                .unwrap(),
++            ),
++        };
++        let mut layers = vec![
++            <SimdBackend as MerkleOpsLifted<Blake2sMerkleHasher>>::build_leaves(&sorted, log_size),
++        ];
++        for _ in 0..log_size {
++            layers.push(
++                <SimdBackend as MerkleOpsLifted<Blake2sMerkleHasher>>::build_next_layer(
++                    layers.last().unwrap(),
++                ),
++            );
++        }
++        layers.reverse();
++        let memory = Tree::in_memory(layers);
++        let mut raw_leaf = Blake2sHasher::default();
++        for _ in &sorted {
++            raw_leaf.update(&P.to_le_bytes());
++        }
++        assert_eq!(memory.hash_at(log_size as usize, 0), raw_leaf.finalize());
++        assert_eq!(disk.log_size(), memory.log_size());
++        assert_eq!(disk.root(), memory.root());
++        for (height, layer) in memory.layers.iter().enumerate() {
++            for (index, digest) in layer.iter().enumerate() {
++                assert_eq!(disk.hash_at(height, index), *digest);
++            }
++        }
++
++        let limit = 1 << log_size;
++        let positions: Vec<_> = [0, 1, 9, 8191, 8192]
++            .into_iter()
++            .filter(|&index| index < limit - 1)
++            .chain([limit - 1])
++            .collect();
++        let (disk_values, disk_opening) = disk.decommit(&positions, input.clone());
++        let (memory_values, memory_opening) = memory.decommit(&positions, input);
++        assert_eq!(disk_values[0][0], BaseField::zero());
++        assert_eq!(disk_values, memory_values);
++        assert_eq!(
++            disk_opening.decommitment.hash_witness,
++            memory_opening.decommitment.hash_witness
++        );
++        assert_eq!(
++            disk_opening.aux.all_node_values,
++            memory_opening.aux.all_node_values
++        );
++    }
+ }
