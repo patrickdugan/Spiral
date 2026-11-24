@@ -103,6 +103,22 @@ copies. The archived Stwo tests separately matched in-memory roots, every
 stored node, and openings with the CUDA bridge loaded. The Blake2s-M31
 control kept the archive's normal backend.
 
+In the archived Cairo smoke, the RTX 3050 processed 33,554,428 Merkle nodes
+in four measured commitment stages totaling 49.83 seconds. Windows reached
+its shared RAM reserve during FRI work before the verifier could run. The
+last sample recorded 1,582 MiB peak device memory, 1,964,331,008 bytes peak
+cgroup memory, and zero swap I/O. The retry under earlier cache reclaim
+also stopped at the host reserve.
+
+The exact-case worker `run-archived-cuda-proof.sh` takes a kit directory and
+a new report directory. Run it inside a bounded Linux cgroup with swap
+disabled. The kit pairs the pinned archived input, profile, prover, and
+Scarb verifier with native `sm_80`, `sm_86`, and `sm_120` bridge libraries.
+Audit any returned `archive-verified.json` with `audit-exact-melt-stark.py`
+for exact public-output equality and the 24 mutation controls. Historical
+Bitcoin inclusion and CSV maturity also require the original chain and a
+separately recorded checkpoint.
+
 ## CUDA compatibility adapter
 
 The published CUDA proof of concept at Cairo
