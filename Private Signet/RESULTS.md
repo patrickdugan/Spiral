@@ -551,6 +551,21 @@ lab, with a stock Core 31.1 legacy node:
 | Refund | refused before the delay (`non-BIP68-final`); after 144 fast-timestamp blocks, `7b90cef6012e85bb11ad5aaafcbbe1e6ba83a46d3a46913ac17bc3003c76c003` pays 625 / 1,000, accepted by all |
 | Final | all three nodes agree at height 400 |
 
+**CI confirmation.** [Run 45326772649](https://github.com/patrickdugan/Spiral/actions/runs/45326772649)
+on commit `0ea8330` passed all four jobs.
+
+- **Regtest:** SHZ-K2 trials match, with `old-stock` on Core 30.2.
+- **Patched Signet** (after K4, C1, K3, arm C and SHZ-K1):
+  - transfer `0c884ec1c7de0cec445067483a1b4bd5f620704958c99877a876fe85587c61a7`
+    accepted by all three nodes;
+  - the second sale rejected everywhere;
+  - the former owner's settlement invalid on both patched nodes and active
+    on the 30.2 legacy node;
+  - settle 1,075 / 550, the netted book 1,475 / 1,250 / 825 (892 vB) and the
+    post-CSV refund 625 / 1,000 accepted by all (the early refund was refused
+    as `non-BIP68-final`);
+  - all nodes agree.
+
 `lab.py mine --fast` mines each block with `--set-block-time` one second
 after the tip. The timestamps stay above median time past and far below the
 two-hour future limit, which is how 144 blocks fit in minutes.
