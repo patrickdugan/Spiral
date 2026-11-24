@@ -72,11 +72,12 @@ class ExactMeltChainTest(unittest.TestCase):
         self.receipt = json.loads((FIXTURE / "Cashu-Melt-Redemption-Cairo-Execution.json").read_bytes())
         self.core = CoreObservation(self.receipt)
         funding_id = self.receipt["funding_outpoint"].split(":")[0]
+        melt = int(self.receipt["wallet_melt_commitment"], 16)
         self.words = [
             1, 23, int(self.receipt["program"]["program_hash"], 16),
             int.from_bytes(b"PROOFDESK_CSV_REDEEM_V1", "big"), *hash_words(funding_id),
             0, 24000, 1, int(RESERVE[:62], 16), int(RESERVE[62:], 16), 3,
-            104, 110, 0, 0, 0, int(DESTINATION, 16), 22, 23750,
+            104, 110, melt % 2**128, melt >> 128, 0, int(DESTINATION, 16), 22, 23750,
             *hash_words(self.receipt["confirmed_spend"]), *hash_words(self.receipt["confirmed_spend_wtxid"]),
         ]
 
@@ -88,6 +89,7 @@ class ExactMeltChainTest(unittest.TestCase):
         self.assertEqual(result["funding"]["txoutproof"], self.core.proofs[104])
         self.assertEqual(result["payout"]["txoutproof"], self.core.proofs[110])
         self.assertEqual(result["payout"]["wtxid"], self.receipt["confirmed_spend_wtxid"])
+        self.assertEqual(result["wallet_melt_commitment"], self.receipt["wallet_melt_commitment"])
         self.assertEqual((result["relative_delay_blocks"], result["change_sats"], result["fee_sats"]), (6, 0, 250))
 
     def test_refuses_a_changed_anchor_network_or_observed_tip(self):
@@ -101,6 +103,11 @@ class ExactMeltChainTest(unittest.TestCase):
                 mutate()
                 with self.assertRaisesRegex(Refused, reason):
                     self.observe()
+
+    def test_refuses_a_different_melt_commitment(self):
+        self.words[14] ^= 1
+        with self.assertRaisesRegex(Refused, "exact_melt_receipt_mismatch"):
+            self.observe()
 
     def test_refuses_transaction_and_merkle_substitutions(self):
         for mutate, reason in (

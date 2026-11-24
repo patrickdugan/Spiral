@@ -10,10 +10,14 @@ def _bitcoin_hash(raw):
     return hashlib.sha256(hashlib.sha256(raw).digest()).digest()[::-1].hex()
 
 
-def _wire_hash(low, high):
-    if max(low, high) >= 2**128:
+def _word_pair(low, high):
+    if not 0 <= low < 2**128 or not 0 <= high < 2**128:
         raise Refused("exact_melt_invalid_hash_words")
-    return (low | high << 128).to_bytes(32, "big")[::-1].hex()
+    return (low | high << 128).to_bytes(32, "big")
+
+
+def _wire_hash(low, high):
+    return _word_pair(low, high)[::-1].hex()
 
 
 def _script(words, full_words):
@@ -59,6 +63,7 @@ def observe(core, receipt, expected, anchor_height, anchor_hash):
     vout, reserve_sats = words[3:5]
     funding_script = _script(words[5:9], 1)
     funding_height, payout_height = words[9:11]
+    melt_commitment = _word_pair(*words[11:13]).hex()
     payout_script = _script(words[13:16], 0)
     payout_sats = words[16]
     payout_txid = _wire_hash(*words[17:19])
@@ -67,6 +72,7 @@ def observe(core, receipt, expected, anchor_height, anchor_hash):
     fee_sats = reserve_sats - payout_sats
     if (f"{funding_txid}:{vout}" != receipt["funding_outpoint"]
             or payout_txid != receipt["confirmed_spend"] or payout_wtxid != receipt["confirmed_spend_wtxid"]
+            or melt_commitment != receipt["wallet_melt_commitment"]
             or (reserve_sats, payout_sats, fee_sats) != (
                 receipt["reserve_sats"], receipt["payout_sats"], receipt["payout_fee_sats"])
             or not 0 < delay <= 65535 or payout_height - funding_height < delay):
@@ -93,6 +99,7 @@ def observe(core, receipt, expected, anchor_height, anchor_hash):
         "schema": "proof-grove/exact-melt-chain-observation/v1",
         "evidence_level": "independent-bitcoin-core-regtest",
         "network": "regtest", "genesis": GENESIS, "statement_sha256": receipt["statement_sha256"],
+        "wallet_melt_commitment": melt_commitment,
         "anchor_height": anchor_height, "anchor_hash": anchor_hash,
         "observed_tip_height": before["blocks"], "observed_tip_hash": before["bestblockhash"],
         "funding": funding_evidence | {"outpoint_vout": vout, "amount_sats": reserve_sats, "script": funding_script},
