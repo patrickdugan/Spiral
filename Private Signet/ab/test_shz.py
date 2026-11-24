@@ -119,5 +119,72 @@ class K1(unittest.TestCase):
             merkle_tree([b"\x51"])
 
 
+class Frost(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from shz_frost import FrostOracle
+        cls.o = FrostOracle("unit", "SHZ/unit", 20, t=3, n=5)
+
+    def test_any_quorum_signs_under_announced_nonce(self):
+        bits = decompose_price_bits(125_000, 20)
+        for quorum in ([1, 2, 3], [2, 4, 5], [5, 3, 1]):
+            for j, s in enumerate(self.o.attest(125_000, quorum)[:4]):
+                self.assertTrue(secp.verify(self.o.P, self.o.msg(j, bits[j]), self.o.R[j] + s))
+
+    def test_two_signers_are_not_enough(self):
+        bits = decompose_price_bits(125_000, 20)
+        s = self.o.attest(125_000, [1, 2])[0]
+        self.assertFalse(secp.verify(self.o.P, self.o.msg(0, bits[0]), self.o.R[0] + s))
+
+    def test_equivocation_reveals_group_key(self):
+        q = [1, 2, 3]
+        s0, s1 = (int.from_bytes(self.o.sign_digit(0, b, q), "big") for b in (0, 1))
+        e0, e1 = (secp.challenge(self.o.R[0], self.o.P, self.o.msg(0, b)) for b in (0, 1))
+        d = (s0 - s1) * pow(e0 - e1, -1, secp.N) % secp.N
+        self.assertEqual(secp.pubkey_xonly(d), self.o.P)
+
+
+class Book(unittest.TestCase):
+    def test_shz_triangle_nets_to_prototype_clearing(self):
+        from shz_margin import BookTrade, book_payout_at_price, compress_book_ranges
+        trades = [BookTrade(InverseContractSpec(1, 80_000, 625, 1_000), "alice", "bob"),
+                  BookTrade(InverseContractSpec(1, 100_000, 500, 625), "bob", "carol"),
+                  BookTrade(InverseContractSpec(1, 125_000, 400, 400), "carol", "alice")]
+        # SHZ's live clearing outputs: Alice 1,475, Bob 1,250, Carol 825.
+        self.assertEqual(book_payout_at_price(trades, 125_000), {"alice": 1_475, "bob": 1_250, "carol": 825})
+        ranges = compress_book_ranges(trades, 20, 1)
+        r = next(x for x in ranges if x.matches_price(125_000, 20))
+        exact = book_payout_at_price(trades, 125_000)
+        for party, amt in r.payouts.items():
+            self.assertLessEqual(abs(amt - exact[party]), 1)
+        for x in ranges:
+            self.assertEqual(sum(x.payouts.values()), 3_550)
+        for a, b in zip(ranges, ranges[1:]):
+            self.assertEqual(a.max_price_usd + 1, b.min_price_usd)
+
+
+class K2(unittest.TestCase):
+    def test_state_bound_spk_and_transfer_shape(self):
+        from shz_frost import FrostOracle
+        from shz_k2 import Coin, enc_num, single_trade
+        o = FrostOracle("unit-k2", "SHZ/unit", 20)
+        k2 = single_trade(o, InverseContractSpec(1, 80_000, 625, 1_000), max_error_sats=1, settle_fee=1_000)
+        a, b, c = (secp.pubkey_xonly(secp.seckey(f"unit/{w}")) for w in ("alice", "bob", "carol"))
+        self.assertNotEqual(k2.spk([a, b]), k2.spk([c, b]))
+        i = k2.index("cet", price=125_000)
+        for keys in ([a, b], [c, b]):
+            h = ref.tapleaf(k2.leaves[i].script)
+            for sib in k2.paths[i] + [k2.h_state(keys)]:
+                h = ref.tapbranch(h, sib)
+            self.assertEqual(b"\x52\x20" + h, k2.spk(keys))
+        coin = Coin("22" * 32, 0, 4_625, [a, b])
+        tx, nxt = k2.transfer(coin, "long", c, secp.seckey("unit/alice"))
+        self.assertEqual(nxt.keys, [c, b])
+        self.assertEqual(tx.vout[0].value, 4_125)
+        self.assertEqual(tx.vout[0].script, k2.spk([c, b]))
+        self.assertEqual(tx.vin[0].witness[3], enc_num(4_625))
+        self.assertEqual(enc_num(128), b"\x80\x00")
+
+
 if __name__ == "__main__":
     unittest.main()

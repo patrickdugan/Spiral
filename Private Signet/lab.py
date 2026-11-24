@@ -273,7 +273,14 @@ def wait_synced(timeout: float = 120.0) -> dict:
         time.sleep(0.5)
 
 
-def mine(blocks: int) -> dict:
+def mine(blocks: int, fast: bool = False) -> dict:
+    """Mine signed blocks with the official miner.
+
+    The miner backdates only 100 block intervals and then waits in real time
+    (10 minutes per block). `fast` mines each block with
+    `--set-block-time` one second after the tip instead, so relative
+    timelocks (CSV) can be reached quickly; timestamps stay valid (above
+    median time past, far below the 2-hour future limit)."""
     state = read_state()
     if not 1 <= blocks <= 1000:
         raise ValueError("Block count must be 1..1000")
@@ -283,15 +290,25 @@ def mine(blocks: int) -> dict:
     utility = binary("bitcoin-util", "BITCOIN_UTIL", required=False)
     cli_cmd = base_cli("miner", state["challenge"]) + ["-rpcwallet=signer"]
     cmd = [sys.executable, str(Path(script).resolve()), "--cli=" + shlex.join(cli_cmd), "generate",
-           f"--address={state['reward_address']}", "--min-nbits", f"--max-blocks={blocks}"]
+           f"--address={state['reward_address']}", "--min-nbits"]
     if utility:
         cmd.append("--grind-cmd=" + shlex.join([utility, "grind"]))
     before = {"height": rpc("miner", "getblockcount"), "tip": cli("miner", "getbestblockhash")}
-    print(f"Mining {blocks} signed custom-Signet blocks "
+    print(f"Mining {blocks} signed custom-Signet blocks{' (fast timestamps)' if fast else ''} "
           f"({'bitcoin-util grind' if utility else 'miner built-in grinding'})", flush=True)
     start = time.time()
-    process = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    entry = {"kind": "mining", "blocks_requested": blocks,
+    if not fast:
+        process = subprocess.run(cmd + [f"--max-blocks={blocks}"], text=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        for _ in range(blocks):
+            tip = rpc("miner", "getblockheader", cli("miner", "getbestblockhash"))
+            t = max(tip["time"], tip["mediantime"]) + 1
+            process = subprocess.run(cmd + [f"--set-block-time={t}"], text=True,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if process.returncode:
+                break
+    entry = {"kind": "mining", "blocks_requested": blocks, "fast_timestamps": fast,
              "elapsed_seconds": round(time.time() - start, 3),
              "returncode": process.returncode, "grinder": "bitcoin-util" if utility else "miner-python",
              "miner_sha256": sha256_file(script),
@@ -507,6 +524,8 @@ def main() -> None:
         command.add_parser(name)
     p_mine = command.add_parser("mine")
     p_mine.add_argument("--blocks", type=int, default=1)
+    p_mine.add_argument("--fast", action="store_true",
+                        help="one block per miner call, timestamp = tip + 1 s (reach CSV quickly)")
     p_fund = command.add_parser("fund-demo")
     p_fund.add_argument("--amount", default="1.0")
     p_probe = command.add_parser("probe")
@@ -515,7 +534,7 @@ def main() -> None:
                          help="Explicitly broadcast only on isolated miner node")
     args = parser.parse_args()
     {"init": init, "status": status, "agree": agree, "stop": stop, "destroy": destroy,
-     "mine": lambda: mine(args.blocks), "fund-demo": lambda: fund_demo(args.amount),
+     "mine": lambda: mine(args.blocks, args.fast),"fund-demo": lambda: fund_demo(args.amount),
      "probe": lambda: probe(args.txhex_file, args.broadcast)}[args.command]()
 
 

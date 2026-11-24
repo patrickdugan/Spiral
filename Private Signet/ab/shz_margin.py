@@ -133,6 +133,67 @@ def compress_cet_ranges(spec: InverseContractSpec, num_bits: int, max_error_sats
     return out
 
 
+@dataclass(frozen=True)
+class BookTrade:
+    spec: InverseContractSpec
+    long_party: str
+    short_party: str
+
+
+@dataclass(frozen=True)
+class BookRange:
+    prefix_bits: tuple[int, ...]
+    min_price_usd: int
+    max_price_usd: int
+    payouts: dict          # party -> netted sats
+
+    def matches_price(self, price: int, num_bits: int) -> bool:
+        p = min(price, (1 << num_bits) - 1)
+        return self.min_price_usd <= p <= self.max_price_usd
+
+
+def book_payout_at_price(trades: list[BookTrade], price: int) -> dict:
+    out: dict = {}
+    for t in trades:
+        p = t.spec.payout_at_price(price)
+        out[t.long_party] = out.get(t.long_party, 0) + p.long_sats
+        out[t.short_party] = out.get(t.short_party, 0) + p.short_sats
+    return out
+
+
+def compress_book_ranges(trades: list[BookTrade], num_bits: int, max_error_sats: int) -> list[BookRange]:
+    """Dyadic prefix partition for several trades settling on ONE oracle
+    event, paying each party its NETTED total. Each trade keeps SHZ's own
+    representative (midpoint of its endpoint long payouts, short = total -
+    long), so every range conserves every trade's collateral. A party's
+    error is at most the sum of ceil(spread/2) over its trades; a node
+    becomes a leaf when that bound is <= max_error_sats for every party
+    (same root split and depth rules as compress_cet_ranges)."""
+    if not 4 <= num_bits <= 30:
+        raise ValueError("num_bits must be 4..30")
+    out: list[BookRange] = []
+
+    def node(lo: int, hi: int, prefix: list[int]) -> None:
+        err: dict = {}
+        net: dict = {}
+        for t in trades:
+            a, b = t.spec.payout_at_price(lo), t.spec.payout_at_price(hi)
+            half = _ceil_div(max(b.long_sats - a.long_sats, 0), 2)
+            rep = (a.long_sats + b.long_sats) // 2
+            for party, amt in ((t.long_party, rep), (t.short_party, t.spec.total_collateral_sats - rep)):
+                err[party] = err.get(party, 0) + half
+                net[party] = net.get(party, 0) + amt
+        if prefix and (lo == hi or len(prefix) == num_bits or max(err.values()) <= max_error_sats):
+            out.append(BookRange(tuple(prefix), lo, hi, net))
+            return
+        mid = lo + ((hi - lo) >> 1)
+        node(lo, mid, prefix + [0])
+        node(mid + 1, hi, prefix + [1])
+
+    node(0, (1 << num_bits) - 1, [])
+    return out
+
+
 def decompose_price_bits(price: int, num_bits: int) -> list[int]:
     p = min(price, (1 << num_bits) - 1)
     return [(p >> s) & 1 for s in range(num_bits - 1, -1, -1)]

@@ -71,6 +71,15 @@ def keyless(receipts: Path):
             out.append(f"SHZ-K1 1-sat shave block {s['block']}: "
                        + ", ".join(f"{n}={(c or {}).get('status')}" for n, c in s["chaintips"].items())
                        + f"; legacy_forked={s['legacy_forked']} patched_rejected={s['patched_rejected']}; agreement={d['agreement']}")
+        elif d.get("kind") == "signet-shz-k2":
+            t, x, s = d["transfer"], d["double_sale"], d["split"]
+            out.append(f"SHZ-K2 on-chain transfer {t['txid']} accepted_by_all={t['accepted_by_all']}; second sale "
+                       f"rejected_everywhere={x['rejected_everywhere']}; former owner settling: "
+                       + ", ".join(f"{n}={(c or {}).get('status')}" for n, c in s["chaintips"].items()))
+            out.append(f"SHZ-K2 settle {d['settle']['outputs']} all={d['settle']['accepted_by_all']}; book netted "
+                       f"{d['book']['outputs']} vsize={d['book']['vsize']} all={d['book']['accepted_by_all']}; refund after "
+                       f"CSV {d['refund']['outputs']} all={d['refund']['accepted_by_all']} (early: "
+                       f"{d['refund_early_mempool'].get('reject-reason')}); agreement={d['agreement']}")
         elif d.get("kind") == "signet-keyless-k4":
             k4, c1, k3 = d["k4"], d["c1"], d["k3"]
             out.append(f"K4 arm B settlement {k4['txid']} in signed block {k4['block']} accepted_by_all={k4['accepted_by_all']} "

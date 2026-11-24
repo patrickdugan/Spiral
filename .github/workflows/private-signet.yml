@@ -150,12 +150,20 @@ jobs:
         if: always()
         run: python "Private Signet/ab/ci_notice.py" ab /tmp/ab-regtest.json
       - name: SHZ-K1 trials (SatsHedgeZero trade 1 as a keyless numeric DLC)
-        run: |
-          python "Private Signet/ab/run_shz_k1_regtest.py" --patched /tmp/kcore/build/bin/bitcoind             --stock /tmp/bitcoin-$CORE_VERSION/bin/bitcoind --output /tmp/shz-k1-regtest.json
+        run: >-
+          python "Private Signet/ab/run_shz_k1_regtest.py" --patched /tmp/kcore/build/bin/bitcoind
+          --stock /tmp/bitcoin-$CORE_VERSION/bin/bitcoind --output /tmp/shz-k1-regtest.json
       - name: Publish SHZ-K1 verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" ab /tmp/shz-k1-regtest.json
-      - name: Patched custom Signet (K4, C1, K3, arm C, SHZ-K1) with a stock legacy node
+      - name: SHZ-K2 trials (exclusive transfer, netted book, FROST 3-of-5 oracle)
+        run: >-
+          python "Private Signet/ab/run_shz_k2_regtest.py" --patched /tmp/kcore/build/bin/bitcoind
+          --stock /tmp/bitcoin-$CORE_VERSION/bin/bitcoind --output /tmp/shz-k2-regtest.json
+      - name: Publish SHZ-K2 verdicts as public annotations
+        if: always()
+        run: python "Private Signet/ab/ci_notice.py" ab /tmp/shz-k2-regtest.json
+      - name: Patched custom Signet (K4, C1, K3, arm C, SHZ-K1, SHZ-K2) with a stock legacy node
         run: |
           echo "SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet" >> "$GITHUB_ENV"
           export SPIRAL_SIGNET_HOME=$RUNNER_TEMP/keyless-signet SPIRAL_SIGNET_PORT_BASE=39532
@@ -174,6 +182,9 @@ jobs:
           python "Private Signet/ab/run_signet_shz_k1.py" > /tmp/shz-k1.out 2>&1 || {
             echo "::error title=shz-k1::$(tail -c 1500 /tmp/shz-k1.out | tr '\n' ' ' | sed 's/%/%25/g')"; exit 1; }
           cat /tmp/shz-k1.out
+          python "Private Signet/ab/run_signet_shz_k2.py" > /tmp/shz-k2.out 2>&1 || {
+            echo "::error title=shz-k2::$(tail -c 1500 /tmp/shz-k2.out | tr '\n' ' ' | sed 's/%/%25/g')"; exit 1; }
+          cat /tmp/shz-k2.out
       - name: Publish patched-Signet verdicts as public annotations
         if: always()
         run: python "Private Signet/ab/ci_notice.py" keyless "$SPIRAL_SIGNET_HOME/receipts"
@@ -184,6 +195,7 @@ jobs:
           path: |
             /tmp/ab-regtest.json
             /tmp/shz-k1-regtest.json
+            /tmp/shz-k2-regtest.json
             /tmp/keyless-core.patch
             /tmp/keyless-vectors.log
             ${{ runner.temp }}/keyless-signet/receipts/
