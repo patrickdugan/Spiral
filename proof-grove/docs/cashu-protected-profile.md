@@ -25,6 +25,8 @@ A pre-existing candidate can be supplied with `--existing-proof`. Omitting both 
 
 The recovered 21-word payload carries the funding txid and index, reserve amount and script, funding and spend heights, claim commitment, destination script, payout amount, transaction ID and witness transaction ID. Bitcoin network, block inclusion and canonical chain selection require a separate header or Core observer binding. The exact case spends one reserve input to one payout output. Their value difference is 250 sats. Cashu melt change belongs to the cooperative funding step and requires separate evidence.
 
+An offline transaction audit decoded the payout, recomputed both transaction IDs, matched the reserve script hash and independently verified the holder's BIP143 signature with OpenSSL. The verifier rejected substitutions of the funding txid, output index, sequence, reserve script and amount, payout amount, destination and signature. The heights remain statements from the historical observer. [BIP143](https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki)
+
 ## PG-ZK-02 — Nova accounting
 
 `integrations/cashu-nova` folds a uniform Pallas/Vesta step. The public state contains four domain-separated Poseidon trees (reserve, intents, live claims, spent claims), three integer balances, sequence, journal and ledger context. The public verifier starts at a pinned genesis or independently accepted checkpoint and uses the expected final state and exact step count. The journal binds the previous journal root, context, sequence, operation, identifiers, amounts and admission-evidence digest. Applications must provide those evidence records and make witness data available for independent replay.
