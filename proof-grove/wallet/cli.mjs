@@ -1,9 +1,10 @@
 import { resolve } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { sumProofs } from '@cashu/cashu-ts';
 import { Vault } from './vault.mjs';
 import { ProofWallet } from './client.mjs';
+import { exportCooperativePsbt } from './protected.mjs';
 
 const [command,...argv]=process.argv.slice(2),options={};
 for(let i=0;i<argv.length;i+=2){if(!argv[i]?.startsWith('--')||argv[i+1]===undefined)throw new Error('Expected --option value');options[argv[i].slice(2)]=argv[i+1];}
@@ -21,6 +22,19 @@ try {
     bundlePath:options.bundle,bundleId:options['bundle-id'],coreConfig:options['core-config'],python:options.python,
   });
   else if(command==='protected-audit')result=await wallet.protectedAudit(options.id);
+  else if(['protected-melt-prepare','protected-melt-settle','protected-melt-status'].includes(command)) {
+    const action=command.slice('protected-melt-'.length);
+    if(!options.bundle||statSync(options.bundle).size>32_768)throw new Error('A bounded --bundle is required');
+    if(action==='prepare'&&(!options.output||!options['core-config']))throw new Error('Prepare requires --output FILE and --core-config FILE');
+    if(action==='settle'&&(!options.psbt||statSync(options.psbt).size>16_384))throw new Error('A bounded --psbt is required');
+    const bundle=JSON.parse(readFileSync(options.bundle,'utf8'));
+    const signature=action==='settle' ? readFileSync(options.psbt,'ascii').trim() : undefined;
+    result=await wallet.protectedMelt(options.id,action,bundle,signature);
+    if(action==='prepare') {
+      result=exportCooperativePsbt({bundlePath:options.bundle,bundleId:bundle.bundle_id,
+        coreConfig:options['core-config'],output:options.output,python:options.python}, result.txid);
+    }
+  }
   else if(command==='list')result=wallet.list();
   else if(command==='ark-quote')result=await wallet.createArkPayment(options.id,options.destination,Number(options.amount),Number(options['max-fee']||0));
   else if(command==='ark-pay')result=await wallet.payArk(options.payment);
@@ -33,7 +47,7 @@ try {
     if(!options.output)throw new Error('Export requires --output FILE; the file is a bearer token');
     writeFileSync(resolve(options.output),wallet.token(options.id),{flag:'wx',mode:0o600});
     result={exported:true};
-  } else throw new Error('Commands: deposit, bind, admit-regtest, claim, protected-claim, protected-audit, list, audit, export, ark-quote, ark-pay, ark-status, ark-list');
+  } else throw new Error('Commands: deposit, bind, admit-regtest, claim, protected-claim, protected-audit, protected-melt-prepare, protected-melt-settle, protected-melt-status, list, audit, export, ark-quote, ark-pay, ark-status, ark-list');
   console.log(JSON.stringify(result));
 } catch(error){console.log(JSON.stringify({error:error.message}));process.exitCode=1;}
 finally{vault?.close();}

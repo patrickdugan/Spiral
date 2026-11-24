@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deserializeProofs, hashToCurve, Mint, sumProofs, Wallet } from '@cashu/cashu-ts';
 
@@ -42,6 +43,22 @@ export function observeProtection(operation, options) {
   }
   const lockKey = protectedLockKey(bundleId);
   return {bundle, bundle_id: bundleId, lock_key: lockKey};
+}
+
+export function exportCooperativePsbt({bundlePath, bundleId, coreConfig, output, python = 'python3'}, expectedTxid) {
+  const args = ['-m', 'proofdesk', 'protected-psbt', '--route', 'cooperative',
+    '--config', resolve(coreConfig), '--bundle', resolve(bundlePath), '--bundle-id', bundleId,
+    '--output', resolve(output)];
+  let local;
+  try {
+    local = JSON.parse(execFileSync(python, args, {
+      cwd: appRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000,
+    }));
+  } catch {
+    throw new Error('Could not export a locally verified cooperative PSBT');
+  }
+  if (local.txid !== expectedTxid) throw new Error('Desk and holder Core disagree on the cooperative transaction');
+  return local;
 }
 
 export function requireProtectedSecrets(proofs, lockKey) {

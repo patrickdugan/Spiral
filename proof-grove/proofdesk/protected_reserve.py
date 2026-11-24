@@ -246,7 +246,60 @@ def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str) -> dict:
     after = status(core, bundle, bundle_id)
     if after["tip"] != observed["tip"] or after["state"] != "unspent":
         raise Refused("chain_changed_retry")
-    return {"bundle_id": bundle_id, "route": route, "psbt": enriched, "observation": after}
+    return {"bundle_id": bundle_id, "route": route, "psbt": enriched, "txid": decoded["tx"]["txid"],
+            "observation": after}
+
+
+def spending_observation(core, bundle: dict, bundle_id: str) -> dict:
+    observed = status(core, bundle, bundle_id)
+    if observed["state"] == "unspent":
+        return observed | {"spender": None}
+    funding = bundle["funding"]
+    outpoint = {key: funding[key] for key in ("txid", "vout")}
+    spent = core.rpc("gettxspendingprevout", [[outpoint], {"mempool_only": False, "return_spending_tx": True}])[0]
+    if any(spent.get(key) != value for key, value in outpoint.items()) or not spent.get("spendingtxid"):
+        raise Refused("chain_changed_retry")
+    txid = hash32(spent["spendingtxid"], "spending_txid")
+    block = spent.get("blockhash")
+    if (block is not None) != (observed["state"] == "consumed"):
+        raise Refused("chain_changed_retry")
+    if block:
+        height = core.rpc("getblockheader", [block]).get("height")
+        if type(height) is not int or height > observed["height"] or core.rpc("getblockhash", [height]) != block:
+            raise Refused("chain_changed_retry")
+    tx = core.rpc("decoderawtransaction", [spent["spendingtx"]])
+    if (tx.get("txid") != txid or not any(
+            vin.get("txid") == funding["txid"] and vin.get("vout") == funding["vout"] for vin in tx.get("vin", []))):
+        raise Refused("chain_changed_retry")
+    route = "other"
+    for candidate in ("cooperative", "holder"):
+        try:
+            source = _match_transaction(tx, bundle, _sequence(candidate, bundle["plan"]))
+            _check_witness(source, bundle["plan"], candidate)
+        except Refused:
+            continue
+        route = candidate
+        break
+    if status(core, bundle, bundle_id) != observed:
+        raise Refused("chain_changed_retry")
+    return observed | {"spender": {"txid": txid, "wtxid": tx["hash"], "block": block, "route": route}}
+
+
+def _check_witness(source, saved, route):
+    witness = source.get("txinwitness", [])
+    if route == "holder" and len(witness) == 3 and witness[0] == "":
+        signatures = witness[1:2]
+    elif route == "cooperative" and len(witness) == 4 and witness[1] == "01":
+        signatures = (witness[0], witness[2])
+    else:
+        raise Refused("protected_witness_branch_mismatch")
+    if witness[-1] != saved["witness_script"] or any(not all_signature(sig) for sig in signatures):
+        raise Refused("protected_witness_authorization_mismatch")
+
+
+def all_signature(signature):
+    return (isinstance(signature, str) and 18 <= len(signature) <= 146
+            and HEX.fullmatch(signature) is not None and signature.endswith("01"))
 
 
 def check_signed(core, bundle: dict, bundle_id: str, route: str, raw: str) -> dict:
@@ -259,17 +312,7 @@ def check_signed(core, bundle: dict, bundle_id: str, route: str, raw: str) -> di
     sequence = _sequence(route, saved)
     tx = core.rpc("decoderawtransaction", [raw])
     source = _match_transaction(tx, bundle, sequence)
-    witness = source.get("txinwitness", [])
-    if route == "holder" and len(witness) == 3 and witness[0] == "":
-        signatures = witness[1:2]
-    elif route == "cooperative" and len(witness) == 4 and witness[1] == "01":
-        signatures = (witness[0], witness[2])
-    else:
-        raise Refused("protected_witness_branch_mismatch")
-    if (witness[-1] != saved["witness_script"] or any(
-            not isinstance(sig, str) or not 18 <= len(sig) <= 146
-            or not HEX.fullmatch(sig) or not sig.endswith("01") for sig in signatures)):
-        raise Refused("protected_witness_authorization_mismatch")
+    _check_witness(source, saved, route)
     outcome = core.rpc("testmempoolaccept", [[raw]])[0]
     if outcome.get("txid") != tx.get("txid") or outcome.get("wtxid") != tx.get("hash"):
         raise Refused("protected_payout_mismatch")

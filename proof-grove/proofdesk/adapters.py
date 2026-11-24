@@ -72,15 +72,19 @@ class CoreClient:
         # This explicit list cannot sign or broadcast.
         if method not in ("getblockchaininfo", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
                           "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept",
-                          "getdescriptorinfo", "deriveaddresses", "createpsbt", "utxoupdatepsbt", "decodepsbt"):
+                          "getdescriptorinfo", "deriveaddresses", "createpsbt", "utxoupdatepsbt", "decodepsbt",
+                          "gettxspendingprevout", "getindexinfo"):
             raise Refused("rpc_not_allowed")
+        return self._call(method, params)
+
+    def _call(self, method: str, params: list, path: str = "") -> object:
         if self.cookie_file:
             try:
                 credential=self.cookie_file.read_bytes().strip()
                 if not credential or b':' not in credential:raise OSError('invalid cookie')
                 self.http.headers['Authorization']='Basic '+base64.b64encode(credential).decode()
             except OSError:raise Refused('core_cookie_unavailable') from None
-        record = self.http.request("", {"jsonrpc": "2.0", "id": "proof-grove", "method": method, "params": params})
+        record = self.http.request(path, {"jsonrpc": "2.0", "id": "proof-grove", "method": method, "params": params})
         if isinstance(record, dict) and isinstance(record.get("error"), dict) and type(record["error"].get("code")) is int:
             raise CoreRPCError(record["error"]["code"])
         if not isinstance(record, dict) or record.get("error") is not None or "result" not in record:

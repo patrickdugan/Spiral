@@ -80,7 +80,7 @@ def main():
                     ledger.add_intent(Intent(**item))
                 core_config = config["core"]
                 core = CoreClient.from_config(core_config)
-                public_config = {k: config[k] for k in ("cashu_url", "bark_url", "ark_regtest_execution", "ark_regtest_exit_broadcast", "max_tip_lag", "max_view_age_seconds","min_confirmations","recorded_proof") if k in config}
+                public_config = {k: config[k] for k in ("cashu_url", "bark_url", "ark_regtest_execution", "ark_regtest_exit_broadcast", "max_tip_lag", "max_view_age_seconds","min_confirmations","recorded_proof", "protected_melt_wallet") if k in config}
                 if config.get("bark_bearer_env"):
                     public_config["bark_bearer"] = os.environ[config["bark_bearer_env"]]
                 desk = Desk(mode, ledger, gate_from(config) if mode == "live" else None, core, public_config)

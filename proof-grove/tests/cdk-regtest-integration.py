@@ -34,14 +34,17 @@ parser.add_argument('--mint',default='http://127.0.0.1:28738')
 parser.add_argument('--rpc',default='http://127.0.0.1:28743')
 parser.add_argument('--browser-script',help='Optional connected browser QA script, run while the real test services are live')
 parser.add_argument('--protected-handoff',type=Path)
+parser.add_argument('--cooperative',action='store_true')
 args=parser.parse_args()
+if args.cooperative and not args.protected_handoff:parser.error('--cooperative requires --protected-handoff')
 os.environ['PATH']=str(Path(args.node).resolve().parent)+os.pathsep+os.environ['PATH']
 runtime=ROOT/'.runtime'/('cdk-e2e-'+secrets.token_hex(5));runtime.mkdir(parents=True)
 auth='Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()
 
 def rpc(method,params,*,wallet=False):
     if method not in ('getblockchaininfo','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
-                       'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader'):
+                       'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader',
+                       'generateblock','invalidateblock','reconsiderblock','gettxoutproof','verifytxoutproof'):
         raise AssertionError('Unexpected test RPC')
     path=('/wallet/proof-grove-test-miner' if wallet is True else '/wallet/'+wallet) if wallet else ''
     body=json.dumps({'jsonrpc':'2.0','id':'pg-e2e','method':method,'params':params}).encode()
@@ -83,7 +86,9 @@ proxy=ThreadingHTTPServer(('127.0.0.1',0),Proxy)
 proxy_thread=threading.Thread(target=proxy.serve_forever,daemon=True);proxy_thread.start()
 ledger=Ledger(runtime/'desk.sqlite','regtest')
 core=CoreClient(args.rpc,'proofgrove','public-regtest-only')
-desk=Desk('regtest',ledger,None,core,{'cashu_url':f'http://127.0.0.1:{proxy.server_port}','min_confirmations':2})
+configuration={'cashu_url':f'http://127.0.0.1:{proxy.server_port}','min_confirmations':2}
+if args.cooperative:configuration['protected_melt_wallet']=cdk_protected_fixture.MINT_WALLET
+desk=Desk('regtest',ledger,None,core,configuration)
 server=make_server(desk,0);server_thread=threading.Thread(target=server.serve_forever,daemon=True);server_thread.start()
 environment=os.environ|{'PROOF_GROVE_WALLET_PASSWORD':'public-isolated-regtest-fixture-password',
                         'PG_TEST_RPC_PASSWORD':'public-regtest-only'}
@@ -101,7 +106,7 @@ try:
     started=time.monotonic()
     deposit=client('deposit','--amount','25000');operation=deposit['operation_id']
     if args.protected_handoff:
-        bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(core,rpc,deposit,mining_address,runtime,args.rpc)
+        bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(core,rpc,deposit,mining_address,runtime,args.rpc,args.cooperative)
         claim_command='protected-claim'
     else:
         protected_args=[]
@@ -150,10 +155,21 @@ try:
         client('export','--id',operation,'--output',str(runtime/'refused-token'),expect_error='No spendable token for this operation')
         certificate=args.protected_handoff/'issuance-certificate.json'
         legacy_melt=cdk_protected_fixture.check_normal_melt(args.node,ROOT,args.mint,runtime/'wallet.sqlite',operation,bundle,environment,certificate)
-        payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
-            mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate)
+        if args.cooperative:
+            payout=cdk_protected_fixture.cooperate(core,rpc,client,operation,runtime,mining_address,bundle)
+            independent = json.loads(subprocess.check_output([
+                args.node, str(ROOT/'wallet/test-verify-protected-issuance.mjs'), str(certificate),
+                bundle['bundle_id'], legacy_melt['certificate_sha256']
+            ], cwd=ROOT, text=True, timeout=30))
+            assert independent['proofs_sha256'] == audit['proofs_sha256'] and independent['changed_secret_rejected']
+            payout.update(cdk_issuance=independent,legacy_cdk_melt=legacy_melt,funding_transaction=funding_hex)
+            filename='cdk-protected-cooperative-report.json'
+        else:
+            payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
+                mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate)
+            filename='cdk-protected-report.json'
         payout['issuance_flow']=report
-        (ROOT/'.runtime/cdk-protected-report.json').write_text(json.dumps(payout,indent=2)+'\n')
+        (ROOT/'.runtime'/filename).write_text(json.dumps(payout,indent=2)+'\n')
         report=payout
     else:
         report['token_sha256']=audit['token_sha256']

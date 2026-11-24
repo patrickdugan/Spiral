@@ -37,6 +37,21 @@ node wallet/cli.mjs protected-audit --id OPERATION_ID --vault VAULT --mint MINT 
 
 `CORE_CONFIG` selects the independent loopback Bitcoin Core observer used by the Python holder tools. The wallet binds each note's P2PK guard to the reserve bundle and archives the mint keyset in the encrypted vault. The Bitcoin reserve is the settlement instrument. Export and standard Cashu melts are unavailable for protected notes. See [the protected profile](cashu-protected-profile.md) for claim consumption and the independent evidence.
 
+For a cooperative melt, a regtest desk can configure `protected_melt_wallet` with the name of a dedicated Core wallet holding only the mint's reserve key. Core 31.0 needs `-txospenderindex=1`. The named wallet must have the matching descriptor for the issued reserve. Use the same vault, mint and desk options as at issuance.
+
+```bash
+node wallet/cli.mjs protected-melt-prepare --id OPERATION_ID --bundle RESERVE_BUNDLE \
+  --core-config CORE_CONFIG --output cooperative.psbt --vault VAULT --mint MINT --desk DESK
+
+node wallet/cli.mjs protected-melt-settle --id OPERATION_ID --bundle RESERVE_BUNDLE \
+  --psbt holder-partial.psbt --vault VAULT --mint MINT --desk DESK
+
+node wallet/cli.mjs protected-melt-status --id OPERATION_ID --bundle RESERVE_BUNDLE \
+  --vault VAULT --mint MINT --desk DESK
+```
+
+The holder CLI generates the PSBT using the pinned bundle and its own Core observer. Between preparation and settlement, sign `cooperative.psbt` with the holder's external signing wallet using `SIGHASH_ALL` and leave the PSBT unfinalized. `settle` gives the desk permission to co-sign and broadcast that exact transaction. Treat `pending-spend` as provisional. `status` reports the active chain's spender and updates when a reorg removes or replaces it. The local holder recovery command remains available when the desk or mint signer is unavailable.
+
 ## Recovery and authorization
 
 An exact request is immutable after reservation. On a lost mint reply, the desk uses NUT-09 to restore those original blinded outputs. Complete restoration can finish the request; partial restoration, changed outputs, an unrecognized issued balance, a changed mint, or a reorg stops it. A fresh mint call is possible only for the same original packet when restoration is empty and the provider still reports zero issuance. Upstream atomic quote accounting remains required; local SQLite cannot make a remote mint action atomic.
@@ -61,5 +76,7 @@ python3 tests/run-regtest-stack.py --protected --node /path/to/node \
 ```
 
 The supervisor saves the holder's receipt at `.runtime/cdk-protected-report.json` and the certificate under the run's `protected-handoff/` directory. Match the certificate SHA-256 against the receipt. To recheck it independently with the mint stopped, pass the reported bundle ID and certificate digest to `node wallet/test-verify-protected-issuance.mjs CERTIFICATE BUNDLE_ID CERTIFICATE_SHA256`. The certificate contains the locked fixture notes and public keysets.
+
+Use `--protected-cooperative` in place of `--protected` to run the cooperative wallet and reorg assertions on a fresh chain. Its receipt is `.runtime/cdk-protected-cooperative-report.json`.
 
 The mainnet M16 proof check and this regtest issuance test establish different things. No live mainnet/testnet4 deposit-to-Cashu issuance or Ark rollover has been executed by this build.

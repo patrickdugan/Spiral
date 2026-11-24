@@ -19,6 +19,7 @@ from .archive import bundle
 from .cashu import CashuBridge
 from .ark import ArkCaretaker
 from .exits import ExitRecovery
+from .protected_melt import ProtectedMelt
 from .domain import Ledger, Refused, Rules, canonical, plan_vtxo
 from .regtest import payment_from_regtest
 from .verifier import M16Gate, PROOF_LIMIT, STATEMENT_SIZE, read_bounded
@@ -37,6 +38,8 @@ class Desk:
         self.lock = threading.RLock()
         self.last = demo.run_case("cashu") if mode == "demo" else None
         self.cashu = CashuBridge(ledger,CashuClient(self.config["cashu_url"]),core) if ledger and core and self.config.get("cashu_url") else None
+        mint_wallet = self.config.get("protected_melt_wallet")
+        self.protected_melt = ProtectedMelt(self.cashu, core, mint_wallet) if mode == "regtest" and self.cashu and mint_wallet is not None else None
         self.ark = ArkCaretaker(ledger, BarkClient(self.config["bark_url"], self.config.get("bark_bearer", "")), core,
                                allow_regtest=self.config.get("ark_regtest_execution") is True) if ledger and core and self.config.get("bark_url") else None
         self.exits = ExitRecovery(ledger, core, broadcaster=self.config.get("ark_regtest_exit_broadcast") is True) if ledger and core else None
@@ -44,6 +47,7 @@ class Desk:
     def status(self) -> dict:
         return {"app": "Proof Grove", "version": "0.4.0", "mode": self.mode,
                 "ark_wallet_configured": self.ark is not None,
+                "protected_melt_configured": self.protected_melt is not None,
                 "native_verifier": "configured" if self.gate else "not configured",
                 "chain_observer": "configured" if self.core else "not configured",
                 "settlement": "proof-gated Cashu issuance" if self.cashu else "preparation only", "custody": "Cashu remains mint-custodial; Ark retains expiry and operator liveness requirements.",
@@ -284,6 +288,16 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                             raise Refused("cashu_not_configured")
                         value = desk.cashu.issue(body.get("intent_id"),body.get("payload"),body.get("authorization"),
                                                  body.get("protection"))
+                    elif self.path in ("/api/cashu/protected/prepare", "/api/cashu/protected/settle", "/api/cashu/protected/status"):
+                        if not desk.protected_melt:
+                            raise Refused("protected_melt_not_configured")
+                        intent, reserve, reserve_id = (body[key] for key in ("intent_id", "bundle", "bundle_id"))
+                        if self.path.endswith("/prepare"):
+                            value = desk.protected_melt.prepare(intent, reserve, reserve_id)
+                        elif self.path.endswith("/settle"):
+                            value = desk.protected_melt.settle(intent, reserve, reserve_id, body.get("psbt"))
+                        else:
+                            value = desk.protected_melt.status(intent, reserve, reserve_id)
                     elif self.path == "/api/plan":
                         value = {"plan": plan_vtxo(body["vtxo"], body["tip_height"]), "evidence_level": "caller-supplied", "executed": False}
                     elif self.path == "/api/ark/refresh":

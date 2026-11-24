@@ -23,7 +23,9 @@ CDK_SHA256='3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cdk',required=True);parser.add_argument('--node',required=True)
 parser.add_argument('--bitcoind',help='Use an installed Linux Bitcoin Core binary in a temporary data directory')
-parser.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
+scenario=parser.add_mutually_exclusive_group()
+scenario.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
+scenario.add_argument('--protected-cooperative',action='store_true',help='Test the protected melt API and competing holder exit')
 args=parser.parse_args()
 if sys.platform!='linux':raise SystemExit('Run this foreground supervisor on Linux or inside WSL.')
 cdk,node=Path(args.cdk).resolve(),Path(args.node).resolve()
@@ -53,6 +55,9 @@ try:
     core_flags=['-regtest','-server','-txindex=1','-blockfilterindex=1','-listen=0','-connect=0',
                 '-dnsseed=0','-discover=0','-fallbackfee=0.00001','-keypool=16',
                 '-rpcuser=proofgrove','-rpcpassword=public-regtest-only']
+    if args.protected_cooperative:
+        if not args.bitcoind:raise RuntimeError('Cooperative settlement requires local Bitcoin Core 31.0 with txospenderindex')
+        core_flags.append('-txospenderindex=1')
     if args.bitcoind:
         core_data=tempfile.TemporaryDirectory(prefix='proof-grove-cdk-core-')
         with (runtime/'core.log').open('ab') as logfile:
@@ -109,8 +114,11 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
     mint_url=f'http://127.0.0.1:{mint_port}'
     wait_url(mint_url+'/v1/info',process=process)
     test_command=[sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url]
-    if args.protected:
+    if args.protected or args.protected_cooperative:
         handoff=runtime/'protected-handoff';handoff.mkdir()
+    if args.protected_cooperative:
+        subprocess.run([*test_command,'--protected-handoff',str(handoff),'--cooperative'],cwd=ROOT,env=environment,check=True,timeout=360)
+    elif args.protected:
         test_process=subprocess.Popen([*test_command,'--protected-handoff',str(handoff)],cwd=ROOT,env=environment)
         deadline=time.monotonic()+360
         while test_process.poll() is None and not (handoff/'stop-requested').is_file():

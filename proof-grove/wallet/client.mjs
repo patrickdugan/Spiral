@@ -132,6 +132,16 @@ export class ProofWallet {
     });
   }
   protectedAudit(id) { return auditProtected(this.operation(this.state(), id), this.mintUrl); }
+  protectedMelt(id, action, bundle, psbt) {
+    const operation = this.operation(this.state(), id);
+    if (operation.state !== 'protected-issued' || !operation.protection ||
+        operation.protection.bundle_id !== bundle?.bundle_id) {
+      throw new Error('Reserve bundle does not match the issued protected claim');
+    }
+    return this.request(`/api/cashu/protected/${action}`, {
+      intent_id:operation.intent.id, bundle_id:operation.protection.bundle_id, bundle, psbt,
+    });
+  }
   token(id) {
     const state=this.state(),operation=this.operation(state,id);
     if(operation.state!=='spendable'||!operation.proofs)throw new Error('No spendable token for this operation');
