@@ -11,7 +11,7 @@ from .adapters import CoreClient
 from .domain import Intent, Ledger, Refused, plan_vtxo
 from .server import Desk, make_server
 from .verifier import M16Gate, NativeFinalGate, PROOF_LIMIT, STATEMENT_SIZE, read_bounded
-from . import recovery_cli
+from . import protected_cli, recovery_cli
 from .access import HostedAccess
 
 
@@ -48,10 +48,13 @@ def main():
     plan.add_argument("--vtxo", required=True)
     plan.add_argument("--tip", type=int, required=True)
     recovery_cli.configure(commands)
+    protected_cli.configure(commands)
     args = parser.parse_args()
     try:
         if args.command.startswith("exit-"):
             print(json.dumps(recovery_cli.run(args), indent=2))
+        elif args.command.startswith("protected-"):
+            print(json.dumps(protected_cli.run(args), indent=2))
         elif args.command == "demo":
             print(json.dumps(demo.run_case(args.case), indent=2))
         elif args.command == "plan":

@@ -71,7 +71,8 @@ class CoreClient:
     def rpc(self, method: str, params: list) -> object:
         # This explicit list cannot sign or broadcast.
         if method not in ("getblockchaininfo", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
-                          "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept"):
+                          "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept",
+                          "getdescriptorinfo", "deriveaddresses", "createpsbt", "utxoupdatepsbt", "decodepsbt"):
             raise Refused("rpc_not_allowed")
         if self.cookie_file:
             try:
