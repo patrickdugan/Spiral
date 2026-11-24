@@ -13,6 +13,8 @@ use std::io::Read;
 use std::path::Path;
 use std::time::Instant;
 
+mod journal;
+
 type E1 = PallasEngine;
 type E2 = VestaEngine;
 type S1 = RelaxedR1CSSNARK<E1, EvaluationEngine<E1>>;
@@ -124,22 +126,30 @@ fn bounded_proof(path: &Path) -> std::io::Result<Vec<u8>> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let argv: Vec<_> = std::env::args_os().skip(1).collect();
-    let [command, output] = argv.as_slice() else {
-        return Err("usage: proof-grove-cashu-nova {prove-demo|verify-demo} DIRECTORY".into());
+    let mode = argv
+        .first()
+        .and_then(|command| command.to_str())
+        .unwrap_or_default();
+    let (output, (initial, steps, expected, count), journal_context) = match (mode, argv.as_slice()) {
+        ("prove-demo" | "verify-demo", [_, output]) => (Path::new(output), demo(), None),
+        ("prove-journal", [_, output, journal]) => {
+            let replay = journal::read(Path::new(journal), None)?;
+            (Path::new(output), (replay.initial, replay.steps, replay.expected, replay.constraints), Some((replay.sha256, field_hex(replay.prior_journal_root))))
+        }
+        ("verify-journal", [_, output, journal, pin]) => {
+            let replay = journal::read(Path::new(journal), Some(pin.to_str().ok_or("invalid journal SHA-256")?))?;
+            (Path::new(output), (replay.initial, replay.steps, replay.expected, replay.constraints), Some((replay.sha256, field_hex(replay.prior_journal_root))))
+        }
+        _ => return Err("usage: proof-grove-cashu-nova {prove-demo|verify-demo} DIR | prove-journal DIR JOURNAL | verify-journal DIR JOURNAL EXPECTED_SHA256".into()),
     };
-    let mode = command.to_str().ok_or("invalid command")?;
-    if !matches!(mode, "prove-demo" | "verify-demo") {
-        return Err("unknown command".into());
-    }
-    let output = Path::new(output);
-    let (initial, steps, expected, count) = demo();
     let start = Instant::now();
     let pp = PP::setup(&CashuStep::default(), &*S1::ck_floor(), &*S2::ck_floor())?;
     let (pk, vk) = CS::setup(&pp)?;
     let vk_id = hex::encode(Sha256::digest(bincode::serialize(&vk)?));
     let setup_seconds = start.elapsed().as_secs_f64();
     let start = Instant::now();
-    let (bytes, fold_seconds, compress_seconds) = if mode == "prove-demo" {
+    let (bytes, fold_seconds, compress_seconds) = if matches!(mode, "prove-demo" | "prove-journal")
+    {
         let mut proof = RS::new(&pp, &steps[0], &initial)?;
         for step in &steps {
             proof.prove_step(&pp, step)?;
@@ -157,8 +167,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (bounded_proof(&output.join("nova-proof.bin"))?, None, None)
     };
 
-    // A verifier recomputes the fixture checkpoint and expected root without a
-    // prover-provided state file, then checks the compressed proof's output.
+    // A verifier recomputes the checkpoint and expected root from the fixture
+    // or its independently pinned journal, then checks the compressed proof.
     let verify_start = Instant::now();
     let proof: CS = bincode::DefaultOptions::new()
         .with_fixint_encoding()
@@ -176,7 +186,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut wrong_anchor = initial;
     wrong_anchor[9] += proof_grove_cashu_nova::F::from(1u64);
     assert!(proof.verify(&vk, steps.len(), &wrong_anchor).is_err());
-    assert!(proof.verify(&vk, steps.len() - 1, &initial).is_err());
+    assert!(proof.verify(&vk, steps.len() + 1, &initial).is_err());
     let peak = fs::read_to_string("/proc/self/status")
         .ok()
         .and_then(|status| {
@@ -186,17 +196,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .and_then(|line| line.split_whitespace().nth(1))
                 .and_then(|value| value.parse::<u64>().ok())
         });
+    let operations: Vec<_> = steps
+        .iter()
+        .map(|step| match step.operation {
+            Operation::Register => "register",
+            Operation::Issue => "issue",
+            Operation::Split => "split",
+            Operation::Swap => "swap",
+            Operation::Redeem => "redeem",
+        })
+        .collect();
+    let balance = |index: usize| u64::from_str_radix(&field_hex(expected[index])[48..], 16);
     let receipt = json!({
         "schema": "proof-grove/cashu-nova-regtest-accounting/v1",
         "mode": mode, "verified": true, "proof_bytes": bytes.len(),
         "proof_sha256": hex::encode(Sha256::digest(&bytes)), "verifier_key_sha256": vk_id,
-        "constraints_per_step": count, "steps": steps.len(), "operations": ["register", "issue", "split", "swap", "redeem"],
+        "constraints_per_step": count, "steps": steps.len(), "operations": operations,
+        "journal_sha256": journal_context.as_ref().map(|(sha256, _)| sha256),
+        "before_final_journal_root": journal_context.as_ref().map(|(_, root)| root),
         "z0": initial.map(field_hex), "zn": expected.map(field_hex),
-        "declared_reserve_sats": 10000, "outstanding_claims_sats": 10000,
+        "declared_reserve_sats": balance(4)?, "outstanding_claims_sats": balance(6)?,
         "setup_seconds": setup_seconds, "fold_seconds": fold_seconds, "compress_seconds": compress_seconds,
         "verify_seconds": verify_seconds, "peak_rss_kib": peak,
         "rejected": ["different_context_anchor", "wrong_step_count"],
-        "scope": "accounting fixture, with external admission evidence identifiers"
+        "scope": "declared accounting, with external admission evidence commitments"
     });
     println!("{}", serde_json::to_string_pretty(&receipt)?);
     Ok(())

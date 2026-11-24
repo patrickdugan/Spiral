@@ -52,6 +52,12 @@ Both proof commands print the public-state and verification-key identifiers. The
 
 The local run used 42,043 constraints per step. It folded five steps in 2.37 seconds and compressed them in 18.16 seconds, with 413,688 KiB peak prover RSS. A separate verifier process checked the 11,504-byte compressed proof in 0.314 seconds after local key setup. The final public state declares 10,000 sats reserved and 10,000 sats outstanding. The proof was rejected under a different context anchor and a changed step count.
 
+The same verifier accepts a declared regtest journal through `prove-journal PROOF_DIR JOURNAL` and `verify-journal PROOF_DIR JOURNAL EXPECTED_SHA256`. The auditor supplies the expected SHA-256 from its own pinned journal. Each event names a funding txid, vout, exact integer amount, evidence digest and operation. Reserve IDs are derived from the genesis and actual outpoint, so changing a quote intent cannot register the same Bitcoin coin twice. The replay derives the ledger context from the genesis and mint profile, then computes the initial root, event count, final root and root before the last event.
+
+`scripts/protected-fixture-evidence.py journal` prepares a journal and admission records from the holder's regtest receipt. The funding and payout entries link to the observed Bitcoin transactions. The intermediate issuance entry is explicitly declared fixture issuance. The generic journal verifier covers the accounting transition and its evidence commitments. Proof Grove's live admission still needs a protected-mint certificate and independent checks of the evidence those commitments identify.
+
+The local three-entry journal ended with zero reserve and zero outstanding claims. The separate Nova process verified it in 0.308 seconds after key setup.
+
 ## PG-ZK-03 — Bitcoin claim consumption
 
 Each protected claim controls one full outpoint. The holder's wallet stores the descriptor, funding transaction and outpoint, key and sequence, chain context, claim-bundle commitment, expected amount, and mint profile identity. A certificate binds these fields to issuance and appears in the accounting journal. The mint's on-chain cooperative redemption needs the holder signature and uses the same outpoint as the unilateral CSV exit. The holder only signs an exact authorized transaction with `SIGHASH_ALL`, covering beneficiary, amounts, change and fees. Confirmation consumes the outpoint. A replacement before finality remains subject to the same consensus exclusivity, so clients keep it pending and recompute active-chain state after a reorg.
@@ -59,6 +65,8 @@ Each protected claim controls one full outpoint. The holder's wallet stores the 
 The fixture descriptor is `wsh(and_v(v:pk(H),or_i(pk(M),older(6))))` with distinct holder and mint keys. It requires both keys on the cooperative branch and only the holder key when the CSV branch matures. The holder is always required. This profile uses block-based [BIP68](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki) and [BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki).
 
 Bitcoin Core 31.0 confirmed a 24,750-sat payout from the 25,000-sat fixture after six blocks. The test checked concurrent broadcasts, a signature-invalid substituted beneficiary, early payout, replay after confirmation, and invalidation of the payout and funding blocks. The funding in this test is direct Bitcoin funding, and the mint is represented by a separate signing wallet that the test unloads before redemption.
+
+The holder uses the Proof Grove CLI with a loopback Bitcoin Core configuration. `protected-plan` saves the two public keys, amount, exact payout, fee and delay, then returns the funding address and plan ID. `protected-attach` verifies the confirmed transaction output before saving its bundle. Keep the plan ID and resulting bundle ID through a trusted channel. `protected-status` checks whether the coin is unspent, pending spend, consumed, or orphaned. `protected-psbt` exports either branch for external signing and includes the exact witness UTXO and witness script. A holder can export before maturity. `protected-check` checks `SIGHASH_ALL`, both branches' exact output and fee, and the active Core mempool result. The signing wallet and broadcaster are separate from these commands.
 
 ```bash
 python3 proof-grove/tests/protected-reserve-regtest.py --bitcoind /path/to/bitcoind
@@ -76,6 +84,8 @@ The holder-controlled reserve remains the payout contract. Its cooperative and C
 
 The local measurement was 71,477 non-free gates for 3,488 input bits and about 1.14 MB at 16 bytes per gate before protocol overhead. The example rejected changes to each of the 20 record fields under the pinned digest. It also rejected an early payout and an incorrect fee after recomputing the digest, which exercises the arithmetic beyond the commitment check.
 
+Build a regtest settlement record from the holder receipt and the independent Nova journal verifier with `scripts/protected-fixture-evidence.py settlement RECEIPT RECORD NOVA_VERIFIER`. The M14 example `cashu-settlement RECORD EXPECTED_BLAKE3` uses the challenger-supplied expected digest. The executable's `--digest RECORD` mode calculates a digest for offline preparation. The two roots in this record come from the Nova journal replay before and after redemption. Core's funding and payout inputs remain fixture observations. The linked record passed the same 20 public-field controls and two arithmetic controls at 71,477 non-free gates.
+
 ## Measurement and evidence
 
 The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prover stages took 240.505 seconds and 257.603 seconds and peaked at 45,576,180 KiB and 46,434,300 KiB. This was a 16-thread CPU run on Hyperstack, hosted on an A100 VM. The available WSL machine reported approximately 15 GiB RAM and zero swap. Any new paid run needs ready inputs, approved spend and a bounded lease. Completion ETA is unknown.
@@ -84,6 +94,6 @@ The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prov
 | --- | --- | --- | --- | --- |
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
 | Exact 23,750-sat melt-funded case | Archived Cairo 24-word execution | STARK bytes and independent transcript require recovery or fresh proving | CDK rejected reuse of the six source proofs in the archived run | Historical offline payout after cooperative funding |
-| Protected reserve fixture | New Bitcoin Core 31.0 execution | Bitcoin Script signatures and timelock enforced by Core | Concurrent spends, replay and reorg controls | 24,750 sats on regtest with the mint signer unloaded |
-| Nova accounting fixture | Native witness and constraint tests | A separate process verified the five-step compressed Nova proof | Authenticated accounting and replay checks | Admission evidence is external |
+| Protected reserve fixture | Proof Grove CLI and Bitcoin Core 31.0 | Bitcoin Script signatures and timelock enforced by Core | Concurrent spends, replay and reorg controls | 24,750 sats on regtest with the mint signer unloaded |
+| Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core fixture records. Issuance is a declared fixture entry. |
 | BitVM3 binding fixture | Boolean circuit, 71,477 non-free gates | BLAKE3 binding under a supplied digest | Full verifier and state anchor composition remain open | Collateral transaction graph remains open |
