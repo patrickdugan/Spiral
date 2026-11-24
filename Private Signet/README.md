@@ -31,6 +31,11 @@ harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
     sold to Carol without Bob on the patched Signet. A 1-sat shave was
     rejected by the patched nodes and forked the stock one.
   - 19 regtest trials match their expected verdicts.
+  - **SHZ-K2** keeps the owners inside the output itself. Transfer is an
+    on-chain step signed by the seller alone, so a second sale fails. SHZ's
+    3-trade book settles netted in one keyless transaction (1,475 / 1,250 /
+    825 at $125k). The oracle is SHZ's FROST 3-of-5 scheme, and the CSV
+    refund ran on the Signet. 26 regtest trials match.
 
 Results, measurements and the security analysis are in [RESULTS.md](RESULTS.md),
 and the raw receipts in [evidence/](evidence/).
@@ -104,6 +109,8 @@ python3 "Private Signet/lab.py" init
 python3 "Private Signet/lab.py" mine --blocks 101
 SPIRAL_SIGNET_CSFS=1 python3 "Private Signet/ab/run_signet_keyless.py"   # K4, C1, K3, arm C; all nodes agree
 python3 "Private Signet/ab/run_signet_shz_k1.py"                          # SHZ-K1 transfer, double sale, split
+python3 "Private Signet/ab/run_signet_shz_k2.py"                          # SHZ-K2 transfer, book, refund (mine --fast)
+python3 "Private Signet/ab/run_shz_k2_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output shz-k2.json
 python3 "Private Signet/ab/run_shz_k1_regtest.py" --patched <patched bitcoind> --stock <stock bitcoind> --output shz-k1.json
 ~~~
 

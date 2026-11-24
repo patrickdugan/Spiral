@@ -1,0 +1,281 @@
+{
+  "agreement": true,
+  "armC": {
+    "accepted_by_all": true,
+    "carol_utxo": {
+      "legacy": {
+        "bestblock": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "miner": {
+        "bestblock": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "observer": {
+        "bestblock": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      }
+    },
+    "double_sale_block": "0000027e74ba92ebb39ddc088c5754b0f9e2648633c177173e87584563391355",
+    "double_sale_rejected_everywhere": true,
+    "double_sale_txid": "7625467a35b3bc3851f9d07a905e21c8521ad509259ec9cde6c9a7cb803800ba",
+    "double_sale_verdicts": {
+      "legacy": {
+        "result": "duplicate-invalid",
+        "tip": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0"
+      },
+      "miner": {
+        "result": "bad-txns-inputs-missingorspent",
+        "tip": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0"
+      },
+      "observer": {
+        "result": "duplicate-invalid",
+        "tip": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0"
+      }
+    },
+    "leaf_bytes": 272,
+    "mempool": {
+      "allowed": false,
+      "reject-details": "bad-txns-nonstandard-inputs",
+      "reject-reason": "bad-txns-nonstandard-inputs",
+      "txid": "a5286bdda3fffc09e548d94c26939b82770c2d25fb5b7ce626b59d84b34c4e50",
+      "wtxid": "1babfa78c71f46c5ab77e0cd6a32840efee703dba4c52b75679b161a0adba5b3"
+    },
+    "synced": {
+      "height": 105,
+      "tip": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0"
+    },
+    "transfer_block": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0",
+    "transfer_submit": {
+      "miner": {
+        "result": "accepted",
+        "tip": "000000856f7b0039daa01e49446a8fde97a5530657901d8d6d53d966482fe8c0"
+      }
+    },
+    "transfer_txid": "a5286bdda3fffc09e548d94c26939b82770c2d25fb5b7ce626b59d84b34c4e50",
+    "transfer_weight": 1033
+  },
+  "arm_b_leaves": {
+    "ALICE_WINS": "a820623519cb4ec844f166877301ba3e280bd7e822e6dfcf68e757105235b4c5f221886b6b76a86c6c637c687ea8201a6ee7163994df566e5578ea2d7fbbbe67d72a57c25b13402fb140ed7e36515f887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad51",
+    "BOB_WINS": "a8206f4ff359b929e54d3691a8ef82b87064d534cd74d34ddc18b9a60c081cd3e8b2886b6b76a86c6c637c687ea82060db8b028d6a141aa73d55f1c0f6097d32eba4a91f0ecab1be5cf9a17e787fbb887b6b7c6b0251207c7e09703a0f0000000000227c7ea86c6c7b7b7e7e40f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a0317c7ea82102a86c31a624716338279c99e4a1f8c21915b080335dac54e957ed2053b8e76776ad51"
+  },
+  "c1": {
+    "block": "00000248eddbfdc4e1751036dffc01e5df084f4ac6509c8aff255290f60a7255",
+    "chaintips": {
+      "legacy": {
+        "branchlen": 0,
+        "hash": "00000248eddbfdc4e1751036dffc01e5df084f4ac6509c8aff255290f60a7255",
+        "height": 104,
+        "status": "active"
+      },
+      "miner": {
+        "branchlen": 1,
+        "hash": "00000248eddbfdc4e1751036dffc01e5df084f4ac6509c8aff255290f60a7255",
+        "height": 104,
+        "status": "invalid"
+      },
+      "observer": {
+        "branchlen": 1,
+        "hash": "00000248eddbfdc4e1751036dffc01e5df084f4ac6509c8aff255290f60a7255",
+        "height": 104,
+        "status": "invalid"
+      }
+    },
+    "legacy_forked": true,
+    "legacy_restored_to": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+    "patched_rejected": true,
+    "signed": true,
+    "tip_before": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+    "txid": "3fe4059c2fb95c46aa480462afcfa73973f3b552b03d09428885d41842ca8c12",
+    "verdicts": {
+      "legacy": {
+        "result": "duplicate",
+        "tip": "00000248eddbfdc4e1751036dffc01e5df084f4ac6509c8aff255290f60a7255"
+      },
+      "miner": {
+        "result": "block-script-verify-flag-failed (Invalid Schnorr signature)",
+        "tip": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6"
+      },
+      "observer": {
+        "result": "duplicate-invalid",
+        "tip": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6"
+      }
+    }
+  },
+  "challenge": "2102f041e65e928bb26a4f7938fef5e4998fed6b6abf5d338657dd875d9f6ddcc162ac",
+  "funding": {
+    "arm_b_address": "tb1z7nx56p09dsaps7kj82wfhu9g8v3htk6unq9rf2jy0l26gnqhetrq7rjhyt",
+    "arm_b_vout": 3,
+    "block": "000000719cb8cae4ee4f2eda7cbc93e95713bbe0c50152bdb678d6e0f4ccb152",
+    "k3_address": "tb1zmekp5k2t2jvfwu8a2tc0zrl6ur4m63fz5rwg3dp3hf99e0ccepesgrmcf5",
+    "k3_vout": 0,
+    "second_arm_b_vout": 0,
+    "second_txid": "b8d136a0cecbe8c0c3c8f19899fe412d47581952cf582828a59aa424a59fa2f5",
+    "txid": "85c8c900f1eae43d6e7efb8b1920174f9f7891e5832efd4f03179bc723eef1a7"
+  },
+  "k3": {
+    "block": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49",
+    "submit": {
+      "miner": {
+        "result": "accepted",
+        "tip": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49"
+      }
+    },
+    "synced": {
+      "height": 104,
+      "tip": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49"
+    },
+    "thief_utxo": {
+      "legacy": {
+        "bestblock": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pumegm98wc6rxnfg49cg93pgwjvj4rdnqal9sm2tjcnmracav8xqsgzwk5w",
+          "asm": "1 e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "desc": "rawtr(e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981)#57jgw0he",
+          "hex": "5120e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "miner": {
+        "bestblock": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pumegm98wc6rxnfg49cg93pgwjvj4rdnqal9sm2tjcnmracav8xqsgzwk5w",
+          "asm": "1 e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "desc": "rawtr(e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981)#57jgw0he",
+          "hex": "5120e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "observer": {
+        "bestblock": "0000034264ba40f7bfc408a3fb86f7defe6255a39b8941d21ac26be1a3283c49",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pumegm98wc6rxnfg49cg93pgwjvj4rdnqal9sm2tjcnmracav8xqsgzwk5w",
+          "asm": "1 e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "desc": "rawtr(e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981)#57jgw0he",
+          "hex": "5120e6f28d94eec68669a5152e1058850e932551b660efcb0da972c4f63ee3ac3981",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      }
+    },
+    "txid": "d6fdca86149e5f2fcc41b853159f8a24493f31603f01fafc476bcd891bd282bb"
+  },
+  "k4": {
+    "accepted_by_all": true,
+    "block": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+    "payout_utxo": {
+      "legacy": {
+        "bestblock": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "miner": {
+        "bestblock": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      },
+      "observer": {
+        "bestblock": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6",
+        "coinbase": false,
+        "confirmations": 1,
+        "scriptPubKey": {
+          "address": "tb1pmz36a8xkhl6y5cllff8r78x2vt2pj0q5sm645fq3w3j7aq85g4ssvtq0c9",
+          "asm": "1 d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "desc": "rawtr(d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561)#0l565vtf",
+          "hex": "5120d8a3ae9cd6bff44a63ff4a4e3f1cca62d4193c1486f55a24117465ee80f44561",
+          "type": "witness_v1_taproot"
+        },
+        "value": 0.00998
+      }
+    },
+    "signed": true,
+    "submit": {
+      "miner": {
+        "result": "accepted",
+        "tip": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6"
+      }
+    },
+    "synced": {
+      "height": 103,
+      "tip": "0000029d1491aa1b7bd2ca8ea6c7fc1265db1985e1f92836e0ef506cb83ee4a6"
+    },
+    "txid": "be65a1c9b0c8a1e1ee1513d6e1e55611a3a76ad8fc9960be05b16e829e6eb0cc",
+    "weight": 909
+  },
+  "k4_mempool": {
+    "legacy": {
+      "allowed": false,
+      "reject-details": "bad-txns-nonstandard-inputs",
+      "reject-reason": "bad-txns-nonstandard-inputs",
+      "txid": "be65a1c9b0c8a1e1ee1513d6e1e55611a3a76ad8fc9960be05b16e829e6eb0cc",
+      "wtxid": "78de2773b59df611ef112ea83e1649c84114bab675445004a1051ff973a074e2"
+    },
+    "miner": {
+      "allowed": false,
+      "reject-details": "bad-txns-nonstandard-inputs",
+      "reject-reason": "bad-txns-nonstandard-inputs",
+      "txid": "be65a1c9b0c8a1e1ee1513d6e1e55611a3a76ad8fc9960be05b16e829e6eb0cc",
+      "wtxid": "78de2773b59df611ef112ea83e1649c84114bab675445004a1051ff973a074e2"
+    }
+  },
+  "kind": "signet-keyless-k4",
+  "node_args": [
+    "-keylessresearch=1"
+  ],
+  "versions": {
+    "legacy": "/Satoshi:31.1.0/",
+    "miner": "/Satoshi:30.0.0/",
+    "observer": "/Satoshi:30.0.0/"
+  }
+}

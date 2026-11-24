@@ -1,0 +1,95 @@
+{
+  "bitcoind_sha256": "aa8c8ba796a397023f704624870cad556456c9ed7f4f6a54b0bb8d67c387760f",
+  "challenge": "2102f041e65e928bb26a4f7938fef5e4998fed6b6abf5d338657dd875d9f6ddcc162ac",
+  "commands": {
+    "legacy": [
+      "/root/ark-nm2/core/bin/bitcoind",
+      "-datadir=<lab>/legacy",
+      "-signet",
+      "-signetchallenge=2102f041e65e928bb26a4f7938fef5e4998fed6b6abf5d338657dd875d9f6ddcc162ac",
+      "-rpcport=39962",
+      "-port=39963",
+      "-server=1",
+      "-daemon",
+      "-dnsseed=0",
+      "-fixedseeds=0",
+      "-fallbackfee=0.00001",
+      "-rpcbind=127.0.0.1",
+      "-rpcallowip=127.0.0.1",
+      "-listen=0",
+      "-connect=127.0.0.1:39943",
+      "-disablewallet=1"
+    ],
+    "miner": [
+      "/root/psig/core-keyless/build/bin/bitcoind",
+      "-datadir=<lab>/miner",
+      "-signet",
+      "-signetchallenge=2102f041e65e928bb26a4f7938fef5e4998fed6b6abf5d338657dd875d9f6ddcc162ac",
+      "-rpcport=39942",
+      "-port=39943",
+      "-server=1",
+      "-daemon",
+      "-dnsseed=0",
+      "-fixedseeds=0",
+      "-fallbackfee=0.00001",
+      "-rpcbind=127.0.0.1",
+      "-rpcallowip=127.0.0.1",
+      "-listen=1",
+      "-bind=127.0.0.1",
+      "-connect=0",
+      "-keylessresearch=1"
+    ],
+    "observer": [
+      "/root/psig/core-keyless/build/bin/bitcoind",
+      "-datadir=<lab>/observer",
+      "-signet",
+      "-signetchallenge=2102f041e65e928bb26a4f7938fef5e4998fed6b6abf5d338657dd875d9f6ddcc162ac",
+      "-rpcport=39952",
+      "-port=39953",
+      "-server=1",
+      "-daemon",
+      "-dnsseed=0",
+      "-fixedseeds=0",
+      "-fallbackfee=0.00001",
+      "-rpcbind=127.0.0.1",
+      "-rpcallowip=127.0.0.1",
+      "-listen=1",
+      "-bind=127.0.0.1",
+      "-connect=127.0.0.1:39943",
+      "-keylessresearch=1"
+    ]
+  },
+  "core_subversion": "/Satoshi:30.0.0/",
+  "core_version": 300000,
+  "genesis_hash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+  "node_args": [
+    "-keylessresearch=1"
+  ],
+  "nodes": [
+    "miner",
+    "observer",
+    "legacy"
+  ],
+  "ports": {
+    "bootstrap": [
+      39932,
+      39933
+    ],
+    "legacy": [
+      39962,
+      39963
+    ],
+    "miner": [
+      39942,
+      39943
+    ],
+    "observer": [
+      39952,
+      39953
+    ]
+  },
+  "reward_address": "tb1qw4aux9syzyr8l9hw3rx9j4476ftl9s4x2vetwv",
+  "schema": "spiral-private-signet/2",
+  "scope": "localhost-only; miner/observer args -keylessresearch=1; legacy node on /root/ark-nm2/core/bin/bitcoind",
+  "signer_address": "tb1qu325ed5vsk4a6egc6j4kr3ej5ssyr9rj99w709"
+}

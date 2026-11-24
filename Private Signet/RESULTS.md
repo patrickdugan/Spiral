@@ -451,16 +451,120 @@ observer with CSFS, stock Core 31.1 legacy node.
 - **Transfer without the counterparty.** MNR-05 needs novation or a
   ClearingGuard; here one owner signature is enough.
 - **Kept:** the oracle trust (the FROST quorum signs the same messages) and
-  the exact contract maths. The lab oracle is one key; FROST produces the
-  same BIP340 signatures.
-- **Lost:** SHZ's cooperative collated clearing (three trades in 505 vB).
-  K1 settles each trade on its own (794 vB), with no Nova/BitVM3 batch
-  statement.
-- **Unsolved:** the double sale, as in arm C. Both assignments verify until
-  one settles.
-- **Not run on Signet:** the CSV 144 refund. The miner mines in real time
-  after block 101, so 144 more blocks take about a day; the refund runs on
-  regtest only.
+  the exact contract maths.
+- **Left open by K1, closed by K2 (next section):**
+  - the double sale;
+  - SHZ's netted clearing (K1 settles each trade on its own, 794 vB);
+  - the CSV refund on the Signet;
+  - a single-key lab oracle in place of SHZ's FROST quorum.
+
+### SHZ-K2: exclusive transfer, netted book, FROST, refund on Signet
+
+`ab/shz_k2.py`, `ab/shz_frost.py`, `ab/run_shz_k2_regtest.py`,
+`ab/run_signet_shz_k2.py`; evidence in `evidence/regtest/shz-k2-regtest.json`
+and `evidence/signet-shz-k2/`.
+
+**Owners live in the output.** The P2MR root is `TapBranch(C, TapLeaf(state))`.
+The state leaf is `OP_RETURN <K_1> … <K_n>` and is never executed. `C` is the
+tree of contract leaves, none of which contains a key. Each leaf takes the
+owner keys, `C` and the branch order from the witness, recomputes the spk,
+and writes `SHA256(0x22‖spk)` into the TXCOMMIT message as
+`sha_scriptpubkeys`. Naming anyone but the current owners therefore gives a
+different spk, and the spend fails.
+
+**Transfer is an on-chain step that one owner signs alone.** The transfer
+leaf for party p works as follows:
+
+- the current `K_p` signs the spending transaction with an ordinary BIP342
+  CHECKSIG;
+- the single output must be the same `C` with only `K_p` replaced;
+- the output keeps the input amount minus a fixed 500-sat fee, computed with
+  4-byte script arithmetic (amounts stay below 2^31 sats);
+- it may not fall below a floor that keeps settlement funded.
+
+The counterparty is not needed and cannot block it. Once the transfer
+confirms, the old key is no longer in the state, so a second sale spends a
+coin that does not exist, and the former owner can neither settle nor
+transfer again. A buyer is exclusive after one confirmation. Before that,
+two conflicting transfers race like any double spend.
+
+**Netted book.** SHZ's live flow funds its three trades together, so the
+three can share one K2 output with parties alice, bob and carol:
+
+- `compress_book_ranges` partitions the price across all three trades,
+  keeping SHZ's per-trade representative so every range conserves every
+  trade's collateral;
+- each leaf pays the netted per-party totals.
+
+At $125,000 those totals are exactly the prototype's clearing outputs:
+1,475 / 1,250 / 825. A party's transfer moves its whole book.
+
+**FROST.** `shz_frost.py` ports `crates/shz-oracle/src/frost.rs`:
+
+- Feldman-checked Shamir shares of the group key;
+- one Shamir-shared nonce polynomial per digit;
+- partial signatures checked per signer;
+- Lagrange combination into a plain BIP340 signature under the announced
+  nonce.
+
+The tests check that any 3 of 5 sign, that 2 do not, and that signing both
+bit values of a digit reveals the group key.
+
+**Sizes**
+
+| Item | Trade 1 | 3-trade book |
+|---|---|---|
+| CET leaves | 949 | 8,282 |
+| Tree depth (incl. state leaf) | 11 | 15 |
+| Longest leaf | 1,857 B | 2,396 B |
+| Settlement | 777 vB | 892 vB (three trades) |
+| Transfer | 408 vB | 452 vB |
+| Refund | 370 vB | 451 vB |
+
+The book's one settlement replaces three per-trade settlements; trade 1's
+alone is 777 vB. SHZ's cooperative clearing, signed by all parties, is
+505 vB.
+
+**Regtest:** all 26 trials match.
+
+| Pattern (new / old-flag / old-stock) | Cases |
+|---|---|
+| accepted everywhere | settle $125k (quorum 1,2,3 and 2,4,5); transfer alice → carol without Bob; the new coin settles to carol / bob; book netted 1,475 / 1,250 / 825; book settles after bob's book moves to mallory; refund after CSV to current owners; book refund |
+| rejected only by `new` | 2-of-5 attestation; $100k attestation on the $125k leaf; 1-sat shave; paying mallory instead of the long owner; witness naming carol as owner while the state says alice; transfer signed by bob; transfer that also swaps bob's key; transfer taking 1,000 sats extra fee; former owner transferring the new coin (as herself, or signing as carol); new coin settled to the former owner; transfer below the settlement floor (two cases, `OP_VERIFY`); book shave; bob settling after selling his book; refund to the former owner |
+| rejected everywhere | refund before CSV (`bad-txns-nonfinal`); second sale of the spent coin (`bad-txns-inputs-missingorspent`) |
+
+The floor rejections fail at the floor's `OP_VERIFY`. The others fail at
+the owner CHECKSIG, a CSFS digit check, or TXCOMMIT, which Core all reports
+as `Invalid Schnorr signature`.
+
+**Patched custom Signet**, run after K4, C1, K3, arm C and SHZ-K1 in the same
+lab, with a stock Core 31.1 legacy node:
+
+| Step | Result |
+|---|---|
+| Funding | trade 1 (alice / bob), the book (alice / bob / carol) and a refund coin, in one transaction |
+| Transfer | `1732bd5f7eea7ec8236858900f540201ab6f060d1e97ebd9b424c93605cc3c7d` (408 vB), signed only by Alice: refused by both mempools (`bad-txns-nonstandard-inputs`), mined in signed block `000002904adb2c7ae2015121066ac178bf5c7c962df545a457a9bfca82b44199`, accepted by all three nodes |
+| Second sale | Alice's transfer of the same coin to Mallory: miner `bad-txns-inputs-missingorspent`, observer and legacy `duplicate-invalid` |
+| Former owner settles | Alice settling the sold coin to herself, in a signed block: invalid on both patched nodes, active on the legacy node, then invalidated there |
+| Settle | `f36dcc650b152e41f009c09e205f79e5b35ad38cf24ac2ea50790e0b9494c5ad`: Carol 1,075, Bob 550 (FROST quorum 2,4,5), accepted by all |
+| Book | `74ad58e5378d68a663532a30e0ff568b7f2795df3872ea588f360db8fbeb186c` (892 vB): Alice 1,475, Bob 1,250, Carol 825, accepted by all |
+| Refund | refused before the delay (`non-BIP68-final`); after 144 fast-timestamp blocks, `7b90cef6012e85bb11ad5aaafcbbe1e6ba83a46d3a46913ac17bc3003c76c003` pays 625 / 1,000, accepted by all |
+| Final | all three nodes agree at height 400 |
+
+`lab.py mine --fast` mines each block with `--set-block-time` one second
+after the tip. The timestamps stay above median time past and far below the
+two-hour future limit, which is how 144 blocks fit in minutes.
+
+**Still open after K2**
+
+- **Netting trades funded separately.** The book needs its trades created
+  together. Netting independently funded outputs would need each leaf to
+  check other inputs' contributions, which needs 64-bit amount arithmetic
+  or input introspection that these rules do not provide.
+- **Book transfers are per party, not per position.** Selling one trade
+  out of a book is not possible.
+- **Amounts below 2^31 sats per output.** The transfer fee arithmetic uses
+  4-byte script numbers.
 
 ## Phase 5: does keyless reduce the trusted computing base?
 
@@ -506,15 +610,16 @@ it.
 - **Mempool relay of keyless spends.** Arm B settlements reach blocks only
   through the block signer (K4). Relay policy is untouched, and so is the
   pre-validation compact-block relay that carried C1 to the legacy node.
-- **Exclusive off-chain transfer.** Arm C transfers without the
-  counterparty, but the owner can sign two buyers. Exclusivity still needs
-  an on-chain rollover or a revocation mechanism.
+- **Exclusive transfer without a transaction.** SHZ-K2 makes transfer
+  exclusive and keyless as an on-chain step (one owner signature, no
+  counterparty). Purely off-chain exclusivity, as in arm C, still cannot
+  stop a second sale.
 - **CSFS message length.** The lab restricts CSFS to 32-byte messages.
   BIP348 allows any length; supporting that needs a variable-length
   `VerifySchnorr` in the pinned Core.
-- **Collated keyless clearing.** SHZ-K1 settles one trade per transaction.
-  Netting several trades keylessly, as SHZ's 3-party clearing does with
-  signatures, has not been designed.
+- **Netting separately funded trades.** SHZ-K2 nets a book whose trades
+  are funded together. Netting independent outputs keylessly is open (see
+  SHZ-K2, still open).
 - **bitcoin-rs.** No TXCOMMIT, OP_CAT or P2MR; the Core patch is the only
   implementation of the rules.
 - **Validation cost.** The `submitblock` latency at this size does not
