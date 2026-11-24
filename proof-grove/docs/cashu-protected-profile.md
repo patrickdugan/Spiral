@@ -186,6 +186,8 @@ The SP1 Cashu guest builds separately with the pinned SP1 v6.9.0 toolchain. Its 
 
 The SP1 settlement guest binds the 404-byte V3 record to the same compressed Nova proof. It recomputes the final redemption event from the record, including the prior root, reserve outpoint, consumed claim, and payout admission. An independent observer pins the record after checking Bitcoin. The guest compiled under a 768 MiB build cap. The separate native fixture test accepted the real V3 journal and rejected record, opening, and ledger-context mutations. A fresh SP1 settlement proof and its M14 wrap remain outstanding.
 
+SP1's pinned LightProver derived the settlement program key from the saved ELF in 51.82 seconds at 701,820 KiB peak RSS with zero swap. The M13/M14 expected statement pairs this key with the exact staged public SHA-256, wrap key, and recursion root. The pin builder rejected seven substitutions. The packed-key decoder also reproduced the key from the archived verified CUDA control.
+
 ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned Shinigami fixture uses Cairo's Stwo CPU/SIMD prover. More GPU memory can accommodate larger SP1 shards. To measure acceleration of the historical payout proof, first prepare a Stwo accelerator that emits proof bytes the pinned Shinigami verifier accepts.
 
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |

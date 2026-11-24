@@ -40,18 +40,28 @@ hashes to disk. File cache, traces, polynomials, and FRI still contribute to
 process pressure. Plan for those separately and measure actual whole-prover
 memory.
 
-After the parity gate, build the pinned Cairo development prover:
+After the parity gate, install and build the JSON-only prover. The CLI uses
+the pinned Cairo proof generator and reads a saved `ProverInput`. Its
+dependencies are the proof generator's runtime crates. Staging records the
+CLI source and updated manifest hashes alongside the lockfile hash.
 
 ```sh
+python3 integrations/shinigami-stwo/stage.py --install-cli "$STAGED"
 cd "$STAGED/cairo/stwo_cairo_prover"
 cargo +nightly-2025-06-23 build --locked --release -j1 \
-    -p stwo-cairo-dev-utils --bin prove --features stwo/disk-merkle
+    -p stwo-cairo-prover --bin prove-json --features disk-prove-cli,stwo/disk-merkle
 ```
+
+For a low-cost interoperability control, use
+`test_data/test_prove_verify_all_builtins/prover_input.json` from the staged
+Cairo tree and this integration's `smoke-profile.json`. Have the separately
+installed Scarb verifier check its JSON output using `--proof-file`. The
+small profile is intended for smoke testing.
 
 Use the pinned Shinigami kit's exact `profile.json` and the exact archived
 case's `prover_input.json` produced by `audit-exact-melt-stark.py --execute-only`.
-Use the new prover binary with `--prover_input_path`, `--params_json` and
-`--proof_path`. Submit the raw candidate JSON to the existing exact audit as
+Pass the input, profile and fresh output path to `prove-json` in that order.
+Submit the raw candidate JSON to the existing exact audit as
 `--existing-proof`. The audit pins the stock verifier and program and tests
 mutations of all 24 Cairo public output cells. The exact historical chain
 check also requires the original regtest blocks and an independent checkpoint.

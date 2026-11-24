@@ -55,12 +55,49 @@ def point_cairo_to_overlay(cairo):
     return hashlib.sha256(lockfile.read_bytes()).hexdigest()
 
 
+def install_cli(target):
+    cairo = target / 'cairo/stwo_cairo_prover'
+    pins = json.loads((target / 'source-pins.json').read_bytes())
+    lock_sha256 = hashlib.sha256((cairo / 'Cargo.lock').read_bytes()).hexdigest()
+    if (pins['cairo_commit'], pins['stwo_commit'], pins['cairo_cargo_lock_sha256']) != (
+            CAIRO_REV, STWO_REV, lock_sha256):
+        raise ValueError('staged Cairo source pins disagree')
+    package = cairo / 'crates/prover/Cargo.toml'
+    manifest = package.read_text(encoding='utf-8')
+    features, dependencies = '[features]\n', '[dependencies]\n'
+    if manifest.count(features) != 1 or manifest.count(dependencies) != 1 or 'disk-prove-cli' in manifest:
+        raise ValueError('unexpected or already extended Cairo prover manifest')
+    manifest = manifest.replace(features, features + 'disk-prove-cli = ["dep:tracing-subscriber"]\n')
+    manifest = manifest.replace(dependencies, dependencies
+                                + 'tracing-subscriber = { workspace = true, optional = true }\n')
+    manifest += ('\n[[bin]]\nname = "prove-json"\npath = "src/bin/prove-json.rs"\n'
+                 'required-features = ["disk-prove-cli"]\n')
+    source = Path(__file__).with_name('prove-json.rs').read_bytes().replace(b'\r\n', b'\n')
+    binary = cairo / 'crates/prover/src/bin/prove-json.rs'
+    binary.parent.mkdir(exist_ok=True)
+    with binary.open('xb') as stream:
+        stream.write(source)
+    package.write_text(manifest, encoding='utf-8', newline='\n')
+    report = dict(pins, cli_source_sha256=hashlib.sha256(source).hexdigest(),
+                  prover_manifest_sha256=hashlib.sha256(package.read_bytes()).hexdigest())
+    (target / 'cli-pins.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--stwo-git', required=True, type=Path)
-    parser.add_argument('--cairo-git', required=True, type=Path)
-    parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--stwo-git', type=Path)
+    parser.add_argument('--cairo-git', type=Path)
+    parser.add_argument('--out', type=Path)
+    parser.add_argument('--install-cli', type=Path, help='add the JSON-only CLI to an existing staged tree')
     args = parser.parse_args()
+    if args.install_cli:
+        if any((args.stwo_git, args.cairo_git, args.out)):
+            parser.error('--install-cli takes only an existing staged directory')
+        print(json.dumps(install_cli(args.install_cli.resolve())))
+        return
+    if not all((args.stwo_git, args.cairo_git, args.out)):
+        parser.error('--stwo-git, --cairo-git and --out are required for source staging')
     target = args.out.resolve()
     target.mkdir(parents=True, exist_ok=False)
     archive_tree(args.stwo_git.resolve(), STWO_REV, target / 'stwo')
