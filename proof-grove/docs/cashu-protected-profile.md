@@ -101,9 +101,34 @@ The cooperative test archives both signed payouts and the three transaction-incl
 
 The M14 example sizes a fixed settlement record, using the existing BLAKE3 and Boolean arithmetic gadgets. The record commits the network via genesis, chain anchor, old and new roots, claim ID, exact funding outpoint, reserve and beneficiary script hashes, holder authorization commitment, payout txid and wtxid, heights and CSV sequence, and reserve, payout, change and fees. The verifier checks the challenge digest, state change, block-based delay, integer ranges and exact conservation. The challenger needs the authenticated expected digest as an input. In a deployment it must be pinned by the setup and derived from the same verified proof statement, or the check would only enforce consistency with a digest chosen by the attacker.
 
-A protocol contract would use separate operator collateral. Setup pins its outpoint, claim, parent state, eligible challenger keys and expected settlement digest. A claimant publishes an assertion and makes the proof and input openings available before the challenge window. A challenger submits a conflicting authenticated record or a proof-verifier dispute. A pre-signed timeout path pays collateral to the challenger if the operator fails a valid response or data-disclosure deadline. An operator reclaim path waits for both the challenge period and response period to close. Timeouts are relative block heights from confirmations, with enough fee-bump and reorg margin for the actual transaction graph. A starting regtest schedule is 144 blocks to challenge and 24 blocks to respond. The setup must bind all timeout transactions, output indices and beneficiaries before any collateral is accepted. Challenger registration and data availability are assumptions until the on-chain graph is implemented and tested.
+### Record disclosure bond
 
-The holder-controlled reserve remains the payout contract. Its cooperative and CSV paths consume the same output. Slashing separate collateral transfers the bond and cannot compel an arbitrary payout from an unrelated reserve. The example measures the binding gadget only. A complete dispute circuit needs the proof verifier and matching program and key pins. M14's current SP1 verifier does not verify a Shinigami Cairo STARK directly.
+The same-chain regtest fixture starts after the holder payout. It independently verifies the Nova journal, constructs the exact settlement record, checks it in M14, and confirms that its payout anchor is active on the Core node where it funds the bond. The setup pins the 404-byte settlement record by SHA-256 and BLAKE3, including its claim, network, chain anchor, old and new journal roots, and reserve and payout transactions. Each bond also commits a fresh nonce, two setup keys, beneficiary scripts, windows and amounts. The setup signatures fix the collateral outpoint, successor outputs, recipients and fees before funding.
+
+| Transaction | Bitcoin rule |
+| --- | --- |
+| Challenge | The registered challenger holds the jointly signed transaction that moves the 50,000-sat bond to a 49,500-sat dispute output. Timely confirmation spends the output needed by the operator's reclaim. |
+| Uncontested reclaim | 49,500 sats to the operator from the funding output at least 144 blocks after its confirmation. |
+| Record disclosure | 49,000 sats to the operator from the dispute output when the witness supplies all 404 bytes. Script checks the sizes and SHA-256 hashes of six ordered chunks. |
+| Response timeout | 49,000 sats to the challenger from the dispute output at least 24 blocks after the active challenge confirmation. |
+
+The challenger needs the independently anchored record digest, proof and verifier pins, the fully signed challenge and timeout transactions, their committed destinations, and a Core observer. The pre-signed routes require one honest setup signer to withhold any alternative authorization. The fixture generates both setup keys in one process. It returns the four authorized transactions and no setup keys. A live protocol needs distinct signers and a durable handoff before funding.
+
+A CSV delay sets an earliest confirmation height. If a challenge has yet to confirm when the reclaim becomes eligible, the two can race for the same output. A late disclosure can likewise race the matured timeout. A challenge reorg resets the response clock to the active confirmation height. The fixture uses fixed fees on an isolated chain. A deployment needs confirmation margins and a fee-bump policy before relying on those windows. [BIP68](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki), [BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki), [BIP143](https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki)
+
+The opener publishes the record in five 80-byte items and one four-byte item under Bitcoin Core's standard P2WSH relay policy. The challenger checks that the script commits those ordered chunk hashes for its agreed record before signing. [Bitcoin Core standardness limits](https://github.com/bitcoin/bitcoin/blob/v31.0/src/policy/policy.h)
+
+The holder reserve pays under its separate cooperative and CSV branches. Both bond beneficiaries use independent test wallets. Bitcoin enforces signatures, the exact record opening, and the bond timeouts. The Nova and M14 checks run off-chain. The bond has no BitVM3 fraud-witness branch for incorrect computation. A complete dispute requires authenticated garbling, a bound rejection witness and its on-chain spend path. M14's current proof verifier covers SP1's wrap format. Direct verification of Shinigami's Cairo STARK needs separate composition. [BitVM3 paper](https://bitvm.org/bitvm3.pdf)
+
+Run the same-chain fixture from `proof-grove/` with a Linux Bitcoin Core 31.0 binary, the pinned CDK and Node from the wallet guide, and Python `cryptography` with secp256k1 available. Build `proof-grove-cashu-nova` in `integrations/cashu-nova` and `cargo +stable build --locked --release --example cashu-settlement` in the verifier repository's `integrations/bitvm3-nova/m14/circuit`.
+
+```bash
+RAYON_NUM_THREADS=4 python3 tests/run-regtest-stack.py --protected \
+  --bitcoind "$BITCOIND" --cdk "$CDK" --node "$NODE" \
+  --collateral-nova "$NOVA_BIN" --collateral-m14 "$M14_CASHU_SETTLEMENT_BIN"
+```
+
+The run's `protected-handoff/collateral` directory contains the holder receipt, accounting proof and independent verifier transcript, M14 record and result, and all three collateral cases with signed transactions and inclusion proofs.
 
 The local measurement was 71,477 non-free gates for 3,488 input bits and about 1.14 MB at 16 bytes per gate before protocol overhead. The example rejected changes to each of the 20 record fields under the pinned digest. It also rejected an early payout and an incorrect fee after recomputing the digest, which exercises the arithmetic beyond the commitment check.
 
@@ -121,4 +146,5 @@ The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prov
 | Protected CDK issuance and holder exit | CDK 0.18.3 and Bitcoin Core 31.0 | Offline DLEQ and changed-secret control | Unique app reserve assignment and stock melt rejected with notes unspent | Holder spent the pre-issued reserve after the CDK process stopped |
 | Protected cooperative melt | Proof Grove wallet, desk, and Bitcoin Core 31.0 | Exact holder `SIGHASH_ALL` plus mint co-signature, verified by Core | Both branches compete for one issued outpoint. Status follows active confirmations and replay. | Cooperative and holder payouts were confirmed on competing regtest histories |
 | Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core records, with a separately verified CDK issuance certificate in the protected journal |
-| BitVM3 binding fixture | Boolean circuit, 71,477 non-free gates | BLAKE3 binding under a supplied digest | Full verifier and state anchor composition remain open | Collateral transaction graph remains open |
+| BitVM3 binding fixture | Boolean circuit, 71,477 non-free gates | BLAKE3 binding under a supplied digest | Full proof-verifier composition remains open | The disclosure bond can be exercised on the anchored holder chain |
+| Settlement record disclosure bond | CDK issuance, Nova and M14 on the same holder fixture | Core verified setup signatures, exact record hash and CSV rules | Pinned record ties the bond to Nova roots and an active payout anchor | Reclaim, response timeout and exact disclosure paid from separate collateral on regtest |

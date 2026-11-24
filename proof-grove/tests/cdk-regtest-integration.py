@@ -35,8 +35,13 @@ parser.add_argument('--rpc',default='http://127.0.0.1:28743')
 parser.add_argument('--browser-script',help='Optional connected browser QA script, run while the real test services are live')
 parser.add_argument('--protected-handoff',type=Path)
 parser.add_argument('--cooperative',action='store_true')
+parser.add_argument('--collateral-nova',type=Path)
+parser.add_argument('--collateral-m14',type=Path)
 args=parser.parse_args()
 if args.cooperative and not args.protected_handoff:parser.error('--cooperative requires --protected-handoff')
+collateral=bool(args.collateral_nova and args.collateral_m14)
+if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected_handoff or args.cooperative):
+    parser.error('The collateral fixture requires the mint-offline holder fixture and both verifier executables')
 os.environ['PATH']=str(Path(args.node).resolve().parent)+os.pathsep+os.environ['PATH']
 runtime=ROOT/'.runtime'/('cdk-e2e-'+secrets.token_hex(5));runtime.mkdir(parents=True)
 auth='Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()
@@ -44,7 +49,8 @@ auth='Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()
 def rpc(method,params,*,wallet=False):
     if method not in ('getblockchaininfo','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
                        'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader',
-                       'generateblock','invalidateblock','reconsiderblock','gettxoutproof','verifytxoutproof'):
+                       'generateblock','invalidateblock','reconsiderblock','gettxoutproof','verifytxoutproof',
+                       'decodescript','walletcreatefundedpsbt','getaddressinfo'):
         raise AssertionError('Unexpected test RPC')
     path=('/wallet/proof-grove-test-miner' if wallet is True else '/wallet/'+wallet) if wallet else ''
     body=json.dumps({'jsonrpc':'2.0','id':'pg-e2e','method':method,'params':params}).encode()
@@ -171,6 +177,12 @@ try:
         payout['issuance_flow']=report
         (ROOT/'.runtime'/filename).write_text(json.dumps(payout,indent=2)+'\n')
         report=payout
+        if collateral:
+            from cashu_collateral_fixture import run as run_bond
+            print(json.dumps({'stage':'holder-payout-confirmed','payout_sats':payout['payout']['sats']}),flush=True)
+            target=args.protected_handoff/'collateral'
+            report=run_bond(core,rpc,mining_address,payout,certificate,target,args.collateral_nova,args.collateral_m14)
+            (target/'regtest-bond-receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     else:
         report['token_sha256']=audit['token_sha256']
         (ROOT/'.runtime/cdk-integration-report.json').write_text(json.dumps(report,indent=2)+'\n')

@@ -26,7 +26,12 @@ parser.add_argument('--bitcoind',help='Use an installed Linux Bitcoin Core binar
 scenario=parser.add_mutually_exclusive_group()
 scenario.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
 scenario.add_argument('--protected-cooperative',action='store_true',help='Test the protected melt API and competing holder exit')
+parser.add_argument('--collateral-nova',type=Path,help='Local CPU Nova CLI for the optional same-chain bond fixture')
+parser.add_argument('--collateral-m14',type=Path,help='Local M14 cashu-settlement executable for the bond fixture')
 args=parser.parse_args()
+collateral=bool(args.collateral_nova and args.collateral_m14)
+if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected):
+    parser.error('The collateral fixture needs --protected, --collateral-nova and --collateral-m14')
 if sys.platform!='linux':raise SystemExit('Run this foreground supervisor on Linux or inside WSL.')
 cdk,node=Path(args.cdk).resolve(),Path(args.node).resolve()
 if hashlib.sha256(cdk.read_bytes()).hexdigest()!=CDK_SHA256:raise SystemExit('CDK binary does not match the pinned official 0.18.3 release.')
@@ -119,6 +124,9 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
     if args.protected_cooperative:
         subprocess.run([*test_command,'--protected-handoff',str(handoff),'--cooperative'],cwd=ROOT,env=environment,check=True,timeout=360)
     elif args.protected:
+        if collateral:
+            test_command.extend(('--collateral-nova',str(args.collateral_nova.resolve()),
+                                 '--collateral-m14',str(args.collateral_m14.resolve())))
         test_process=subprocess.Popen([*test_command,'--protected-handoff',str(handoff)],cwd=ROOT,env=environment)
         deadline=time.monotonic()+360
         while test_process.poll() is None and not (handoff/'stop-requested').is_file():
@@ -129,7 +137,7 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
             try:process.wait(timeout=20)
             except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
             (handoff/'mint-stopped').touch(exist_ok=False)
-        if test_process.wait(timeout=120)!=0:raise RuntimeError('Protected CDK integration failed')
+        if test_process.wait(timeout=300 if collateral else 120)!=0:raise RuntimeError('Protected CDK integration failed')
     else:
         subprocess.run(test_command,cwd=ROOT,env=environment,check=True)
 finally:
