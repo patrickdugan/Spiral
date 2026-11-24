@@ -10,6 +10,8 @@ The paired Shinigami receipt records a 25,000-sat issuance proof and a 24,750-sa
 
 The [recovered case and proving bundle](https://github.com/patrickdugan/zk-rusto-no-bitcoino/tree/6e8e89984ff91598bcdbf4efc0f343da34b9306b/fixtures/cashu-redemption-23750-sat) match the archived hashes. The bundle SHA-256 is `ada77fb81e9f18d619ba2ffdb188b20497b0d73d6f7957f6222728636337a9b4`. The local one-thread replay matched all 24 public words in 14.932 seconds at 1,479,704 KiB peak RSS. The subsequent prover stopped during base-trace interpolation before it wrote a proof or a peak-memory result.
 
+A second pinned replay matched all 24 words in 13.616 seconds at 1,500,932 KiB peak RSS. It retained the 203,353,164-byte prover input with SHA-256 `267f580c26f5e8d49cd9aea39656ef225b2436823d4553b6722d8ad9f20b1366`. The compressed download was checked by decompressing it and recomputing that digest. The raw input can go directly to Stwo after the proof profile and binary have been checked.
+
 Run the case gate with Python 3.11 or newer on x86-64 Linux. `--execute-only` runs Cairo without starting the STARK prover.
 
 ```bash
