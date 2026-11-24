@@ -162,6 +162,8 @@ The CUDA Core worker initialized successfully with per-chip AIR flattening and o
 
 The disk-backed worker assembled a 27-shard Core proof for a 64 KiB prefix of the same corpus. An independent stock verifier accepted its pinned SHA-256 output and rejected a changed public digest and trailing proof data. The worker was then restarted on the 16 MiB input with its existing run manifest and checkpoint directory.
 
+The 16 MiB resume replayed all 1,432 existing shards and added 952 new ones before Windows reached its RAM reserve. It kept roughly 0.53 GiB of anonymous memory in the sampled cgroup, and Linux reported no swap activity or OOM kills in the measured run. The next 2 GiB resume replayed 325 shards at less than one per second while the D: drive backing WSL had a queue depth of 26. Windows also stopped the 1 GiB checkpoint copy to C: at its reserve. The original 2,384-shard checkpoint was preserved. The C: copy awaits completion and validation.
+
 The SP1 Cashu guest builds separately with the pinned SP1 v6.9.0 toolchain. Its verifier takes the Nova key, compressed proof, independently replayed journal digest, step count, and initial and final state. The ELF compiled under a 1 GiB cap, and the exported verifier key matched the native receipt. Separate guest execution reached a 1.5 GiB memory cap before returning public output. The pinned exact historical Cairo payout requires its own proof and verifier.
 
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
