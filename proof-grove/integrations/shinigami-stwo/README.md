@@ -17,6 +17,8 @@ python3 integrations/shinigami-stwo/check-layout.py
 cd "$STAGED/stwo"
 cargo +nightly-2025-07-14 test --locked -j1 -p stwo --lib \
     --features disk-merkle disk_blake2s -- --nocapture
+cargo +nightly-2025-07-14 test --locked -j1 -p stwo --lib \
+    --features disk-merkle,parallel disk_blake2s -- --nocapture
 ```
 
 The disk path uses the same full-width Blake2s leaf bytes as stock. The packed
@@ -25,9 +27,11 @@ preserves that raw word in both its SIMD and small-column paths. The parity
 test compares each stored node, the root and openings against the same pinned
 stock implementation. The Python reference checks the mixed-height projection
 and file offsets independently for 63 layouts, including Blake2s block
-boundaries and raw zero aliases. That check matched 8,085 digests. The patched
-source staged successfully from both pinned commits. The shared Windows memory
-guard stopped compilation before the Rust parity tests ran.
+boundaries and raw zero aliases. That check matched 8,085 digests. Both Rust
+parity tests passed with and without the `parallel` feature under a 1 GiB
+no-swap worker cap. The runs peaked at 522,372 KiB and 583,920 KiB build RSS,
+respectively. The patched source staged successfully from both pinned commits,
+and the exact Cairo toolchain and locked dependencies were staged in WSL.
 
 The overlay selects plain Blake2s when the Linux binary is built with
 `stwo/disk-merkle` and `STWO_MERKLE_DISK_DIR` is set to a private directory on
