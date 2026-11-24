@@ -25,6 +25,18 @@ The wallet commits its output secrets and blinding data before asking the desk f
 
 An explicit `export --id ID --output FILE` writes a bearer token to a new file. It does not remove local proofs or make a payment. A custom `arkoor` melt is available in the isolated regtest profile. Receiving by swap is not implemented. Do not treat a previously exported copy as a second balance.
 
+## Protected regtest issuance
+
+After binding the Cashu quote, create a holder reserve with `protected-plan` and `protected-attach`. Set the plan's claim commitment to SHA-256 of the UTF-8 string `proof-grove/protected-issuance-intent/v1:` followed by the intent ID. The reserve must match the full quote amount. Confirm the reserve and admit the separately funded CDK quote before claiming.
+
+```bash
+node wallet/cli.mjs protected-claim --id OPERATION_ID --vault VAULT --mint MINT --desk DESK \
+  --bundle RESERVE_BUNDLE --bundle-id PINNED_BUNDLE_ID --core-config CORE_CONFIG
+node wallet/cli.mjs protected-audit --id OPERATION_ID --vault VAULT --mint MINT --desk DESK
+```
+
+`CORE_CONFIG` selects the independent loopback Bitcoin Core observer used by the Python holder tools. The wallet binds each note's P2PK guard to the reserve bundle and archives the mint keyset in the encrypted vault. The Bitcoin reserve is the settlement instrument. Export and standard Cashu melts are unavailable for protected notes. See [the protected profile](cashu-protected-profile.md) for claim consumption and the independent evidence.
+
 ## Recovery and authorization
 
 An exact request is immutable after reservation. On a lost mint reply, the desk uses NUT-09 to restore those original blinded outputs. Complete restoration can finish the request; partial restoration, changed outputs, an unrecognized issued balance, a changed mint, or a reorg stops it. A fresh mint call is possible only for the same original packet when restoration is empty and the provider still reports zero issuance. Upstream atomic quote accounting remains required; local SQLite cannot make a remote mint action atomic.
@@ -41,6 +53,13 @@ Also size `max_tip_lag` for the measured prover delay. The example configuration
 
 The test uses a new Bitcoin Core 30.0 regtest node with peer connections disabled, and CDK 0.18.3 with BDK. It does not use the fake-wallet backend. It mines task-owned regtest coins, pays a 25,000 sat quote, mines two confirmations, and proves that issuance is refused before admission. A proxy drops a successful mint reply, then a new wallet process recovers six verified proofs without a second issuance request.
 
-Run `tests/run-regtest-stack.py` on Linux or within WSL. It requires Docker, installed wallet dependencies, Node 24, and the official CDK binary whose SHA-256 is `3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af`. The Bitcoin image is pinned by digest in the supervisor. The test seeds and passphrase are public fixtures; this environment has no mainnet funds. Reports contain no bearer token or wallet private key.
+Run `tests/run-regtest-stack.py` on Linux or within WSL. It requires installed wallet dependencies, Node 24, and the official CDK 0.18.3 Linux binary whose SHA-256 is `3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af`. Use a local Bitcoin Core 31.0 binary with `--bitcoind` or let the supervisor use its pinned Docker image. All nodes, wallets, and keys in this test are isolated regtest fixtures.
+
+```bash
+python3 tests/run-regtest-stack.py --protected --node /path/to/node \
+  --cdk /path/to/cdk-mintd --bitcoind /path/to/bitcoind
+```
+
+The supervisor saves the holder's receipt at `.runtime/cdk-protected-report.json` and the certificate under the run's `protected-handoff/` directory. Match the certificate SHA-256 against the receipt. To recheck it independently with the mint stopped, pass the reported bundle ID and certificate digest to `node wallet/test-verify-protected-issuance.mjs CERTIFICATE BUNDLE_ID CERTIFICATE_SHA256`. The certificate contains the locked fixture notes and public keysets.
 
 The mainnet M16 proof check and this regtest issuance test establish different things. No live mainnet/testnet4 deposit-to-Cashu issuance or Ark rollover has been executed by this build.

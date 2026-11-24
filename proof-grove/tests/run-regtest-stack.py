@@ -1,8 +1,7 @@
 """Run one isolated Core/CDK stack and the real issuance test, then stop only it.
 
-Run on Linux/WSL with Docker, official CDK 0.18.3 and Node 24 binaries. The
-foreground supervisor keeps WSL alive; no user wallets or existing containers
-are selected. Mint seeds, RPC password and wallet passphrase are public fixtures.
+Run on Linux/WSL with Docker or a local bitcoind, official CDK 0.18.3, and Node 24.
+The supervisor starts its own Core node and mint with public fixture credentials.
 """
 import argparse
 import base64
@@ -23,6 +22,8 @@ IMAGE='bitcoin/bitcoin@sha256:68b927b6a2d3b019ce7655f3fd0eb9a4c7011310886ebc7890
 CDK_SHA256='3a41003fcac0f54a164b6d9187c79ce05591947bb4b4b37c45a125fac813e3af'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cdk',required=True);parser.add_argument('--node',required=True)
+parser.add_argument('--bitcoind',help='Use an installed Linux Bitcoin Core binary in a temporary data directory')
+parser.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
 args=parser.parse_args()
 if sys.platform!='linux':raise SystemExit('Run this foreground supervisor on Linux or inside WSL.')
 cdk,node=Path(args.cdk).resolve(),Path(args.node).resolve()
@@ -44,20 +45,30 @@ runtime=Path(tempfile.mkdtemp(prefix='regtest-stack-',dir=ROOT/'.runtime'))
 token=secrets.token_hex(6);name='proof-grove-'+token;volume=name+'-core'
 rpc_port,mint_port=port(),port()
 while rpc_port==mint_port:mint_port=port()
-process=None;volume_created=False;container_created=False
+process=None;test_process=None;core_process=None;core_data=None;volume_created=False;container_created=False
 environment=os.environ|{'PG_TEST_MINT_MNEMONIC':'abandon '*11+'about',
                        'PG_TEST_BDK_MNEMONIC':'legal winner thank year wave sausage worth useful legal winner thank yellow',
                        'PG_TEST_RPC_PASSWORD':'public-regtest-only'}
 try:
-    run('docker','volume','create','--label','proof-grove.run='+token,volume);volume_created=True
-    run('docker','run','--detach','--name',name,'--label','proof-grove.run='+token,
-        '--publish',f'127.0.0.1:{rpc_port}:18443','--mount',f'type=volume,src={volume},dst=/home/bitcoin/.bitcoin',IMAGE,
-        'bitcoind','-regtest','-server','-txindex=1','-blockfilterindex=1','-listen=0','-connect=0','-dnsseed=0','-discover=0',
-        '-fallbackfee=0.00001','-rpcbind=0.0.0.0','-rpcallowip=0.0.0.0/0','-rpcuser=proofgrove','-rpcpassword=public-regtest-only')
-    container_created=True
+    core_flags=['-regtest','-server','-txindex=1','-blockfilterindex=1','-listen=0','-connect=0',
+                '-dnsseed=0','-discover=0','-fallbackfee=0.00001','-keypool=16',
+                '-rpcuser=proofgrove','-rpcpassword=public-regtest-only']
+    if args.bitcoind:
+        core_data=tempfile.TemporaryDirectory(prefix='proof-grove-cdk-core-')
+        with (runtime/'core.log').open('ab') as logfile:
+            core_process=subprocess.Popen([str(Path(args.bitcoind).resolve()),*core_flags,
+                f'-datadir={core_data.name}',f'-rpcport={rpc_port}','-rpcbind=127.0.0.1'],
+                stdout=logfile,stderr=logfile)
+    else:
+        run('docker','volume','create','--label','proof-grove.run='+token,volume);volume_created=True
+        run('docker','run','--detach','--name',name,'--label','proof-grove.run='+token,
+            '--publish',f'127.0.0.1:{rpc_port}:18443','--mount',f'type=volume,src={volume},dst=/home/bitcoin/.bitcoin',IMAGE,
+            'bitcoind',*core_flags,'-rpcbind=0.0.0.0','-rpcallowip=0.0.0.0/0')
+        container_created=True
     rpc_url=f'http://127.0.0.1:{rpc_port}'
     info=wait_url(rpc_url,json.dumps({'jsonrpc':'2.0','id':'pg','method':'getblockchaininfo','params':[]}).encode(),
-                  {'Content-Type':'application/json','Authorization':'Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()})
+                  {'Content-Type':'application/json','Authorization':'Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()},
+                  process=core_process)
     if info['result']['chain']!='regtest':raise RuntimeError('Unexpected network')
     config=runtime/'config.toml'
     config.write_text(f'''[info]
@@ -97,12 +108,37 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
         process=subprocess.Popen([str(cdk),'--work-dir',str(runtime)],env=environment,stdout=logfile,stderr=logfile)
     mint_url=f'http://127.0.0.1:{mint_port}'
     wait_url(mint_url+'/v1/info',process=process)
-    subprocess.run([sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url],cwd=ROOT,env=environment,check=True)
+    test_command=[sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url]
+    if args.protected:
+        handoff=runtime/'protected-handoff';handoff.mkdir()
+        test_process=subprocess.Popen([*test_command,'--protected-handoff',str(handoff)],cwd=ROOT,env=environment)
+        deadline=time.monotonic()+360
+        while test_process.poll() is None and not (handoff/'stop-requested').is_file():
+            if time.monotonic()>=deadline:raise TimeoutError('Protected issuance did not reach mint shutdown')
+            time.sleep(0.2)
+        if test_process.poll() is None:
+            process.terminate()
+            try:process.wait(timeout=20)
+            except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
+            (handoff/'mint-stopped').touch(exist_ok=False)
+        if test_process.wait(timeout=120)!=0:raise RuntimeError('Protected CDK integration failed')
+    else:
+        subprocess.run(test_command,cwd=ROOT,env=environment,check=True)
 finally:
+    if test_process and test_process.poll() is None:
+        test_process.terminate()
+        try:test_process.wait(timeout=15)
+        except subprocess.TimeoutExpired:test_process.kill();test_process.wait(timeout=10)
     if process and process.poll() is None:
         process.terminate()
         try:process.wait(timeout=20)
         except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
+    if core_process and core_process.poll() is None:
+        core_process.terminate()
+        try:core_process.wait(timeout=20)
+        except subprocess.TimeoutExpired:core_process.kill();core_process.wait(timeout=10)
+    if core_data:
+        core_data.cleanup()
     if container_created:
         record=json.loads(run('docker','inspect',name))[0]
         if record['Config']['Labels'].get('proof-grove.run')!=token:raise RuntimeError('Refusing cleanup: container owner changed')

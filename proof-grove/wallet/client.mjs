@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { authorizeIssue,authorizeBinding } from './authorization.mjs';
 import {createArkPayment,payArk,reconcileArk,listArkPayments} from './ark-payments.mjs';
 import {singleAttemptRequest} from './transport.mjs';
+import {auditProtected, issueIntentDomain, observeProtection, requireProtectedSecrets} from './protected.mjs';
 
 const hex = bytes => Buffer.from(bytes).toString('hex');
 const normalizeUrl = value => { const url=new URL(value); if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)throw new Error('Invalid wallet endpoint'); if(url.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(url.hostname))throw new Error('Remote endpoints require HTTPS'); return url.href.replace(/\/$/,''); };
@@ -37,7 +38,8 @@ export class ProofWallet {
   }
   operation(state,id) { const operation=state.operations[id];if(!operation)throw new Error('Unknown wallet operation');return operation; }
   summary(operation) { return {operation_id:operation.id,intent_id:operation.intent?.id,amount_sats:operation.amount_sats,state:operation.state,
-    balance_sats:operation.proofs?Number(sumProofs(deserializeProofs(operation.proofs)).toString()):undefined,
+    balance_sats:operation.proofs&&!operation.protection?Number(sumProofs(deserializeProofs(operation.proofs)).toString()):undefined,
+    protected_bundle_id:operation.protection?.bundle_id,
     request:operation.intent ? operation.quote?.request : undefined,pubkey:operation.pubkey,payment_expiry:operation.quote?.expiry,
     proof_admission_expiry:operation.intent?.expires_at,unit:'sat',mint:this.mintUrl}; }
   async createDeposit(amount) {
@@ -74,9 +76,18 @@ export class ProofWallet {
       operation.intent=binding.intent;operation.state='awaiting_payment';this.vault.save(state);return this.summary(operation);
     });
   }
-  async claim(id) {
+  async claim(id, protectedOptions) {
     return this.vault.exclusive(async()=>{
-      const state=this.state(),operation=this.operation(state,id),wallet=await this.wallet();
+      const state=this.state(),operation=this.operation(state,id);
+      const protection=protectedOptions ? observeProtection(operation, protectedOptions) : null;
+      if ((operation.preview || operation.proofs || operation.protection) &&
+          operation.protection?.bundle_id !== protection?.bundle_id) {
+        throw new Error('Saved issuance protection cannot change');
+      }
+      if (operation.proofs && protection) {
+        return {...await auditProtected(operation, this.mintUrl), idempotent_replay: true};
+      }
+      const wallet=await this.wallet();
       if(operation.proofs){
         if(operation.state!=='spendable')throw new Error('Issued proofs are spent or reserved; no new issuance requested');
         const proofs=deserializeProofs(operation.proofs),states=await wallet.checkProofsStates(proofs);
@@ -86,12 +97,18 @@ export class ProofWallet {
       if(!operation.intent)throw new Error('Quote has not been bound');
       if(!operation.preview) {
         const quote=await wallet.checkMintQuoteOnchain(operation.quote.quote);
-        const preview=await wallet.prepareMint('onchain',operation.amount_sats,quote,{privkey:operation.privkey});
+        if (protection && !wallet.getMintInfo().isSupported(11).supported) {
+          throw new Error('Mint does not advertise NUT-11');
+        }
+        const outputType=protection ? {type:'p2pk',options:{pubkey:protection.lock_key,blindKeys:false}} : undefined;
+        const preview=await wallet.prepareMint('onchain',operation.amount_sats,quote,{privkey:operation.privkey},outputType);
         const payload={quote:preview.payload.quote,signature:preview.payload.signature,outputs:preview.payload.outputs.map(o=>({amount:Number(o.amount.toString()),id:o.id,B_:o.B_}))};
-        operation.preview={payload,authorization:authorizeIssue(operation.privkey,operation.intent.id,payload),outputData:preview.outputData.map(OutputData.serialize)};
+        operation.preview={payload,authorization:authorizeIssue(operation.privkey,issueIntentDomain(operation.intent.id,protection),payload),outputData:preview.outputData.map(OutputData.serialize)};
+        if (protection) operation.protection={bundle_id:protection.bundle_id,lock_key:protection.lock_key};
         operation.state='outputs_prepared';this.vault.save(state);
       }
-      const result=await this.request('/api/cashu/issue',{intent_id:operation.intent.id,payload:operation.preview.payload,authorization:operation.preview.authorization});
+      const result=await this.request('/api/cashu/issue',{intent_id:operation.intent.id,payload:operation.preview.payload,authorization:operation.preview.authorization,
+        ...(protection ? {protection:{bundle:protection.bundle,bundle_id:protection.bundle_id}} : {})});
       if(result.state!=='blind-signatures-received'||!Array.isArray(result.signatures))throw new Error('Unexpected mint response');
       const outputData=operation.preview.outputData.map(OutputData.deserialize);
       if(outputData.length!==result.signatures.length)throw new Error('Mint signature count mismatch');
@@ -99,13 +116,22 @@ export class ProofWallet {
       const proofs=outputData.map((output,index)=>output.toProof(result.signatures[index],wallet.getKeyset(result.signatures[index].id)));
       const verified=await wallet.verifyMintSignatures(proofs,{require:true});
       if(verified.invalid.length||verified.valid.length!==proofs.length)throw new Error('Mint signature DLEQ verification failed');
+      if (protection) {
+        if (result.protected_bundle_id !== protection.bundle_id) throw new Error('Mint response reserve binding mismatch');
+        requireProtectedSecrets(proofs, protection.lock_key);
+        observeProtection(operation, protectedOptions);
+        const cache={info:wallet.getMintInfo().cache,keys:wallet.keyChain.cache};
+        operation.protectedMintCache=JSON.parse(JSON.stringify(cache, (_,value)=>typeof value==='bigint'?value.toString():value));
+      }
       const states=await wallet.checkProofsStates(proofs);
       if(states.length!==proofs.length||states.some(p=>p.state!=='UNSPENT'))throw new Error('Mint does not report every issued proof as unspent');
       if(Number(sumProofs(proofs).toString())!==operation.amount_sats)throw new Error('Mint returned the wrong token amount');
-      operation.proofs=serializeProofs(proofs);operation.state='spendable';operation.request_sha256=result.request_sha256;operation.evidence_level=result.evidence_level;this.vault.save(state);
+      operation.proofs=serializeProofs(proofs);operation.state=protection?'protected-issued':'spendable';operation.request_sha256=result.request_sha256;operation.evidence_level=result.evidence_level;this.vault.save(state);
+      if (protection) return {...await auditProtected(operation, this.mintUrl), idempotent_replay:result.idempotent_replay};
       return {state:'spendable',amount_sats:operation.amount_sats,proof_count:proofs.length,dleq_verified:true,evidence_level:result.evidence_level,idempotent_replay:result.idempotent_replay};
     });
   }
+  protectedAudit(id) { return auditProtected(this.operation(this.state(), id), this.mintUrl); }
   token(id) {
     const state=this.state(),operation=this.operation(state,id);
     if(operation.state!=='spendable'||!operation.proofs)throw new Error('No spendable token for this operation');

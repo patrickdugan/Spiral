@@ -17,6 +17,10 @@ try {
   else if(command==='bind')result=await wallet.bind(options.id);
   else if(command==='admit-regtest')result=await wallet.admitRegtest(options.id,options.txid,Number(options.vout));
   else if(command==='claim')result=await wallet.claim(options.id);
+  else if(command==='protected-claim')result=await wallet.claim(options.id,{
+    bundlePath:options.bundle,bundleId:options['bundle-id'],coreConfig:options['core-config'],python:options.python,
+  });
+  else if(command==='protected-audit')result=await wallet.protectedAudit(options.id);
   else if(command==='list')result=wallet.list();
   else if(command==='ark-quote')result=await wallet.createArkPayment(options.id,options.destination,Number(options.amount),Number(options['max-fee']||0));
   else if(command==='ark-pay')result=await wallet.payArk(options.payment);
@@ -29,7 +33,7 @@ try {
     if(!options.output)throw new Error('Export requires --output FILE; the file is a bearer token');
     writeFileSync(resolve(options.output),wallet.token(options.id),{flag:'wx',mode:0o600});
     result={exported:true};
-  } else throw new Error('Commands: deposit, bind, admit-regtest, claim, list, audit, export, ark-quote, ark-pay, ark-status, ark-list');
+  } else throw new Error('Commands: deposit, bind, admit-regtest, claim, protected-claim, protected-audit, list, audit, export, ark-quote, ark-pay, ark-status, ark-list');
   console.log(JSON.stringify(result));
 } catch(error){console.log(JSON.stringify({error:error.message}));process.exitCode=1;}
 finally{vault?.close();}

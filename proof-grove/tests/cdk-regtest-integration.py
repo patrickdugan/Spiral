@@ -26,21 +26,24 @@ sys.path.insert(0,str(ROOT))
 from proofdesk.adapters import CoreClient
 from proofdesk.domain import Ledger
 from proofdesk.server import Desk,make_server
+import cdk_protected_fixture
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--node',required=True)
 parser.add_argument('--mint',default='http://127.0.0.1:28738')
 parser.add_argument('--rpc',default='http://127.0.0.1:28743')
 parser.add_argument('--browser-script',help='Optional connected browser QA script, run while the real test services are live')
+parser.add_argument('--protected-handoff',type=Path)
 args=parser.parse_args()
 os.environ['PATH']=str(Path(args.node).resolve().parent)+os.pathsep+os.environ['PATH']
 runtime=ROOT/'.runtime'/('cdk-e2e-'+secrets.token_hex(5));runtime.mkdir(parents=True)
 auth='Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()
 
 def rpc(method,params,*,wallet=False):
-    if method not in ('getblockchaininfo','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction'):
+    if method not in ('getblockchaininfo','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
+                       'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader'):
         raise AssertionError('Unexpected test RPC')
-    path='/wallet/proof-grove-test-miner' if wallet else ''
+    path=('/wallet/proof-grove-test-miner' if wallet is True else '/wallet/'+wallet) if wallet else ''
     body=json.dumps({'jsonrpc':'2.0','id':'pg-e2e','method':method,'params':params}).encode()
     req=urllib.request.Request(args.rpc+path,data=body,headers={'Authorization':auth,'Content-Type':'application/json'})
     try:
@@ -82,7 +85,8 @@ ledger=Ledger(runtime/'desk.sqlite','regtest')
 core=CoreClient(args.rpc,'proofgrove','public-regtest-only')
 desk=Desk('regtest',ledger,None,core,{'cashu_url':f'http://127.0.0.1:{proxy.server_port}','min_confirmations':2})
 server=make_server(desk,0);server_thread=threading.Thread(target=server.serve_forever,daemon=True);server_thread.start()
-environment=os.environ|{'PROOF_GROVE_WALLET_PASSWORD':'public-isolated-regtest-fixture-password'}
+environment=os.environ|{'PROOF_GROVE_WALLET_PASSWORD':'public-isolated-regtest-fixture-password',
+                        'PG_TEST_RPC_PASSWORD':'public-regtest-only'}
 common=['--vault',str(runtime/'wallet.sqlite'),'--mint',args.mint,'--desk',f'http://127.0.0.1:{server.server_port}']
 def client(command,*options,expect_error=None):
     cp=subprocess.run([args.node,str(ROOT/'wallet/cli.mjs'),command,*common,*options],cwd=ROOT,env=environment,text=True,capture_output=True,timeout=120)
@@ -96,6 +100,12 @@ def client(command,*options,expect_error=None):
 try:
     started=time.monotonic()
     deposit=client('deposit','--amount','25000');operation=deposit['operation_id']
+    if args.protected_handoff:
+        bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(core,rpc,deposit,mining_address,runtime,args.rpc)
+        claim_command='protected-claim'
+    else:
+        protected_args=[]
+        claim_command='claim'
     print(json.dumps({'stage':'quote-bound','amount_sats':deposit['amount_sats']}),flush=True)
     txid=rpc('sendtoaddress',[deposit['request'],0.00025],wallet=True)
     rpc('generatetoaddress',[2,mining_address],wallet=True)
@@ -109,18 +119,18 @@ try:
         time.sleep(1)
     else:raise AssertionError('CDK did not observe the mined deposit')
     print(json.dumps({'stage':'real-deposit-confirmed','confirmations':transaction['confirmations']}),flush=True)
-    client('claim','--id',operation,expect_error='payment_admission_required')
+    client(claim_command,'--id',operation,*protected_args,expect_error='payment_admission_required')
     assert counts['mint_requests']==0
     admission=client('admit-regtest','--id',operation,'--txid',txid,'--vout',str(vout))
     assert admission['evidence_level']=='core-regtest'
-    client('claim','--id',operation,expect_error='upstream_unavailable')
+    client(claim_command,'--id',operation,*protected_args,expect_error='upstream_unavailable')
     assert desk.cashu.mint.raw_quote(quote_id)['amount_issued']==25000
     # A new CLI process decrypts the committed preview and uses NUT-09 recovery.
-    recovered=client('claim','--id',operation)
+    recovered=client(claim_command,'--id',operation,*protected_args)
     assert recovered['dleq_verified'] is True and recovered['amount_sats']==25000
-    repeated=client('claim','--id',operation)
+    repeated=client(claim_command,'--id',operation,*protected_args)
     assert repeated['idempotent_replay'] is True
-    audit=client('audit','--id',operation)
+    audit=client('protected-audit' if args.protected_handoff else 'audit','--id',operation)
     assert audit['amount_sats']==25000 and audit['proof_count']>0
     assert counts=={'mint_requests':1,'restore_requests':1,'dropped_replies':1},counts
     assert ledger.db.execute('SELECT count(*) FROM outbox').fetchone()[0]==1
@@ -130,11 +140,24 @@ try:
         subprocess.run([args.node,args.browser_script],cwd=ROOT,env=browser_env,check=True,timeout=180)
     report={'status':'passed','tested_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'network':'regtest','payment_evidence':'core-regtest','zk_verified':False,
             'mint':'CDK 0.18.3 with real BDK/Bitcoin Core backend','cashu_sdk':'4.13.1',
-            'amount_sats':25000,'proof_count':audit['proof_count'],'token_sha256':audit['token_sha256'],
+            'amount_sats':25000,'proof_count':audit['proof_count'],
             'dleq_verified':True,'wallet_restarted_between_attempts':True,'no_second_issuance':True,
             'counts':counts,'seconds':round(time.monotonic()-started,3),
             'meaning':'Actual regtest deposit issued real Cashu cryptographic proofs. Test coins have no monetary value. No Ark transfer or mainnet issuance tested.'}
-    (ROOT/'.runtime/cdk-integration-report.json').write_text(json.dumps(report,indent=2)+'\n')
+    if args.protected_handoff:
+        assert audit['bundle_id']==bundle['bundle_id']
+        client('claim','--id',operation,expect_error='Saved issuance protection cannot change')
+        client('export','--id',operation,'--output',str(runtime/'refused-token'),expect_error='No spendable token for this operation')
+        certificate=args.protected_handoff/'issuance-certificate.json'
+        legacy_melt=cdk_protected_fixture.check_normal_melt(args.node,ROOT,args.mint,runtime/'wallet.sqlite',operation,bundle,environment,certificate)
+        payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
+            mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate)
+        payout['issuance_flow']=report
+        (ROOT/'.runtime/cdk-protected-report.json').write_text(json.dumps(payout,indent=2)+'\n')
+        report=payout
+    else:
+        report['token_sha256']=audit['token_sha256']
+        (ROOT/'.runtime/cdk-integration-report.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2),flush=True)
 finally:
     server.shutdown();server.server_close();server_thread.join(5)

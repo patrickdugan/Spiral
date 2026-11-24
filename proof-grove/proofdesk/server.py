@@ -282,7 +282,8 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                     elif self.path == "/api/cashu/issue":
                         if not desk.cashu:
                             raise Refused("cashu_not_configured")
-                        value = desk.cashu.issue(body.get("intent_id"),body.get("payload"),body.get("authorization"))
+                        value = desk.cashu.issue(body.get("intent_id"),body.get("payload"),body.get("authorization"),
+                                                 body.get("protection"))
                     elif self.path == "/api/plan":
                         value = {"plan": plan_vtxo(body["vtxo"], body["tip_height"]), "evidence_level": "caller-supplied", "executed": False}
                     elif self.path == "/api/ark/refresh":

@@ -21,13 +21,12 @@ import tempfile
 from threading import Barrier
 import time
 
+from protected_fixture_keys import HOLDER_PUB, MINT_PUB, descriptor, fixture_wif
+
 SATOSHIS = 100_000_000
 RESERVE = 25_000
 FEE = 250
 DELAY = 6
-ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-HOLDER_PUB = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
-MINT_PUB = '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
 APP_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -50,21 +49,6 @@ class CoreClient:
         if result.get('error'):
             raise CoreRPCError(result['error']['message'])
         return result['result']
-
-
-def fixture_wif(scalar: int) -> str:
-    key = b'\xef' + scalar.to_bytes(32, 'big') + b'\x01'
-    checksum = hashlib.sha256(hashlib.sha256(key).digest()).digest()[:4]
-    number = int.from_bytes(key + checksum, 'big')
-    encoded = ''
-    while number:
-        number, remainder = divmod(number, 58)
-        encoded = ALPHABET[remainder] + encoded
-    return encoded
-
-
-def descriptor(holder: str, mint: str) -> str:
-    return f'wsh(and_v(v:pk({holder}),or_i(pk({mint}),older({DELAY}))))'
 
 
 def checked_descriptor(core: CoreClient, expression: str) -> str:
@@ -90,7 +74,7 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     # Each signer knows the complete policy and holds exactly its own key.
     for signer, keys in ((holder, (fixture_wif(1), MINT_PUB)),
                          (mint, (HOLDER_PUB, fixture_wif(2)))):
-        private = checked_descriptor(core, descriptor(*keys))
+        private = checked_descriptor(core, descriptor(*keys, DELAY))
         result = signer.rpc('importdescriptors', [[{'desc': private, 'timestamp': 0}]])
         assert result[0]['success'], result
 

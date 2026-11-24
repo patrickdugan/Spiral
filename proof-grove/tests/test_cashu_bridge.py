@@ -6,7 +6,7 @@ import unittest
 from functools import partial
 from dataclasses import replace
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from proofdesk import demo
 from proofdesk.cashu import CashuBridge
@@ -155,6 +155,39 @@ class BridgeTests(unittest.TestCase):
                         {**self.payload,'outputs':[{**self.payload['outputs'][0],'amount':32768}]}):
             with self.assertRaises(Refused):self.bridge.issue(self.id,payload)
         self.assertEqual(self.mint.posts,0)
+
+    @staticmethod
+    def protection(intent_id, bundle_id):
+        commitment = hashlib.sha256(f'proof-grove/protected-issuance-intent/v1:{intent_id}'.encode()).hexdigest()
+        return {'bundle_id': bundle_id, 'bundle': {
+            'bundle_id': bundle_id, 'plan': {'genesis': '11'*32, 'claim_commitment': commitment, 'reserve_sats': 25000},
+            'funding': {'txid': '22'*32, 'vout': 0},
+        }}
+
+    @patch('proofdesk.protected_reserve.status', return_value={'state': 'unspent'})
+    def test_protected_issuance_cannot_be_replayed_as_ordinary_or_reassign_the_reserve(self, status):
+        self.admit()
+        protected = self.protection(self.id, '33'*32)
+        result = self.bridge.issue(self.id, self.payload, protection=protected)
+        self.assertEqual(result['protected_bundle_id'], protected['bundle_id'])
+        self.assertEqual(self.signature.call_args.args[2], self.id + '#protected:' + protected['bundle_id'])
+        self.refuse('protected_bundle_required', self.bridge.issue, self.id, self.payload)
+        status.return_value = {'state': 'consumed'}
+        self.refuse('protected_reserve_unavailable', partial(self.bridge.issue, protection=protected), self.id, self.payload)
+
+        status.return_value = {'state': 'unspent'}
+        second_script = '0014'+'66'*20
+        self.core.rpc.side_effect = lambda method, params: ({'chain':'regtest'} if method=='getblockchaininfo'
+                                                           else {'isvalid':True,'scriptPubKey':second_script})
+        self.mint.quote.update(quote='another-quote', request='another-address', amount_paid=0, amount_issued=0)
+        second = self.bridge.bind('another-quote', POINT, 25000, 'regtest')['intent']['id']
+        other_evidence = replace(self.evidence, txid='44'*32, script_sha256=hashlib.sha256(bytes.fromhex(second_script)).hexdigest())
+        self.ledger.prepare(second, other_evidence, self.chain, self.rules, demo.NOW)
+        self.mint.quote['amount_paid'] = 25000
+        payload = self.payload | {'quote':'another-quote'}
+        other_bundle = self.protection(second, '55'*32)
+        self.refuse('protected_reserve_already_assigned', partial(self.bridge.issue, protection=other_bundle), second, payload)
+        self.assertEqual(self.mint.posts, 1)
 
 
 class RegtestTests(unittest.TestCase):

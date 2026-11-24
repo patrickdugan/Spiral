@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync, statSync } from 'node:fs';
+import { deserializeProofs, serializeProofs } from '@cashu/cashu-ts';
+import { auditProtected } from './protected.mjs';
+
+const [file, expectedBundle, expectedSha] = process.argv.slice(2);
+assert.match(expectedBundle ?? '', /^[a-f0-9]{64}$/);
+assert.match(expectedSha ?? '', /^[a-f0-9]{64}$/);
+assert.ok(statSync(file).size < 2 * 1024 * 1024);
+const raw = readFileSync(file);
+const sha256 = createHash('sha256').update(raw).digest('hex');
+assert.equal(sha256, expectedSha);
+const certificate = JSON.parse(raw);
+assert.equal(certificate.schema, 'proof-grove/protected-cdk-issuance-fixture/v1');
+assert.equal(new URL(certificate.mint_url).hostname, '127.0.0.1');
+assert.equal(certificate.operation.protection.bundle_id, expectedBundle);
+const verified = await auditProtected(certificate.operation, certificate.mint_url);
+const altered = structuredClone(certificate.operation);
+const proofs = deserializeProofs(altered.proofs);
+const secret = JSON.parse(proofs[0].secret);
+const nonce = secret[1].nonce;
+assert.match(nonce, /^[a-f0-9]{64}$/);
+secret[1].nonce = (nonce[0] === '0' ? '1' : '0') + nonce.slice(1);
+proofs[0].secret = JSON.stringify(secret);
+altered.proofs = serializeProofs(proofs);
+await assert.rejects(() => auditProtected(altered, certificate.mint_url), /DLEQ/);
+console.log(JSON.stringify({...verified, certificate_sha256:sha256, changed_secret_rejected:true}));

@@ -59,6 +59,10 @@ class CashuBridge:
                 intent_id TEXT PRIMARY KEY REFERENCES cashu_bindings(intent_id),
                 payload_hash TEXT NOT NULL, payload TEXT NOT NULL,
                 state TEXT NOT NULL, result TEXT, lease TEXT, lease_until INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS cashu_protected_reserves (
+                intent_id TEXT PRIMARY KEY REFERENCES cashu_bindings(intent_id),
+                genesis TEXT NOT NULL, txid TEXT NOT NULL, vout INTEGER NOT NULL, bundle_id TEXT NOT NULL,
+                UNIQUE(genesis, txid, vout));
         """)
 
     def _binding(self, intent_id: str) -> dict:
@@ -133,7 +137,8 @@ class CashuBridge:
             raise
         return {"intent":intent.__dict__,"quote_bound":True,"idempotent_replay":False}
 
-    def _validate_payload(self, intent: Intent, binding: dict, payload: dict, authorization: str):
+    def _validate_payload(self, intent: Intent, binding: dict, payload: dict, authorization: str,
+                          bundle_id: str | None = None):
         if not isinstance(payload,dict) or set(payload) != {"quote","outputs","signature"} or payload["quote"] != binding["quote"]:
             raise Refused("invalid_mint_payload")
         outputs = payload["outputs"]
@@ -157,8 +162,47 @@ class CashuBridge:
             raise Refused("quote_signature_required")
         if not isinstance(authorization,str) or len(authorization)!=128 or any(c not in "0123456789abcdef" for c in authorization):
             raise Refused("issue_authorization_required")
-        if self.signature_verifier(binding["pubkey"],payload,intent.id,authorization) is not True:
+        authorization_intent = intent.id if bundle_id is None else f"{intent.id}#protected:{bundle_id}"
+        if self.signature_verifier(binding["pubkey"],payload,authorization_intent,authorization) is not True:
             raise Refused("issue_authorization_invalid")
+
+    def _checked_protection(self, intent, protection):
+        if protection is None:
+            return None
+        if self.ledger.namespace != "regtest" or intent.network != "regtest":
+            raise Refused("protected_regtest_required")
+        if not isinstance(protection, dict) or set(protection) != {"bundle", "bundle_id"}:
+            raise Refused("protected_invalid_bundle")
+        from .protected_reserve import status
+        bundle, bundle_id = protection["bundle"], protection["bundle_id"]
+        if status(self.core, bundle, bundle_id)["state"] != "unspent":
+            raise Refused("protected_reserve_unavailable")
+        plan = bundle["plan"]
+        commitment = hashlib.sha256(f"proof-grove/protected-issuance-intent/v1:{intent.id}".encode()).hexdigest()
+        if plan["claim_commitment"] != commitment or plan["reserve_sats"] != intent.amount_sats:
+            raise Refused("protected_issuance_binding_mismatch")
+        return bundle
+
+    @staticmethod
+    def _reserve_protection(db, intent_id, old, bundle):
+        assigned = db.execute("SELECT bundle_id FROM cashu_protected_reserves WHERE intent_id=?", (intent_id,)).fetchone()
+        if bundle is None:
+            if assigned:
+                raise Refused("protected_bundle_required")
+            return
+        if assigned:
+            if assigned[0] != bundle["bundle_id"]:
+                raise Refused("protected_bundle_mismatch")
+            return
+        if old:
+            raise Refused("existing_issuance_mode_immutable")
+        genesis = bundle["plan"]["genesis"]
+        txid, vout = bundle["funding"]["txid"], bundle["funding"]["vout"]
+        if db.execute("SELECT 1 FROM cashu_protected_reserves WHERE genesis=? AND txid=? AND vout=?",
+                      (genesis, txid, vout)).fetchone():
+            raise Refused("protected_reserve_already_assigned")
+        db.execute("INSERT INTO cashu_protected_reserves VALUES (?,?,?,?,?)",
+                   (intent_id, genesis, txid, vout, bundle["bundle_id"]))
 
     @staticmethod
     def _validate_signatures(outputs: list, signatures: list) -> list:
@@ -187,10 +231,13 @@ class CashuBridge:
             raise Refused("mint_restore_incomplete")
         return self._validate_signatures(outputs,[pairs[o["B_"]] for o in outputs])
 
-    def issue(self, intent_id: str, payload: dict, authorization: str | None = None) -> dict:
+    def issue(self, intent_id: str, payload: dict, authorization: str | None = None,
+              protection: dict | None = None) -> dict:
         intent = self.ledger.intent(intent_id)
         binding = self._binding(intent_id)
-        self._validate_payload(intent,binding,payload,authorization)
+        bundle = self._checked_protection(intent, protection)
+        bundle_id = None if bundle is None else bundle["bundle_id"]
+        self._validate_payload(intent,binding,payload,authorization,bundle_id)
         receipt,evidence,rules = self.ledger.admitted(intent_id)
         if receipt["checked_at"] >= intent.expires_at:
             raise Refused("payment_admission_required")
@@ -207,6 +254,7 @@ class CashuBridge:
         try:
             db.execute("BEGIN IMMEDIATE")
             old = db.execute("SELECT * FROM cashu_issuance WHERE intent_id=?",(intent_id,)).fetchone()
+            self._reserve_protection(db, intent_id, old, bundle)
             if old and old["payload_hash"] != packet_hash:
                 raise Refused("mint_outputs_immutable")
             if old and old["result"]:
@@ -235,6 +283,8 @@ class CashuBridge:
             result = {"state":"blind-signatures-received","signatures":signatures,"request_sha256":packet_hash,
                       "evidence_level":evidence.kind,"wallet_verification":"required",
                       "meaning":"Wallet must unblind and verify mint signatures; this response is not a bearer token."}
+            if bundle_id is not None:
+                result["protected_bundle_id"] = bundle_id
             db.execute("UPDATE cashu_issuance SET state='signatures_received',result=?,lease=NULL,lease_until=0 WHERE intent_id=? AND lease=?",
                        (canonical(result).decode(),intent_id,lease))
             return result | {"idempotent_replay":False}

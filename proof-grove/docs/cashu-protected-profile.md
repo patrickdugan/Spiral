@@ -54,9 +54,22 @@ The local run used 42,043 constraints per step. It folded five steps in 2.37 sec
 
 The same verifier accepts a declared regtest journal through `prove-journal PROOF_DIR JOURNAL` and `verify-journal PROOF_DIR JOURNAL EXPECTED_SHA256`. The auditor supplies the expected SHA-256 from its own pinned journal. Each event names a funding txid, vout, exact integer amount, evidence digest and operation. Reserve IDs are derived from the genesis and actual outpoint, so changing a quote intent cannot register the same Bitcoin coin twice. The replay derives the ledger context from the genesis and mint profile, then computes the initial root, event count, final root and root before the last event.
 
-`scripts/protected-fixture-evidence.py journal` prepares a journal and admission records from the holder's regtest receipt. The funding and payout entries link to the observed Bitcoin transactions. The intermediate issuance entry is explicitly declared fixture issuance. The generic journal verifier covers the accounting transition and its evidence commitments. Proof Grove's live admission still needs a protected-mint certificate and independent checks of the evidence those commitments identify.
+`scripts/protected-fixture-evidence.py journal` prepares the journal from the holder's regtest receipt. For the CDK run, `--issuance-certificate` adds the independently checked DLEQ receipt and the pinned certificate digest to the issuance entry. The builder requires that the reserve bundle, amount, locked-note digest and request digest agree. Run the certificate verifier separately before admitting that evidence. Nova verifies accounting and commits to the admission records. Verification of the Cashu signatures and Bitcoin transactions occurs outside the circuit.
 
-The local three-entry journal ended with zero reserve and zero outstanding claims. The separate Nova process verified it in 0.308 seconds after key setup.
+The protected CDK journal ended with zero reserve and zero outstanding claims. Nova produced an 11,504-byte proof with 404,920 KiB peak prover RSS. The separate verifier checked the proof in 0.298 seconds after key setup. Changing the certificate bytes caused journal admission to fail before proving.
+
+To rebuild the protected CDK journal, first reproduce the issuance fixture in [the wallet guide](cashu-wallet.md) and verify its certificate. From `proof-grove/`, point `RECEIPT` and `CERTIFICATE` at those files and `RUN` at a new directory.
+
+```bash
+JOURNAL_SHA=$(python3 scripts/protected-fixture-evidence.py journal "$RECEIPT" "$RUN" \
+  --issuance-certificate "$CERTIFICATE")
+cargo +stable run --locked --release --manifest-path integrations/cashu-nova/Cargo.toml -- \
+  prove-journal "$RUN/proof" "$RUN/journal.json"
+cargo +stable run --locked --release --manifest-path integrations/cashu-nova/Cargo.toml -- \
+  verify-journal "$RUN/proof" "$RUN/journal.json" "$JOURNAL_SHA" > "$RUN/independent-verifier.json"
+```
+
+For an independent audit of an existing proof, obtain the expected journal SHA-256 from its trusted evidence manifest. The proof verifies the folded `register`, `issue` and `redeem` steps for that journal.
 
 ## PG-ZK-03 — Bitcoin claim consumption
 
@@ -64,7 +77,11 @@ Each protected claim controls one full outpoint. The holder's wallet stores the 
 
 The fixture descriptor is `wsh(and_v(v:pk(H),or_i(pk(M),older(6))))` with distinct holder and mint keys. It requires both keys on the cooperative branch and only the holder key when the CSV branch matures. The holder is always required. This profile uses block-based [BIP68](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki) and [BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki).
 
-Bitcoin Core 31.0 confirmed a 24,750-sat payout from the 25,000-sat fixture after six blocks. The test checked concurrent broadcasts, a signature-invalid substituted beneficiary, early payout, replay after confirmation, and invalidation of the payout and funding blocks. The funding in this test is direct Bitcoin funding, and the mint is represented by a separate signing wallet that the test unloads before redemption.
+The standalone Bitcoin Core 31.0 fixture confirmed a 24,750-sat payout from a 25,000-sat reserve after six blocks. The test checked concurrent broadcasts, a signature-invalid substituted beneficiary, early payout, replay after confirmation, and invalidation of the payout and funding blocks. Its two script branches are tested with separate signing wallets.
+
+The protected CDK fixture funds the holder reserve before issuance. It pays the mint quote with a separate test payment. CDK 0.18.3 signs six P2PK notes worth 25,000 sats. Their lock key comes from Cashu hash-to-curve over a domain and the pinned reserve bundle ID, with no known signer and no refund branch. The wallet verifies the lock after unblinding and keeps the notes in `protected-issued` state. Proof Grove checks the reserve against Core and assigns the outpoint at most once in its issuance database. A protected recipient also needs its own copy of the reserve bundle and trusted mint keyset pin.
+
+The CDK control submits these inputs to the stock NUT-30 melt endpoint. CDK rejects the spending condition and reports the inputs unspent. A separate process verifies the six DLEQ proofs against cached public mint keys while the actual CDK process is stopped and rejects a changed note secret. The holder then spends the confirmed reserve with its own signing wallet. The certificate is a regtest artifact. Its DLEQ check attests to the keysets pinned by the accepted fixture certificate. Application code must establish those pins against a trusted mint identity before accepting an externally supplied certificate.
 
 The holder uses the Proof Grove CLI with a loopback Bitcoin Core configuration. `protected-plan` saves the two public keys, amount, exact payout, fee and delay, then returns the funding address and plan ID. `protected-attach` verifies the confirmed transaction output before saving its bundle. Keep the plan ID and resulting bundle ID through a trusted channel. `protected-status` checks whether the coin is unspent, pending spend, consumed, or orphaned. `protected-psbt` exports either branch for external signing and includes the exact witness UTXO and witness script. A holder can export before maturity. `protected-check` checks `SIGHASH_ALL`, both branches' exact output and fee, and the active Core mempool result. The signing wallet and broadcaster are separate from these commands.
 
@@ -72,7 +89,7 @@ The holder uses the Proof Grove CLI with a loopback Bitcoin Core configuration. 
 python3 proof-grove/tests/protected-reserve-regtest.py --bitcoind /path/to/bitcoind
 ```
 
-NUT-07 lets CDK report and serialize proof states inside the mint. NUT-11 is a mint-enforced P2PK condition and does not give the holder a Bitcoin spend path. NUT-12 verifies a blind signature against the mint key, without showing that the mint reserved funds. NUT-30 supplies the on-chain mint and melt quote flow, without requiring the mint to spend any specific input for payment. The protected extension needs its own quote/certificate type and separate redemption eligibility. Protected notes may use the normal DLEQ primitives, but a wallet must reject ordinary redemption endpoints for the protected balance and check the matching capability and profile. Lightning melt would need a protocol that atomically binds Lightning settlement to the shared Bitcoin claim. This profile defines the on-chain melt only. [NUT-07](https://github.com/cashubtc/nuts/blob/main/07.md), [NUT-11](https://github.com/cashubtc/nuts/blob/main/11.md), [NUT-12](https://github.com/cashubtc/nuts/blob/main/12.md), [NUT-30](https://github.com/cashubtc/nuts/blob/main/30.md), [CDK](https://github.com/cashubtc/cdk)
+NUT-07 lets CDK report and serialize proof states inside the mint. NUT-11 enforces P2PK conditions within a compliant mint. NUT-12 verifies a blind signature against a mint key. NUT-30 provides on-chain quotes and leaves the mint free to select its payment inputs. Protected cooperative redemption therefore needs its own route for jointly signing and spending the specific outpoint. The standalone fixture exercises the two signatures and competing Bitcoin branches. A service endpoint for cooperative authorization and confirmation tracking remains open. Lightning melt needs a protocol that atomically binds Lightning settlement to the shared Bitcoin claim. [NUT-07](https://github.com/cashubtc/nuts/blob/main/07.md), [NUT-11](https://github.com/cashubtc/nuts/blob/main/11.md), [NUT-12](https://github.com/cashubtc/nuts/blob/main/12.md), [NUT-30](https://github.com/cashubtc/nuts/blob/main/30.md), [CDK](https://github.com/cashubtc/cdk)
 
 ## PG-ZK-04 — BitVM3 target
 
@@ -84,7 +101,7 @@ The holder-controlled reserve remains the payout contract. Its cooperative and C
 
 The local measurement was 71,477 non-free gates for 3,488 input bits and about 1.14 MB at 16 bytes per gate before protocol overhead. The example rejected changes to each of the 20 record fields under the pinned digest. It also rejected an early payout and an incorrect fee after recomputing the digest, which exercises the arithmetic beyond the commitment check.
 
-Build a regtest settlement record from the holder receipt and the independent Nova journal verifier with `scripts/protected-fixture-evidence.py settlement RECEIPT RECORD NOVA_VERIFIER`. The M14 example `cashu-settlement RECORD EXPECTED_BLAKE3` uses the challenger-supplied expected digest. The executable's `--digest RECORD` mode calculates a digest for offline preparation. The two roots in this record come from the Nova journal replay before and after redemption. Core's funding and payout inputs remain fixture observations. The linked record passed the same 20 public-field controls and two arithmetic controls at 71,477 non-free gates.
+Build a regtest settlement record from the holder receipt and the independent Nova journal verifier with `scripts/protected-fixture-evidence.py settlement RECEIPT RECORD NOVA_VERIFIER`. Supply `--issuance-certificate CERTIFICATE` for the protected CDK run. The M14 example `cashu-settlement RECORD EXPECTED_BLAKE3` uses the challenger-supplied expected digest. The executable's `--digest RECORD` mode calculates a digest for offline preparation. The two roots in this record come from the Nova journal replay before and after redemption. Core's funding and payout inputs remain fixture observations. The linked record passed the same 20 public-field controls and two arithmetic controls at 71,477 non-free gates.
 
 ## Measurement and evidence
 
@@ -95,5 +112,6 @@ The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prov
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
 | Exact 23,750-sat melt-funded case | Archived Cairo 24-word execution | STARK bytes and independent transcript require recovery or fresh proving | CDK rejected reuse of the six source proofs in the archived run | Historical offline payout after cooperative funding |
 | Protected reserve fixture | Proof Grove CLI and Bitcoin Core 31.0 | Bitcoin Script signatures and timelock enforced by Core | Concurrent spends, replay and reorg controls | 24,750 sats on regtest with the mint signer unloaded |
-| Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core fixture records. Issuance is a declared fixture entry. |
+| Protected CDK issuance and holder exit | CDK 0.18.3 and Bitcoin Core 31.0 | Offline DLEQ and changed-secret control | Unique app reserve assignment and stock melt rejected with notes unspent | Holder spent the pre-issued reserve after the CDK process stopped |
+| Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core records, with a separately verified CDK issuance certificate in the protected journal |
 | BitVM3 binding fixture | Boolean circuit, 71,477 non-free gates | BLAKE3 binding under a supplied digest | Full verifier and state anchor composition remain open | Collateral transaction graph remains open |
