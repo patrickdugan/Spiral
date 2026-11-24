@@ -8,18 +8,22 @@ The archived execution receipt identifies the funding outpoint `51bf73de53a364d4
 
 The paired Shinigami receipt records a 25,000-sat issuance proof and a 24,750-sat payout proof from a separately funded reserve. The proof hashes are `979bc9a9f0e9b24f4486b638c7e05aa05d33bc2b508b34308d89955f131a86fb` and `350b8fe97e02ee2ef90880a18d83b43ad0790e8cf7c92c1ea223b569deb9df6c`. The 24,750-sat proof cannot satisfy the 23,750-sat statement. The other archived 23,750-sat regtest receipts also carry different funding and payout txids.
 
-With the original proving bundle and case directory on Linux, the exact case gate runs as follows.
+The [recovered case and proving bundle](https://github.com/patrickdugan/zk-rusto-no-bitcoino/tree/6e8e89984ff91598bcdbf4efc0f343da34b9306b/fixtures/cashu-redemption-23750-sat) match the archived hashes. The bundle SHA-256 is `ada77fb81e9f18d619ba2ffdb188b20497b0d73d6f7957f6222728636337a9b4`. The local one-thread replay matched all 24 public words in 14.932 seconds at 1,479,704 KiB peak RSS. The subsequent prover stopped during base-trace interpolation before it wrote a proof or a peak-memory result.
+
+Run the case gate with Python 3.11 or newer on x86-64 Linux. `--execute-only` runs Cairo without starting the STARK prover.
 
 ```bash
-python3 proof-grove/scripts/audit-exact-melt-stark.py \
+python3.11 proof-grove/scripts/audit-exact-melt-stark.py \
   --runner /path/to/shinigami-cpu-pilot/benchmarks/shinigami/run.py \
   --case /path/to/exact/redemption-case --check-only
-python3 proof-grove/scripts/audit-exact-melt-stark.py \
+python3.11 proof-grove/scripts/audit-exact-melt-stark.py \
   --runner /path/to/shinigami-cpu-pilot/benchmarks/shinigami/run.py \
-  --case /path/to/exact/redemption-case --out /path/to/new/evidence-directory
+  --case /path/to/exact/redemption-case --execute-only --out /path/to/new/evidence-directory
 ```
 
-A pre-existing candidate can be supplied with `--existing-proof`. The gate checks the archived case and tool pins, then archives the case statement, proof, verifier transcript, timings, and an independent verification receipt. The public-memory mutation loop changes every exposed word. A separate source audit is required to establish which public words constrain which semantic fields. For delivery, the verifier must bind the network, canonical chain anchor, exact funding transaction and output, reserve script and amount, holder authorization, delay, payout transaction and destination, payout amount, change and fees. A Bitcoin inclusion proof needs a separately trusted or verified canonical tip to resolve reorgs.
+A pre-existing candidate can be supplied with `--existing-proof`. Omitting both modes starts a fresh proof. The gate compares all 24 public output words against the archived statement and program hash before it accepts an independently verified proof. It then reruns the pinned verifier with one mutation per public word and archives the statement, proof, transcript and timings.
+
+The recovered 21-word payload carries the funding txid and index, reserve amount and script, funding and spend heights, claim commitment, destination script, payout amount, transaction ID and witness transaction ID. Bitcoin network, block inclusion and canonical chain selection require a separate header or Core observer binding. The exact case spends one reserve input to one payout output. Their value difference is 250 sats. Cashu melt change belongs to the cooperative funding step and requires separate evidence.
 
 ## PG-ZK-02 — Nova accounting
 
@@ -136,6 +140,8 @@ The local measurement was 71,477 non-free gates for 3,488 input bits and about 1
 
 The same-chain record was also garbled and evaluated in separate processes. The package carried 3,488 selected input labels and 1,143,632 ciphertext bytes. The evaluator accepted the exact record in 0.054 seconds and returned the committed rejection label for a changed previous root in 0.070 seconds under a fresh garbling and the same challenger digest. It refused changes to the package, pin, record, digest, labels and ciphertext stream. The fixture relies on a trusted generator and a 64-bit backend seed. It exercises authenticated delivery under the trusted manifest pin. A malicious-setup defense and an assertion-bound Bitcoin fraud witness remain open.
 
+A separate one-byte Taproot assertion spent a confirmed 100,000-sat regtest output, paid 99,000 sats and committed its opening table in a signed `OP_RETURN`. The evaluator reconstructed the exact signature digest from the mined transaction and opened eight labels. Core refused changes to the payout, table commitment and control block. Core accepted an ordinary Schnorr signature that the label extractor refused. An assertion path that enforces extractability and connects the emitted labels to the settlement circuit remains open.
+
 Build a regtest settlement record from the holder receipt and the independent Nova journal verifier with `scripts/protected-fixture-evidence.py settlement RECEIPT RECORD NOVA_VERIFIER`. Supply `--issuance-certificate CERTIFICATE` for the protected CDK run. The M14 example `cashu-settlement RECORD EXPECTED_BLAKE3` uses the challenger-supplied expected digest. The executable's `--digest RECORD` mode calculates a digest for offline preparation. The two roots in this record come from the Nova journal replay before and after redemption. Core's funding and payout inputs remain fixture observations. The linked record passed the same 20 public-field controls and two arithmetic controls at 71,477 non-free gates.
 
 ## Measurement and evidence
@@ -145,11 +151,12 @@ The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prov
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
 | --- | --- | --- | --- | --- |
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
-| Exact 23,750-sat melt-funded case | Archived Cairo 24-word execution | STARK bytes and independent transcript require recovery or fresh proving | CDK rejected reuse of the six source proofs in the archived run | Historical offline payout after cooperative funding |
+| Exact 23,750-sat melt-funded case | Pinned Cairo replay matched 24 words locally | Fresh STARK remains outstanding after interrupted CPU proving | CDK rejected reuse of the six source proofs in the archived run | Historical offline payout after cooperative funding |
 | Protected reserve fixture | Proof Grove CLI and Bitcoin Core 31.0 | Bitcoin Script signatures and timelock enforced by Core | Concurrent spends, replay and reorg controls | 24,750 sats on regtest with the mint signer unloaded |
 | Protected CDK issuance and holder exit | CDK 0.18.3 and Bitcoin Core 31.0 | Offline DLEQ and changed-secret control | Unique app reserve assignment and stock melt rejected with notes unspent | Holder spent the pre-issued reserve after the CDK process stopped |
 | Protected cooperative melt | Proof Grove wallet, desk, and Bitcoin Core 31.0 | Exact holder `SIGHASH_ALL` plus mint co-signature, verified by Core | Both branches compete for one issued outpoint. Status follows active confirmations and replay. | Cooperative and holder payouts were confirmed on competing regtest histories |
 | Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core records, with a separately verified CDK issuance certificate in the protected journal |
 | BitVM3 binding fixture | Boolean circuit, 71,477 non-free gates | BLAKE3 binding under a supplied digest | Full proof-verifier composition remains open | The disclosure bond can be exercised on the anchored holder chain |
 | M14 garbled settlement fixture | Separate garbler and evaluator on the same-chain record | Pinned package and matching accept or reject label commitment | Trusted setup and independent digest pin | Fraud-witness spend remains open |
+| One-byte funded Taproot assertion | Bitcoin Core 31.0 and separate label extractor | Extracted eight labels from the exact mined BIP340 signature and committed table | Trusted setup. The script permits ordinary signatures that carry no opening. | Core confirmed the assertion and its 99,000-sat payout |
 | Settlement record disclosure bond | CDK issuance, Nova and M14 on the same holder fixture | Core verified setup signatures, exact record hash and CSV rules | Pinned record ties the bond to Nova roots and an active payout anchor | Reclaim, response timeout and exact disclosure paid from separate collateral on regtest |
