@@ -131,6 +131,32 @@ Check the cubin list for `sm_86`. The laptop RTX 3050 is a smoke target. Its
 candidate after smoke and verifier success. Peak GPU and host memory for the
 complete proof remain unmeasured, and trace generation still uses CPU/SIMD.
 
+The Vortex build script compiles CUDA translation units serially and archives
+them after the last one succeeds. For an interrupted SM86 build, use the
+local NVCC cache below. Keep the same target directory, toolkit, and build
+environment for each retry. The first run populates an empty cache from
+successful NVCC commands. Each hit checks the compile receipt and object
+hash before restoring the exact output bytes.
+
+```sh
+REAL_CUDA_PATH="$CUDA_PATH"
+python3.11 -B "$INTEGRATION/nvcc-object-cache.py" prepare \
+    --source "$CUDA_STAGED/vortex" --toolkit "$REAL_CUDA_PATH" \
+    --shim "$CUDA_SHIM" --cache "$CUDA_OBJECT_CACHE"
+export CUDA_PATH="$CUDA_SHIM"
+export PATH="$REAL_CUDA_PATH/bin:$PATH"
+export LD_LIBRARY_PATH="$REAL_CUDA_PATH/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Run the same locked Cargo build above. Reuse the existing shim on retry.
+```
+
+Use fresh shim and cache paths on the Linux filesystem. The shim forwards
+commands outside the pinned Linux SM86 compile form to the real NVCC. Its
+recipe binds the exact command, Vortex CUDA files and headers, CUDA toolkit
+and host compiler fingerprint, and relevant environment. Reprepare after a
+host or toolkit update. Run a standalone object compile separately from
+Cargo, with the same working directory, environment, source flags and
+absolute output path, to make its result available to a later build.
+
 The RTX 3050 ran the pinned lifted Blake2s leaf and parent kernels directly.
 All 463 hashes matched the stock layout across 27 CUDA launches, including
 mixed column heights and the raw `0x7fffffff` zero encoding. The harness checks
