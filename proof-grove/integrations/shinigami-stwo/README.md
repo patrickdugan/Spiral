@@ -96,9 +96,39 @@ cargo +nightly-2025-06-23 build --locked --release -j1 \
 For the RTX 5090, use a CUDA 13 toolchain and matching NVIDIA driver so the
 pinned build script emits native `sm_120`. Record the GPU compute capability
 and toolkit version. The script also emits `sm_89` and `compute_89` for Ada.
-An RTX A6000 or RTX 3050 needs separate Ampere targeting and compatibility
-checks. CUDA still uses a CPU/SIMD trace generator, and device and host memory
-for the complete historical proof remain unmeasured. [Pinned VortexSTARK build targets](https://github.com/garrick247/VortexSTARK/blob/1e88c31974bcb9906274d7a129bd9f2902d7ae2e/build.rs)
+[Pinned VortexSTARK build targets](https://github.com/garrick247/VortexSTARK/blob/1e88c31974bcb9906274d7a129bd9f2902d7ae2e/build.rs)
+
+For the RTX A6000 and RTX 3050, opt in to native `sm_86` with a fresh staging
+directory on a Linux filesystem, including under WSL, and set `CUDA_PATH` to
+the CUDA 12.8 toolkit root.
+`VORTEX_GIT` is a local VortexSTARK checkout containing the exact commit above.
+Keep the default NVCC path and Vortex features. The staged build script targets
+Ampere, the Cairo manifests point both Vortex packages at the same staged tree,
+and the lockfile drops only the two Vortex Git source lines. The receipt records
+the original Git blob, original and patched build script hashes, and staged
+manifest and lock hashes. Resolve metadata with `--locked` before starting the
+build. Cargo resolution for this overlay still needs to be exercised.
+
+```sh
+python3 -B "$INTEGRATION/stage-cuda.py" --cuda-cairo-git "$CUDA_CAIRO_GIT" \
+    --vortex-sm86-git "$VORTEX_GIT" --out "$CUDA_STAGED"
+export CUDA_PATH
+export PATH="$CUDA_PATH/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_PATH/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+cd "$CUDA_STAGED/stwo_cairo_prover"
+nvcc --version
+cargo +nightly-2025-06-23 metadata --locked --format-version 1 \
+    --features stwo-cairo-prover/cuda-prove-json >/dev/null
+cargo +nightly-2025-06-23 build --locked --release -j1 \
+    -p stwo-cairo-prover --bin prove-json-cuda --features cuda-prove-json
+cuobjdump --list-elf target/release/build/vortexstark-*/out/libvortex_cuda.a
+```
+
+Check the cubin list for `sm_86`. The laptop RTX 3050 is a smoke target. Its
+4 GiB VRAM cannot hold the current exact lift-26 layout, which needs nearly
+4 GiB for one dense Merkle tree alone. The 48 GiB A6000 is an exact-proof
+candidate after smoke and verifier success. Peak GPU and host memory for the
+complete proof remain unmeasured, and trace generation still uses CPU/SIMD.
 
 Start with the pinned CPU tree's `test_data/test_prove_verify_all_builtins/prover_input.json`
 and set `SMOKE_PROOF` to a new path. `SHINIGAMI` points to the archived kit's
@@ -115,6 +145,10 @@ nvcc --version
     "$INTEGRATION/smoke-profile.json" "$SMOKE_PROOF"
 "$SHINIGAMI/bin/scarb-verify" --proof-file "$SMOKE_PROOF"
 ```
+
+Use the CUDA launch trace to confirm Blake2s leaf and parent kernels ran and
+check the prover log for CPU fallbacks. The backend can recover from a failed
+GPU leaf launch by computing the leaf hashes on the CPU. [Pinned CUDA Merkle implementation](https://github.com/garrick247/VortexSTARK/blob/1e88c31974bcb9906274d7a129bd9f2902d7ae2e/crates/cuda-backend/src/merkle_ops.rs)
 
 Once the separate stock verifier accepts that proof, use the retained
 historical raw input and verified kit profile with the same adapter. Record
