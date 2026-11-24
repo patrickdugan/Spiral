@@ -159,7 +159,7 @@ python3.11 -m proofdesk.protected_payout_evidence "$RECEIPT" \
   --bundle-id "$BUNDLE_ID" --anchor-height "$PAYOUT_HEIGHT" --anchor-hash "$PAYOUT_BLOCK"
 ```
 
-The verifier checks both transaction inclusions, the exact mined payout witness, the holder signature, the six-block delay, and the agreed amount, destination and fee. The independent checkpoint supplies active chain status. The holder received 24,750 sats from the 25,000-sat reserve in a fresh CDK run. The offline verifier accepted that receipt after the isolated Core and mint processes stopped.
+The verifier checks both transaction inclusions, the exact mined payout witness, the holder signature, the six-block delay, and the agreed amount, destination and fee. The independent checkpoint supplies active chain status. The holder received 24,750 sats from the 25,000-sat reserve in a fresh CDK run. After the isolated Core and mint processes stopped, the wallet verifier accepted the six issued notes and the payout verifier accepted the mined witness. A separate Nova verifier accepted the three-step accounting proof for that same issuance and redemption, with zero closing reserve and outstanding claims. It rejected a changed context anchor and step count.
 
 The local measurement was 71,477 non-free gates for 3,488 input bits and about 1.14 MB at 16 bytes per gate before protocol overhead. The example rejected changes to each of the 20 record fields under the pinned digest. It also rejected an early payout and an incorrect fee after recomputing the digest, which exercises the arithmetic beyond the commitment check.
 
