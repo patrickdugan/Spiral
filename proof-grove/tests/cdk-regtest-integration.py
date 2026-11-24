@@ -49,7 +49,7 @@ runtime=ROOT/'.runtime'/('cdk-e2e-'+secrets.token_hex(5));runtime.mkdir(parents=
 auth='Basic '+base64.b64encode(b'proofgrove:public-regtest-only').decode()
 
 def rpc(method,params,*,wallet=False):
-    if method not in ('getblockchaininfo','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
+    if method not in ('getblockchaininfo','getblock','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
                        'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader',
                        'generateblock','invalidateblock','reconsiderblock','gettxoutproof','verifytxoutproof',
                        'decodescript','walletcreatefundedpsbt','getaddressinfo'):

@@ -13,7 +13,7 @@ import time
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from proofdesk import protected_reserve
+from proofdesk import protected_payout_evidence, protected_reserve
 from protected_fixture_keys import HOLDER_PUB, MINT_PUB, descriptor, fixture_wif
 
 SATS = 100_000_000
@@ -231,7 +231,7 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
     assert spent['allowed'] is False
     claim = hashlib.sha256(b'proof-grove/protected-reserve/v1\0' + bytes.fromhex(plan['genesis'])
                           + bytes.fromhex(outpoint['txid']) + outpoint['vout'].to_bytes(4, 'big')).hexdigest()
-    return {
+    receipt = {
         'schema': 'proof-grove/protected-reserve-regtest/v1', 'network': 'regtest', 'genesis': plan['genesis'],
         'claim_id': claim, 'app_bundle': bundle, 'mature_holder_check': checked,
         'reserve': outpoint | {'sats': AMOUNT, 'script': plan['funding_script']},
@@ -245,3 +245,8 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
                            'payout': rpc('getblockheader', [payout_block, False])},
         'evidence': 'bitcoin-core-regtest-consensus',
     }
+    if plan['schema'] == protected_reserve.V3_PLAN_SCHEMA:
+        receipt['bitcoin_chain_evidence'] = protected_payout_evidence.capture(
+            rpc, checked['observation']['funding_height'], height, outpoint['block'], payout_block,
+        )
+    return receipt
