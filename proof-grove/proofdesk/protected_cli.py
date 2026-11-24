@@ -12,6 +12,8 @@ from .verifier import read_bounded
 def configure(commands):
     plan = commands.add_parser("protected-plan", help="Pin protected reserve terms and derive the regtest funding address")
     plan.add_argument("--config", required=True)
+    plan.add_argument("--profile", choices=("v2", "v3"), default="v2",
+                      help="Use v3 to commit to the ordered blinded issuance batch")
     for key in ("holder-pubkey", "mint-pubkey", "claim-commitment", "payout-address", "output"):
         plan.add_argument("--" + key, required=True)
     for key in ("reserve-sats", "fee-sats", "delay-blocks"):
@@ -58,7 +60,8 @@ def run(args):
     core = CoreClient.from_config(_load(args.config)["core"])
     if args.command == "protected-plan":
         terms = {key: getattr(args, key) for key in protected_reserve.PLAN_FIELDS}
-        result = protected_reserve.plan(core, **terms)
+        schema = protected_reserve.V3_PLAN_SCHEMA if args.profile == "v3" else protected_reserve.PLAN_SCHEMA
+        result = protected_reserve.plan(core, schema=schema, **terms)
         _write(args.output, json.dumps(result, indent=2))
         return {key: result[key] for key in ("plan_id", "funding_address", "reserve_sats")}
     if args.command == "protected-attach":

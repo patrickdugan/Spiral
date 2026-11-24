@@ -35,10 +35,12 @@ parser.add_argument('--rpc',default='http://127.0.0.1:28743')
 parser.add_argument('--browser-script',help='Optional connected browser QA script, run while the real test services are live')
 parser.add_argument('--protected-handoff',type=Path)
 parser.add_argument('--cooperative',action='store_true')
+parser.add_argument('--batch-protected',action='store_true')
 parser.add_argument('--collateral-nova',type=Path)
 parser.add_argument('--collateral-m14',type=Path)
 args=parser.parse_args()
 if args.cooperative and not args.protected_handoff:parser.error('--cooperative requires --protected-handoff')
+if args.batch_protected and not args.protected_handoff:parser.error('--batch-protected requires --protected-handoff')
 collateral=bool(args.collateral_nova and args.collateral_m14)
 if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected_handoff or args.cooperative):
     parser.error('The collateral fixture requires the mint-offline holder fixture and both verifier executables')
@@ -112,7 +114,8 @@ try:
     started=time.monotonic()
     deposit=client('deposit','--amount','25000');operation=deposit['operation_id']
     if args.protected_handoff:
-        bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(core,rpc,deposit,mining_address,runtime,args.rpc,args.cooperative)
+        if not args.batch_protected:
+            bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(core,rpc,deposit,mining_address,runtime,args.rpc,args.cooperative)
         claim_command='protected-claim'
     else:
         protected_args=[]
@@ -130,6 +133,12 @@ try:
         time.sleep(1)
     else:raise AssertionError('CDK did not observe the mined deposit')
     print(json.dumps({'stage':'real-deposit-confirmed','confirmations':transaction['confirmations']}),flush=True)
+    if args.batch_protected:
+        draft=client('protected-draft','--id',operation)
+        assert client('protected-draft','--id',operation)==draft and counts['mint_requests']==0
+        client('claim','--id',operation,expect_error='Saved issuance protection cannot change')
+        bundle, protected_args, funding_hex=cdk_protected_fixture.prepare(
+            core,rpc,deposit,mining_address,runtime,args.rpc,args.cooperative,draft=draft)
     client(claim_command,'--id',operation,*protected_args,expect_error='payment_admission_required')
     assert counts['mint_requests']==0
     admission=client('admit-regtest','--id',operation,'--txid',txid,'--vout',str(vout))
@@ -166,6 +175,8 @@ try:
         trusted_pin=client('protected-pin-mint','--keysets',','.join(offered_pin['keyset_ids']))
         assert trusted_pin==offered_pin
         (args.protected_handoff/'protected-mint-pin.json').write_text(json.dumps(trusted_pin),encoding='utf-8')
+        if args.batch_protected:
+            (args.protected_handoff/'protected-bundle.json').write_text(json.dumps(bundle),encoding='utf-8')
         if args.cooperative:
             payout=cdk_protected_fixture.cooperate(core,rpc,client,operation,runtime,mining_address,bundle)
             independent=cdk_protected_fixture.verify_certificate(args.node,ROOT,certificate,bundle,legacy_melt)

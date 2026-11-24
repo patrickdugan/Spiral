@@ -138,7 +138,7 @@ class CashuBridge:
         return {"intent":intent.__dict__,"quote_bound":True,"idempotent_replay":False}
 
     def _validate_payload(self, intent: Intent, binding: dict, payload: dict, authorization: str,
-                          bundle_id: str | None = None):
+                          bundle: dict | None = None):
         if not isinstance(payload,dict) or set(payload) != {"quote","outputs","signature"} or payload["quote"] != binding["quote"]:
             raise Refused("invalid_mint_payload")
         outputs = payload["outputs"]
@@ -157,6 +157,14 @@ class CashuBridge:
             total += amount; points.add(output["B_"])
         if total != intent.amount_sats:
             raise Refused("wrong_mint_amount")
+        bundle_id = None
+        if bundle is not None:
+            from .protected_reserve import V3_PLAN_SCHEMA, issuance_batch_commitment
+            plan = bundle["plan"]
+            if (plan["schema"] == V3_PLAN_SCHEMA
+                    and plan["claim_commitment"] != issuance_batch_commitment(intent.id, outputs)):
+                raise Refused("protected_issuance_binding_mismatch")
+            bundle_id = bundle["bundle_id"]
         signature = payload["signature"]
         if not isinstance(signature,str) or len(signature)!=128 or any(c not in "0123456789abcdef" for c in signature):
             raise Refused("quote_signature_required")
@@ -173,14 +181,17 @@ class CashuBridge:
             raise Refused("protected_regtest_required")
         if not isinstance(protection, dict) or set(protection) != {"bundle", "bundle_id"}:
             raise Refused("protected_invalid_bundle")
-        from .protected_reserve import status
+        from .protected_reserve import V3_PLAN_SCHEMA, status
         bundle, bundle_id = protection["bundle"], protection["bundle_id"]
         if status(self.core, bundle, bundle_id)["state"] != "unspent":
             raise Refused("protected_reserve_unavailable")
         plan = bundle["plan"]
-        commitment = hashlib.sha256(f"proof-grove/protected-issuance-intent/v1:{intent.id}".encode()).hexdigest()
-        if plan["claim_commitment"] != commitment or plan["reserve_sats"] != intent.amount_sats:
+        if plan["reserve_sats"] != intent.amount_sats:
             raise Refused("protected_issuance_binding_mismatch")
+        if plan["schema"] != V3_PLAN_SCHEMA:
+            commitment = hashlib.sha256(f"proof-grove/protected-issuance-intent/v1:{intent.id}".encode()).hexdigest()
+            if plan["claim_commitment"] != commitment:
+                raise Refused("protected_issuance_binding_mismatch")
         return bundle
 
     @staticmethod
@@ -196,8 +207,8 @@ class CashuBridge:
             return
         if old:
             raise Refused("existing_issuance_mode_immutable")
-        from .protected_reserve import PLAN_SCHEMA
-        if bundle["plan"].get("schema") != PLAN_SCHEMA:
+        from .protected_reserve import PLAN_SCHEMA, V3_PLAN_SCHEMA
+        if bundle["plan"].get("schema") not in (PLAN_SCHEMA, V3_PLAN_SCHEMA):
             raise Refused("protected_onchain_issuance_commitment_required")
         genesis = bundle["plan"]["genesis"]
         txid, vout = bundle["funding"]["txid"], bundle["funding"]["vout"]
@@ -240,7 +251,7 @@ class CashuBridge:
         binding = self._binding(intent_id)
         bundle = self._checked_protection(intent, protection)
         bundle_id = None if bundle is None else bundle["bundle_id"]
-        self._validate_payload(intent,binding,payload,authorization,bundle_id)
+        self._validate_payload(intent,binding,payload,authorization,bundle)
         receipt,evidence,rules = self.ledger.admitted(intent_id)
         if receipt["checked_at"] >= intent.expires_at:
             raise Refused("payment_admission_required")

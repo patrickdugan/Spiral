@@ -3,17 +3,53 @@ import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deserializeProofs, hashToCurve, Mint, sumProofs, Wallet } from '@cashu/cashu-ts';
+import { blindMessage, deserializeProofs, hashToCurve, Mint, sumProofs, Wallet } from '@cashu/cashu-ts';
+import { canonical } from './authorization.mjs';
 import { normalizeWalletUrl, singleAttemptRequest } from './transport.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
 const fundedIssuancePlan = 'proof-grove/protected-reserve-plan/v2';
+export const batchIssuancePlan = 'proof-grove/protected-reserve-plan/v3';
+const batchBundleSchema = 'proof-grove/protected-reserve-bundle/v3';
 const receiptSchema = 'proof-grove/protected-issuance-receipt/v1';
+const batchReceiptSchema = 'proof-grove/protected-issuance-receipt/v2';
 const receiptFields = ['state', 'amount_sats', 'protection', 'protectedMintCache', 'proofs',
   'request_sha256', 'evidence_level'];
 const SHA256 = /^[0-9a-f]{64}$/;
 const KEYSET_ID = /^(?:[0-9a-f]{16}|[0-9a-f]{66})$/;
+const INTENT_ID = /^cashu:[0-9a-f]{64}$/;
+const BLINDED_POINT = /^(02|03)[0-9a-f]{64}$/;
+const SECP256K1_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+
+export function protectedBatchCommitment(intentId, outputs) {
+  if (!INTENT_ID.test(intentId ?? '') || !Array.isArray(outputs) || !outputs.length || outputs.length > 128 ||
+      outputs.some(output => !output || typeof output !== 'object' || Object.keys(output).length !== 3 ||
+        !Number.isSafeInteger(output.amount) || output.amount <= 0 ||
+        !KEYSET_ID.test(output.id ?? '') || !BLINDED_POINT.test(output.B_ ?? '')) ||
+      new Set(outputs.map(output => output.B_)).size !== outputs.length) {
+    throw new Error('Invalid protected issuance batch');
+  }
+  return digest(canonical({schema: 'proof-grove/protected-issuance-batch/v1', intent_id: intentId, outputs}));
+}
+
+export function protectedBatchLockKey(intentId) {
+  if (!INTENT_ID.test(intentId ?? '')) throw new Error('Invalid protected issuance intent');
+  return hashToCurve(Buffer.from('proof-grove/protected-cashu-nut11/v2:' + intentId)).toHex(true);
+}
+
+export function checkBatchOpening(proofs, outputs) {
+  if (!Array.isArray(outputs) || proofs.length !== outputs.length) throw new Error('Protected receipt batch opening mismatch');
+  for (const [index, proof] of proofs.entries()) {
+    const output = outputs[index];
+    const encoded = proof.dleq?.r;
+    const r = typeof encoded === 'string' && SHA256.test(encoded) ? BigInt(`0x${encoded}`) : 0n;
+    if (r <= 0n || r >= SECP256K1_ORDER || proof.id !== output.id || proof.amount.toString() !== String(output.amount) ||
+        blindMessage(Buffer.from(proof.secret, 'utf8'), r).B_.toHex(true) !== output.B_) {
+      throw new Error('Protected receipt batch opening mismatch');
+    }
+  }
+}
 
 export function issueIntentDomain(intentId, protection) {
   return protection ? `${intentId}#protected:${protection.bundle_id}` : intentId;
@@ -44,8 +80,19 @@ export function observeProtection(operation, options) {
   // Use only the bytes which were checked. The server independently verifies
   // the same pinned bundle before it forwards the blind signature request.
   if (rawBundle !== readFileSync(bundlePath, 'utf8') || bundle.bundle_id !== bundleId || status.state !== 'unspent' ||
-      bundle.plan?.reserve_sats !== operation.amount_sats ||
-      bundle.plan?.claim_commitment !== digest('proof-grove/protected-issuance-intent/v1:' + operation.intent.id)) {
+      bundle.plan?.reserve_sats !== operation.amount_sats) {
+    throw new Error('Protected reserve does not match the issuance intent');
+  }
+  if (bundle.plan.schema === batchIssuancePlan) {
+    if (!operation.preview?.batch || bundle.plan.claim_commitment !==
+        protectedBatchCommitment(operation.intent.id, operation.preview.payload.outputs)) {
+      throw new Error('Protected reserve does not match the frozen issuance batch');
+    }
+    return {bundle, bundle_id: bundleId, lock_key: protectedBatchLockKey(operation.intent.id),
+      batch: {intent_id: operation.intent.id, outputs: operation.preview.payload.outputs}};
+  }
+  if (operation.preview?.batch ||
+      bundle.plan.claim_commitment !== digest('proof-grove/protected-issuance-intent/v1:' + operation.intent.id)) {
     throw new Error('Protected reserve does not match the issuance intent');
   }
   if (bundle.plan.schema !== fundedIssuancePlan && operation.protection?.bundle_id !== bundleId) {
@@ -71,7 +118,7 @@ export function exportCooperativePsbt({bundlePath, bundleId, coreConfig, output,
   return local;
 }
 
-export function requireProtectedSecrets(proofs, lockKey) {
+export function requireProtectedSecrets(proofs, lockKey, strictBatch = false) {
   const secrets = new Set();
   for (const proof of proofs) {
     if (secrets.has(proof.secret)) throw new Error('Duplicate protected Cashu proof');
@@ -89,6 +136,11 @@ export function requireProtectedSecrets(proofs, lockKey) {
         tags.some(tag => !Array.isArray(tag) || tag.length !== 2 ||
           !((tag[0] === 'sigflag' && tag[1] === 'SIG_INPUTS') || (tag[0] === 'n_sigs' && tag[1] === '1')))) {
       throw new Error('Protected Cashu output lock mismatch');
+    }
+    if (strictBatch && (proof.p2pk_e || secret.data !== lockKey || tags.length ||
+        !SHA256.test(secret.nonce ?? '') || Object.keys(secret).length !== 3 || !Array.isArray(secret.tags) ||
+        JSON.stringify(condition) !== proof.secret)) {
+      throw new Error('Invalid protected batch lock encoding');
     }
   }
 }
@@ -147,41 +199,62 @@ export async function exportProtectedReceipt(operation, endpoint) {
   const mint_url = normalizeWalletUrl(endpoint);
   await auditProtected(operation, mint_url);
   const pin = issuerKeyPin(mint_url, operation.protectedMintCache.keys, receiptProofs(operation).map(proof => proof.id));
-  const receipt = {schema: receiptSchema, mint_url,
+  const receipt = {schema: operation.protection.batch ? batchReceiptSchema : receiptSchema, mint_url,
     operation: Object.fromEntries(receiptFields.map(key => [key, operation[key]]))};
   return {receipt, pin};
 }
 
-export async function verifyProtectedReceipt(receipt, {mint, bundleId, keysetsSha256, amount}) {
+export async function verifyProtectedReceipt(receipt, {mint, bundleId, keysetsSha256, amount, bundle}) {
   const mintUrl = normalizeWalletUrl(mint);
   if (!SHA256.test(bundleId ?? '') || !SHA256.test(keysetsSha256 ?? '') ||
       !Number.isSafeInteger(amount) || amount <= 0 || amount > 2_100_000_000_000_000) {
     throw new Error('Expected trusted reserve and mint keyset pins and reserve amount');
   }
-  if (receipt?.schema !== receiptSchema || receipt.mint_url !== mintUrl ||
+  if (bundle) {
+    const {bundle_id, ...terms} = bundle;
+    if (bundle_id !== bundleId || digest(canonical(terms)) !== bundleId || bundle.plan?.reserve_sats !== amount) {
+      throw new Error('Protected reserve bundle does not match the observer pin');
+    }
+  }
+  const batchBound = bundle?.plan?.schema === batchIssuancePlan;
+  const expectedSchema = batchBound ? batchReceiptSchema : receiptSchema;
+  if (receipt?.schema !== expectedSchema || receipt.mint_url !== mintUrl ||
       receipt.operation?.protection?.bundle_id !== bundleId || receipt.operation.amount_sats !== amount) {
     throw new Error('Protected receipt differs from the pinned mint or reserve');
   }
   const operation = receipt.operation;
+  const batch = operation.protection.batch;
+  if (batchBound) {
+    if (bundle.schema !== batchBundleSchema ||
+        protectedBatchCommitment(batch?.intent_id, batch?.outputs) !== bundle.plan.claim_commitment) {
+      throw new Error('Protected receipt differs from the on-chain issuance batch');
+    }
+  } else if (batch) {
+    throw new Error('Protected batch receipts require a pinned V3 reserve bundle');
+  }
   const pin = issuerKeyPin(mintUrl, operation.protectedMintCache?.keys, receiptProofs(operation).map(proof => proof.id));
   if (pin.keysets_sha256 !== keysetsSha256) throw new Error('Protected receipt mint keyset pin mismatch');
   const {amount_sats, proof_count, bundle_id, lock_key, proofs_sha256, dleq_verified, offline_keyset_audit} =
     await auditProtected(operation, mintUrl);
-  return {amount_sats, proof_count, bundle_id, lock_key, proofs_sha256, dleq_verified, offline_keyset_audit, ...pin};
+  return {amount_sats, proof_count, bundle_id, lock_key, proofs_sha256, dleq_verified, offline_keyset_audit,
+    batch_bound: batchBound, ...pin};
 }
 
 export async function auditProtected(operation, mintUrl) {
   if (operation.state !== 'protected-issued' || !operation.protection || !operation.protectedMintCache) {
     throw new Error('No protected issuance receipt for this operation');
   }
-  if (protectedLockKey(operation.protection.bundle_id) !== operation.protection.lock_key) {
+  const batch = operation.protection.batch;
+  const expectedLock = batch ? protectedBatchLockKey(batch.intent_id) : protectedLockKey(operation.protection.bundle_id);
+  if (expectedLock !== operation.protection.lock_key) {
     throw new Error('Protected issuance receipt lock mismatch');
   }
   const offline = () => { throw new Error('Protected issuance audit requires cached mint keys'); };
   const wallet = new Wallet(new Mint(mintUrl, {customRequest: offline}));
   wallet.loadMintFromCache(operation.protectedMintCache.info, operation.protectedMintCache.keys);
   const proofs = receiptProofs(operation);
-  requireProtectedSecrets(proofs, operation.protection.lock_key);
+  requireProtectedSecrets(proofs, operation.protection.lock_key, Boolean(batch));
+  if (batch) checkBatchOpening(proofs, batch.outputs);
   const checked = await wallet.verifyMintSignatures(proofs, {require: true});
   if (checked.invalid.length || checked.valid.length !== proofs.length ||
       Number(sumProofs(proofs).toString()) !== operation.amount_sats) {

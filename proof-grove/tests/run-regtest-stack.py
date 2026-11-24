@@ -26,9 +26,12 @@ parser.add_argument('--bitcoind',help='Use an installed Linux Bitcoin Core binar
 scenario=parser.add_mutually_exclusive_group()
 scenario.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
 scenario.add_argument('--protected-cooperative',action='store_true',help='Test the protected melt API and competing holder exit')
+parser.add_argument('--batch-protected',action='store_true',help='Commit the ordered blinded batch in the reserve before issuance')
 parser.add_argument('--collateral-nova',type=Path,help='Local CPU Nova CLI for the optional same-chain bond fixture')
 parser.add_argument('--collateral-m14',type=Path,help='Local M14 cashu-settlement executable for the bond fixture')
 args=parser.parse_args()
+if args.batch_protected and not (args.protected or args.protected_cooperative):
+    parser.error('--batch-protected requires a protected scenario')
 collateral=bool(args.collateral_nova and args.collateral_m14)
 if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected):
     parser.error('The collateral fixture needs --protected, --collateral-nova and --collateral-m14')
@@ -133,6 +136,8 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
     mint_url=f'http://127.0.0.1:{mint_port}'
     wait_url(mint_url+'/v1/info',process=process)
     test_command=[sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url]
+    if args.batch_protected:
+        test_command.append('--batch-protected')
     if args.protected or args.protected_cooperative:
         handoff=runtime/'protected-handoff';handoff.mkdir()
     if args.protected_cooperative:

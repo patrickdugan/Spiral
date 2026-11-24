@@ -51,6 +51,10 @@ node wallet/cli.mjs protected-verify-receipt --receipt issuance.json --mint MINT
 
 The exporter lists the keyset IDs. As an observer, fetch their pin directly from your configured mint before going offline. Use your own Core observation to pin the bundle ID and reserve amount. The receipt verifier needs neither a wallet vault nor a live mint. It verifies the presented notes' DLEQ signatures, reserve lock, uniqueness and total. The receipt contains the notes, so share it only with the intended observer.
 
+For V3, wait for CDK to credit the separate mint quote and run `protected-draft --id OPERATION_ID` before funding the reserve. The command saves the ordered blinded outputs and blinding factors in the encrypted vault. Pass its `claim_commitment` to `protected-plan --profile v3`. Fund and attach that plan, admit the mint payment, then run `protected-claim` with the attached bundle. A restart reuses the frozen draft.
+
+To verify a V3 receipt, also pass `--bundle RESERVE_BUNDLE` to `protected-verify-receipt`. Get that bundle and its ID from your own Core observation. Require `batch_bound: true` for V3 admission. The verifier opens each blinded point from the note's secret and its NUT-12 blinding factor, checks the mint signature, and matches the exact order and denominations committed by the reserve. Sharing the V3 receipt also reveals how its unblinded notes map to the mint request. [NUT-12](https://github.com/cashubtc/nuts/blob/main/12.md)
+
 For a cooperative melt, a regtest desk can configure `protected_melt_wallet` with the name of a dedicated Core wallet holding only the mint's reserve key. Core 31.0 needs `-txospenderindex=1`. The named wallet must have the matching descriptor for the issued reserve. Use the same vault, mint and desk options as at issuance.
 
 ```bash
@@ -92,5 +96,7 @@ python3 tests/run-regtest-stack.py --protected --node /path/to/node \
 The supervisor saves the holder's receipt at `.runtime/cdk-protected-report.json`. The run's `protected-handoff/` directory contains the legacy certificate, the portable issuance receipt and the mint keyset pin obtained independently before shutdown. The offline verifier checks the receipt after CDK stops. Its adversarial checks cover a substituted key, mint, bundle or amount, a changed note secret, and a repeated note.
 
 Use `--protected-cooperative` in place of `--protected` to run the cooperative wallet and reorg assertions on a fresh chain. Its receipt is `.runtime/cdk-protected-cooperative-report.json`.
+
+Add `--batch-protected` to either protected fixture to select V3. The handoff includes the observer's pinned reserve bundle and the offline audit reports the batch binding.
 
 The mainnet M16 proof check and this regtest issuance test establish different things. No live mainnet/testnet4 deposit-to-Cashu issuance or Ark rollover has been executed by this build.

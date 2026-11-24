@@ -24,11 +24,16 @@ HOLDER_WALLET = 'cashu-protected-holder'
 MINT_WALLET = 'cashu-protected-mint'
 
 
-def prepare(core, rpc, deposit, mining_address, runtime, rpc_url, cooperative=False):
+def prepare(core, rpc, deposit, mining_address, runtime, rpc_url, cooperative=False, draft=None):
     beneficiary = rpc('getnewaddress', [], wallet=True)
     commitment = hashlib.sha256(('proof-grove/protected-issuance-intent/v1:' + deposit['intent_id']).encode()).hexdigest()
+    schema = protected_reserve.PLAN_SCHEMA
+    if draft:
+        assert draft['intent_id'] == deposit['intent_id'] and draft['plan_schema'] == protected_reserve.V3_PLAN_SCHEMA
+        schema = draft['plan_schema']
+        commitment = draft['claim_commitment']
     plan = protected_reserve.plan(
-        core, holder_pubkey=HOLDER_PUB, mint_pubkey=MINT_PUB, claim_commitment=commitment,
+        core, schema=schema, holder_pubkey=HOLDER_PUB, mint_pubkey=MINT_PUB, claim_commitment=commitment,
         reserve_sats=AMOUNT, payout_address=beneficiary, fee_sats=FEE, delay_blocks=DELAY,
         min_confirmations=2,
     )

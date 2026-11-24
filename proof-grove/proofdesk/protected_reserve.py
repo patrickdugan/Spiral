@@ -15,6 +15,17 @@ LEGACY_PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v1"
 LEGACY_BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v1"
 PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v2"
 BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v2"
+V3_PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v3"
+V3_BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v3"
+_BUNDLE_SCHEMAS = {
+    LEGACY_PLAN_SCHEMA: LEGACY_BUNDLE_SCHEMA,
+    PLAN_SCHEMA: BUNDLE_SCHEMA,
+    V3_PLAN_SCHEMA: V3_BUNDLE_SCHEMA,
+}
+_ISSUANCE_TERM_SCHEMAS = {
+    PLAN_SCHEMA: "proof-grove/protected-issuance-terms/v2",
+    V3_PLAN_SCHEMA: "proof-grove/protected-issuance-terms/v3",
+}
 GENESIS = "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
 COOPERATIVE_SEQUENCE = 0xFFFFFFFD
 HEX = re.compile(r"(?:[0-9a-f]{2})+")
@@ -22,6 +33,12 @@ PLAN_FIELDS = (
     "holder_pubkey", "mint_pubkey", "claim_commitment", "reserve_sats", "payout_address",
     "fee_sats", "delay_blocks", "min_confirmations",
 )
+
+
+def issuance_batch_commitment(intent_id: str, outputs: list) -> str:
+    """Commit to the Cashu intent and the ordered, validated blinded outputs."""
+    return digest({"schema": "proof-grove/protected-issuance-batch/v1",
+                   "intent_id": intent_id, "outputs": outputs})
 
 
 def _chain(core) -> dict:
@@ -80,7 +97,7 @@ def _sats(value) -> int:
 
 def _plan_body(core, holder_pubkey, mint_pubkey, claim_commitment, reserve_sats, payout_address,
                fee_sats, delay_blocks, min_confirmations, *, schema) -> dict:
-    if schema not in (PLAN_SCHEMA, LEGACY_PLAN_SCHEMA):
+    if not isinstance(schema, str) or schema not in _BUNDLE_SCHEMAS:
         raise Refused("protected_invalid_plan")
     if not compressed_point(holder_pubkey) or not compressed_point(mint_pubkey) or holder_pubkey == mint_pubkey:
         raise Refused("protected_distinct_public_keys_required")
@@ -100,8 +117,8 @@ def _plan_body(core, holder_pubkey, mint_pubkey, claim_commitment, reserve_sats,
     }
     commitment = {}
     policy = f"and_v(v:pk({holder_pubkey}),or_i(pk({mint_pubkey}),older({delay_blocks})))"
-    if schema == PLAN_SCHEMA:
-        preimage = digest({"schema": "proof-grove/protected-issuance-terms/v2"} | terms)
+    if schema in _ISSUANCE_TERM_SCHEMAS:
+        preimage = digest({"schema": _ISSUANCE_TERM_SCHEMAS[schema]} | terms)
         issuance_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
         commitment = {"issuance_preimage": preimage, "issuance_hash": issuance_hash}
         policy = f"and_v(v:sha256({issuance_hash}),{policy})"
@@ -210,7 +227,7 @@ def attach(core, saved: dict, plan_id: str, outpoint: dict) -> dict:
     observation = _funding(core, saved, outpoint, _chain(core))
     if observation["state"] != "unspent":
         raise Refused("protected_reserve_unavailable")
-    schema = BUNDLE_SCHEMA if saved["schema"] == PLAN_SCHEMA else LEGACY_BUNDLE_SCHEMA
+    schema = _BUNDLE_SCHEMAS[saved["schema"]]
     body = {"schema": schema, "plan": saved, "funding": outpoint}
     return body | {"bundle_id": digest(body)}
 
@@ -229,14 +246,14 @@ def _observe(core, bundle: dict, bundle_id: str, *, active_funding_block: str | 
     if not isinstance(bundle, dict) or set(bundle) != {"schema", "plan", "funding", "bundle_id"}:
         raise Refused("protected_invalid_bundle")
     body = {key: value for key, value in bundle.items() if key != "bundle_id"}
-    if (bundle["schema"] not in (BUNDLE_SCHEMA, LEGACY_BUNDLE_SCHEMA)
+    if (bundle["schema"] not in _BUNDLE_SCHEMAS.values()
             or bundle["bundle_id"] != bundle_id or digest(body) != bundle_id):
         raise Refused("protected_bundle_mismatch")
     saved = bundle["plan"]
     if not isinstance(saved, dict):
         raise Refused("protected_invalid_plan")
     _validate_plan(core, saved, saved.get("plan_id"))
-    expected_schema = BUNDLE_SCHEMA if saved["schema"] == PLAN_SCHEMA else LEGACY_BUNDLE_SCHEMA
+    expected_schema = _BUNDLE_SCHEMAS[saved["schema"]]
     if bundle["schema"] != expected_schema:
         raise Refused("protected_bundle_mismatch")
     return _funding(core, saved, bundle["funding"], _chain(core), active_funding_block=active_funding_block)
@@ -317,7 +334,7 @@ def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_fund
     value = format(Decimal(saved["payout_sats"]) / 100_000_000, ".8f")
     transaction = core.rpc("createpsbt", [requested, [{saved["payout_address"]: value}], 0, False])
     enriched = core.rpc("utxoupdatepsbt", [transaction, [saved["descriptor"]]])
-    if saved["schema"] == PLAN_SCHEMA:
+    if saved["schema"] in _ISSUANCE_TERM_SCHEMAS:
         # BIP174 PSBT_IN_SHA256 supplies the public commitment preimage to both signers.
         key = b"\x0b" + bytes.fromhex(saved["issuance_hash"])
         enriched = _with_psbt_input_record(enriched, key, bytes.fromhex(saved["issuance_preimage"]))
@@ -376,7 +393,7 @@ def spending_observation(core, bundle: dict, bundle_id: str) -> dict:
 
 def _check_witness(source, saved, route):
     witness = source.get("txinwitness", [])
-    if saved["schema"] == PLAN_SCHEMA:
+    if saved["schema"] in _ISSUANCE_TERM_SCHEMAS:
         if len(witness) < 2 or witness[-2] != saved["issuance_preimage"]:
             raise Refused("protected_witness_commitment_mismatch")
         witness = witness[:-2] + witness[-1:]

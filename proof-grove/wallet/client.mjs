@@ -4,9 +4,20 @@ import { randomUUID } from 'node:crypto';
 import { authorizeIssue,authorizeBinding } from './authorization.mjs';
 import {createArkPayment,payArk,reconcileArk,listArkPayments} from './ark-payments.mjs';
 import {normalizeWalletUrl, singleAttemptRequest} from './transport.mjs';
-import {auditProtected, exportProtectedReceipt, issueIntentDomain, observeProtection, requireProtectedSecrets} from './protected.mjs';
+import {auditProtected, batchIssuancePlan, checkBatchOpening, exportProtectedReceipt, issueIntentDomain,
+  observeProtection, protectedBatchCommitment, protectedBatchLockKey, requireProtectedSecrets} from './protected.mjs';
 
 const hex = bytes => Buffer.from(bytes).toString('hex');
+
+async function prepareOutputs(wallet, operation, lockKey) {
+  const quote = await wallet.checkMintQuoteOnchain(operation.quote.quote);
+  if (lockKey && !wallet.getMintInfo().isSupported(11).supported) throw new Error('Mint does not advertise NUT-11');
+  const outputType = lockKey ? {type:'p2pk',options:{pubkey:lockKey,blindKeys:false}} : undefined;
+  const preview = await wallet.prepareMint('onchain', operation.amount_sats, quote, {privkey:operation.privkey}, outputType);
+  return {payload:{quote:preview.payload.quote,signature:preview.payload.signature,
+    outputs:preview.payload.outputs.map(o=>({amount:Number(o.amount.toString()),id:o.id,B_:o.B_}))},
+    outputData:preview.outputData.map(OutputData.serialize)};
+}
 export class ProofWallet {
   constructor({mintUrl,deskUrl,vault,deskToken}) {
     this.mintUrl=normalizeWalletUrl(mintUrl);this.deskUrl=normalizeWalletUrl(deskUrl);this.vault=vault;
@@ -74,12 +85,29 @@ export class ProofWallet {
       operation.intent=binding.intent;operation.state='awaiting_payment';this.vault.save(state);return this.summary(operation);
     });
   }
+  async draftProtectedBatch(id) {
+    return this.vault.exclusive(async () => {
+      const state = this.state(), operation = this.operation(state, id);
+      if (operation.intent?.network !== 'regtest') throw new Error('A bound regtest quote is required');
+      if (operation.preview && !operation.preview.batch) throw new Error('Saved issuance protection cannot change');
+      if (!operation.preview) {
+        const wallet = await this.wallet();
+        operation.preview = {...await prepareOutputs(wallet, operation, protectedBatchLockKey(operation.intent.id)), batch:true};
+        operation.state = 'outputs_prepared';
+        this.vault.save(state);
+      }
+      const claim_commitment = protectedBatchCommitment(operation.intent.id, operation.preview.payload.outputs);
+      return {...this.summary(operation), plan_schema:batchIssuancePlan, claim_commitment};
+    });
+  }
   async claim(id, protectedOptions) {
     return this.vault.exclusive(async()=>{
       const state=this.state(),operation=this.operation(state,id);
       const protection=protectedOptions ? observeProtection(operation, protectedOptions) : null;
-      if ((operation.preview || operation.proofs || operation.protection) &&
-          operation.protection?.bundle_id !== protection?.bundle_id) {
+      const attachDraft = operation.preview?.batch && !operation.protection && protection?.batch;
+      if ((operation.preview?.batch && !protection?.batch) ||
+          (!attachDraft && (operation.preview || operation.proofs || operation.protection) &&
+           operation.protection?.bundle_id !== protection?.bundle_id)) {
         throw new Error('Saved issuance protection cannot change');
       }
       if (operation.proofs && protection) {
@@ -93,16 +121,11 @@ export class ProofWallet {
         return {state:'spendable',amount_sats:Number(sumProofs(proofs).toString()),idempotent_replay:true};
       }
       if(!operation.intent)throw new Error('Quote has not been bound');
-      if(!operation.preview) {
-        const quote=await wallet.checkMintQuoteOnchain(operation.quote.quote);
-        if (protection && !wallet.getMintInfo().isSupported(11).supported) {
-          throw new Error('Mint does not advertise NUT-11');
-        }
-        const outputType=protection ? {type:'p2pk',options:{pubkey:protection.lock_key,blindKeys:false}} : undefined;
-        const preview=await wallet.prepareMint('onchain',operation.amount_sats,quote,{privkey:operation.privkey},outputType);
-        const payload={quote:preview.payload.quote,signature:preview.payload.signature,outputs:preview.payload.outputs.map(o=>({amount:Number(o.amount.toString()),id:o.id,B_:o.B_}))};
-        operation.preview={payload,authorization:authorizeIssue(operation.privkey,issueIntentDomain(operation.intent.id,protection),payload),outputData:preview.outputData.map(OutputData.serialize)};
-        if (protection) operation.protection={bundle_id:protection.bundle_id,lock_key:protection.lock_key};
+      if (!operation.preview || attachDraft) {
+        operation.preview ??= await prepareOutputs(wallet, operation, protection?.lock_key);
+        operation.preview.authorization = authorizeIssue(operation.privkey, issueIntentDomain(operation.intent.id, protection), operation.preview.payload);
+        if (protection) operation.protection = {bundle_id:protection.bundle_id,lock_key:protection.lock_key,
+          ...(protection.batch ? {batch:protection.batch} : {})};
         operation.state='outputs_prepared';this.vault.save(state);
       }
       const result=await this.request('/api/cashu/issue',{intent_id:operation.intent.id,payload:operation.preview.payload,authorization:operation.preview.authorization,
@@ -116,7 +139,8 @@ export class ProofWallet {
       if(verified.invalid.length||verified.valid.length!==proofs.length)throw new Error('Mint signature DLEQ verification failed');
       if (protection) {
         if (result.protected_bundle_id !== protection.bundle_id) throw new Error('Mint response reserve binding mismatch');
-        requireProtectedSecrets(proofs, protection.lock_key);
+        requireProtectedSecrets(proofs, protection.lock_key, Boolean(protection.batch));
+        if (protection.batch) checkBatchOpening(proofs, protection.batch.outputs);
         const cache={info:wallet.getMintInfo().cache,keys:wallet.keyChain.cache};
         operation.protectedMintCache=JSON.parse(JSON.stringify(cache, (_,value)=>typeof value==='bigint'?value.toString():value));
       }

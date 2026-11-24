@@ -8,10 +8,10 @@ from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from proofdesk import demo
+from proofdesk import demo, protected_reserve
 from proofdesk.cashu import CashuBridge
 from proofdesk.domain import Ledger, Refused, Rules, canonical, digest
-from proofdesk.protected_reserve import LEGACY_PLAN_SCHEMA, PLAN_SCHEMA
+from proofdesk.protected_reserve import BUNDLE_SCHEMA, LEGACY_PLAN_SCHEMA, PLAN_SCHEMA, V3_BUNDLE_SCHEMA, V3_PLAN_SCHEMA
 from proofdesk.regtest import payment_from_regtest
 
 POINT = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -213,6 +213,81 @@ class BridgeTests(unittest.TestCase):
         other_bundle = self.protection(second, '55'*32)
         self.refuse('protected_reserve_already_assigned', partial(self.bridge.issue, protection=other_bundle), second, payload)
         self.assertEqual(self.mint.posts, 1)
+
+    @patch('proofdesk.protected_reserve.status', return_value={'state': 'unspent'})
+    def test_v3_rejects_substituted_or_reordered_outputs_before_first_issuance(self, status):
+        self.admit()
+        protected = self.protection(self.id, '33'*32)
+        protected['bundle']['plan'].update(
+            schema=V3_PLAN_SCHEMA,
+            claim_commitment=digest({'schema': 'proof-grove/protected-issuance-batch/v1',
+                                     'intent_id': self.id, 'outputs': self.payload['outputs']}),
+        )
+        issue = partial(self.bridge.issue, protection=protected)
+        changed = copy.deepcopy(self.payload)
+        changed['outputs'][0]['B_'] = '03' + '77'*32
+        reordered = self.payload | {'outputs': self.payload['outputs'][::-1]}
+        self.signature.reset_mock()
+        for payload in (changed, reordered):
+            self.refuse('protected_issuance_binding_mismatch', issue, self.id, payload)
+        self.signature.assert_not_called()
+        for table in ('cashu_issuance', 'cashu_protected_reserves'):
+            self.assertEqual(self.ledger.db.execute(f'SELECT count(*) FROM {table}').fetchone()[0], 0)
+        self.assertEqual(self.mint.posts, 0)
+
+        self.assertEqual(issue(self.id, self.payload)['protected_bundle_id'], protected['bundle_id'])
+        self.assertTrue(issue(self.id, self.payload)['idempotent_replay'])
+        self.refuse('protected_issuance_binding_mismatch', issue, self.id, changed)
+        self.assertEqual(self.mint.posts, 1)
+
+
+class ProtectedReserveTests(unittest.TestCase):
+    @patch('proofdesk.protected_reserve._funding', return_value={'state': 'unspent'})
+    def test_v3_binds_terms_into_both_witness_routes_and_rejects_schema_aliases(self, funding):
+        reserve = protected_reserve
+        terms = {'holder_pubkey': POINT, 'mint_pubkey': '03' + POINT[2:], 'claim_commitment': '77'*32,
+                 'reserve_sats': 25000, 'payout_address': 'bcrt1-test-payout', 'fee_sats': 250,
+                 'delay_blocks': 6, 'min_confirmations': 2}
+        pinned_terms = terms | {'network': 'regtest', 'genesis': reserve.GENESIS, 'payout_script': SCRIPT}
+        preimage = digest({'schema': 'proof-grove/protected-issuance-terms/v3'} | pinned_terms)
+        issuance_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        witness = reserve._witness_script(terms['holder_pubkey'], terms['mint_pubkey'], 6, issuance_hash)
+        funding_address = 'bcrt1-test-funding'
+        funding_script = '0020' + hashlib.sha256(witness).hexdigest()
+        replies = {
+            'getblockchaininfo': {'chain': 'regtest', 'initialblockdownload': False, 'blocks': 6, 'bestblockhash': 'aa'*32},
+            'getblockhash': reserve.GENESIS,
+            'getdescriptorinfo': {'issolvable': True, 'hasprivatekeys': False, 'descriptor': 'checked-descriptor'},
+            'deriveaddresses': [funding_address],
+        }
+
+        def rpc(method, params):
+            if method == 'validateaddress':
+                return {'isvalid': True, 'scriptPubKey': funding_script if params == [funding_address] else SCRIPT}
+            return replies[method]
+
+        core = Mock()
+        core.rpc.side_effect = rpc
+        plan = reserve.plan(core, schema=V3_PLAN_SCHEMA, **terms)
+        self.assertEqual(plan['issuance_preimage'], preimage)
+        self.assertEqual(plan['issuance_hash'], issuance_hash)
+        point = {'txid': '11'*32, 'vout': 0, 'block': '22'*32}
+        bundle = reserve.attach(core, plan, plan['plan_id'], point)
+        self.assertEqual(bundle['schema'], V3_BUNDLE_SCHEMA)
+        self.assertEqual(reserve.status(core, bundle, bundle['bundle_id']), {'state': 'unspent'})
+
+        for route, inputs in (('holder', ['', '11'*8 + '01']),
+                              ('cooperative', ['11'*8 + '01', '01', '22'*8 + '01'])):
+            reserve._check_witness({'txinwitness': inputs + [preimage, witness.hex()]}, plan, route)
+            with self.assertRaisesRegex(Refused, 'protected_witness_commitment_mismatch'):
+                reserve._check_witness({'txinwitness': inputs + ['00'*32, witness.hex()]}, plan, route)
+
+        aliased = {'schema': BUNDLE_SCHEMA, 'plan': plan, 'funding': point}
+        alias_id = digest(aliased)
+        funding.reset_mock()
+        with self.assertRaisesRegex(Refused, 'protected_bundle_mismatch'):
+            reserve.status(core, aliased | {'bundle_id': alias_id}, alias_id)
+        funding.assert_not_called()
 
 
 class RegtestTests(unittest.TestCase):
