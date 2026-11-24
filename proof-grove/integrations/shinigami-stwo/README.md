@@ -66,15 +66,76 @@ Submit the raw candidate JSON to the existing exact audit as
 mutations of all 24 Cairo public output cells. The exact historical chain
 check also requires the original regtest blocks and an independent checkpoint.
 
-For GPU compatibility testing, the published CUDA proof of concept at Cairo
+## CUDA compatibility adapter
+
+The published CUDA proof of concept at Cairo
 `4c54e2e52fc447b7c97ca3d5ffecb759230a676f` uses Stwo fork
 `483f8c94c02bc7c4eaf128f2cd2269dd6f1a5f6c` and VortexSTARK
-`1e88c31974bcb9906274d7a129bd9f2902d7ae2e`. Its driver hardcodes a
-canonical trace, automatically chooses its lifting size and keeps polynomial
-coefficients. It verifies internally and does not write an archive. The exact
-Shinigami profile needs `canonical_without_pedersen`, lifting log 26 and
-coefficient retention disabled. A GPU port has to read the pinned profile and
-write proof bytes for the existing independent verifier. GPU compatibility and
-whole-prover memory for this exact input remain unmeasured.
-[CUDA driver](https://github.com/garrick247/stwo-cairo/blob/4c54e2e52fc447b7c97ca3d5ffecb759230a676f/stwo_cairo_prover/crates/dev_utils/src/bin/run_and_prove_cuda.rs)
-[VortexSTARK backend](https://github.com/garrick247/VortexSTARK#use-as-a-stwo-cudabackend)
+`1e88c31974bcb9906274d7a129bd9f2902d7ae2e`. The saved-input adapter calls that
+candidate's CUDA prover and uses Cairo's same `ProofFormat::Json` serializer
+as the CPU CLI. It requires the explicit historical profile. The candidate's
+optional component split may be omitted or null, which selects its default.
+The adapter rejects a split override or any changed proof parameter. The
+historical profile uses plain Blake2s, salt zero, `canonical_without_pedersen`,
+lifting log 26, 26 PoW bits, and 70 FRI queries with blowup log one and fold
+step one. It disables polynomial coefficient retention and all-column
+preprocessed sampling. [CUDA prover API](https://github.com/garrick247/stwo-cairo/blob/4c54e2e52fc447b7c97ca3d5ffecb759230a676f/stwo_cairo_prover/crates/prover/src/cuda_prover.rs)
+
+Stage this source in a fresh directory, separately from the pinned CPU tree.
+`CUDA_CAIRO_GIT` is a local clone containing the exact candidate commit.
+`PROOF_GROVE` is the absolute path to this repository's `proof-grove/`.
+
+```sh
+INTEGRATION="$PROOF_GROVE/integrations/shinigami-stwo"
+python3 -B "$INTEGRATION/stage-cuda.py" --cuda-cairo-git "$CUDA_CAIRO_GIT" --out "$CUDA_STAGED"
+cd "$CUDA_STAGED/stwo_cairo_prover"
+cargo +nightly-2025-06-23 build --locked --release -j1 \
+    -p stwo-cairo-prover --bin prove-json-cuda --features cuda-prove-json
+```
+
+For the RTX 5090, use a CUDA 13 toolchain and matching NVIDIA driver so the
+pinned build script emits native `sm_120`. Record the GPU compute capability
+and toolkit version. The script also emits `sm_89` and `compute_89` for Ada.
+An RTX A6000 or RTX 3050 needs separate Ampere targeting and compatibility
+checks. CUDA still uses a CPU/SIMD trace generator, and device and host memory
+for the complete historical proof remain unmeasured. [Pinned VortexSTARK build targets](https://github.com/garrick247/VortexSTARK/blob/1e88c31974bcb9906274d7a129bd9f2902d7ae2e/build.rs)
+
+Start with the pinned CPU tree's `test_data/test_prove_verify_all_builtins/prover_input.json`
+and set `SMOKE_PROOF` to a new path. `SHINIGAMI` points to the archived kit's
+`benchmarks/shinigami/` directory. The `--smoke` switch is required for the
+smaller CanonicalSmall test parameters.
+
+```sh
+BIN="$CUDA_STAGED/stwo_cairo_prover/target/release/prove-json-cuda"
+printf '%s  %s\n' '07287a92f6b59878c0296e0a4fd956d6cfd160d2daaac8d2f2dbaa81cee1ef29' \
+    "$SMOKE_INPUT" | sha256sum -c
+nvidia-smi --query-gpu=name,compute_cap,memory.total,driver_version --format=csv
+nvcc --version
+/usr/bin/time -v -o "$SMOKE_PROOF.time" "$BIN" --smoke "$SMOKE_INPUT" \
+    "$INTEGRATION/smoke-profile.json" "$SMOKE_PROOF"
+"$SHINIGAMI/bin/scarb-verify" --proof-file "$SMOKE_PROOF"
+```
+
+Once the separate stock verifier accepts that proof, use the retained
+historical raw input and verified kit profile with the same adapter. Record
+the binary and source pins, timings, and memory. The historical audit checks
+the proof profile and program hash, all 24 exact public words, and one
+mutation per public word.
+
+```sh
+printf '%s  %s\n' \
+    '267f580c26f5e8d49cd9aea39656ef225b2436823d4553b6722d8ad9f20b1366' "$EXACT_INPUT" \
+    '62670efbaaf0ba945a291e18153ca0d27a49d6c8882899cc2d7b4d4b51953ecd' "$SHINIGAMI/profile.json" \
+    | sha256sum -c
+sha256sum "$BIN"
+/usr/bin/time -v -o "$EXACT_PROOF.time" "$BIN" "$EXACT_INPUT" "$SHINIGAMI/profile.json" "$EXACT_PROOF"
+python3.11 "$PROOF_GROVE/scripts/audit-exact-melt-stark.py" --runner "$SHINIGAMI/run.py" \
+    --case "$EXACT_CASE" --existing-proof "$EXACT_PROOF" --out "$EXACT_AUDIT"
+```
+
+The adapter is staged source. CUDA smoke and exact proof compatibility are
+still to be measured. The VortexSTARK pin is licensed under Business Source
+License 1.1. The pinned terms permit non-production evaluation, testing and
+development, with a stated change date of March 20, 2029 to Apache 2.0.
+Production use requires a grant that covers it. Retain the license and its
+notices with any redistribution under the pinned terms. [Pinned VortexSTARK license](https://github.com/garrick247/VortexSTARK/blob/1e88c31974bcb9906274d7a129bd9f2902d7ae2e/LICENSE)
