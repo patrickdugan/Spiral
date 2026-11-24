@@ -139,6 +139,22 @@ compiled the pinned `cuda/blake2s.cu` to an RTX 5090 `sm_120` cubin. NVCC took
 30.37 seconds at 161,176 KiB peak RSS in a 512 MiB cgroup with zero swap. A
 complete Blackwell binary and verification on an RTX 5090 remain outstanding.
 
+The RTX 3050 completed the saved-input CUDA smoke workload in 212 seconds.
+The first run overflowed a trace worker's stack. The successful proving run used
+64 MiB thread stacks and peaked at 539,256 KiB process RSS with zero swaps.
+The device sampled a 2,790 MiB VRAM peak and 100 percent utilization at peak.
+It spent 191 seconds in out-of-domain evaluation. The GPU was mostly idle
+during that stage.
+
+`verify-cuda-candidate.rs` calls the pinned CUDA Cairo revision's CPU verifier
+in a separate process. It accepted the serialized smoke proof in 0.19 seconds
+and rejected a changed channel salt and each changed proof-of-work nonce.
+The archived Shinigami verifier rejected the same proof. Archived Cairo
+`467d5c6` hashes a zero log-size slot for every disabled optional component.
+CUDA Cairo `4c54e2e` omits those slots and adds two component flags, so the
+versions derive different transcripts before interaction proof of work.
+Compatibility requires the archived AIR and transcript rules during proving.
+
 The Vortex build script compiles CUDA translation units serially and archives
 them after the last one succeeds. For an interrupted SM86 build, use the
 local NVCC cache below. Keep the same target directory, toolkit, and build
