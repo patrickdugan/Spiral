@@ -1,0 +1,515 @@
+{
+  "release": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/releases/tag/ark-679-m14-public-setup-20261123",
+  "assets": [
+    {
+      "name": "ciphertexts.bin.part-001",
+      "bytes": 134217728,
+      "sha256": "4e30c0d3310c15487c3f090010b031067f0364ff0abe2cd34c55698bff291ea0"
+    },
+    {
+      "name": "ciphertexts.bin.part-002",
+      "bytes": 134217728,
+      "sha256": "155bc97a245d937a3fb690d7c1f9b2e15988b4476970b745e0fa815d0128fd40"
+    },
+    {
+      "name": "ciphertexts.bin.part-003",
+      "bytes": 134217728,
+      "sha256": "9ee21033315bddf29e77b201efb40b3fd859820fe1449cbe4c23b649987845d6"
+    },
+    {
+      "name": "ciphertexts.bin.part-004",
+      "bytes": 134217728,
+      "sha256": "9be76a64d0713a45cb1a13646b0a6ad6e1b88b7b53ac36a1a7b51c96c33c2083"
+    },
+    {
+      "name": "ciphertexts.bin.part-005",
+      "bytes": 134217728,
+      "sha256": "50893ae918939d0e735cc01b35d60345d3c4c8bffa546664addf030bc6fa7090"
+    },
+    {
+      "name": "ciphertexts.bin.part-006",
+      "bytes": 134217728,
+      "sha256": "2781a2f80aa448ca66fa07071f2c09a859c50d737092b43fdd5a3229eda353e1"
+    },
+    {
+      "name": "ciphertexts.bin.part-007",
+      "bytes": 134217728,
+      "sha256": "6fc3cbc2dc0f5dd042896b01f1d82fc449d78686625e01dd026839e7618f755c"
+    },
+    {
+      "name": "ciphertexts.bin.part-008",
+      "bytes": 134217728,
+      "sha256": "42a9cba9598a9864849350a920fe0a9c05d9bcb14a1aa2fc368f37f2219e62b0"
+    },
+    {
+      "name": "ciphertexts.bin.part-009",
+      "bytes": 134217728,
+      "sha256": "58df9b48b9379b05e95cb7e1e335e7ea590206892dffd6db55fd2b97286e127f"
+    },
+    {
+      "name": "ciphertexts.bin.part-010",
+      "bytes": 134217728,
+      "sha256": "4a9a88e736914d781433b23cfdd9e310fb6d4f7fad2937941e5a77aee7885131"
+    },
+    {
+      "name": "ciphertexts.bin.part-011",
+      "bytes": 134217728,
+      "sha256": "b3dfbe6fefbdc84e1306756137d9cf7adcd15e6d379eaa189fc4166096b0da8c"
+    },
+    {
+      "name": "ciphertexts.bin.part-012",
+      "bytes": 134217728,
+      "sha256": "8fc6a6c39103072e232cf658ad1c20f3dc30b471982f3aba21c1c592ae62cc66"
+    },
+    {
+      "name": "ciphertexts.bin.part-013",
+      "bytes": 134217728,
+      "sha256": "0d04e8a60124eebd5c9b35d1f16a6a9b4481a3a6b20d10ad4fc1991e61145bfc"
+    },
+    {
+      "name": "ciphertexts.bin.part-014",
+      "bytes": 134217728,
+      "sha256": "7f1d29b02178134d1bf9e1d2a8efda2245816d2e5992370a8e4d81ac7ab1beaf"
+    },
+    {
+      "name": "ciphertexts.bin.part-015",
+      "bytes": 134217728,
+      "sha256": "0d6431d5576b7b11cb8d18885964b78d633d6640ad4b9a760988f549d255b909"
+    },
+    {
+      "name": "ciphertexts.bin.part-016",
+      "bytes": 134217728,
+      "sha256": "8151a9e97b5db83d1ca6be44b7d3e41a2736533867d120b5fcc23138513be766"
+    },
+    {
+      "name": "ciphertexts.bin.part-017",
+      "bytes": 134217728,
+      "sha256": "bfe86aa1fb954cc4a29a7f1d2fb57f19d959757bcc289bb52fdf45612e96aa8c"
+    },
+    {
+      "name": "ciphertexts.bin.part-018",
+      "bytes": 134217728,
+      "sha256": "d2b0cdf84075a5c42e3fbdc9a0c2f1da284b1acd64cc7be815b9c8d09e4342f2"
+    },
+    {
+      "name": "ciphertexts.bin.part-019",
+      "bytes": 134217728,
+      "sha256": "86c613f344fafaf2bc6f8222edb9dcfd5e1559a3324528e9766744f91ce19cba"
+    },
+    {
+      "name": "ciphertexts.bin.part-020",
+      "bytes": 134217728,
+      "sha256": "67046c68d0e4accd63336a9097f469f4310580b558ef2073113ac9ed275556c5"
+    },
+    {
+      "name": "ciphertexts.bin.part-021",
+      "bytes": 134217728,
+      "sha256": "4da3782fc51a95c04f4d305d7c24e4a5e62804f08991176f9ee75de5a31d6ea0"
+    },
+    {
+      "name": "ciphertexts.bin.part-022",
+      "bytes": 134217728,
+      "sha256": "2421a92752e618b8e289e641b256da0ffbb1c421e6e25c1fe0a4f9f88f90512a"
+    },
+    {
+      "name": "ciphertexts.bin.part-023",
+      "bytes": 134217728,
+      "sha256": "2d20b9c3ecfb933734ce3fd25b6301d90f3c55156649299711c533e96d6c3402"
+    },
+    {
+      "name": "ciphertexts.bin.part-024",
+      "bytes": 134217728,
+      "sha256": "2571e6b980d62db939d317debc80be4529ae7b91066f79a166277c6770e8c48a"
+    },
+    {
+      "name": "ciphertexts.bin.part-025",
+      "bytes": 134217728,
+      "sha256": "e18a283afbf64fc9c6c8db0ccaad5d60f23c3ac4e8520ea0a5dc6aa220ad6ae0"
+    },
+    {
+      "name": "ciphertexts.bin.part-026",
+      "bytes": 134217728,
+      "sha256": "13936eda223d1174da0f837e2f0742c45b9f6e0c1bb5676964ed1535fa9f28c7"
+    },
+    {
+      "name": "ciphertexts.bin.part-027",
+      "bytes": 134217728,
+      "sha256": "dc58ae2a78eb12728ef9e87df8123bdd87db886dff79c4fddc418785f055f056"
+    },
+    {
+      "name": "ciphertexts.bin.part-028",
+      "bytes": 134217728,
+      "sha256": "562871a98f369e4424208c9dc289a876aba6326dcff48f76a88e4a7717e32360"
+    },
+    {
+      "name": "ciphertexts.bin.part-029",
+      "bytes": 134217728,
+      "sha256": "45e2265774fd4509f1a4f33b667fb49b7fa1c493874d87171994171f5842e93e"
+    },
+    {
+      "name": "ciphertexts.bin.part-030",
+      "bytes": 134217728,
+      "sha256": "31ef3d9fcea0961df6839b204a173d56e96ce8a03243261a88d3535141eb783d"
+    },
+    {
+      "name": "ciphertexts.bin.part-031",
+      "bytes": 134217728,
+      "sha256": "f097f7ec27fe780a70aab41a21c739b8a1d1d8141fd88b92984a160badefcb4e"
+    },
+    {
+      "name": "ciphertexts.bin.part-032",
+      "bytes": 134217728,
+      "sha256": "655f96dfb0fc13463ec021aa468d14989dcc44dae1bf396c444c9fb1c5d48a73"
+    },
+    {
+      "name": "ciphertexts.bin.part-033",
+      "bytes": 134217728,
+      "sha256": "b434b707f1d2c72bc83f834a7b68d45ac386fd23c821b1cd31bee3d47b9f15bd"
+    },
+    {
+      "name": "ciphertexts.bin.part-034",
+      "bytes": 134217728,
+      "sha256": "53ba33dc8c666f83bd985769db0906e6bb04e65cbd1ee56d2bdac3009bd71ec1"
+    },
+    {
+      "name": "ciphertexts.bin.part-035",
+      "bytes": 134217728,
+      "sha256": "c2d903470fbc06d182eb7d7ecb2cb2cdaa0e4501ecef5756eaccb60554b90538"
+    },
+    {
+      "name": "ciphertexts.bin.part-036",
+      "bytes": 134217728,
+      "sha256": "758d56f7d41629fbfdc10a61272d756e417d65a3431568ca9c8efb1715098667"
+    },
+    {
+      "name": "ciphertexts.bin.part-037",
+      "bytes": 134217728,
+      "sha256": "da4791d176de1b4478323e7f64e2f50926055f83423e7b05ae8b1f9c009ebd52"
+    },
+    {
+      "name": "ciphertexts.bin.part-038",
+      "bytes": 134217728,
+      "sha256": "7c0501797ba64ef773817bcc3d1ea5a35a47dddb4fca26932d0b76cd296d66cf"
+    },
+    {
+      "name": "ciphertexts.bin.part-039",
+      "bytes": 134217728,
+      "sha256": "c96454f2c47ebcb47ea37619edb21421050d8558a4f0adba1d1a5ac510d916aa"
+    },
+    {
+      "name": "ciphertexts.bin.part-040",
+      "bytes": 134217728,
+      "sha256": "02cd063cc2a64f1c86aede030a85af6dedb7e2e0f882f6c6706c6dceecfcccb3"
+    },
+    {
+      "name": "ciphertexts.bin.part-041",
+      "bytes": 134217728,
+      "sha256": "60f3ef22ef3d113911c793ed8c9247a56e2d961d1752e28386c610d6b5ffe4f0"
+    },
+    {
+      "name": "ciphertexts.bin.part-042",
+      "bytes": 134217728,
+      "sha256": "c849bf86bc4ec7f82e479d502589cddab8daca2ea950d7b19c5f123ed3e44d1e"
+    },
+    {
+      "name": "ciphertexts.bin.part-043",
+      "bytes": 134217728,
+      "sha256": "906842cf2a05ec61dc1eec9f9f90f406b8bd55ef9abb7650fe2dc0fb83b924a3"
+    },
+    {
+      "name": "ciphertexts.bin.part-044",
+      "bytes": 134217728,
+      "sha256": "0fcb4942bd9e98d922172a8e2709bb98f5db7560d396b5d9e1fafc991ff097d4"
+    },
+    {
+      "name": "ciphertexts.bin.part-045",
+      "bytes": 134217728,
+      "sha256": "acc45d1f35fcbd49fd178c5dfe324cc4d8835d72d1bda93cbb8c477405cdaa67"
+    },
+    {
+      "name": "ciphertexts.bin.part-046",
+      "bytes": 134217728,
+      "sha256": "3060b2b47148005bae7490a7a7f3c1e596ed4a47f84ccfd2af9b604ca1c995af"
+    },
+    {
+      "name": "ciphertexts.bin.part-047",
+      "bytes": 134217728,
+      "sha256": "f8280172ec8d005adc729dc68b62aaaba65b9a2093dd83aa174b0c5fa4e1095a"
+    },
+    {
+      "name": "ciphertexts.bin.part-048",
+      "bytes": 134217728,
+      "sha256": "1292e4fac823b3eaa983eb3cacaa95ed6c5111f462b4aaa18db7d7a8ec2d2fee"
+    },
+    {
+      "name": "ciphertexts.bin.part-049",
+      "bytes": 134217728,
+      "sha256": "a753cf77312d4a781a8e25484d0640260c2145bff3208890a4b1e5fc4f6d11c9"
+    },
+    {
+      "name": "ciphertexts.bin.part-050",
+      "bytes": 134217728,
+      "sha256": "782dd7b1b96ff4f7261d5e0ae91480842e1828cf06ddde4242474bfba7fb3375"
+    },
+    {
+      "name": "ciphertexts.bin.part-051",
+      "bytes": 134217728,
+      "sha256": "81ec04f082ae505dfbd39e0fb3cb8e7638adfd6c632e5bb997dd3291f63dd9ae"
+    },
+    {
+      "name": "ciphertexts.bin.part-052",
+      "bytes": 134217728,
+      "sha256": "14b0f3cbb7798e22f4a023c7c466af1d56ca5fdc2903b10cac0f552433bfb361"
+    },
+    {
+      "name": "ciphertexts.bin.part-053",
+      "bytes": 134217728,
+      "sha256": "b93ced3542e24a8d2b8f512edf1dae1951e0b9087e895887dc1f9f6681eb9a61"
+    },
+    {
+      "name": "ciphertexts.bin.part-054",
+      "bytes": 134217728,
+      "sha256": "4a3134543effcdcfc4824dd27e283ab7eee173af2e7b747f453705bd28ff31fc"
+    },
+    {
+      "name": "ciphertexts.bin.part-055",
+      "bytes": 134217728,
+      "sha256": "a924a125bff45e03253942bcfa8ca9c573f663077da0a81f80873c60c2676d94"
+    },
+    {
+      "name": "ciphertexts.bin.part-056",
+      "bytes": 134217728,
+      "sha256": "84a567062d3f07c51728d9384171b40722bcb33ea366f699d933782eeb1f1569"
+    },
+    {
+      "name": "ciphertexts.bin.part-057",
+      "bytes": 134217728,
+      "sha256": "246519dec47f9bd2d498aab5bfbbfe739bda774155c592ede4211a8abc5b5a60"
+    },
+    {
+      "name": "ciphertexts.bin.part-058",
+      "bytes": 134217728,
+      "sha256": "16045f35d5a58c602d28b5ad54aaa3dbd7bb52b2c548da4b912e68b96220873a"
+    },
+    {
+      "name": "ciphertexts.bin.part-059",
+      "bytes": 134217728,
+      "sha256": "0b85a4c5de23a11dfca75b0c03c90f9f1b7db20e4f63f95d44a5b7b5a849c4cd"
+    },
+    {
+      "name": "ciphertexts.bin.part-060",
+      "bytes": 134217728,
+      "sha256": "ad31f1e79c71efd81d6404bb40fe7102435ca9e4a12de87c32744c6aaa18be3e"
+    },
+    {
+      "name": "ciphertexts.bin.part-061",
+      "bytes": 134217728,
+      "sha256": "7a8d30d3845f5514e16a6863c89dc65860c46a90b9aac98ae720d77a5ca8c189"
+    },
+    {
+      "name": "ciphertexts.bin.part-062",
+      "bytes": 134217728,
+      "sha256": "085f2d647b2cc656d199e26892e57784f584466258325a464d85fe21ba7ee22b"
+    },
+    {
+      "name": "ciphertexts.bin.part-063",
+      "bytes": 134217728,
+      "sha256": "0b9203bb180b257b4fed5f5badf631d4a0b279bf5935839a0c3d2ab56e3513cb"
+    },
+    {
+      "name": "ciphertexts.bin.part-064",
+      "bytes": 134217728,
+      "sha256": "6ba24fbf417dff998432f9b9b3ff5746029023e6d26b595a427ddd2763676075"
+    },
+    {
+      "name": "ciphertexts.bin.part-065",
+      "bytes": 134217728,
+      "sha256": "f1f5c095949d04caf835cc2b10f930b03a635f7130e33733608f7edfd774736c"
+    },
+    {
+      "name": "ciphertexts.bin.part-066",
+      "bytes": 134217728,
+      "sha256": "55958f0265c768e697f8cb1cd5926de2ad7dc55673ab1fb5299e9320c758ae1e"
+    },
+    {
+      "name": "ciphertexts.bin.part-067",
+      "bytes": 134217728,
+      "sha256": "40e72a4247f0f3f5dd23bd7fe9b2cc728985250e592c5af136a4e814b605a02a"
+    },
+    {
+      "name": "ciphertexts.bin.part-068",
+      "bytes": 134217728,
+      "sha256": "8f0459ec98fdf59fcce07b5bb7595a97aec037434a5c9ae5b7394b0c58bf5bb9"
+    },
+    {
+      "name": "ciphertexts.bin.part-069",
+      "bytes": 134217728,
+      "sha256": "e442212828253380addc20b166ce775ba5c15835e16b21605b5318926331192c"
+    },
+    {
+      "name": "ciphertexts.bin.part-070",
+      "bytes": 134217728,
+      "sha256": "be5ea7cecaf9bc231d12a4748f9083aa8df9bdfd79a019c952f1490799a1219c"
+    },
+    {
+      "name": "ciphertexts.bin.part-071",
+      "bytes": 134217728,
+      "sha256": "98135a4c5a37f2b7dae20e9113505554b2d67145d6be96ed90e470d92600bdd6"
+    },
+    {
+      "name": "ciphertexts.bin.part-072",
+      "bytes": 134217728,
+      "sha256": "09a798d93781deeecca490911d82b9db120f4a0995e7dbdb57609b916be00286"
+    },
+    {
+      "name": "ciphertexts.bin.part-073",
+      "bytes": 134217728,
+      "sha256": "e69214fb1b2019a8f22c3ffcf1453f8a2f87616ed3f8a3ca77244769c6fa5f6f"
+    },
+    {
+      "name": "ciphertexts.bin.part-074",
+      "bytes": 134217728,
+      "sha256": "8a81d80dfea295a79abaeeb3439442a39176abc1a1498646abab87563ed8b3c0"
+    },
+    {
+      "name": "ciphertexts.bin.part-075",
+      "bytes": 134217728,
+      "sha256": "dfa0427e1de19ca88fc5d3de0c404a33d4170e260136f3b9fa51cf6bc523c3b5"
+    },
+    {
+      "name": "ciphertexts.bin.part-076",
+      "bytes": 134217728,
+      "sha256": "c33ab3de35cdb925f88d392e43ac121e199994aa240c1532e37835b9b52ffcd5"
+    },
+    {
+      "name": "ciphertexts.bin.part-077",
+      "bytes": 134217728,
+      "sha256": "93cdce271aa5051eeabcdad32a830eb0c34cf8c36ce7110af7ffe99397ee7cef"
+    },
+    {
+      "name": "ciphertexts.bin.part-078",
+      "bytes": 134217728,
+      "sha256": "717046962460ec51755c9f0dcea02108eea4d744acd3e224ff094ef831253163"
+    },
+    {
+      "name": "ciphertexts.bin.part-079",
+      "bytes": 134217728,
+      "sha256": "f8dca988879531b670b7c1d477f71b7de4261e356b1307146c30fa7b3201cd17"
+    },
+    {
+      "name": "ciphertexts.bin.part-080",
+      "bytes": 134217728,
+      "sha256": "797c6de14db407724dd61830a04c7c2a2c60c91681e982b5dfe2db5e294a9da6"
+    },
+    {
+      "name": "ciphertexts.bin.part-081",
+      "bytes": 134217728,
+      "sha256": "aff730f2970fc1ef10692d128650058ed3238b3442d10dd9d8ed70609d085759"
+    },
+    {
+      "name": "ciphertexts.bin.part-082",
+      "bytes": 134217728,
+      "sha256": "aa048fd0d3e58554dd66be27da1f3932de06407170943a93c65192532c5d3975"
+    },
+    {
+      "name": "ciphertexts.bin.part-083",
+      "bytes": 134217728,
+      "sha256": "7a390afd90eb3f1d313750eee44a4f393cae378088433a8cc2abdcd7af22b3cb"
+    },
+    {
+      "name": "ciphertexts.bin.part-084",
+      "bytes": 134217728,
+      "sha256": "6554ef048eec9ff0635933789ab37a46041d80b433fbbfc434300ad1093e35f2"
+    },
+    {
+      "name": "ciphertexts.bin.part-085",
+      "bytes": 134217728,
+      "sha256": "61de01b55c9aab6808f7bea280fc6d134f4c7dc8d07f58c24093382a65fc35dd"
+    },
+    {
+      "name": "ciphertexts.bin.part-086",
+      "bytes": 134217728,
+      "sha256": "59b353675ebb44c0df8d1b58bd5751473b204e1666a68e2d9f1b93f12d866590"
+    },
+    {
+      "name": "ciphertexts.bin.part-087",
+      "bytes": 134217728,
+      "sha256": "5dcff98ee978e1820e7fb60389a72661bf1914f43c7b23fb2dace1fe93a3d3cb"
+    },
+    {
+      "name": "ciphertexts.bin.part-088",
+      "bytes": 134217728,
+      "sha256": "6dbf696aa2580548cf131cd9839d1a1e5a084b36e038a0efad0a792ee6f69bfb"
+    },
+    {
+      "name": "ciphertexts.bin.part-089",
+      "bytes": 134217728,
+      "sha256": "42f44d6599bfc35cbde98d1188b4dae8327955ac53942858b494aa171571a277"
+    },
+    {
+      "name": "ciphertexts.bin.part-090",
+      "bytes": 134217728,
+      "sha256": "ea862c88f961bd75b3fcf3b7b39f4fed3562a12c9928c8df9e5b1b8445155b30"
+    },
+    {
+      "name": "ciphertexts.bin.part-091",
+      "bytes": 134217728,
+      "sha256": "91d92d732de87327ee5301aee1b4ada1092ed45c41e612802d01f214043fbfb6"
+    },
+    {
+      "name": "ciphertexts.bin.part-092",
+      "bytes": 134217728,
+      "sha256": "cf34e28062346977056a407f5f418c90c978a77738479b4f97a112c0ef1bd3dd"
+    },
+    {
+      "name": "ciphertexts.bin.part-093",
+      "bytes": 134217728,
+      "sha256": "610f7dd46cc4993a2c172849d4491b6c001d5362d83ccbe83fce215fd39074f3"
+    },
+    {
+      "name": "ciphertexts.bin.part-094",
+      "bytes": 84831168,
+      "sha256": "bddc95975218d1e590205d154c54156dad2cc15a3dc9d6c2f9cbb6dcadcb86fa"
+    },
+    {
+      "name": "input-commitments.bin.part-001",
+      "bytes": 134217728,
+      "sha256": "05cf8f67d2134784ad382a22d0a53ace778cce922605f969b680550d66f057da"
+    },
+    {
+      "name": "input-commitments.bin.part-002",
+      "bytes": 134217728,
+      "sha256": "c40be0cd384072374474ecece331ddf6feef75c68cd6047f5a55620ee924617f"
+    },
+    {
+      "name": "input-commitments.bin.part-003",
+      "bytes": 134217728,
+      "sha256": "b02e41771202e1a39e44b4c698fe0685418f1122db33868b33acc5362481f000"
+    },
+    {
+      "name": "input-commitments.bin.part-004",
+      "bytes": 134217728,
+      "sha256": "66444fd7d82e68537ea94209beb61448ceb004a9083ad37a0536f8b6f1d6db0b"
+    },
+    {
+      "name": "input-commitments.bin.part-005",
+      "bytes": 15774208,
+      "sha256": "4d95c9be9d17ffbda8feb9303cfac73c8d68379e827dc4c62614a92222698c38"
+    },
+    {
+      "name": "m14-native-manifest.json",
+      "bytes": 3587,
+      "sha256": "b970760ed14fe4f1f7d2f277c8aef478b7ad6bce470470bab269ce1122ff5f0d"
+    },
+    {
+      "name": "manifest.json",
+      "bytes": 19836,
+      "sha256": "086fdae9b8e51636f868f75dbf876a34722f7503ac32f4c5ccdf22cd790cf012"
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 9311,
+      "sha256": "cf6f4fda1b088e12f0a2885c83886333d562a6b4840115b3861ad07eb491fd9d"
+    }
+  ]
+}

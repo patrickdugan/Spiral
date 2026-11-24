@@ -1,0 +1,49 @@
+{
+  "status": "confirmed_regtest_holder_reserve_redemption",
+  "network": "regtest",
+  "mint_offline": true,
+  "cashu_claim_commitment": "6b7a93c4f90d4efc2518fce8f48fb0e1f927c559e03fb6735ef8e590d851c5e0",
+  "reserve": {
+    "txid": "60f842725ef497df0e81d9f35144e9f16013f799638594a9033a12b72b913347",
+    "vout": 1
+  },
+  "funding_fee_sat": null,
+  "timeout_blocks": 6,
+  "confirmed_spend": "7d464ceb42d1d2c78c658a69ab47146b99905e34babd787d60d5022e3d262fcd",
+  "payout_sat": 23750,
+  "payout_fee_sat": 250,
+  "chain_evidence": {
+    "reserve_height": 104,
+    "reserve_block": "43b72b9f3dcd3c1b3ff892717fb2373f0fa614cebdb1ff01cd866769d60b5208",
+    "reserve_script": "0020877784b610a59772613125a4fec6402ca6ae1996b7a494a4d4a74813e7d71634",
+    "reserve_amount_sat": 24000,
+    "spend_height": 110,
+    "spend_block": "50367adf0cf0fc7f027ffad046babce6b85493e0a7e23d1139b459db627dac6d",
+    "spend_wtxid": "e07eaffcf01709102de02e6f855331ddb44fed0e793855c7c34a7ca88f515536",
+    "payout_script": "0014d91ac2e2754b64710f8feb42a3f3f51f54d06195"
+  },
+  "early_spend_refused": true,
+  "cooperative_conflict_refused": true,
+  "dashboard_holder_flow_verified": true,
+  "holder_cli_confirmed": true,
+  "source_melt": {
+    "address": "bcrt1qsamcfdss5kthycf3ykj0a3jq9jn2uxvkk7jfffx55ayp8e7hzc6qfszv0p",
+    "amount_sats": 24000,
+    "outpoint": "60f842725ef497df0e81d9f35144e9f16013f799638594a9033a12b72b913347:1",
+    "quote_id": "01a20a09-fd6a-74e8-931e-1282c2e000bc",
+    "reserve_plan_id": "077313165edaedf2cfc66ab731c4774d79fecbf65b06296e8e25934002dc85f2",
+    "source_token_sha256": "4aac86caff73d881da248c864b45950a766259e76983a4f2e14706f594ebe807",
+    "source_proofs_spent": 6,
+    "original_melt_replay_code": 11001,
+    "change_sats": 695,
+    "melt_fee_sats": 305
+  },
+  "holder_signer_handoff_verified": true,
+  "evidence_level": "observed-cdk-and-bitcoin-core-regtest",
+  "cashu_issued_sat": 25000,
+  "cdk_version": "0.18.3",
+  "wallet_sdk_version": "4.13.1",
+  "shinigami_verified_for_this_run": false,
+  "bitvm3_verified_for_this_run": false,
+  "saved_plan_funding_handoff_verified": true
+}

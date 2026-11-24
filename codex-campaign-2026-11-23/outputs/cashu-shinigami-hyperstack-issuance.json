@@ -1,0 +1,88 @@
+{
+  "schema": "proofdesk/hyperstack-issuance-benchmark/v1",
+  "network": "regtest",
+  "status": "issuance_verified_and_holder_reserve_spent",
+  "worker": {
+    "provider": "Hyperstack",
+    "region": "CANADA-1",
+    "flavor": "n3-A100x1",
+    "backend": "cpu",
+    "cpu": "AMD EPYC 9554 64-Core Processor",
+    "vcpus": 28,
+    "rayon_threads": 16,
+    "quoted_hourly_usd_with_ip": 1.35672
+  },
+  "started_at": "2026-11-23T07:44:02.214925+00:00",
+  "finished_at": "2026-11-23T07:47:36.007293+00:00",
+  "phases": {
+    "execute": {
+      "exit_code": 0,
+      "elapsed_seconds": 7.79,
+      "peak_rss_kib": 1931968,
+      "user_cpu_seconds": 3.01,
+      "system_cpu_seconds": 5.43
+    },
+    "prove": {
+      "exit_code": 0,
+      "elapsed_seconds": 205.479,
+      "peak_rss_kib": 45417000,
+      "user_cpu_seconds": 821.9,
+      "system_cpu_seconds": 178.75
+    },
+    "verify": {
+      "exit_code": 0,
+      "elapsed_seconds": 0.065,
+      "peak_rss_kib": 31288,
+      "user_cpu_seconds": 0.02,
+      "system_cpu_seconds": 0.0
+    },
+    "reject_changed_anchor_amount": {
+      "exit_code": 1,
+      "elapsed_seconds": 0.034,
+      "peak_rss_kib": 27828,
+      "user_cpu_seconds": 0.01,
+      "system_cpu_seconds": 0.0
+    },
+    "reject_changed_commitment": {
+      "exit_code": 1,
+      "elapsed_seconds": 0.033,
+      "peak_rss_kib": 27964,
+      "user_cpu_seconds": 0.01,
+      "system_cpu_seconds": 0.0
+    }
+  },
+  "input_pins": {
+    "bin/scarb": "b76b6a5fe53c9f5f940ea91e919238daecb86f97d2a6090c6279718ae6f649f9",
+    "bin/scarb-execute": "0942b466980bbaabe248bd8d1fa1faab4880d50753a26b5abef336dc25c5259e",
+    "bin/scarb-verify": "d6b77b191ba50edb968ecc559d3ce933293b2d040daa93d746016a7d3310ab31",
+    "bin/prove-clean": "fd2e89986a8b65d401d9af257b3040361c3544ee00fd03cad9915f076c5ba240",
+    "main.executable.json": "697615bf5f2c888b79dd36e299cef0cc2194be8003fa2e9bae2f53bb0f5e6aed",
+    "profile.json": "62670efbaaf0ba945a291e18153ca0d27a49d6c8882899cc2d7b4d4b51953ecd",
+    "testnet4-tapleaf-args.json": "e3a9a9fd876c61a409fc3a30eb008a37f161f5adb970eb7a5d48838aa24c9b07",
+    "regtest_arguments": "8e826b55576e7f8b6d9a780a9f7fcf596a1a572c9365fbc4f8ee8da6506bebc1"
+  },
+  "issuance": {
+    "proof_sha256": "c165698142cb60ab5eadff39de1f07f2d57c75d472f167c889a4720958144243",
+    "proof_bytes": 4647322,
+    "amount_sats": 25000,
+    "live_core_binding_verified": true,
+    "cdk_dleq_verified": true,
+    "single_issuance": true
+  },
+  "offline_reserve": {
+    "mint_offline": true,
+    "payout_sats": 24750,
+    "fee_sats": 250,
+    "independent_redemption_proof": "pending",
+    "pinned_cairo_execution": {
+      "status": "recorded_regtest_payout_statement_matched",
+      "program_hash": "0xdbda06ad0006b1d166c1634af58314bc255e1dbbd378c6553c6c35a17a9cb0",
+      "public_words_matched": 24,
+      "execution_seconds": 6.582,
+      "early_spend_refused": true,
+      "changed_prevout_amount_refused": true,
+      "stark_proof_generated": false
+    }
+  },
+  "scope": "Evidence from an isolated regtest fixture. The holder reserve has its own settlement path. Normal Cashu redemption and the reserve are not a shared single-spend claim."
+}

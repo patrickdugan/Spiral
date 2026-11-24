@@ -1,0 +1,39 @@
+{
+  "status": "confirmed_regtest_holder_reserve_redemption",
+  "network": "regtest",
+  "mint_offline": true,
+  "cashu_claim_commitment": "d0e07f8807901c5a19c797dd6a40f77a915deea13b09d8828a7a41f809133626",
+  "reserve": {
+    "txid": "39fb92fac2e6510bfbb8db70ba59cf195779d48b441d3cff319a0d0c78d6a0be",
+    "vout": 1
+  },
+  "funding_fee_sat": 208,
+  "timeout_blocks": 6,
+  "confirmed_spend": "a2122491e959391389116e6e7954e3b98f66ef89c81b844c6cf605e0750e6477",
+  "payout_sat": 24750,
+  "payout_fee_sat": 250,
+  "chain_evidence": {
+    "reserve_height": 104,
+    "reserve_block": "4d137916fd6081e4407c81e78fa4b07b17ca014b9959d353d7897ec35048c8f2",
+    "reserve_script": "00207a7d090a727423dfe5c55891508bc19cc3dff5dff74fa691691fc792e8dd220f",
+    "reserve_amount_sat": 25000,
+    "spend_height": 110,
+    "spend_block": "5aa36b9edca787251301daddbc2dc78a9911a5b50ad3e7be424aa96d935e995f",
+    "spend_wtxid": "19092b97fec89fa8d7d3b80062abe5bec040731758ac358cce843b12b641cde6",
+    "payout_script": "0014951f6ddbcbc3b6a0a420d3d341e8a681f2e22bb9"
+  },
+  "early_spend_refused": true,
+  "cooperative_conflict_refused": true,
+  "holder_cli_confirmed": true,
+  "holder_cli_checks": [
+    "wrong_bundle_id_refused",
+    "fee_cap_refused",
+    "premature_payout_refused_by_mempool_policy",
+    "ready_before_submission",
+    "observed_same_transaction_on_retry",
+    "confirmed_with_mint_offline"
+  ],
+  "issuance_payment_evidence": "core-regtest",
+  "shared_cdk_claim_consumption_verified": false,
+  "bitvm3_evaluation_verified": false
+}

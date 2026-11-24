@@ -1,0 +1,455 @@
+{
+  "core": {
+    "consensus_accepted": true,
+    "core_negative_controls": [
+      {
+        "core_accepted": false,
+        "core_reject_reason": "non-final",
+        "description": "Broadcast 3-input Bob-offline clearing tx at height 148 (< maturity 150)",
+        "probe_id": "mnr03-premature-broadcast-before-maturity"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Shave 1 sat from offline Bob's AB 0x83-pinned output vout[0] (55,000,000 -> 54,999,999)",
+        "probe_id": "mnr03-shave-1-sat-bob-ab-vout0"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Shave 1 sat from offline Bob's BC 0x83-pinned output vout[1] (35,000,000 -> 34,999,999)",
+        "probe_id": "mnr03-shave-1-sat-bob-bc-vout1"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Swap offline Bob's vout[0] and vout[1] across the two 0x83 inputs",
+        "probe_id": "mnr03-swap-bob-vout0-and-vout1"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "non-final",
+        "description": "Attempt Leaf 1 unilateral CLTV fallback at height 150 (< unilateral_cltv 170)",
+        "probe_id": "mnr03-unilateral-cet-during-priority-window"
+      }
+    ],
+    "core_version": "Bitcoin Core v310100 (/Satoshi:31.1.0/)",
+    "cpfp_anchor_confirmed": true,
+    "fresh_core_replay": true,
+    "native": {
+      "bitcoin_network": "regtest",
+      "bitvm3_onchain_verified": false,
+      "epoch_context": "922677f8619dc55c8d61bf8f897107110299e558217e3b4a33b0e8cae7f92003",
+      "fee_sats": 2670,
+      "funded_sats": 244000000,
+      "genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "native_signature_verified": true,
+      "nova_authorization_verified": false,
+      "ordered_funding_commitment": "3f8e0e32a0a2f1ddb0924038ecd8fa352cb444cf4cecfa021f53939a758fb386",
+      "original_contract_policy_external": true,
+      "payout_sats": [
+        55000000,
+        35000000,
+        71498500,
+        82498500,
+        330
+      ],
+      "production_ready": false,
+      "relation": "shz/mnr04/bitcoin-exact-clearing/v1",
+      "sigmsg_hex": [
+        [
+          "f0a227ca08ab66c226c9c142c8293961944cf15140628586fe6b9d86ed0b7bed",
+          "07dee064db2c819835496b220bd3a3864bc7d90076cad35a57bd90af53828585",
+          "07dee064db2c819835496b220bd3a3864bc7d90076cad35a57bd90af53828585"
+        ],
+        [
+          "39a7bc6ee5689edf62231e83d5b02657ceb6655b64719e24ea63dbf52ede68d2",
+          "d55cc7abe78b19c16556a0a82a7499d429d1e5022a068922671d6289b91ac415",
+          "d55cc7abe78b19c16556a0a82a7499d429d1e5022a068922671d6289b91ac415"
+        ],
+        [
+          "ac64d2d258f83d77fd08279a81e383f4a373845396e4b52c7d9a472776c65355",
+          "ac64d2d258f83d77fd08279a81e383f4a373845396e4b52c7d9a472776c65355",
+          null
+        ]
+      ],
+      "transaction_commitment": "68e929162d98e0627bf44c43c47736bf215e2fe402d1e37472a84ae225525da1",
+      "txid": "c10fcee0db4cfd6ec6336ab01a8d22759d0e08572ecb09f0da1f53a1e021ad6a",
+      "wtxid": "71868ea6eb0ed60eef77018195e6fd7c4453b0fe7a7bea48c7041d3ebcf45910"
+    },
+    "native_negative_controls": [
+      {
+        "case": "bob_ab_minus_one_sat",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "bob_bc_minus_one_sat",
+        "rejection": "invalid or unexpected BIP340 signature at input 1"
+      },
+      {
+        "case": "bob_outputs_swapped",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "ordered_inputs_swapped",
+        "rejection": "clearing transaction does not spend the approved ordered outpoints"
+      },
+      {
+        "case": "funding_outpoint_substituted",
+        "rejection": "clearing transaction does not spend the approved ordered outpoints"
+      },
+      {
+        "case": "funding_outpoint_double_consumed",
+        "rejection": "funding outpoint used more than once"
+      },
+      {
+        "case": "anchor_and_fee_changed",
+        "rejection": "fee or anchor accounting failed"
+      },
+      {
+        "case": "online_payout_and_fee_changed",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "locktime_changed",
+        "rejection": "wrong locktime or sequence"
+      }
+    ],
+    "native_pnl_accounting": {
+      "direct_payouts_sats": {
+        "alice-ab": 0,
+        "alice-ca": 0,
+        "anchor": 0,
+        "bob-ab": 0,
+        "bob-bc": 0,
+        "carol-bc": 0,
+        "carol-ca": 0
+      },
+      "epoch_id": 1,
+      "evidence_flags": {
+        "accounting_verified": true,
+        "execution_verified": false,
+        "production_ready": false,
+        "zk_proof_verified": false
+      },
+      "net_account_deltas": {
+        "alice-ab": 11000000,
+        "alice-ca": 0,
+        "anchor": 0,
+        "bob-ab": -11000000,
+        "bob-bc": 5000000,
+        "carol-bc": -5000000,
+        "carol-ca": 0
+      },
+      "next_accounting_state_root": [
+        77,
+        28,
+        13,
+        30,
+        22,
+        91,
+        32,
+        213,
+        198,
+        140,
+        242,
+        152,
+        35,
+        101,
+        141,
+        25,
+        213,
+        250,
+        232,
+        237,
+        114,
+        108,
+        217,
+        199,
+        118,
+        164,
+        62,
+        20,
+        32,
+        71,
+        227,
+        240
+      ],
+      "post_account_equities": {
+        "alice-ab": 44000000,
+        "alice-ca": 27498500,
+        "anchor": 330,
+        "bob-ab": 55000000,
+        "bob-bc": 35000000,
+        "carol-bc": 55000000,
+        "carol-ca": 27498500
+      },
+      "route_allocations": [
+        [
+          "funding-ab",
+          {
+            "Vault": "bob-ab"
+          },
+          55000000
+        ],
+        [
+          "funding-ab",
+          {
+            "Vault": "alice"
+          },
+          44000000
+        ],
+        [
+          "funding-bc",
+          {
+            "Vault": "bob-bc"
+          },
+          35000000
+        ],
+        [
+          "funding-bc",
+          {
+            "Vault": "carol"
+          },
+          55000000
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "alice"
+          },
+          27498500
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "carol"
+          },
+          27498500
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "anchor"
+          },
+          330
+        ]
+      ],
+      "snapshot_hash": [
+        93,
+        109,
+        227,
+        222,
+        32,
+        229,
+        196,
+        136,
+        23,
+        142,
+        241,
+        129,
+        221,
+        7,
+        1,
+        79,
+        19,
+        163,
+        184,
+        248,
+        152,
+        106,
+        63,
+        234,
+        77,
+        38,
+        130,
+        12,
+        111,
+        213,
+        191,
+        244
+      ],
+      "total_fee_sats": 2670,
+      "total_input_sats": 244000000,
+      "vault_residuals_sats": {
+        "alice": 71498500,
+        "anchor": 330,
+        "bob-ab": 55000000,
+        "bob-bc": 35000000,
+        "carol": 82498500,
+        "funding-ab": 0,
+        "funding-bc": 0,
+        "funding-ca": 0
+      }
+    },
+    "operational_pyth_provenance_verified": false,
+    "public_transactions_broadcast": false,
+    "reorg_watchtower_frozen": true,
+    "signed_origination": {
+      "native_signatures_verified": true,
+      "participant_xonly_keys": [
+        "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa",
+        "466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f27",
+        "e11f40af6b41f494bfbc27c47a178ce572e8b8ca687cc67e1298514861ac5e48"
+      ],
+      "terms_sha256": "b2cd8bc53d065d8d49596d7add55dfc53f2a5a71b2ab1c2a36111c213686a0a4"
+    },
+    "unilateral_fallback": true
+  },
+  "independent_verification": {
+    "compression_seconds": null,
+    "folding_seconds": null,
+    "native": {
+      "bitcoin_network": "regtest",
+      "bitvm3_onchain_verified": false,
+      "epoch_context": "922677f8619dc55c8d61bf8f897107110299e558217e3b4a33b0e8cae7f92003",
+      "fee_sats": 2670,
+      "funded_sats": 244000000,
+      "genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "native_signature_verified": true,
+      "nova_authorization_verified": false,
+      "ordered_funding_commitment": "3f8e0e32a0a2f1ddb0924038ecd8fa352cb444cf4cecfa021f53939a758fb386",
+      "original_contract_policy_external": true,
+      "payout_sats": [
+        55000000,
+        35000000,
+        71498500,
+        82498500,
+        330
+      ],
+      "production_ready": false,
+      "relation": "shz/mnr04/bitcoin-exact-clearing/v1",
+      "sigmsg_hex": [
+        [
+          "f0a227ca08ab66c226c9c142c8293961944cf15140628586fe6b9d86ed0b7bed",
+          "07dee064db2c819835496b220bd3a3864bc7d90076cad35a57bd90af53828585",
+          "07dee064db2c819835496b220bd3a3864bc7d90076cad35a57bd90af53828585"
+        ],
+        [
+          "39a7bc6ee5689edf62231e83d5b02657ceb6655b64719e24ea63dbf52ede68d2",
+          "d55cc7abe78b19c16556a0a82a7499d429d1e5022a068922671d6289b91ac415",
+          "d55cc7abe78b19c16556a0a82a7499d429d1e5022a068922671d6289b91ac415"
+        ],
+        [
+          "ac64d2d258f83d77fd08279a81e383f4a373845396e4b52c7d9a472776c65355",
+          "ac64d2d258f83d77fd08279a81e383f4a373845396e4b52c7d9a472776c65355",
+          null
+        ]
+      ],
+      "transaction_commitment": "68e929162d98e0627bf44c43c47736bf215e2fe402d1e37472a84ae225525da1",
+      "txid": "c10fcee0db4cfd6ec6336ab01a8d22759d0e08572ecb09f0da1f53a1e021ad6a",
+      "wtxid": "71868ea6eb0ed60eef77018195e6fd7c4453b0fe7a7bea48c7041d3ebcf45910"
+    },
+    "nova_ambient_context_native": true,
+    "nova_backend": "Nova Pallas/Vesta Spartan IPA CPU",
+    "nova_funding_conservation_verified": true,
+    "nova_output_values_verified": true,
+    "nova_txid_verified": true,
+    "primary_constraints": null,
+    "proof_bytes": 12576,
+    "proof_sha256": "29cfd9556a02017f253d7be6a043210a3e51bc8cc516546b0bb43838fa9ebfa6",
+    "routed_netting": {
+      "allocation_sats": [
+        55000000,
+        44000000,
+        35000000,
+        55000000,
+        27498500,
+        27498500,
+        330
+      ],
+      "changed_allocation_refused": true,
+      "changed_origination_context_refused": true,
+      "changed_snapshot_refused": true,
+      "profile": "shz/mnr04/route-conservation/v1",
+      "route_conservation_verified": true,
+      "signed_origination": {
+        "native_signatures_verified": true,
+        "participant_xonly_keys": [
+          "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa",
+          "466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f27",
+          "e11f40af6b41f494bfbc27c47a178ce572e8b8ca687cc67e1298514861ac5e48"
+        ],
+        "terms_sha256": "b2cd8bc53d065d8d49596d7add55dfc53f2a5a71b2ab1c2a36111c213686a0a4"
+      },
+      "snapshot_sha256": "5d6de3de20e5c488178ef181dd07014f13a3b8f8986a3fea4d26820c6fd5bff4",
+      "successor_state_sha256": "4d1c0d1e165b20d5c68cf29823658d19d5fae8ed726cd9c776a43e142047e3f0"
+    },
+    "secondary_constraints": null,
+    "setup_seconds": null,
+    "verification_seconds": 2.941058758,
+    "vk_sha256": "e92e08dafafd66304914f136910fba8942ad8b16faadf9973c85c064962e606d",
+    "wrong_txid_claim_refused": true
+  },
+  "prover_measurements": {
+    "primary_constraints": 197591,
+    "secondary_constraints": 10349,
+    "setup_seconds": 24.207208656,
+    "folding_seconds": 0.436178708,
+    "compression_seconds": 64.077346802
+  },
+  "prior_mnr03_compressed_proof_bytes": 12376,
+  "phases": {
+    "core": {
+      "elapsed_seconds": 20.47,
+      "user_cpu_seconds": 1.49,
+      "system_cpu_seconds": 1.43,
+      "peak_rss_kib": 61244
+    },
+    "key": {
+      "elapsed_seconds": 25.65,
+      "user_cpu_seconds": 24.99,
+      "system_cpu_seconds": 0.62,
+      "peak_rss_kib": 308248
+    },
+    "prove": {
+      "elapsed_seconds": 98.42,
+      "user_cpu_seconds": 96.27,
+      "system_cpu_seconds": 2.03,
+      "peak_rss_kib": 661604
+    },
+    "verify": {
+      "elapsed_seconds": 9.01,
+      "user_cpu_seconds": 8.72,
+      "system_cpu_seconds": 0.27,
+      "peak_rss_kib": 249276
+    }
+  },
+  "cuda_used_for_nova": false,
+  "rayon_threads": 1,
+  "origination_negative_controls": [
+    {
+      "case": "wrong_signature",
+      "strict_mode": true,
+      "exit_code": 1,
+      "reason": "MNR-04: invalid signed origination participant signature"
+    },
+    {
+      "case": "wrong_terms_digest",
+      "strict_mode": true,
+      "exit_code": 1,
+      "reason": "MNR-04: signed origination terms or funding changed"
+    },
+    {
+      "case": "stripped_origination",
+      "strict_mode": true,
+      "exit_code": 1,
+      "reason": "MNR-04: signed MNR-04 origination required"
+    },
+    {
+      "case": "stripped_origination",
+      "strict_mode": false,
+      "exit_code": 1,
+      "reason": "MNR-04: ProofVerifyError"
+    }
+  ],
+  "unsigned_routed_compatibility": {
+    "proof_sha256": "88c5da9edc99d5955b7a5fafdfd162c8719a76738ad8de170b2563c77efc21fc",
+    "vk_sha256": "e92e08dafafd66304914f136910fba8942ad8b16faadf9973c85c064962e606d",
+    "txid": "e8abf658eab148d9527c9e622e54298772aa4eebbbf6d15de5e29bba3ad21193"
+  },
+  "core_archive_sha256": "8b129c1feecd9a3769454c7fa727494b9f5d686af4e849be4afcd6a256d8bd9c",
+  "core_binary_sha256": "986e63b3c8770f08d0059820ad3dd085d1ab9e1bea23946c243f858a06888a08",
+  "source_commit": "d27ff72490bd629ae4208f745ef6dd4f92fb4054",
+  "rustc": "1.99.1 (58cf8f9c3 2026-10-13)"
+}

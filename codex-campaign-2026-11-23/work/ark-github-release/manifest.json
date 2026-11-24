@@ -1,0 +1,419 @@
+{
+  "schema": "ark-sp1/resumable-memo-release/v1",
+  "sp1_revision": "b8387fa61e1361d90ee7de49f551863418ca0f08",
+  "chain": "regtest",
+  "height": 679,
+  "vtxos": 4,
+  "policy_sats": 79440,
+  "source_archive_sha256": "2ec3db943ca16b2380a38309ab92a1d381002277afb386bfbd4d47cc681afc96",
+  "run_json_sha256": "a800d7026670d6d2a1240ea6e60d1f8171b2216ffe103b8e826cd36693ce3238",
+  "memo_counts": {
+    "shard": 1727,
+    "reduce": 6624
+  },
+  "full_sp1_proof_verified": false,
+  "m13_verified": false,
+  "bitvm3_onchain_verified": false,
+  "assets": [
+    {
+      "name": "ark-679-checkpoints-001.tar",
+      "bytes": 133816320,
+      "sha256": "fc1ac3eea0f60eb8ced11a416bd0e9880bc43ca26704d17ecd4da358c2158478"
+    },
+    {
+      "name": "ark-679-checkpoints-002.tar",
+      "bytes": 133816320,
+      "sha256": "37bd8fd62655e3d653155e037f543c0283a163986346d11fdbc20ea689e1c3f9"
+    },
+    {
+      "name": "ark-679-checkpoints-003.tar",
+      "bytes": 133816320,
+      "sha256": "0fdd640609e73e394773fd8e6987c1d90385414e599d37ccbdab7ab7fe9623fd"
+    },
+    {
+      "name": "ark-679-checkpoints-004.tar",
+      "bytes": 133816320,
+      "sha256": "ec918532d6b306f91d4c71aaa44defd257555138daaac5c0f8421d30ce0b24f7"
+    },
+    {
+      "name": "ark-679-checkpoints-005.tar",
+      "bytes": 133816320,
+      "sha256": "354ff785f31a2078ac627bc081e441bbdf699f511f0efa9039e675a2fbb48e92"
+    },
+    {
+      "name": "ark-679-checkpoints-006.tar",
+      "bytes": 133816320,
+      "sha256": "94910b4518f46753a44d32f07d5a8b59007bf7a029ab8084500fc5e0963fa80d"
+    },
+    {
+      "name": "ark-679-checkpoints-007.tar",
+      "bytes": 133816320,
+      "sha256": "fa4965a14318c8e12a114fd0fe25bec259d4b3c006b5acaf173751cc80694fbd"
+    },
+    {
+      "name": "ark-679-checkpoints-008.tar",
+      "bytes": 133816320,
+      "sha256": "b301f9692b4a300f023d5e36300e2411fe505621a43434f6eea12a54939974df"
+    },
+    {
+      "name": "ark-679-checkpoints-009.tar",
+      "bytes": 133816320,
+      "sha256": "e5f6eabe4e6480fd15e069a8c75ffaa398107f01f7dd201e75cf5af8021efe52"
+    },
+    {
+      "name": "ark-679-checkpoints-010.tar",
+      "bytes": 133816320,
+      "sha256": "64e8819c560fb3c7c1c85c72ded471553aa270f60567a84cc4494ec74dbf2ba7"
+    },
+    {
+      "name": "ark-679-checkpoints-011.tar",
+      "bytes": 133816320,
+      "sha256": "d8c7c5ca9fa34f8ab15fc1f60cf81136fff034830026eb994ee33708a9d6ce58"
+    },
+    {
+      "name": "ark-679-checkpoints-012.tar",
+      "bytes": 133816320,
+      "sha256": "6091921b10baa3946f3896819f3c0f85fda5131b7fb1e38327b36ce6f1b94120"
+    },
+    {
+      "name": "ark-679-checkpoints-013.tar",
+      "bytes": 133816320,
+      "sha256": "d98a034a8122c4de8c3e0c27f5de69bd5e645ef14150ce972fd7b5069759700d"
+    },
+    {
+      "name": "ark-679-checkpoints-014.tar",
+      "bytes": 133816320,
+      "sha256": "8ff93f72707fd6b683430a6d02c1ec3396339b78658e97ec0d34f2d6b4ba2d9c"
+    },
+    {
+      "name": "ark-679-checkpoints-015.tar",
+      "bytes": 133816320,
+      "sha256": "d89dace26fb3099b4eaec4112fa65a268972c2ce0024e696e24ae8af2afc4e1d"
+    },
+    {
+      "name": "ark-679-checkpoints-016.tar",
+      "bytes": 133816320,
+      "sha256": "42b0cc180b66d62422ddcc93062e1787730f4b926818f16e5864706e44b005b1"
+    },
+    {
+      "name": "ark-679-checkpoints-017.tar",
+      "bytes": 133816320,
+      "sha256": "d6ec994427595e361e435fbff30ef0afefd6f2732eeb07f8106a3b2ac94f5bc8"
+    },
+    {
+      "name": "ark-679-checkpoints-018.tar",
+      "bytes": 133816320,
+      "sha256": "80a35395c4e24f7d942a618d5f512412b44294b24a22187608db1c67b5279efd"
+    },
+    {
+      "name": "ark-679-checkpoints-019.tar",
+      "bytes": 133816320,
+      "sha256": "51ca483ef8ff80bb9df7df3c6181182c2b3ffd229cb1eb55dcdbce63ab8d3e37"
+    },
+    {
+      "name": "ark-679-checkpoints-020.tar",
+      "bytes": 133816320,
+      "sha256": "33d19f7e65eda5a2b2f087b646f12885d5ea3d775c5c2b6ccad2a2108ccdac07"
+    },
+    {
+      "name": "ark-679-checkpoints-021.tar",
+      "bytes": 133816320,
+      "sha256": "6cef71e67b9449ed76673c8011a17dd913e10e26e9e8659d7a7f40c87f374e6c"
+    },
+    {
+      "name": "ark-679-checkpoints-022.tar",
+      "bytes": 133816320,
+      "sha256": "4a5f252a80d6ee4df98f338042016764e42b58468ce6bbb19f2670f15aea648e"
+    },
+    {
+      "name": "ark-679-checkpoints-023.tar",
+      "bytes": 133816320,
+      "sha256": "2ca494dbcc9e5b5ceed6a6aa3440a0b00a312fdd5309bc32cb1ac7ef1b03c6e1"
+    },
+    {
+      "name": "ark-679-checkpoints-024.tar",
+      "bytes": 133816320,
+      "sha256": "a65d63c0f9b97178edaeaf974eb16c5bec99daec8a90b536b403aa734078eadd"
+    },
+    {
+      "name": "ark-679-checkpoints-025.tar",
+      "bytes": 133816320,
+      "sha256": "b9dfe9953c2fec307ea8139434815c80239395422d37d3ed468b60a1b56b57e3"
+    },
+    {
+      "name": "ark-679-checkpoints-026.tar",
+      "bytes": 133816320,
+      "sha256": "d27dc1286c85e03bd60ed16f16da1c181f6f071b5fd79dca54185ca7ceb3c3f6"
+    },
+    {
+      "name": "ark-679-checkpoints-027.tar",
+      "bytes": 133816320,
+      "sha256": "fb94207c453e193bc9cd9ab3ff41090b1d628e671c0dc45b49abee30baf56844"
+    },
+    {
+      "name": "ark-679-checkpoints-028.tar",
+      "bytes": 133816320,
+      "sha256": "5a4e23ed922ce4c8733f1cff818e829382b1adeb516d281ab6119775fb084ee2"
+    },
+    {
+      "name": "ark-679-checkpoints-029.tar",
+      "bytes": 133816320,
+      "sha256": "d94bf61cd8d4b9afae9290ee4247ccd720daeef4af305ceff6c2f0dc77763f3e"
+    },
+    {
+      "name": "ark-679-checkpoints-030.tar",
+      "bytes": 133816320,
+      "sha256": "b68ca77a7c4de4096aa9e1ae1b00084cfd456235c1dd4274d53c4228f16375c5"
+    },
+    {
+      "name": "ark-679-checkpoints-031.tar",
+      "bytes": 133816320,
+      "sha256": "92fbb36f3f99c6d96de3c89a33576488c42d5301a202ec80f43f3759168afe57"
+    },
+    {
+      "name": "ark-679-checkpoints-032.tar",
+      "bytes": 133816320,
+      "sha256": "63d32aefe956706006ab7b974a5337d94c16d55ba7c0ddc219810efb93901868"
+    },
+    {
+      "name": "ark-679-checkpoints-033.tar",
+      "bytes": 133816320,
+      "sha256": "48bdcce721ae31cf4fb88ff22b1946c5845e360bf8eb0133feceba8eb1895107"
+    },
+    {
+      "name": "ark-679-checkpoints-034.tar",
+      "bytes": 133816320,
+      "sha256": "b9a3fa748f6421097651df8153b3cafe5cadc2d98f5477c9e68bef0fd1609847"
+    },
+    {
+      "name": "ark-679-checkpoints-035.tar",
+      "bytes": 133816320,
+      "sha256": "676d3958f836bc0972de7f1765799f98d2f346b22b45388cca6bc80be30cf4d8"
+    },
+    {
+      "name": "ark-679-checkpoints-036.tar",
+      "bytes": 133816320,
+      "sha256": "af2e5d61abb604ca033441761b5837fc61c0ac4b8b51a252789df667d6ab2b5d"
+    },
+    {
+      "name": "ark-679-checkpoints-037.tar",
+      "bytes": 133816320,
+      "sha256": "91a325af1f18a33f3017e618ada13dcf956539705ee954c786c52e3c409311e6"
+    },
+    {
+      "name": "ark-679-checkpoints-038.tar",
+      "bytes": 133816320,
+      "sha256": "3134f23cba00f05244739a3a9902ceb6e6184d6c2bcc06a4f58cb485397c4c7a"
+    },
+    {
+      "name": "ark-679-checkpoints-039.tar",
+      "bytes": 133816320,
+      "sha256": "50548799f41e083fc5dcf2b9b2bc310771d3e6466a90ac6a6850c942d99dcca5"
+    },
+    {
+      "name": "ark-679-checkpoints-040.tar",
+      "bytes": 133816320,
+      "sha256": "ad510ac5f9b66422d7b20f569d71564c345362c0191d9eab03dc57946406a45c"
+    },
+    {
+      "name": "ark-679-checkpoints-041.tar",
+      "bytes": 133816320,
+      "sha256": "2c83b867fee4fa873c3d64b7e195806befadd22acf442641ade85d43c61ea532"
+    },
+    {
+      "name": "ark-679-checkpoints-042.tar",
+      "bytes": 133816320,
+      "sha256": "daca3e51acda7ae1d50a1d1943fcd4041f0d827f5091d3d50a5211905bc97a9e"
+    },
+    {
+      "name": "ark-679-checkpoints-043.tar",
+      "bytes": 133816320,
+      "sha256": "56cde53c87ad6a2cfa914d598ded3ac63c2b7238048f44faaa5ac812df213bb3"
+    },
+    {
+      "name": "ark-679-checkpoints-044.tar",
+      "bytes": 133816320,
+      "sha256": "38a70b83b52e3c1d41094e1499fd19230efb7dab368e3ce98efeb8d635c07d22"
+    },
+    {
+      "name": "ark-679-checkpoints-045.tar",
+      "bytes": 133816320,
+      "sha256": "93bc4921c25a9d0798c30b878bf5ba94c222361e3575cc291ffa03ba7c15af07"
+    },
+    {
+      "name": "ark-679-checkpoints-046.tar",
+      "bytes": 133816320,
+      "sha256": "b1794ef621f420a6e4439cd99fbe8f9998df04581c066e4d1432f3b9d974dbb6"
+    },
+    {
+      "name": "ark-679-checkpoints-047.tar",
+      "bytes": 133816320,
+      "sha256": "3e5f424549849ffaec331845a4a1e44abba7502a30fd53b220c95e237d6cbbea"
+    },
+    {
+      "name": "ark-679-checkpoints-048.tar",
+      "bytes": 133816320,
+      "sha256": "9899d7d11d1d2751f29d081f4a4bcad91f8d4767965a3daccf6489abee35f3f7"
+    },
+    {
+      "name": "ark-679-checkpoints-049.tar",
+      "bytes": 133816320,
+      "sha256": "7ccc9ff9e4484eea15cbbfbcf9b3e0940d0f3d97ae17f0a1a4b4cd8a07d1af66"
+    },
+    {
+      "name": "ark-679-checkpoints-050.tar",
+      "bytes": 133816320,
+      "sha256": "976ba7f841560de3bb5716296501802cf7054e523ea36d9aaa82b87d88b7c0ef"
+    },
+    {
+      "name": "ark-679-checkpoints-051.tar",
+      "bytes": 133816320,
+      "sha256": "65ae89068665c6e9ba624f047e556fdaf6d5f7108d87339c858ba004b328da05"
+    },
+    {
+      "name": "ark-679-checkpoints-052.tar",
+      "bytes": 133816320,
+      "sha256": "8ea2fe56229e49bf7b0ca47b260c7283e623eb7279fd4be9de06aa0cf501d3f2"
+    },
+    {
+      "name": "ark-679-checkpoints-053.tar",
+      "bytes": 133816320,
+      "sha256": "07c9034572a50cce10f1912fc15add8fb423ab023871019343c4c275e6b6f540"
+    },
+    {
+      "name": "ark-679-checkpoints-054.tar",
+      "bytes": 133816320,
+      "sha256": "dfe3d788a412b0abc9fa150f8dda6f9f27eb852c00ac0bb871298200de515b30"
+    },
+    {
+      "name": "ark-679-checkpoints-055.tar",
+      "bytes": 133816320,
+      "sha256": "52d7d78908de6931d5e560ec40a20fa05a97cc8f3d4e1cf2be4ccef074e234d4"
+    },
+    {
+      "name": "ark-679-checkpoints-056.tar",
+      "bytes": 133816320,
+      "sha256": "61db2f8f6d262ad82f9974e93bcaa505dfda3d147bb01162dabead548f2de789"
+    },
+    {
+      "name": "ark-679-checkpoints-057.tar",
+      "bytes": 133816320,
+      "sha256": "72e78c245992d0f341900da9b41fbef5cd09945184744b22493e63f392a22ab7"
+    },
+    {
+      "name": "ark-679-checkpoints-058.tar",
+      "bytes": 133816320,
+      "sha256": "6f083156f19cc6413bd5833db047d7208e940eb7e2201d764a1f696ff5f922fb"
+    },
+    {
+      "name": "ark-679-checkpoints-059.tar",
+      "bytes": 133816320,
+      "sha256": "afb64e1d1e311690f6438940034fd99272e75349648a80df860b00a023f1863a"
+    },
+    {
+      "name": "ark-679-checkpoints-060.tar",
+      "bytes": 133816320,
+      "sha256": "175ed37e79639860cd272dd77d2232c90562167b8059b4c458eaa0f0cd8521cb"
+    },
+    {
+      "name": "ark-679-checkpoints-061.tar",
+      "bytes": 133816320,
+      "sha256": "ca464e6efaac28d9b41a1d7aad5419be74c692f3f8d5404f8ceadb106ed63748"
+    },
+    {
+      "name": "ark-679-checkpoints-062.tar",
+      "bytes": 133816320,
+      "sha256": "080afa90e1f9ab4a1cae581c007ea6b4c2551b647f2e74b2cd4bb4100fe427c9"
+    },
+    {
+      "name": "ark-679-checkpoints-063.tar",
+      "bytes": 133816320,
+      "sha256": "9186a79c9dfe2228416388aeb69a822a6b7846009186e1b2f9473f5d8725377e"
+    },
+    {
+      "name": "ark-679-checkpoints-064.tar",
+      "bytes": 133908480,
+      "sha256": "29e8b0a0fbd354062bd2fe2724fbbd3eed39767c6660561c23c6ecc1392092c9"
+    },
+    {
+      "name": "ark-679-checkpoints-065.tar",
+      "bytes": 133918720,
+      "sha256": "32f07545530434f6c39b28a7b416f433456f8946a5bb4cb2d51cfc02009b596e"
+    },
+    {
+      "name": "ark-679-checkpoints-066.tar",
+      "bytes": 133918720,
+      "sha256": "c35812201f8de6c5819a0c695b193d60e149c26f7cdcdf5a19a7fc9c99470aa7"
+    },
+    {
+      "name": "ark-679-checkpoints-067.tar",
+      "bytes": 133918720,
+      "sha256": "f924a28637e2e96b7b6d6524f6f58f06d05728da29b3b306f728967eda2ac2ac"
+    },
+    {
+      "name": "ark-679-checkpoints-068.tar",
+      "bytes": 133918720,
+      "sha256": "888464429202b1ac54f3094345e6cf48ed3565d1b39f53e34462b97d1e17804b"
+    },
+    {
+      "name": "ark-679-checkpoints-069.tar",
+      "bytes": 133918720,
+      "sha256": "0bb7d35aece7d8d048c902b21b0171d5c3271b71cacab8ac047222416603edd8"
+    },
+    {
+      "name": "ark-679-checkpoints-070.tar",
+      "bytes": 133918720,
+      "sha256": "58b82eae0bc08d900bdbfb2cf8ce944386936ee6185f46dff2f418716b703810"
+    },
+    {
+      "name": "ark-679-checkpoints-071.tar",
+      "bytes": 133918720,
+      "sha256": "2b7ff2015aa5ad3aea25de210fdd2e637e4a7d479212b59d7631b7d299c9a7d8"
+    },
+    {
+      "name": "ark-679-checkpoints-072.tar",
+      "bytes": 133918720,
+      "sha256": "a4c94d83e85ecff0b37f9521c859c682f27622e0fbc06981b114b8a84b7ba7d1"
+    },
+    {
+      "name": "ark-679-checkpoints-073.tar",
+      "bytes": 133918720,
+      "sha256": "0f04f9915ebe997446282bc86f3a2e8218cc58421818f1e598edc263c1be7c7c"
+    },
+    {
+      "name": "ark-679-checkpoints-074.tar",
+      "bytes": 133918720,
+      "sha256": "14c653d2a68648df9ebcaee44a79028cab0596fae102933a9ea84374f91d84e9"
+    },
+    {
+      "name": "ark-679-checkpoints-075.tar",
+      "bytes": 133918720,
+      "sha256": "7a89e1ddd36eef9f4fbefe48a6c417903ac943ffb0a8525db9c8c4f7b3b42ee1"
+    },
+    {
+      "name": "ark-679-checkpoints-076.tar",
+      "bytes": 133918720,
+      "sha256": "5b76020754fef7aa29a965a8bbaed98e4c341788f9860bc923c258f03a17e5a3"
+    },
+    {
+      "name": "ark-679-checkpoints-077.tar",
+      "bytes": 133918720,
+      "sha256": "532e2981b2aaacdd4a06633aa4088483841f6326ebd9ec61c9df99c6b3f01ddb"
+    },
+    {
+      "name": "ark-679-checkpoints-078.tar",
+      "bytes": 133918720,
+      "sha256": "3578dfcc368c8430dfd875cde7bc6c5aaa80682a9af10c855039073329f89ffa"
+    },
+    {
+      "name": "ark-679-checkpoints-079.tar",
+      "bytes": 133918720,
+      "sha256": "ca7486c2291f0ee298da10eb4683b1103963446ba1dadf5f787ce5e8ce99450c"
+    },
+    {
+      "name": "ark-679-checkpoints-080.tar",
+      "bytes": 71424000,
+      "sha256": "fa01e21695d34b6287b1198553883334cc113dfdab2e3615432a6a7589d5b71f"
+    }
+  ]
+}

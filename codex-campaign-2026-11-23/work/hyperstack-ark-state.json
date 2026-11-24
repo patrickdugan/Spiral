@@ -1,0 +1,16 @@
+{
+  "name": "ark-mnr04-a100-a6e283d956",
+  "vm_id": 1178271,
+  "stage": "ark_heartbeat|1795472195|replay|1795464452|123|1353|4378|2693|5083|1|0",
+  "storage_key_id": 417,
+  "seed_sha256": "7bd476303dd15ae958e450fbc42fc8f7d0074a357fe9c2ba75f33ce7d2d3578b",
+  "seed_bytes": 15635466240,
+  "lease_ends_at_unix": 1795482455,
+  "max_billed_seconds": 28800,
+  "spot": true,
+  "rate_usd_per_hour": 1.0867204300000002,
+  "requested_at": 1795453787,
+  "flavor": "n3-A100x1-spot",
+  "prepare_phase": null,
+  "cleanup": "vm_deleted"
+}

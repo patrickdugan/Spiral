@@ -1,0 +1,412 @@
+{
+  "core": {
+    "consensus_accepted": true,
+    "core_negative_controls": [
+      {
+        "core_accepted": false,
+        "core_reject_reason": "non-final",
+        "description": "Broadcast 3-input Bob-offline clearing tx at height 148 (< maturity 150)",
+        "probe_id": "mnr03-premature-broadcast-before-maturity"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Shave 1 sat from offline Bob's AB 0x83-pinned output vout[0] (55,000,000 -> 54,999,999)",
+        "probe_id": "mnr03-shave-1-sat-bob-ab-vout0"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Shave 1 sat from offline Bob's BC 0x83-pinned output vout[1] (35,000,000 -> 34,999,999)",
+        "probe_id": "mnr03-shave-1-sat-bob-bc-vout1"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "mempool-script-verify-flag-failed (Invalid Schnorr signature)",
+        "description": "Swap offline Bob's vout[0] and vout[1] across the two 0x83 inputs",
+        "probe_id": "mnr03-swap-bob-vout0-and-vout1"
+      },
+      {
+        "core_accepted": false,
+        "core_reject_reason": "non-final",
+        "description": "Attempt Leaf 1 unilateral CLTV fallback at height 150 (< unilateral_cltv 170)",
+        "probe_id": "mnr03-unilateral-cet-during-priority-window"
+      }
+    ],
+    "core_version": "Bitcoin Core v310100 (/Satoshi:31.1.0/)",
+    "cpfp_anchor_confirmed": true,
+    "fresh_core_replay": true,
+    "native": {
+      "bitcoin_network": "regtest",
+      "bitvm3_onchain_verified": false,
+      "epoch_context": "979039375973cf4aee3d42f18ddb873e4913355ef4f448f6f7555d651dfa7dab",
+      "fee_sats": 2670,
+      "funded_sats": 244000000,
+      "genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "native_signature_verified": true,
+      "nova_authorization_verified": false,
+      "ordered_funding_commitment": "f610f5cd1f34c36f7a6f9829f6dae8a56f5e776e660d4db0db182d27aecb6777",
+      "original_contract_policy_external": true,
+      "payout_sats": [
+        55000000,
+        35000000,
+        71498500,
+        82498500,
+        330
+      ],
+      "production_ready": false,
+      "relation": "shz/mnr04/bitcoin-exact-clearing/v1",
+      "sigmsg_hex": [
+        [
+          "5a7483324f66a3cecd45474cf0c18e44d420b2dc2cef1ba9fe1aaacb6f2999f7",
+          "1c065b5446755100660c6bd84a2f12412f46eccad55618710b0e25d1bee3a61b",
+          "1c065b5446755100660c6bd84a2f12412f46eccad55618710b0e25d1bee3a61b"
+        ],
+        [
+          "9737efd449f623fcfbac1ee54779d4760780f96b1da83c8a1d234fb357bb1d2b",
+          "5e894142030df4e3b2e7b29c7715c3454b2691be22247016ace6598c1bbdd19e",
+          "5e894142030df4e3b2e7b29c7715c3454b2691be22247016ace6598c1bbdd19e"
+        ],
+        [
+          "e856d45deffdd25f2d6850cb0aeb9bb3db586465ef2a6fe1dcce010ba7d05eed",
+          "e856d45deffdd25f2d6850cb0aeb9bb3db586465ef2a6fe1dcce010ba7d05eed",
+          null
+        ]
+      ],
+      "transaction_commitment": "da0558eba3bac049511e05502e062126a40b7e40e44550f43b917ba9217c9994",
+      "txid": "e8abf658eab148d9527c9e622e54298772aa4eebbbf6d15de5e29bba3ad21193",
+      "wtxid": "d48ae7aee8d9744af5dd3447448c3bf6d012eafe3ba7a5e617af69a2583108d6"
+    },
+    "native_negative_controls": [
+      {
+        "case": "bob_ab_minus_one_sat",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "bob_bc_minus_one_sat",
+        "rejection": "invalid or unexpected BIP340 signature at input 1"
+      },
+      {
+        "case": "bob_outputs_swapped",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "ordered_inputs_swapped",
+        "rejection": "clearing transaction does not spend the approved ordered outpoints"
+      },
+      {
+        "case": "funding_outpoint_substituted",
+        "rejection": "clearing transaction does not spend the approved ordered outpoints"
+      },
+      {
+        "case": "funding_outpoint_double_consumed",
+        "rejection": "funding outpoint used more than once"
+      },
+      {
+        "case": "anchor_and_fee_changed",
+        "rejection": "fee or anchor accounting failed"
+      },
+      {
+        "case": "online_payout_and_fee_changed",
+        "rejection": "invalid or unexpected BIP340 signature at input 0"
+      },
+      {
+        "case": "locktime_changed",
+        "rejection": "wrong locktime or sequence"
+      }
+    ],
+    "native_pnl_accounting": {
+      "direct_payouts_sats": {
+        "alice-ab": 0,
+        "alice-ca": 0,
+        "anchor": 0,
+        "bob-ab": 0,
+        "bob-bc": 0,
+        "carol-bc": 0,
+        "carol-ca": 0
+      },
+      "epoch_id": 1,
+      "evidence_flags": {
+        "accounting_verified": true,
+        "execution_verified": false,
+        "production_ready": false,
+        "zk_proof_verified": false
+      },
+      "net_account_deltas": {
+        "alice-ab": 11000000,
+        "alice-ca": 0,
+        "anchor": 0,
+        "bob-ab": -11000000,
+        "bob-bc": 5000000,
+        "carol-bc": -5000000,
+        "carol-ca": 0
+      },
+      "next_accounting_state_root": [
+        62,
+        161,
+        212,
+        181,
+        181,
+        199,
+        40,
+        141,
+        51,
+        137,
+        130,
+        20,
+        64,
+        102,
+        175,
+        144,
+        86,
+        154,
+        198,
+        88,
+        145,
+        30,
+        217,
+        222,
+        31,
+        49,
+        0,
+        100,
+        168,
+        207,
+        95,
+        110
+      ],
+      "post_account_equities": {
+        "alice-ab": 44000000,
+        "alice-ca": 27498500,
+        "anchor": 330,
+        "bob-ab": 55000000,
+        "bob-bc": 35000000,
+        "carol-bc": 55000000,
+        "carol-ca": 27498500
+      },
+      "route_allocations": [
+        [
+          "funding-ab",
+          {
+            "Vault": "bob-ab"
+          },
+          55000000
+        ],
+        [
+          "funding-ab",
+          {
+            "Vault": "alice"
+          },
+          44000000
+        ],
+        [
+          "funding-bc",
+          {
+            "Vault": "bob-bc"
+          },
+          35000000
+        ],
+        [
+          "funding-bc",
+          {
+            "Vault": "carol"
+          },
+          55000000
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "alice"
+          },
+          27498500
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "carol"
+          },
+          27498500
+        ],
+        [
+          "funding-ca",
+          {
+            "Vault": "anchor"
+          },
+          330
+        ]
+      ],
+      "snapshot_hash": [
+        126,
+        40,
+        110,
+        168,
+        11,
+        197,
+        0,
+        156,
+        50,
+        189,
+        0,
+        166,
+        176,
+        18,
+        29,
+        81,
+        196,
+        227,
+        104,
+        166,
+        203,
+        111,
+        191,
+        12,
+        4,
+        30,
+        46,
+        121,
+        242,
+        132,
+        177,
+        230
+      ],
+      "total_fee_sats": 2670,
+      "total_input_sats": 244000000,
+      "vault_residuals_sats": {
+        "alice": 71498500,
+        "anchor": 330,
+        "bob-ab": 55000000,
+        "bob-bc": 35000000,
+        "carol": 82498500,
+        "funding-ab": 0,
+        "funding-bc": 0,
+        "funding-ca": 0
+      }
+    },
+    "operational_pyth_provenance_verified": false,
+    "public_transactions_broadcast": false,
+    "reorg_watchtower_frozen": true,
+    "unilateral_fallback": true
+  },
+  "independent_verification": {
+    "compression_seconds": null,
+    "folding_seconds": null,
+    "native": {
+      "bitcoin_network": "regtest",
+      "bitvm3_onchain_verified": false,
+      "epoch_context": "979039375973cf4aee3d42f18ddb873e4913355ef4f448f6f7555d651dfa7dab",
+      "fee_sats": 2670,
+      "funded_sats": 244000000,
+      "genesis_hash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "native_signature_verified": true,
+      "nova_authorization_verified": false,
+      "ordered_funding_commitment": "f610f5cd1f34c36f7a6f9829f6dae8a56f5e776e660d4db0db182d27aecb6777",
+      "original_contract_policy_external": true,
+      "payout_sats": [
+        55000000,
+        35000000,
+        71498500,
+        82498500,
+        330
+      ],
+      "production_ready": false,
+      "relation": "shz/mnr04/bitcoin-exact-clearing/v1",
+      "sigmsg_hex": [
+        [
+          "5a7483324f66a3cecd45474cf0c18e44d420b2dc2cef1ba9fe1aaacb6f2999f7",
+          "1c065b5446755100660c6bd84a2f12412f46eccad55618710b0e25d1bee3a61b",
+          "1c065b5446755100660c6bd84a2f12412f46eccad55618710b0e25d1bee3a61b"
+        ],
+        [
+          "9737efd449f623fcfbac1ee54779d4760780f96b1da83c8a1d234fb357bb1d2b",
+          "5e894142030df4e3b2e7b29c7715c3454b2691be22247016ace6598c1bbdd19e",
+          "5e894142030df4e3b2e7b29c7715c3454b2691be22247016ace6598c1bbdd19e"
+        ],
+        [
+          "e856d45deffdd25f2d6850cb0aeb9bb3db586465ef2a6fe1dcce010ba7d05eed",
+          "e856d45deffdd25f2d6850cb0aeb9bb3db586465ef2a6fe1dcce010ba7d05eed",
+          null
+        ]
+      ],
+      "transaction_commitment": "da0558eba3bac049511e05502e062126a40b7e40e44550f43b917ba9217c9994",
+      "txid": "e8abf658eab148d9527c9e622e54298772aa4eebbbf6d15de5e29bba3ad21193",
+      "wtxid": "d48ae7aee8d9744af5dd3447448c3bf6d012eafe3ba7a5e617af69a2583108d6"
+    },
+    "nova_ambient_context_native": true,
+    "nova_backend": "Nova Pallas/Vesta Spartan IPA CPU",
+    "nova_funding_conservation_verified": true,
+    "nova_output_values_verified": true,
+    "nova_txid_verified": true,
+    "primary_constraints": null,
+    "proof_bytes": 12576,
+    "proof_sha256": "88c5da9edc99d5955b7a5fafdfd162c8719a76738ad8de170b2563c77efc21fc",
+    "routed_netting": {
+      "allocation_sats": [
+        55000000,
+        44000000,
+        35000000,
+        55000000,
+        27498500,
+        27498500,
+        330
+      ],
+      "changed_allocation_refused": true,
+      "changed_snapshot_refused": true,
+      "profile": "shz/mnr04/route-conservation/v1",
+      "route_conservation_verified": true,
+      "snapshot_sha256": "7e286ea80bc5009c32bd00a6b0121d51c4e368a6cb6fbf0c041e2e79f284b1e6",
+      "successor_state_sha256": "3ea1d4b5b5c7288d338982144066af90569ac658911ed9de1f310064a8cf5f6e"
+    },
+    "secondary_constraints": null,
+    "setup_seconds": null,
+    "verification_seconds": 2.350958865,
+    "vk_sha256": "e92e08dafafd66304914f136910fba8942ad8b16faadf9973c85c064962e606d",
+    "wrong_txid_claim_refused": true
+  },
+  "prover_measurements": {
+    "primary_constraints": 197591,
+    "secondary_constraints": 10349,
+    "setup_seconds": 27.616437452,
+    "folding_seconds": 0.441261605,
+    "compression_seconds": 71.929772141
+  },
+  "prior_mnr03_compressed_proof_bytes": 12376,
+  "phases": {
+    "core": {
+      "elapsed_seconds": 21.85,
+      "user_cpu_seconds": 1.7,
+      "system_cpu_seconds": 1.64,
+      "peak_rss_kib": 61212
+    },
+    "key": {
+      "elapsed_seconds": 27.65,
+      "user_cpu_seconds": 26.71,
+      "system_cpu_seconds": 0.78,
+      "peak_rss_kib": 308564
+    },
+    "prove": {
+      "elapsed_seconds": 110.1,
+      "user_cpu_seconds": 106.52,
+      "system_cpu_seconds": 3.3,
+      "peak_rss_kib": 604632
+    },
+    "verify": {
+      "elapsed_seconds": 7.9,
+      "user_cpu_seconds": 7.57,
+      "system_cpu_seconds": 0.33,
+      "peak_rss_kib": 250712
+    }
+  },
+  "cuda_used_for_nova": false,
+  "rayon_threads": 1,
+  "legacy_a100_compatibility": {
+    "vk_sha256": "7fc71a8518976ede1ad97855ee164e63356e4ef11cda43565e1177fa5f082db1",
+    "proof_sha256": "7ea6d1150f4f5c467ae6b8280e0a227c71fbe482768d964efe5f81187eb8a36d",
+    "txid": "2b855bf2694a1f6bfede361666ee663f46ec5f25ff2a5630c4de5123c70fe23f",
+    "wrong_txid_refused": true
+  },
+  "legacy_key_refused_by_route_profile": true,
+  "source_commit": "a71f82ec00086a47093a2ac5d3400cab14ad21c8",
+  "core_binary_sha256": "986e63b3c8770f08d0059820ad3dd085d1ab9e1bea23946c243f858a06888a08",
+  "core_archive_sha256": "7fec1ec0918287c3f5a7f48c146df57d08bc2a4bf654296e636a6dd351a97edd",
+  "rustc": "1.99.1 (58cf8f9c3 2026-10-13)"
+}

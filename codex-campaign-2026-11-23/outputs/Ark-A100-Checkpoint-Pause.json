@@ -1,0 +1,44 @@
+{
+  "schema": "ark-a100-checkpoint-pause-observation/v1",
+  "status": "vm_activity_observed_while_awaiting_checkpoint",
+  "network": "regtest",
+  "height": 679,
+  "vtxos": 4,
+  "policy_sats": 79440,
+  "vm_id": 1178271,
+  "provider_vm_status": "ACTIVE",
+  "provider_sampled_at_utc": "2026-11-23T20:42:55.6085082Z",
+  "provider_metrics_source": "https://docs.hyperstack.cloud/docs/api-reference/get-vm-metrics/",
+  "earlier_comparison": {
+    "started_at": "2026-11-24T03:45:00+08:00",
+    "ended_at": "2026-11-24T04:00:00+08:00",
+    "duration_seconds": 900,
+    "vm_cpu_nanoseconds": 305500000000,
+    "vm_disk_read_bytes": 20974481408,
+    "vm_disk_write_bytes": 1544192,
+    "vm_memory_reported_at_end_mb": 4859.73828125
+  },
+  "checkpoint_pause": {
+    "started_at": "2026-11-24T04:25:00+08:00",
+    "ended_at": "2026-11-24T04:40:00+08:00",
+    "duration_seconds": 900,
+    "vm_cpu_nanoseconds": 87650000000,
+    "vm_disk_read_bytes": 4311101440,
+    "vm_disk_write_bytes": 1544192,
+    "vm_memory_reported_at_end_mb": 4897.5390625
+  },
+  "last_checkpoint_at": "2026-11-24T04:07:32+08:00",
+  "last_checkpoint_event": "replay",
+  "prover_heartbeat_counts": {
+    "new_core": 123,
+    "new_recursion": 1353,
+    "replayed_core": 4378,
+    "replayed_recursion": 2693
+  },
+  "private_recovery_bucket_bytes": 17580647002,
+  "private_recovery_bucket_objects": 3856,
+  "metric_scope": "Hyperstack standard VM-wide cumulative counters. The samples do not isolate the SP1 process.",
+  "gpu_compute_utilization_measured": false,
+  "root_cause_confirmed": false,
+  "full_proof_verified": false
+}

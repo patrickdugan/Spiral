@@ -1,0 +1,556 @@
+{
+  "release": "https://github.com/patrickdugan/zk-rusto-no-bitcoino/releases/tag/ark-679-checkpoints-delta-20261123",
+  "release_id": 455658731,
+  "assets": [
+    {
+      "name": "ark-679-delta-001.tar",
+      "bytes": 133908480,
+      "sha256": "b81d0f74537438c38c12d0b40ca6f67fdd1e2fb287d55d5b0d172da7cfd33bc4"
+    },
+    {
+      "name": "ark-679-delta-002.tar",
+      "bytes": 133908480,
+      "sha256": "7557109e392ff39c56a14d25fb640b13cf7a2d15d1735313b8391b73c7dd71b2"
+    },
+    {
+      "name": "ark-679-delta-003.tar",
+      "bytes": 133908480,
+      "sha256": "8c85c2e6f5c6e1d0e3e75a92621127642d1bbc0daf6fed03d9e1fc6cfbf71aa4"
+    },
+    {
+      "name": "ark-679-delta-004.tar",
+      "bytes": 133908480,
+      "sha256": "b83eebaba6e3a1d90f6178699fa32186565d67240a8ab5dbdafdffe268198c65"
+    },
+    {
+      "name": "ark-679-delta-005.tar",
+      "bytes": 133908480,
+      "sha256": "094aa2bf919ccba385eca995de42bd5ee3f043ad90e8cf0ac2a9fce9df8cab6a"
+    },
+    {
+      "name": "ark-679-delta-006.tar",
+      "bytes": 133908480,
+      "sha256": "ba8a1980ca45c443e0bef970a8e9e5f2da130c101c11aebf2ca7b9079b5afb35"
+    },
+    {
+      "name": "ark-679-delta-007.tar",
+      "bytes": 133918720,
+      "sha256": "1a71765d08ead2ba68c180630df5eb28dc384de3997aec724fe88cbbe055ef75"
+    },
+    {
+      "name": "ark-679-delta-008.tar",
+      "bytes": 133908480,
+      "sha256": "58d41defaf6c45260c557efd649b2577a0b0eef4912318e8aff1a867695b16aa"
+    },
+    {
+      "name": "ark-679-delta-009.tar",
+      "bytes": 133908480,
+      "sha256": "044109a74c72cc1c1d75260757bc1f5c9b02c7e9b60390f531a89a0803ca130e"
+    },
+    {
+      "name": "ark-679-delta-010.tar",
+      "bytes": 133918720,
+      "sha256": "0588b1a31e35cf2c8e2a2ca40bb9a173f0b2760ef71f0e444222d0e4784a3a0b"
+    },
+    {
+      "name": "ark-679-delta-011.tar",
+      "bytes": 133908480,
+      "sha256": "14b5def024379e284aff978aab0ffe164a6b1e33fb6a36531f0a8ec037e90f63"
+    },
+    {
+      "name": "ark-679-delta-012.tar",
+      "bytes": 133908480,
+      "sha256": "db4f2f5c1dea988f6969b61f54fefb976f2047b1c95fb2ed008b6bac075f3ea3"
+    },
+    {
+      "name": "ark-679-delta-013.tar",
+      "bytes": 133918720,
+      "sha256": "b7ea7fbcc3bac18124814e3767ac7bc33ece905280f3b18c7af31be86020803a"
+    },
+    {
+      "name": "ark-679-delta-014.tar",
+      "bytes": 133908480,
+      "sha256": "cd4ce4ce896316ad4f4b963446b19011312d804ca585cd9a8f41afbd59deef57"
+    },
+    {
+      "name": "ark-679-delta-015.tar",
+      "bytes": 133918720,
+      "sha256": "21923c8b6849b067f0249ea1b55242e38f22fdefa85d52397b46bca057d0f69d"
+    },
+    {
+      "name": "ark-679-delta-016.tar",
+      "bytes": 133908480,
+      "sha256": "16e2665d32cfbc0361a22d2ea62bda155663fbcc499440b05144af5e13311194"
+    },
+    {
+      "name": "ark-679-delta-017.tar",
+      "bytes": 133908480,
+      "sha256": "dd900c92cd8ad97020d6e378220f75b1971c36df957f0b9e15834e5cd81ae481"
+    },
+    {
+      "name": "ark-679-delta-018.tar",
+      "bytes": 133908480,
+      "sha256": "ba47b5c8d82fb60499785152c903f8ecfd02e1083316948d44164848f818fc22"
+    },
+    {
+      "name": "ark-679-delta-019.tar",
+      "bytes": 133847040,
+      "sha256": "66e52e74350c66347f484a77fa2fa9f686c1831cb6bfcb26f52efa5f652d3fb0"
+    },
+    {
+      "name": "ark-679-delta-020.tar",
+      "bytes": 133816320,
+      "sha256": "26d1d6e0065a0750c9ce5a105d7055ce6f82b7065a7f39425279d4f670053d76"
+    },
+    {
+      "name": "ark-679-delta-021.tar",
+      "bytes": 133816320,
+      "sha256": "a1002faf737759aac05d8ef60cc62e6a1d2e0798fc45fd4ebfd99188c20c6480"
+    },
+    {
+      "name": "ark-679-delta-022.tar",
+      "bytes": 133816320,
+      "sha256": "ccc0f919ea1beca7559aece8e3e9685492390b0fa1061bbf1cee9474e3e4abef"
+    },
+    {
+      "name": "ark-679-delta-023.tar",
+      "bytes": 133816320,
+      "sha256": "d6fe31e0cb332337cfe4c7a4c1d13608fc028f9aa2fc3777f62547e8e8bf63ce"
+    },
+    {
+      "name": "ark-679-delta-024.tar",
+      "bytes": 133816320,
+      "sha256": "fb498e9cf61301bffeeac0292e74b9d3ce0358f52f1b6a6b9ee4d8c6d05af96f"
+    },
+    {
+      "name": "ark-679-delta-025.tar",
+      "bytes": 133816320,
+      "sha256": "aba9b13b92bdeb83fa9d21e4ab06c3c7b75eda0c0dd4d16f824ac0e9d6631da3"
+    },
+    {
+      "name": "ark-679-delta-026.tar",
+      "bytes": 133816320,
+      "sha256": "00d9bc1f6637f56317e871a29c1d9a0cdd6e8a44a363b8cf3dfab2183b5063ca"
+    },
+    {
+      "name": "ark-679-delta-027.tar",
+      "bytes": 133816320,
+      "sha256": "f2a2358b068dfe889220dc4bed0b68d32544e699583e716cef78a128ed369553"
+    },
+    {
+      "name": "ark-679-delta-028.tar",
+      "bytes": 133816320,
+      "sha256": "66866188c5ba81951e963af540a117061b931051c5f2e72e07ae18f999bd3c3b"
+    },
+    {
+      "name": "ark-679-delta-029.tar",
+      "bytes": 133816320,
+      "sha256": "691b2e1fef00edbf0d2cac4459faedc90206a83aaf5bfb1ef4d9740e794e3748"
+    },
+    {
+      "name": "ark-679-delta-030.tar",
+      "bytes": 133816320,
+      "sha256": "a73a4bcf2b1f152f966979eb30ad7c2511322ed5b0aa9e5e0c08dcc9bbf7b99b"
+    },
+    {
+      "name": "ark-679-delta-031.tar",
+      "bytes": 133816320,
+      "sha256": "3530edf63a533acc04605127d5cf74a50741a9c5780c6398c8ac0248979c208a"
+    },
+    {
+      "name": "ark-679-delta-032.tar",
+      "bytes": 133816320,
+      "sha256": "1bf7c7ee390bed187228166a9bab3a5f4a627b27f2a5d7ef677c22ffc3d3678c"
+    },
+    {
+      "name": "ark-679-delta-033.tar",
+      "bytes": 133816320,
+      "sha256": "6fde96311101716ef89706936bc650f3119b508fb5944fdff362bef8b89dbd90"
+    },
+    {
+      "name": "ark-679-delta-034.tar",
+      "bytes": 133816320,
+      "sha256": "a509ffa94c65de39e1435d85e6e582257bfd37a791b04a9251bde44dbc1a0f26"
+    },
+    {
+      "name": "ark-679-delta-035.tar",
+      "bytes": 133816320,
+      "sha256": "983f1c454d9d73810ae9b6174f1144227384dfe93bf369db9225ddb317bd974e"
+    },
+    {
+      "name": "ark-679-delta-036.tar",
+      "bytes": 133816320,
+      "sha256": "d6197e8fcb6ff6d234b9a3be2381ac676a75ea3bd0f24545ad1209e042ec797d"
+    },
+    {
+      "name": "ark-679-delta-037.tar",
+      "bytes": 133816320,
+      "sha256": "ca26aeac163591103570cae3965c8649d44115d2e1bc3f384a9e5c3ee31a861d"
+    },
+    {
+      "name": "ark-679-delta-038.tar",
+      "bytes": 133816320,
+      "sha256": "c2b4fdd70bbcf13fb046c514e8eb45b6d26ca97dbc035f62732645c80ebd5178"
+    },
+    {
+      "name": "ark-679-delta-039.tar",
+      "bytes": 133816320,
+      "sha256": "5483c298d8f4d58105bd8aa3634ffc280b23dee49c8aebb3a305a780c0111f16"
+    },
+    {
+      "name": "ark-679-delta-040.tar",
+      "bytes": 133816320,
+      "sha256": "0ed28c40393886836791bbbd2f45dc3e3e9d8ce965be7050111a25f3381f5cad"
+    },
+    {
+      "name": "ark-679-delta-041.tar",
+      "bytes": 133816320,
+      "sha256": "de7dc330965307cec909286c8b17395b2ac5fb2858c4ec2c9eee6fb1a72d76fb"
+    },
+    {
+      "name": "ark-679-delta-042.tar",
+      "bytes": 133816320,
+      "sha256": "eaffef1773d3ba8f0d3ddb045a78213d8e4ef125e3a77de5493b73d2c3e554bb"
+    },
+    {
+      "name": "ark-679-delta-043.tar",
+      "bytes": 133816320,
+      "sha256": "f3ee3540f0dabd0869b0be48eda2936d13dcf221719334c4815e719d4f7d0c17"
+    },
+    {
+      "name": "ark-679-delta-044.tar",
+      "bytes": 133816320,
+      "sha256": "e606685a81c5f626a0f0f5fed2872bda52021504a22a582a7515eef89a996ce4"
+    },
+    {
+      "name": "ark-679-delta-045.tar",
+      "bytes": 133816320,
+      "sha256": "615edcc67bc3bad7a196455dd33c18d6783f5fc2537349d8f3d94e76cdfa4477"
+    },
+    {
+      "name": "ark-679-delta-046.tar",
+      "bytes": 133816320,
+      "sha256": "cedaaf3d7fec34fb3c86462727687c2b7dbf29e1ea8ed38588c01c6a4e4de221"
+    },
+    {
+      "name": "ark-679-delta-047.tar",
+      "bytes": 133816320,
+      "sha256": "1ff59985ef08f642674f018977fa77bb62af9d085cfa363ff7711268ec3fb1be"
+    },
+    {
+      "name": "ark-679-delta-048.tar",
+      "bytes": 133816320,
+      "sha256": "94d0a9456204f95cbc7b4e597afa0d82cea20bfc8b6997699fdcd65ac46d2784"
+    },
+    {
+      "name": "ark-679-delta-049.tar",
+      "bytes": 133816320,
+      "sha256": "6b05374637b68a1b1c36aba0065db098fb3120739654149c7fd904fa4c5613ea"
+    },
+    {
+      "name": "ark-679-delta-050.tar",
+      "bytes": 133816320,
+      "sha256": "c6cef3cd216f53d2704218c99330a1fdfc1e0da8e6bf0eb4fa733a5c4c92e74a"
+    },
+    {
+      "name": "ark-679-delta-051.tar",
+      "bytes": 133816320,
+      "sha256": "be286a58f8992fcb63232917c67230d39e6121cf9c884a4a2d2954886f3f9b2b"
+    },
+    {
+      "name": "ark-679-delta-052.tar",
+      "bytes": 133816320,
+      "sha256": "a28784a844e019ccce6bc1b2b7b37820d9a5884ecb2557e4eb631307e5372711"
+    },
+    {
+      "name": "ark-679-delta-053.tar",
+      "bytes": 133816320,
+      "sha256": "ef6a9510abf76b1c1eb10b2cb40cc25868246e3ce20f2d87b79bc0f790a155c8"
+    },
+    {
+      "name": "ark-679-delta-054.tar",
+      "bytes": 133816320,
+      "sha256": "d5fe36100d2159c15605e51a4e7fc1b6b54543ed61d7fafd1ae3eb16670dcdba"
+    },
+    {
+      "name": "ark-679-delta-055.tar",
+      "bytes": 133816320,
+      "sha256": "039c99ae1e8092cb339942adfd659db279ac600714480bf18ff485d40f5e8c5a"
+    },
+    {
+      "name": "ark-679-delta-056.tar",
+      "bytes": 133816320,
+      "sha256": "9234e093776eddfb43b45d3b8fe109c856fe964d9b3f3342fa6ad7cebf9fd0be"
+    },
+    {
+      "name": "ark-679-delta-057.tar",
+      "bytes": 133816320,
+      "sha256": "0814ae300048b4f5c3053dfad1d97f59abd487e7cf8ac53199d079655d9a95e1"
+    },
+    {
+      "name": "ark-679-delta-058.tar",
+      "bytes": 133816320,
+      "sha256": "c9fef878cb441af121594b473a467e763e26e38dd8a2976b81cfc381a0d9fede"
+    },
+    {
+      "name": "ark-679-delta-059.tar",
+      "bytes": 133816320,
+      "sha256": "6135dee20ee493df7b110e680df5ea486cba780ea72870d21527e55d4a4b6f95"
+    },
+    {
+      "name": "ark-679-delta-060.tar",
+      "bytes": 133816320,
+      "sha256": "2cae5759da56041748e291ac73dc9eadfd8ec0128dcd7f58a893ac8e38e435db"
+    },
+    {
+      "name": "ark-679-delta-061.tar",
+      "bytes": 133816320,
+      "sha256": "33b47ac26a1081fa1ba40af720f4846be07909bca4351613006cf19328cbd1b4"
+    },
+    {
+      "name": "ark-679-delta-062.tar",
+      "bytes": 133816320,
+      "sha256": "706cd9737248a3df012eeaa8a89103c723bb5eb92cece29edc6d933266fcf004"
+    },
+    {
+      "name": "ark-679-delta-063.tar",
+      "bytes": 133816320,
+      "sha256": "3bcbfce83c9904f5d228ce8a18f2fe2383b1b00c90773968070a7048e6e213de"
+    },
+    {
+      "name": "ark-679-delta-064.tar",
+      "bytes": 133816320,
+      "sha256": "d1a24a3fd0f340cce52f9edc590cbea2133c09946f91d3ba2795cd094e930fcb"
+    },
+    {
+      "name": "ark-679-delta-065.tar",
+      "bytes": 133816320,
+      "sha256": "77ef072ca4a583317850f20337aa99ec677ffa01c01b220f771c55f27530e785"
+    },
+    {
+      "name": "ark-679-delta-066.tar",
+      "bytes": 133816320,
+      "sha256": "d61d36187e84eb798e2ac10c74da7773c0416acb92dee1986928f0819706345b"
+    },
+    {
+      "name": "ark-679-delta-067.tar",
+      "bytes": 133816320,
+      "sha256": "97cf4796dfe0c4003f6e374580e6e189a72809424eac411f03df91de9860d97a"
+    },
+    {
+      "name": "ark-679-delta-068.tar",
+      "bytes": 133816320,
+      "sha256": "10a6b0efa0438440ae8b24df82a49911046be808e402174e0bef0adf93adb46c"
+    },
+    {
+      "name": "ark-679-delta-069.tar",
+      "bytes": 133816320,
+      "sha256": "8a9286de9fe0853f25c57a10148f28830c9e680e33c5da06a2416241d5e9cb90"
+    },
+    {
+      "name": "ark-679-delta-070.tar",
+      "bytes": 133816320,
+      "sha256": "31966877890e90a59768b80967efd28feda6f574f2c7c04935c8c2086deb2a5f"
+    },
+    {
+      "name": "ark-679-delta-071.tar",
+      "bytes": 133816320,
+      "sha256": "168294f5211862bdfaea8709fd181eb97de652f78d5d44769d5231a8c0d0068e"
+    },
+    {
+      "name": "ark-679-delta-072.tar",
+      "bytes": 133816320,
+      "sha256": "6da0c1c8e502ea5d97fd1712a64bba288ee1e2fdad1c0bc66c97b707ba0d54ad"
+    },
+    {
+      "name": "ark-679-delta-073.tar",
+      "bytes": 133816320,
+      "sha256": "52fdc06aad8eb6980edc1f331324779edd9ee337b65d7f74661191ad2a6d4b4d"
+    },
+    {
+      "name": "ark-679-delta-074.tar",
+      "bytes": 133816320,
+      "sha256": "763f545409570641a399089bfe24c72e4e53b58ada53356c90383f0693304074"
+    },
+    {
+      "name": "ark-679-delta-075.tar",
+      "bytes": 133816320,
+      "sha256": "ef96855481d4f02e31572347bddd17906077e0823b2dbf5e9ab41bb104df75ea"
+    },
+    {
+      "name": "ark-679-delta-076.tar",
+      "bytes": 133816320,
+      "sha256": "662a48ef1c1f9d5ee10902c9b25d2651b795c93d2028d179d6497c08355432fc"
+    },
+    {
+      "name": "ark-679-delta-077.tar",
+      "bytes": 133816320,
+      "sha256": "5e62efa3de1cbe0b3da97383f3b8d88eda3dc76d71f38882ed25cb6c86ad260d"
+    },
+    {
+      "name": "ark-679-delta-078.tar",
+      "bytes": 133816320,
+      "sha256": "083a9c5911e6e58f306e17ce88f2b8e5fb33fad4e588fec8a4d19325834bdf0a"
+    },
+    {
+      "name": "ark-679-delta-079.tar",
+      "bytes": 133816320,
+      "sha256": "f8a60cb832550db7872f1ac28533c8b81638b7b9daa0a2610d839abb5e9ad324"
+    },
+    {
+      "name": "ark-679-delta-080.tar",
+      "bytes": 133816320,
+      "sha256": "88cc56bfd2281e29283defb1780ad52916c0eedba5637bb5c47ab959eccf73de"
+    },
+    {
+      "name": "ark-679-delta-081.tar",
+      "bytes": 133816320,
+      "sha256": "8a23e9575e8d2f0bce5fe913d174f02048ff05157dd822aedb8004036d07d164"
+    },
+    {
+      "name": "ark-679-delta-082.tar",
+      "bytes": 133816320,
+      "sha256": "0d3fde18028b2ff1088fd8bb195204c4084bdb5c605b154ff53e4f43178ed00c"
+    },
+    {
+      "name": "ark-679-delta-083.tar",
+      "bytes": 133816320,
+      "sha256": "05ec85f7a5be94b0c4e0a36b637d00a97836425b58e2aeb7607184747a9a0cbb"
+    },
+    {
+      "name": "ark-679-delta-084.tar",
+      "bytes": 133816320,
+      "sha256": "8e72e782a95f247442b79e0a735f1317d3bd901066a7e4311ec7580eb9b0239c"
+    },
+    {
+      "name": "ark-679-delta-085.tar",
+      "bytes": 133816320,
+      "sha256": "f8e7d22da0ffc000eba7c0b4a0aabc71411789454fcd912dffffe7ac1b19b974"
+    },
+    {
+      "name": "ark-679-delta-086.tar",
+      "bytes": 133816320,
+      "sha256": "f8d67dcf6e03f98f3bc11c424c1da627d071723a446302489f037635eeaeb34f"
+    },
+    {
+      "name": "ark-679-delta-087.tar",
+      "bytes": 133816320,
+      "sha256": "3fe7d44dec688e1bb0770fa02f789c6465deac2c8acd363d30e519ece498c5e7"
+    },
+    {
+      "name": "ark-679-delta-088.tar",
+      "bytes": 133816320,
+      "sha256": "76f77a35dda2c7521d8f1f179687ce71b049f67a058f67761e345c7ecef4f94f"
+    },
+    {
+      "name": "ark-679-delta-089.tar",
+      "bytes": 133816320,
+      "sha256": "f7c0cba4517efc3bc9865dbede1c4e5a8a0ab8556d6786ed3ccf86222da7c434"
+    },
+    {
+      "name": "ark-679-delta-090.tar",
+      "bytes": 133816320,
+      "sha256": "38b47af9b262f58d76aafcc8b3cb60c1b74e323442769497bfcdb9d6ad578680"
+    },
+    {
+      "name": "ark-679-delta-091.tar",
+      "bytes": 133816320,
+      "sha256": "593c8cc8e06d6c6d84f05155128c0d324548c72c3e3a081531f917d5f91fb887"
+    },
+    {
+      "name": "ark-679-delta-092.tar",
+      "bytes": 133816320,
+      "sha256": "ecb28a50be35c6d309fc8ad72ad46b9c8bbf2b6f9e1f4c2dfcad285ae8d4f8c6"
+    },
+    {
+      "name": "ark-679-delta-093.tar",
+      "bytes": 133816320,
+      "sha256": "ec4a5a69a52d1c7d37a2b2fea6002def2f340ceafb87949f1fb4cd2b1385368c"
+    },
+    {
+      "name": "ark-679-delta-094.tar",
+      "bytes": 133816320,
+      "sha256": "1896ea210294309e2c7d5bb3001fd6936e145b679fa2a839c05c759b35093009"
+    },
+    {
+      "name": "ark-679-delta-095.tar",
+      "bytes": 133816320,
+      "sha256": "9707e6f9ae0615abefcca0ec59558984a9289a588b08d04cada19f0f61125f75"
+    },
+    {
+      "name": "ark-679-delta-096.tar",
+      "bytes": 133816320,
+      "sha256": "237bb421ce083105157bbecc9f249be6e4b935ef019c8a30252d58dd3d7db2cf"
+    },
+    {
+      "name": "ark-679-delta-097.tar",
+      "bytes": 133816320,
+      "sha256": "a79353a246115c730f284053a735d83d806c432d4a6173bce38e89e0a25f48ee"
+    },
+    {
+      "name": "ark-679-delta-098.tar",
+      "bytes": 133816320,
+      "sha256": "e8694224522b7ed0d69f466bda32242475bddb4025c8d5d3396bf258097ca75e"
+    },
+    {
+      "name": "ark-679-delta-099.tar",
+      "bytes": 133816320,
+      "sha256": "956a75e5cf27b894959127012b8f4be8c337bb0f46c7ed1388387a40e9ae97bd"
+    },
+    {
+      "name": "ark-679-delta-100.tar",
+      "bytes": 133816320,
+      "sha256": "669c3a39f2c26a3e89fc6239ec14d7226f193e9ca6fc66160134a15c5daf99d0"
+    },
+    {
+      "name": "ark-679-delta-101.tar",
+      "bytes": 133816320,
+      "sha256": "f43dbb47de9c7807cb9b77cb64ba55d99c0d8101c380158b827639e84e800e9b"
+    },
+    {
+      "name": "ark-679-delta-102.tar",
+      "bytes": 133816320,
+      "sha256": "ae21d286389fc4e001d944897da6710ce5184bda0b17460af1f75bdddcc64434"
+    },
+    {
+      "name": "ark-679-delta-103.tar",
+      "bytes": 133816320,
+      "sha256": "a0bb7287edf84e3ac5d5f319ca53433c3d8629fddb6cc7bb8002d45097616b57"
+    },
+    {
+      "name": "ark-679-delta-104.tar",
+      "bytes": 133816320,
+      "sha256": "5c81248e1be3e433023894bb0739c090c2995622a48fc7137cfadf9ff0abdbd3"
+    },
+    {
+      "name": "ark-679-delta-105.tar",
+      "bytes": 133816320,
+      "sha256": "77c0aaa19427367a24cafb0deab4c8ba9a378d69e99366db2517e1b7f42aebd0"
+    },
+    {
+      "name": "ark-679-delta-106.tar",
+      "bytes": 133816320,
+      "sha256": "9396ad55a7541cbbb63bf53f4823cc49c058b19a157fa05bae2a20c02a9ae6ba"
+    },
+    {
+      "name": "ark-679-delta-107.tar",
+      "bytes": 115978240,
+      "sha256": "f71af0c2b4669ca3811c24a177a713e3efd5d866016f91ba9c1b61c8eb70875f"
+    },
+    {
+      "name": "manifest.json",
+      "bytes": 18554,
+      "sha256": "97594c5db32255f3192a67cd384041a663bbc023dec6af99c50b8558e56d80d4"
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 9523,
+      "sha256": "5a95506b95bd39d1fcca3c0b05ed7cae1bc370852083d1bc89b96672a819b521"
+    }
+  ],
+  "scope": {
+    "shard": 3646,
+    "reduce": 15926
+  },
+  "archive_bytes": 14302238720
+}

@@ -1,0 +1,45 @@
+{
+  "status": "confirmed_regtest_holder_reserve_redemption",
+  "network": "regtest",
+  "mint_offline": true,
+  "cashu_claim_commitment": "fe41bbfca2f3451882e594b9c7ee134a34b04327b3b3472d53be5b0dbcedea8c",
+  "reserve": {
+    "txid": "92e9a98a0a86da9e3ed808b19b6c297d92699d4bbee94714775ffef064b4f71e",
+    "vout": 0
+  },
+  "funding_fee_sat": null,
+  "timeout_blocks": 6,
+  "confirmed_spend": "5c21293903778808039c99ca3b0e9df553d09a6b52e40fc423f69043cdd492a5",
+  "payout_sat": 23750,
+  "payout_fee_sat": 250,
+  "chain_evidence": {
+    "reserve_height": 104,
+    "reserve_block": "00a6ea77f2d40ea182ffd58af3ee69accd051bfa9de38076a65cc7d77367e08d",
+    "reserve_script": "0020d98d033c150aa26fc1a039a7f320b00671ddf10cc49faf9e74e20727543c5c24",
+    "reserve_amount_sat": 24000,
+    "spend_height": 110,
+    "spend_block": "588659f3bf58df0eb6ad03d6ccd18ebbd98c9d303abf621b9b356bba7969c45a",
+    "spend_wtxid": "bb81ca31fdb8dfc83f6c0fb4182d0ed1adf7d6de711580f91d0ba63a953b0f91",
+    "payout_script": "00149dbe9c6f942c1d253e0f4d3c92cdf7f41219d7cd"
+  },
+  "early_spend_refused": true,
+  "cooperative_conflict_refused": true,
+  "holder_cli_confirmed": true,
+  "source_melt": {
+    "outpoint": "92e9a98a0a86da9e3ed808b19b6c297d92699d4bbee94714775ffef064b4f71e:0",
+    "amount_sats": 24000,
+    "address": "bcrt1qmxxsx0q4p23xlsdq8xnlxg9sqecamugvcj06l8n5ugrjw4putsjqrwefcm",
+    "quote_id": "01a209e3-2797-76ac-9d61-a98e807d7ff1",
+    "source_token_sha256": "d1f0f3cb6d29ae89bec8f41b451a5f50b38a0ef85ccc8a08d112be77e77d531a",
+    "change_sats": 695,
+    "melt_fee_sats": 305,
+    "source_proofs_spent": 6,
+    "original_melt_replay_code": 11001
+  },
+  "evidence_level": "observed-cdk-and-bitcoin-core-regtest",
+  "cashu_issued_sat": 25000,
+  "cdk_version": "0.18.3",
+  "wallet_sdk_version": "4.13.1",
+  "shinigami_verified_for_this_run": false,
+  "bitvm3_verified_for_this_run": false
+}

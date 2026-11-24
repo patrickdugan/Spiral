@@ -1,0 +1,39 @@
+{
+  "schema": "ark-post-compression-preflight/v1",
+  "status": "post_compression_preflight_passed",
+  "network": "regtest",
+  "height": 679,
+  "vtxos": 4,
+  "policy_sats": 79440,
+  "checked_at_utc": "2026-11-23T20:36:48Z",
+  "pinned_tool_sha256": {
+    "sdk_host": "28c3bb3082bd4d4d20f27647bd3c08046eb9822b295138bfccd03c8eac2ca88c",
+    "m13_wrapper": "f3e0608f83f55db8327d371fd90753c9fb450e49682c5ae8f41ce249c784eb2f",
+    "guest_elf": "7ce5812fd76c3b31a5c3c24d117120b02839175636a68586e0fe97d370dcba5d",
+    "management": "0b436a6c5b2f814bf7d9b35f810217363dd4488dcc70b1cd5befda2dd25a27fe",
+    "m13_verifier": "dd25029a7fb8e177680cb9057c74b693c373dd62ed171ff5ef84756749614d0b",
+    "m14-claim": "6b8454cc31731cdbc402f69eadb703a855a62e7723c30887c330b909644cbd9d",
+    "ark-m14-negative-input": "0d33e9d0df5bccb7cca40d69c4ad3376af6850a287149db45707637c16a9f80c"
+  },
+  "expected_public_sha256": "dd352842409878b3da279ce254d39ff95e4425ef5c256fdbbf6426acffa88f41",
+  "expected_public_bytes": 1616,
+  "m14_manifest_file_sha256": "b970760ed14fe4f1f7d2f277c8aef478b7ad6bce470470bab269ce1122ff5f0d",
+  "m14_build_report_sha256": "065063f723e5045b3a8fd79898fa51cc22e8f31b3fe88cff36e5cdf2baa1a143",
+  "queued_scripts_bash_syntax_passed": true,
+  "startup_malformed_input_refusals": {
+    "sdk": {
+      "return_code": 1,
+      "error": "Error: Io(Kind(UnexpectedEof))",
+      "elapsed_seconds": 14.827
+    },
+    "m13": {
+      "return_code": 1,
+      "error": "Error: io error: unexpected end of file",
+      "elapsed_seconds": 0.013
+    }
+  },
+  "windows_d_free_bytes": 50634063872,
+  "wsl_native_and_windows_d_passed_8_gib_floor": true,
+  "private_release_bound": false,
+  "proof_verified": false
+}

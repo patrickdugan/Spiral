@@ -1,0 +1,1 @@
+{"schema": "rbzk/hyperstack-benchmark/v1", "vm_id": 1177106, "stage": "verified", "active": false, "sampled_at_unix": 1795420156, "started_at_unix": 1795419710, "rate_usd_per_hour": 1.3567204300000002, "logical_cpus": 28, "host_ram_gib": 118.01, "host_ram_used_gib": 2.7, "a100_confirmed": true, "threads": 16, "prove_seconds": 205.479, "peak_prove_ram_gib": 43.31}

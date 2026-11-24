@@ -1,0 +1,11 @@
+{
+  "status": "copy_bytes_verified",
+  "source": "/mnt/c/Users/patri/Documents/Codex/2026-11-15/new-chat/work/ark-proof-cache-20261122/prover-transient",
+  "destination": "/var/tmp/ark-asp-full-20261117/prover-native-20261122",
+  "original_retained": true,
+  "files": 20181,
+  "bytes": 15705750236,
+  "run_config_sha256": "a800d7026670d6d2a1240ea6e60d1f8171b2216ffe103b8e826cd36693ce3238",
+  "manifest_sha256": "ed3ad3f1d6ba736ac317c2501b3fcb7707f02376c1744392f81c931b1b6400c1",
+  "cryptographic_proof_verified": false
+}

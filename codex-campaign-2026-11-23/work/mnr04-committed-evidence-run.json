@@ -1,0 +1,87 @@
+{
+  "status": "verified",
+  "artifacts": [
+    {
+      "artifact": "a100",
+      "proof_bytes": 12224,
+      "proof_sha256": "7ea6d1150f4f5c467ae6b8280e0a227c71fbe482768d964efe5f81187eb8a36d",
+      "core_archive_sha256": "55d3d9382d1bfe7d55c5c1f98fff0f4d9ba4769ab2239104b3fbdf765854f723",
+      "vk_sha256": "7fc71a8518976ede1ad97855ee164e63356e4ef11cda43565e1177fa5f082db1",
+      "txid": "2b855bf2694a1f6bfede361666ee663f46ec5f25ff2a5630c4de5123c70fe23f",
+      "wtxid": "363e11e43e1e4a9217c1870a32192d8f4a955c26fd704524c8084bfb34a4c869",
+      "network": "regtest",
+      "core_observation": "recorded-regtest-confirmation",
+      "routed_netting_verified": false,
+      "signed_origination_verified_natively": false
+    },
+    {
+      "artifact": "historical-testnet4",
+      "proof_bytes": 12224,
+      "proof_sha256": "707df04408ecf6ad176a3919503c644a1c40d32f73533c13263a46eed364674a",
+      "core_archive_sha256": "3692da46db3b59a92846454e78e6f15da6bf0ab4056c83f5bbf660438bfad833",
+      "vk_sha256": "7fc71a8518976ede1ad97855ee164e63356e4ef11cda43565e1177fa5f082db1",
+      "txid": "ca258b44b2700a493360512bc5d6f7f4640ed794edd90ed6d3560d61af8470c1",
+      "wtxid": "3ffb76424476f676055bd9e549cf6759196528cfcd51e761ee7f37132db847cd",
+      "network": "testnet4",
+      "core_observation": "historical-mempool",
+      "routed_netting_verified": false,
+      "signed_origination_verified_natively": false
+    },
+    {
+      "artifact": "local-regtest",
+      "proof_bytes": 12224,
+      "proof_sha256": "acd66b0b26eb43fab057833989f77b2b0009c8acc4e097c1a62460e2fc39f50e",
+      "core_archive_sha256": "308ae4f6edde9c966b87422a38578c33e9aead72896bc71f2be946ecb2d2d30b",
+      "vk_sha256": "7fc71a8518976ede1ad97855ee164e63356e4ef11cda43565e1177fa5f082db1",
+      "txid": "3f7ee56f1775602c030f33ee7dc4f8404a7560afb1d2551e91f76e74d6dfb594",
+      "wtxid": "4b3155ee8e058db7e1d947595efdd28080cf7795c4ecdd17bcb9a423700ab0cf",
+      "network": "regtest",
+      "core_observation": "recorded-regtest-confirmation",
+      "routed_netting_verified": false,
+      "signed_origination_verified_natively": false
+    },
+    {
+      "artifact": "netting-reconciled-regtest",
+      "proof_bytes": 12224,
+      "proof_sha256": "75ebb5df0d3c3f9e86ce73d4eda0616b9e27f96bc5d900f4c04556add53ede6a",
+      "core_archive_sha256": "71c99e900875b1ea91d832c0dd4d5c9741454e5634164c07f379d6e13bf84b4e",
+      "vk_sha256": "7fc71a8518976ede1ad97855ee164e63356e4ef11cda43565e1177fa5f082db1",
+      "txid": "df9a35e8228f2caf3715ef45ea45a9c7d660c98b0675a6e4a535ef9983c2a8d0",
+      "wtxid": "465ad022066ccba1dd60990f96ec3f56d6a0c6f549f94f207509ead9a0c72f14",
+      "network": "regtest",
+      "core_observation": "recorded-regtest-confirmation",
+      "routed_netting_verified": false,
+      "signed_origination_verified_natively": false
+    },
+    {
+      "artifact": "routed-regtest",
+      "proof_bytes": 12576,
+      "proof_sha256": "88c5da9edc99d5955b7a5fafdfd162c8719a76738ad8de170b2563c77efc21fc",
+      "core_archive_sha256": "7fec1ec0918287c3f5a7f48c146df57d08bc2a4bf654296e636a6dd351a97edd",
+      "vk_sha256": "e92e08dafafd66304914f136910fba8942ad8b16faadf9973c85c064962e606d",
+      "txid": "e8abf658eab148d9527c9e622e54298772aa4eebbbf6d15de5e29bba3ad21193",
+      "wtxid": "d48ae7aee8d9744af5dd3447448c3bf6d012eafe3ba7a5e617af69a2583108d6",
+      "network": "regtest",
+      "core_observation": "recorded-regtest-confirmation",
+      "routed_netting_verified": true,
+      "signed_origination_verified_natively": false
+    },
+    {
+      "artifact": "signed-regtest",
+      "proof_bytes": 12576,
+      "proof_sha256": "29cfd9556a02017f253d7be6a043210a3e51bc8cc516546b0bb43838fa9ebfa6",
+      "core_archive_sha256": "8b129c1feecd9a3769454c7fa727494b9f5d686af4e849be4afcd6a256d8bd9c",
+      "vk_sha256": "e92e08dafafd66304914f136910fba8942ad8b16faadf9973c85c064962e606d",
+      "txid": "c10fcee0db4cfd6ec6336ab01a8d22759d0e08572ecb09f0da1f53a1e021ad6a",
+      "wtxid": "71868ea6eb0ed60eef77018195e6fd7c4453b0fe7a7bea48c7041d3ebcf45910",
+      "network": "regtest",
+      "core_observation": "recorded-regtest-confirmation",
+      "routed_netting_verified": true,
+      "signed_origination_verified_natively": true
+    }
+  ],
+  "fresh_core_replay": false,
+  "signed_archive_mutations_rejected": 3,
+  "production_ready": false,
+  "bitvm3_onchain_verified": false
+}

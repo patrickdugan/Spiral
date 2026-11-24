@@ -1,0 +1,149 @@
+{
+  "schema": "proofdesk/paired-shinigami-cloud-benchmark/v1",
+  "network": "regtest",
+  "status": "issuance_and_funded_refusal_proofs_verified",
+  "worker": {
+    "provider": "Hyperstack",
+    "region": "CANADA-1",
+    "flavor": "n3-A100x1",
+    "prover_backend": "cpu",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "vcpus": 28,
+    "prover_threads": 16,
+    "rate_usd_per_hour_with_ip": 1.35672
+  },
+  "issuance": {
+    "case": "fresh_cashu_regtest",
+    "proof_sha256": "979bc9a9f0e9b24f4486b638c7e05aa05d33bc2b508b34308d89955f131a86fb",
+    "proof_bytes": 4621690,
+    "source": {
+      "ark_arguments_commit": "d84f0f494f944a963c9990b39cb9195920f8c249",
+      "ark_verification_commit": "1703e972e510a124d8007f2a2e5aa848ff21b8ad",
+      "shinigami_revision": "19cb9fab4664e8f7fc4936f018d9c59ccac5883c",
+      "wrapper_revision": "d230376de091297f73e5f61b984879e5c051c6fa",
+      "scarb_version": "2.19.6"
+    },
+    "input_pins": {
+      "bin/scarb": "b76b6a5fe53c9f5f940ea91e919238daecb86f97d2a6090c6279718ae6f649f9",
+      "bin/scarb-execute": "0942b466980bbaabe248bd8d1fa1faab4880d50753a26b5abef336dc25c5259e",
+      "bin/scarb-verify": "d6b77b191ba50edb968ecc559d3ce933293b2d040daa93d746016a7d3310ab31",
+      "bin/prove-clean": "fd2e89986a8b65d401d9af257b3040361c3544ee00fd03cad9915f076c5ba240",
+      "main.executable.json": "697615bf5f2c888b79dd36e299cef0cc2194be8003fa2e9bae2f53bb0f5e6aed",
+      "profile.json": "62670efbaaf0ba945a291e18153ca0d27a49d6c8882899cc2d7b4d4b51953ecd",
+      "testnet4-tapleaf-args.json": "e3a9a9fd876c61a409fc3a30eb008a37f161f5adb970eb7a5d48838aa24c9b07",
+      "regtest_arguments": "34eca24b7ced8ce6bacc1328e8965b057d65eacd93706d27e9232e63b1649e29"
+    },
+    "started_at": "2026-11-23T10:11:39.815313+00:00",
+    "finished_at": "2026-11-23T10:15:49.482515+00:00",
+    "phases": {
+      "execute": {
+        "exit_code": 0,
+        "elapsed_seconds": 8.493,
+        "peak_rss_kib": 1911444,
+        "user_cpu_seconds": 4.09,
+        "system_cpu_seconds": 5.57
+      },
+      "prove": {
+        "exit_code": 0,
+        "elapsed_seconds": 240.505,
+        "peak_rss_kib": 45576180,
+        "user_cpu_seconds": 1091.51,
+        "system_cpu_seconds": 200.4
+      },
+      "verify": {
+        "exit_code": 0,
+        "elapsed_seconds": 0.065,
+        "peak_rss_kib": 31032,
+        "user_cpu_seconds": 0.03,
+        "system_cpu_seconds": 0.0
+      },
+      "reject_changed_anchor_amount": {
+        "exit_code": 1,
+        "elapsed_seconds": 0.066,
+        "peak_rss_kib": 27868,
+        "user_cpu_seconds": 0.02,
+        "system_cpu_seconds": 0.0
+      },
+      "reject_changed_commitment": {
+        "exit_code": 1,
+        "elapsed_seconds": 0.035,
+        "peak_rss_kib": 27812,
+        "user_cpu_seconds": 0.02,
+        "system_cpu_seconds": 0.0
+      }
+    },
+    "amount_sats": 25000,
+    "exact_live_quote_verified": true,
+    "cdk_dleq_verified": true,
+    "single_issuance": true
+  },
+  "funded_refusal": {
+    "case": "fresh_cashu_redemption",
+    "proof_sha256": "350b8fe97e02ee2ef90880a18d83b43ad0790e8cf7c92c1ea223b569deb9df6c",
+    "proof_bytes": 4679844,
+    "source": {
+      "shinigami_revision": "19cb9fab4664e8f7fc4936f018d9c59ccac5883c",
+      "scarb_version": "2.19.6",
+      "program_hash": "0xdbda06ad0006b1d166c1634af58314bc255e1dbbd378c6553c6c35a17a9cb0"
+    },
+    "input_pins": {
+      "bin/scarb": "b76b6a5fe53c9f5f940ea91e919238daecb86f97d2a6090c6279718ae6f649f9",
+      "bin/scarb-execute": "0942b466980bbaabe248bd8d1fa1faab4880d50753a26b5abef336dc25c5259e",
+      "bin/scarb-verify": "d6b77b191ba50edb968ecc559d3ce933293b2d040daa93d746016a7d3310ab31",
+      "bin/prove-clean": "fd2e89986a8b65d401d9af257b3040361c3544ee00fd03cad9915f076c5ba240",
+      "main.executable.json": "697615bf5f2c888b79dd36e299cef0cc2194be8003fa2e9bae2f53bb0f5e6aed",
+      "profile.json": "62670efbaaf0ba945a291e18153ca0d27a49d6c8882899cc2d7b4d4b51953ecd",
+      "testnet4-tapleaf-args.json": "e3a9a9fd876c61a409fc3a30eb008a37f161f5adb970eb7a5d48838aa24c9b07",
+      "redemption_executable": "a30a90d6a80b402459f86d217cdd75017707df05f3b559e44f379a97f264e276",
+      "redemption_arguments": "b1661233da20f49489b022babe47ccfe1cd6d034e6878d67499131a4a226ba94"
+    },
+    "started_at": "2026-11-23T10:16:56.280034+00:00",
+    "finished_at": "2026-11-23T10:21:23.235778+00:00",
+    "phases": {
+      "execute": {
+        "exit_code": 0,
+        "elapsed_seconds": 8.793,
+        "peak_rss_kib": 2073536,
+        "user_cpu_seconds": 4.41,
+        "system_cpu_seconds": 5.66
+      },
+      "prove": {
+        "exit_code": 0,
+        "elapsed_seconds": 257.603,
+        "peak_rss_kib": 46434300,
+        "user_cpu_seconds": 1134.52,
+        "system_cpu_seconds": 217.98
+      },
+      "verify": {
+        "exit_code": 0,
+        "elapsed_seconds": 0.065,
+        "peak_rss_kib": 31140,
+        "user_cpu_seconds": 0.03,
+        "system_cpu_seconds": 0.0
+      },
+      "reject_changed_anchor_amount": {
+        "exit_code": 1,
+        "elapsed_seconds": 0.032,
+        "peak_rss_kib": 27824,
+        "user_cpu_seconds": 0.02,
+        "system_cpu_seconds": 0.0
+      },
+      "reject_changed_commitment": {
+        "exit_code": 1,
+        "elapsed_seconds": 0.033,
+        "peak_rss_kib": 27828,
+        "user_cpu_seconds": 0.02,
+        "system_cpu_seconds": 0.0
+      }
+    },
+    "payout_sats": 24750,
+    "payout_fee_sats": 250,
+    "timeout_blocks": 6,
+    "mint_offline": true,
+    "early_spend_refused": true,
+    "competing_reserve_spend_refused": true,
+    "independent_local_verifier_and_live_core_checks": true,
+    "public_output_words_matched": 24
+  },
+  "scope": "Both fresh proofs use one isolated Core/CDK run. The linked holder reserve is funded separately. Ordinary Cashu melts and the holder reserve do not share a single-spend rule. This is Shinigami regtest evidence, separate from the Ark SP1 and Nova/BitVM3 campaigns."
+}
