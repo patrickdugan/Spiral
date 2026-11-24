@@ -65,3 +65,16 @@ Submit the raw candidate JSON to the existing exact audit as
 `--existing-proof`. The audit pins the stock verifier and program and tests
 mutations of all 24 Cairo public output cells. The exact historical chain
 check also requires the original regtest blocks and an independent checkpoint.
+
+For GPU compatibility testing, the published CUDA proof of concept at Cairo
+`4c54e2e52fc447b7c97ca3d5ffecb759230a676f` uses Stwo fork
+`483f8c94c02bc7c4eaf128f2cd2269dd6f1a5f6c` and VortexSTARK
+`1e88c31974bcb9906274d7a129bd9f2902d7ae2e`. Its driver hardcodes a
+canonical trace, automatically chooses its lifting size and keeps polynomial
+coefficients. It verifies internally and does not write an archive. The exact
+Shinigami profile needs `canonical_without_pedersen`, lifting log 26 and
+coefficient retention disabled. A GPU port has to read the pinned profile and
+write proof bytes for the existing independent verifier. GPU compatibility and
+whole-prover memory for this exact input remain unmeasured.
+[CUDA driver](https://github.com/garrick247/stwo-cairo/blob/4c54e2e52fc447b7c97ca3d5ffecb759230a676f/stwo_cairo_prover/crates/dev_utils/src/bin/run_and_prove_cuda.rs)
+[VortexSTARK backend](https://github.com/garrick247/VortexSTARK#use-as-a-stwo-cudabackend)
