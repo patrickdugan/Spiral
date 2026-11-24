@@ -19,6 +19,7 @@ import time
 ARCHIVE = Path(__file__).resolve().parents[2] / 'codex-campaign-2026-11-23' / 'outputs'
 EXECUTION = ARCHIVE / 'Cashu-Melt-Redemption-Cairo-Execution.json'
 MAX_PROOF = 32 * 1024 * 1024
+MAX_RAW_PROOF = 64 * 1024 * 1024
 FIELD_PRIME = 2**251 + 17 * 2**192 + 1
 FELT_HEX = re.compile(r'0x(?:0|[1-9a-f][0-9a-f]{0,62})')
 
@@ -63,7 +64,7 @@ def preflight(runner, case):
     for name, key in (
         ('bin/scarb', 'bin/scarb'), ('bin/scarb-execute', 'bin/scarb-execute'),
         ('bin/scarb-verify', 'bin/scarb-verify'), ('bin/prove-clean', 'bin/prove-clean'),
-        ('profile.json', 'profile.json'), ('redemption/main.executable.json', 'redemption_executable'),
+        ('redemption/main.executable.json', 'redemption_executable'),
     ):
         check(runner.parent / name, pins[key])
     if not runner.is_file():
@@ -76,7 +77,11 @@ def preflight(runner, case):
         hashlib.sha256(statement).hexdigest(), hashlib.sha256(canonical).hexdigest()
     }:
         raise ValueError('statement is not the archived melt-funded case')
-    return receipt, expected_public_output(receipt, parsed)
+    profile_path = runner.parent / 'profile.json'
+    profile = read(profile_path, 4096)
+    if hashlib.sha256(profile).hexdigest() != pins['profile.json']:
+        raise ValueError(f'SHA-256 mismatch for {profile_path}')
+    return receipt, expected_public_output(receipt, parsed), json.loads(profile)
 
 
 def verify_one(verifier, proof, cwd, timeout):
@@ -106,9 +111,32 @@ def pinned_proof_output(document, expected):
     return outputs, values
 
 
-def independent_verify(verifier, proof, cwd, expected, timeout, transcript):
+def pinned_proof_profile(document, profile):
+    """Check the pinned Stwo proof metadata before invoking its verifier."""
+    if not isinstance(document, dict) or ('stark_proof' in document and 'extended_stark_proof' in document):
+        raise ValueError('ambiguous or invalid Cairo proof format')
+    stark = document.get('stark_proof')
+    if 'extended_stark_proof' in document and isinstance(document['extended_stark_proof'], dict):
+        stark = document['extended_stark_proof'].get('proof')
+    # The pinned Scarb verifier selects plain Blake2s. The proof carries its
+    # own PCS config, salt and preprocessed-trace variant.
+    accepted = {
+        'channel_hash': 'blake2s',
+        'channel_salt': document.get('channel_salt'),
+        'pcs_config': stark.get('config') if isinstance(stark, dict) else None,
+        'preprocessed_trace': document.get('preprocessed_trace_variant'),
+    }
+    expected = {name: profile[name] for name in accepted}
+    # JSON equality preserves numeric types (True and 1 otherwise compare equal).
+    if json.dumps(accepted, sort_keys=True) != json.dumps(expected, sort_keys=True):
+        raise ValueError('proof metadata differs from the pinned Shinigami security profile')
+    return accepted
+
+
+def independent_verify(verifier, proof, cwd, expected, profile, timeout, transcript):
     raw = read(proof, MAX_PROOF)
     document = json.loads(raw)
+    verified_profile = pinned_proof_profile(document, profile)
     outputs, values = pinned_proof_output(document, expected)
 
     code, seconds, log = verify_one(verifier, proof, cwd, timeout)
@@ -127,7 +155,7 @@ def independent_verify(verifier, proof, cwd, expected, timeout, transcript):
             if exit_code != 1 or b'verification failed' not in log.lower():
                 raise ValueError(f'expected verifier rejection for public cell {index}, got {exit_code}')
             controls.append({'index': index, 'value_id': cell[0], 'exit_code': exit_code, 'seconds': elapsed})
-    return hashlib.sha256(raw).hexdigest(), values, seconds, controls
+    return hashlib.sha256(raw).hexdigest(), values, seconds, controls, verified_profile
 
 
 def main():
@@ -154,7 +182,9 @@ def main():
     if any(option is not None for option in chain_options) and any(option is None for option in chain_options):
         parser.error('Core chain observation requires --core-config, --anchor-height and --anchor-hash')
     runner, case = args.runner.resolve(), args.case.resolve()
-    receipt, expected = preflight(runner, case)
+    receipt, expected, profile = preflight(runner, case)
+    if args.existing_proof:
+        pinned_proof_profile(json.loads(read(args.existing_proof, MAX_RAW_PROOF)), profile)
     if args.core_config:
         sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
         from proofdesk.adapters import CoreClient
@@ -198,15 +228,16 @@ def main():
     check(proof, report['verifier_input_sha256'])
     verifier = runner.parent / 'bin/scarb-verify'
     with (result / 'independent-verifier.log').open('xb') as log:
-        digest, output, seconds, controls = independent_verify(
+        digest, output, seconds, controls, verified_profile = independent_verify(
             verifier, proof, args.verifier_cwd or runner.parent,
-            expected, min(60, args.max_seconds), log,
+            expected, profile, min(60, args.max_seconds), log,
         )
     verification = {
         'schema': 'rbzk/cashu-independent-verification/v1',
         'verified': True, 'proof_sha256': digest, 'statement_sha256': receipt['statement_sha256'],
         'chain_context_observed': bool(args.core_config),
         'verifier_id': receipt['input_sha256']['bin/scarb-verify'], 'program': receipt['program'],
+        'proof_profile_sha256': receipt['input_sha256']['profile.json'], 'verified_proof_profile': verified_profile,
         'funding_outpoint': receipt['funding_outpoint'], 'payout_txid': receipt['confirmed_spend'],
         'cairo_public_memory_output': [hex(value) for value in output],
         'verified_mutated_cells': controls, 'verify_seconds': seconds, 'stages': report['phases'],
