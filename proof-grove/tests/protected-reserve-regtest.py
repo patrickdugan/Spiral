@@ -64,6 +64,79 @@ def assert_refused(result: dict) -> str:
     return result['reject-reason']
 
 
+def reobserve_funding(core, holder, mining_address, original, bundle_path, scratch, holder_cli):
+    saved = bundle_path.read_bytes()
+    bundle = json.loads(saved)
+    original_block = bundle['funding']['block']
+    previous_maturity = core.rpc('getblockheader', [original_block])['height'] + DELAY
+    args = ('--bundle', bundle_path, '--bundle-id', bundle['bundle_id'])
+
+    # Omit the orphaned transaction until the old CSV maturity has passed.
+    empty = [core.rpc('generateblock', [mining_address, []])['hash'] for _ in range(DELAY + 1)]
+    active_block = core.rpc('generateblock', [mining_address, [original['hex']]])['hash']
+    assert core.rpc('getblockheader', [original_block])['confirmations'] == -1
+    active_height = core.rpc('getblockheader', [active_block])['height']
+    assert active_height > previous_maturity
+    assert core.rpc('getrawtransaction', [original['txid'], True, active_block])['hex'] == original['hex']
+
+    holder_cli('status', *args, rejected='protected_funding_reorged')
+    holder_cli('status', *args, '--active-funding-block', empty[-1], rejected='protected_funding_mismatch')
+    active_args = (*args, '--active-funding-block', active_block)
+    observed = holder_cli('status', *active_args)
+    assert observed['pinned_funding_block'] == original_block and observed['active_funding_block'] == active_block
+    assert observed['state'] == 'unspent' and observed['funding_height'] == active_height
+    assert observed['confirmations'] == 1 and not observed['eligible_in_next_block']
+    assert observed['holder_only_earliest_height'] == active_height + DELAY
+
+    tampered = scratch / 'tampered-bundle.json'
+    wrong_outpoint = bundle['funding'] | {'vout': bundle['funding']['vout'] ^ 1}
+    tampered.write_text(json.dumps(bundle | {'funding': wrong_outpoint}), encoding='utf-8')
+    holder_cli('status', '--bundle', tampered, '--bundle-id', bundle['bundle_id'],
+               '--active-funding-block', active_block, rejected='protected_bundle_mismatch')
+
+    psbt = scratch / 'reobserved.psbt'
+    holder_cli('psbt', *active_args, '--route', 'cooperative', '--output', psbt,
+               rejected='protected_holder_reobservation_only')
+    prepared = holder_cli('psbt', *active_args, '--route', 'holder', '--output', psbt)
+    assert prepared['bundle_id'] == bundle['bundle_id'] and prepared['observation'] == observed
+    signed = holder.rpc('walletprocesspsbt', [psbt.read_text(encoding='ascii').strip(), True, 'ALL'])
+    assert signed['complete'], signed
+    raw = signed['hex']
+    vin = core.rpc('decoderawtransaction', [raw])['vin'][0]
+    funding = bundle['funding']
+    assert (vin['txid'], vin['vout']) == (funding['txid'], funding['vout'])
+    txid_le = bytes.fromhex(funding['txid'])[::-1].hex()
+    prevout = txid_le + funding['vout'].to_bytes(4, 'little').hex()
+    wrong_prevout = txid_le + wrong_outpoint['vout'].to_bytes(4, 'little').hex()
+    assert raw.count(prevout) == 1
+    wrong_txfile = scratch / 'wrong-reobserved-payout.hex'
+    wrong_txfile.write_text(raw.replace(prevout, wrong_prevout), encoding='ascii')
+    holder_cli('check', *active_args, '--route', 'holder', '--tx-file', wrong_txfile,
+               rejected='protected_payout_mismatch')
+    txfile = scratch / 'reobserved-payout.hex'
+    txfile.write_text(raw, encoding='ascii')
+    check_args = (*active_args, '--route', 'holder', '--tx-file', txfile)
+    early = holder_cli('check', *check_args)
+    assert not early['mempool_eligible'] and early['reject_reason'] == 'non-BIP68-final'
+    core.rpc('generatetoaddress', [DELAY - 1, mining_address])
+    reviewed = holder_cli('check', *check_args)
+    assert reviewed['mempool_eligible'] and reviewed['bundle_id'] == bundle['bundle_id']
+    assert reviewed['txid'] == prepared['txid'] and reviewed['payout_sats'] == RESERVE - FEE
+    payout_block = core.rpc('generateblock', [mining_address, [raw]])['hash']
+    assert core.rpc('getblockhash', [active_height + DELAY]) == payout_block
+    assert holder_cli('status', *active_args)['state'] == 'consumed'
+    assert bundle_path.read_bytes() == saved
+
+    core.rpc('invalidateblock', [empty[0]])
+    core.rpc('reconsiderblock', [original_block])
+    return {'bundle_id': bundle['bundle_id'], 'pinned_funding_block': original_block,
+            'active_funding_block': active_block, 'active_funding_height': active_height,
+            'payout_block': payout_block, 'payout_height': active_height + DELAY,
+            'payout_txid': reviewed['txid'], 'payout_sats': reviewed['payout_sats'],
+            'wrong_block_rejected': True, 'wrong_outpoint_rejected': True,
+            'cooperative_override_rejected': True, 'old_maturity_rejected': early['reject_reason']}
+
+
 def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     chain = core.rpc('getblockchaininfo', [])
     assert chain['chain'] == 'regtest' and chain['blocks'] == 0
@@ -198,7 +271,7 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     assert core.rpc('getblockheader', [funding_block])['confirmations'] == -1
     assert core.rpc('gettxout', [txid, vout, False]) is None
     holder_cli('status', *bundle_args, rejected='protected_funding_reorged')
-    core.rpc('reconsiderblock', [funding_block])
+    reobserved = reobserve_funding(core, holder, mining_address, original, bundle_path, scratch, holder_cli)
     assert core.rpc('getblockhash', [expected_height]) == payout_block
 
     genesis = core.rpc('getblockhash', [0])
@@ -209,6 +282,7 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
         'genesis': genesis, 'chain_version': core.rpc('getnetworkinfo', [])['subversion'],
         'claim_id': claim_id, 'reserve_descriptor': public,
         'app_bundle': saved_bundle, 'mature_holder_check': reviewed,
+        'holder_funding_reobservation': reobserved,
         'reserve': {'txid': txid, 'vout': vout, 'sats': RESERVE, 'block': funding_block,
                     'script': output['scriptPubKey']['hex']},
         'payout': {'txid': spend, 'wtxid': payout['hash'], 'block': payout_block,

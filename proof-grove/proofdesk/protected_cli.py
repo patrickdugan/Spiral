@@ -32,6 +32,7 @@ def configure(commands):
         parser = commands.add_parser("protected-" + action, help=help_text)
         for key in ("config", "bundle", "bundle-id"):
             parser.add_argument("--" + key, required=True)
+        parser.add_argument("--active-funding-block", help="Reobserve the same outpoint in this active block for local holder recovery")
         if action != "status":
             parser.add_argument("--route", choices=("holder", "cooperative"), required=True)
         if action == "psbt":
@@ -66,13 +67,14 @@ def run(args):
         _write(args.output, json.dumps(result, indent=2))
         return {"bundle_id": result["bundle_id"], "funding": result["funding"]}
     bundle = _load(args.bundle)
+    evidence = {"active_funding_block": args.active_funding_block}
     if args.command == "protected-status":
-        return protected_reserve.status(core, bundle, args.bundle_id)
+        return protected_reserve.holder_status(core, bundle, args.bundle_id, **evidence)
     if args.command == "protected-psbt":
-        result = protected_reserve.unsigned_psbt(core, bundle, args.bundle_id, args.route)
+        result = protected_reserve.unsigned_psbt(core, bundle, args.bundle_id, args.route, **evidence)
         _write(args.output, result.pop("psbt"))
         return result
     if args.command == "protected-check":
         tx = read_bounded(args.tx_file, 16002).decode("ascii").strip()
-        return protected_reserve.check_signed(core, bundle, args.bundle_id, args.route, tx)
+        return protected_reserve.check_signed(core, bundle, args.bundle_id, args.route, tx, **evidence)
     raise Refused("protected_invalid_command")

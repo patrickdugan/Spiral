@@ -129,11 +129,12 @@ def _validate_plan(core, saved: dict, plan_id: str) -> dict:
     return saved
 
 
-def _funding(core, saved: dict, outpoint: dict, before: dict) -> dict:
+def _funding(core, saved: dict, outpoint: dict, before: dict, *, active_funding_block: str | None = None) -> dict:
     if not isinstance(outpoint, dict) or set(outpoint) != {"txid", "vout", "block"}:
         raise Refused("protected_invalid_outpoint")
     txid = hash32(outpoint["txid"], "funding_txid")
-    block = hash32(outpoint["block"], "funding_block")
+    pinned_block = hash32(outpoint["block"], "funding_block")
+    block = pinned_block if active_funding_block is None else hash32(active_funding_block, "active_funding_block")
     vout = outpoint["vout"]
     if type(vout) is not int or not 0 <= vout < 2**32:
         raise Refused("protected_invalid_outpoint")
@@ -145,7 +146,13 @@ def _funding(core, saved: dict, outpoint: dict, before: dict) -> dict:
     confirmations = before["blocks"] - height + 1
     if confirmations < saved["min_confirmations"]:
         raise Refused("protected_funding_unconfirmed")
-    tx = core.rpc("getrawtransaction", [txid, True, block])
+    try:
+        tx = core.rpc("getrawtransaction", [txid, True, block])
+    except CoreRPCError as error:
+        if active_funding_block is None or error.rpc_code != -5:
+            raise
+        _stable_tip(core, before)
+        raise Refused("protected_funding_mismatch") from None
     if (tx.get("txid") != txid or tx.get("blockhash") != block or tx.get("in_active_chain") is False
             or any("coinbase" in item for item in tx.get("vin", []))):
         raise Refused("protected_funding_mismatch")
@@ -167,12 +174,15 @@ def _funding(core, saved: dict, outpoint: dict, before: dict) -> dict:
     if confirmed is None and live is not None:
         raise Refused("chain_changed_retry")
     state = "consumed" if confirmed is None else "pending-spend" if live is None else "unspent"
-    return {
+    observation = {
         "state": state, "tip": before["bestblockhash"], "height": before["blocks"],
         "funding_height": height, "confirmations": confirmations,
         "eligible_in_next_block": state == "unspent" and confirmations >= saved["delay_blocks"],
         "holder_only_earliest_height": height + saved["delay_blocks"],
     }
+    if active_funding_block is not None:
+        observation.update(pinned_funding_block=pinned_block, active_funding_block=block)
+    return observation
 
 
 def attach(core, saved: dict, plan_id: str, outpoint: dict) -> dict:
@@ -185,6 +195,15 @@ def attach(core, saved: dict, plan_id: str, outpoint: dict) -> dict:
 
 
 def status(core, bundle: dict, bundle_id: str) -> dict:
+    return _observe(core, bundle, bundle_id)
+
+
+def holder_status(core, bundle: dict, bundle_id: str, *, active_funding_block: str | None = None) -> dict:
+    """Observe the pinned outpoint for local holder recovery, even after it is re-mined."""
+    return _observe(core, bundle, bundle_id, active_funding_block=active_funding_block)
+
+
+def _observe(core, bundle: dict, bundle_id: str, *, active_funding_block: str | None = None) -> dict:
     hash32(bundle_id, "bundle_id")
     if not isinstance(bundle, dict) or set(bundle) != {"schema", "plan", "funding", "bundle_id"}:
         raise Refused("protected_invalid_bundle")
@@ -195,7 +214,7 @@ def status(core, bundle: dict, bundle_id: str) -> dict:
     if not isinstance(saved, dict):
         raise Refused("protected_invalid_plan")
     _validate_plan(core, saved, saved.get("plan_id"))
-    return _funding(core, saved, bundle["funding"], _chain(core))
+    return _funding(core, saved, bundle["funding"], _chain(core), active_funding_block=active_funding_block)
 
 
 def _sequence(route: str, saved: dict) -> int:
@@ -222,8 +241,16 @@ def _match_transaction(tx: dict, bundle: dict, sequence: int) -> dict:
     return source
 
 
-def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str) -> dict:
-    observed = status(core, bundle, bundle_id)
+def _route_status(core, bundle, bundle_id, route, active_funding_block):
+    if active_funding_block is None:
+        return status(core, bundle, bundle_id)
+    if route != "holder":
+        raise Refused("protected_holder_reobservation_only")
+    return holder_status(core, bundle, bundle_id, active_funding_block=active_funding_block)
+
+
+def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_funding_block: str | None = None) -> dict:
+    observed = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if observed["state"] != "unspent":
         raise Refused("protected_reserve_unavailable")
     saved, funding = bundle["plan"], bundle["funding"]
@@ -243,7 +270,7 @@ def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str) -> dict:
             or entries[0].get("witness_script", {}).get("hex") != saved["witness_script"]
             or _sats(decoded.get("fee")) != saved["fee_sats"]):
         raise Refused("protected_psbt_input_mismatch")
-    after = status(core, bundle, bundle_id)
+    after = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if after["tip"] != observed["tip"] or after["state"] != "unspent":
         raise Refused("chain_changed_retry")
     return {"bundle_id": bundle_id, "route": route, "psbt": enriched, "txid": decoded["tx"]["txid"],
@@ -302,8 +329,8 @@ def all_signature(signature):
             and HEX.fullmatch(signature) is not None and signature.endswith("01"))
 
 
-def check_signed(core, bundle: dict, bundle_id: str, route: str, raw: str) -> dict:
-    observed = status(core, bundle, bundle_id)
+def check_signed(core, bundle: dict, bundle_id: str, route: str, raw: str, *, active_funding_block: str | None = None) -> dict:
+    observed = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if observed["state"] != "unspent":
         raise Refused("protected_reserve_unavailable")
     if not isinstance(raw, str) or not 20 <= len(raw) <= 16000 or not HEX.fullmatch(raw):
@@ -316,7 +343,7 @@ def check_signed(core, bundle: dict, bundle_id: str, route: str, raw: str) -> di
     outcome = core.rpc("testmempoolaccept", [[raw]])[0]
     if outcome.get("txid") != tx.get("txid") or outcome.get("wtxid") != tx.get("hash"):
         raise Refused("protected_payout_mismatch")
-    after = status(core, bundle, bundle_id)
+    after = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if after["tip"] != observed["tip"] or after["state"] != "unspent":
         raise Refused("chain_changed_retry")
     return {
