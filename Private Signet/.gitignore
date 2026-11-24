@@ -12,3 +12,5 @@ PRIVATE-*.json
 bitcoin.conf
 *.env
 __pycache__/
+# The showcase page data is built from committed evidence (site/build_data.py).
+!site/data/
