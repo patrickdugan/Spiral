@@ -134,6 +134,11 @@ Check the cubin list for the selected architecture. The laptop RTX 3050 is a smo
 candidate after smoke and verifier success. Peak GPU and host memory for the
 complete proof remain unmeasured, and trace generation still uses CPU/SIMD.
 
+CUDA 12.8.93 resolved the locked build graph for all three native targets and
+compiled the pinned `cuda/blake2s.cu` to an RTX 5090 `sm_120` cubin. NVCC took
+30.37 seconds at 161,176 KiB peak RSS in a 512 MiB cgroup with zero swap. A
+complete Blackwell binary and verification on an RTX 5090 remain outstanding.
+
 The Vortex build script compiles CUDA translation units serially and archives
 them after the last one succeeds. For an interrupted SM86 build, use the
 local NVCC cache below. Keep the same target directory, toolkit, and build
