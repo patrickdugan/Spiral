@@ -107,7 +107,8 @@ Ampere, the Cairo manifests point both Vortex packages at the same staged tree,
 and the lockfile drops only the two Vortex Git source lines. The receipt records
 the original Git blob, original and patched build script hashes, and staged
 manifest and lock hashes. Resolve metadata with `--locked` before starting the
-build. Cargo resolution for this overlay still needs to be exercised.
+build. The staged overlay resolved 506 packages under `--locked` with its
+lockfile unchanged.
 
 ```sh
 python3 -B "$INTEGRATION/stage-cuda.py" --cuda-cairo-git "$CUDA_CAIRO_GIT" \
@@ -129,6 +130,19 @@ Check the cubin list for `sm_86`. The laptop RTX 3050 is a smoke target. Its
 4 GiB for one dense Merkle tree alone. The 48 GiB A6000 is an exact-proof
 candidate after smoke and verifier success. Peak GPU and host memory for the
 complete proof remain unmeasured, and trace generation still uses CPU/SIMD.
+
+The RTX 3050 ran the pinned lifted Blake2s leaf and parent kernels directly.
+All 463 hashes matched the stock layout across 27 CUDA launches, including
+mixed column heights and the raw `0x7fffffff` zero encoding. The harness checks
+launch and synchronization status and compares every tree level.
+
+```sh
+VORTEX="$CUDA_STAGED/vortex"
+nvcc -shared --cudart shared -Xcompiler=-fPIC -O1 -gencode arch=compute_86,code=sm_86 \
+    "$VORTEX/cuda/merkle_leaves_lifted.cu" "$VORTEX/cuda/blake2s.cu" \
+    -o "$SM86_KERNEL_LIBRARY"
+CUDA_VISIBLE_DEVICES=0 python3.11 -B "$INTEGRATION/check-cuda-merkle.py" "$SM86_KERNEL_LIBRARY"
+```
 
 Start with the pinned CPU tree's `test_data/test_prove_verify_all_builtins/prover_input.json`
 and set `SMOKE_PROOF` to a new path. `SHINIGAMI` points to the archived kit's
