@@ -25,14 +25,6 @@ MINT_WALLET = 'cashu-protected-mint'
 
 
 def prepare(core, rpc, deposit, mining_address, runtime, rpc_url, cooperative=False):
-    signers = [(HOLDER_WALLET, descriptor(fixture_wif(1), MINT_PUB, DELAY))]
-    if cooperative:
-        signers.append((MINT_WALLET, descriptor(HOLDER_PUB, fixture_wif(2), DELAY)))
-    for wallet, private in signers:
-        rpc('createwallet', [wallet, False, True])
-        checksum = rpc('getdescriptorinfo', [private])['checksum']
-        imported = rpc('importdescriptors', [[{'desc': private + '#' + checksum, 'timestamp': 0}]], wallet=wallet)
-        assert imported[0]['success'], imported
     beneficiary = rpc('getnewaddress', [], wallet=True)
     commitment = hashlib.sha256(('proof-grove/protected-issuance-intent/v1:' + deposit['intent_id']).encode()).hexdigest()
     plan = protected_reserve.plan(
@@ -40,6 +32,15 @@ def prepare(core, rpc, deposit, mining_address, runtime, rpc_url, cooperative=Fa
         reserve_sats=AMOUNT, payout_address=beneficiary, fee_sats=FEE, delay_blocks=DELAY,
         min_confirmations=2,
     )
+    issuance_hash = plan['issuance_hash']
+    signers = [(HOLDER_WALLET, descriptor(fixture_wif(1), MINT_PUB, DELAY, issuance_hash))]
+    if cooperative:
+        signers.append((MINT_WALLET, descriptor(HOLDER_PUB, fixture_wif(2), DELAY, issuance_hash)))
+    for wallet, private in signers:
+        rpc('createwallet', [wallet, False, True])
+        checksum = rpc('getdescriptorinfo', [private])['checksum']
+        imported = rpc('importdescriptors', [[{'desc': private + '#' + checksum, 'timestamp': 0}]], wallet=wallet)
+        assert imported[0]['success'], imported
     txid = rpc('sendtoaddress', [plan['funding_address'], AMOUNT / SATS], wallet=True)
     block, _ = rpc('generatetoaddress', [2, mining_address], wallet=True)
     tx = rpc('getrawtransaction', [txid, True, block])

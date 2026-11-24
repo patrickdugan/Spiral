@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from decimal import Decimal, InvalidOperation
 import hashlib
 import re
@@ -10,8 +11,10 @@ from .adapters import CoreRPCError
 from .cashu import compressed_point
 from .domain import MAX_SATS, Refused, digest, hash32, positive
 
-PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v1"
-BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v1"
+LEGACY_PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v1"
+LEGACY_BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v1"
+PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v2"
+BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v2"
 GENESIS = "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
 COOPERATIVE_SEQUENCE = 0xFFFFFFFD
 HEX = re.compile(r"(?:[0-9a-f]{2})+")
@@ -45,9 +48,13 @@ def _script_number(value: int) -> bytes:
     return bytes([len(payload)]) + payload
 
 
-def _witness_script(holder: str, mint: str, delay: int) -> bytes:
+def _witness_script(holder: str, mint: str, delay: int, issuance_hash: str | None = None) -> bytes:
+    prefix = b""
+    if issuance_hash is not None:
+        # SIZE 32 EQUALVERIFY SHA256 <issuance_hash> EQUALVERIFY.
+        prefix = b"\x82\x01\x20\x88\xa8\x20" + bytes.fromhex(issuance_hash) + b"\x88"
     # <holder> CHECKSIGVERIFY IF <mint> CHECKSIG ELSE <delay> CSV ENDIF
-    return (b"\x21" + bytes.fromhex(holder) + b"\xad\x63\x21" + bytes.fromhex(mint)
+    return (prefix + b"\x21" + bytes.fromhex(holder) + b"\xad\x63\x21" + bytes.fromhex(mint)
             + b"\xac\x67" + _script_number(delay) + b"\xb2\x68")
 
 
@@ -72,7 +79,9 @@ def _sats(value) -> int:
 
 
 def _plan_body(core, holder_pubkey, mint_pubkey, claim_commitment, reserve_sats, payout_address,
-               fee_sats, delay_blocks, min_confirmations) -> dict:
+               fee_sats, delay_blocks, min_confirmations, *, schema) -> dict:
+    if schema not in (PLAN_SCHEMA, LEGACY_PLAN_SCHEMA):
+        raise Refused("protected_invalid_plan")
     if not compressed_point(holder_pubkey) or not compressed_point(mint_pubkey) or holder_pubkey == mint_pubkey:
         raise Refused("protected_distinct_public_keys_required")
     hash32(claim_commitment, "claim_commitment")
@@ -82,9 +91,23 @@ def _plan_body(core, holder_pubkey, mint_pubkey, claim_commitment, reserve_sats,
     positive(min_confirmations, "min_confirmations", 1000)
     if fee_sats >= reserve_sats:
         raise Refused("protected_fee_consumes_reserve")
-    witness = _witness_script(holder_pubkey, mint_pubkey, delay_blocks)
+    payout_script = _address_script(core, payout_address)
+    terms = {
+        "network": "regtest", "genesis": GENESIS, "holder_pubkey": holder_pubkey, "mint_pubkey": mint_pubkey,
+        "claim_commitment": claim_commitment, "reserve_sats": reserve_sats, "fee_sats": fee_sats,
+        "delay_blocks": delay_blocks, "min_confirmations": min_confirmations, "payout_address": payout_address,
+        "payout_script": payout_script,
+    }
+    commitment = {}
+    policy = f"and_v(v:pk({holder_pubkey}),or_i(pk({mint_pubkey}),older({delay_blocks})))"
+    if schema == PLAN_SCHEMA:
+        preimage = digest({"schema": "proof-grove/protected-issuance-terms/v2"} | terms)
+        issuance_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        commitment = {"issuance_preimage": preimage, "issuance_hash": issuance_hash}
+        policy = f"and_v(v:sha256({issuance_hash}),{policy})"
+    witness = _witness_script(holder_pubkey, mint_pubkey, delay_blocks, commitment.get("issuance_hash"))
     funding_script = "0020" + hashlib.sha256(witness).hexdigest()
-    expr = f"wsh(and_v(v:pk({holder_pubkey}),or_i(pk({mint_pubkey}),older({delay_blocks}))))"
+    expr = f"wsh({policy})"
     try:
         info = core.rpc("getdescriptorinfo", [expr])
     except CoreRPCError as error:
@@ -100,22 +123,18 @@ def _plan_body(core, holder_pubkey, mint_pubkey, claim_commitment, reserve_sats,
     if (not isinstance(addresses, list) or len(addresses) != 1
             or _address_script(core, addresses[0]) != funding_script):
         raise Refused("protected_descriptor_script_mismatch")
-    payout_script = _address_script(core, payout_address)
     if payout_script == funding_script:
         raise Refused("protected_payout_reuses_reserve")
     return {
-        "schema": PLAN_SCHEMA, "network": "regtest", "genesis": GENESIS,
-        "holder_pubkey": holder_pubkey, "mint_pubkey": mint_pubkey, "claim_commitment": claim_commitment,
-        "reserve_sats": reserve_sats, "fee_sats": fee_sats, "delay_blocks": delay_blocks,
-        "min_confirmations": min_confirmations, "descriptor": descriptor, "funding_address": addresses[0],
-        "funding_script": funding_script, "witness_script": witness.hex(), "payout_address": payout_address,
-        "payout_script": payout_script, "payout_sats": reserve_sats - fee_sats, "change_sats": 0,
-    }
+        "schema": schema, **terms, "descriptor": descriptor, "funding_address": addresses[0],
+        "funding_script": funding_script, "witness_script": witness.hex(),
+        "payout_sats": reserve_sats - fee_sats, "change_sats": 0,
+    } | commitment
 
 
-def plan(core, **terms) -> dict:
+def plan(core, *, schema=PLAN_SCHEMA, **terms) -> dict:
     before = _chain(core)
-    body = _plan_body(core, **terms)
+    body = _plan_body(core, **terms, schema=schema)
     _stable_tip(core, before)
     return body | {"plan_id": digest(body)}
 
@@ -124,7 +143,8 @@ def _validate_plan(core, saved: dict, plan_id: str) -> dict:
     hash32(plan_id, "plan_id")
     if not isinstance(saved, dict) or any(key not in saved for key in PLAN_FIELDS):
         raise Refused("protected_invalid_plan")
-    if saved != plan(core, **{key: saved[key] for key in PLAN_FIELDS}) or saved["plan_id"] != plan_id:
+    if (saved != plan(core, schema=saved.get("schema"), **{key: saved[key] for key in PLAN_FIELDS})
+            or saved["plan_id"] != plan_id):
         raise Refused("protected_plan_mismatch")
     return saved
 
@@ -190,7 +210,8 @@ def attach(core, saved: dict, plan_id: str, outpoint: dict) -> dict:
     observation = _funding(core, saved, outpoint, _chain(core))
     if observation["state"] != "unspent":
         raise Refused("protected_reserve_unavailable")
-    body = {"schema": BUNDLE_SCHEMA, "plan": saved, "funding": outpoint}
+    schema = BUNDLE_SCHEMA if saved["schema"] == PLAN_SCHEMA else LEGACY_BUNDLE_SCHEMA
+    body = {"schema": schema, "plan": saved, "funding": outpoint}
     return body | {"bundle_id": digest(body)}
 
 
@@ -208,12 +229,16 @@ def _observe(core, bundle: dict, bundle_id: str, *, active_funding_block: str | 
     if not isinstance(bundle, dict) or set(bundle) != {"schema", "plan", "funding", "bundle_id"}:
         raise Refused("protected_invalid_bundle")
     body = {key: value for key, value in bundle.items() if key != "bundle_id"}
-    if bundle["schema"] != BUNDLE_SCHEMA or bundle["bundle_id"] != bundle_id or digest(body) != bundle_id:
+    if (bundle["schema"] not in (BUNDLE_SCHEMA, LEGACY_BUNDLE_SCHEMA)
+            or bundle["bundle_id"] != bundle_id or digest(body) != bundle_id):
         raise Refused("protected_bundle_mismatch")
     saved = bundle["plan"]
     if not isinstance(saved, dict):
         raise Refused("protected_invalid_plan")
     _validate_plan(core, saved, saved.get("plan_id"))
+    expected_schema = BUNDLE_SCHEMA if saved["schema"] == PLAN_SCHEMA else LEGACY_BUNDLE_SCHEMA
+    if bundle["schema"] != expected_schema:
+        raise Refused("protected_bundle_mismatch")
     return _funding(core, saved, bundle["funding"], _chain(core), active_funding_block=active_funding_block)
 
 
@@ -249,6 +274,39 @@ def _route_status(core, bundle, bundle_id, route, active_funding_block):
     return holder_status(core, bundle, bundle_id, active_funding_block=active_funding_block)
 
 
+def _with_psbt_input_record(psbt: str, key: bytes, value: bytes) -> str:
+    """Insert one small field into the input map of a Core-created, one-input PSBT."""
+    try:
+        raw = base64.b64decode(psbt, validate=True)
+    except (ValueError, TypeError):
+        raise Refused("protected_psbt_input_mismatch") from None
+    if not raw.startswith(b"psbt\xff") or not 0 < len(key) < 253 or len(value) >= 253:
+        raise Refused("protected_psbt_input_mismatch")
+
+    def compact_size(offset):
+        if offset >= len(raw):
+            raise Refused("protected_psbt_input_mismatch")
+        prefix = raw[offset]
+        number_bytes = {253: 2, 254: 4, 255: 8}.get(prefix, 0)
+        end = offset + 1 + number_bytes
+        if end > len(raw):
+            raise Refused("protected_psbt_input_mismatch")
+        return (int.from_bytes(raw[offset + 1:end], "little") if number_bytes else prefix), end
+
+    def map_end(offset):
+        while offset < len(raw):
+            keylen, offset = compact_size(offset)
+            if keylen == 0:
+                return offset
+            valuelen, offset = compact_size(offset + keylen)
+            offset += valuelen
+        raise Refused("protected_psbt_input_mismatch")
+
+    separator = map_end(map_end(5)) - 1
+    record = bytes([len(key)]) + key + bytes([len(value)]) + value
+    return base64.b64encode(raw[:separator] + record + raw[separator:]).decode("ascii")
+
+
 def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_funding_block: str | None = None) -> dict:
     observed = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if observed["state"] != "unspent":
@@ -259,6 +317,10 @@ def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_fund
     value = format(Decimal(saved["payout_sats"]) / 100_000_000, ".8f")
     transaction = core.rpc("createpsbt", [requested, [{saved["payout_address"]: value}], 0, False])
     enriched = core.rpc("utxoupdatepsbt", [transaction, [saved["descriptor"]]])
+    if saved["schema"] == PLAN_SCHEMA:
+        # BIP174 PSBT_IN_SHA256 supplies the public commitment preimage to both signers.
+        key = b"\x0b" + bytes.fromhex(saved["issuance_hash"])
+        enriched = _with_psbt_input_record(enriched, key, bytes.fromhex(saved["issuance_preimage"]))
     decoded = core.rpc("decodepsbt", [enriched])
     _match_transaction(decoded["tx"], bundle, sequence)
     entries = decoded.get("inputs", [])
@@ -314,6 +376,10 @@ def spending_observation(core, bundle: dict, bundle_id: str) -> dict:
 
 def _check_witness(source, saved, route):
     witness = source.get("txinwitness", [])
+    if saved["schema"] == PLAN_SCHEMA:
+        if len(witness) < 2 or witness[-2] != saved["issuance_preimage"]:
+            raise Refused("protected_witness_commitment_mismatch")
+        witness = witness[:-2] + witness[-1:]
     if route == "holder" and len(witness) == 3 and witness[0] == "":
         signatures = witness[1:2]
     elif route == "cooperative" and len(witness) == 4 and witness[1] == "01":

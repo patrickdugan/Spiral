@@ -144,24 +144,28 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
         core.rpc('createwallet', [name, False, name != 'funding'])
     funding, holder, mint = (wallet(name) for name in ('funding', 'holder', 'mint'))
 
-    # Each signer knows the complete policy and holds exactly its own key.
-    for signer, keys in ((holder, (fixture_wif(1), MINT_PUB)),
-                         (mint, (HOLDER_PUB, fixture_wif(2)))):
-        private = checked_descriptor(core, descriptor(*keys, DELAY))
-        result = signer.rpc('importdescriptors', [[{'desc': private, 'timestamp': 0}]])
-        assert result[0]['success'], result
-
     mining_address = funding.rpc('getnewaddress', [])
     for count in (25, 25, 25, 26):
         core.rpc('generatetoaddress', [count, mining_address])
     payout_address = funding.rpc('getnewaddress', [])
     claim_commitment = hashlib.sha256(b'proof-grove/regtest-protected-issuance-fixture').hexdigest()
+
+    def reserve_plan(path, claim=claim_commitment, beneficiary=payout_address, fee=FEE):
+        return holder_cli('plan', '--holder-pubkey', HOLDER_PUB, '--mint-pubkey', MINT_PUB,
+                          '--claim-commitment', claim, '--reserve-sats', str(RESERVE),
+                          '--payout-address', beneficiary, '--fee-sats', str(fee),
+                          '--delay-blocks', str(DELAY), '--min-confirmations', '1', '--output', path)
+
     plan_path = scratch / 'plan.json'
-    created = holder_cli('plan', '--holder-pubkey', HOLDER_PUB, '--mint-pubkey', MINT_PUB,
-                         '--claim-commitment', claim_commitment, '--reserve-sats', str(RESERVE),
-                         '--payout-address', payout_address, '--fee-sats', str(FEE),
-                         '--delay-blocks', str(DELAY), '--min-confirmations', '1', '--output', plan_path)
+    created = reserve_plan(plan_path)
     saved_plan = json.loads(plan_path.read_bytes())
+    issuance_hash = saved_plan['issuance_hash']
+    # Each signer knows the complete policy and holds exactly its own key.
+    for signer, keys in ((holder, (fixture_wif(1), MINT_PUB)),
+                         (mint, (HOLDER_PUB, fixture_wif(2)))):
+        private = checked_descriptor(core, descriptor(*keys, DELAY, issuance_hash))
+        result = signer.rpc('importdescriptors', [[{'desc': private, 'timestamp': 0}]])
+        assert result[0]['success'], result
     public = saved_plan['descriptor']
     reserve_address = created['funding_address']
     txid = funding.rpc('sendtoaddress', [reserve_address, RESERVE / SATOSHIS])
@@ -179,6 +183,19 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
                rejected='protected_funding_mismatch')
     attached = holder_cli('attach', *attach_args, '--vout', str(vout), '--output', bundle_path)
     saved_bundle = json.loads(bundle_path.read_bytes())
+    # Fresh CLI processes independently validate the same UTXO. None have a desk database.
+    changed_terms = {
+        'claim': {'claim': hashlib.sha256(b'another-issuance-intent').hexdigest()},
+        'beneficiary': {'beneficiary': substituted_address},
+        'fee': {'fee': FEE + 1},
+    }
+    for name, change in changed_terms.items():
+        other_plan = scratch / f'{name}-plan.json'
+        other = reserve_plan(other_plan, **change)
+        assert other['funding_address'] != reserve_address
+        holder_cli('attach', '--plan', other_plan, '--plan-id', other['plan_id'], '--txid', txid,
+                   '--block', funding_block, '--vout', str(vout), '--output', scratch / f'{name}-bundle.json',
+                   rejected='protected_funding_mismatch')
     bundle_args = ('--bundle', bundle_path, '--bundle-id', attached['bundle_id'])
     holder_cli('status', '--bundle', bundle_path, '--bundle-id', '0' * 64,
                rejected='protected_bundle_mismatch')
@@ -218,6 +235,13 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     assert accept(core, cooperative_tx)['allowed']
     reviewed = checked(emergency_tx)
     assert reviewed['mempool_eligible'] and reviewed['payout_sats'] == RESERVE - FEE and reviewed['fee_sats'] == FEE
+
+    preimage = saved_plan['issuance_preimage']
+    assert emergency_tx.count(preimage) == 1
+    changed_preimage = f'{int(preimage[:2], 16) ^ 1:02x}' + preimage[2:]
+    substituted_commitment = emergency_tx.replace(preimage, changed_preimage)
+    commitment_rejection = assert_refused(accept(core, substituted_commitment))
+    checked(substituted_commitment, rejected='protected_witness_commitment_mismatch')
 
     decoded = core.rpc('decoderawtransaction', [emergency_tx])
     payout_script = decoded['vout'][0]['scriptPubKey']['hex']
@@ -289,6 +313,8 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
                    'height': expected_height, 'script': payout_script, 'sats': RESERVE - FEE,
                    'fee_sats': FEE, 'delay_blocks': DELAY},
         'controls': {'early_exit': early, 'substituted_beneficiary': beneficiary,
+                     'changed_protected_terms_cannot_attach_same_coin': list(changed_terms),
+                     'substituted_issuance_preimage': commitment_rejection,
                      'conflicting_melt': conflict, 'replayed_exit': replay,
                      'single_signer_cannot_cooperate': True, 'mint_signer_unloaded': True,
                      'app_rejected_wrong_outpoint_plan_and_payout': True,

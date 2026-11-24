@@ -29,6 +29,8 @@ An explicit `export --id ID --output FILE` writes a bearer token to a new file. 
 
 After binding the Cashu quote, create a holder reserve with `protected-plan` and `protected-attach`. Set the plan's claim commitment to SHA-256 of the UTF-8 string `proof-grove/protected-issuance-intent/v1:` followed by the intent ID. The reserve must match the full quote amount. Confirm the reserve and admit the separately funded CDK quote before claiming.
 
+New plans commit the claim, beneficiary script, amount, fee, keys and timing terms in the P2WSH funding script. Use the plan's complete descriptor in each signer. The generated PSBT supplies the public SHA-256 preimage needed by either spending branch. Existing V1 bundles retain their original descriptor for recovery. A newly registered protected issuance requires the V2 commitment. [BIP174](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki)
+
 ```bash
 node wallet/cli.mjs protected-claim --id OPERATION_ID --vault VAULT --mint MINT --desk DESK \
   --bundle RESERVE_BUNDLE --bundle-id PINNED_BUNDLE_ID --core-config CORE_CONFIG

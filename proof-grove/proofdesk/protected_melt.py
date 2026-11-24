@@ -12,29 +12,7 @@ from .domain import Refused, hash32
 def _with_holder_signature(psbt, pubkey, signature):
     # Core produced this BIP-174 v0 PSBT. Add just the holder's partial
     # signature to its input map; upstream wallet RPC never sees caller metadata.
-    raw = base64.b64decode(psbt, validate=True)
-    if not raw.startswith(b"psbt\xff"):
-        raise Refused("protected_psbt_input_mismatch")
-
-    def compact_size(offset):
-        prefix = raw[offset]
-        number_bytes = {253: 2, 254: 4, 255: 8}.get(prefix, 0)
-        end = offset + 1 + number_bytes
-        return (int.from_bytes(raw[offset + 1:end], "little") if number_bytes else prefix), end
-
-    def map_end(offset):
-        while offset < len(raw):
-            keylen, offset = compact_size(offset)
-            if keylen == 0:
-                return offset
-            valuelen, offset = compact_size(offset + keylen)
-            offset += valuelen
-        raise Refused("protected_psbt_input_mismatch")
-
-    separator = map_end(map_end(5)) - 1
-    sig = bytes.fromhex(signature)
-    record = b"\x22\x02" + bytes.fromhex(pubkey) + bytes([len(sig)]) + sig
-    return base64.b64encode(raw[:separator] + record + raw[separator:]).decode("ascii")
+    return reserve._with_psbt_input_record(psbt, b"\x02" + bytes.fromhex(pubkey), bytes.fromhex(signature))
 
 
 class ProtectedMelt:

@@ -196,6 +196,9 @@ class CashuBridge:
             return
         if old:
             raise Refused("existing_issuance_mode_immutable")
+        from .protected_reserve import PLAN_SCHEMA
+        if bundle["plan"].get("schema") != PLAN_SCHEMA:
+            raise Refused("protected_onchain_issuance_commitment_required")
         genesis = bundle["plan"]["genesis"]
         txid, vout = bundle["funding"]["txid"], bundle["funding"]["vout"]
         if db.execute("SELECT 1 FROM cashu_protected_reserves WHERE genesis=? AND txid=? AND vout=?",

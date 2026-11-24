@@ -10,7 +10,8 @@ from unittest.mock import Mock, patch
 
 from proofdesk import demo
 from proofdesk.cashu import CashuBridge
-from proofdesk.domain import Ledger, Refused, Rules
+from proofdesk.domain import Ledger, Refused, Rules, canonical, digest
+from proofdesk.protected_reserve import LEGACY_PLAN_SCHEMA, PLAN_SCHEMA
 from proofdesk.regtest import payment_from_regtest
 
 POINT = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -160,9 +161,33 @@ class BridgeTests(unittest.TestCase):
     def protection(intent_id, bundle_id):
         commitment = hashlib.sha256(f'proof-grove/protected-issuance-intent/v1:{intent_id}'.encode()).hexdigest()
         return {'bundle_id': bundle_id, 'bundle': {
-            'bundle_id': bundle_id, 'plan': {'genesis': '11'*32, 'claim_commitment': commitment, 'reserve_sats': 25000},
+            'bundle_id': bundle_id, 'plan': {'schema': PLAN_SCHEMA, 'genesis': '11'*32,
+                                             'claim_commitment': commitment, 'reserve_sats': 25000},
             'funding': {'txid': '22'*32, 'vout': 0},
         }}
+
+    @patch('proofdesk.protected_reserve.status', return_value={'state': 'unspent'})
+    def test_new_protected_issuance_rejects_legacy_while_existing_assignment_can_replay(self, status):
+        self.admit()
+        legacy = self.protection(self.id, '33'*32)
+        legacy['bundle']['plan']['schema'] = LEGACY_PLAN_SCHEMA
+        self.refuse('protected_onchain_issuance_commitment_required',
+                    partial(self.bridge.issue, protection=legacy), self.id, self.payload)
+        self.assertEqual(self.ledger.db.execute('SELECT count(*) FROM cashu_protected_reserves').fetchone()[0], 0)
+        self.assertEqual(self.mint.posts, 0)
+
+        # Reopen the rows a previous version would have saved for this exact packet.
+        signatures = [{'id': o['id'], 'amount': o['amount'], 'C_': POINT} for o in self.payload['outputs']]
+        issued = {'state': 'blind-signatures-received', 'signatures': signatures,
+                  'protected_bundle_id': legacy['bundle_id']}
+        self.ledger.db.execute('INSERT INTO cashu_protected_reserves VALUES (?,?,?,?,?)',
+                               (self.id, '11'*32, '22'*32, 0, legacy['bundle_id']))
+        self.ledger.db.execute('INSERT INTO cashu_issuance VALUES (?,?,?,\'signatures_received\',?,NULL,0)',
+                               (self.id, digest(self.payload), canonical(self.payload).decode(), canonical(issued).decode()))
+        replay = self.bridge.issue(self.id, self.payload, protection=legacy)
+        self.assertTrue(replay['idempotent_replay'])
+        self.assertEqual(replay['signatures'], issued['signatures'])
+        self.assertEqual(self.mint.posts, 0)
 
     @patch('proofdesk.protected_reserve.status', return_value={'state': 'unspent'})
     def test_protected_issuance_cannot_be_replayed_as_ordinary_or_reassign_the_reserve(self, status):

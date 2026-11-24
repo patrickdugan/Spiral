@@ -18,5 +18,8 @@ def fixture_wif(scalar: int) -> str:
     return encoded
 
 
-def descriptor(holder: str, mint: str, delay: int) -> str:
-    return f'wsh(and_v(v:pk({holder}),or_i(pk({mint}),older({delay}))))'
+def descriptor(holder: str, mint: str, delay: int, issuance_hash: str | None = None) -> str:
+    policy = f'and_v(v:pk({holder}),or_i(pk({mint}),older({delay})))'
+    if issuance_hash is not None:
+        policy = f'and_v(v:sha256({issuance_hash}),{policy})'
+    return f'wsh({policy})'

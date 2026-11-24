@@ -119,13 +119,13 @@ export class ProofWallet {
       if (protection) {
         if (result.protected_bundle_id !== protection.bundle_id) throw new Error('Mint response reserve binding mismatch');
         requireProtectedSecrets(proofs, protection.lock_key);
-        observeProtection(operation, protectedOptions);
         const cache={info:wallet.getMintInfo().cache,keys:wallet.keyChain.cache};
         operation.protectedMintCache=JSON.parse(JSON.stringify(cache, (_,value)=>typeof value==='bigint'?value.toString():value));
       }
       const states=await wallet.checkProofsStates(proofs);
       if(states.length!==proofs.length||states.some(p=>p.state!=='UNSPENT'))throw new Error('Mint does not report every issued proof as unspent');
       if(Number(sumProofs(proofs).toString())!==operation.amount_sats)throw new Error('Mint returned the wrong token amount');
+      if (protection) observeProtection(operation, protectedOptions);
       operation.proofs=serializeProofs(proofs);operation.state=protection?'protected-issued':'spendable';operation.request_sha256=result.request_sha256;operation.evidence_level=result.evidence_level;this.vault.save(state);
       if (protection) return {...await auditProtected(operation, this.mintUrl), idempotent_replay:result.idempotent_replay};
       return {state:'spendable',amount_sats:operation.amount_sats,proof_count:proofs.length,dleq_verified:true,evidence_level:result.evidence_level,idempotent_replay:result.idempotent_replay};

@@ -7,6 +7,7 @@ import { deserializeProofs, hashToCurve, Mint, sumProofs, Wallet } from '@cashu/
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
+const fundedIssuancePlan = 'proof-grove/protected-reserve-plan/v2';
 
 export function issueIntentDomain(intentId, protection) {
   return protection ? `${intentId}#protected:${protection.bundle_id}` : intentId;
@@ -40,6 +41,9 @@ export function observeProtection(operation, options) {
       bundle.plan?.reserve_sats !== operation.amount_sats ||
       bundle.plan?.claim_commitment !== digest('proof-grove/protected-issuance-intent/v1:' + operation.intent.id)) {
     throw new Error('Protected reserve does not match the issuance intent');
+  }
+  if (bundle.plan.schema !== fundedIssuancePlan && operation.protection?.bundle_id !== bundleId) {
+    throw new Error('New protected issuance requires an on-chain commitment to the reserve terms');
   }
   const lockKey = protectedLockKey(bundleId);
   return {bundle, bundle_id: bundleId, lock_key: lockKey};
