@@ -226,15 +226,23 @@ def exercise(core, rpc, mining_address, record, expected, reserve_outpoint):
             'independent_beneficiary_wallets':True, 'fixtures':fixtures}
 
 
-def run(core, rpc, mining_address, receipt, certificate, directory, nova, m14):
+def run(core, rpc, mining_address, receipt, certificate, directory, nova, m14, node):
     root = Path(__file__).resolve().parents[1]
     builder = [sys.executable, str(root/'scripts/protected-fixture-evidence.py')]
     directory.mkdir()
     admission = directory/'holder-receipt.json'
     admission.write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
     work = directory/'accounting'
-    cert = ('--issuance-certificate', str(certificate))
-    journal_sha = subprocess.check_output([*builder, 'journal', admission, work, *cert], text=True, timeout=30).strip()
+    bundle = receipt['app_bundle']
+    if bundle['plan']['schema'] == 'proof-grove/protected-reserve-plan/v3':
+        handoff = certificate.parent
+        issuance = ('--v3-receipt', handoff/'protected-issuance-receipt.json',
+                    '--v3-bundle', handoff/'protected-bundle.json',
+                    '--v3-bundle-id', bundle['bundle_id'],
+                    '--v3-mint-pin', handoff/'protected-mint-pin.json', '--node', node)
+    else:
+        issuance = ('--issuance-certificate', certificate)
+    journal_sha = subprocess.check_output([*builder, 'journal', admission, work, *issuance], text=True, timeout=40).strip()
     proof, journal = work/'proof', work/'journal.json'
     with (work/'prover.json').open('w', encoding='utf-8') as stream:
         subprocess.run([nova, 'prove-journal', proof, journal], stdout=stream, check=True, timeout=100)
@@ -242,7 +250,7 @@ def run(core, rpc, mining_address, receipt, certificate, directory, nova, m14):
     with independent.open('w', encoding='utf-8') as stream:
         subprocess.run([nova, 'verify-journal', proof, journal, journal_sha], stdout=stream, check=True, timeout=100)
     record_path = work/'settlement.bin'
-    subprocess.run([*builder, 'settlement', admission, record_path, independent, *cert], check=True, timeout=30)
+    subprocess.run([*builder, 'settlement', admission, record_path, independent, *issuance], check=True, timeout=40)
     expected = subprocess.check_output([m14, '--digest', record_path], text=True, timeout=30).strip()
     (work/'settlement.blake3').write_text(expected + '\n', encoding='ascii')
     evaluation = subprocess.check_output([m14, record_path, expected], timeout=30)

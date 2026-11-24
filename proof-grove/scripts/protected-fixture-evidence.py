@@ -4,10 +4,21 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import tempfile
 
 
 GENESIS = '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206'
 SCHEMA = 'proof-grove/protected-reserve-regtest/v1'
+V3_PLAN = 'proof-grove/protected-reserve-plan/v3'
+
+
+def read_bounded(path, limit):
+    with path.open('rb') as stream:
+        data = stream.read(limit + 1)
+    if not data or len(data) > limit:
+        raise ValueError('unexpected evidence file length')
+    return data
 
 
 def canonical(value):
@@ -19,7 +30,7 @@ def digest(value):
 
 
 def read_receipt(path):
-    value = json.loads(path.read_bytes())
+    value = json.loads(read_bounded(path, 256 * 1024))
     if value.get('schema') != SCHEMA or value.get('genesis') != GENESIS:
         raise ValueError('expected the protected holder regtest receipt')
     if value.get('evidence') != 'bitcoin-core-regtest-consensus':
@@ -35,6 +46,50 @@ def read_receipt(path):
             or value['mature_holder_check']['txid'] != payout['txid']):
         raise ValueError('reserve and settlement disagree with the saved plan')
     return value
+
+
+def verify_v3_admission(receipt, portable_path, bundle_path, bundle_id, mint_pin_path, node):
+    """Rerun offline note verification against the observer's independent pins."""
+    hex_bytes(bundle_id, 32)
+    bundle_raw = read_bounded(bundle_path, 32768)
+    bundle = json.loads(bundle_raw)
+    reserve = receipt['reserve']
+    funding = {key: reserve[key] for key in ('txid', 'vout', 'block')}
+    if (bundle != receipt['app_bundle'] or bundle['bundle_id'] != bundle_id
+            or bundle['plan']['schema'] != V3_PLAN or bundle['funding'] != funding
+            or bundle['plan']['genesis'] != GENESIS):
+        raise ValueError('V3 funding receipt differs from the independently pinned bundle')
+    claim = hashlib.sha256(b'proof-grove/protected-reserve/v1\0' + hex_bytes(GENESIS, 32)
+                           + hex_bytes(funding['txid'], 32) + funding['vout'].to_bytes(4, 'big')).hexdigest()
+    if claim != receipt['claim_id']:
+        raise ValueError('V3 claim is not the canonical reserve outpoint claim')
+    pin = json.loads(read_bounded(mint_pin_path, 32768))
+    hex_bytes(pin['keysets_sha256'], 32)
+    portable = read_bounded(portable_path, 2 * 1024 * 1024)
+    cli = Path(__file__).resolve().parents[1] / 'wallet/cli.mjs'
+    with tempfile.TemporaryDirectory(prefix='proof-grove-v3-admission-') as scratch:
+        checked_receipt, checked_bundle = (Path(scratch) / name for name in ('receipt.json', 'bundle.json'))
+        checked_receipt.write_bytes(portable)
+        checked_bundle.write_bytes(bundle_raw)
+        run = subprocess.run([node, str(cli), 'protected-verify-receipt', '--receipt', str(checked_receipt),
+                              '--mint', pin['mint'], '--keysets-sha256', pin['keysets_sha256'],
+                              '--bundle', str(checked_bundle), '--bundle-id', bundle_id,
+                              '--amount', str(reserve['sats'])],
+                             stdin=subprocess.DEVNULL, capture_output=True, check=False, timeout=30)
+    verification = json.loads(run.stdout)
+    if run.returncode:
+        raise ValueError(f'V3 offline issuer verification refused the receipt: {verification.get("error")}')
+    if (verification.get('batch_bound') is not True or verification.get('dleq_verified') is not True
+            or verification.get('offline_keyset_audit') is not True
+            or verification.get('bundle_id') != bundle_id or verification.get('amount_sats') != reserve['sats']
+            or verification.get('keysets_sha256') != pin['keysets_sha256']
+            or verification.get('keyset_ids') != pin['keyset_ids']):
+        raise ValueError('V3 issuer verification did not establish the expected exact batch')
+    intent = json.loads(portable)['operation']['protection']['batch']['intent_id']
+    return {'kind': 'verified-cdk-protected-v3-batch', 'real_cdk_issuance': True,
+            'bundle_id': bundle_id, 'claim': claim, 'amount_sats': reserve['sats'],
+            'intent_id': intent, 'issuance_batch_sha256': bundle['plan']['claim_commitment'],
+            'issuance_receipt_sha256': hashlib.sha256(portable).hexdigest(), 'independent_verifier': verification}
 
 
 def issuance_evidence(receipt, certificate, note):
@@ -68,16 +123,31 @@ def issuance_evidence(receipt, certificate, note):
                      'certificate_sha256': certificate_sha, 'independent_verifier': independent}
 
 
-def journal(receipt, certificate=None):
+def journal(receipt, certificate=None, v3=None):
     bundle, reserve, payout = (receipt[key] for key in ('app_bundle', 'reserve', 'payout'))
     plan = bundle['plan']
-    mint = digest({'schema': plan['schema'], 'mint_pubkey': plan['mint_pubkey']})
-    intent = plan['claim_commitment'] if certificate is not None else digest({
-        'kind': 'protected-fixture-intent', 'plan_id': plan['plan_id'],
-    })
-    note = receipt['claim_id'] if certificate is not None else digest({
-        'kind': 'fixture-note', 'claim_commitment': plan['claim_commitment'], 'bundle_id': bundle['bundle_id'],
-    })
+    if plan['schema'] == V3_PLAN:
+        if v3 is None or certificate is not None:
+            raise ValueError('V3 journal requires independently verified batch evidence')
+        mint = digest({'schema': 'proof-grove/protected-accounting-mint/v3',
+                       'mint_url': v3['independent_verifier']['mint']})
+        namespace, _, quote = v3['intent_id'].partition(':')
+        if namespace != 'cashu':
+            raise ValueError('V3 issuance intent must identify a Cashu quote')
+        intent = hashlib.sha256(b'proof-grove/protected-issuance-intent/v1\0'
+                                + hex_bytes(quote, 32)).hexdigest()
+        note, issuance = v3['claim'], v3
+    else:
+        if v3 is not None:
+            raise ValueError('V3 evidence requires a V3 reserve plan')
+        mint = digest({'schema': plan['schema'], 'mint_pubkey': plan['mint_pubkey']})
+        intent = plan['claim_commitment'] if certificate is not None else digest({
+            'kind': 'protected-fixture-intent', 'plan_id': plan['plan_id'],
+        })
+        note = receipt['claim_id'] if certificate is not None else digest({
+            'kind': 'fixture-note', 'claim_commitment': plan['claim_commitment'], 'bundle_id': bundle['bundle_id'],
+        })
+        issuance = issuance_evidence(receipt, certificate, note)
     actions = [
         {'kind': 'register', 'intent': intent},
         {'kind': 'issue', 'intent': intent, 'claim': note},
@@ -85,7 +155,7 @@ def journal(receipt, certificate=None):
     ]
     evidence = [
         {'kind': 'observed-regtest-reserve', 'funding': reserve, 'bundle_id': bundle['bundle_id']},
-        issuance_evidence(receipt, certificate, note),
+        issuance,
         {'kind': 'observed-regtest-payout', 'payout': payout, 'bundle_id': bundle['bundle_id']},
     ]
     events = [
@@ -104,8 +174,8 @@ def hex_bytes(value, count):
     return raw
 
 
-def settlement(receipt, verifier, certificate=None):
-    expected, evidence = journal(receipt, certificate)
+def settlement(receipt, verifier, certificate=None, v3=None):
+    expected, evidence = journal(receipt, certificate, v3)
     expected_hash = hashlib.sha256(canonical(expected)).hexdigest()
     if (verifier.get('schema') != 'proof-grove/cashu-nova-regtest-accounting/v1'
             or verifier.get('mode') != 'verify-journal' or verifier.get('verified') is not True
@@ -151,19 +221,28 @@ def main():
         command.add_argument('receipt', type=Path)
         command.add_argument('output', type=Path)
         command.add_argument('--issuance-certificate', type=Path)
+        command.add_argument('--v3-receipt', type=Path)
+        command.add_argument('--v3-bundle', type=Path)
+        command.add_argument('--v3-bundle-id')
+        command.add_argument('--v3-mint-pin', type=Path)
+        command.add_argument('--node', default='node')
     make_record.add_argument('nova_verifier', type=Path)
     args = parser.parse_args()
     receipt = read_receipt(args.receipt)
-    certificate = args.issuance_certificate.read_bytes() if args.issuance_certificate else None
+    v3_inputs = (args.v3_receipt, args.v3_bundle, args.v3_bundle_id, args.v3_mint_pin)
+    if any(v3_inputs) and (not all(v3_inputs) or args.issuance_certificate):
+        parser.error('all four V3 admission arguments are required together')
+    certificate = read_bounded(args.issuance_certificate, 2 * 1024 * 1024) if args.issuance_certificate else None
+    v3 = verify_v3_admission(receipt, *v3_inputs, args.node) if all(v3_inputs) else None
     if args.command == 'journal':
-        statement, records = journal(receipt, certificate)
+        statement, records = journal(receipt, certificate, v3)
         args.output.mkdir()
         (args.output / 'journal.json').write_bytes(canonical(statement))
         (args.output / 'admission-evidence.json').write_bytes(canonical(records))
         print(hashlib.sha256(canonical(statement)).hexdigest())
     else:
-        verification = json.loads(args.nova_verifier.read_bytes())
-        record = settlement(receipt, verification, certificate)
+        verification = json.loads(read_bounded(args.nova_verifier, 256 * 1024))
+        record = settlement(receipt, verification, certificate, v3)
         with args.output.open('xb') as stream:
             stream.write(record)
 

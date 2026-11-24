@@ -194,7 +194,7 @@ try:
             from cashu_collateral_fixture import run as run_bond
             print(json.dumps({'stage':'holder-payout-confirmed','payout_sats':payout['payout']['sats']}),flush=True)
             target=args.protected_handoff/'collateral'
-            report=run_bond(core,rpc,mining_address,payout,certificate,target,args.collateral_nova,args.collateral_m14)
+            report=run_bond(core,rpc,mining_address,payout,certificate,target,args.collateral_nova,args.collateral_m14,args.node)
             (target/'regtest-bond-receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     else:
         report['token_sha256']=audit['token_sha256']
