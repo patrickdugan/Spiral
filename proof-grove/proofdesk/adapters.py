@@ -73,7 +73,7 @@ class CoreClient:
         if method not in ("getblockchaininfo", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
                           "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept",
                           "getdescriptorinfo", "deriveaddresses", "createpsbt", "utxoupdatepsbt", "decodepsbt",
-                          "gettxspendingprevout", "getindexinfo"):
+                          "gettxspendingprevout", "getindexinfo", "gettxoutproof", "verifytxoutproof"):
             raise Refused("rpc_not_allowed")
         return self._call(method, params)
 
