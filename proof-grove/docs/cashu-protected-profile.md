@@ -145,7 +145,7 @@ The V3 CDK fixture exercised the same bond path. The holder received 24,750 sats
 Run the same-chain fixture from `proof-grove/` with a Linux Bitcoin Core 31.0 binary, the pinned CDK and Node from the wallet guide, and Python `cryptography` with secp256k1 available. Build `proof-grove-cashu-nova` in `integrations/cashu-nova` and `cargo +stable build --locked --release --example cashu-settlement` in the verifier repository's `integrations/bitvm3-nova/m14/circuit`.
 
 ```bash
-RAYON_NUM_THREADS=4 python3 tests/run-regtest-stack.py --protected \
+RAYON_NUM_THREADS=4 python3 tests/run-regtest-stack.py --protected --batch-protected \
   --bitcoind "$BITCOIND" --cdk "$CDK" --node "$NODE" \
   --collateral-nova "$NOVA_BIN" --collateral-m14 "$M14_CASHU_SETTLEMENT_BIN"
 ```
