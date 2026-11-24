@@ -1,0 +1,738 @@
+{
+  "initial_account_check": {
+    "plan": "open",
+    "remaining_qpu_seconds": 515,
+    "checked_utc": "2026-11-23T14:47:19.651420+00:00"
+  },
+  "repeat_account_check": {
+    "plan": "open",
+    "remaining_qpu_seconds": 515,
+    "checked_utc": "2026-11-23T14:50:59.614193+00:00"
+  },
+  "initial_calibration_fingerprint": "0d9e5d11762d5ae933e9bccc4ba923184187d52db2223137e9521c42ddc46fe4",
+  "repeat_calibration_fingerprint": "0d9e5d11762d5ae933e9bccc4ba923184187d52db2223137e9521c42ddc46fe4",
+  "same_compilation_and_noise_inputs": true,
+  "repeat_devices": [
+    {
+      "backend": "ibm_fez",
+      "available_triples": 244,
+      "calibration_timestamp": "2026-11-23T22:32:59+08:00",
+      "calibration_drift": {
+        "status": "available",
+        "prior_timestamp": "2026-11-23T22:08:28+08:00",
+        "prior_native_couplers": 352
+      },
+      "top_triples": [
+        {
+          "physical_xyz": [
+            22,
+            23,
+            24
+          ],
+          "score": 0.04286236739157397,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                22,
+                23
+              ],
+              "error": 0.00157754196635998,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                23,
+                24
+              ],
+              "error": 0.0017173398950867669,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.004638671875,
+            0.00390625,
+            0.004150390625
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            16,
+            23,
+            22
+          ],
+          "score": 0.05352774269223933,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                16,
+                23
+              ],
+              "error": 0.0023791250889199367,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                22,
+                23
+              ],
+              "error": 0.00157754196635998,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.009521484375,
+            0.00390625,
+            0.004638671875
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            8,
+            9,
+            10
+          ],
+          "score": 0.05389052509320288,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                8,
+                9
+              ],
+              "error": 0.0019977443438639886,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                9,
+                10
+              ],
+              "error": 0.0021568584021613713,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.00439453125,
+            0.00390625,
+            0.008544921875
+          ],
+          "contains_q2_pair": true
+        },
+        {
+          "physical_xyz": [
+            16,
+            23,
+            24
+          ],
+          "score": 0.05415784487205363,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                16,
+                23
+              ],
+              "error": 0.0023791250889199367,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                23,
+                24
+              ],
+              "error": 0.0017173398950867669,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.009521484375,
+            0.00390625,
+            0.004150390625
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            88,
+            89,
+            90
+          ],
+          "score": 0.05516860787502816,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                88,
+                89
+              ],
+              "error": 0.0020232443072568385,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                89,
+                90
+              ],
+              "error": 0.002092754528684182,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.0050048828125,
+            0.010498046875,
+            0.0029296875
+          ],
+          "contains_q2_pair": false
+        }
+      ],
+      "best_q2_pair_extension": {
+        "physical_xyz": [
+          8,
+          9,
+          10
+        ],
+        "score": 0.05389052509320288,
+        "bonds": [
+          {
+            "gate": "cz",
+            "physical": [
+              8,
+              9
+            ],
+            "error": 0.0019977443438639886,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          },
+          {
+            "gate": "cz",
+            "physical": [
+              9,
+              10
+            ],
+            "error": 0.0021568584021613713,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          }
+        ],
+        "readout_errors": [
+          0.00439453125,
+          0.00390625,
+          0.008544921875
+        ],
+        "contains_q2_pair": true
+      }
+    },
+    {
+      "backend": "ibm_kingston",
+      "available_triples": 244,
+      "calibration_timestamp": "2026-11-23T22:34:13+08:00",
+      "calibration_drift": {
+        "status": "available",
+        "prior_timestamp": "2026-11-23T22:03:26+08:00",
+        "prior_native_couplers": 352
+      },
+      "top_triples": [
+        {
+          "physical_xyz": [
+            67,
+            68,
+            69
+          ],
+          "score": 0.04015691170619858,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                67,
+                68
+              ],
+              "error": 0.0009912156824169738,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                68,
+                69
+              ],
+              "error": 0.0013551326558578491,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.0052490234375,
+            0.0047607421875,
+            0.007568359375
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            108,
+            109,
+            110
+          ],
+          "score": 0.0415578631515667,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                108,
+                109
+              ],
+              "error": 0.0011527143225992242,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                109,
+                110
+              ],
+              "error": 0.001445046891659113,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.006591796875,
+            0.005615234375,
+            0.0047607421875
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            122,
+            123,
+            136
+          ],
+          "score": 0.04241818058533161,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                122,
+                123
+              ],
+              "error": 0.0010868436497020184,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                123,
+                136
+              ],
+              "error": 0.001526904509401933,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.0052490234375,
+            0.0042724609375,
+            0.0081787109375
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            55,
+            59,
+            75
+          ],
+          "score": 0.042687356190796964,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                55,
+                59
+              ],
+              "error": 0.0011759877951308118,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                59,
+                75
+              ],
+              "error": 0.001349337002156309,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.007080078125,
+            0.0028076171875,
+            0.0087890625
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            57,
+            67,
+            68
+          ],
+          "score": 0.04373841202799574,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                57,
+                67
+              ],
+              "error": 0.0019096317195199941,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                67,
+                68
+              ],
+              "error": 0.0009912156824169738,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.0067138671875,
+            0.0052490234375,
+            0.0047607421875
+          ],
+          "contains_q2_pair": false
+        }
+      ],
+      "best_q2_pair_extension": {
+        "physical_xyz": [
+          9,
+          10,
+          11
+        ],
+        "score": 0.08000271228499975,
+        "bonds": [
+          {
+            "gate": "cz",
+            "physical": [
+              9,
+              10
+            ],
+            "error": 0.004742457389980331,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          },
+          {
+            "gate": "cz",
+            "physical": [
+              10,
+              11
+            ],
+            "error": 0.0011655486378321367,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          }
+        ],
+        "readout_errors": [
+          0.0052490234375,
+          0.0045166015625,
+          0.0191650390625
+        ],
+        "contains_q2_pair": true
+      }
+    },
+    {
+      "backend": "ibm_marrakesh",
+      "available_triples": 244,
+      "calibration_timestamp": "2026-11-23T22:16:51+08:00",
+      "calibration_drift": {
+        "status": "available",
+        "prior_timestamp": "2026-11-23T21:40:55+08:00",
+        "prior_native_couplers": 352
+      },
+      "top_triples": [
+        {
+          "physical_xyz": [
+            87,
+            97,
+            107
+          ],
+          "score": 0.04545449962208622,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                87,
+                97
+              ],
+              "error": 0.001695034629896397,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                97,
+                107
+              ],
+              "error": 0.0012677358306768804,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.0057373046875,
+            0.008544921875,
+            0.003662109375
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            52,
+            53,
+            54
+          ],
+          "score": 0.0476916509644811,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                52,
+                53
+              ],
+              "error": 0.0019114828036476406,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                53,
+                54
+              ],
+              "error": 0.0012393788403499972,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.006591796875,
+            0.005859375,
+            0.0062255859375
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            53,
+            54,
+            55
+          ],
+          "score": 0.049602760702961844,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                53,
+                54
+              ],
+              "error": 0.0012393788403499972,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                54,
+                55
+              ],
+              "error": 0.0021351127318952334,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.005859375,
+            0.0062255859375,
+            0.0067138671875
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            39,
+            53,
+            54
+          ],
+          "score": 0.058584108997494964,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                39,
+                53
+              ],
+              "error": 0.0026321709171493735,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                53,
+                54
+              ],
+              "error": 0.0012393788403499972,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.01171875,
+            0.005859375,
+            0.0062255859375
+          ],
+          "contains_q2_pair": false
+        },
+        {
+          "physical_xyz": [
+            66,
+            65,
+            77
+          ],
+          "score": 0.060055214340936934,
+          "bonds": [
+            {
+              "gate": "cz",
+              "physical": [
+                65,
+                66
+              ],
+              "error": 0.0016515340353189245,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            },
+            {
+              "gate": "cz",
+              "physical": [
+                65,
+                77
+              ],
+              "error": 0.0024191626791731924,
+              "duration_s": 6.8e-08,
+              "error_change": 0.0
+            }
+          ],
+          "readout_errors": [
+            0.01025390625,
+            0.0059814453125,
+            0.0074462890625
+          ],
+          "contains_q2_pair": false
+        }
+      ],
+      "best_q2_pair_extension": {
+        "physical_xyz": [
+          9,
+          10,
+          11
+        ],
+        "score": 0.07800705723468601,
+        "bonds": [
+          {
+            "gate": "cz",
+            "physical": [
+              9,
+              10
+            ],
+            "error": 0.001700642652925688,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          },
+          {
+            "gate": "cz",
+            "physical": [
+              10,
+              11
+            ],
+            "error": 0.0017148645014100627,
+            "duration_s": 6.8e-08,
+            "error_change": 0.0
+          }
+        ],
+        "readout_errors": [
+          0.0181884765625,
+          0.0013427734375,
+          0.02734375
+        ],
+        "contains_q2_pair": true
+      }
+    }
+  ],
+  "repeat_selection": {
+    "physical_xyz": [
+      67,
+      68,
+      69
+    ],
+    "score": 0.04015691170619858,
+    "bonds": [
+      {
+        "gate": "cz",
+        "physical": [
+          67,
+          68
+        ],
+        "error": 0.0009912156824169738,
+        "duration_s": 6.8e-08,
+        "error_change": 0.0
+      },
+      {
+        "gate": "cz",
+        "physical": [
+          68,
+          69
+        ],
+        "error": 0.0013551326558578491,
+        "duration_s": 6.8e-08,
+        "error_change": 0.0
+      }
+    ],
+    "readout_errors": [
+      0.0052490234375,
+      0.0047607421875,
+      0.007568359375
+    ],
+    "contains_q2_pair": false
+  },
+  "qpu_submitted": false
+}
