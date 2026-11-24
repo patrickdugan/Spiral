@@ -9,7 +9,7 @@ use proof_grove_cashu_nova::{
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Instant;
 
@@ -130,6 +130,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .first()
         .and_then(|command| command.to_str())
         .unwrap_or_default();
+    if let ("export-verifier-key", [_, output]) = (mode, argv.as_slice()) {
+        let pp = PP::setup(&CashuStep::default(), &*S1::ck_floor(), &*S2::ck_floor())?;
+        let (_, vk) = CS::setup(&pp)?;
+        let bytes = bincode::serialize(&vk)?;
+        fs::File::create_new(output)?.write_all(&bytes)?;
+        println!("{}", hex::encode(Sha256::digest(bytes)));
+        return Ok(());
+    }
     let (output, (initial, steps, expected, count), journal_context) = match (mode, argv.as_slice()) {
         ("prove-demo" | "verify-demo", [_, output]) => (Path::new(output), demo(), None),
         ("prove-journal", [_, output, journal]) => {
@@ -140,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let replay = journal::read(Path::new(journal), Some(pin.to_str().ok_or("invalid journal SHA-256")?))?;
             (Path::new(output), (replay.initial, replay.steps, replay.expected, replay.constraints), Some((replay.sha256, field_hex(replay.prior_journal_root))))
         }
-        _ => return Err("usage: proof-grove-cashu-nova {prove-demo|verify-demo} DIR | prove-journal DIR JOURNAL | verify-journal DIR JOURNAL EXPECTED_SHA256".into()),
+        _ => return Err("usage: proof-grove-cashu-nova {prove-demo|verify-demo} DIR | prove-journal DIR JOURNAL | verify-journal DIR JOURNAL EXPECTED_SHA256 | export-verifier-key NEW_FILE".into()),
     };
     let start = Instant::now();
     let pp = PP::setup(&CashuStep::default(), &*S1::ck_floor(), &*S2::ck_floor())?;

@@ -156,6 +156,10 @@ Build a regtest settlement record from the holder receipt and the independent No
 
 The paired Cashu benchmark cost $0.2487. The issuance and 24,750-sat payout prover stages took 240.505 seconds and 257.603 seconds and peaked at 45,576,180 KiB and 46,434,300 KiB. This was a 16-thread CPU run on Hyperstack, hosted on an A100 VM. The available WSL machine reported approximately 15 GiB RAM and zero swap. Any new paid run needs ready inputs, approved spend and a bounded lease. Completion ETA is unknown.
 
+The local RTX 3050 trial uses a 16 MiB Cashu evidence corpus and the SP1 SHA-256 guest to measure core-shard proving. Two full-CUDA attempts stopped during initialization at the device memory guard. The second sampled 3,904 MiB in use and 59 MiB free. The CUDA-core, CPU-recursion worker reached its isolated 6 GiB host RAM cap before the GPU processed a shard. The guard recorded zero swap activity and zero verified proofs. These attempts incurred zero rental charges and provide no measured proving throughput.
+
+The SP1 Cashu guest builds separately with the pinned SP1 v6.9.0 toolchain. Its verifier takes the Nova key, compressed proof, independently replayed journal digest, step count, and initial and final state. The ELF compiled under a 1 GiB cap, and the exported verifier key matched the native receipt. Separate guest execution reached a 1.5 GiB memory cap before returning public output. The pinned exact historical Cairo payout requires its own proof and verifier.
+
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
 | --- | --- | --- | --- | --- |
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
