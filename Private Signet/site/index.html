@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keyless SatsHedgeZero</title>
+<meta name="description" content="SatsHedgeZero's inverse BTC/USD DLC on a private Signet: the prototype as it is, then settled by script with no keys, exclusive on-chain transfer, a netted book and a FROST oracle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-row">
+    <span class="mark">Private Signet · SatsHedgeZero</span>
+    <nav>
+      <a href="#prototype">Prototype</a><a href="#k1">By script</a><a href="#k2">Ownership</a><a href="#book">Book</a><a href="#trials">Trials</a>
+      <button id="theme" type="button" aria-label="Toggle colour theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero wrap">
+  <p class="eyebrow">Research run · patched Bitcoin Core on a self-mined custom Signet</p>
+  <h1>A Bitcoin hedge that settles itself.</h1>
+  <p class="lede">SatsHedgeZero's inverse BTC/USD contract, first run as it is on a private Signet, then moved
+    onto research consensus rules (TXCOMMIT, OP_CAT, P2MR, OP_CHECKSIGFROMSTACK). The oracle's signatures
+    are checked in script, and the payout is bound to the transaction. Positions change hands on-chain
+    with one signature and no counterparty.</p>
+  <div class="stats" id="stats"></div>
+  <p class="caveat"><b>Not on any public network.</b> These rules run only in a patched Core started with
+    <code>-keylessresearch</code> on a custom-challenge Signet. On stock rules every one of these spends is
+    anyone-can-spend, and the stock node in every run proves that by forking.</p>
+</section>
+
+<section id="prototype" class="wrap act">
+  <div class="act-head"><span class="act-n">01</span><div>
+    <h2>The prototype, unchanged, on a private Signet</h2>
+    <p>SatsHedgeZero's own live flow (<code>shz testnet4-live</code>), pointed at the lab's miner node:
+      three DLC fundings, one pre-signed 3-input, 4-output collated clearing, and two 1-sat shave probes
+      against the mempool.</p></div></div>
+  <figure class="card"><div id="proto-flow" class="flow"></div>
+    <figcaption id="proto-cap"></figcaption></figure>
+</section>
+
+<section id="k1" class="wrap act">
+  <div class="act-head"><span class="act-n">02</span><div>
+    <h2>Settlement by script</h2>
+    <p>The contract maths is ported from Rust and checked against the crate's own test vectors.
+      SHZ's dyadic compression cuts the 2<sup>20</sup> possible prices into <b id="cet-n"></b> ranges.
+      Each range becomes one leaf that checks only the oracle digits it needs. Move across the
+      chart to see which leaf would settle.</p></div></div>
+  <figure class="card">
+    <div class="chart-head"><h3>Trade 1 payout · Alice long $1 at 2x vs Bob short $1 at 1.25x, entry $80,000</h3>
+      <div class="legend" id="k1-legend"></div></div>
+    <div id="k1-chart" class="chart" role="img" aria-label="Long and short payout in sats against BTC/USD price"></div>
+    <div class="leafbox" id="k1-leaf"></div>
+    <details class="tableview"><summary>Table view</summary><div id="k1-table"></div></details>
+  </figure>
+</section>
+
+<section id="k2" class="wrap act">
+  <div class="act-head"><span class="act-n">03</span><div>
+    <h2>Owners inside the output</h2>
+    <p>K1 let an owner sign an off-chain assignment, so the same position could be sold twice. K2 puts the
+      owners into the output's own tree. Every leaf rebuilds the output from the claimed owners and binds
+      it through TXCOMMIT, so a stale owner list cannot spend. A transfer leaf lets one owner, alone,
+      move the coin to the same contract with only their key replaced.</p></div></div>
+  <div class="grid2">
+    <figure class="card"><h3>Output structure</h3><div id="k2-tree" class="tree"></div></figure>
+    <figure class="card"><h3>Rules the transfer leaf enforces</h3><ul class="rules" id="k2-rules"></ul></figure>
+  </div>
+  <figure class="card"><h3>What happened on the patched Signet</h3>
+    <p class="sub">Patched miner and observer (Core v30.0 with the research patches), and a stock Core 31.1
+      node following with the old rules.</p>
+    <ol class="timeline" id="k2-timeline"></ol></figure>
+</section>
+
+<section id="book" class="wrap act">
+  <div class="act-head"><span class="act-n">04</span><div>
+    <h2>A netted book in one keyless transaction</h2>
+    <p>SHZ funds its three-trade triangle together and clears it cooperatively. Here the three trades share
+      one output: <b id="book-ranges"></b> leaves over a joint price partition, each paying every party their
+      net total. At $125,000 that is exactly the prototype's clearing, with no signatures.</p></div></div>
+  <figure class="card">
+    <div class="chart-head"><h3>Netted payout per party (sats)</h3><div class="legend" id="book-legend"></div></div>
+    <div id="book-chart" class="chart" role="img" aria-label="Netted payout per party against price"></div>
+    <div id="book-trades" class="trades"></div>
+    <details class="tableview"><summary>Table view</summary><div id="book-table"></div></details>
+  </figure>
+  <figure class="card"><div class="chart-head"><h3>Transaction size (vB)</h3></div>
+    <div id="sizes" class="bars"></div>
+    <p class="sub">SHZ's clearing is smaller because every party signs it together. The keyless
+      settlements need nobody online and no keys at all.</p></figure>
+</section>
+
+<section id="trials" class="wrap act">
+  <div class="act-head"><span class="act-n">05</span><div>
+    <h2>Every trial</h2>
+    <p>Each trial is one hand-built block submitted to three regtest validators: the patched node with the
+      rules on (<b>new</b>), the same binary with them off (<b>old-flag</b>), and stock Core
+      (<b>old-stock</b>). A soft fork shows up as rejected by new and accepted by both old nodes.</p></div></div>
+  <div class="filters" id="filters" role="group" aria-label="Filter trials"></div>
+  <div class="card tablecard"><table class="trials" id="trial-table"></table></div>
+</section>
+
+<section class="wrap act foot">
+  <div class="grid2">
+    <div><h3>Evidence</h3><ul class="links" id="links"></ul></div>
+    <div><h3>Still open</h3><ul class="plain">
+      <li>Netting trades that were funded separately needs 64-bit amount arithmetic or input introspection.</li>
+      <li>A book transfer moves a party's whole book; one trade cannot be sold out of it.</li>
+      <li>Amounts stay below 2<sup>31</sup> sats (about 21 BTC), because the transfer fee uses 4-byte script numbers.</li>
+      <li>Until a transfer confirms, two conflicting transfers race like any double spend.</li>
+    </ul></div>
+  </div>
+  <p class="fine">Built from the committed receipts by <code>Private Signet/site/build_data.py</code>.
+    The transaction IDs belong to a private Signet; no public explorer indexes them.</p>
+</section>
+</main>
+<div id="tip" class="tip" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

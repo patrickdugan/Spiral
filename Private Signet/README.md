@@ -8,6 +8,13 @@ harness compares a vanilla DLC settlement with the proposed Keyless-CHECKSIG
 
 **Status (2026-11-23):** working.
 
+**Showcase:** <https://patrickdugan.github.io/Spiral/shz-keyless/>, the
+SatsHedgeZero results as an interactive page. The source is `site/`; its data
+is rebuilt from `evidence/` by `site/build_data.py`. The Pages workflow
+publishes it from main. Pushing a tag `shz-keyless-v*` makes
+`shz-keyless-release.yml` create a GitHub release with the page, the
+receipts and the code as assets.
+
 - **Private Signet:** 101 signed blocks mined, observer agreement on every
   hash and on chainwork, and a wallet transaction confirmed.
 - **Vanilla DLC:** an adaptor-signature DLC was settled on the private Signet

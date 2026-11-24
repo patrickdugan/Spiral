@@ -1,6 +1,6 @@
 name: iob-pages
 
-# Publishes both demos into their own directories. All other gh-pages content
+# Publishes the Spiral demos into their own directories. All other gh-pages content
 # is retained. The explicit build request also publishes GITHUB_TOKEN commits.
 
 on:
@@ -9,6 +9,7 @@ on:
     paths:
       - "in-and-out-burger/site/**"
       - "proof-grove/**"
+      - "Private Signet/site/**"
       - ".github/workflows/iob-pages.yml"
   workflow_dispatch:
 
@@ -36,6 +37,8 @@ jobs:
       - name: Check Proof Grove's static export contract
         working-directory: src/proof-grove
         run: python3 -m unittest discover -s tests -p test_static_export.py -q
+      - name: Check the SHZ showcase data parses
+        run: python3 -c "import json; d = json.load(open('src/Private Signet/site/data/showcase.json')); assert all(t['ok'] for t in d['trials']); print(len(d['trials']), 'trials, all as expected')"
       - name: Build the authenticated app and fixture examples
         run: python3 src/proof-grove/scripts/build-pages.py --output built-proof-grove
       - name: Update both demo directories on gh-pages
@@ -46,14 +49,18 @@ jobs:
           rm -rf pages/proof-grove
           mkdir -p pages/proof-grove
           cp -r built-proof-grove/. pages/proof-grove/
+          rm -rf pages/shz-keyless
+          mkdir -p pages/shz-keyless/data
+          cp "src/Private Signet/site/index.html" "src/Private Signet/site/style.css" "src/Private Signet/site/app.js" pages/shz-keyless/
+          cp "src/Private Signet/site/data/showcase.json" pages/shz-keyless/data/
           cd pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A in-and-out-burger proof-grove
+          git add -A in-and-out-burger proof-grove shz-keyless
           if git diff --cached --quiet; then echo "demos unchanged"; exit 0; fi
           git commit -m "Spiral demos from ${GITHUB_SHA::7}"
           git push origin gh-pages
-          echo "::notice::published both demos from ${GITHUB_SHA::7}"
+          echo "::notice::published the demos from ${GITHUB_SHA::7}"
       - name: Request the Pages build
         uses: actions/github-script@v8
         with:

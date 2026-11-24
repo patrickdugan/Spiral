@@ -1,0 +1,46 @@
+name: shz-keyless-release
+
+# Pushing a tag shz-keyless-v* publishes a GitHub release with the showcase
+# site, the evidence receipts and the contract code as assets. The release
+# is created with the workflow's own token.
+
+on:
+  push:
+    tags: ["shz-keyless-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline tests and a rebuild check of the showcase data
+        run: |
+          python -m unittest discover -s "Private Signet/ab" -p test_shz.py
+          cp "Private Signet/site/data/showcase.json" /tmp/committed.json
+          python "Private Signet/site/build_data.py"
+          cmp /tmp/committed.json "Private Signet/site/data/showcase.json"
+      - name: Package assets
+        run: |
+          mkdir -p dist
+          (cd "Private Signet/site" && zip -qr "$GITHUB_WORKSPACE/dist/shz-keyless-showcase-site.zip" index.html style.css app.js data)
+          (cd "Private Signet" && zip -qr "$GITHUB_WORKSPACE/dist/shz-keyless-evidence.zip" evidence/regtest/shz-k1-regtest.json \
+            evidence/regtest/shz-k2-regtest.json evidence/signet-shz-prototype evidence/signet-shz-k1 evidence/signet-shz-k2 RESULTS.md)
+          (cd "Private Signet" && zip -qr "$GITHUB_WORKSPACE/dist/shz-keyless-code.zip" ab/shz_margin.py ab/shz_k1.py ab/shz_k2.py \
+            ab/shz_frost.py ab/test_shz.py ab/run_shz_k1_regtest.py ab/run_shz_k2_regtest.py ab/run_signet_shz_k1.py \
+            ab/run_signet_shz_k2.py ab/run_signet_shz_prototype.py lab.py)
+          (cd dist && sha256sum *.zip > SHA256SUMS)
+          cat dist/SHA256SUMS
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS \
+            --title "Keyless SatsHedgeZero on a private Signet ($GITHUB_REF_NAME)" \
+            --notes-file "Private Signet/site/RELEASE_NOTES.md" --verify-tag
+          echo "::notice::release $GITHUB_REF_NAME published"
