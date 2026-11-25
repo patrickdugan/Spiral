@@ -301,6 +301,24 @@ python -m proofdesk.protected_withdrawal_evidence bitcoin-authorization-evidence
 
 The verifier connects the funding header to the pinned tip, verifies the funding transaction’s Merkle inclusion, reconstructs the reserve script and checks the exact holder signature, beneficiary, amounts and next-block CSV eligibility. The observer selects the active chain and checks that the output is unspent. The archive can be replayed with OpenSSL and without a live mint or Bitcoin node.
 
+The pre-broadcast fixture also archives the public blocks from genesis through
+the checkpoint as `checkpoint-blocks.hex` and records their SHA-256 in
+`checkpoint-blocks-manifest.json`. Rehydrate the exact chain on a separate
+regtest node using the original checkpoint and byte pins.
+
+```bash
+python -m proofdesk.protected_chain_archive replay checkpoint-blocks.hex \
+  --bitcoin-cli "$BITCOIN_CLI" --datadir "$REGTEST_DATADIR" --rpc-port "$RPC_PORT" \
+  --height "$TIP_HEIGHT" --anchor "$TIP_HASH" --archive-sha256 "$BLOCK_ARCHIVE_SHA256"
+```
+
+The destination must be at genesis or an exact prefix of the archive. Core
+validates the submitted blocks and reconstructs the UTXO set without wallet
+files. A fresh Core 31 node replayed all 107 blocks of a test archive, found the
+same unspent 25,000-sat reserve, and accepted a retry with zero submissions.
+The earlier withdrawal archive contains its signed spend and header prefix.
+Replaying that earlier history requires the full original blocks.
+
 Run `tests/run-regtest-stack.py --protected --batch-protected --bitcoind "$BITCOIND" --node "$NODE" --cdk "$CDK" --withdrawal-nova "$NOVA"`. The fixture independently checks the exact CDK batch and proves, then independently verifies, the candidate journal with the mint stopped. It checks that the reserve remains unspent before publishing the exact signed transaction. The candidate uses a separate admission domain from the observation of a mined payout. Its native Nova verifier checks the accounting transition and evidence commitment. Core supplies the independent Bitcoin admission. A new SP1 relation and funded BitVM3 release still need to bind this pre-withdrawal statement. Claim uniqueness across collateral instances remains a separate settlement requirement.
 
 SP1's pinned LightProver derived the settlement program key from the saved ELF in 51.82 seconds at 701,820 KiB peak RSS with zero swap. The M13/M14 expected statement pairs this key with the exact staged public SHA-256, wrap key, and recursion root. The pin builder rejected seven substitutions. The packed-key decoder also reproduced the key from the archived verified CUDA control.

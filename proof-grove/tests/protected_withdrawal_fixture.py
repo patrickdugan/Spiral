@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 from proofdesk import protected_accounting as accounting, protected_withdrawal as withdrawal
+from proofdesk import protected_chain_archive
 from proofdesk import protected_withdrawal_evidence as bitcoin_evidence
 from proofdesk.domain import Refused, digest
 from protected_rollover_fixture import v3_issuance_prefix
@@ -65,6 +66,8 @@ def prove(core, rpc, root, runtime, handoff, node, nova, key_pin, bundle, raw):
                                               catalog['tip_height'], catalog['tip_hash'],
                                               openssl=os.environ.get('PROOF_GROVE_OPENSSL', 'openssl'))
     write('independent-bitcoin-authorization.json', verified_bitcoin)
+    archive = protected_chain_archive.capture(rpc, directory/'checkpoint-blocks.hex', catalog['tip_height'], catalog['tip_hash'])
+    write('checkpoint-blocks-manifest.json', archive)
 
     changed = copy.deepcopy(candidate)
     changed['admission']['statement']['withdrawal']['wtxid'] = '55' * 32
