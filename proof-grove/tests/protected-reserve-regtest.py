@@ -137,7 +137,66 @@ def reobserve_funding(core, holder, mining_address, original, bundle_path, scrat
             'cooperative_override_rejected': True, 'old_maturity_rejected': early['reject_reason']}
 
 
-def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
+def v3_accounting_fixture(core, bundle, reserve):
+    """Use the live chain with a fixture issuance record to exercise reconciliation."""
+    sys.path.insert(0, str(APP_ROOT))
+    from proofdesk import protected_accounting as accounting
+    from proofdesk.domain import digest, Refused
+
+    mint = 'http://127.0.0.1:31510'
+    quote = hashlib.sha256(b'proof-grove/regtest-accounting-quote-fixture').hexdigest()
+    intent = hashlib.sha256(b'proof-grove/protected-issuance-intent/v1\0' + bytes.fromhex(quote)).hexdigest()
+    claim = accounting.bound_claim((reserve['txid'], reserve['vout']))
+    bundle_id = bundle['bundle_id']
+    journal = {'schema': accounting.JOURNAL_SCHEMA, 'genesis': accounting.GENESIS,
+               'mint_profile_sha256': digest({'schema': 'proof-grove/protected-accounting-mint/v3', 'mint_url': mint}),
+               'events': []}
+    records = []
+
+    def add(action, evidence):
+        record = evidence | {'bundle_id': bundle_id}
+        records.append(record)
+        journal['events'].append({'funding_txid': reserve['txid'], 'funding_vout': reserve['vout'],
+                                  'amount_sats': RESERVE, 'action': action, 'evidence_sha256': digest(record)})
+
+    def observe(rejected=None, old_tip=None):
+        tip = old_tip or core.rpc('getblockchaininfo', [])
+        catalog = {'schema': accounting.CATALOG_SCHEMA, 'genesis': accounting.GENESIS, 'mint': mint,
+                   'tip_hash': tip['bestblockhash'], 'tip_height': tip['blocks'], 'bundles': [bundle]}
+        try:
+            result = accounting.audit(core, catalog, journal, records)
+        except Refused as error:
+            if error.code != rejected:
+                raise
+            return error.code
+        assert rejected is None, 'accounting unexpectedly accepted the live state'
+        return result
+
+    add({'kind': 'register', 'intent': intent}, {'kind': 'observed-regtest-reserve', 'funding': reserve})
+    pending = observe()
+    assert pending['pending_issuance_sats'] == RESERVE and pending['outstanding_claims_sats'] == 0
+    add({'kind': 'issue', 'intent': intent, 'claim': claim}, {
+        'kind': 'verified-cdk-protected-v3-batch', 'real_cdk_issuance': True, 'claim': claim,
+        'amount_sats': RESERVE, 'intent_id': f'cashu:{quote}', 'issuance_batch_sha256': bundle['plan']['claim_commitment'],
+        'independent_verifier': {'bundle_id': bundle_id, 'amount_sats': RESERVE, 'mint': mint,
+                                 'batch_bound': True, 'dleq_verified': True, 'offline_keyset_audit': True},
+    })
+    issued = observe()
+    assert issued['pending_issuance_sats'] == 0 and issued['outstanding_claims_sats'] == RESERVE
+
+    def redeem(payout):
+        add({'kind': 'redeem', 'input': claim, 'reserve_before_sats': RESERVE}, {
+            'kind': 'observed-regtest-payout', 'payout': payout,
+        })
+        result = observe()
+        assert result['declared_reserve_sats'] == result['outstanding_claims_sats'] == 0
+        return result
+
+    return {'issuance_evidence': 'synthetic-test-fixture', 'nova_proof_verified': False,
+            'registered': pending, 'issued': issued}, observe, redeem
+
+
+def demo(core: CoreClient, wallet, scratch: Path, holder_cli, profile='v2') -> dict:
     chain = core.rpc('getblockchaininfo', [])
     assert chain['chain'] == 'regtest' and chain['blocks'] == 0
     for name in ('funding', 'holder', 'mint'):
@@ -154,7 +213,7 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
         return holder_cli('plan', '--holder-pubkey', HOLDER_PUB, '--mint-pubkey', MINT_PUB,
                           '--claim-commitment', claim, '--reserve-sats', str(RESERVE),
                           '--payout-address', beneficiary, '--fee-sats', str(fee),
-                          '--delay-blocks', str(DELAY), '--min-confirmations', '1', '--output', path)
+                          '--delay-blocks', str(DELAY), '--min-confirmations', '1', '--profile', profile, '--output', path)
 
     plan_path = scratch / 'plan.json'
     created = reserve_plan(plan_path)
@@ -183,6 +242,10 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
                rejected='protected_funding_mismatch')
     attached = holder_cli('attach', *attach_args, '--vout', str(vout), '--output', bundle_path)
     saved_bundle = json.loads(bundle_path.read_bytes())
+    reserve = {'txid': txid, 'vout': vout, 'sats': RESERVE, 'block': funding_block, 'script': output['scriptPubKey']['hex']}
+    accounting = None
+    if profile == 'v3':
+        accounting, observe_ledger, record_redemption = v3_accounting_fixture(core, saved_bundle, reserve)
     # Fresh CLI processes independently validate the same UTXO. None have a desk database.
     changed_terms = {
         'claim': {'claim': hashlib.sha256(b'another-issuance-intent').hexdigest()},
@@ -270,6 +333,8 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
         raced = list(race.map(broadcast, (emergency_tx, cooperative_tx)))
     assert sum('txid' in result for result in raced) == 1, raced
     assert holder_cli('status', *bundle_args)['state'] == 'pending-spend'
+    if accounting is not None:
+        accounting['pending_spend_rejected'] = observe_ledger(rejected='protected_accounting_reserve_unavailable')
     spend = decoded['txid']
     payout_block = core.rpc('generateblock', [mining_address, [emergency_tx]])['hash']
     expected_height = core.rpc('getblockheader', [funding_block])['height'] + DELAY
@@ -280,6 +345,11 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     assert round(payout['vout'][0]['value'] * SATOSHIS) == RESERVE - FEE
     assert core.rpc('gettxout', [txid, vout, False]) is None
     assert holder_cli('status', *bundle_args)['state'] == 'consumed'
+    paid = {'txid': spend, 'wtxid': payout['hash'], 'block': payout_block, 'height': expected_height,
+            'script': payout_script, 'sats': RESERVE - FEE, 'fee_sats': FEE, 'delay_blocks': DELAY}
+    if accounting is not None:
+        pinned_tip = core.rpc('getblockchaininfo', [])
+        accounting['redeemed'] = record_redemption(paid)
     conflict = assert_refused(accept(core, cooperative_tx))
     replay = assert_refused(accept(core, emergency_tx))
 
@@ -287,6 +357,8 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     assert core.rpc('getblockheader', [payout_block])['confirmations'] == -1
     assert core.rpc('gettxout', [txid, vout, False]) is not None
     assert holder_cli('status', *bundle_args)['state'] in ('unspent', 'pending-spend')
+    if accounting is not None:
+        accounting['old_pin_rejected_after_reorg'] = observe_ledger(rejected='protected_accounting_stale_catalog', old_tip=pinned_tip)
     core.rpc('reconsiderblock', [payout_block])
     assert core.rpc('getblockhash', [expected_height]) == payout_block
     assert core.rpc('gettxout', [txid, vout, False]) is None
@@ -301,17 +373,20 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
     genesis = core.rpc('getblockhash', [0])
     claim_id = hashlib.sha256(b'proof-grove/protected-reserve/v1\0' + bytes.fromhex(genesis)
                               + bytes.fromhex(txid) + vout.to_bytes(4, 'big')).hexdigest()
+    v3_evidence = {}
+    if accounting is not None:
+        from proofdesk.protected_payout_evidence import capture
+
+        v3_evidence = {'accounting': accounting, 'bitcoin_chain_evidence': capture(
+            core.rpc, expected_height - DELAY, expected_height, funding_block, payout_block)}
     return {
         'schema': 'proof-grove/protected-reserve-regtest/v1', 'network': 'regtest',
         'genesis': genesis, 'chain_version': core.rpc('getnetworkinfo', [])['subversion'],
         'claim_id': claim_id, 'reserve_descriptor': public,
         'app_bundle': saved_bundle, 'mature_holder_check': reviewed,
         'holder_funding_reobservation': reobserved,
-        'reserve': {'txid': txid, 'vout': vout, 'sats': RESERVE, 'block': funding_block,
-                    'script': output['scriptPubKey']['hex']},
-        'payout': {'txid': spend, 'wtxid': payout['hash'], 'block': payout_block,
-                   'height': expected_height, 'script': payout_script, 'sats': RESERVE - FEE,
-                   'fee_sats': FEE, 'delay_blocks': DELAY},
+        'reserve': reserve, 'payout': paid,
+        **v3_evidence,
         'controls': {'early_exit': early, 'substituted_beneficiary': beneficiary,
                      'changed_protected_terms_cannot_attach_same_coin': list(changed_terms),
                      'substituted_issuance_preimage': commitment_rejection,
@@ -331,6 +406,7 @@ def demo(core: CoreClient, wallet, scratch: Path, holder_cli) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--bitcoind', default='bitcoind')
+    parser.add_argument('--profile', choices=('v2', 'v3'), default='v2')
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='proof-grove-protected-') as scratch:
         with socket.socket() as listener:
@@ -339,9 +415,12 @@ def main() -> None:
         user, password = 'proofgrove', secrets.token_hex(24)
         command = [args.bitcoind, '-regtest', f'-datadir={scratch}', '-server=1', '-listen=0',
                    '-connect=0', '-dnsseed=0', '-discover=0', '-keypool=16',
-                   '-fallbackfee=0.00001', '-printtoconsole=0',
+                   '-fallbackfee=0.00001', '-printtoconsole=0', '-dbcache=32', '-par=2',
                    f'-rpcport={port}', f'-rpcuser={user}', f'-rpcpassword={password}']
-        process = subprocess.Popen(command)
+        if args.profile == 'v3':
+            command.append('-txospenderindex=1')
+        process = subprocess.Popen(command, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace',
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         auth = 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
         core = CoreClient(port, auth)
         scratch_path = Path(scratch)
@@ -367,12 +446,13 @@ def main() -> None:
                     break
                 except (CoreRPCError, OSError):
                     if process.poll() is not None:
-                        raise RuntimeError('Bitcoin Core exited while starting')
+                        _, diagnostic = process.communicate()
+                        raise RuntimeError(f'Bitcoin Core exited while starting: {diagnostic.strip()}')
                     time.sleep(0.1)
             else:
                 raise RuntimeError('Bitcoin Core did not start')
             print(json.dumps(demo(core, lambda name: CoreClient(port, auth, f'/wallet/{name}'),
-                                  scratch_path, holder_cli), indent=2))
+                                  scratch_path, holder_cli, args.profile), indent=2))
         finally:
             if process.poll() is None:
                 try:
