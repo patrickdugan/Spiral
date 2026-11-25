@@ -62,4 +62,13 @@ The count represents checkpoint metadata. Non-execution shards, proof
 verification, recursive compression, wrapping and settlement each require
 separate measurements.
 
+For a resumed run, pass the current report directory with its
+`progress-baseline-bytes.txt` and a prior coverage report for the same
+manifest. This reads only the recent fresh shard headers and measures a
+contiguous window of at least 180 seconds.
+
+```bash
+python3 -B "$TOOLS/measure_core_window.py" "$RUN_DIR" "$RESUME_REPORT" "$PRIOR_COVERAGE"
+```
+
 [Pinned SP1 Core public values](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/air/public_values.rs) · [Pinned SP1 shard proof encoding](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/verifier/proof.rs)
