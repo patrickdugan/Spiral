@@ -60,6 +60,16 @@ jobs:
           assert r["clearing"]["vsize"] == c["clearing"]["vsize"] and r["unilateral_exit"]["vsize"] == c["unilateral_exit"]["vsize"]
           print(f"::notice title=regtest release::{sum(r['checks'].values())}/{len(r['checks'])} checks; clearing {r['clearing']['vsize']} vB; exit {r['unilateral_exit']['vsize']} vB; CSV rejected at {r['unilateral_exit']['rejected_at_confirmations']}, accepted at {r['unilateral_exit']['accepted_at_confirmations']}")
           PY
+      - name: Oracle-attested DLC release with LP reimbursement on regtest
+        working-directory: experiments/cbm-shz-01
+        run: |
+          python dlc/run_regtest.py --bitcoind "$BITCOIND" --out "$RUNNER_TEMP/dlc.json"
+          python - <<'PY'
+          import json, os
+          r = json.load(open(os.path.join(os.environ["RUNNER_TEMP"], "dlc.json")))
+          assert r["passed"], r["checks"]
+          print(f"::notice title=regtest oracle DLC::{sum(r['checks'].values())}/{len(r['checks'])} checks; outcome {r['contract']['outcome']}; funding {r['funding']['vsize']} vB; CET {r['cet']['vsize']} vB; presigned sigs per CET {r['presigned_sigs_per_cet']}")
+          PY
 
   lean:
     runs-on: ubuntu-24.04

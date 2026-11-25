@@ -18,6 +18,7 @@ Branch `research/shz-clearing-rent-20261125` (Spiral PR #21). Paper section:
 | R-LEAN-2a | Dual price of payout capacity bounded by the substitute's cost: `capacity_value_le_substitute` | `formal-rent/SpiralRent/Duals.lean` |
 | R-PM-1 | Risk statement for portfolio margin: `inverse_move_bound`, `gap_buffer_covers` (Lean); gapped liquidating rule C_pmg in the sim; tail measured on 67 days: 4σ√15 exceeded in 1.05% of 15-min windows (median σ), 8σ 0.14%, 8σ own-day σ 0.02%, max 14.3σ; covering the max costs 67 BTC-days vs C 1,558 (seed 1) | `formal-rent/SpiralRent/GapBuffer.lean`, `cbm/pm_tail.py`, `results/pm_tail.json`, cells `pm_gap_mult=*`, `pm_liq_lag_min=*` |
 | R-CI-2 | Run 45531174422 on d3a7543: `simulator` (11 tests, base reproduces), `regtest` (Core 31.1 Linux tarball checked against SHA256SUMS; 8/8 checks; 255 vB clearing, 130 vB exit, CSV rejected at [1, 143], accepted at 144) and `lean` (22 theorems) all green | public notice on the regtest job |
+| R-VER-1 | Testnet4 campaign cbm-shz01-dlc01 (approved by Patrick 2026-11-25): dual-funded oracle DLC (leaves multi_a(3,A_j,B_j,S_j), refund after 144), CETs + refund signed before funding (2 sigs per CET, own leaf only); oracle attested flat (Coinbase spot 59,363.21 → 59,046.29) at 163,267; flat CET 326ab15c (238 vB) confirmed at 163,268, 1,180 s after attestation; down/up CETs stay incomplete; refund non-BIP68-final; LP advanced B 19,700 sat (906406357d…) and was reimbursed by the CET after 1,174 s; all outputs reused and returned to cbm-pilot01-payer (cost 3,608 sat). 9/9 checks | `dlc/oracle_dlc.py`, `results/testnet4_dlc01.json`; regtest twin `dlc/run_regtest.py` (`results/dlc_regtest.json`, CI job `regtest`) |
 | R-PAPER-1 | Section integrated; abstract, introduction, preregistration, limitations, conclusion, appendix updated; PDF rebuilt with Tectonic | `paper/tex/main.tex`, `paper/tex/main.pdf` |
 
 ## Findings (base cell unless stated)
@@ -35,17 +36,19 @@ Branch `research/shz-clearing-rent-20261125` (Spiral PR #21). Paper section:
 - Imbalance correlation and router count leave per-contract capital unchanged (by construction of DLC margin); they move only flows and portfolio margin.
 - Bond pooling: sum of per-pool peak advances equals the pooled peak.
 - Smoke-run corrections before the registered sweeps: trade size from day mean rather than per-second median (10× too many contracts); offline as (party, day) events rather than per contract (chain fees inflated ~20×); C/D gross and net totals include offline obligations settled bilaterally.
+- Oracle DLC on regtest: per-leaf keys derived from one xprv let a wallet holding one leaf key sign every leaf (8 sigs per CET) and the attestation completed wrong-outcome CETs; fixed with independent per-leaf secrets before any broadcast.
+- Testnet4 harness first stalled: getrawtransaction cannot see confirmed transactions on the pruned node without txindex; confirmations now come from wallet gettransaction, and setup resumes from the recorded txid (no double payment).
 - An ad hoc fragmentation estimate with assumed scaling constants was discarded and replaced by the simulated computation before any result was recorded.
 
 ## Simulated vs verified
 
-Every capital release in the CBM-SHZ-01 sweeps is SIMULATED. The release PATH of C (MuSig2 clearing, reuse, CSV exit) is verified on regtest under consensus rules (R-VER-1r), with a supplied claim, not an oracle-attested DLC outcome. Verification classes recorded per object: `ln_channel_state`, `onchain_confirmed (clearing tx)`, `ln_settled (LP advance)`, `proof + challenge (LP reimbursement)`. The only verified recovery of spend authority in the program is the Testnet4 pilot01 change reuse (2 blocks; 1,730 s and 2,290 s), on `research/capital-bound-testnet4`.
+Every capital release in the CBM-SHZ-01 sweeps is SIMULATED. The release PATH of C (MuSig2 clearing, reuse, CSV exit) is verified on regtest under consensus rules (R-VER-1r), with a supplied claim, not an oracle-attested DLC outcome. One oracle-attested DLC margin release with an LP reimbursement is VERIFIED on Testnet4 (R-VER-1, campaign cbm-shz01-dlc01, 9/9 checks), with one synthetic oracle key, one contract and no BitVM3 challenge. Verification classes recorded per object: `ln_channel_state`, `onchain_confirmed (clearing tx)`, `ln_settled (LP advance)`, `proof + challenge (LP reimbursement)`. The only verified recovery of spend authority in the program is the Testnet4 pilot01 change reuse (2 blocks; 1,730 s and 2,290 s), on `research/capital-bound-testnet4`.
 
 ## Outstanding
 
 | ID | What | Blocker / next step |
 |---|---|---|
-| R-VER-1 | Observe an oracle-attested DLC margin release and one LP reimbursement on Testnet4 | SHZ reference router has no DLC closure/withdrawal; needs implementation, then a Testnet4 campaign with a new campaign ID (broadcast needs Patrick's yes) |
+| R-VER-2 | Same release with the SHZ oracle federation (4-of-5) instead of one synthetic oracle key, the BitVM3 challenge on the LP reimbursement, and the SHZ router itself driving closure | federation attestation format for DLC events; SHZ router closure code |
 | R-LEAN-2b | General max-flow sufficiency; attainment of the dual bound (complementary slackness) | upper bound proved (R-LEAN-2a); attainment and general MFMC need LP duality / flow machinery; numeric checks in `tests/` |
 | R-PM-2 | Attested close-out authority for portfolio margin in SHZ | design + implementation; until then only per-contract margin is offered |
 | R-DATA-1 | Participant collateral, offline and topology data | none public; assumptions stated in SPEC.md |

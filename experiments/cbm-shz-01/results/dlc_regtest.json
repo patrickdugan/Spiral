@@ -1,0 +1,80 @@
+{
+ "schema": "cbm-shz-01/oracle-dlc-release/v1",
+ "prefix": "dlc-rt",
+ "chain": "regtest",
+ "core_version": "/Satoshi:31.1.0/",
+ "contract": {
+  "margin_sat": 20000,
+  "leverage": 10,
+  "price0": 100000.0,
+  "price1": 101500.0,
+  "price_source": {
+   "synthetic": true
+  },
+  "outcome": "up",
+  "refund_blocks": 144
+ },
+ "oracle": {
+  "P": "5480aa34fc7c6442dc96eec0eeb302d15299fab124e901211dc7de55224bc23e",
+  "R": "caf701361a83c75e4931dfe57e722556c07eb5325e539a9d6309c31f6834b3f7",
+  "S": {
+   "down": "bb46af2386937591bc8e81772832eee43f37051f12aadd6dd7d55d216f7b1160",
+   "flat": "f4b03b5a722d8582ef6d9d87d3f56ad84c42eb9aabd76c63a6e5006bebb6a429",
+   "up": "493f510ceab9b3a58bc479ed51de337166a5aa1233f1e4db76dbfd66acbb9b82"
+  },
+  "attestation_s": "0x5169840be79765caed28e081293150eb37ec137f1127f80fcc365f5cb7667f3b",
+  "event": "dlc-rt/btcusd-bucket"
+ },
+ "funding": {
+  "txid": "9a3e433742b655d8e3b1b3e65320417eb67af91e9c9ad2e36e2fe97a8cd59eea",
+  "vsize": 169,
+  "amount_sat": 40000,
+  "height": 112
+ },
+ "cet": {
+  "txid": "4d21dfe8c14d42e4d95471f72cc166f50b6e1facf5a2dc7a8f16eef1c452061b",
+  "vsize": 238,
+  "witness_items": 5,
+  "outputs": {
+   "bcrt1pf37usuyxkhqzu84wm5pr3dtjshlyz6rskc503fc3ldxyy79tt9ksx5pxs0": 23622,
+   "bcrt1pkk49v7v0zy39xmaqfnvyq4vw9ml04pqhwjantlkahhmrl4rft4cscdr7wf": 15778
+  },
+  "a_sat": 23622,
+  "lp_sat": 15778
+ },
+ "presigned_sigs_per_cet": {
+  "down": 2,
+  "flat": 2,
+  "up": 2
+ },
+ "lp_advance_txid": "67dd4c1a35bce9b3bfb1deda0e4b4d18bf95b174c6202a7ac2e5f96deebee231",
+ "reuse": {
+  "a": "b42c6086c824abd90b665d23f64c12353049b588c954933a5ef9198ccd3b1c2f",
+  "b": "f6f01129adda00e57b0dbc03563c97d5547affb7479bfb034a3e6592f706b63e",
+  "lp": "853d9df8e1f25be2130e1db9e8781d34d4ea98af92f8347fd1c1bbdc357ed2eb"
+ },
+ "checks": {
+  "cets_and_refund_signed_before_funding": true,
+  "cets_incomplete_before_attestation": true,
+  "cets_presigned_only_on_own_leaf": true,
+  "refund_rejected_before_timelock": true,
+  "attestation_matches_announced_point": true,
+  "wrong_outcome_cets_stay_incomplete": true,
+  "cet_confirmed": true,
+  "lp_reimbursed_by_cet": true,
+  "released_outputs_reused": true
+ },
+ "timings_s": {
+  "attestation_to_cet_confirmed": 0.5038838386535645,
+  "lp_advance_to_reimbursement_confirmed": 0.44271087646484375,
+  "cet_confirmed_to_reuse_confirmed": 0.36582493782043457,
+  "funding_broadcast_to_reuse_confirmed": 1.4899475574493408
+ },
+ "heights": {
+  "funding": 112,
+  "maturity": 114,
+  "attestation": 114,
+  "cet": 116
+ },
+ "passed": true
+}
