@@ -216,25 +216,12 @@ def settlement(receipt, verifier, certificate=None, v3=None):
     return result
 
 
-def audit_v3(args, receipt, v3):
-    """Verify the archived issuance, Nova proof and mined payout against separate pins."""
-    if args.output.exists():
-        raise ValueError('the V3 audit requires a new output directory')
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from proofdesk.protected_payout_evidence import verify as verify_payout
-
-    statement, records = journal(receipt, v3=v3)
-    encoded = canonical(statement)
+def verify_nova(args, encoded):
     journal_sha256 = hashlib.sha256(encoded).hexdigest()
     hex_bytes(args.journal_sha256, 32)
     hex_bytes(args.nova_key_sha256, 32)
     if journal_sha256 != args.journal_sha256:
         raise ValueError('rebuilt V3 journal differs from the independent pin')
-    payout = verify_payout(receipt, args.v3_bundle_id, args.anchor_height, args.anchor_hash, openssl=args.openssl)
-    if (payout['claim_id'] != v3['claim'] or payout['reserve_sats'] != v3['amount_sats']
-            or payout['funding_txid'] != statement['events'][0]['funding_txid']):
-        raise ValueError('V3 payout differs from the admitted issuance claim')
-
     proof_file = args.proof_dir / 'nova-proof.bin'
     proof_sha256 = hashlib.sha256(read_bounded(proof_file, 4 * 1024 * 1024)).hexdigest()
     with tempfile.TemporaryDirectory(prefix='proof-grove-v3-journal-') as scratch:
@@ -244,11 +231,29 @@ def audit_v3(args, receipt, v3):
                                   str(journal_path), journal_sha256], stdin=subprocess.DEVNULL,
                                  capture_output=True, check=True, timeout=180)
     nova = json.loads(checked.stdout)
-    if (nova.get('verifier_key_sha256') != args.nova_key_sha256 or nova.get('proof_sha256') != proof_sha256
-            or nova.get('steps') != len(records)):
+    if (nova.get('verified') is not True or nova.get('journal_sha256') != journal_sha256
+            or nova.get('verifier_key_sha256') != args.nova_key_sha256 or nova.get('proof_sha256') != proof_sha256
+            or nova.get('steps') != len(json.loads(encoded)['events'])):
         raise ValueError('Nova verification differs from the pinned key, proof, or journal length')
+    return nova
+
+
+def audit_v3(args, receipt, v3):
+    """Verify the archived issuance, Nova proof and mined payout against separate pins."""
+    if args.output.exists():
+        raise ValueError('the V3 audit requires a new output directory')
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from proofdesk.protected_payout_evidence import verify as verify_payout
+
+    statement, records = journal(receipt, v3=v3)
+    payout = verify_payout(receipt, args.v3_bundle_id, args.anchor_height, args.anchor_hash, openssl=args.openssl)
+    if (payout['claim_id'] != v3['claim'] or payout['reserve_sats'] != v3['amount_sats']
+            or payout['funding_txid'] != statement['events'][0]['funding_txid']):
+        raise ValueError('V3 payout differs from the admitted issuance claim')
+    encoded = canonical(statement)
+    nova = verify_nova(args, encoded)
     record = settlement(receipt, nova, v3=v3)
-    result = {'schema': 'proof-grove/protected-v3-archived-audit/v1', 'journal_sha256': journal_sha256,
+    result = {'schema': 'proof-grove/protected-v3-archived-audit/v1', 'journal_sha256': nova['journal_sha256'],
               'settlement_record_sha256': hashlib.sha256(record).hexdigest(),
               'issuance': v3, 'nova': nova, 'bitcoin_payout': payout}
     args.output.mkdir()
@@ -259,13 +264,61 @@ def audit_v3(args, receipt, v3):
     print(json.dumps(result, indent=2))
 
 
+def audit_withdrawal_issuance(args, receipt, v3):
+    """Open the exact issuance commitment in the proof for an authorized withdrawal."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from proofdesk.protected_payout_evidence import verify as verify_payout
+    from proofdesk.protected_withdrawal import SCHEMA as CANDIDATE, STATEMENT
+
+    mined, _ = journal(receipt, v3=v3)
+    prefix = mined | {'events': mined['events'][:2]}
+    candidate = json.loads(read_bounded(args.candidate, 256 * 1024))
+    admission = candidate['admission']
+    statement = admission['statement']
+    expected_admission = {'kind': 'authorized-regtest-withdrawal', 'bundle_id': args.v3_bundle_id,
+                          'statement': statement}
+    terminal = mined['events'][-1] | {'evidence_sha256': digest(expected_admission)}
+    expected_journal = prefix | {'events': [*prefix['events'], terminal]}
+    encoded = read_bounded(args.candidate_journal, 256 * 1024)
+    reserve, payout = receipt['reserve'], receipt['payout']
+    plan = receipt['app_bundle']['plan']
+    expected_withdrawal = {key: payout[key] for key in ('txid', 'wtxid', 'script', 'sats', 'fee_sats')}
+    expected_withdrawal.update({
+        'signed_tx_sha256': hashlib.sha256(bytes.fromhex(receipt['public_transactions']['payout'])).hexdigest(),
+        'change_sats': plan['change_sats'], 'sequence': plan['delay_blocks'], 'earliest_height': payout['height'],
+    })
+    if (candidate['schema'] != CANDIDATE or admission != expected_admission
+            or candidate['withdrawal_id'] != digest(expected_admission) or candidate['journal'] != expected_journal
+            or json.loads(encoded) != expected_journal
+            or statement['schema'] != STATEMENT or statement['genesis'] != GENESIS
+            or statement['confirmed_journal_sha256'] != digest(prefix) or statement['claim_id'] != v3['claim']
+            or statement['holder_pubkey'] != plan['holder_pubkey'] or statement['withdrawal'] != expected_withdrawal
+            or statement['reserve'] != (reserve | {'height': payout['height'] - payout['delay_blocks']})):
+        raise ValueError('withdrawal journal does not open the independently verified issuance and payout')
+
+    bitcoin = verify_payout(receipt, args.v3_bundle_id, args.anchor_height, args.anchor_hash, openssl=args.openssl)
+    header = hex_bytes(receipt['public_headers']['payout'], 80)
+    if statement['anchor'] != {'hash': header[4:36][::-1].hex(), 'height': payout['height'] - 1}:
+        raise ValueError('withdrawal authorization is outside the payout block parent')
+    nova = verify_nova(args, encoded)
+    if (nova.get('operations') != ['register', 'issue', 'redeem'] or nova.get('declared_reserve_sats') != 0
+            or nova.get('outstanding_claims_sats') != 0):
+        raise ValueError('withdrawal journal produced unexpected accounting totals')
+    result = {'schema': 'proof-grove/protected-withdrawal-issuance-audit/v1', 'issuance': v3, 'nova': nova,
+              'withdrawal_id': candidate['withdrawal_id'], 'bitcoin_payout': bitcoin}
+    with args.output.open('x', encoding='utf-8') as stream:
+        stream.write(json.dumps(result, indent=2) + '\n')
+    print(json.dumps(result, indent=2))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest='command', required=True)
     generate = subparsers.add_parser('journal')
     make_record = subparsers.add_parser('settlement')
     combined = subparsers.add_parser('audit-v3')
-    for command in (generate, make_record, combined):
+    withdrawal = subparsers.add_parser('audit-withdrawal-issuance')
+    for command in (generate, make_record, combined, withdrawal):
         command.add_argument('receipt', type=Path)
         command.add_argument('output', type=Path)
         command.add_argument('--issuance-certificate', type=Path)
@@ -276,20 +329,23 @@ def main():
         command.add_argument('--node', default='node')
         command.add_argument('--wallet-cli', type=Path)
     make_record.add_argument('nova_verifier', type=Path)
-    combined.add_argument('--proof-dir', required=True, type=Path)
-    combined.add_argument('--nova-verifier', required=True, type=Path)
-    combined.add_argument('--journal-sha256', required=True)
-    combined.add_argument('--nova-key-sha256', required=True)
-    combined.add_argument('--anchor-height', required=True, type=int)
-    combined.add_argument('--anchor-hash', required=True)
-    combined.add_argument('--openssl', default='openssl')
+    withdrawal.add_argument('--candidate', required=True, type=Path)
+    withdrawal.add_argument('--candidate-journal', required=True, type=Path)
+    for command in (combined, withdrawal):
+        command.add_argument('--proof-dir', required=True, type=Path)
+        command.add_argument('--nova-verifier', required=True, type=Path)
+        command.add_argument('--journal-sha256', required=True)
+        command.add_argument('--nova-key-sha256', required=True)
+        command.add_argument('--anchor-height', required=True, type=int)
+        command.add_argument('--anchor-hash', required=True)
+        command.add_argument('--openssl', default='openssl')
     args = parser.parse_args()
     receipt = read_receipt(args.receipt)
     v3_inputs = (args.v3_receipt, args.v3_bundle, args.v3_bundle_id, args.v3_mint_pin)
     if any(v3_inputs) and (not all(v3_inputs) or args.issuance_certificate):
         parser.error('all four V3 admission arguments are required together')
-    if args.command == 'audit-v3' and not all(v3_inputs):
-        parser.error('audit-v3 requires independently pinned V3 admission inputs')
+    if args.command in ('audit-v3', 'audit-withdrawal-issuance') and not all(v3_inputs):
+        parser.error('the audit requires independently pinned V3 admission inputs')
     certificate = read_bounded(args.issuance_certificate, 2 * 1024 * 1024) if args.issuance_certificate else None
     v3 = verify_v3_admission(receipt, *v3_inputs, args.node, args.wallet_cli) if all(v3_inputs) else None
     if args.command == 'journal':
@@ -303,8 +359,10 @@ def main():
         record = settlement(receipt, verification, certificate, v3)
         with args.output.open('xb') as stream:
             stream.write(record)
-    else:
+    elif args.command == 'audit-v3':
         audit_v3(args, receipt, v3)
+    else:
+        audit_withdrawal_issuance(args, receipt, v3)
 
 
 if __name__ == '__main__':
