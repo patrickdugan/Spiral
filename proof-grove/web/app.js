@@ -1,7 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 let state = { mode: 'demo', current: null, cases: [], vtxos: [], receiptText: '' };
-const labels = { payments: 'Payment gate', caretaker: 'Ark caretaker', evidence: 'Evidence & sources' };
+const labels = { payments: 'Payment gate', 'protected-preview': 'Cashu recovery', caretaker: 'Ark caretaker', evidence: 'Evidence & sources' };
 const errors = {
   deposit_script_reused: 'This deposit script is already bound to its original intent. A second recipient cannot claim it.',
   payment_already_claimed: 'This payment is already reserved for another intent. No second request was prepared.',
@@ -31,6 +31,30 @@ function tab(id) {
   if (id === 'evidence') loadArchive().catch(e => error(e.message));
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => tab(button.dataset.tab)));
+$('protected-preview-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = event.submitter;
+  const result = $('protected-preview-result');
+  const details = $('protected-preview-details');
+  const variant = $('protected-preview-case').value;
+  button.disabled = true;
+  details.hidden = true;
+  result.textContent = 'Checking the recorded evidence…';
+  try {
+    const check = await api('/api/protected/preview?case=' + encodeURIComponent(variant));
+    result.textContent = check.verified
+      ? `Verified ${check.payout.payout_sats.toLocaleString('en-US')} sats with a ${check.payout.fee_sats} sat fee after ${check.payout.relative_delay_blocks} blocks.`
+      : `Rejected. ${check.detail}`;
+    if (check.verified) {
+      $('protected-preview-json').textContent = JSON.stringify(check.payout, null, 2);
+      details.hidden = false;
+    }
+  } catch (err) {
+    result.textContent = err.message;
+  } finally {
+    button.disabled = false;
+  }
+});
 $('trust-link').addEventListener('click', event => { event.preventDefault(); tab('evidence'); });
 function renderRun(run) {
   state.current = run;
@@ -259,6 +283,7 @@ $('refresh-chainstate').addEventListener('click',loadChainstate);
 async function initialize() {
   const [status, cases, vtxos, sources] = await Promise.all(['/api/status', '/api/cases', '/api/vtxos', '/api/sources'].map(path => api(path)));
   state.mode = status.mode; state.cases = cases.cases; state.vtxos = vtxos.vtxos; state.planRequest = 0;
+  $('protected-preview-tab').hidden = !status.protected_preview_configured;
   state.hostedMutations=!status.hosted_access?.enabled||status.hosted_access.mutations;
   $('proof-files').hidden=status.mode==='regtest';
   $('statement-file').required=status.mode==='live';$('proof-file').required=status.mode==='live';

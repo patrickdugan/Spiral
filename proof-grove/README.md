@@ -22,6 +22,22 @@ python -m proofdesk serve
 
 Open <http://127.0.0.1:8765>. To choose another port, add `--port 8766`. The service binds only to loopback and validates Host, Origin, and a custom header on mutations. Stop it with Ctrl+C.
 
+To try the Cashu recovery verifier in the browser, start the local demo with a
+recorded V3 payout and its observer pins.
+
+```powershell
+python -m proofdesk serve --port 8766 --protected-preview /path/to/preview.json
+```
+
+The preview manifest holds `receipt` (relative to the manifest),
+`receipt_sha256`, `bundle_id`, `anchor_height`, and `anchor_hash`. The last
+three fields come from the independently observed reserve and Core checkpoint.
+The verifier calls OpenSSL on the original payout. Set `PROOF_GROVE_OPENSSL`
+to the executable path if OpenSSL is outside `PATH`. Open **Cashu recovery**
+to verify the recorded holder signature and mined witness or try the two
+substitutions. This demo works with an archived regtest payout. Live protected
+issuance and recovery use the [wallet guide](docs/cashu-wallet.md).
+
 ```powershell
 python -m unittest discover -s tests -q
 node --check web/app.js

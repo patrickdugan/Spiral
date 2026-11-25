@@ -36,6 +36,7 @@ def main():
     serve = commands.add_parser("serve")
     serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--config", help="Use live mode with a server-owned configuration")
+    serve.add_argument("--protected-preview", type=Path, help="Load a pinned archived V3 regtest payout for the local demo")
     serve.add_argument('--hosted',action='store_true',help='Require bearer authentication and exact configured HTTPS origins behind a TLS proxy')
     serve.add_argument('--bind',default='127.0.0.1',choices=['127.0.0.1','0.0.0.0'])
     check = commands.add_parser("verify", help="Verify M16 proof bytes; does not authorize or settle a payment")
@@ -65,6 +66,8 @@ def main():
         elif args.command == "serve":
             ledger = None
             access=None
+            if args.protected_preview and (args.config or args.hosted or args.bind != '127.0.0.1'):
+                raise Refused('protected_preview_requires_local_demo')
             if args.hosted and not args.config:raise Refused('hosted_configuration_required')
             if args.config:
                 config_path = Path(args.config).resolve()
@@ -85,7 +88,8 @@ def main():
                     public_config["bark_bearer"] = os.environ[config["bark_bearer_env"]]
                 desk = Desk(mode, ledger, gate_from(config) if mode == "live" else None, core, public_config)
             else:
-                desk = Desk()
+                preview = {"protected_preview": args.protected_preview.resolve()} if args.protected_preview else None
+                desk = Desk(config=preview)
             server = make_server(desk, args.port,access=access,bind=args.bind)
             print(f"Proof Grove ({desk.mode}) http://127.0.0.1:{server.server_port}", flush=True)
             try:

@@ -12,7 +12,7 @@
 <aside class="sidebar">
   <a class="brand" href="/" aria-label="Proof Grove home"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 34V18M20 25C7 26 5 14 7 6c10 0 17 5 13 19Zm0-5C19 10 25 5 35 6c1 9-3 16-15 14Z"/></svg><span>proof grove<small>ARK + CASHU</small></span></a>
   <p class="nav-label">WORKSPACE</p>
-  <nav aria-label="Workspace"><button class="nav-item active" data-tab="payments" aria-current="page"><span>◈</span> Payment gate</button><button class="nav-item" data-tab="caretaker"><span>◷</span> Ark caretaker</button><button class="nav-item" data-tab="evidence"><span>▤</span> Evidence & sources</button></nav>
+  <nav aria-label="Workspace"><button class="nav-item active" data-tab="payments" aria-current="page"><span>◈</span> Payment gate</button><button class="nav-item" id="protected-preview-tab" data-tab="protected-preview" hidden><span>◇</span> Cashu recovery</button><button class="nav-item" data-tab="caretaker"><span>◷</span> Ark caretaker</button><button class="nav-item" data-tab="evidence"><span>▤</span> Evidence & sources</button></nav>
   <div class="side-note"><span class="small-leaf">↗</span><h3>Less operator discretion.</h3><p>Payments follow a fixed policy. Recovery follows the clock.</p><span class="side-tag">HACKATHON BUILD / 01</span></div>
   <div class="side-bottom"><span class="dot"></span> Local workspace <small>Python · no dependencies</small></div>
 </aside>
@@ -39,6 +39,18 @@
         </div>
       </div>
       <div class="section-foot"><span><span class="dot"></span> Proof facts, wallet reports, and settlement states stay distinct.</span><span>BUILT ON NOVA / BITVM + BARK / CDK</span></div>
+    </section>
+    <section class="page" id="protected-preview" hidden>
+      <div class="heading-row"><div><h1>Cashu recovery</h1><p class="lede">Recheck a recorded holder payout from Bitcoin Core regtest.</p></div><div class="network-tag"><span class="dot"></span>Recorded regtest</div></div>
+      <section class="panel" aria-labelledby="protected-preview-heading">
+        <div class="panel-head"><h2 id="protected-preview-heading">Verify the holder’s payout</h2></div>
+        <form id="protected-preview-form">
+          <label for="protected-preview-case">Evidence to check</label>
+          <div class="case-controls"><select id="protected-preview-case"><option value="original">Original payout</option><option value="beneficiary">Substitute beneficiary</option><option value="checkpoint">Substitute checkpoint</option></select><button class="primary" type="submit">Verify payout</button></div>
+        </form>
+        <p class="help" id="protected-preview-result" role="status"></p>
+        <details id="protected-preview-details" hidden><summary>Inspect verification evidence</summary><pre id="protected-preview-json"></pre></details>
+      </section>
     </section>
     <section class="page" id="caretaker" hidden>
       <p class="eyebrow">DELEGATE THE WATCH, KEEP THE KEYS</p><h1>A little runway matters.</h1><p class="lede">Plan refreshes and exits before your VTXOs expire.</p>
