@@ -71,6 +71,15 @@ class HistoricalStatementTest(unittest.TestCase):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 self.audit.expected_public_output(self.receipt, self.words)
 
+    def test_refuses_replaced_historical_receipt_before_opening_case_files(self):
+        with tempfile.TemporaryDirectory() as name:
+            folder = Path(name)
+            replaced = folder / 'receipt.json'
+            replaced.write_bytes(self.audit.EXECUTION.read_bytes() + b' ')
+            with patch.object(self.audit, 'EXECUTION', replaced):
+                with self.assertRaisesRegex(ValueError, 'execution receipt differs from the archived pin'):
+                    self.audit.pinned_case(folder, folder / 'profile.json')
+
     def test_exact_profile_accepts_stock_normalized_and_extended_encodings(self):
         expected = {key: PROFILE[key] for key in ('channel_hash', 'channel_salt', 'pcs_config', 'preprocessed_trace')}
         self.assertEqual(self.audit.pinned_proof_profile(self.proof, PROFILE), expected)

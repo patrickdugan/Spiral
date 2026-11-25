@@ -27,6 +27,26 @@ python3.11 proof-grove/scripts/audit-exact-melt-stark.py \
 
 A pre-existing candidate can be supplied with `--existing-proof`. Omitting both modes starts a fresh proof. The gate compares all 24 public output words against the archived statement and program hash before it accepts an independently verified proof. It then reruns the pinned verifier with one mutation per public word and archives the statement, proof, transcript and timings.
 
+The compact verifier download includes the pinned Scarb binary, the original
+execution receipt, exact case and proof profile. Run standalone verification
+from the extracted directory on x86-64 Linux or WSL.
+
+```sh
+chmod +x bin/scarb-verify
+python3 -B proof-grove/scripts/audit-exact-melt-stark.py \
+  --case case --verifier bin/scarb-verify --profile profile.json \
+  --existing-proof proof/redemption-proof.json --out verification-recheck
+```
+
+The same download includes the paired historical benchmark receipt. The
+original 25,000-sat issuance and 24,750-sat redemption proof bytes were
+unavailable in the campaign archive, the checked local worktrees and GitHub.
+The standalone audit matched all 24 public words and rejected all 24 changes
+in 11.08 seconds at 83,624 KiB peak RSS. A separate OpenSSL run checked the
+holder signature and rejected eight transaction witness or sighash changes.
+The verification ZIP SHA-256 is
+`c8e188876da146546a3f617afa35819e3b209d9eaaef0816b61efcf447ce4d9c`.
+
 The recovered 21-word payload carries the funding txid and index, reserve amount and script, funding and spend heights, claim commitment, destination script, payout amount, transaction ID and witness transaction ID. Bitcoin network, block inclusion and canonical chain selection require a separate header or Core observer binding. The exact case spends one reserve input to one payout output. Their value difference is 250 sats. Cashu melt change belongs to the cooperative funding step and requires separate evidence.
 
 An offline transaction audit decoded the payout, recomputed both transaction IDs, matched the reserve script hash and independently verified the holder's BIP143 signature with OpenSSL. The verifier rejected substitutions of the funding txid, output index, sequence, reserve script and amount, payout amount, destination and signature. The heights remain statements from the historical observer. [BIP143](https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki)
@@ -372,7 +392,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
 | --- | --- | --- | --- | --- |
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
-| Exact 23,750-sat melt-funded case | Pinned Cairo replay matched 24 words locally | Fresh STARK accepted by stock Scarb. The separate audit matched 24 public words and rejected 24 mutations. | CDK rejected reuse of the six source proofs in the archived run | Archived offline payout after cooperative funding. Independent historical chain inclusion and timelock verification remain open. |
+| Exact 23,750-sat melt-funded case | Pinned Cairo replay matched 24 words locally | Stock Scarb independently reverified the downloadable STARK. The standalone audit matched 24 public words and rejected 24 mutations. The transaction audit independently checked the holder signature. | CDK rejected reuse of the six source proofs in the archived run | Archived offline payout after cooperative funding. Independent historical chain inclusion and timelock verification remain open. |
 | Exact Shinigami prover storage experiment | The pinned Rust tests matched stock nodes, roots and openings in serial and parallel builds. The independent layout check covered 63 cases. [Storage experiment](../integrations/shinigami-stwo/README.md) | The archived exact-case verifier remains the acceptance gate | — | — |
 | Archived Shinigami CUDA disk batches | RTX 3050 matched 65,535 independently computed nodes across mixed-height batches. The archived Stwo tests matched stock roots and openings. | The archived AIR and transcript remain pinned. All-node parity establishes the commitment backend for the tested tree. [Archived CUDA batches](../integrations/shinigami-stwo/README.md) | — | — |
 | Shinigami CUDA smoke on RTX 3050 | Saved Cairo test input, CUDA commitments and FRI in 212 seconds total | Separate matching Cairo CPU verifier accepted and rejected three mutations. The archived verifier rejected the different transcript. [CUDA smoke](../integrations/shinigami-stwo/README.md) | — | — |
