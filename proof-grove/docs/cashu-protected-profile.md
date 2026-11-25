@@ -89,6 +89,20 @@ cargo +stable run --locked --release --manifest-path integrations/cashu-nova/Car
 
 For an independent audit of an existing proof, obtain the expected journal SHA-256 from its trusted evidence manifest. The proof verifies the folded `register`, `issue` and `redeem` steps for that journal.
 
+`audit-v3` verifies a settled V3 archive offline. It reruns the wallet's CDK checks, rebuilds the pinned journal, verifies its existing Nova proof with the pinned key, and checks the holder's signature and mined witness against the independently recorded payout block. The output includes the reconstructed journal, admission records, verification results, and the 404-byte settlement record. Use the live Core auditor below for a current UTXO balance.
+
+Use `--wallet-cli` to select the same wallet code from a checkout with dependencies installed for the host running the audit.
+
+```bash
+python3 scripts/protected-fixture-evidence.py audit-v3 "$RECEIPT" "$RUN" \
+  --v3-receipt "$ISSUANCE_RECEIPT" --v3-bundle "$BUNDLE" --v3-bundle-id "$BUNDLE_ID" \
+  --v3-mint-pin "$MINT_PIN" --proof-dir "$PROOF_DIR" --nova-verifier "$NOVA_VERIFIER" \
+  --journal-sha256 "$JOURNAL_SHA" --nova-key-sha256 "$NOVA_KEY_SHA" \
+  --anchor-height "$PAYOUT_HEIGHT" --anchor-hash "$PAYOUT_BLOCK"
+```
+
+The native Windows audit accepted the six CDK notes for 25,000 sats, the same 11,504-byte Nova proof, and the confirmed 24,750-sat holder payout under the saved checkpoint. The complete run took 37.50 seconds. Nova key setup took 35.02 seconds and its proof verification took 0.493 seconds. The audit refused a substituted journal pin, payout block pin and modified Nova proof. The resulting settlement record has SHA-256 `aa235d7684e890547f50a472cfa19a106189612a13bc41707ef4a2a545883116`.
+
 The read-only `protected_accounting` command reconciles that proof's ledger with Core. An observer publishes a `proof-grove/protected-reserve-catalog/v1` JSON document containing `genesis`, the pinned `mint` URL, `tip_hash`, `tip_height`, and `bundles` with each full V3 reserve bundle. Include spent reserves so the observer can check every journal entry. Pin the journal and catalog bytes independently. Obtain the issuance records by running the wallet's offline verification against the authorized mint keysets before signing off on the journal pin.
 
 ```bash
@@ -256,7 +270,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 | RTX A6000 V3 CUDA resume | 750 replayed core shards and 787 newly proved core shards at 2.079 per second. | CPU independently verified 74 sampled outputs under the effective zero nonce. The failed reduction was unpublished, and zero complete proofs passed. | ELF, inputs and memo manifest matched the prior lease. | — |
 | RTX A6000 reduction diagnostic | Actual four-input recursion reduction reproduced the constraint failure and preserved its request. | Stock CPU verifier accepted all four child proofs individually. The generated reduction failed. | The archived order and ranges identify the request for a CPU and CUDA replay. | — |
 | Stock SP1 single-arity reduction replay | Verified the four child inputs and compiled the compose program. Proving-key generation reached the runtime cap. | No reduction proof produced | Reused the exact capture, arity, child order and effective nonce | — |
-| Portable V3 holder payout receipt | Captured from a fresh CDK and Core fixture. | Offline verification covered the funding and payout inclusions, BIP141 witness commitment and BIP143 holder signature under an independently observed checkpoint. | The original protected bundle binds the outpoint and exact payout terms. | Core confirmed 24,750 sats after six blocks with the mint stopped. |
+| Portable V3 issuance, accounting and payout | Captured from a fresh CDK and Core fixture and reverified on Windows. | The combined audit checked the exact CDK batch, Nova proof, BIP141 witness inclusion and BIP143 holder signature under the recorded pins. | The rebuilt journal matches the original SHA-256, binds the same outpoint and claim, and verifies zero remaining liabilities. | Core confirmed 24,750 sats after six blocks with the mint stopped. |
 | M14 garbled settlement fixture | Separate garbler and evaluator on the same-chain record | Pinned package and matching accept or reject label commitment | Trusted setup and independent digest pin | Fraud-witness spend remains open |
 | One-byte funded Taproot assertion | Bitcoin Core 31.0 and separate label extractor | Extracted eight labels from the exact mined BIP340 signature and committed table | Trusted setup. The script permits ordinary signatures that carry no opening. | Core confirmed the assertion and its 99,000-sat payout |
 | Funded asserted-byte Cashu dispute | Two independent garblings and confirmed Core assertion transactions | Verified script-path signatures, transaction and witness commitments, and matched accept or reject labels | One record byte varies under the same challenger digest. Trusted setup and one-shot signing apply. | Core confirmed the 49,500-sat challenger payout with the reject label and the operator reclaim after four blocks |
