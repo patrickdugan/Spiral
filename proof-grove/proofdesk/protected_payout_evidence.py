@@ -200,41 +200,33 @@ def _verify_holder_witness(tx, previous, plan, openssl):
     _verify_signature(openssl, _raw(plan["holder_pubkey"], 33, 33), signature[:-1], sighash)
 
 
-def verify(receipt, bundle_id, anchor_height, anchor_hash, *, openssl="openssl"):
-    """Verify inclusion and the exact V3 spend under independently obtained pins."""
+def _v3_plan(bundle, bundle_id):
     hash32(bundle_id, "bundle_id")
-    hash32(anchor_hash, "anchor_hash")
-    positive(anchor_height, "anchor_height", 2**31 - 1)
-    bundle = receipt["app_bundle"]
     plan = bundle["plan"]
-    if (receipt.get("network") != "regtest" or receipt.get("genesis") != GENESIS
-            or bundle.get("schema") != V3_BUNDLE_SCHEMA or plan.get("schema") != V3_PLAN_SCHEMA
+    if (bundle.get("schema") != V3_BUNDLE_SCHEMA or plan.get("schema") != V3_PLAN_SCHEMA
             or plan.get("network") != "regtest" or plan.get("genesis") != GENESIS
             or bundle.get("bundle_id") != bundle_id
             or digest({k: v for k, v in bundle.items() if k != "bundle_id"}) != bundle_id
             or digest({k: v for k, v in plan.items() if k != "plan_id"}) != plan.get("plan_id")):
         raise ValueError("V3 payout reserve bundle pin mismatch")
-    evidence = receipt["bitcoin_chain_evidence"]
-    raw_headers = evidence["headers"]
-    if (evidence.get("schema") != CHAIN_SCHEMA or not isinstance(raw_headers, list)
-            or not 2 <= len(raw_headers) <= MAX_HEADERS or anchor_height < len(raw_headers)):
+    return plan
+
+
+def _pinned_headers(raw_headers, anchor_height, anchor_hash, minimum):
+    hash32(anchor_hash, "anchor_hash")
+    positive(anchor_height, "anchor_height", 2**31 - 1)
+    if (not isinstance(raw_headers, list) or not minimum <= len(raw_headers) <= MAX_HEADERS
+            or anchor_height < len(raw_headers)):
         raise ValueError("invalid protected payout header interval")
     headers = [_raw(header, 80, 80) for header in raw_headers]
     hashes = [_hash256(header) for header in headers]
     if (hashes[-1][::-1].hex() != anchor_hash
             or any(header[4:36] != parent for header, parent in zip(headers[1:], hashes))):
         raise ValueError("protected payout headers differ from the checkpoint")
-    funding_block = hashes[0][::-1].hex()
-    funding_height = anchor_height - len(headers) + 1
-    delay = positive(plan["delay_blocks"], "delay_blocks", 65535)
-    outpoint, paid = bundle["funding"], receipt["payout"]
-    if (outpoint["block"] != funding_block or paid["block"] != anchor_hash or paid["height"] != anchor_height
-            or receipt["mature_holder_check"]["observation"]["funding_height"] != funding_height
-            or paid["delay_blocks"] != delay or anchor_height - funding_height < delay):
-        raise ValueError("protected payout CSV or height mismatch")
-    funding, payout = (_transaction(receipt["public_transactions"][name]) for name in ("funding", "payout"))
-    _verify_inclusion(evidence, headers, funding, payout)
-    vout = outpoint["vout"]
+    return headers, hashes[0][::-1].hex(), anchor_height - len(headers) + 1
+
+
+def _v3_amounts_and_script(plan, delay):
     reserve = positive(plan["reserve_sats"], "reserve_sats")
     amount = positive(plan["payout_sats"], "payout_sats")
     fee = positive(plan["fee_sats"], "fee_sats")
@@ -247,12 +239,37 @@ def verify(receipt, bundle_id, anchor_height, anchor_hash, *, openssl="openssl")
     commitment = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
     script = _witness_script(plan["holder_pubkey"], plan["mint_pubkey"], delay, commitment)
     funding_script = b"\x00\x20" + hashlib.sha256(script).digest()
+    if (funding_script.hex() != plan["funding_script"] or script.hex() != plan["witness_script"]
+            or preimage != plan["issuance_preimage"] or commitment != plan["issuance_hash"]
+            or reserve - amount != fee or plan["change_sats"] != 0):
+        raise ValueError("protected payout differs from the pinned amounts or scripts")
+    return reserve, amount, fee, destination, funding_script
+
+
+def verify(receipt, bundle_id, anchor_height, anchor_hash, *, openssl="openssl"):
+    """Verify inclusion and the exact V3 spend under independently obtained pins."""
+    bundle = receipt["app_bundle"]
+    plan = _v3_plan(bundle, bundle_id)
+    if receipt.get("network") != "regtest" or receipt.get("genesis") != GENESIS:
+        raise ValueError("V3 payout reserve bundle pin mismatch")
+    evidence = receipt["bitcoin_chain_evidence"]
+    if evidence.get("schema") != CHAIN_SCHEMA:
+        raise ValueError("invalid protected payout header interval")
+    headers, funding_block, funding_height = _pinned_headers(evidence["headers"], anchor_height, anchor_hash, 2)
+    delay = positive(plan["delay_blocks"], "delay_blocks", 65535)
+    outpoint, paid = bundle["funding"], receipt["payout"]
+    if (outpoint["block"] != funding_block or paid["block"] != anchor_hash or paid["height"] != anchor_height
+            or receipt["mature_holder_check"]["observation"]["funding_height"] != funding_height
+            or paid["delay_blocks"] != delay or anchor_height - funding_height < delay):
+        raise ValueError("protected payout CSV or height mismatch")
+    funding, payout = (_transaction(receipt["public_transactions"][name]) for name in ("funding", "payout"))
+    _verify_inclusion(evidence, headers, funding, payout)
+    vout = outpoint["vout"]
+    reserve, amount, fee, destination, funding_script = _v3_amounts_and_script(plan, delay)
     if (type(vout) is not int or not 0 <= vout < len(funding.outputs) or funding.txid != outpoint["txid"]
-            or funding.outputs[vout] != (reserve, funding_script) or funding_script.hex() != plan["funding_script"]
-            or script.hex() != plan["witness_script"] or preimage != plan["issuance_preimage"]
-            or commitment != plan["issuance_hash"] or reserve - amount != fee
+            or funding.outputs[vout] != (reserve, funding_script)
             or receipt["reserve"] != outpoint | {"sats": reserve, "script": funding_script.hex()}
-            or plan["change_sats"] != 0 or (paid["txid"], paid["wtxid"], paid["sats"], paid["script"], paid["fee_sats"]) != (
+            or (paid["txid"], paid["wtxid"], paid["sats"], paid["script"], paid["fee_sats"]) != (
                 payout.txid, payout.wtxid, amount, destination.hex(), fee)):
         raise ValueError("protected payout differs from the pinned amounts or scripts")
     previous = bytes.fromhex(funding.txid)[::-1] + vout.to_bytes(4, "little")

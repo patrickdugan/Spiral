@@ -3,10 +3,12 @@
 import copy
 import hashlib
 import json
+import os
 import subprocess
 import sys
 
 from proofdesk import protected_accounting as accounting, protected_withdrawal as withdrawal
+from proofdesk import protected_withdrawal_evidence as bitcoin_evidence
 from proofdesk.domain import Refused, digest
 from protected_rollover_fixture import v3_issuance_prefix
 
@@ -57,6 +59,12 @@ def prove(core, rpc, root, runtime, handoff, node, nova, key_pin, bundle, raw):
     assert cli['withdrawal_id'] == candidate['withdrawal_id'] and cli['steps'] == 3
     assert withdrawal.verify_candidate(*args, candidate) == candidate
     paid = candidate['admission']['statement']['withdrawal']
+    witness = bitcoin_evidence.capture(rpc, bundle, candidate['admission'], raw)
+    write('bitcoin-authorization-evidence.json', witness)
+    verified_bitcoin = bitcoin_evidence.verify(witness, bundle['bundle_id'], candidate['withdrawal_id'],
+                                              catalog['tip_height'], catalog['tip_hash'],
+                                              openssl=os.environ.get('PROOF_GROVE_OPENSSL', 'openssl'))
+    write('independent-bitcoin-authorization.json', verified_bitcoin)
 
     changed = copy.deepcopy(candidate)
     changed['admission']['statement']['withdrawal']['wtxid'] = '55' * 32
