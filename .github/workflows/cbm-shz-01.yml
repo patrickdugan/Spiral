@@ -1,0 +1,63 @@
+name: CBM-SHZ-01
+
+on:
+  push:
+    paths:
+      - "experiments/cbm-shz-01/**"
+      - "formal-rent/**"
+      - ".github/workflows/cbm-shz-01.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r experiments/cbm-shz-01/requirements.txt
+      - name: Invariant tests
+        working-directory: experiments/cbm-shz-01
+        run: python -m pytest -q tests
+      - name: Re-run the base cell and compare with committed results
+        working-directory: experiments/cbm-shz-01
+        run: |
+          python verify.py | tee verify.txt
+          echo "::notice title=CBM-SHZ-01 verify::$(tail -1 verify.txt)"
+
+  lean:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lean toolchain
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Resolve pinned Mathlib
+        working-directory: formal-rent
+        run: lake update
+      - name: Mathlib cache
+        working-directory: formal-rent
+        run: lake exe cache get
+      - name: Build proofs
+        working-directory: formal-rent
+        run: lake build
+      - name: Axioms
+        working-directory: formal-rent
+        run: |
+          lake env lean SpiralRent/Audit.lean | tee axioms.txt
+          if grep -v "propext, Classical.choice, Quot.sound\]" axioms.txt | grep -q "depends on axioms"; then
+            echo "::error::unexpected axiom"; exit 1
+          fi
+          echo "::notice title=formal-rent::$(grep -c 'depends on axioms' axioms.txt) theorems, standard axioms only"
+      - name: Reject placeholders
+        run: |
+          if grep -REn '(^|[^[:alnum:]_])(sorry|admit)([^[:alnum:]_]|$)' formal-rent/SpiralRent/*.lean; then
+            echo "::error::proof placeholder"; exit 1
+          fi
