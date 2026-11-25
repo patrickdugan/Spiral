@@ -25,5 +25,8 @@ The index proposes links between public rows. The auditor verifies each
 selected proof and its program key, recursion-key membership and proof nonce.
 The compose prover checks the ordered witness and emits a new proof when it
 fits the local resources. The planned composition covers an execution prefix.
+On the measured WSL host, the two-child witness executed successfully. The
+CPU prover reached both the 2 GiB and 2.5 GiB hard limits during proving with
+zero swap. The verified source reduction and leaves remain reusable.
 Complete settlement still requires a stock SP1 proof with the pinned public
 output and a separate Bitcoin enforcement test.
