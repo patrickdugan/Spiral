@@ -12,6 +12,16 @@ import sys
 from core_progress import CORE_HEADER_SIZE, execution_interval, load_metadata
 
 
+def compare_reference_clock(frontier, reference, rate):
+    executed = frontier - 1
+    if executed > reference:
+        return {"reference_clock_status": "exceeded", "reference_clock_excess_ticks": executed - reference,
+                "position_as_pct_of_guest_clock": None, "execution_clock_hours_if_same_rate": None}
+    return {"reference_clock_status": "within_reference", "reference_clock_excess_ticks": 0,
+            "position_as_pct_of_guest_clock": round(100 * executed / reference, 4),
+            "execution_clock_hours_if_same_rate": (reference - executed) / rate / 3600}
+
+
 def measure(run, report, previous):
     previous_bytes, sample = load_metadata(previous)
     manifest_bytes, manifest = load_metadata(run / "run.json")
@@ -69,10 +79,12 @@ def measure(run, report, previous):
     if last - first < 180:
         sys.exit("Waiting for 180 seconds of contiguous fresh execution slices")
     clock = sample["executed_global_clock"]
+    if type(clock) is not int or not 0 < clock < 1 << 48:
+        raise ValueError("invalid independently measured reference clock")
     first_tick = contiguous[0][0]
     frontier = contiguous[-1][1]
-    if not sample["checkpoint_frontier_clock"] <= first_tick < frontier <= clock + 1:
-        raise ValueError("fresh intervals are outside the independently measured guest clock")
+    if not sample["checkpoint_frontier_clock"] <= first_tick < frontier:
+        raise ValueError("fresh intervals do not follow the independently measured checkpoint")
     ticks = sum(end - start for start, end, stamp in contiguous if stamp > first)
     rate = ticks / (last - first)
     return {
@@ -86,9 +98,9 @@ def measure(run, report, previous):
         "window_seconds": last - first,
         "first_execution_clock": first_tick,
         "last_execution_clock": frontier,
-        "position_as_pct_of_guest_clock": round(100 * (frontier - 1) / clock, 4),
+        "reference_guest_clock": clock,
         "clock_ticks_per_second": rate,
-        "execution_clock_hours_if_same_rate": (clock - (frontier - 1)) / rate / 3600,
+        **compare_reference_clock(frontier, clock, rate),
     }
 
 

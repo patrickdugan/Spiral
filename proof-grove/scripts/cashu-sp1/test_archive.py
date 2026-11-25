@@ -3,6 +3,7 @@ import unittest
 
 import index_archive as index
 from core_progress import clock_frontier, execution_interval
+from measure_core_window import compare_reference_clock
 from plan_prefix import candidate_path
 from verify_prefix import check_chain
 
@@ -41,6 +42,16 @@ class ArchiveTests(unittest.TestCase):
             clock_frontier([(1, 11), (10, 12)], 49)
         with self.assertRaisesRegex(ValueError, 'executed clock'):
             clock_frontier([(1, 51)], 49)
+
+    def test_live_clock_overrun_supersedes_the_reference_estimate(self):
+        within = compare_reference_clock(11, 20, 2)
+        self.assertEqual(within['position_as_pct_of_guest_clock'], 50)
+        self.assertEqual(within['execution_clock_hours_if_same_rate'], 5 / 3600)
+        self.assertEqual(compare_reference_clock(21, 20, 2)['reference_clock_excess_ticks'], 0)
+        exceeded = compare_reference_clock(22, 20, 2)
+        self.assertEqual((exceeded['reference_clock_status'], exceeded['reference_clock_excess_ticks']), ('exceeded', 1))
+        self.assertIsNone(exceeded['position_as_pct_of_guest_clock'])
+        self.assertIsNone(exceeded['execution_clock_hours_if_same_rate'])
 
     def test_public_row_rejects_nonce_and_length_changes(self):
         row = bytearray(index.FIELDS.size)

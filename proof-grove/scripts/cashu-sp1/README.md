@@ -65,7 +65,10 @@ separate measurements.
 For a resumed run, pass the current report directory with its
 `progress-baseline-bytes.txt` and a prior coverage report for the same
 manifest. This reads only the recent fresh shard headers and measures a
-contiguous window of at least 180 seconds.
+contiguous window of at least 180 seconds. When the live frontier crosses the
+earlier executor clock, the report records the measured excess and leaves the
+percentage and estimate unset. Core archive verification establishes the
+completed shard range independently.
 
 ```bash
 python3 -B "$TOOLS/measure_core_window.py" "$RUN_DIR" "$RESUME_REPORT" "$PRIOR_COVERAGE"
