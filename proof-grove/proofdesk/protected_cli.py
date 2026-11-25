@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from . import protected_reserve, protected_rollover
+from . import protected_accounting, protected_reserve, protected_rollover
 from .adapters import CoreClient
 from .domain import Refused
 from .verifier import read_bounded
@@ -47,6 +47,7 @@ def configure(commands):
         ("psbt", "Export a holder-only split PSBT"),
         ("check", "Check a signed split against its plan and Core policy"),
         ("confirm", "Attach both successors after the split confirms"),
+        ("journal", "Export the verified five-event rollover group for the Nova journal"),
     ):
         parser = commands.add_parser("protected-rollover-" + action, help=help_text)
         for key in ("config", "bundle", "bundle-id"):
@@ -64,6 +65,8 @@ def configure(commands):
         if action == "confirm":
             parser.add_argument("--txid", required=True)
             parser.add_argument("--block", required=True)
+        if action == "journal":
+            parser.add_argument("--receipt", required=True)
 
 
 def _load(path):
@@ -97,6 +100,17 @@ def _rollover(core, args, bundle):
         result = protected_rollover.confirm(*inputs, args.txid, args.block)
         _write(args.output, json.dumps(result, indent=2))
         return {"receipt_id": result["receipt_id"], "successors": [child["bundle_id"] for child in result["successors"]]}
+    if args.command == "protected-rollover-journal":
+        plan, receipt = inputs[3], _load(args.receipt)
+        if receipt.get("rollover_id") != args.rollover_id:
+            raise Refused("protected_rollover_plan_mismatch")
+        tip = protected_reserve._chain(core)
+        protected_rollover.verify_confirmed(core, bundle, plan, receipt, tip)
+        entries = protected_accounting.rollover_entries(bundle, plan, receipt)
+        _write(args.output, json.dumps({"schema": "proof-grove/protected-rollover-journal-group/v1",
+                "receipt_id": receipt["receipt_id"], "tip_hash": tip["bestblockhash"], "tip_height": tip["blocks"],
+                "events": [event for event, _ in entries], "admission_evidence": [record for _, record in entries]}, indent=2))
+        return {"receipt_id": receipt["receipt_id"], "events": len(entries)}
     raise Refused("protected_invalid_command")
 
 

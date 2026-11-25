@@ -1,6 +1,7 @@
 """Reconcile a pinned protected Cashu journal with a read-only Bitcoin Core observer."""
 
 import argparse
+from collections import deque
 import hashlib
 import json
 from pathlib import Path
@@ -8,7 +9,8 @@ import subprocess
 
 from .adapters import CoreClient
 from .domain import digest, hash32, positive, Refused
-from .protected_reserve import GENESIS, V3_BUNDLE_SCHEMA, _chain, _stable_tip, spending_observation
+from .protected_reserve import GENESIS, SUCCESSOR_BUNDLE_SCHEMA, V3_BUNDLE_SCHEMA, _chain, _stable_tip, spending_observation
+from .protected_rollover import verify_confirmed
 from .verifier import read_bounded
 
 
@@ -35,6 +37,31 @@ def bound_claim(key):
     txid, index = key
     return hashlib.sha256(b"proof-grove/protected-reserve/v1\0" + bytes.fromhex(GENESIS + txid)
                           + index.to_bytes(4, "big")).hexdigest()
+
+
+def journal_entry(bundle, action, evidence):
+    coin = outpoint(bundle["funding"])
+    record = evidence | {"bundle_id": bundle["bundle_id"]}
+    return ({"funding_txid": coin[0], "funding_vout": coin[1], "amount_sats": bundle["plan"]["reserve_sats"],
+             "action": action, "evidence_sha256": digest(record)}, record)
+
+
+def rollover_entries(parent, plan, receipt):
+    """Encode one admitted split as five events under the existing Nova key."""
+    amount = parent["plan"]["reserve_sats"]
+    entries = [journal_entry(parent, {"kind": "redeem", "input": bound_claim(outpoint(parent["funding"])),
+                                     "reserve_before_sats": amount},
+                             {"kind": "observed-regtest-rollover", "plan": plan, "receipt": receipt})]
+    for child in receipt["successors"]:
+        coin = outpoint(child["funding"])
+        intent = digest({"schema": "proof-grove/protected-rollover-intent/v1",
+                         "receipt_id": receipt["receipt_id"], "funding_txid": coin[0], "funding_vout": coin[1]})
+        binding = {"receipt_id": receipt["receipt_id"], "funding": child["funding"]}
+        entries.append(journal_entry(child, {"kind": "register", "intent": intent},
+                                     {"kind": "observed-rollover-successor", **binding}))
+        entries.append(journal_entry(child, {"kind": "issue", "intent": intent, "claim": bound_claim(coin)},
+                                     {"kind": "admitted-rollover-successor", **binding}))
+    return entries
 
 
 def check_issuance(record, bundle, mint, intent, claim, amount):
@@ -76,13 +103,18 @@ def audit(core, catalog, journal, records):
     by_coin = {}
     for bundle in bundles:
         coin = outpoint(bundle["funding"])
-        if coin in by_coin or bundle.get("schema") != V3_BUNDLE_SCHEMA:
+        if coin in by_coin or bundle.get("schema") not in (V3_BUNDLE_SCHEMA, SUCCESSOR_BUNDLE_SCHEMA):
             raise Refused("protected_accounting_duplicate_or_unsupported_reserve")
         by_coin[coin] = bundle
 
-    # Each protected claim is a full outpoint. Native Nova split/swap steps have
-    # their own scope and do not authorize fractional claims against these bundles.
+    tip = _chain(core)
+    if (hash32(catalog["tip_hash"], "tip_hash") != tip["bestblockhash"]
+            or positive(catalog["tip_height"], "tip_height", 2**31 - 1) != tip["blocks"]):
+        raise Refused("protected_accounting_stale_catalog")
+
+    # A confirmed rollover authorizes exactly four successive child events.
     intents, phases = {}, {}
+    expected_successors = deque()
     for event, record in zip(events, records, strict=True):
         coin = outpoint(event, "funding_txid", "funding_vout")
         if coin not in by_coin or digest(record) != event["evidence_sha256"]:
@@ -95,33 +127,53 @@ def audit(core, catalog, journal, records):
         action, last = event["action"], phases.get(coin)
         kind = action["kind"]
         claim = bound_claim(coin)
-        if kind == "register" and last is None:
+        if expected_successors:
+            if (event, record) != expected_successors.popleft():
+                raise Refused("protected_accounting_rollover_group_mismatch")
+            intent = action["intent"]
+            if kind == "register":
+                if last is not None or intent in intents:
+                    raise Refused("protected_accounting_registration_mismatch")
+                intents[intent] = coin
+            elif not last or last[0] != "register" or intents.get(intent) != coin:
+                raise Refused("protected_accounting_rollover_group_mismatch")
+        elif kind == "register" and last is None and bundle["schema"] == V3_BUNDLE_SCHEMA:
             funding = bundle["funding"] | {"sats": amount, "script": plan["funding_script"]}
             intent = hash32(action["intent"], "intent")
             if record.get("kind") != "observed-regtest-reserve" or record["funding"] != funding or intent in intents:
                 raise Refused("protected_accounting_registration_mismatch")
             intents[intent] = coin
-        elif kind == "issue" and last and last[0] == "register":
+        elif kind == "issue" and last and last[0] == "register" and bundle["schema"] == V3_BUNDLE_SCHEMA:
             if intents.get(action["intent"]) != coin or action["claim"] != claim:
                 raise Refused("protected_accounting_issuance_mismatch")
             check_issuance(record, bundle, mint, action["intent"], claim, amount)
         elif kind == "redeem" and last and last[0] == "issue":
-            if (action["input"] != claim or positive(action["reserve_before_sats"], "reserve_before_sats") != amount
-                    or record.get("kind") != "observed-regtest-payout"):
+            if action["input"] != claim or positive(action["reserve_before_sats"], "reserve_before_sats") != amount:
+                raise Refused("protected_accounting_payout_mismatch")
+            if record.get("kind") == "observed-regtest-rollover":
+                receipt = record["receipt"]
+                children = verify_confirmed(core, bundle, record["plan"], receipt, tip)
+                if any(by_coin.get(outpoint(child["funding"])) != child for child in children):
+                    raise Refused("protected_accounting_rollover_catalog_mismatch")
+                parent_entry, *child_entries = rollover_entries(bundle, record["plan"], receipt)
+                if (event, record) != parent_entry:
+                    raise Refused("protected_accounting_rollover_group_mismatch")
+                expected_successors.extend(child_entries)
+            elif record.get("kind") != "observed-regtest-payout":
                 raise Refused("protected_accounting_payout_mismatch")
         else:
             raise Refused("protected_accounting_invalid_transition")
         phases[coin] = kind, record
+    if expected_successors:
+        raise Refused("protected_accounting_rollover_group_mismatch")
     if phases.keys() != by_coin.keys():
         raise Refused("protected_accounting_catalog_omission")
 
-    tip = _chain(core)
-    if (hash32(catalog["tip_hash"], "tip_hash") != tip["bestblockhash"]
-            or positive(catalog["tip_height"], "tip_height", 2**31 - 1) != tip["blocks"]):
-        raise Refused("protected_accounting_stale_catalog")
     totals = {"declared_reserve_sats": 0, "outstanding_claims_sats": 0, "pending_issuance_sats": 0}
     for coin, bundle in by_coin.items():
         kind, record = phases[coin]
+        if kind == "redeem" and record["kind"] == "observed-regtest-rollover":
+            continue
         observation = spending_observation(core, bundle, bundle["bundle_id"])
         if observation["tip"] != tip["bestblockhash"]:
             raise Refused("chain_changed_retry")

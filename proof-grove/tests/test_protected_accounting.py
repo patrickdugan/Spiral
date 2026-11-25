@@ -119,6 +119,39 @@ class ProtectedAccountingTest(unittest.TestCase):
         with self.assertRaisesRegex(Refused, "invalid_transition"):
             self.audit()
 
+    def test_funded_rollover_requires_both_ordered_successors(self):
+        self.add_bundle(4, "issue")
+        parent = self.catalog["bundles"][-1]
+        children = []
+        for index, amount in enumerate((12000, 12750)):
+            child = {"schema": accounting.SUCCESSOR_BUNDLE_SCHEMA, "bundle_id": digest({"child": index}),
+                     "funding": {"txid": "bf" * 32, "vout": index, "block": "bc" * 32},
+                     "plan": {"reserve_sats": amount}}
+            children.append(child)
+            self.observations[child["bundle_id"]] = {"state": "unspent", "tip": TIP, "spender": None}
+        self.catalog["bundles"].extend(children)
+        receipt = {"successors": children, "receipt_id": "11" * 32}
+        entries = accounting.rollover_entries(parent, {}, receipt)
+        original_events, original_records = self.journal["events"][:], self.records[:]
+
+        def use(group):
+            self.journal["events"] = original_events + [event for event, _ in group]
+            self.records = original_records + [record for _, record in group]
+
+        with patch.object(accounting, "verify_confirmed", return_value=children):
+            use(entries)
+            result = self.audit()
+            self.assertEqual(result["outstanding_claims_sats"], 49750)
+            use(entries[:-1])
+            with self.assertRaisesRegex(Refused, "rollover_group_mismatch"):
+                self.audit()
+            use([entries[0], *entries[3:], *entries[1:3]])
+            with self.assertRaisesRegex(Refused, "rollover_group_mismatch"):
+                self.audit()
+            use(entries[1:])
+            with self.assertRaisesRegex(Refused, "invalid_transition"):
+                self.audit()
+
     def test_tip_change_during_reconciliation_invalidates_all_totals(self):
         response = self.core.rpc.side_effect
         first = response("getblockchaininfo", [])

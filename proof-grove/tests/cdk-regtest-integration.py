@@ -44,7 +44,7 @@ args=parser.parse_args()
 if args.cooperative and not args.protected_handoff:parser.error('--cooperative requires --protected-handoff')
 if args.batch_protected and not args.protected_handoff:parser.error('--batch-protected requires --protected-handoff')
 if args.rollover and (not args.batch_protected or not args.protected_handoff or args.cooperative
-                      or args.accounting_nova or args.collateral_nova or args.collateral_m14):
+                      or args.collateral_nova or args.collateral_m14):
     parser.error('--rollover requires the isolated V3 mint-offline scenario')
 if args.accounting_nova and (not args.batch_protected or not args.protected_handoff or args.cooperative):
     parser.error('--accounting-nova requires the V3 holder exit')
@@ -193,10 +193,11 @@ try:
         else:
             payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
                 mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate,
-                rollover_runtime=runtime if args.rollover else None)
+                rollover_runtime=runtime if args.rollover else None,
+                rollover_nova=args.accounting_nova if args.rollover else None)
             filename='cdk-protected-rollover-report.json' if args.rollover else 'cdk-protected-report.json'
         payout['issuance_flow']=report
-        if args.accounting_nova:
+        if args.accounting_nova and not args.rollover:
             payout['live_accounting']=cdk_protected_fixture.account(core,rpc,payout,args.protected_handoff,
                                                                   args.accounting_nova,args.node,ROOT)
         (ROOT/'.runtime'/filename).write_text(json.dumps(payout,indent=2)+'\n')

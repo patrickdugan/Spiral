@@ -231,6 +231,10 @@ def attach(core, saved: dict, plan_id: str, outpoint: dict) -> dict:
     observation = _funding(core, saved, outpoint, _chain(core))
     if observation["state"] != "unspent":
         raise Refused("protected_reserve_unavailable")
+    return _bound_bundle(saved, outpoint)
+
+
+def _bound_bundle(saved, outpoint):
     schema = _BUNDLE_SCHEMAS[saved["schema"]]
     body = {"schema": schema, "plan": saved, "funding": outpoint}
     return body | {"bundle_id": digest(body)}

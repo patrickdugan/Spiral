@@ -1,14 +1,18 @@
 """Exercise a mined two-recipient rollover of a real V3 issuance reserve."""
 
+import copy
+import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
 
-from proofdesk import protected_reserve as reserve
+from proofdesk import protected_accounting as accounting, protected_reserve as reserve
+from proofdesk.domain import Refused, digest
 from protected_fixture_keys import descriptor, fixture_wif
 
 
-def run(core, rpc, root, runtime, mining, parent, holder_wallet):
+def run(core, rpc, root, runtime, mining, parent, holder_wallet, at_split=None):
     config = runtime / 'protected-core.json'
     parent_path = runtime / 'protected-bundle.json'
     parent_args = ('--bundle', parent_path, '--bundle-id', parent['bundle_id'])
@@ -113,6 +117,8 @@ def run(core, rpc, root, runtime, mining, parent, holder_wallet):
         '--output', runtime/'orphaned-rollover.json', refusal='protected_rollover_unconfirmed')
     rpc('reconsiderblock', [split_block])
     assert rpc('getblockhash', [confirmed['height']]) == split_block
+    if at_split is not None:
+        at_split(rollover, confirmed)
 
     psbts = []
     for i, (child, (scalar, _)) in enumerate(zip(children, scalar_amounts, strict=True)):
@@ -154,3 +160,89 @@ def run(core, rpc, root, runtime, mining, parent, holder_wallet):
                          'substituted_output_rejected': True, 'orphaned_split_rejected': True,
                          'foreign_holder_cannot_sign': True, 'early_child_payouts_rejected': True,
                          'consumed_parent_cannot_split_again': True}}
+
+
+def accounting_prefix(core, root, handoff, node, parent, plan, receipt):
+    path = root / 'scripts/protected-fixture-evidence.py'
+    spec = importlib.util.spec_from_file_location('fixture_evidence', path)
+    evidence = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(evidence)
+    claim = accounting.bound_claim(accounting.outpoint(parent['funding']))
+    funding = parent['funding'] | {'sats': parent['plan']['reserve_sats'], 'script': parent['plan']['funding_script']}
+    mint_pin = handoff / 'protected-mint-pin.json'
+    issued = evidence.verify_v3_admission({'app_bundle': parent, 'reserve': funding, 'claim_id': claim},
+        handoff/'protected-issuance-receipt.json', handoff/'protected-bundle.json', parent['bundle_id'], mint_pin, node)
+    quote = issued['intent_id'].removeprefix('cashu:')
+    intent = hashlib.sha256(b'proof-grove/protected-issuance-intent/v1\0' + bytes.fromhex(quote)).hexdigest()
+    entries = [
+        accounting.journal_entry(parent, {'kind': 'register', 'intent': intent},
+                                 {'kind': 'observed-regtest-reserve', 'funding': funding}),
+        accounting.journal_entry(parent, {'kind': 'issue', 'intent': intent, 'claim': claim}, issued),
+        *accounting.rollover_entries(parent, plan, receipt),
+    ]
+    mint = json.loads(mint_pin.read_bytes())['mint']
+    tip = core.rpc('getblockchaininfo', [])
+    catalog = {'schema': accounting.CATALOG_SCHEMA, 'genesis': reserve.GENESIS, 'mint': mint,
+               'tip_hash': tip['bestblockhash'], 'tip_height': tip['blocks'],
+               'bundles': [parent, *receipt['successors']]}
+    journal = {'schema': accounting.JOURNAL_SCHEMA, 'genesis': reserve.GENESIS, 'events': [event for event, _ in entries],
+               'mint_profile_sha256': digest({'schema': 'proof-grove/protected-accounting-mint/v3', 'mint_url': mint})}
+    records = [record for _, record in entries]
+    totals = accounting.audit(core, catalog, journal, records)
+    assert (totals['declared_reserve_sats'], totals['outstanding_claims_sats'], totals['pending_issuance_sats']) == (
+        24750, 24750, 0)
+    return catalog, journal, records, totals
+
+
+def prove_accounting(core, handoff, nova, key_pin, prefix, payouts):
+    catalog, journal, records, split_totals = prefix
+    for child, paid in zip(catalog['bundles'][1:], payouts, strict=True):
+        amount = child['plan']['reserve_sats']
+        payout = {key: paid[key] for key in ('txid', 'wtxid', 'block', 'height', 'fee_sats')}
+        payout.update(sats=paid['payout_sats'], script=child['plan']['payout_script'], delay_blocks=child['plan']['delay_blocks'])
+        event, record = accounting.journal_entry(child, {
+            'kind': 'redeem', 'input': accounting.bound_claim(accounting.outpoint(child['funding'])),
+            'reserve_before_sats': amount,
+        }, {'kind': 'observed-regtest-payout', 'payout': payout})
+        journal['events'].append(event)
+        records.append(record)
+    tip = core.rpc('getblockchaininfo', [])
+    catalog.update(tip_hash=tip['bestblockhash'], tip_height=tip['blocks'])
+    totals = accounting.audit(core, catalog, journal, records)
+    assert all(totals[key] == 0 for key in ('declared_reserve_sats', 'outstanding_claims_sats', 'pending_issuance_sats'))
+
+    def rejected(candidate, evidence):
+        try:
+            accounting.audit(core, catalog, candidate, evidence)
+        except Refused as error:
+            return error.code
+        raise AssertionError('invalid rollover journal was accepted')
+
+    incomplete = journal | {'events': journal['events'][:6]}
+    assert rejected(incomplete, records[:6]) == 'protected_accounting_rollover_group_mismatch'
+    changed = copy.deepcopy(journal)
+    changed['events'][6]['action']['claim'] = 'ff' * 32
+    assert rejected(changed, records) == 'protected_accounting_rollover_group_mismatch'
+    replayed = journal | {'events': journal['events'] + journal['events'][2:7]}
+    assert rejected(replayed, records + records[2:7]) == 'protected_accounting_invalid_transition'
+
+    directory = handoff / 'rollover-accounting'
+    directory.mkdir()
+    for name, data in (('catalog', catalog), ('journal', journal), ('admission-evidence', records)):
+        (directory / f'{name}.json').write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+    journal_file = directory / 'journal.json'
+    pin = hashlib.sha256(journal_file.read_bytes()).hexdigest()
+    proof_dir = directory / 'proof'
+    print(json.dumps({'stage': 'rollover-nova-prove', 'steps': len(records)}), flush=True)
+    with (directory / 'prover.json').open('x', encoding='utf-8') as stream:
+        subprocess.run([nova, 'prove-journal', proof_dir, journal_file], stdout=stream, check=True, timeout=540)
+    transcript = subprocess.check_output([nova, 'verify-journal', proof_dir, journal_file, pin], timeout=120)
+    (directory / 'independent-verifier.json').write_bytes(transcript)
+    verified = json.loads(transcript)
+    assert (verified['verified'], verified['journal_sha256'], verified['verifier_key_sha256'], verified['steps']) == (
+        True, pin, key_pin, len(records))
+    for key in ('declared_reserve_sats', 'outstanding_claims_sats'):
+        assert verified[key] == totals[key]
+    assert accounting.audit(core, catalog, journal, records) == totals
+    return {'live_split': split_totals, 'final': totals, 'nova': verified, 'partial_group_rejected': True,
+            'substituted_claim_rejected': True, 'replayed_group_rejected': True}

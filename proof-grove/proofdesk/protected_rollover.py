@@ -112,7 +112,7 @@ def check_signed(core, parent, bundle_id, saved, rollover_id, raw):
             "split_fee_sats": saved["split_fee_sats"], "observation": observed}
 
 
-def confirm(core, parent, bundle_id, saved, rollover_id, txid, block):
+def _confirmed_spend(core, parent, bundle_id, saved, rollover_id, txid, block):
     hash32(txid, "rollover_txid")
     hash32(block, "rollover_block")
     observed = _checked_plan(core, parent, bundle_id, saved, rollover_id)
@@ -126,6 +126,11 @@ def confirm(core, parent, bundle_id, saved, rollover_id, txid, block):
     if tx.get("txid") != txid or tx.get("blockhash") != block or tx.get("in_active_chain") is not True:
         raise Refused("protected_rollover_transaction_mismatch")
     reserve._check_witness(_match_transaction(tx, parent, saved["children"]), parent["plan"], "holder")
+    return observed, height, tx
+
+
+def confirm(core, parent, bundle_id, saved, rollover_id, txid, block):
+    observed, height, tx = _confirmed_spend(core, parent, bundle_id, saved, rollover_id, txid, block)
     successors = [reserve.attach(core, child, child["plan_id"], {"txid": txid, "vout": n, "block": block})
                   for n, child in enumerate(saved["children"])]
     if _observe(core, parent, bundle_id) != observed:
@@ -135,3 +140,27 @@ def confirm(core, parent, bundle_id, saved, rollover_id, txid, block):
             "height": height, "tip": observed["tip"], "split_fee_sats": saved["split_fee_sats"],
             "successors": successors}
     return body | {"receipt_id": digest(body)}
+
+
+def verify_confirmed(core, parent, saved, receipt, tip):
+    """Reobserve a confirmed rollover after either successor may have been spent."""
+    bundle_id = parent["bundle_id"]
+    rollover_id, txid, block = receipt["rollover_id"], receipt["txid"], receipt["block"]
+    observed, height, tx = _confirmed_spend(core, parent, bundle_id, saved, rollover_id, txid, block)
+    if observed["tip"] != tip["bestblockhash"]:
+        raise Refused("chain_changed_retry")
+    successors = [reserve._bound_bundle(child, {"txid": txid, "vout": n, "block": block})
+                  for n, child in enumerate(saved["children"])]
+    confirmation_tip = hash32(receipt["tip"], "rollover_confirmation_tip")
+    body = {"schema": RECEIPT_SCHEMA, "rollover_id": rollover_id, "parent_bundle_id": bundle_id,
+            "parent_funding": parent["funding"], "txid": txid, "wtxid": tx["hash"], "block": block,
+            "height": height, "tip": confirmation_tip, "split_fee_sats": saved["split_fee_sats"],
+            "successors": successors}
+    if receipt != body | {"receipt_id": digest(body)}:
+        raise Refused("protected_accounting_rollover_receipt_mismatch")
+    for successor in successors:
+        state = reserve.holder_status(core, successor, successor["bundle_id"])
+        if state["tip"] != tip["bestblockhash"]:
+            raise Refused("chain_changed_retry")
+    _same_tip(core, observed)
+    return successors

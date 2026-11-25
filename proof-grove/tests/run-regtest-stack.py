@@ -34,7 +34,7 @@ parser.add_argument('--collateral-m14',type=Path,help='Local M14 cashu-settlemen
 args=parser.parse_args()
 if args.batch_protected and not (args.protected or args.protected_cooperative):
     parser.error('--batch-protected requires a protected scenario')
-if args.rollover and (not args.protected or not args.batch_protected or args.accounting_nova
+if args.rollover and (not args.protected or not args.batch_protected
                       or args.collateral_nova or args.collateral_m14):
     parser.error('--rollover requires the isolated V3 mint-offline scenario')
 if args.accounting_nova and not (args.protected and args.batch_protected and args.bitcoind):
@@ -168,7 +168,8 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
             try:process.wait(timeout=20)
             except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
             (handoff/'mint-stopped').touch(exist_ok=False)
-        if test_process.wait(timeout=480 if args.accounting_nova else 300 if collateral else 120)!=0:raise RuntimeError('Protected CDK integration failed')
+        after_stop = 720 if args.rollover and args.accounting_nova else 480 if args.accounting_nova else 300 if collateral else 120
+        if test_process.wait(timeout=after_stop)!=0:raise RuntimeError('Protected CDK integration failed')
     else:
         subprocess.run(test_command,cwd=ROOT,env=environment,check=True)
 finally:
