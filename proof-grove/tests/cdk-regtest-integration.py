@@ -38,6 +38,7 @@ parser.add_argument('--cooperative',action='store_true')
 parser.add_argument('--batch-protected',action='store_true')
 parser.add_argument('--rollover',action='store_true')
 parser.add_argument('--accounting-nova',type=Path)
+parser.add_argument('--withdrawal-nova',type=Path)
 parser.add_argument('--collateral-nova',type=Path)
 parser.add_argument('--collateral-m14',type=Path)
 args=parser.parse_args()
@@ -48,6 +49,8 @@ if args.rollover and (not args.batch_protected or not args.protected_handoff or 
     parser.error('--rollover requires the isolated V3 mint-offline scenario')
 if args.accounting_nova and (not args.batch_protected or not args.protected_handoff or args.cooperative):
     parser.error('--accounting-nova requires the V3 holder exit')
+if args.withdrawal_nova and (not args.batch_protected or not args.protected_handoff or args.cooperative or args.rollover):
+    parser.error('--withdrawal-nova requires the V3 holder exit')
 collateral=bool(args.collateral_nova and args.collateral_m14)
 if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected_handoff or args.cooperative):
     parser.error('The collateral fixture requires the mint-offline holder fixture and both verifier executables')
@@ -59,7 +62,7 @@ def rpc(method,params,*,wallet=False):
     if method not in ('getblockchaininfo','getblock','listwallets','createwallet','loadwallet','getnewaddress','generatetoaddress','sendtoaddress','getrawtransaction',
                        'getdescriptorinfo','importdescriptors','walletprocesspsbt','sendrawtransaction','getblockhash','testmempoolaccept','getblockheader',
                        'generateblock','invalidateblock','reconsiderblock','gettxoutproof','verifytxoutproof',
-                       'decodescript','walletcreatefundedpsbt','getaddressinfo'):
+                       'decodescript','walletcreatefundedpsbt','getaddressinfo','getrawmempool'):
         raise AssertionError('Unexpected test RPC')
     path=('/wallet/proof-grove-test-miner' if wallet is True else '/wallet/'+wallet) if wallet else ''
     body=json.dumps({'jsonrpc':'2.0','id':'pg-e2e','method':method,'params':params}).encode()
@@ -194,7 +197,8 @@ try:
             payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
                 mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate,
                 rollover_runtime=runtime if args.rollover else None,
-                rollover_nova=args.accounting_nova if args.rollover else None)
+                rollover_nova=args.accounting_nova if args.rollover else None,
+                withdrawal_nova=args.withdrawal_nova, withdrawal_runtime=runtime)
             filename='cdk-protected-rollover-report.json' if args.rollover else 'cdk-protected-report.json'
         payout['issuance_flow']=report
         if args.accounting_nova and not args.rollover:

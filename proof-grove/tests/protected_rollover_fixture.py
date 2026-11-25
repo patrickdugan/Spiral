@@ -162,7 +162,7 @@ def run(core, rpc, root, runtime, mining, parent, holder_wallet, at_split=None):
                          'consumed_parent_cannot_split_again': True}}
 
 
-def accounting_prefix(core, root, handoff, node, parent, plan, receipt):
+def v3_issuance_prefix(root, handoff, node, parent):
     path = root / 'scripts/protected-fixture-evidence.py'
     spec = importlib.util.spec_from_file_location('fixture_evidence', path)
     evidence = importlib.util.module_from_spec(spec)
@@ -178,9 +178,14 @@ def accounting_prefix(core, root, handoff, node, parent, plan, receipt):
         accounting.journal_entry(parent, {'kind': 'register', 'intent': intent},
                                  {'kind': 'observed-regtest-reserve', 'funding': funding}),
         accounting.journal_entry(parent, {'kind': 'issue', 'intent': intent, 'claim': claim}, issued),
-        *accounting.rollover_entries(parent, plan, receipt),
     ]
     mint = json.loads(mint_pin.read_bytes())['mint']
+    return mint, entries
+
+
+def accounting_prefix(core, root, handoff, node, parent, plan, receipt):
+    mint, entries = v3_issuance_prefix(root, handoff, node, parent)
+    entries.extend(accounting.rollover_entries(parent, plan, receipt))
     tip = core.rpc('getblockchaininfo', [])
     catalog = {'schema': accounting.CATALOG_SCHEMA, 'genesis': reserve.GENESIS, 'mint': mint,
                'tip_hash': tip['bestblockhash'], 'tip_height': tip['blocks'],

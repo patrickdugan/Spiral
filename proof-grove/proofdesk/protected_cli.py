@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from . import protected_accounting, protected_reserve, protected_rollover
+from . import protected_accounting, protected_reserve, protected_rollover, protected_withdrawal
 from .adapters import CoreClient
 from .domain import Refused
 from .verifier import read_bounded
@@ -19,6 +19,12 @@ def configure(commands):
     for key in ("reserve-sats", "fee-sats", "delay-blocks"):
         plan.add_argument("--" + key, required=True, type=int)
     plan.add_argument("--min-confirmations", default=2, type=int)
+
+    withdrawal = commands.add_parser("protected-withdrawal", help="Check and export a candidate withdrawal journal before broadcast")
+    for key in ("config", "bundle-id", "tx-file", "output", "catalog", "catalog-sha256", "journal", "journal-sha256",
+                "records", "records-sha256"):
+        withdrawal.add_argument("--" + key, required=True)
+    withdrawal.add_argument("--candidate", help="Readmit an existing candidate against the pinned live prefix")
 
     attach = commands.add_parser("protected-attach", help="Verify funding and save the exact coin and plan")
     attach.add_argument("--config", required=True)
@@ -127,6 +133,18 @@ def run(args):
         result = protected_reserve.attach(core, _load(args.plan), args.plan_id, outpoint)
         _write(args.output, json.dumps(result, indent=2))
         return {"bundle_id": result["bundle_id"], "funding": result["funding"]}
+    if args.command == "protected-withdrawal":
+        limits = (("catalog", 2 * 1024 * 1024), ("journal", 256 * 1024), ("records", 2 * 1024 * 1024))
+        inputs = [protected_accounting.pinned_json(getattr(args, key), getattr(args, key + "_sha256"), limit)
+                  for key, limit in limits]
+        tx = read_bounded(args.tx_file, 16002).decode("ascii").strip()
+        if args.candidate:
+            candidate = json.loads(read_bounded(args.candidate, 256 * 1024))
+            result = protected_withdrawal.verify_candidate(core, *inputs, args.bundle_id, tx, candidate)
+        else:
+            result = protected_withdrawal.prepare(core, *inputs, args.bundle_id, tx)
+        _write(args.output, json.dumps(result, indent=2))
+        return {"withdrawal_id": result["withdrawal_id"], "steps": len(result["journal"]["events"])}
     bundle = _load(args.bundle)
     if args.command.startswith("protected-rollover-"):
         return _rollover(core, args, bundle)

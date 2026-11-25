@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from proofdesk import protected_accounting as accounting
+from proofdesk import protected_withdrawal as withdrawal
 from proofdesk.domain import digest, Refused
 
 
@@ -77,6 +78,33 @@ class ProtectedAccountingTest(unittest.TestCase):
         self.assertEqual(result, {"declared_reserve_sats": 50000, "outstanding_claims_sats": 25000,
                                   "pending_issuance_sats": 25000, "catalog_reserves": 3, "tip_hash": TIP,
                                   "tip_height": 120})
+
+    def test_prewithdrawal_requires_live_issuance_and_one_tip(self):
+        bundle = self.catalog['bundles'][1]
+        bundle['plan']['holder_pubkey'] = '02' + 'ab' * 32
+        issued = bundle['bundle_id']
+        observation = {'tip': TIP, 'height': 120, 'funding_height': 115, 'eligible_in_next_block': True,
+                       'holder_only_earliest_height': 121}
+        checked = {'txid': PAYOUT, 'wtxid': 'aa' * 32, 'payout_sats': 24750, 'fee_sats': 250, 'change_sats': 0,
+                   'mempool_eligible': True, 'reject_reason': None, 'observation': observation}
+        args = (self.core, self.catalog, self.journal, self.records)
+        with (patch.object(accounting, 'spending_observation', side_effect=lambda c, b, pin: self.observations[pin]),
+              patch.object(withdrawal, 'check_signed', return_value=checked) as signed):
+            result = withdrawal.prepare(*args, issued, 'abcd')
+            last = result['journal']['events'][-1]
+            self.assertEqual(last['evidence_sha256'], result['withdrawal_id'])
+            self.assertEqual(result['journal']['events'][:-1], self.journal['events'])
+            self.assertEqual(last['action']['input'], accounting.bound_claim(accounting.outpoint(bundle['funding'])))
+            for inactive in (self.catalog['bundles'][0], self.catalog['bundles'][2]):
+                with self.assertRaisesRegex(Refused, 'claim_not_live'):
+                    withdrawal.prepare(*args, inactive['bundle_id'], 'abcd')
+            signed.assert_called_once_with(self.core, bundle, issued, 'holder', 'abcd')
+            checked.update(mempool_eligible=False, reject_reason='non-BIP68-final')
+            with self.assertRaisesRegex(Refused, 'not_eligible: non-BIP68-final'):
+                withdrawal.prepare(*args, issued, 'abcd')
+            observation['tip'] = 'ff' * 32
+            with self.assertRaisesRegex(Refused, 'chain_changed_retry'):
+                withdrawal.prepare(*args, issued, 'abcd')
 
     def test_catalog_views_reject_omission_and_duplicate_funding(self):
         original = copy.deepcopy(self.catalog["bundles"])

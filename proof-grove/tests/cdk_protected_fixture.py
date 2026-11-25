@@ -192,7 +192,8 @@ def cooperate(core, rpc, client, operation, runtime, mining_address, bundle):
 
 
 def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
-           bundle, funding_hex, issuance, legacy_melt, node, root, certificate, *, rollover_runtime=None, rollover_nova=None):
+           bundle, funding_hex, issuance, legacy_melt, node, root, certificate, *, rollover_runtime=None,
+           rollover_nova=None, withdrawal_nova=None, withdrawal_runtime=None):
     handoff = Path(handoff)
     (handoff / 'stop-requested').touch(exist_ok=False)
     for _ in range(150):
@@ -239,7 +240,15 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
         rpc('generatetoaddress', [blocks, mining_address], wallet=True)
     checked = protected_reserve.check_signed(core, bundle, bundle['bundle_id'], 'holder', signed['hex'])
     assert checked['mempool_eligible'] and checked['fee_sats'] == FEE, checked
+    authorization = None
+    if withdrawal_nova:
+        from protected_withdrawal_fixture import prove
+
+        authorization, after_broadcast = prove(core, rpc, root, withdrawal_runtime, handoff, node,
+                                               withdrawal_nova, NOVA_KEY_SHA256, bundle, signed['hex'])
     paid = rpc('sendrawtransaction', [signed['hex']])
+    if authorization is not None:
+        authorization['pending_readmission_refused'] = after_broadcast()
     payout_block = rpc('generatetoaddress', [1, mining_address], wallet=True)[0]
     tx = rpc('getrawtransaction', [paid, True, payout_block])
     height = checked['observation']['funding_height'] + DELAY
@@ -268,6 +277,10 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
         receipt['bitcoin_chain_evidence'] = protected_payout_evidence.capture(
             rpc, checked['observation']['funding_height'], height, outpoint['block'], payout_block,
         )
+    if authorization is not None:
+        predicted = authorization['candidate_withdrawal']
+        assert (paid, tx['hash'], height) == (predicted['txid'], predicted['wtxid'], predicted['earliest_height'])
+        receipt['withdrawal_authorization'] = authorization | {'confirmed_exact_witness': True}
     return receipt
 
 
