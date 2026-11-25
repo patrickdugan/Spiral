@@ -27,11 +27,14 @@ scenario=parser.add_mutually_exclusive_group()
 scenario.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
 scenario.add_argument('--protected-cooperative',action='store_true',help='Test the protected melt API and competing holder exit')
 parser.add_argument('--batch-protected',action='store_true',help='Commit the ordered blinded batch in the reserve before issuance')
+parser.add_argument('--accounting-nova',type=Path,help='Nova executable for the live V3 accounting audit')
 parser.add_argument('--collateral-nova',type=Path,help='Local CPU Nova CLI for the optional same-chain bond fixture')
 parser.add_argument('--collateral-m14',type=Path,help='Local M14 cashu-settlement executable for the bond fixture')
 args=parser.parse_args()
 if args.batch_protected and not (args.protected or args.protected_cooperative):
     parser.error('--batch-protected requires a protected scenario')
+if args.accounting_nova and not (args.protected and args.batch_protected and args.bitcoind):
+    parser.error('--accounting-nova requires the V3 holder exit with a local Core binary')
 collateral=bool(args.collateral_nova and args.collateral_m14)
 if (args.collateral_nova or args.collateral_m14) and (not collateral or not args.protected):
     parser.error('The collateral fixture needs --protected, --collateral-nova and --collateral-m14')
@@ -77,10 +80,11 @@ try:
     core_flags=['-regtest','-server','-txindex=1','-blockfilterindex=1','-listen=0','-connect=0',
                 '-dnsseed=0','-discover=0','-fallbackfee=0.00001','-keypool=16',
                 '-rpcuser=proofgrove','-rpcpassword=public-regtest-only']
-    if args.protected_cooperative:
+    if args.protected_cooperative or args.accounting_nova:
         if not args.bitcoind:raise RuntimeError('Cooperative settlement requires local Bitcoin Core 31.0 with txospenderindex')
         core_flags.append('-txospenderindex=1')
     if args.bitcoind:
+        core_flags.extend(('-dbcache=32', '-par=2'))
         core_data=tempfile.TemporaryDirectory(prefix='proof-grove-cdk-core-')
         with (runtime/'core.log').open('ab') as logfile:
             core_process=subprocess.Popen([str(Path(args.bitcoind).resolve()),*core_flags,
@@ -138,6 +142,8 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
     test_command=[sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url]
     if args.batch_protected:
         test_command.append('--batch-protected')
+    if args.accounting_nova:
+        test_command.extend(('--accounting-nova', str(args.accounting_nova.resolve())))
     if args.protected or args.protected_cooperative:
         handoff=runtime/'protected-handoff';handoff.mkdir()
     if args.protected_cooperative:
@@ -156,7 +162,7 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
             try:process.wait(timeout=20)
             except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
             (handoff/'mint-stopped').touch(exist_ok=False)
-        if test_process.wait(timeout=300 if collateral else 120)!=0:raise RuntimeError('Protected CDK integration failed')
+        if test_process.wait(timeout=480 if args.accounting_nova else 300 if collateral else 120)!=0:raise RuntimeError('Protected CDK integration failed')
     else:
         subprocess.run(test_command,cwd=ROOT,env=environment,check=True)
 finally:

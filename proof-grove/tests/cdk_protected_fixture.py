@@ -13,7 +13,8 @@ import time
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from proofdesk import protected_payout_evidence, protected_reserve
+from proofdesk import protected_accounting, protected_payout_evidence, protected_reserve
+from proofdesk.domain import Refused
 from protected_fixture_keys import HOLDER_PUB, MINT_PUB, descriptor, fixture_wif
 
 SATS = 100_000_000
@@ -22,6 +23,7 @@ FEE = 250
 DELAY = 6
 HOLDER_WALLET = 'cashu-protected-holder'
 MINT_WALLET = 'cashu-protected-mint'
+NOVA_KEY_SHA256 = 'e472ec73e400c2d88b4e398741596765024fab4ee22ed7b6c600e8753df1034d'
 
 
 def prepare(core, rpc, deposit, mining_address, runtime, rpc_url, cooperative=False, draft=None):
@@ -250,3 +252,59 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
             rpc, checked['observation']['funding_height'], height, outpoint['block'], payout_block,
         )
     return receipt
+
+
+def account(core, rpc, receipt, handoff, nova, node, root):
+    """Prove the exact fresh journal, verify it separately and reconcile it while Core is live."""
+    payout = receipt['payout']
+    tip = core.rpc('getblockchaininfo', [])
+    assert tip['bestblockhash'] == payout['block'] and tip['blocks'] == payout['height']
+    directory = handoff/'live-accounting'
+    directory.mkdir()
+    admission = directory/'holder-receipt.json'
+    admission.write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
+    mint_pin = handoff/'protected-mint-pin.json'
+    bundle = receipt['app_bundle']
+    issuance = ('--v3-receipt', handoff/'protected-issuance-receipt.json',
+                '--v3-bundle', handoff/'protected-bundle.json', '--v3-bundle-id', bundle['bundle_id'],
+                '--v3-mint-pin', mint_pin, '--node', node)
+    builder = [sys.executable, str(root/'scripts/protected-fixture-evidence.py')]
+    journal_files = directory/'journal-evidence'
+    journal_sha = subprocess.check_output([*builder, 'journal', admission, journal_files, *issuance],
+                                          text=True, timeout=40).strip()
+    proof_dir = directory/'proof'
+    with (directory/'prover.json').open('x', encoding='utf-8') as stream:
+        subprocess.run([nova, 'prove-journal', proof_dir, journal_files/'journal.json'], stdout=stream,
+                       check=True, timeout=210)
+    verification = directory/'verification'
+    result = json.loads(subprocess.check_output([
+        *builder, 'audit-v3', admission, verification, *issuance, '--proof-dir', proof_dir,
+        '--nova-verifier', nova, '--journal-sha256', journal_sha, '--nova-key-sha256', NOVA_KEY_SHA256,
+        '--anchor-height', str(tip['blocks']), '--anchor-hash', tip['bestblockhash'],
+    ], timeout=210))
+
+    catalog = {'schema': protected_accounting.CATALOG_SCHEMA, 'genesis': receipt['genesis'],
+               'mint': json.loads(mint_pin.read_bytes())['mint'],
+               'tip_hash': tip['bestblockhash'], 'tip_height': tip['blocks'], 'bundles': [bundle]}
+    journal = json.loads((verification/'journal.json').read_bytes())
+    records = json.loads((verification/'admission-evidence.json').read_bytes())
+    totals = protected_accounting.audit(core, catalog, journal, records)
+    assert all(result['nova'][key] == totals[key] == 0 for key in ('declared_reserve_sats', 'outstanding_claims_sats'))
+    rpc('invalidateblock', [payout['block']])
+    try:
+        try:
+            protected_accounting.audit(core, catalog, journal, records)
+        except Refused as error:
+            assert error.code == 'protected_accounting_stale_catalog', error
+        else:
+            raise AssertionError('the previous payout tip survived invalidation')
+    finally:
+        rpc('reconsiderblock', [payout['block']])
+    assert protected_accounting.audit(core, catalog, journal, records) == totals
+    report = totals | {'schema': 'proof-grove/live-v3-regtest-accounting/v1', 'journal_sha256': journal_sha,
+                       'nova_key_sha256': NOVA_KEY_SHA256, 'nova_proof_sha256': result['nova']['proof_sha256'],
+                       'settlement_record_sha256': result['settlement_record_sha256'],
+                       'payout_txid': payout['txid'], 'payout_sats': payout['sats'], 'stale_tip_rejected': True}
+    (directory/'catalog.json').write_text(json.dumps(catalog, indent=2) + '\n', encoding='utf-8')
+    (directory/'live-reconciliation.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    return report
