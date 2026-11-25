@@ -89,6 +89,17 @@ cargo +stable run --locked --release --manifest-path integrations/cashu-nova/Car
 
 For an independent audit of an existing proof, obtain the expected journal SHA-256 from its trusted evidence manifest. The proof verifies the folded `register`, `issue` and `redeem` steps for that journal.
 
+The read-only `protected_accounting` command reconciles that proof's ledger with Core. An observer publishes a `proof-grove/protected-reserve-catalog/v1` JSON document containing `genesis`, the pinned `mint` URL, `tip_hash`, `tip_height`, and `bundles` with each full V3 reserve bundle. Include spent reserves so the observer can check every journal entry. Pin the journal and catalog bytes independently. Obtain the issuance records by running the wallet's offline verification against the authorized mint keysets before signing off on the journal pin.
+
+```bash
+python3 -m proofdesk.protected_accounting \
+  --config "$CORE_CONFIG" --catalog "$CATALOG" --catalog-sha256 "$CATALOG_SHA" \
+  --journal "$JOURNAL" --journal-sha256 "$JOURNAL_SHA" --admission "$ADMISSION_EVIDENCE" \
+  --nova-verifier "$NOVA_VERIFIER" --proof-dir "$PROOF_DIR" --nova-key-sha256 "$NOVA_KEY_SHA"
+```
+
+After verifying the Nova proof, the auditor observes Core at the pinned tip and compares independently reconciled reserves and liabilities with the proof totals. Core checks unspent funding for pending and live claims and the exact confirmed spender for redeemed claims. A pending mempool spend makes a reserve unavailable. For redeemed claims Core needs its transaction-output spender index. The auditor checks the tip again after observing all entries. The catalog covers the observer's published V3 reserve set. Its integrity and availability are required to detect omissions, and bearer notes issued outside that set remain invisible. Protected split and swap need funded outputs assigned to the new holders before the auditor can admit them.
+
 ## PG-ZK-03 — Bitcoin claim consumption
 
 Each protected claim controls one full outpoint. The holder's wallet stores the descriptor, funding transaction and outpoint, key and sequence, chain context, claim-bundle commitment, expected amount, and mint profile identity. A certificate binds these fields to issuance and appears in the accounting journal. The mint's on-chain cooperative redemption needs the holder signature and uses the same outpoint as the unilateral CSV exit. The holder only signs an exact authorized transaction with `SIGHASH_ALL`, covering beneficiary, amounts, change and fees. Confirmation consumes the outpoint. A replacement before finality remains subject to the same consensus exclusivity, so clients keep it pending and recompute active-chain state after a reorg.
