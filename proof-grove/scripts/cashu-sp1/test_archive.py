@@ -2,7 +2,7 @@ import struct
 import unittest
 
 import index_archive as index
-from core_progress import clock_frontier, execution_interval
+from core_progress import clock_frontier, execution_interval, execution_reference
 from measure_core_window import compare_reference_clock
 from plan_prefix import candidate_path
 from verify_prefix import check_chain
@@ -42,8 +42,13 @@ class ArchiveTests(unittest.TestCase):
             clock_frontier([(1, 11), (10, 12)], 49)
         with self.assertRaisesRegex(ValueError, 'executed clock'):
             clock_frontier([(1, 51)], 49)
+        self.assertEqual(clock_frontier([(1, 51)], None), (51, 1, 51))
 
     def test_live_clock_overrun_supersedes_the_reference_estimate(self):
+        missing = compare_reference_clock(11, None, 2)
+        self.assertEqual(missing['reference_clock_status'], 'trace_clock_unavailable')
+        self.assertIsNone(missing['position_as_pct_of_guest_clock'])
+        self.assertIsNone(missing['execution_clock_hours_if_same_rate'])
         within = compare_reference_clock(11, 20, 2)
         self.assertEqual(within['position_as_pct_of_guest_clock'], 50)
         self.assertEqual(within['execution_clock_hours_if_same_rate'], 5 / 3600)
@@ -52,6 +57,20 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual((exceeded['reference_clock_status'], exceeded['reference_clock_excess_ticks']), ('exceeded', 1))
         self.assertIsNone(exceeded['position_as_pct_of_guest_clock'])
         self.assertIsNone(exceeded['execution_clock_hours_if_same_rate'])
+
+    def test_legacy_instruction_count_cannot_be_used_as_a_trace_clock(self):
+        elf, public = 'aa' * 32, 'bb' * 32
+        manifest = {'schema': 'nb3-prover/core-run/v1', 'expected_public_sha256': public,
+                    'config': {'sp1_version': '6.9.0', 'elf_sha256': elf}}
+        receipt = {'executor': 'sp1-minimal-untraced', 'stage': 'guest_execution',
+                   'elf_sha256': elf, 'committed_values_sha256': public, 'exit_code': 0, 'global_clock': 20}
+        self.assertEqual(execution_reference(manifest, receipt), (20, None))
+        exact = receipt | {'instruction_count': 20, 'trace_clock': 161, 'trace_clock_domain': 'sp1_core_timestamp'}
+        self.assertEqual(execution_reference(manifest, exact), (20, 161))
+        with self.assertRaisesRegex(ValueError, 'invalid trace clock'):
+            execution_reference(manifest, exact | {'trace_clock_domain': 'rv64_instruction_count'})
+        with self.assertRaisesRegex(ValueError, 'checkpoint workload'):
+            execution_reference(manifest, exact | {'committed_values_sha256': 'cc' * 32})
 
     def test_public_row_rejects_nonce_and_length_changes(self):
         row = bytearray(index.FIELDS.size)

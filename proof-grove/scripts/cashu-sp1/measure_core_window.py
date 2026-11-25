@@ -9,10 +9,13 @@ from pathlib import Path
 import re
 import sys
 
-from core_progress import CORE_HEADER_SIZE, execution_interval, load_metadata
+from core_progress import CORE_HEADER_SIZE, execution_interval, execution_reference, load_metadata
 
 
 def compare_reference_clock(frontier, reference, rate):
+    if reference is None:
+        return {"reference_clock_status": "trace_clock_unavailable", "reference_clock_excess_ticks": None,
+                "position_as_pct_of_guest_clock": None, "execution_clock_hours_if_same_rate": None}
     executed = frontier - 1
     if executed > reference:
         return {"reference_clock_status": "exceeded", "reference_clock_excess_ticks": executed - reference,
@@ -22,7 +25,7 @@ def compare_reference_clock(frontier, reference, rate):
             "execution_clock_hours_if_same_rate": (reference - executed) / rate / 3600}
 
 
-def measure(run, report, previous):
+def measure(run, report, previous, execution_receipt=None):
     previous_bytes, sample = load_metadata(previous)
     manifest_bytes, manifest = load_metadata(run / "run.json")
     manifest_pin = hashlib.sha256(manifest_bytes).hexdigest()
@@ -30,9 +33,21 @@ def measure(run, report, previous):
         manifest["expected_public_sha256"] != sample["expected_public_sha256"]
     ):
         raise ValueError("the fresh window belongs to a different withdrawal")
+    clock = sample.get("reference_trace_clock")
+    instructions = sample.get("reference_instruction_count", sample.get("executed_global_clock"))
+    receipt_pin = sample.get("execution_receipt_sha256")
+    if execution_receipt is not None:
+        receipt_bytes, receipt = load_metadata(execution_receipt)
+        instructions, clock = execution_reference(manifest, receipt)
+        receipt_pin = hashlib.sha256(receipt_bytes).hexdigest()
+    if clock is not None and (type(clock) is not int or not 0 < clock < 1 << 48):
+        raise ValueError("invalid independently measured reference clock")
     baseline = int((report / "progress-baseline-bytes.txt").read_text())
     events = deque(maxlen=512)
-    with (run / "progress.jsonl").open("rb") as stream:
+    progress = report / "progress.jsonl"
+    if not progress.is_file():
+        progress = run / "progress.jsonl"
+    with progress.open("rb") as stream:
         stream.seek(baseline)
         for raw in stream:
             if not raw.endswith(b"\n"):
@@ -78,9 +93,6 @@ def measure(run, report, previous):
     last = max(stamp for _, _, stamp in contiguous)
     if last - first < 180:
         sys.exit("Waiting for 180 seconds of contiguous fresh execution slices")
-    clock = sample["executed_global_clock"]
-    if type(clock) is not int or not 0 < clock < 1 << 48:
-        raise ValueError("invalid independently measured reference clock")
     first_tick = contiguous[0][0]
     frontier = contiguous[-1][1]
     if not sample["checkpoint_frontier_clock"] <= first_tick < frontier:
@@ -91,6 +103,7 @@ def measure(run, report, previous):
         "scope": "Fresh execution-clock window only. Recursion, archive verification, wrap and payout are separate.",
         "run_manifest_sha256": manifest_pin,
         "prior_coverage_sha256": hashlib.sha256(previous_bytes).hexdigest(),
+        "execution_receipt_sha256": receipt_pin,
         "fresh_shard_events": len(events),
         "contiguous_execution_shards_measured": len(contiguous),
         "window_started_unix": first,
@@ -98,7 +111,8 @@ def measure(run, report, previous):
         "window_seconds": last - first,
         "first_execution_clock": first_tick,
         "last_execution_clock": frontier,
-        "reference_guest_clock": clock,
+        "reference_trace_clock": clock,
+        "reference_instruction_count": instructions,
         "clock_ticks_per_second": rate,
         **compare_reference_clock(frontier, clock, rate),
     }
@@ -109,5 +123,6 @@ if __name__ == "__main__":
     parser.add_argument("run", type=Path)
     parser.add_argument("report", type=Path)
     parser.add_argument("previous_coverage", type=Path)
+    parser.add_argument("--execution-receipt", type=Path)
     args = parser.parse_args()
-    print(json.dumps(measure(args.run, args.report, args.previous_coverage), indent=2))
+    print(json.dumps(measure(args.run, args.report, args.previous_coverage, args.execution_receipt), indent=2))

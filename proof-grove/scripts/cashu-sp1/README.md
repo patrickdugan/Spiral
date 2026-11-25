@@ -65,13 +65,20 @@ separate measurements.
 For a resumed run, pass the current report directory with its
 `progress-baseline-bytes.txt` and a prior coverage report for the same
 manifest. This reads only the recent fresh shard headers and measures a
-contiguous window of at least 180 seconds. When the live frontier crosses the
-earlier executor clock, the report records the measured excess and leaves the
-percentage and estimate unset. Core archive verification establishes the
-completed shard range independently.
+contiguous window of at least 180 seconds. Coverage requires a reference from
+the executor's `clk()` in the `sp1_core_timestamp` domain. Earlier receipts
+carry only `global_clk()`, the instruction counter, so their reports leave the
+estimate unset. When the live frontier exceeds a same-domain reference, the
+report gives the excess and leaves the percentage and estimate unset. Core
+archive verification establishes the completed shard range independently.
+See the [pinned SP1 executor counters](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/core/executor/src/minimal/arch/x86_64/mod.rs#L201-L216).
 
 ```bash
 python3 -B "$TOOLS/measure_core_window.py" "$RUN_DIR" "$RESUME_REPORT" "$PRIOR_COVERAGE"
 ```
+
+Supply `--execution-receipt RECEIPT` to update the reference for a saved
+window. The sampler checks the new receipt against the same ELF and public
+digest. Finished attempts can use their archived `progress.jsonl` snapshot.
 
 [Pinned SP1 Core public values](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/air/public_values.rs) · [Pinned SP1 shard proof encoding](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/verifier/proof.rs)

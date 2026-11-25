@@ -42,11 +42,11 @@ def execution_interval(header, nonce):
     return start, end
 
 
-def clock_frontier(intervals, global_clock):
+def clock_frontier(intervals, trace_clock):
     frontier = next_clock = 1
     contiguous = 0
     for start, end in sorted(intervals):
-        if start < next_clock or end > global_clock + 1:
+        if start < next_clock or (trace_clock is not None and end > trace_clock + 1):
             raise ValueError('overlapping Core intervals or checkpoint exceeds the executed clock')
         if start == frontier:
             frontier = end
@@ -55,20 +55,29 @@ def clock_frontier(intervals, global_clock):
     return frontier, contiguous, next_clock
 
 
-def measure(run, execution):
-    manifest_bytes, manifest = load_metadata(run / 'run.json')
-    receipt_bytes, receipt = load_metadata(execution)
-    config = manifest['config']
-    elf_sha256 = config['elf_sha256']
+def execution_reference(manifest, receipt):
+    elf_sha256 = manifest['config']['elf_sha256']
     public_sha256 = manifest['expected_public_sha256']
-    global_clock = receipt['global_clock']
-    if (manifest['schema'], config['sp1_version']) != ('nb3-prover/core-run/v1', '6.9.0'):
+    instructions = receipt.get('instruction_count', receipt.get('global_clock'))
+    trace_clock = receipt.get('trace_clock')
+    if (manifest['schema'], manifest['config']['sp1_version']) != ('nb3-prover/core-run/v1', '6.9.0'):
         raise ValueError('expected an SP1 6.9 Core-only manifest')
     if (not SHA256.fullmatch(elf_sha256) or not SHA256.fullmatch(public_sha256)
             or (receipt['elf_sha256'], receipt['committed_values_sha256']) != (elf_sha256, public_sha256)
             or receipt['executor'] != 'sp1-minimal-untraced' or receipt['stage'] != 'guest_execution'
-            or receipt['exit_code'] != 0 or type(global_clock) is not int or not 0 < global_clock < 1 << 48):
+            or receipt['exit_code'] != 0 or type(instructions) is not int or not 0 < instructions < 1 << 64):
         raise ValueError('execution receipt does not match the checkpoint workload')
+    if trace_clock is not None and (receipt.get('trace_clock_domain') != 'sp1_core_timestamp'
+                                    or type(trace_clock) is not int or not 0 < trace_clock < 1 << 48):
+        raise ValueError('execution receipt has an invalid trace clock')
+    return instructions, trace_clock
+
+
+def measure(run, execution):
+    manifest_bytes, manifest = load_metadata(run / 'run.json')
+    receipt_bytes, receipt = load_metadata(execution)
+    instructions, trace_clock = execution_reference(manifest, receipt)
+    config = manifest['config']
     uses_nonce = config.get('controller_nonce', False)
     nonce = tuple(config['nonce']) if uses_nonce else (0, 0, 0, 0)
     if (type(uses_nonce) is not bool or len(nonce) != 4
@@ -87,7 +96,7 @@ def measure(run, execution):
                 if interval in interval_times:
                     raise ValueError('duplicate Core execution interval')
                 interval_times[interval] = os.fstat(shard.fileno()).st_mtime
-    frontier, contiguous, furthest = clock_frontier(interval_times, global_clock)
+    frontier, contiguous, furthest = clock_frontier(interval_times, trace_clock)
     frontier_saved_at = max((saved_at for (_, end), saved_at in interval_times.items() if end <= frontier),
                             default=None)
     return {
@@ -97,8 +106,8 @@ def measure(run, execution):
         'scope': 'Unverified contiguous Core execution clock. Memory, precompiles, recursion and settlement have separate progress.',
         'run_manifest_sha256': hashlib.sha256(manifest_bytes).hexdigest(),
         'execution_receipt_sha256': hashlib.sha256(receipt_bytes).hexdigest(),
-        'elf_sha256': elf_sha256,
-        'expected_public_sha256': public_sha256,
+        'elf_sha256': config['elf_sha256'],
+        'expected_public_sha256': manifest['expected_public_sha256'],
         'effective_nonce': nonce,
         'saved_core_memos': len(paths),
         'saved_execution_memos': len(interval_times),
@@ -106,8 +115,9 @@ def measure(run, execution):
         'checkpoint_frontier_clock': frontier,
         'frontier_saved_at_unix': frontier_saved_at,
         'furthest_checkpoint_clock': furthest,
-        'executed_global_clock': global_clock,
-        'execution_clock_coverage_pct': round(100 * (frontier - 1) / global_clock, 4),
+        'reference_instruction_count': instructions,
+        'reference_trace_clock': trace_clock,
+        'execution_clock_coverage_pct': None if trace_clock is None else round(100 * (frontier - 1) / trace_clock, 4),
     }
 
 
