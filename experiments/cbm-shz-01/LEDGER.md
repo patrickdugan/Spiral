@@ -13,6 +13,7 @@ Branch `research/shz-clearing-rent-20261125` (Spiral PR #21). Paper section:
 | R-SIM-1 | Five architectures + three portfolio-margin rows on one demand trace; distinct capital objects with owner, category and verification class | `cbm/sim.py`, `tests/test_cbm.py` (9 pass) |
 | R-RUN-1 | 39 sweep cells + empirical replay; base over 3 seeds | `results/sweeps.json`; `verify.py` reproduces the base cell |
 | R-COM-1 | Duals, pooling, fragmentation, services | `results/commercial.json` |
+| R-CI-1 | Workflow `CBM-SHZ-01` run 45517736704 on 6b3e5b2: `lean` (lake build, axiom audit, no placeholders) and `simulator` (9 tests; base cell reproduces on Linux: 606,933 contracts, 8 architectures) both green | public notice on the simulator job |
 | R-PAPER-1 | Section integrated; abstract, introduction, preregistration, limitations, conclusion, appendix updated; PDF rebuilt with Tectonic | `paper/tex/main.tex`, `paper/tex/main.pdf` |
 
 ## Findings (base cell unless stated)
@@ -45,4 +46,3 @@ Every capital release in CBM-SHZ-01 is SIMULATED. Verification classes recorded 
 | R-PM-1 | Risk statement for portfolio margin under gap moves | needs a margin model with a proven coverage bound |
 | R-DATA-1 | Participant collateral, offline and topology data | none public; assumptions stated in SPEC.md |
 | R-PROOF-1 | Prove one SHZ clearing statement with Nova → SP1 (BLAKE3 final layer) | costs used are the measured guest-A figures, not an SHZ statement |
-| R-CI-1 | CI run of workflow `CBM-SHZ-01` on this branch | see the run recorded in the commit after push |
