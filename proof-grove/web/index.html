@@ -41,9 +41,9 @@
       <div class="section-foot"><span><span class="dot"></span> Proof facts, wallet reports, and settlement states stay distinct.</span><span>BUILT ON NOVA / BITVM + BARK / CDK</span></div>
     </section>
     <section class="page" id="protected-preview" hidden>
-      <div class="heading-row"><div><h1>Cashu recovery</h1><p class="lede">Recheck a recorded holder payout from Bitcoin Core regtest.</p></div><div class="network-tag"><span class="dot"></span>Recorded regtest</div></div>
+      <div class="heading-row"><div><h1>Cashu recovery</h1><p class="lede">Verify regtest withdrawals and download their evidence.</p></div><div class="network-tag"><span class="dot"></span>Recorded regtest</div></div>
       <section class="panel" aria-labelledby="protected-preview-heading">
-        <div class="panel-head"><h2 id="protected-preview-heading">Verify the holder’s payout</h2></div>
+        <div class="panel-head"><h2 id="protected-preview-heading">Holder-only exit</h2></div>
         <form id="protected-preview-form">
           <label for="protected-preview-case">Evidence to check</label>
           <div class="case-controls"><select id="protected-preview-case"><option value="original">Original payout</option><option value="beneficiary">Substitute beneficiary</option><option value="checkpoint">Substitute checkpoint</option></select><button class="primary" type="submit">Verify payout</button></div>
@@ -51,6 +51,15 @@
         <p class="help" id="protected-preview-result" role="status"></p>
         <p class="help" id="protected-preview-export" hidden><a href="./api/protected/preview/archive" download="proof-grove-cashu-payout.zip">Download payout evidence</a></p>
         <details id="protected-preview-details" hidden><summary>Inspect verification evidence</summary><pre id="protected-preview-json"></pre></details>
+      </section>
+      <section class="panel" id="funded-preview" aria-labelledby="funded-preview-heading" hidden>
+        <div class="panel-head"><h2 id="funded-preview-heading">Proof-backed payout</h2><button class="secondary" id="refresh-funded-preview" type="button">Check status</button></div>
+        <p class="help" id="funded-preview-result" role="status"></p>
+        <div class="provider-controls" id="funded-preview-export" hidden>
+          <a href="./api/protected/preview/funded/archive" download="proof-grove-cashu-funded-payout.zip">Download funded evidence</a>
+          <a href="./api/protected/preview/funded/verification" download="proof-grove-cashu-verification.json">Download verification receipt</a>
+        </div>
+        <details id="funded-preview-details" hidden><summary>Inspect payout and proof pins</summary><pre id="funded-preview-json"></pre></details>
       </section>
     </section>
     <section class="page" id="caretaker" hidden>

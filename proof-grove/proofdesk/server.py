@@ -10,13 +10,14 @@ import time
 import hashlib
 import io
 import os
+import shutil
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from . import demo, protected_payout_evidence
+from . import demo, protected_funded_preview, protected_payout_evidence
 from .adapters import BarkClient, CashuClient
 from .archive import bundle
 from .cashu import CashuBridge
@@ -51,6 +52,7 @@ class Desk:
         return {"app": "Proof Grove", "version": "0.4.0", "mode": self.mode,
                 "ark_wallet_configured": self.ark is not None,
                 "protected_preview_configured": self.mode == 'demo' and bool(self.config.get('protected_preview')),
+                "protected_funded_preview_configured": self.mode == 'demo' and bool(self.config.get('protected_funded_preview')),
                 "protected_melt_configured": self.protected_melt is not None,
                 "native_verifier": "configured" if self.gate else "not configured",
                 "chain_observer": "configured" if self.core else "not configured",
@@ -208,9 +210,13 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                 self.close_connection = True
 
         def _send_response(self, status: int, payload: bytes, content_type: str):
+            self._send_headers(status, len(payload), content_type)
+            self.wfile.write(payload)
+
+        def _send_headers(self, status: int, size: int, content_type: str):
             self.send_response(status)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Content-Length", str(size))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
@@ -222,7 +228,24 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                     self.send_header('Access-Control-Allow-Headers','Authorization, Content-Type, X-Proof-Grove')
             self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
             self.end_headers()
-            self.wfile.write(payload)
+
+        def _funded_preview(self, path):
+            publication = desk.config.get('protected_funded_preview') if desk.mode == 'demo' else None
+            with protected_funded_preview.verified_archive(publication) as checked:
+                if path == '/api/protected/preview/funded':
+                    value = {'status': 'pending'} if checked is None else checked[0]
+                    self._send(200, canonical(value))
+                elif checked is None:
+                    raise Refused('funded_preview_pending')
+                elif path == '/api/protected/preview/funded/verification':
+                    self._send(200, checked[1])
+                else:
+                    _, _, source, size = checked
+                    try:
+                        self._send_headers(200, size, 'application/zip')
+                        shutil.copyfileobj(source, self.wfile, length=128 * 1024)
+                    except (BrokenPipeError, ConnectionResetError):
+                        self.close_connection = True
 
         def _error(self, exc: Exception):
             if isinstance(exc, Refused):
@@ -246,6 +269,10 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                 self._guard()
                 url = urlsplit(self.path)
                 path = url.path
+                if path in ('/api/protected/preview/funded', '/api/protected/preview/funded/archive',
+                            '/api/protected/preview/funded/verification'):
+                    self._funded_preview(path)
+                    return
                 with desk.lock:
                     if path == "/api/status":
                         value = desk.status()

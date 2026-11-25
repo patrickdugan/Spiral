@@ -42,6 +42,18 @@ independent check, compare the bundle ID and checkpoint in that manifest with
 your own observations. Live protected issuance and recovery use the
 [wallet guide](docs/cashu-wallet.md).
 
+To show the proof-backed payout alongside the holder-only exit, add
+`--protected-funded-preview /path/to/funded-preview.json`. The status stays
+pending until a publication arrives. Create the descriptor after the
+recipient's `verify_withdrawal_evidence.py` in the ZK Rusto repository accepts
+the ZIP and replays the payout in walletless Core. Use schema
+`proof-grove/funded-preview/v1` and the fields `archive`, `archive_sha256`,
+`verification`, `verification_sha256`, and `statement_sha256`. Keep the ZIP
+and verification receipt beside the descriptor and use their filenames in
+`archive` and `verification`. The service checks both file hashes and serves
+the original ZIP and the recipient verification receipt. This panel displays
+the local verifier's result. The recipient CLI can repeat the verification.
+
 ```powershell
 python -m unittest discover -s tests -q
 node --check web/app.js

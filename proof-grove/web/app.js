@@ -29,8 +29,35 @@ function tab(id) {
   document.querySelectorAll('[data-tab]').forEach(button => { button.classList.toggle('active', button.dataset.tab === id); if (button.dataset.tab === id) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
   $('breadcrumb').textContent = labels[id];
   if (id === 'evidence') loadArchive().catch(e => error(e.message));
+  if (id === 'protected-preview') loadFundedPreview();
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => tab(button.dataset.tab)));
+async function loadFundedPreview() {
+  const button = $('refresh-funded-preview');
+  if ($('funded-preview').hidden || button.disabled) return;
+  const result = $('funded-preview-result');
+  const details = $('funded-preview-details');
+  const downloads = $('funded-preview-export');
+  button.disabled = true;
+  details.hidden = downloads.hidden = true;
+  result.textContent = 'Checking funded evidence…';
+  try {
+    const check = await api('/api/protected/preview/funded');
+    if (check.status === 'pending') {
+      result.textContent = 'Awaiting the settlement proof and independent Bitcoin replay.';
+    } else if (check.status === 'verified') {
+      const sats = count => count.toLocaleString('en-US');
+      result.textContent = `Verified on regtest at block ${sats(check.height)}. Holder paid ${sats(check.holder_sats)} sats. Collateral refund ${sats(check.refund_sats)} sats. Fee ${sats(check.fee_sats)} sats.`;
+      $('funded-preview-json').textContent = JSON.stringify(check, null, 2);
+      details.hidden = downloads.hidden = false;
+    }
+  } catch {
+    result.textContent = 'Funded evidence could not be verified.';
+  } finally {
+    button.disabled = false;
+  }
+}
+$('refresh-funded-preview').addEventListener('click', loadFundedPreview);
 $('protected-preview-case').addEventListener('change', () => {
   $('protected-preview-export').hidden = true;
   $('protected-preview-details').hidden = true;
@@ -295,6 +322,7 @@ async function initialize() {
   const [status, cases, vtxos, sources] = await Promise.all(['/api/status', '/api/cases', '/api/vtxos', '/api/sources'].map(path => api(path)));
   state.mode = status.mode; state.cases = cases.cases; state.vtxos = vtxos.vtxos; state.planRequest = 0;
   $('protected-preview-tab').hidden = !status.protected_preview_configured;
+  $('funded-preview').hidden = !status.protected_funded_preview_configured;
   state.hostedMutations=!status.hosted_access?.enabled||status.hosted_access.mutations;
   $('proof-files').hidden=status.mode==='regtest';
   $('statement-file').required=status.mode==='live';$('proof-file').required=status.mode==='live';
