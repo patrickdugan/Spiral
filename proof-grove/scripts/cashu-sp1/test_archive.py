@@ -3,6 +3,7 @@ import unittest
 
 import index_archive as index
 from plan_prefix import candidate_path
+from verify_prefix import check_chain
 
 
 class ArchiveTests(unittest.TestCase):
@@ -32,6 +33,26 @@ class ArchiveTests(unittest.TestCase):
                    'shard/c': edge(2, 3), 'shard/d': edge(3, 4), 'shard/e': edge(4, 5),
                    'shard/unconnected': edge(6, 10)}
         self.assertEqual(candidate_path(entries, 'shard/a'), ['reduce/ab', 'shard/c', 'shard/d', 'shard/e'])
+
+    def test_verified_prefix_requires_exact_order_and_boundaries(self):
+        first = {'entry': 'reduce/' + 'a' * 64, 'before': 'start', 'after': 'middle',
+                 'timestamp': [1, 10], 'contains_first_shard': True,
+                 'complete_flag': False, 'exit_code': 0, 'included_core_shards': 355}
+        second = {'entry': 'shard/' + 'b' * 64, 'before': 'middle', 'after': 'end',
+                  'timestamp': [10, 20], 'contains_first_shard': False,
+                  'complete_flag': False, 'exit_code': 0, 'included_core_shards': 1}
+        self.assertEqual(check_chain([first, second]), 356)
+        for changed, error in [
+            ({'before': 'other state'}, 'disconnected public rows'),
+            ({'timestamp': [11, 20]}, 'disconnected public rows'),
+            ({'entry': first['entry']}, 'duplicate or invalid proof'),
+            ({'contains_first_shard': True}, 'first-shard flag'),
+            ({'complete_flag': True}, 'unexpected completion'),
+        ]:
+            with self.subTest(changed=changed), self.assertRaisesRegex(ValueError, error):
+                check_chain([first, {**second, **changed}])
+        with self.assertRaisesRegex(ValueError, 'does not start'):
+            check_chain([second, first])
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import tarfile
+import tempfile
 
 import index_archive as index
 
@@ -43,7 +44,7 @@ def candidate_path(entries, anchor):
     return path
 
 
-def take_audit_inputs(archive_path, selected):
+def take_audit_inputs(archive_path, selected, memo_dir):
     if archive_path.stat().st_size != index.ARCHIVE_BYTES:
         raise ValueError('checkpoint differs from its pinned archive size')
     found = {}
@@ -68,10 +69,14 @@ def take_audit_inputs(archive_path, selected):
                 if entry in found or not member.isfile() or not 0 < member.size <= 16 * 1024**2:
                     raise ValueError(f'invalid selected archive entry {entry}')
                 proof = archive.extractfile(member).read()
-                row, _ = index.public_row(proof[:index.PREFIX_BYTES])
-                if hashlib.sha256(row).hexdigest() != selected[entry]['public_row_sha256']:
+                row, words = index.public_row(proof[:index.PREFIX_BYTES])
+                metadata = index.row_metadata(row, words)
+                if metadata != selected[entry]:
                     raise ValueError(f'archive entry {entry} no longer matches the public-row index')
-                found[entry] = proof
+                destination = memo_dir / entry / 'out0'
+                destination.parent.mkdir(parents=True)
+                destination.write_bytes(proof)
+                found[entry] = {'entry': entry, **metadata, 'out0_sha256': hashlib.sha256(proof).hexdigest()}
         while hashed.read(1024 * 1024):
             pass
         if hashed.digest.hexdigest() != index.ARCHIVE_SHA256 or manifest_bytes is None or found.keys() != selected.keys():
@@ -84,6 +89,7 @@ def main():
     parser.add_argument('archive', type=Path)
     parser.add_argument('candidate_index', type=Path)
     parser.add_argument('audit_directory', type=Path)
+    parser.add_argument('--full-prefix', action='store_true', help='stage every proof along the candidate prefix')
     args = parser.parse_args()
     if not 0 < args.candidate_index.stat().st_size <= 2 * 1024**2:
         raise ValueError('invalid candidate index size')
@@ -92,29 +98,30 @@ def main():
         raise ValueError('candidate index refers to a different archive')
     entries = candidate_index['entries']
     path = candidate_path(entries, candidate_index['matching_control_entry'])
-    selected = {entry: entries[entry] for entry in path[:4]}
-    manifest, proofs = take_audit_inputs(args.archive, selected)
-
     output = args.audit_directory
-    output.mkdir()
-    (output / 'run.json').write_bytes(manifest)
-    (output / 'entries.txt').write_text('\n'.join(selected) + '\n', encoding='utf-8', newline='\n')
-    selected_receipts = []
-    for entry, row in selected.items():
-        folder = output / 'memo' / entry
-        folder.mkdir(parents=True)
-        proof = proofs[entry]
-        (folder / 'out0').write_bytes(proof)
-        selected_receipts.append({'entry': entry, **row, 'out0_sha256': hashlib.sha256(proof).hexdigest()})
-    plan = {
-        'scope': 'Candidate archive coverage and next compose inputs. A final stock SP1 proof is still required.',
-        'archive_sha256': index.ARCHIVE_SHA256, 'program_key': index.PROGRAM_KEY.hex(),
-        'leading_group': selected_receipts, 'candidate_path': path,
-        'candidate_archive_core_shards': sum(entries[node]['included_core_shards'] for node in path),
-        'candidate_timestamp_range': [entries[path[0]]['timestamp'][0], entries[path[-1]]['timestamp'][1]],
-    }
-    (output / 'composition-plan.json').write_text(json.dumps(plan, indent=2) + '\n', encoding='utf-8')
-    print(json.dumps({key: val for key, val in plan.items() if key != 'candidate_path'}))
+    if output.exists():
+        raise FileExistsError(output)
+    selected = {entry: entries[entry] for entry in (path if args.full_prefix else path[:4])}
+    # Keep one proof body at a time and publish only after checking the entire source archive.
+    with tempfile.TemporaryDirectory(dir=output.parent, prefix='.cashu-prefix-') as temporary:
+        staged = Path(temporary) / 'audit'
+        staged.mkdir()
+        manifest, found = take_audit_inputs(args.archive, selected, staged / 'memo')
+        ordered = [found[name] for name in selected]
+        (staged / 'run.json').write_bytes(manifest)
+        (staged / 'entries.txt').write_text('\n'.join(selected) + '\n', encoding='utf-8', newline='\n')
+        plan = {
+            'scope': 'Candidate archive coverage and next compose inputs. A final stock SP1 proof is still required.',
+            'archive_sha256': index.ARCHIVE_SHA256, 'program_key': index.PROGRAM_KEY.hex(),
+            'leading_group': ordered[:4], 'candidate_path': path,
+            'candidate_archive_core_shards': sum(entries[node]['included_core_shards'] for node in path),
+            'candidate_timestamp_range': [entries[path[0]]['timestamp'][0], entries[path[-1]]['timestamp'][1]],
+        }
+        if args.full_prefix:
+            plan['selected_proofs'] = ordered
+        (staged / 'composition-plan.json').write_text(json.dumps(plan, indent=2) + '\n', encoding='utf-8')
+        staged.rename(output)
+    print(json.dumps({key: val for key, val in plan.items() if key not in ('candidate_path', 'selected_proofs')}))
 
 
 if __name__ == '__main__':

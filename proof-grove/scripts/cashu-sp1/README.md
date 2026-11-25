@@ -1,7 +1,7 @@
 # Reuse the Cashu V3 recursion checkpoint
 
-These scripts inspect the pinned A6000 settlement archive and prepare the
-leading reduction and its next leaf for the stock SP1 6.9 compose prover.
+These scripts inspect the pinned A6000 settlement archive and prepare
+adjacent verified proofs for the stock SP1 6.9 compose prover.
 The archived run uses a zero effective controller nonce. The archive SHA-256
 is `b2786320ba2abc774a8e2438db8272d0f94b409dd47008992c4b7bb4baf2ed26`.
 
@@ -23,6 +23,21 @@ cargo run --release --manifest-path "$PROVER/Cargo.toml" --example replay-reduct
 
 The index proposes links between public rows. The auditor verifies each
 selected proof and its program key, recursion-key membership and proof nonce.
+To check the entire available prefix, stage it in a separate directory and
+verify the stock receipts against the exact proof bytes and connecting public
+rows. The planner keeps one proof body in memory while staging the archive.
+
+```bash
+python3 -B "$TOOLS/plan_prefix.py" "$ARCHIVE" candidate-index.json full-audit --full-prefix
+cargo run --release --manifest-path "$PROVER/Cargo.toml" --example audit-recursion-memos \
+  -- full-audit "$PROGRAM_KEY" full-audit/entries.txt > full-audit/verified.jsonl
+python3 -B "$TOOLS/verify_prefix.py" full-audit full-prefix-receipt.json
+python3 -B "$TOOLS/prepare_compose.py" full-audit interior-input --start-ordinal 2 --arity 3
+```
+
+The full-prefix receipt records the original compressed archive hash, stock
+verifier transcript hash, covered shard count and both endpoint commitments.
+The combine step accepts two to four adjacent proofs from the verified audit.
 The compose prover checks the ordered witness and emits a new proof when it
 fits the local resources. The planned composition covers an execution prefix.
 On the measured WSL host, the two-child witness executed successfully. The

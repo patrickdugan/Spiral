@@ -74,6 +74,19 @@ TRANSITIONS = ((0, 32, 32), (64, 72, 8), (80, 81, 1), (82, 85, 3), (88, 92, 4),
                (120, 128, 8), (169, 170, 1), (171, 172, 1), (173, 174, 1))
 
 
+def row_metadata(row, words):
+    return {
+        'public_row_sha256': hashlib.sha256(row).hexdigest(),
+        'before': boundary(words, [(before, width) for before, _, width in TRANSITIONS]),
+        'after': boundary(words, [(after, width) for _, after, width in TRANSITIONS]),
+        'timestamp': [timestamp(words[88:92]), timestamp(words[92:96])],
+        'contains_first_shard': bool(words[166]),
+        'included_core_shards': words[167],
+        'complete_flag': bool(words[168]),
+        'exit_code': words[170],
+    }
+
+
 def index_archive(archive_path, control_path):
     if archive_path.stat().st_size != ARCHIVE_BYTES:
         raise ValueError('checkpoint differs from its pinned archive size')
@@ -111,14 +124,7 @@ def index_archive(archive_path, control_path):
                 row, words = public_row(archive.extractfile(member).read(PREFIX_BYTES))
                 if words[144:152] != key_root:
                     raise ValueError(f'entry {entry} has a different key root')
-                entries[entry] = {
-                    'public_row_sha256': hashlib.sha256(row).hexdigest(),
-                    'before': boundary(words, [(before, width) for before, _, width in TRANSITIONS]),
-                    'after': boundary(words, [(after, width) for _, after, width in TRANSITIONS]),
-                    'timestamp': [timestamp(words[88:92]), timestamp(words[92:96])],
-                    'contains_first_shard': bool(words[166]), 'included_core_shards': words[167],
-                    'complete_flag': bool(words[168]), 'exit_code': words[170],
-                }
+                entries[entry] = row_metadata(row, words)
         while hashed.read(1024 * 1024):
             pass
         if hashed.digest.hexdigest() != ARCHIVE_SHA256 or counts != COUNTS:
