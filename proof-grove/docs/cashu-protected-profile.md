@@ -213,6 +213,8 @@ A separate stock SP1 LightProver accepted the archived A6000 digest control in 3
 
 The single-arity CPU replay verified the four captured reduction children and compiled the arity-four compose program. It reached the 350-second runtime limit during proving-key generation under a 2,200 MiB no-swap cgroup. Windows kept at least 3.89 GiB available. The replay produced zero reduction proofs. A separate guarded build linked the CUDA core and CPU recursion worker against the pinned SP1 v6.9.0 archives in 121.26 seconds. It still needs an end-to-end proving run and independent verification.
 
+The next A6000 spot lease restored 1,537 core and 239 recursion entries for the same pinned workload. The CUDA-core, CPU-recursion worker stopped during initialization, about 399 seconds after the prover started. It logged its GPU admission checks and did not report the backend ready. Peak sampled device memory was 310 MiB and peak cgroup RAM was 4.10 GiB. The worker reported zero swap I/O, zero cgroup out-of-memory events and zero proved or replayed tasks. The original checkpoint is retained. Hyperstack confirmed VM and temporary bucket deletion, with an accrual upper estimate of $0.068604. The billing API returned no line item for this VM.
+
 ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned Shinigami fixture uses Cairo's Stwo CPU/SIMD prover. More GPU memory can accommodate larger SP1 shards. To measure acceleration of the historical payout proof, first prepare a Stwo accelerator that emits proof bytes the pinned Shinigami verifier accepts.
 
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
