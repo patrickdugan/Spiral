@@ -17,14 +17,18 @@ PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v2"
 BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v2"
 V3_PLAN_SCHEMA = "proof-grove/protected-reserve-plan/v3"
 V3_BUNDLE_SCHEMA = "proof-grove/protected-reserve-bundle/v3"
+SUCCESSOR_PLAN_SCHEMA = "proof-grove/protected-successor-plan/v1"
+SUCCESSOR_BUNDLE_SCHEMA = "proof-grove/protected-successor-bundle/v1"
 _BUNDLE_SCHEMAS = {
     LEGACY_PLAN_SCHEMA: LEGACY_BUNDLE_SCHEMA,
     PLAN_SCHEMA: BUNDLE_SCHEMA,
     V3_PLAN_SCHEMA: V3_BUNDLE_SCHEMA,
+    SUCCESSOR_PLAN_SCHEMA: SUCCESSOR_BUNDLE_SCHEMA,
 }
 _ISSUANCE_TERM_SCHEMAS = {
     PLAN_SCHEMA: "proof-grove/protected-issuance-terms/v2",
     V3_PLAN_SCHEMA: "proof-grove/protected-issuance-terms/v3",
+    SUCCESSOR_PLAN_SCHEMA: "proof-grove/protected-successor-terms/v1",
 }
 GENESIS = "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
 COOPERATIVE_SEQUENCE = 0xFFFFFFFD
@@ -324,22 +328,17 @@ def _with_psbt_input_record(psbt: str, key: bytes, value: bytes) -> str:
     return base64.b64encode(raw[:separator] + record + raw[separator:]).decode("ascii")
 
 
-def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_funding_block: str | None = None) -> dict:
-    observed = _route_status(core, bundle, bundle_id, route, active_funding_block)
-    if observed["state"] != "unspent":
-        raise Refused("protected_reserve_unavailable")
+def _funded_psbt(core, bundle, sequence, destinations, fee_sats):
     saved, funding = bundle["plan"], bundle["funding"]
-    sequence = _sequence(route, saved)
     requested = [{"txid": funding["txid"], "vout": funding["vout"], "sequence": sequence}]
-    value = format(Decimal(saved["payout_sats"]) / 100_000_000, ".8f")
-    transaction = core.rpc("createpsbt", [requested, [{saved["payout_address"]: value}], 0, False])
+    outputs = [{address: format(Decimal(sats) / 100_000_000, ".8f")} for address, sats in destinations]
+    transaction = core.rpc("createpsbt", [requested, outputs, 0, False])
     enriched = core.rpc("utxoupdatepsbt", [transaction, [saved["descriptor"]]])
     if saved["schema"] in _ISSUANCE_TERM_SCHEMAS:
         # BIP174 PSBT_IN_SHA256 supplies the public commitment preimage to both signers.
         key = b"\x0b" + bytes.fromhex(saved["issuance_hash"])
         enriched = _with_psbt_input_record(enriched, key, bytes.fromhex(saved["issuance_preimage"]))
     decoded = core.rpc("decodepsbt", [enriched])
-    _match_transaction(decoded["tx"], bundle, sequence)
     entries = decoded.get("inputs", [])
     if len(entries) != 1:
         raise Refused("protected_psbt_input_mismatch")
@@ -347,12 +346,23 @@ def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_fund
     if (_sats(prevout.get("amount")) != saved["reserve_sats"]
             or prevout.get("scriptPubKey", {}).get("hex") != saved["funding_script"]
             or entries[0].get("witness_script", {}).get("hex") != saved["witness_script"]
-            or _sats(decoded.get("fee")) != saved["fee_sats"]):
+            or _sats(decoded.get("fee")) != fee_sats):
         raise Refused("protected_psbt_input_mismatch")
+    return enriched, decoded["tx"]
+
+
+def unsigned_psbt(core, bundle: dict, bundle_id: str, route: str, *, active_funding_block: str | None = None) -> dict:
+    observed = _route_status(core, bundle, bundle_id, route, active_funding_block)
+    if observed["state"] != "unspent":
+        raise Refused("protected_reserve_unavailable")
+    saved = bundle["plan"]
+    sequence = _sequence(route, saved)
+    enriched, tx = _funded_psbt(core, bundle, sequence, [(saved["payout_address"], saved["payout_sats"])], saved["fee_sats"])
+    _match_transaction(tx, bundle, sequence)
     after = _route_status(core, bundle, bundle_id, route, active_funding_block)
     if after["tip"] != observed["tip"] or after["state"] != "unspent":
         raise Refused("chain_changed_retry")
-    return {"bundle_id": bundle_id, "route": route, "psbt": enriched, "txid": decoded["tx"]["txid"],
+    return {"bundle_id": bundle_id, "route": route, "psbt": enriched, "txid": tx["txid"],
             "observation": after}
 
 

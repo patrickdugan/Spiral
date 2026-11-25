@@ -192,7 +192,7 @@ def cooperate(core, rpc, client, operation, runtime, mining_address, bundle):
 
 
 def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
-           bundle, funding_hex, issuance, legacy_melt, node, root, certificate):
+           bundle, funding_hex, issuance, legacy_melt, node, root, certificate, *, rollover_runtime=None):
     handoff = Path(handoff)
     (handoff / 'stop-requested').touch(exist_ok=False)
     for _ in range(150):
@@ -211,6 +211,13 @@ def finish(core, rpc, client, operation, mint_url, handoff, mining_address,
     assert offline['proofs_sha256'] == issuance['proofs_sha256']
     independent = verify_certificate(node, root, certificate, bundle, legacy_melt)
     assert independent['proofs_sha256'] == offline['proofs_sha256'] and independent['changed_secret_rejected']
+    if rollover_runtime is not None:
+        import protected_rollover_fixture
+
+        split = protected_rollover_fixture.run(core, rpc, root, rollover_runtime, mining_address, bundle, HOLDER_WALLET)
+        return {'schema': 'proof-grove/protected-rollover-regtest/v1', 'network': 'regtest', 'genesis': bundle['plan']['genesis'],
+                'parent_bundle': bundle, 'parent_funding_raw': funding_hex, 'cdk_issuance': independent,
+                'legacy_cdk_melt': legacy_melt, 'mint_process_stopped': True, 'offline_dleq_reverified': True, **split}
     outpoint, plan = bundle['funding'], bundle['plan']
     preflight = protected_reserve.unsigned_psbt(core, bundle, bundle['bundle_id'], 'holder')
     signed = rpc('walletprocesspsbt', [preflight['psbt'], True, 'ALL'], wallet=HOLDER_WALLET)

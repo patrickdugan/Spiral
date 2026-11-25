@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from . import protected_reserve
+from . import protected_reserve, protected_rollover
 from .adapters import CoreClient
 from .domain import Refused
 from .verifier import read_bounded
@@ -42,6 +42,29 @@ def configure(commands):
         if action == "check":
             parser.add_argument("--tx-file", required=True, help="File containing the signed transaction hex")
 
+    for action, help_text in (
+        ("plan", "Pin an exact two-recipient protected reserve split"),
+        ("psbt", "Export a holder-only split PSBT"),
+        ("check", "Check a signed split against its plan and Core policy"),
+        ("confirm", "Attach both successors after the split confirms"),
+    ):
+        parser = commands.add_parser("protected-rollover-" + action, help=help_text)
+        for key in ("config", "bundle", "bundle-id"):
+            parser.add_argument("--" + key, required=True)
+        if action == "plan":
+            parser.add_argument("--recipient", action="append", required=True, help="Recipient terms JSON, supplied twice in output order")
+            parser.add_argument("--split-fee-sats", type=int, required=True)
+        else:
+            parser.add_argument("--rollover", required=True)
+            parser.add_argument("--rollover-id", required=True)
+        if action == "check":
+            parser.add_argument("--tx-file", required=True)
+        else:
+            parser.add_argument("--output", required=True)
+        if action == "confirm":
+            parser.add_argument("--txid", required=True)
+            parser.add_argument("--block", required=True)
+
 
 def _load(path):
     value = json.loads(read_bounded(path, 32768))
@@ -54,6 +77,27 @@ def _write(path, content):
     with Path(path).open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(content)
         stream.write("\n")
+
+
+def _rollover(core, args, bundle):
+    if args.command == "protected-rollover-plan":
+        result = protected_rollover.plan(core, bundle, args.bundle_id,
+                                         [_load(path) for path in args.recipient], args.split_fee_sats)
+        _write(args.output, json.dumps(result, indent=2))
+        return {"rollover_id": result["rollover_id"]}
+    inputs = (core, bundle, args.bundle_id, _load(args.rollover), args.rollover_id)
+    if args.command == "protected-rollover-psbt":
+        result = protected_rollover.unsigned_psbt(*inputs)
+        _write(args.output, result.pop("psbt"))
+        return result
+    if args.command == "protected-rollover-check":
+        raw = read_bounded(args.tx_file, 16002).decode("ascii").strip()
+        return protected_rollover.check_signed(*inputs, raw)
+    if args.command == "protected-rollover-confirm":
+        result = protected_rollover.confirm(*inputs, args.txid, args.block)
+        _write(args.output, json.dumps(result, indent=2))
+        return {"receipt_id": result["receipt_id"], "successors": [child["bundle_id"] for child in result["successors"]]}
+    raise Refused("protected_invalid_command")
 
 
 def run(args):
@@ -70,6 +114,8 @@ def run(args):
         _write(args.output, json.dumps(result, indent=2))
         return {"bundle_id": result["bundle_id"], "funding": result["funding"]}
     bundle = _load(args.bundle)
+    if args.command.startswith("protected-rollover-"):
+        return _rollover(core, args, bundle)
     evidence = {"active_funding_block": args.active_funding_block}
     if args.command == "protected-status":
         return protected_reserve.holder_status(core, bundle, args.bundle_id, **evidence)

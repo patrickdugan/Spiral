@@ -51,7 +51,24 @@ The circuit enforces Boolean operation selection and Merkle directions, full 256
 
 The accounting proof covers the declared protected ledger. A coordinator must independently check credible Bitcoin Core or chain-verifier evidence for unspent funding and mature, confirmed withdrawals. The circuit binds evidence digests and leaves Bitcoin consensus, Cashu DLEQ, and holder signing to the admission layer. A mint with signing keys can sign additional bearer notes outside the ledger. A protected wallet must verify the canonical protected checkpoint, live claim membership, funding script, individual collateral balance, and the certificate tying that note bundle to its reserve. Missing or stale evidence fails admission. A public enumerable or witness-available protected issuance journal allows auditors to reconstruct that ledger. Completeness for a mint's external bearer liabilities cannot be deduced from an authenticated subset of the ledger.
 
-The fixture demonstrates accounting splits and swaps. A holder assigned only a fractional bookkeeping claim has no independent ability to spend part of a Bitcoin UTXO. Protected transfers and splits require the current holder to roll the whole input into fresh reserve outputs for the new holders, or an independently enforceable transaction graph that creates those outputs. Each recipient waits for its own usable reserve and verifies its own key and recovery delay.
+The fixture demonstrates accounting splits and swaps. Bitcoin spends whole UTXOs, so protected splits roll the entire input into fresh reserve outputs. Each recipient waits for its own usable reserve and verifies its own key and recovery delay.
+
+### Holder-only funded rollover
+
+The holder can prepare a regtest split of a confirmed V3 reserve after the parent CSV delay. Give the planner two recipient JSON files in output order. Each specifies `holder_pubkey`, `reserve_sats`, `payout_address`, `fee_sats`, `delay_blocks` and `min_confirmations`. The parent amount covers the two new reserves and one explicit split fee. Each successor commitment binds the parent bundle, output index and recipient terms. The successor keeps the parent mint public key and has a fresh holder key and maturity schedule of its own.
+
+Use `protected-rollover-plan` to pin both recipients and the split fee. Use `protected-rollover-psbt` to export the transaction, have the parent holder sign it with `SIGHASH_ALL`, and run `protected-rollover-check` before broadcast. `protected-rollover-confirm` verifies the exact spending transaction in an active Core block and exports both successor bundles in one receipt. Each recipient can use its successor bundle with the existing holder PSBT and check commands.
+
+The isolated reproducer uses the existing pinned CDK and local Core binaries.
+
+```bash
+python3 -B tests/run-regtest-stack.py --protected --batch-protected --rollover \
+  --bitcoind "$BITCOIND" --cdk "$CDK" --node "$NODE"
+```
+
+The fixture independently checked the genuine V3 CDK issuance certificate after the mint process stopped. A 25,000-sat parent coin split at height 110 into 12,000 and 12,750 sats with a 250-sat fee. At height 116 the two recipients paid 250 sats each in fees and confirmed 11,750 and 12,500 sats to addresses they controlled. Core rejected the early split and early payouts, and the fixture refused a substituted output, orphaned funding block and replay of the consumed parent. One recipient's wallet could not sign for the other. Peak cgroup usage was 239,190,016 bytes with zero swap. The evidence ZIP has SHA-256 `6d9ffc02a6c033dea1f701e118e02776e259d46559f43127bf2d9b3d11b4f059`.
+
+The successor format records Bitcoin collateral and holder recovery terms. Nova still needs a transition that consumes the parent claim and admits both funded successors. Cashu token transfer and split admission remain open.
 
 Run the R1CS replay controls, generate the compressed fixture proof, and verify it in a separate process.
 
@@ -342,6 +359,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 | Cashu V3 two-child prefix composition | The stock recursion runtime executed the verified reduction and its next leaf in order | The CPU prover hit the 2 GiB and 2.5 GiB hard limits during proving with zero swap | The witness covers the first 356 archived Core shards. A parent proof remains outstanding. | — |
 | Portable V3 issuance, accounting and payout | Captured from a fresh CDK and Core fixture and reverified on Windows. | The combined audit checked the exact CDK batch, Nova proof, BIP141 witness inclusion and BIP143 holder signature under the recorded pins. | The rebuilt journal matches the original SHA-256, binds the same outpoint and claim, and verifies zero remaining liabilities. | Core confirmed 24,750 sats after six blocks with the mint stopped. |
 | Fresh live V3 issuance, accounting and payout | CDK 0.18.3, Nova and Bitcoin Core 31.0 ran in a single fixture | Separate verification checked the exact CDK batch, three-step Nova proof and mined holder witness. | Live reconciliation matched zero reserve and liabilities, rejected the stale tip and matched again after block restoration. | Core confirmed a 24,750-sat holder payout after six blocks with CDK stopped. |
+| Holder-only V3 reserve rollover | The real CDK issuance fixture prepared and checked an exact split and both successor spends with the mint offline. | The separate CDK verifier accepted the source issuance certificate. Core verified the parent and successor spends and their inclusion. | One parent outpoint funds distinct successor outpoints with conserved value after fees. Nova admission of those successors remains open. | Core confirmed the two payouts at height 116 after the successors' own six-block delay. |
 | M14 garbled settlement fixture | Separate garbler and evaluator on the same-chain record | Pinned package and matching accept or reject label commitment | Trusted setup and independent digest pin | Fraud-witness spend remains open |
 | One-byte funded Taproot assertion | Bitcoin Core 31.0 and separate label extractor | Extracted eight labels from the exact mined BIP340 signature and committed table | Trusted setup. The script permits ordinary signatures that carry no opening. | Core confirmed the assertion and its 99,000-sat payout |
 | Funded asserted-byte Cashu dispute | Two independent garblings and confirmed Core assertion transactions | Verified script-path signatures, transaction and witness commitments, and matched accept or reject labels | One record byte varies under the same challenger digest. Trusted setup and one-shot signing apply. | Core confirmed the 49,500-sat challenger payout with the reject label and the operator reclaim after four blocks |

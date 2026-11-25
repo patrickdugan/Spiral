@@ -27,12 +27,16 @@ scenario=parser.add_mutually_exclusive_group()
 scenario.add_argument('--protected',action='store_true',help='Issue NUT-11 protected notes, stop the mint and test holder payout')
 scenario.add_argument('--protected-cooperative',action='store_true',help='Test the protected melt API and competing holder exit')
 parser.add_argument('--batch-protected',action='store_true',help='Commit the ordered blinded batch in the reserve before issuance')
+parser.add_argument('--rollover',action='store_true',help='Split a V3 issuance reserve and test both holder exits with the mint offline')
 parser.add_argument('--accounting-nova',type=Path,help='Nova executable for the live V3 accounting audit')
 parser.add_argument('--collateral-nova',type=Path,help='Local CPU Nova CLI for the optional same-chain bond fixture')
 parser.add_argument('--collateral-m14',type=Path,help='Local M14 cashu-settlement executable for the bond fixture')
 args=parser.parse_args()
 if args.batch_protected and not (args.protected or args.protected_cooperative):
     parser.error('--batch-protected requires a protected scenario')
+if args.rollover and (not args.protected or not args.batch_protected or args.accounting_nova
+                      or args.collateral_nova or args.collateral_m14):
+    parser.error('--rollover requires the isolated V3 mint-offline scenario')
 if args.accounting_nova and not (args.protected and args.batch_protected and args.bitcoind):
     parser.error('--accounting-nova requires the V3 holder exit with a local Core binary')
 collateral=bool(args.collateral_nova and args.collateral_m14)
@@ -142,6 +146,8 @@ bitcoind_rpc_password="env:PG_TEST_RPC_PASSWORD"
     test_command=[sys.executable,str(ROOT/'tests/cdk-regtest-integration.py'),'--node',str(node),'--mint',mint_url,'--rpc',rpc_url]
     if args.batch_protected:
         test_command.append('--batch-protected')
+    if args.rollover:
+        test_command.append('--rollover')
     if args.accounting_nova:
         test_command.extend(('--accounting-nova', str(args.accounting_nova.resolve())))
     if args.protected or args.protected_cooperative:

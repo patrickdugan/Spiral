@@ -36,12 +36,16 @@ parser.add_argument('--browser-script',help='Optional connected browser QA scrip
 parser.add_argument('--protected-handoff',type=Path)
 parser.add_argument('--cooperative',action='store_true')
 parser.add_argument('--batch-protected',action='store_true')
+parser.add_argument('--rollover',action='store_true')
 parser.add_argument('--accounting-nova',type=Path)
 parser.add_argument('--collateral-nova',type=Path)
 parser.add_argument('--collateral-m14',type=Path)
 args=parser.parse_args()
 if args.cooperative and not args.protected_handoff:parser.error('--cooperative requires --protected-handoff')
 if args.batch_protected and not args.protected_handoff:parser.error('--batch-protected requires --protected-handoff')
+if args.rollover and (not args.batch_protected or not args.protected_handoff or args.cooperative
+                      or args.accounting_nova or args.collateral_nova or args.collateral_m14):
+    parser.error('--rollover requires the isolated V3 mint-offline scenario')
 if args.accounting_nova and (not args.batch_protected or not args.protected_handoff or args.cooperative):
     parser.error('--accounting-nova requires the V3 holder exit')
 collateral=bool(args.collateral_nova and args.collateral_m14)
@@ -188,8 +192,9 @@ try:
             filename='cdk-protected-cooperative-report.json'
         else:
             payout=cdk_protected_fixture.finish(core,rpc,client,operation,args.mint,args.protected_handoff,
-                mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate)
-            filename='cdk-protected-report.json'
+                mining_address,bundle,funding_hex,audit,legacy_melt,args.node,ROOT,certificate,
+                rollover_runtime=runtime if args.rollover else None)
+            filename='cdk-protected-rollover-report.json' if args.rollover else 'cdk-protected-report.json'
         payout['issuance_flow']=report
         if args.accounting_nova:
             payout['live_accounting']=cdk_protected_fixture.account(core,rpc,payout,args.protected_handoff,
