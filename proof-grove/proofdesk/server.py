@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from . import demo, protected_funded_preview, protected_payout_evidence
+from . import demo, protected_evidence_preview, protected_funded_preview, protected_payout_evidence
 from .adapters import BarkClient, CashuClient
 from .archive import bundle
 from .cashu import CashuBridge
@@ -53,6 +53,7 @@ class Desk:
                 "ark_wallet_configured": self.ark is not None,
                 "protected_preview_configured": self.mode == 'demo' and bool(self.config.get('protected_preview')),
                 "protected_funded_preview_configured": self.mode == 'demo' and bool(self.config.get('protected_funded_preview')),
+                "protected_evidence_preview_configured": self.mode == 'demo' and bool(self.config.get('protected_evidence_preview')),
                 "protected_melt_configured": self.protected_melt is not None,
                 "native_verifier": "configured" if self.gate else "not configured",
                 "chain_observer": "configured" if self.core else "not configured",
@@ -272,6 +273,18 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                 if path in ('/api/protected/preview/funded', '/api/protected/preview/funded/archive',
                             '/api/protected/preview/funded/verification'):
                     self._funded_preview(path)
+                    return
+                evidence_prefix = '/api/protected/preview/evidence/'
+                if path.startswith(evidence_prefix):
+                    case, _, suffix = path.removeprefix(evidence_prefix).partition('/')
+                    if path.endswith('/') or suffix not in ('', 'archive'):
+                        raise Refused('recovery_evidence_unknown_case')
+                    manifest = desk.config.get('protected_evidence_preview') if desk.mode == 'demo' else None
+                    summary, archive = protected_evidence_preview.checked_archive(manifest, case)
+                    if suffix == 'archive':
+                        self._send(200, archive, 'application/zip')
+                    else:
+                        self._send(200, canonical(summary))
                     return
                 with desk.lock:
                     if path == "/api/status":

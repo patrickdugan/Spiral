@@ -39,6 +39,8 @@ def main():
     serve.add_argument("--protected-preview", type=Path, help="Load a pinned archived V3 regtest payout for the local demo")
     serve.add_argument("--protected-funded-preview", type=Path,
                        help="Watch a pinned, independently verified joint payout publication in the local demo")
+    serve.add_argument("--protected-evidence-preview", type=Path,
+                       help="Load pinned issuance and refusal downloads for local Cashu recovery")
     serve.add_argument('--hosted',action='store_true',help='Require bearer authentication and exact configured HTTPS origins behind a TLS proxy')
     serve.add_argument('--bind',default='127.0.0.1',choices=['127.0.0.1','0.0.0.0'])
     check = commands.add_parser("verify", help="Verify M16 proof bytes; does not authorize or settle a payment")
@@ -72,6 +74,8 @@ def main():
                 raise Refused('protected_preview_requires_local_demo')
             if args.protected_funded_preview and not args.protected_preview:
                 raise Refused('funded_preview_requires_protected_preview')
+            if args.protected_evidence_preview and not args.protected_preview:
+                raise Refused('recovery_evidence_requires_protected_preview')
             if args.hosted and not args.config:raise Refused('hosted_configuration_required')
             if args.config:
                 config_path = Path(args.config).resolve()
@@ -95,6 +99,8 @@ def main():
                 preview = {"protected_preview": args.protected_preview.resolve()} if args.protected_preview else {}
                 if args.protected_funded_preview:
                     preview["protected_funded_preview"] = args.protected_funded_preview.resolve()
+                if args.protected_evidence_preview:
+                    preview["protected_evidence_preview"] = args.protected_evidence_preview.resolve()
                 desk = Desk(config=preview)
             server = make_server(desk, args.port,access=access,bind=args.bind)
             print(f"Proof Grove ({desk.mode}) http://127.0.0.1:{server.server_port}", flush=True)

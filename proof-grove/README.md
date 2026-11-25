@@ -54,6 +54,16 @@ and verification receipt beside the descriptor and use their filenames in
 the original ZIP and the recipient verification receipt. This panel displays
 the local verifier's result. The recipient CLI can repeat the verification.
 
+To include the already verified issuance and refusal downloads, add
+`--protected-evidence-preview /path/to/recovery-evidence.json` to the local
+demo. The manifest uses schema `proof-grove/protected-recovery-evidence/v1`,
+the common `claim_id`, `holder_txid`, and `holder_wtxid`, and two objects named
+`issuance` and `refusal`. Each object carries `file` and `sha256` for its ZIP
+beside the manifest. Use the issuance audit and the walletless funded refusal
+archive from the evidence matrix. The demo verifies the archive pins and
+checks that the enclosed receipts refer to the same holder transaction. The
+downloads include instructions to repeat the underlying verification.
+
 ```powershell
 python -m unittest discover -s tests -q
 node --check web/app.js

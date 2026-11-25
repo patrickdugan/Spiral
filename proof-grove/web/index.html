@@ -52,6 +52,15 @@
         <p class="help" id="protected-preview-export" hidden><a href="./api/protected/preview/archive" download="proof-grove-cashu-payout.zip">Download payout evidence</a></p>
         <details id="protected-preview-details" hidden><summary>Inspect verification evidence</summary><pre id="protected-preview-json"></pre></details>
       </section>
+      <section class="panel" id="recovery-evidence" aria-labelledby="recovery-evidence-heading" hidden>
+        <div class="panel-head"><h2 id="recovery-evidence-heading">Issuance and refusal evidence</h2></div>
+        <h3>Cashu issuance</h3>
+        <p class="help" id="recovery-issuance-result" role="status"></p>
+        <p class="help" id="recovery-issuance-export" hidden><a href="./api/protected/preview/evidence/issuance/archive" download="proof-grove-cashu-issuance.zip">Download issuance and Nova proof</a></p>
+        <h3>Funded refusal</h3>
+        <p class="help" id="recovery-refusal-result" role="status"></p>
+        <p class="help" id="recovery-refusal-export" hidden><a href="./api/protected/preview/evidence/refusal/archive" download="proof-grove-cashu-refusal.zip">Download refusal and timeout evidence</a></p>
+      </section>
       <section class="panel" id="funded-preview" aria-labelledby="funded-preview-heading" hidden>
         <div class="panel-head"><h2 id="funded-preview-heading">Proof-backed payout</h2><button class="secondary" id="refresh-funded-preview" type="button">Check status</button></div>
         <p class="help" id="funded-preview-result" role="status"></p>

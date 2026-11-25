@@ -29,9 +29,32 @@ function tab(id) {
   document.querySelectorAll('[data-tab]').forEach(button => { button.classList.toggle('active', button.dataset.tab === id); if (button.dataset.tab === id) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
   $('breadcrumb').textContent = labels[id];
   if (id === 'evidence') loadArchive().catch(e => error(e.message));
-  if (id === 'protected-preview') loadFundedPreview();
+  if (id === 'protected-preview') {
+    loadFundedPreview();
+    loadRecoveryEvidence();
+  }
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => tab(button.dataset.tab)));
+function loadRecoveryEvidence() {
+  if ($('recovery-evidence').hidden) return;
+  const sats = count => count.toLocaleString('en-US');
+  const summaries = {
+    issuance: item => `${sats(item.issued_sats)} sats issued. ${item.proof_count} Cashu signatures and the Nova accounting proof verified.`,
+    refusal: item => `Walletless Bitcoin replay verified ${sats(item.holder_sats)} sats to the holder with no verdict. The challenger received ${sats(item.challenger_sats)} sats after the ${item.timeout_blocks}-block collateral delay.`,
+  };
+  for (const [caseName, summarize] of Object.entries(summaries)) {
+    const display = $(`recovery-${caseName}-result`);
+    const download = $(`recovery-${caseName}-export`);
+    display.textContent = 'Checking archived evidence…';
+    download.hidden = true;
+    api(`/api/protected/preview/evidence/${caseName}`).then(item => {
+      display.textContent = summarize(item);
+      download.hidden = false;
+    }).catch(() => {
+      display.textContent = 'The pinned archive could not be checked.';
+    });
+  }
+}
 async function loadFundedPreview() {
   const button = $('refresh-funded-preview');
   if ($('funded-preview').hidden || button.disabled) return;
@@ -323,6 +346,7 @@ async function initialize() {
   state.mode = status.mode; state.cases = cases.cases; state.vtxos = vtxos.vtxos; state.planRequest = 0;
   $('protected-preview-tab').hidden = !status.protected_preview_configured;
   $('funded-preview').hidden = !status.protected_funded_preview_configured;
+  $('recovery-evidence').hidden = !status.protected_evidence_preview_configured;
   state.hostedMutations=!status.hosted_access?.enabled||status.hosted_access.mutations;
   $('proof-files').hidden=status.mode==='regtest';
   $('statement-file').required=status.mode==='live';$('proof-file').required=status.mode==='live';
