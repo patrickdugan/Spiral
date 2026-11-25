@@ -12,6 +12,8 @@ The [recovered case and proving bundle](https://github.com/patrickdugan/zk-rusto
 
 A second pinned replay matched all 24 words in 13.616 seconds at 1,500,932 KiB peak RSS. It retained the 203,353,164-byte prover input with SHA-256 `267f580c26f5e8d49cd9aea39656ef225b2436823d4553b6722d8ad9f20b1366`. The compressed download was checked by decompressing it and recomputing that digest. The raw input can go directly to Stwo after the proof profile and binary have been checked.
 
+The exact A100 run produced a fresh STARK in 316.33 seconds at 29,763,252 KiB peak prover RSS. CUDA hashed 805,306,331 Merkle nodes in 124.59 seconds with 423 MiB peak sampled VRAM and zero observed swap I/O. Stock Scarb accepted the transferred proof, SHA-256 `701389f3f058d0d06ef4fa21402bf309ffcae54a1ee184bc27fb278c29a3dee7`. The separate local audit matched all 24 public words and rejected all 24 mutations. Its compact verifier input has SHA-256 `d2340cf3c6f3c71f33268cc5b097e001ffbafb1ade96ab12ab3fa477ef1ef328` and the Scarb verifier binary has SHA-256 `d6b77b191ba50edb968ecc559d3ce933293b2d040daa93d746016a7d3310ab31`. Hyperstack deletion was confirmed with an estimated cost ceiling of $0.163. The evidence bundle includes the proof, public inputs, verifier transcript, and resource measurements.
+
 Run the case gate with Python 3.11 or newer on x86-64 Linux. `--execute-only` runs Cairo without starting the STARK prover.
 
 ```bash
@@ -216,7 +218,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
 | --- | --- | --- | --- | --- |
 | Archived paired benchmark | Reported on Core and CDK | Archived verifier receipts for issuance and 24,750-sat payout | Local duplicate issuance control | Historical holder payout after reserve funding |
-| Exact 23,750-sat melt-funded case | Pinned Cairo replay matched 24 words locally | Fresh STARK remains outstanding after interrupted CPU proving | CDK rejected reuse of the six source proofs in the archived run | Historical offline payout after cooperative funding |
+| Exact 23,750-sat melt-funded case | Pinned Cairo replay matched 24 words locally | Fresh STARK accepted by stock Scarb. The separate audit matched 24 public words and rejected 24 mutations. | CDK rejected reuse of the six source proofs in the archived run | Archived offline payout after cooperative funding. Independent historical chain inclusion and timelock verification remain open. |
 | Exact Shinigami prover storage experiment | The pinned Rust tests matched stock nodes, roots and openings in serial and parallel builds. The independent layout check covered 63 cases. [Storage experiment](../integrations/shinigami-stwo/README.md) | The archived exact-case verifier remains the acceptance gate | — | — |
 | Archived Shinigami CUDA disk batches | RTX 3050 matched 65,535 independently computed nodes across mixed-height batches. The archived Stwo tests matched stock roots and openings. | The archived AIR and transcript remain pinned. All-node parity establishes the commitment backend for the tested tree. [Archived CUDA batches](../integrations/shinigami-stwo/README.md) | — | — |
 | Shinigami CUDA smoke on RTX 3050 | Saved Cairo test input, CUDA commitments and FRI in 212 seconds total | Separate matching Cairo CPU verifier accepted and rejected three mutations. The archived verifier rejected the different transcript. [CUDA smoke](../integrations/shinigami-stwo/README.md) | — | — |
