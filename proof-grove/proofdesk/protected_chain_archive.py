@@ -62,7 +62,7 @@ def capture(rpc, path, height, anchor):
             "archive_bytes": len(archive)}
 
 
-def replay(rpc, path, archive_sha256, height, anchor):
+def replay(rpc, path, archive_sha256, height, anchor, *, before_final=None):
     positive(height, "height", MAX_BLOCKS)
     hash32(anchor, "anchor")
     hash32(archive_sha256, "archive_sha256")
@@ -82,7 +82,11 @@ def replay(rpc, path, archive_sha256, height, anchor):
     current = tip["blocks"]
     if not 0 <= current <= height or tip["bestblockhash"] != hashes[current]:
         raise ValueError("the destination regtest chain is not an archive prefix")
+    if before_final is not None and current == height:
+        raise ValueError("the final block has already been submitted")
     for index in range(current + 1, height + 1):
+        if index == height and before_final is not None:
+            before_final()
         result = rpc("submitblock", [blocks[index - 1].decode("ascii")])
         if result not in (None, "duplicate") or rpc("getblockhash", [index]) != hashes[index]:
             raise ValueError(f"Bitcoin Core refused block {index}: {result}")

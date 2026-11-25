@@ -46,10 +46,15 @@ class ProtectedChainArchiveTest(unittest.TestCase):
             path = Path(directory) / "checkpoint.hex"
             captured = archive.capture(source, path, 3, hashes[-1])
             file_pin = captured["archive_sha256"]
-            result = archive.replay(destination, path, file_pin, 3, hashes[-1])
+            checked = []
+            result = archive.replay(destination, path, file_pin, 3, hashes[-1],
+                                    before_final=lambda: checked.append(tuple(submitted)))
             self.assertEqual(result["blocks_submitted"], 3)
+            self.assertEqual(checked, [tuple(blocks[:2])])
             self.assertEqual(archive.replay(destination, path, file_pin, 3, hashes[-1])["blocks_submitted"], 0)
             self.assertEqual(submitted, blocks)
+            with self.assertRaisesRegex(ValueError, "already been submitted"):
+                archive.replay(destination, path, file_pin, 3, hashes[-1], before_final=self.fail)
             with self.assertRaisesRegex(ValueError, "byte pin"):
                 archive.replay(destination, path, "ff" * 32, 3, hashes[-1])
             with self.assertRaisesRegex(ValueError, "pinned checkpoint"):
