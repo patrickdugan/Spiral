@@ -8,11 +8,13 @@ import mimetypes
 import threading
 import time
 import hashlib
+import io
 import os
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from . import demo, protected_payout_evidence
 from .adapters import BarkClient, CashuClient
@@ -55,16 +57,24 @@ class Desk:
                 "settlement": "proof-gated Cashu issuance" if self.cashu else "preparation only", "custody": "Cashu remains mint-custodial; Ark retains expiry and operator liveness requirements.",
                 "intents": [asdict(self.ledger.intent(r[0])) for r in self.ledger.db.execute("SELECT id FROM intents")] if self.ledger else []}
 
-    def check_protected_preview(self, case: str) -> dict:
+    def _protected_preview_input(self) -> tuple[dict, bytes]:
         manifest_path = self.config.get('protected_preview')
         if self.mode != 'demo' or not manifest_path:
             raise Refused('protected_preview_not_configured')
-        if case not in ('original', 'beneficiary', 'checkpoint'):
-            raise Refused('invalid_protected_preview_case')
         manifest = json.loads(read_bounded(manifest_path, 4096))
         raw = read_bounded(manifest_path.parent / manifest['receipt'], 256 * 1024)
         if hashlib.sha256(raw).hexdigest() != manifest['receipt_sha256']:
             raise Refused('protected_preview_receipt_changed')
+        return manifest, raw
+
+    def check_protected_preview(self, case: str) -> dict:
+        if case not in ('original', 'beneficiary', 'checkpoint'):
+            raise Refused('invalid_protected_preview_case')
+        manifest, raw = self._protected_preview_input()
+        return self._verify_protected_preview(manifest, raw, case)
+
+    @staticmethod
+    def _verify_protected_preview(manifest: dict, raw: bytes, case: str) -> dict:
         receipt = json.loads(raw)
         anchor = manifest['anchor_hash']
         if case == 'beneficiary':
@@ -79,6 +89,18 @@ class Desk:
         except ValueError as exc:
             return {'case': case, 'verified': False, 'detail': str(exc)}
         return {'case': case, 'verified': True, 'payout': verified}
+
+    def protected_preview_archive(self) -> bytes:
+        manifest, raw = self._protected_preview_input()
+        if not self._verify_protected_preview(manifest, raw, 'original')['verified']:
+            raise Refused('protected_preview_unverified')
+        receipt_name = 'holder-receipt.json'
+        pins = {key: manifest[key] for key in ('receipt_sha256', 'bundle_id', 'anchor_height', 'anchor_hash')}
+        stream = io.BytesIO()
+        with ZipFile(stream, 'w', ZIP_DEFLATED) as archive:
+            archive.writestr('preview.json', canonical({'receipt': receipt_name, **pins}))
+            archive.writestr(receipt_name, raw)
+        return stream.getvalue()
 
     def chainstate(self) -> dict:
         if not self.core:raise Refused('core_not_configured')
@@ -231,6 +253,9 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                                                 'private_bundles':bool(access and access.private_bundles)}
                     elif path == '/api/protected/preview':
                         value = desk.check_protected_preview(parse_qs(url.query).get('case', ['original'])[0])
+                    elif path == '/api/protected/preview/archive':
+                        self._send(200, desk.protected_preview_archive(), 'application/zip')
+                        return
                     elif path == '/api/chainstate':
                         value=desk.chainstate()
                     elif path == '/api/proofs/recorded':

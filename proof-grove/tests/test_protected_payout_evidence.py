@@ -1,13 +1,22 @@
 import copy
 import hashlib
+import io
+import json
 import os
 import shutil
+import tempfile
+import threading
 import unittest
+from pathlib import Path
 from unittest.mock import patch
+from urllib.error import HTTPError
+from urllib.request import urlopen
+from zipfile import ZipFile
 
 from proofdesk import protected_payout_evidence as evidence
 from proofdesk.domain import digest
 from proofdesk.protected_reserve import GENESIS, V3_BUNDLE_SCHEMA, V3_PLAN_SCHEMA, _witness_script
+from proofdesk.server import Desk, make_server
 
 
 HOLDER = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
@@ -131,6 +140,45 @@ class ProtectedPayoutEvidenceTest(unittest.TestCase):
                                           sign_public_fixture(self.sighash), self.sighash)
         self.assertTrue(result["witness_inclusion_verified"])
         self.assertEqual((result["funding_height"], result["payout_sats"], result["fee_sats"]), (104, 24750, 250))
+
+    @patch.object(evidence, "_verify_signature")
+    def test_download_replays_the_exact_receipt_and_refuses_changed_evidence(self, signature):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            raw = json.dumps(self.receipt, indent=2).encode()
+            receipt_path = source / 'recorded-payout.json'
+            receipt_path.write_bytes(raw)
+            manifest_path = source / 'preview.json'
+            pins = {'receipt_sha256': hashlib.sha256(raw).hexdigest(), 'bundle_id': self.bundle,
+                    'anchor_height': 110, 'anchor_hash': self.anchor}
+            manifest = {'receipt': receipt_path.name, **pins}
+            manifest_path.write_text(json.dumps(manifest), encoding='utf-8')
+            desk = Desk(config={'protected_preview': manifest_path})
+            with make_server(desk, 0) as server:
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                url = f'http://127.0.0.1:{server.server_port}/api/protected/preview/archive'
+                try:
+                    with urlopen(url, timeout=5) as response:
+                        self.assertEqual(response.headers.get_content_type(), 'application/zip')
+                        with ZipFile(io.BytesIO(response.read())) as archive:
+                            self.assertEqual(set(archive.namelist()), {'preview.json', 'holder-receipt.json'})
+                            self.assertEqual(json.loads(archive.read('preview.json')), {'receipt': 'holder-receipt.json', **pins})
+                            self.assertEqual(archive.read('holder-receipt.json'), raw)
+                    signature.assert_called_once()
+                    receipt_path.write_bytes(raw + b' ')
+                    with self.assertRaises(HTTPError) as refused:
+                        urlopen(url, timeout=5)
+                    self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_receipt_changed')
+                    receipt_path.write_bytes(raw)
+                    manifest_path.write_text(json.dumps(manifest | {'anchor_hash': '33' * 32}), encoding='utf-8')
+                    with self.assertRaises(HTTPError) as refused:
+                        urlopen(url, timeout=5)
+                    self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_unverified')
+                    signature.assert_called_once()
+                finally:
+                    server.shutdown()
+                    thread.join(timeout=5)
 
     def test_rejects_wrong_checkpoint_and_same_block_payout(self):
         with self.assertRaisesRegex(ValueError, "differ from the checkpoint"):

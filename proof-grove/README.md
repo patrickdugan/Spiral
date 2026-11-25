@@ -35,8 +35,12 @@ three fields come from the independently observed reserve and Core checkpoint.
 The verifier calls OpenSSL on the original payout. Set `PROOF_GROVE_OPENSSL`
 to the executable path if OpenSSL is outside `PATH`. Open **Cashu recovery**
 to verify the recorded holder signature and mined witness or try the two
-substitutions. This demo works with an archived regtest payout. Live protected
-issuance and recovery use the [wallet guide](docs/cashu-wallet.md).
+substitutions. After verifying the original payout, download the evidence ZIP.
+It contains the exact receipt and the recorded pins. To replay it, extract the
+files and point `--protected-preview` at the extracted `preview.json`. For an
+independent check, compare the bundle ID and checkpoint in that manifest with
+your own observations. Live protected issuance and recovery use the
+[wallet guide](docs/cashu-wallet.md).
 
 ```powershell
 python -m unittest discover -s tests -q

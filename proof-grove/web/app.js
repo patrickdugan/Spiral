@@ -31,14 +31,23 @@ function tab(id) {
   if (id === 'evidence') loadArchive().catch(e => error(e.message));
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => tab(button.dataset.tab)));
+$('protected-preview-case').addEventListener('change', () => {
+  $('protected-preview-export').hidden = true;
+  $('protected-preview-details').hidden = true;
+  $('protected-preview-result').textContent = '';
+});
 $('protected-preview-form').addEventListener('submit', async event => {
   event.preventDefault();
   const button = event.submitter;
   const result = $('protected-preview-result');
   const details = $('protected-preview-details');
-  const variant = $('protected-preview-case').value;
+  const exportEvidence = $('protected-preview-export');
+  const caseSelect = $('protected-preview-case');
+  const variant = caseSelect.value;
   button.disabled = true;
+  caseSelect.disabled = true;
   details.hidden = true;
+  exportEvidence.hidden = true;
   result.textContent = 'Checking the recorded evidence…';
   try {
     const check = await api('/api/protected/preview?case=' + encodeURIComponent(variant));
@@ -48,11 +57,13 @@ $('protected-preview-form').addEventListener('submit', async event => {
     if (check.verified) {
       $('protected-preview-json').textContent = JSON.stringify(check.payout, null, 2);
       details.hidden = false;
+      exportEvidence.hidden = variant !== 'original';
     }
   } catch (err) {
     result.textContent = err.message;
   } finally {
     button.disabled = false;
+    caseSelect.disabled = false;
   }
 });
 $('trust-link').addEventListener('click', event => { event.preventDefault(); tab('evidence'); });
