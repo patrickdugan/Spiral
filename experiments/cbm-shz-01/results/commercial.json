@@ -117,6 +117,13 @@
    "pm_global_btc_days": 57.248773907959254,
    "impaired_per_router_btc": 0.0,
    "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
    "V_btc": 1969.9883974191719
   },
   "routers=4": {
@@ -125,6 +132,13 @@
    "pm_global_btc_days": 57.248773907959254,
    "impaired_per_router_btc": 0.00111101184653737,
    "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
    "V_btc": 1969.9883974191719
   },
   "routers=16": {
@@ -133,6 +147,13 @@
    "pm_global_btc_days": 57.248773907959254,
    "impaired_per_router_btc": 0.0,
    "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
    "V_btc": 1969.9883974191719
   }
  },
@@ -200,14 +221,14 @@
    "lp_btc_days": 1728.6212317715706,
    "bond_btc_days": 1370.9554936883037,
    "breakeven_bps": 0.6204469873412786,
-   "customer_capital_btc_days_freed": 187.89621444381487,
-   "customer_value_bps_at_trader_rate": 0.037611471020192036,
-   "lp_annual_return_at_customer_value": 0.0030309979569216397
+   "customer_capital_btc_days_freed": 187.90112844381497,
+   "customer_value_bps_at_trader_rate": 0.03761245466304585,
+   "lp_annual_return_at_customer_value": 0.0030310772258095448
   },
   "capital_efficient_clearing": {
-   "fee_ceiling_bps": 0.6983515530372862,
-   "provider_cost_bps": 0.29344426351005115,
-   "surplus_bps": 0.4049072895272349,
+   "fee_ceiling_bps": 0.6983594586113334,
+   "provider_cost_bps": 0.2862636706773309,
+   "surplus_bps": 0.4120957879340023,
    "feasible": true
   },
   "proof_generation": {
@@ -217,7 +238,7 @@
    "usd_per_batch": 4.5
   },
   "oracle_attestation_breakeven_daily_volume_usd": {
-   "at_clearing_surplus": 20992459.80462466,
+   "at_clearing_surplus": 20626272.4562506,
    "at_1bp": 8500000.0,
    "at_0.1bp": 85000000.0
   },

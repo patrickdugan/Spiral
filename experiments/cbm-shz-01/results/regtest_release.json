@@ -1,0 +1,51 @@
+{
+  "checks": {
+    "clearing_conserves_value": true,
+    "csv_accepted_at_144": true,
+    "csv_rejected_before_144": true,
+    "exit_spendable_by_owner": true,
+    "keypath_needs_operator": true,
+    "keypath_single_schnorr_sig": true,
+    "payout_equals_claim": true,
+    "released_outputs_reused": true
+  },
+  "clearing": {
+    "fee_sat": 2000,
+    "inputs": 2,
+    "outputs": 3,
+    "signing_rounds": 3,
+    "txid": "5687e36ec5a499dd59d1aee0a14e6d35ce0eda2dfd980448b45f8b347eccfd2d",
+    "vsize": 255,
+    "weight": 1018,
+    "witness_items_per_input": [
+      1,
+      1
+    ]
+  },
+  "core_version": "/Satoshi:31.1.0/",
+  "passed": true,
+  "reuse": {
+    "key-a": {
+      "confirmations": 1,
+      "txid": "d8802006fc9e9662630770d71f51543661f6bdaccdd48570efc8b61c2ea8bfc3"
+    },
+    "key-b": {
+      "confirmations": 1,
+      "txid": "a7fcb3563103bc2d8a2d294ff5f8fb952562ab7bff981ba2d66f5a435dd9b769"
+    }
+  },
+  "scope": "isolated regtest; Bitcoin Core native MuSig2 and CSV script path; synthetic keys and coins",
+  "unilateral_exit": {
+    "accepted_at_confirmations": 144,
+    "before_reject_reason": "non-BIP68-final",
+    "early_reject_reason": "non-BIP68-final",
+    "rejected_at_confirmations": [
+      1,
+      143
+    ],
+    "txid": "c975de2b7d64b91b2b4ac720cb89a853d0ddda2fde46865167c431fb7c630447",
+    "vsize": 130,
+    "weight": 517,
+    "witness_items": 3
+  }
+}

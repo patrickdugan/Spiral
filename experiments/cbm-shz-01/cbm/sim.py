@@ -69,6 +69,8 @@ class Scenario:
     default_prob: float = 0.02          # PM rows: P(trader stops meeting margin calls)
     remargin_min: float = 5.0           # PM rows: variation margin interval (minutes)
     pm_buffer: float = 0.0              # PM rows: extra margin as a share of gross notional / leverage
+    pm_gap_mult: float = 4.0            # C_pmg: gap g = mult x sigma_1m x sqrt(remargin + liquidation lag)
+    pm_liq_lag_min: float = 10.0        # C_pmg: a defaulter's book is closed out this long after default
 
 
 # ----------------------------------------------------------------------------------- demand
@@ -239,7 +241,10 @@ def pair_peaks(keys, t_on, t_off, amt):
 
 # --------------------------------------------------------------------------- architectures
 
-EXIT_VB = dict(channel=600, vault=200)  # unilateral exit bytes: force close (commit+CET+sweep), vault path
+# Unilateral exit bytes. vault: measured 130 vB on regtest (results/regtest_release.json, CSV script-path
+# exit of tr(musig(owner, operator), and_v(v:pk(owner), older(144)))). channel: assumed force close
+# (commitment + CET + sweep), not measured here.
+EXIT_VB = dict(channel=600, vault=130)
 
 
 def offline_events(keys, day, mask):
@@ -293,7 +298,7 @@ def arch_B(s, c, minutes, pm=False):
         keys.append(c[side].astype(np.int64) * 100 + c["router"])
     k = np.concatenate(keys)
     if pm:
-        ser, impaired = portfolio_margin(s, c, by_router=True, minutes=minutes, series=True)
+        ser, impaired, _ = portfolio_margin(s, c, by_router=True, minutes=minutes, series=True)
         # Channels must carry the peak portfolio requirement (oracle provisioning).
         L.flat("traders", "channel_stock_pm", float(ser.max()), "ln_channel_state", 0, rel.max())
     else:
@@ -386,8 +391,10 @@ def arch_C(s, c, minutes, pm=False, frictionless=False):
         rel = chain_release(round_up(c["t1"], period), s) + np.where(c["offline"], offline_delay(s), 0)
         verif = "onchain_confirmed (clearing tx)"
     impaired = 0.0
+    pm_info = None
     if pm:
-        stock_series, impaired = portfolio_margin(s, c, by_router=False, minutes=minutes, series=True)
+        stock_series, impaired, pm_info = portfolio_margin(s, c, by_router=False, minutes=minutes, series=True,
+                                                            gapped=(pm == "gapped"))
         L.k[("traders", "margin_pm")] = np.concatenate([[stock_series[0]], np.diff(stock_series), [-stock_series[-1]]])
         L.verif[("traders", "margin_pm")] = verif
     else:
@@ -409,7 +416,7 @@ def arch_C(s, c, minutes, pm=False, frictionless=False):
     n = sum(r["net"] for r in rounds) + off_gross
     return L, dict(chain_vb=int(chain_vb), release=rel, gross_settlement_btc=g, net_settlement_btc=n,
                    unserved_btc=float(sum(r["deficit"] for r in rounds[-1:])), deferred_btc=float(sum(r["deficit"] for r in rounds)),
-                   rounds=len(rounds), impaired_claims_btc=impaired, verification=verif)
+                   rounds=len(rounds), impaired_claims_btc=impaired, pm_info=pm_info, verification=verif)
 
 
 def arch_D(s, c, minutes):
@@ -448,14 +455,19 @@ def arch_D(s, c, minutes):
                    verification="customer: ln_settled (simulated); LP: proof+challenge (simulated)")
 
 
-def portfolio_margin(s, c, by_router, minutes, series=False):
+def portfolio_margin(s, c, by_router, minutes, series=False, gapped=False):
     """Pre-maturity portfolio margin with variation margin every remargin_min minutes.
 
     Collateral per trader (per router if by_router) = |net notional|/(L P) + mark-to-market
     loss + buffer. A defaulting trader stops meeting calls at a random time; claims due from it
     later are paid only from collateral held at default. Returns (stock BTC-days or series,
-    impaired claims BTC). Impaired claims are payouts enforceable under per-contract margin and
-    not under this rule.
+    impaired claims BTC, info). Impaired claims are payouts enforceable under per-contract margin
+    and not under this rule.
+
+    gapped=True is the risk-based rule of formal-rent GapBuffer.lean: collateral = mark-to-market
+    loss + |net| g / ((1 - g) P), with g = pm_gap_mult x sigma_1m x sqrt(remargin + lag), and a
+    defaulter's book is closed out pm_liq_lag_min after default. Claims can then be impaired only
+    when the price moves by more than g between the last call and the close-out.
     """
     rng = np.random.default_rng(s.seed + 7)
     grid = np.arange(0, minutes, s.remargin_min, dtype=np.int64)
@@ -482,20 +494,35 @@ def portfolio_margin(s, c, by_router, minutes, series=False):
     np.add.at(gross, (ridx, b), -q)
     gross = np.cumsum(gross, 1)[:, :G]
     mtm = inv0 - net / P                           # BTC P&L of open book at current price
-    req = np.abs(net) / (s.leverage * P) + np.maximum(-mtm, 0) + s.pm_buffer * gross / (s.leverage * P)
+    if gapped:
+        g = s.pm_gap_mult * c["sigma_1m"] * math.sqrt(s.remargin_min + s.pm_liq_lag_min)
+        if not 0 <= g < 1:
+            raise ValueError("gap must lie in [0, 1)")
+        req = np.maximum(-mtm, 0) + np.abs(net) * (g / ((1 - g) * P))
+    else:
+        g = None
+        req = np.abs(net) / (s.leverage * P) + np.maximum(-mtm, 0) + s.pm_buffer * gross / (s.leverage * P)
     stock = req.sum(0)
     # Default: collateral frozen at the last call before default; later losses beyond it impaired.
     dflt = rng.random(len(ukeys)) < s.default_prob
     t_def = rng.integers(0, G, len(ukeys))
     impaired = 0.0
+    exceed = 0
+    lag_steps = int(math.ceil(s.pm_liq_lag_min / s.remargin_min))
     for i in np.flatnonzero(dflt):
         held = req[i, t_def[i]]
-        loss_need = np.maximum(-mtm[i, t_def[i]:], 0)
-        impaired += float(max(loss_need.max() - held, 0.0))
+        if gapped:
+            j = min(t_def[i] + lag_steps, G - 1)
+            loss_need = max(-mtm[i, j], 0.0)
+            exceed += int(abs(P[j] / P[t_def[i]] - 1) > g)
+        else:
+            loss_need = float(np.maximum(-mtm[i, t_def[i]:], 0).max())
+        impaired += float(max(loss_need - held, 0.0))
+    info = dict(defaults=int(dflt.sum()), gap=g, moves_exceeding_gap=exceed if gapped else None)
     if series:
         full = np.repeat(stock, int(s.remargin_min))[:minutes]
-        return full, impaired
-    return float(stock.mean() * s.horizon_days), impaired
+        return full, impaired, info
+    return float(stock.mean() * s.horizon_days), impaired, info
 
 
 # ---------------------------------------------------------------------------------- driver
@@ -511,6 +538,7 @@ def run(s: Scenario, regimes: dict, cache: Path | None = None) -> dict:
     tr = trades(s, d, rng, trade_minutes)
     c = contracts(s, tr, px, rng)
     c["P_path"] = px
+    c["sigma_1m"] = d["sigma_1m"]
     if s.price_mode == "empirical":
         s.btc_usd = float(np.median(px))
     out = dict(scenario=asdict(s), contracts=c["n"], matched_btc=c["V_btc"], gross_obligation_btc=float(c["owed"].sum()),
@@ -523,6 +551,7 @@ def run(s: Scenario, regimes: dict, cache: Path | None = None) -> dict:
         "C_pm": lambda: arch_C(s, c, minutes, pm=True),
         "D": lambda: arch_D(s, c, minutes),
         "E": lambda: arch_C(s, c, minutes, frictionless=True),
+        "C_pmg": lambda: arch_C(s, c, minutes, pm="gapped"),
         "E_pm": lambda: arch_C(s, c, minutes, pm=True, frictionless=True),
     }
     for name, f in arms.items():

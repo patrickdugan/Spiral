@@ -22,3 +22,6 @@ import SpiralRent
 #print axioms Spiral.Rent.history_invariants
 #print axioms Spiral.Rent.undercut_profitable
 #print axioms Spiral.Rent.sustainable_markup
+#print axioms Spiral.Rent.capacity_value_le_substitute
+#print axioms Spiral.Rent.inverse_move_bound
+#print axioms Spiral.Rent.gap_buffer_covers

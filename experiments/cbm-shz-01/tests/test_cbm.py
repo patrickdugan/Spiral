@@ -1,4 +1,5 @@
 """CBM-SHZ-01 invariants on small synthetic traces (no archive data, no network)."""
+import json
 import sys
 from dataclasses import replace
 from pathlib import Path
@@ -69,6 +70,20 @@ def test_portfolio_margin_without_default_has_no_impairment():
     o = sim.run(replace(SMALL, default_prob=0.0), REG)
     assert o["arch"]["C_pm"]["impaired_claims_btc"] == 0.0
     assert o["arch"]["C_pm"]["btc_days"] < o["arch"]["C"]["btc_days"]
+
+
+def test_gapped_portfolio_margin_backs_claims_when_moves_stay_inside_gap(out):
+    # GapBuffer.lean: impairment is possible only on a move larger than g before close-out.
+    info = out["arch"]["C_pmg"]["pm_info"]
+    if info["moves_exceeding_gap"] == 0:
+        assert out["arch"]["C_pmg"]["impaired_claims_btc"] == 0.0
+    assert out["arch"]["C_pmg"]["btc_days"] < out["arch"]["C_pm"]["btc_days"]
+
+
+def test_measured_vault_exit_size_is_used():
+    rep = json.loads((HERE / "results" / "regtest_release.json").read_text())
+    assert rep["passed"] and sim.EXIT_VB["vault"] == rep["unilateral_exit"]["vsize"]
+    assert rep["clearing"]["vsize"] == 11 + 57.5 * rep["clearing"]["inputs"] + 43 * rep["clearing"]["outputs"]
 
 
 def test_maxflow_matches_cut_condition_on_random_instances():

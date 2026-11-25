@@ -37,6 +37,8 @@ SWEEPS = {
     "proof_batch_h": ("proof_batch_h", [0.25, 1.0, 6.0, 24.0]),
     "challenge_blocks": ("challenge_blocks", [6, 36, 144, 1008]),
     "advance_scope": ("advance_scope", ["all", "payouts"]),
+    "pm_gap_mult": ("pm_gap_mult", [2.0, 4.0, 8.0, 14.3]),
+    "pm_liq_lag_min": ("pm_liq_lag_min", [5.0, 10.0, 60.0]),
     "daily_volume_usd": ("daily_volume_usd", [1e6, 2e7, 1e8]),
     "n_routers": ("n_routers", [1, 4, 16]),
 }
@@ -44,7 +46,7 @@ KEEP = ("peak_btc", "btc_days", "capital_duration_days", "capital_btc_days_by_ow
         "chain_vb", "gross_settlement_btc", "net_settlement_btc", "deferred_btc", "unserved_btc", "impaired_claims_btc",
         "customer_cost_btc", "provider_cost_btc", "system_cost_btc", "system_cost_bps", "fee_ceiling_bps_vs_A", "provider_cost_bps",
         "fee_feasible_vs_A", "surplus_bps_vs_A", "capital_btc_days_saved_vs_A", "fee_ceiling_sat_per_btc_day_saved",
-        "proof_cost_btc", "proof_batches", "peak_lp_advance_btc", "verification", "objects", "by_owner")
+        "proof_cost_btc", "proof_batches", "peak_lp_advance_btc", "verification", "objects", "by_owner", "pm_info")
 
 
 def slim(out):

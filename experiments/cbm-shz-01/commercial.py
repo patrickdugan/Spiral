@@ -79,11 +79,14 @@ def duals(s, reg):
 def pooling(s, reg):
     """Per-router versus global portfolio margin (capital pooling across routers)."""
     c, minutes = build(s, reg)
-    per_router, imp_r = sim.portfolio_margin(s, c, by_router=True, minutes=minutes, series=True)
-    glob, imp_g = sim.portfolio_margin(s, c, by_router=False, minutes=minutes, series=True)
+    per_router, imp_r, _ = sim.portfolio_margin(s, c, by_router=True, minutes=minutes, series=True)
+    glob, imp_g, _ = sim.portfolio_margin(s, c, by_router=False, minutes=minutes, series=True)
+    c["sigma_1m"] = reg["days"][[d["day"] for d in reg["days"]].index(reg["regimes"][s.regime])]["sigma_1m"]
+    gap, imp_gap, info = sim.portfolio_margin(s, c, by_router=False, minutes=minutes, series=True, gapped=True)
     per_contract = float((2 * c["m"] * (c["t1"] - c["t0"]) / sim.DAY).sum())
     return dict(per_contract_margin_btc_days=per_contract, pm_per_router_btc_days=float(per_router.sum() / 1440),
                 pm_global_btc_days=float(glob.sum() / 1440), impaired_per_router_btc=imp_r, impaired_global_btc=imp_g,
+                pm_gapped_btc_days=float(gap.sum() / 1440), impaired_gapped_btc=imp_gap, gapped_info=info,
                 V_btc=c["V_btc"])
 
 
