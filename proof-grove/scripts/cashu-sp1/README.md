@@ -45,3 +45,21 @@ CPU prover reached both the 2 GiB and 2.5 GiB hard limits during proving with
 zero swap. The verified source reduction and leaves remain reusable.
 Complete settlement still requires a stock SP1 proof with the pinned public
 output and a separate Bitcoin enforcement test.
+
+## Measure an active Core checkpoint
+
+Give the sampler the Core run directory and the successful trace-free
+execution receipt for the same ELF and public digest.
+
+```bash
+python3 -B "$TOOLS/core_progress.py" "$RUN_DIR" "$NATIVE_RECEIPT"
+```
+
+The sampler reads 756 bytes per saved shard. It checks the run's effective
+nonce and counts contiguous execution timestamps from the first shard.
+It reports the covered clock against the independent guest's total clock.
+The count represents checkpoint metadata. Non-execution shards, proof
+verification, recursive compression, wrapping and settlement each require
+separate measurements.
+
+[Pinned SP1 Core public values](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/air/public_values.rs) · [Pinned SP1 shard proof encoding](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/verifier/proof.rs)

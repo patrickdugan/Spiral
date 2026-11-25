@@ -2,6 +2,7 @@ import struct
 import unittest
 
 import index_archive as index
+from core_progress import clock_frontier, execution_interval
 from plan_prefix import candidate_path
 from verify_prefix import check_chain
 
@@ -12,6 +13,34 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual(index.timestamp((0, 0, 59, 53937)), 3920561)
         with self.assertRaisesRegex(ValueError, 'timestamp limb'):
             index.timestamp((0, 256, 0, 0))
+
+    def test_core_public_header_binds_the_nonce_and_execution_range(self):
+        words = [0] * 187
+        words[88] = words[150] = 1
+        words[116] = 1
+        words[117:121] = [0, 0, 59, 53937]
+        words[152:156] = [5, 6, 7, 8]
+        def encode():
+            return struct.pack('<Q187I', 187, *words)
+        self.assertEqual(execution_interval(encode(), (5, 6, 7, 8)), (1, 3920561))
+        with self.assertRaisesRegex(ValueError, 'nonce'):
+            execution_interval(encode(), (0, 0, 0, 0))
+        with self.assertRaisesRegex(ValueError, 'complete'):
+            execution_interval(encode()[:-1], (5, 6, 7, 8))
+        words[88] = words[150] = 0
+        words[117:121] = words[113:117]
+        self.assertIsNone(execution_interval(encode(), (5, 6, 7, 8)))
+        words[156] = 1
+        with self.assertRaisesRegex(ValueError, 'layout'):
+            execution_interval(encode(), (5, 6, 7, 8))
+
+    def test_core_clock_frontier_stops_at_the_first_missing_execution_interval(self):
+        self.assertEqual(clock_frontier([(31, 40), (1, 11), (11, 21)], 49), (21, 2, 40))
+        self.assertEqual(clock_frontier([(1, 50)], 49), (50, 1, 50))
+        with self.assertRaisesRegex(ValueError, 'overlapping'):
+            clock_frontier([(1, 11), (10, 12)], 49)
+        with self.assertRaisesRegex(ValueError, 'executed clock'):
+            clock_frontier([(1, 51)], 49)
 
     def test_public_row_rejects_nonce_and_length_changes(self):
         row = bytearray(index.FIELDS.size)
