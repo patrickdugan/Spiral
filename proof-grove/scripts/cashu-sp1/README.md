@@ -120,4 +120,10 @@ stalls, OOM kills and unknown exits leave a terminal receipt for inspection.
 The resume launcher checks the pinned run manifest, exclusive worker lock
 and absence of an assembled proof before creating another attempt.
 
+The compressed raw launcher prefers the existing prover build on the Windows
+SSD when it is executable in WSL. The same binary digest is checked for the
+SSD and WSL-installed copies. The run directory and archive stay on the
+separately mounted checkpoint volume. The resume attempt records its actual
+binary path in `input-pins.log` and retains the launcher it ran.
+
 Run `test-core-continuation.ps1` to exercise the exit classification.
