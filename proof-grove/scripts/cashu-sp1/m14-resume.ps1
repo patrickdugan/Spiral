@@ -1,18 +1,27 @@
-function Read-CashuM14Storage($Path, [string[]]$Roots, [string]$SetupName, [long]$FanoutBytes, [long]$TapeBytes) {
+function Read-CashuM14Storage($Path, [string[]]$Roots, [string]$SetupName, [long]$FanoutBytes, [long]$TapeBytes,
+                             [switch]$AllowBtrfs) {
     $stored = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
     $compressed = $stored.fanout_compressed
+    $btrfs = $stored.fanout_btrfs
     if ($compressed -isnot [bool] -or $stored.fanout_bytes -ne $FanoutBytes -or $stored.tape_and_labels_bytes -ne $TapeBytes) {
         throw 'Saved M14 scratch placement differs from the measured circuit.'
     }
-    $fanoutName = if ($compressed) { "$SetupName-compressed-fanout" } else { $SetupName }
-    $fanoutOptions = @($Roots | ForEach-Object { Join-Path $_ $fanoutName })
+    if (($null -ne $btrfs -and $btrfs -isnot [bool]) -or ($btrfs -and ($compressed -or !$AllowBtrfs))) {
+        throw 'Saved M14 scratch placement has an invalid fanout filesystem.'
+    }
+    $fanoutOptions = if ($btrfs) { @(Join-Path (Get-CashuM14BtrfsRoot) "$SetupName-btrfs-fanout") }
+        else {
+            $fanoutName = if ($compressed) { "$SetupName-compressed-fanout" } else { $SetupName }
+            @($Roots | ForEach-Object { Join-Path $_ $fanoutName })
+        }
     $tapeOptions = @($Roots | ForEach-Object { Join-Path $_ $SetupName })
     if ($stored.fanout_directory -notin $fanoutOptions -or $stored.tape_directory -notin $tapeOptions -or
             !(Test-Path -LiteralPath $stored.fanout_directory -PathType Container) -or
             !(Test-Path -LiteralPath $stored.tape_directory -PathType Container)) {
         throw 'Saved M14 scratch directories are unavailable for this settlement.'
     }
-    $budget = if ($compressed) { Get-CashuM14CompressedFanoutBudget $FanoutBytes } else { $FanoutBytes }
+    $budget = if ($btrfs) { Get-CashuM14BtrfsFanoutBudget $FanoutBytes }
+        elseif ($compressed) { Get-CashuM14CompressedFanoutBudget $FanoutBytes } else { $FanoutBytes }
     if ($stored.fanout_physical_budget_bytes -ne $budget) {
         throw 'Saved M14 fanout budget differs from the measured circuit.'
     }

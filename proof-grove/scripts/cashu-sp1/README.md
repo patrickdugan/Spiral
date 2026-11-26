@@ -99,6 +99,17 @@ the 2 GiB filesystem reserve. The D:-backed ext4 fallback preserves 32 GiB on
 D: for the later wrap. The placement receipt pins the selected site to the
 archive index. Resuming uses the same site and rechecks its reserves.
 
+The raw M14 release uses raw scratch when both outputs fit. Its fallback
+writes the original fanout format through the Windows WSL share into the
+pinned zstd-compressed Btrfs checkpoint volume. Ciphertexts and labels stay
+on a Windows drive. Placement budgets the fanout against both Btrfs free
+space and Windows E: backing space. The process guard rechecks both reserves.
+The saved placement fixes the backend and paths for retry.
+
+The Windows NTFS control reserved the logical size of a freshly compressed
+file in addition to its allocated extents. New M14 attempts select Btrfs for
+compressed scratch. Saved NTFS packages remain readable.
+
 ## Audit saved Core shards during proving
 
 Use `audit_core_prefix.py` with the pinned streaming verifier and independently

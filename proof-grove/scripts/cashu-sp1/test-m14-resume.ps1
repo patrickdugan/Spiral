@@ -29,6 +29,22 @@ try {
     $storage | ConvertTo-Json | Set-Content -LiteralPath $storagePath
     Assert-Refused { Read-CashuM14Storage $storagePath @($primary,$alternate) $name 1024L 80L } '*fanout budget*'
 
+    $mockBtrfsRoot = Join-Path $fixture 'checkpoint-volume'
+    function Get-CashuM14BtrfsRoot { $mockBtrfsRoot }
+    $btrfsFanout = Join-Path $mockBtrfsRoot "$name-btrfs-fanout"
+    New-Item -ItemType Directory -Path $btrfsFanout -Force | Out-Null
+    $storage.fanout_directory = $btrfsFanout
+    $storage.fanout_compressed = $false
+    $storage.fanout_btrfs = $true
+    $storage.fanout_physical_budget_bytes = Get-CashuM14BtrfsFanoutBudget 1024L
+    $storage | ConvertTo-Json | Set-Content -LiteralPath $storagePath
+    $stored = Read-CashuM14Storage $storagePath @($primary,$alternate) $name 1024L 80L -AllowBtrfs
+    if ($stored.fanout_directory -cne $btrfsFanout -or $stored.tape_directory -cne $tape) { throw 'Btrfs placement changed on retry.' }
+    Assert-Refused { Read-CashuM14Storage $storagePath @($primary,$alternate) $name 1024L 80L } '*invalid fanout filesystem*'
+    $storage.fanout_directory = $fanout
+    $storage | ConvertTo-Json | Set-Content -LiteralPath $storagePath
+    Assert-Refused { Read-CashuM14Storage $storagePath @($primary,$alternate) $name 1024L 80L -AllowBtrfs } '*scratch directories are unavailable*'
+
     if (Test-CashuM14CompletedRun $fixture 'export-staged') { throw 'A fresh phase was counted as complete.' }
     Set-Content -LiteralPath "$fixture/export-staged.stdout.log" -Value 'start'
     Assert-Refused { Test-CashuM14CompletedRun $fixture 'export-staged' } '*stopped before recording*'
@@ -39,7 +55,7 @@ try {
     Set-Content -LiteralPath "$fixture/export-staged.json" -Value '{}'
     if (!(Test-CashuM14CompletedRun $fixture 'export-staged')) { throw 'A successful native export could not be rechecked.' }
     if (Test-CashuM14CompletedRun $fixture 'evaluate-staged') { throw 'The evaluation borrowed the export evidence.' }
-    'Ten M14 restart controls passed.'
+    'Thirteen M14 restart controls passed.'
 } finally {
     $resolved = (Resolve-Path -LiteralPath $fixture).Path
     if ($resolved -cne [IO.Path]::GetFullPath($fixture)) { throw 'Unexpected fixture path.' }
