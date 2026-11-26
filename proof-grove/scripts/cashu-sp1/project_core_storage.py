@@ -6,8 +6,12 @@ import json
 import math
 import os
 from pathlib import Path
+import time
 
 from core_progress import CORE_HEADER_SIZE, SHA256, execution_interval, execution_reference, load_metadata
+
+
+BTRFS_EXTENT_SETTLE_SECONDS = 120
 
 
 def memo_events(progress):
@@ -28,6 +32,18 @@ def memo_events(progress):
     return events
 
 
+def storage_sample(events, sample_count, *, now, minimum_age):
+    # Publication precedes compressed extent writeback. Read settled files
+    # without flushing the live prover's filesystem or changing its I/O load.
+    end = len(events)
+    while end and events[end - 1]['t'] > now - minimum_age:
+        end -= 1
+    sample = events[max(0, end - sample_count):end]
+    if len(sample) != sample_count or any(event['t'] > now - minimum_age for event in sample):
+        raise ValueError('not enough settled shard events for a storage sample')
+    return sample
+
+
 def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, sample_count, *, btrfs_extents=False):
     manifest_data, manifest = load_metadata(run / 'run.json')
     execution_data, receipt = load_metadata(execution)
@@ -37,7 +53,9 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
     events = memo_events(run / 'progress.jsonl')
     if not 2 <= sample_count <= 64 or len(events) < sample_count or not 0 <= baseline_shards < len(events):
         raise ValueError('expected a bounded shard sample and an earlier filesystem baseline')
-    sample = events[-sample_count:]
+    sampled_at = time.time()
+    minimum_age = BTRFS_EXTENT_SETTLE_SECONDS if btrfs_extents else 0
+    sample = storage_sample(events, sample_count, now=sampled_at, minimum_age=minimum_age)
     keys = {event['key'] for event in sample}
     locations = {}
     with os.scandir(run / 'memo/shard') as candidates:
@@ -92,6 +110,9 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         'baseline_saved_shards': baseline_shards,
         'saved_shards': len(events),
         'sampled_shards': sample_count,
+        'sampled_at_unix': sampled_at,
+        'sample_latest_event_unix': sample[-1]['t'],
+        'sample_minimum_age_seconds': minimum_age,
         'sampled_average_logical_bytes': average_logical,
         'sampled_average_inode_accounted_bytes': sum(accounted_sizes) / sample_count,
         'observed_filesystem_growth_bytes_per_shard': growth,
@@ -118,7 +139,8 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
             'sampled_memos_with_multiple_links': sum(count > 1 for count in link_counts),
             'estimated_additional_memo_extent_bytes': projected_memos,
             'headroom_after_memo_extents_and_archive_bytes': available - projected_memos - archive_pilot,
-            'memo_extent_scope': 'Data extents only, before other live artifacts and filesystem overhead.',
+        'memo_extent_scope': ('Settled data extents only, before other live artifacts and filesystem overhead. '
+                              'Work committed after the sample is included in the remaining-work allowance.'),
         })
     return result
 

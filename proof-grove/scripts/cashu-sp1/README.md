@@ -81,6 +81,14 @@ Supply `--execution-receipt RECEIPT` to update the reference for a saved
 window. The sampler checks the new receipt against the same ELF and public
 digest. Finished attempts can use their archived `progress.jsonl` snapshot.
 
+For capacity at archive assembly, `project_core_storage.py` reports estimates
+from observed filesystem growth and from the sampled proof data extents.
+With `--measure-btrfs-extents`, it reads shard files published at least two
+minutes ago so compressed writeback can settle without an explicit flush.
+The extent estimate covers memo data and projected archive bytes. Use the
+filesystem-growth estimate to account for the other allocations observed
+between the storage baseline and the sample.
+
 ## Audit saved Core shards during proving
 
 Use `audit_core_prefix.py` with the pinned streaming verifier and independently

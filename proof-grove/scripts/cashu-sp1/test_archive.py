@@ -5,6 +5,7 @@ import index_archive as index
 from core_progress import clock_frontier, execution_interval, execution_reference
 from measure_core_window import compare_reference_clock
 from plan_prefix import candidate_path
+from project_core_storage import storage_sample
 from verify_prefix import check_chain
 
 
@@ -43,6 +44,13 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'executed clock'):
             clock_frontier([(1, 51)], 49)
         self.assertEqual(clock_frontier([(1, 51)], None), (51, 1, 51))
+
+    def test_storage_projection_uses_settled_memos_without_flushing_the_live_volume(self):
+        events = [{'t': stamp} for stamp in (100, 160, 200, 230, 260, 300)]
+        self.assertEqual(storage_sample(events, 2, now=320, minimum_age=120), events[1:3])
+        self.assertEqual(storage_sample(events, 2, now=320, minimum_age=0), events[-2:])
+        with self.assertRaisesRegex(ValueError, 'not enough settled'):
+            storage_sample(events, 2, now=250, minimum_age=120)
 
     def test_live_clock_overrun_supersedes_the_reference_estimate(self):
         missing = compare_reference_clock(11, None, 2)
