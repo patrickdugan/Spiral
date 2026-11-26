@@ -4,6 +4,7 @@ param([switch]$Archive, [switch]$M13Shrink, [switch]$M13Wrap, [switch]$RawWithdr
 $ErrorActionPreference = 'Stop'
 if (@($Archive, $M13Shrink, $M13Wrap).Where({ $_ }).Count -gt 1) { throw 'Choose one Cashu proving stage.' }
 . 'work/cashu-v4-settlement-profile.ps1'
+. "$PSScriptRoot/archive-resume.ps1"
 $settlement = Get-CashuSettlementProfile $Attempt -RawWithdrawal:$RawWithdrawal
 $cashuRoot = (Get-Location).Path
 $firstLeaf = 'outputs/cashu-v4-first-cuda-recursion-leaf'
@@ -134,36 +135,85 @@ $launchArgs = @(
     '-d','ProofGroveCashuRegtest','--user','root','--cd',"`"$linuxRoot`"",'--exec','/bin/bash',
     "$name/launch/run-cashu-capped-wsl.sh"
 ) + $linuxMode
+function Test-CashuArchiveResumeSpace {
+    $PSNativeCommandUseErrorActionPreference = $false
+    if ([ProofGroveHostMemory]::AvailableBytes() -lt $floor -or (Get-PSDrive C).Free -lt 8GB -or
+            (Get-PSDrive D).Free -lt 16GB) { return $false }
+    $placement = "$name/recursion-placement.json"
+    $selected = Get-Content -LiteralPath $placement -Raw | ConvertFrom-Json
+    $core = Get-Content -LiteralPath "$coreReport/verified.json" -Raw | ConvertFrom-Json
+    if ($selected.shard_index_sha256 -cne $core.shard_index_sha256 -or $selected.shards -ne $core.core_shards) {
+        throw 'The saved Cashu recursion placement differs from the independently verified archive.'
+    }
+    $checkpointFree = 0
+    $backingFree = 0
+    if ($selected.site -ceq 'checkpoint') {
+        try { $checkpointFree = Get-CashuM14BtrfsFree } catch { return $false }
+    } elseif ($selected.site -ceq 'backing') {
+        $filesystem = wsl.exe -d ProofGroveCashuRegtest -u root --exec /bin/findmnt -n -T /home/pgcashu -o FSTYPE 2>$null
+        if ($LASTEXITCODE -ne 0 -or $filesystem -cne 'ext4' -or !$nativeBackingD) { return $false }
+        $spaces = @(wsl.exe -d ProofGroveCashuRegtest -u root --exec /bin/df -B1 --output=avail /home/pgcashu 2>$null)
+        if ($LASTEXITCODE -ne 0 -or $spaces.Count -ne 2 -or $spaces[1].Trim() -cnotmatch '^[0-9]+$') { return $false }
+        $backingFree = [long]$spaces[1].Trim()
+    } else {
+        throw 'The saved Cashu recursion placement has an invalid scratch site.'
+    }
+    $checkpointHost = [long](Get-PSDrive E -ErrorAction SilentlyContinue).Free
+    $backingHost = if ($nativeBackingD) { (Get-PSDrive D).Free } else { 0 }
+    $spaceCheck = wsl.exe -d ProofGroveCashuRegtest -u root --cd $linuxRoot --exec python3 -B `
+        work/Spiral/proof-grove/scripts/cashu-sp1/recursion_storage.py $placement $selected.shards $selected.shard_index_sha256 `
+        $checkpointFree $backingFree $backingHost --checkpoint-host-free $checkpointHost 2>&1
+    if ($LASTEXITCODE -eq 0) { return $true }
+    if (($spaceCheck -join "`n") -like '*recorded recursion workspace is below its disk reserve*') { return $false }
+    throw "Cashu could not recheck the saved recursion placement. $spaceCheck"
+}
+
 $spill = $null
 $worker = $null
-try {
-    if ($M13Wrap -and $RawWithdrawal) {
-        $spill = New-CashuM13SpillVolume $report
-    }
-    [void](Record-CashuAvailableMemory)
-    $worker = Start-Process -FilePath wsl.exe -ArgumentList $launchArgs -WindowStyle Hidden -PassThru `
-        -RedirectStandardOutput (Join-Path $report 'supervisor.log') `
-        -RedirectStandardError (Join-Path $report 'supervisor.stderr')
-    while (!$worker.HasExited) {
-        if ((Record-CashuAvailableMemory) -lt $floor) {
-            'Windows memory fell below the 1 GiB reserve.' | Set-Content -LiteralPath $stop
-            break
+do {
+    $restart = $false
+    try {
+        if ($M13Wrap -and $RawWithdrawal) {
+            $spill = New-CashuM13SpillVolume $report
         }
-        if ($usesBackingDrive -and ((Get-PSDrive C).Free -lt 8GB -or (Get-PSDrive D).Free -lt 16GB)) {
-            'Free space fell below a drive reserve.' | Set-Content -LiteralPath $stop
-            break
+        [void](Record-CashuAvailableMemory)
+        $worker = Start-Process -FilePath wsl.exe -ArgumentList $launchArgs -WindowStyle Hidden -PassThru `
+            -RedirectStandardOutput (Join-Path $report 'supervisor.log') `
+            -RedirectStandardError (Join-Path $report 'supervisor.stderr')
+        while (!$worker.HasExited) {
+            if ((Record-CashuAvailableMemory) -lt $floor) {
+                'Windows memory fell below the 1 GiB reserve.' | Set-Content -LiteralPath $stop
+                break
+            }
+            if ($usesBackingDrive -and ((Get-PSDrive C).Free -lt 8GB -or (Get-PSDrive D).Free -lt 16GB)) {
+                'Free space fell below a drive reserve.' | Set-Content -LiteralPath $stop
+                break
+            }
+            Start-Sleep -Seconds 2
         }
-        Start-Sleep -Seconds 2
+    } finally {
+        if ($worker -and !$worker.HasExited) {
+            if (!(Test-Path -LiteralPath $stop)) { 'The Windows proving worker guard ended.' | Set-Content -LiteralPath $stop }
+            if (!$worker.WaitForExit(25000)) { throw 'The bounded proving worker has yet to acknowledge the host stop.' }
+        }
+        if ($spill) { Remove-CashuM13SpillVolume $spill }
     }
-} finally {
-    if ($worker -and !$worker.HasExited) {
-        if (!(Test-Path -LiteralPath $stop)) { 'The Windows proving worker guard ended.' | Set-Content -LiteralPath $stop }
-        if (!$worker.WaitForExit(25000)) { throw 'The bounded proving worker has yet to acknowledge the host stop.' }
+    Get-Content -LiteralPath (Join-Path $report 'supervisor.log') -Tail 18
+    Get-Content -LiteralPath (Join-Path $report 'supervisor.stderr') -Tail 10
+    if ($Archive -and $RawWithdrawal) {
+        $reason = Get-CashuArchiveInterruption $report $worker.ExitCode
+        if ($reason) {
+            $history = Save-CashuArchiveInterruption $report $reason $worker.ExitCode
+            "Cashu recursion paused for $reason. Details saved in $history."
+            while (!(Test-CashuArchiveResumeSpace)) {
+                [void](Record-CashuAvailableMemory)
+                Start-Sleep -Seconds 10
+            }
+            'The host reserves recovered. Continuing the same pinned Cashu recursion archive.'
+            $restart = $true
+        }
     }
-    if ($spill) { Remove-CashuM13SpillVolume $spill }
-}
-Get-Content -LiteralPath (Join-Path $report 'supervisor.log') -Tail 18
-Get-Content -LiteralPath (Join-Path $report 'supervisor.stderr') -Tail 10
+} while ($restart)
 if ($worker.ExitCode -ne 0) { exit $worker.ExitCode }
 if ($M13Wrap) {
     $statementPin = $settlement.assets.statement_sha256
