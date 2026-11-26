@@ -81,7 +81,14 @@ if ($usesBackingDrive -and ((Get-PSDrive C).Free -lt 8GB -or (Get-PSDrive D).Fre
     throw 'Free space is below the 8 GiB workspace or 16 GiB WSL backing reserve.'
 }
 if ($M13Wrap) {
-    if ((Get-PSDrive D).Free -lt 32GB) { throw 'The M13 wrap needs 32 GiB free on the backing drive at admission.' }
+    $wrapBackingBytes = 32GB
+    if ($RawWithdrawal) {
+        . "$PSScriptRoot/m13-spill-volume.ps1"
+        $wrapBackingBytes = Get-CashuM13SpillBackingBytes
+    }
+    if ((Get-PSDrive D).Free -lt $wrapBackingBytes) {
+        throw "The M13 wrap needs $wrapBackingBytes free bytes on the backing drive at admission."
+    }
     $name = $settlement.wrap_report
     $workerScript = 'work/run-cashu-v4-m13-stage.sh'
     $linuxMode = @('wrap-v4-m13', "$Attempt")
@@ -131,7 +138,6 @@ $spill = $null
 $worker = $null
 try {
     if ($M13Wrap -and $RawWithdrawal) {
-        . "$PSScriptRoot/m13-spill-volume.ps1"
         $spill = New-CashuM13SpillVolume $report
     }
     [void](Record-CashuAvailableMemory)

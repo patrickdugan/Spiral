@@ -30,6 +30,12 @@ class RecursionStorageTests(unittest.TestCase):
                 select(self.shards, self.index, LINUX_RESERVE, linux_free, host_free,
                        checkpoint_host_free=CHECKPOINT_HOST_RESERVE + self.scratch)
 
+    def test_backing_preserves_the_m13_image_and_its_measured_metadata(self):
+        self.assertEqual(BACKING_RESERVE, 34_904_997_888)
+        with self.assertRaisesRegex(ValueError, 'neither recursion workspace'):
+            select(self.shards, self.index, LINUX_RESERVE, LINUX_RESERVE + self.scratch,
+                   32 * 1024 ** 3 + self.scratch, checkpoint_host_free=CHECKPOINT_HOST_RESERVE)
+
     def test_virtual_checkpoint_free_space_cannot_spend_the_host_reserve(self):
         checkpoint_linux = LINUX_RESERVE + self.scratch
         checkpoint_host = CHECKPOINT_HOST_RESERVE + self.scratch - 1

@@ -12,7 +12,8 @@ GIB = 1024 ** 3
 MIB = 1024 ** 2
 GROUP_SIZE = 128
 LINUX_RESERVE = 2 * GIB
-BACKING_RESERVE = 32 * GIB
+# Match the raw M13 admission budget for the D:-backed spill image.
+BACKING_RESERVE = 16 * GIB + 16896 * MIB + 8 * MIB
 CHECKPOINT_HOST_RESERVE = 8 * GIB
 
 
@@ -94,7 +95,7 @@ def main():
                 os.link(candidate, path)
     except (AttributeError, OSError, TypeError, ValueError) as error:
         parser.exit(1, f'Recursion storage is unavailable: {error}\n')
-    print(result['site'], result['group_size'])
+    print(result['site'], result['group_size'], BACKING_RESERVE)
 
 
 if __name__ == '__main__':

@@ -103,7 +103,7 @@ host_disk_available() {
 scratch_available() {
     if [[ "$workload" == withdrawal-v4-raw ]]; then
         local free field=4 reserve=8589934592
-        if [[ "$storage_site" == backing ]]; then field=3; reserve=34359738368; fi
+        if [[ "$storage_site" == backing ]]; then field=3; reserve=$backing_reserve; fi
         free=$(host_disk_available "$field")
         [[ $free =~ ^[0-9]+$ ]] && ((free >= reserve)) || return 1
     fi
@@ -202,7 +202,8 @@ if [[ "$workload" == withdrawal-v4-raw ]]; then
     selection=$(python3 -B work/Spiral/proof-grove/scripts/cashu-sp1/recursion_storage.py "$placement" "$count" \
         "$index_pin" "$(filesystem_available "$volume")" "$backing_free" "${host_free:-0}" \
         --checkpoint-host-free "${checkpoint_host_free:-0}")
-    read -r storage_site group_size <<< "$selection"
+    read -r storage_site group_size backing_reserve <<< "$selection"
+    [[ $backing_reserve =~ ^[0-9]+$ ]]
     if [[ "$storage_site" == backing ]]; then scratch=$HOME; else [[ "$storage_site" == checkpoint ]]; fi
     recursion="$scratch/cashu-v4-recursion-$manifest_pin"
     mkdir -p -- "$recursion"

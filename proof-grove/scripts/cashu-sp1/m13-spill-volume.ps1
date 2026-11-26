@@ -1,3 +1,8 @@
+function Get-CashuM13SpillBackingBytes {
+    # Preserve 16 GiB on D: with the fully allocated 16.5 GiB VHDX and its 8 MiB metadata region.
+    return 16GB + 16896MB + 8MB
+}
+
 function Invoke-CashuM13SpillLinux([string]$Action, [string]$Id) {
     $result = wsl.exe -d ProofGroveCashuRegtest -u root --cd (Get-Location).Path --exec /bin/bash `
         work/Spiral/proof-grove/scripts/cashu-sp1/m13-spill-volume.sh $Action $Id
@@ -38,7 +43,9 @@ function Remove-CashuM13SpillVolume($Volume) {
 }
 
 function New-CashuM13SpillVolume([string]$Report) {
-    if ((Get-PSDrive D).Free -lt 32GB) { throw 'The M13 spill disk needs room above the D: reserve.' }
+    if ((Get-PSDrive D).Free -lt (Get-CashuM13SpillBackingBytes)) {
+        throw 'The M13 spill disk and its metadata need space above the 16 GiB D: reserve.'
+    }
     $base = 'D:\ProofGroveCashuScratch'
     if (!(Test-Path -LiteralPath $base)) { New-Item -ItemType Directory -Path $base | Out-Null }
     $directory = Get-Item -LiteralPath $base

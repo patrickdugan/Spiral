@@ -97,9 +97,10 @@ Recursive artifacts require additional space.
 The raw recursion launcher budgets group storage using the verified shard
 index. It checks the Btrfs free space together with the Windows free space
 behind the virtual disk. Allocation on E: preserves the 8 GiB host reserve and
-the 2 GiB filesystem reserve. The D:-backed ext4 fallback preserves 32 GiB on
-D: for the later wrap. The placement receipt pins the selected site to the
-archive index. Resuming uses the same site and rechecks its reserves.
+the 2 GiB filesystem reserve. The D:-backed ext4 fallback preserves 16 GiB on
+D: plus the 16.5 GiB M13 spill image and 8 MiB of VHDX metadata. The placement
+receipt pins the selected site to the archive index. Resuming uses the same
+site and rechecks its reserves.
 
 The raw M14 release uses raw scratch when both outputs fit. Its fallback
 writes the original fanout format through the Windows WSL share into the
