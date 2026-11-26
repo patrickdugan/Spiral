@@ -99,3 +99,17 @@ python3 -B "$TOOLS/audit_core_prefix.py" --run "$RUN_DIR" --manifest-sha256 "$RU
 ```
 
 [Pinned SP1 Core public values](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/air/public_values.rs) · [Pinned SP1 shard proof encoding](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/verifier/proof.rs)
+
+## Continue the live Windows Core checkpoint
+
+From the campaign workspace, pass the active compressed attempt and its
+continuation report to `watch-cashu-raw-continuation.ps1`. The watcher uses
+the attempt's published Windows supervisor and verifier handles. After a
+clean guard stop it waits for three healthy host samples before calling
+the workspace's checkpoint resume launcher. A Linux Core progress timeout
+can trigger one automatic retry per watcher invocation. Archive-write
+stalls, OOM kills and unknown exits leave a terminal receipt for inspection.
+The resume launcher checks the pinned run manifest, exclusive worker lock
+and absence of an assembled proof before creating another attempt.
+
+Run `test-core-continuation.ps1` to exercise the exit classification.
