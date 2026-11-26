@@ -81,6 +81,11 @@ Supply `--execution-receipt RECEIPT` to update the reference for a saved
 window. The sampler checks the new receipt against the same ELF and public
 digest. Finished attempts can use their archived `progress.jsonl` snapshot.
 
+For the live raw settlement run, add `--out "$RESUME_REPORT/execution-clock-window.json"`
+to publish the receipt-backed measurement to Neon. Refresh the sample to keep
+the Core execution projection visible. It expires after 30 minutes and covers
+the measured execution clock up to the start of Core archive assembly.
+
 For capacity at archive assembly, `project_core_storage.py` reports estimates
 from observed filesystem growth and from the sampled proof data extents.
 With `--measure-btrfs-extents`, it reads shard files published at least two

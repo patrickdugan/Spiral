@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 from core_progress import CORE_HEADER_SIZE, execution_interval, execution_reference, load_metadata
 
@@ -124,5 +125,13 @@ if __name__ == "__main__":
     parser.add_argument("report", type=Path)
     parser.add_argument("previous_coverage", type=Path)
     parser.add_argument("--execution-receipt", type=Path)
+    parser.add_argument("--out", type=Path, help="publish the measured window atomically for Neon")
     args = parser.parse_args()
-    print(json.dumps(measure(args.run, args.report, args.previous_coverage, args.execution_receipt), indent=2))
+    data = json.dumps(measure(args.run, args.report, args.previous_coverage, args.execution_receipt), indent=2) + "\n"
+    if args.out is None:
+        print(data, end="")
+    else:
+        with tempfile.TemporaryDirectory(dir=args.out.parent) as scratch:
+            staged = Path(scratch) / args.out.name
+            staged.write_text(data, encoding="utf-8")
+            staged.replace(args.out)
