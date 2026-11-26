@@ -16,7 +16,7 @@ from .verifier import read_bounded
 
 
 RECEIPTS = {'issuance': 'verification.json', 'refusal': 'refusal-receipt.json',
-            'accounting': 'evidence/nova-registry-verification.json'}
+            'accounting': 'evidence/nova-registry-verification.json', 'historical': 'verification/verification.json'}
 REFUSAL_STATEMENT = 'withdrawal/final-statement.json'
 
 
@@ -105,6 +105,31 @@ def read_member(source, name, limit):
     return raw
 
 
+def historical_summary(source, receipt, descriptor):
+    proof = read_member(source, 'proof/redemption-proof.json', 6 * 1024 * 1024)
+    statement = read_member(source, 'case/statement.json', 16 * 1024)
+    audit_raw = read_member(source, 'verification/bitcoin-transaction-audit.json', 16 * 1024)
+    audit = json.loads(audit_raw)
+    proof_pin = hash32(descriptor['proof_sha256'], 'STARK proof')
+    statement_pin = hash32(descriptor['statement_sha256'], 'historical statement')
+    audit_pin = hash32(descriptor['transaction_audit_sha256'], 'historical transaction audit')
+    mutations = receipt['verified_mutated_cells']
+    if (not hashlib.sha256(proof).hexdigest() == receipt['proof_sha256'] == proof_pin
+            or not hashlib.sha256(statement).hexdigest() == receipt['statement_sha256'] == statement_pin
+            or hashlib.sha256(audit_raw).hexdigest() != audit_pin
+            or receipt['schema'] != 'rbzk/cashu-independent-verification/v1' or receipt['verified'] is not True
+            or receipt['chain_context_observed'] is not False or len(receipt['cairo_public_memory_output']) != 24
+            or [cell['index'] for cell in mutations] != list(range(24))
+            or any(type(cell['exit_code']) is not int or cell['exit_code'] != 1 for cell in mutations)
+            or audit['schema'] != 'proof-grove/exact-melt-bitcoin-transaction-audit/v1'
+            or audit['holder_signature_verified'] is not True or audit['canonical_chain_and_network_verified_offline'] is not False
+            or any(audit[field] != receipt[field] for field in ('funding_outpoint', 'payout_txid'))):
+        raise Refused('recovery_evidence_unverified')
+    return {'holder_sats': positive(audit['payout_sats'], 'historical payout'), 'public_word_mutations_rejected': len(mutations),
+            'payout_txid': hash32(audit['payout_txid'], 'historical payout'), 'proof_sha256': proof_pin,
+            'statement_sha256': statement_pin, 'chain_context_observed': False, 'holder_signature_verified': True}
+
+
 def accounting_summary(source, receipt, descriptor):
     root = json.loads(read_member(source, 'evidence/registry-root.json', 4096))
     catalog_raw = read_member(source, 'evidence/catalog.json', 128 * 1024)
@@ -159,12 +184,13 @@ def checked_archive(manifest, case):
         if publication['schema'] != 'proof-grove/protected-recovery-evidence/v1':
             raise Refused('recovery_evidence_invalid_publication')
         claim, txid, wtxid = (hash32(publication[field], field) for field in ('claim_id', 'holder_txid', 'holder_wtxid'))
-        if case == 'accounting' and case not in publication:
-            raise Refused('recovery_accounting_not_configured')
+        if case in ('accounting', 'historical') and case not in publication:
+            raise Refused(f'recovery_{case}_not_configured')
         archive = publication[case]
         pin = hash32(archive['sha256'], 'evidence archive')
         path = local_artifact(manifest, archive['file'], '.zip')
-        raw = read_bounded(path, 256 * 1024)
+        limit = 12 * 1024 * 1024 if case == 'historical' else 256 * 1024
+        raw = read_bounded(path, limit)
         if hashlib.sha256(raw).hexdigest() != pin:
             raise Refused('recovery_evidence_archive_changed')
         verification_fields = {'verification', 'verification_sha256'} & archive.keys()
@@ -176,6 +202,11 @@ def checked_archive(manifest, case):
             if case == 'accounting':
                 summary = accounting_summary(source, report, archive)
                 return CheckedEvidence({'network': 'regtest', 'archive_sha256': pin, **summary}, raw, receipt)
+            if case == 'historical':
+                if hashlib.sha256(receipt).hexdigest() != hash32(archive['receipt_sha256'], 'historical verifier receipt'):
+                    raise Refused('recovery_evidence_unverified')
+                summary = historical_summary(source, report, archive)
+                return CheckedEvidence({'archive_sha256': pin, **summary}, raw, receipt)
             statement = read_member(source, REFUSAL_STATEMENT, 64 * 1024) if verification_fields else None
         summarize = issuance_summary if case == 'issuance' else refusal_summary
         summary = {'network': 'regtest', 'holder_txid': txid, 'archive_sha256': pin, **summarize(report, claim, txid, wtxid)}

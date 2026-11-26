@@ -45,12 +45,13 @@ function loadRecoveryEvidence() {
       ? `Independent walletless replay checked ${sats(item.blocks_replayed)} blocks. The holder received ${sats(item.holder_sats)} sats at block ${sats(item.refusal_holder_height)} and the challenger received ${sats(item.challenger_sats)} sats at block ${sats(item.refusal_timeout_height)} after the ${item.timeout_blocks}-block collateral delay.`
       : `The archive records ${sats(item.holder_sats)} sats to the holder during refusal and ${sats(item.challenger_sats)} sats to the challenger after the ${item.timeout_blocks}-block collateral delay.`,
     accounting: item => `Archived regtest audit at block ${sats(item.tip_height)}. ${sats(item.declared_reserve_sats)} sats in ${sats(item.registered_reserves)} enrolled reserves, ${sats(item.outstanding_claims_sats)} sats in outstanding claims and ${sats(item.pending_issuance_sats)} sats pending issuance.`,
+    historical: item => `The archived STARK verifies the ${sats(item.holder_sats)}-sat payout statement. The holder signature and all ${item.public_word_mutations_rejected} public-word mutation checks passed. Original regtest blocks are still needed to verify chain inclusion.`,
   };
   for (const [caseName, summarize] of Object.entries(summaries)) {
     const display = $(`recovery-${caseName}-result`);
     const download = $(`recovery-${caseName}-export`);
     const verification = caseName === 'refusal' ? $('recovery-refusal-verification') : null;
-    const optional = caseName === 'accounting' ? $('recovery-accounting') : null;
+    const optional = ['accounting', 'historical'].includes(caseName) ? $(`recovery-${caseName}`) : null;
     display.textContent = 'Checking archived evidence…';
     download.hidden = true;
     if (verification) verification.hidden = true;
@@ -60,7 +61,7 @@ function loadRecoveryEvidence() {
       if (optional) optional.hidden = false;
       if (verification) verification.hidden = !item.independent_replay_verified;
     }).catch(failure => {
-      if (optional) optional.hidden = failure.message === 'recovery_accounting_not_configured';
+      if (optional) optional.hidden = failure.message === `recovery_${caseName}_not_configured`;
       display.textContent = 'The pinned archive could not be checked.';
     });
   }

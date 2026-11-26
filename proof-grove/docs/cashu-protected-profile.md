@@ -28,14 +28,22 @@ python3.11 proof-grove/scripts/audit-exact-melt-stark.py \
 A pre-existing candidate can be supplied with `--existing-proof`. Omitting both modes starts a fresh proof. The gate compares all 24 public output words against the archived statement and program hash before it accepts an independently verified proof. It then reruns the pinned verifier with one mutation per public word and archives the statement, proof, transcript and timings.
 
 The integrated verifier download includes the pinned Scarb binary, the original
-execution receipt, exact case, proof profile and holder-witness audit. Run it
-from the extracted directory on x86-64 Linux or WSL with OpenSSL installed.
+execution receipt, exact case, proof profile and holder-witness audit. Run its
+bundled STARK checker from the extracted directory on x86-64 Linux or WSL.
 
 ```sh
 chmod +x bin/scarb-verify
 python3 -B proof-grove/scripts/audit-exact-melt-stark.py \
   --case case --verifier bin/scarb-verify --profile profile.json \
-  --existing-proof proof/redemption-proof.json --holder-openssl --out verification-recheck
+  --existing-proof proof/redemption-proof.json --out verification-recheck
+```
+
+The current Spiral checkout also checks the holder signature with OpenSSL. From
+the extracted directory, set `SPIRAL` to that checkout and run the following.
+
+```bash
+python3 -B "$SPIRAL/proof-grove/scripts/audit-exact-melt-stark.py" \
+  --case case --verifier bin/scarb-verify --profile profile.json --holder-openssl --check-only
 ```
 
 The same download includes the paired historical benchmark receipt. The
@@ -443,6 +451,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 
 | Evidence | Native execution | Cryptographic verification | State-transition soundness | Bitcoin settlement |
 | --- | --- | --- | --- | --- |
+| Historical 23,750-sat proof in Cashu recovery | Desktop and mobile Chrome displayed the same result and downloaded the immutable proof archive from the live preview. Six recovery evidence tests passed. | Stock Scarb reverified the browser download and rejected all 24 public-word mutations. An OpenSSL check on the downloaded fixture verified the holder signature. The preview rejects substituted pinned evidence and an unsupported chain-inclusion claim. | The download has the original execution receipt, statement and proof. Browser and provenance evidence ZIP SHA-256 `f84a103a6e9a8d9ff1b40624021f7ed576829ee2396ee65ef4be8bd663e385cb`. | The original historical blocks and independently recorded active checkpoint remain unavailable. The proof-backed payout for the live Cashu run is pending. |
 | Recipient verification of the compressed SP1 proof | A capped, CPU-only recipient run opened the archived 25-shard reference download. The native process took 14.49 seconds and the cgroup peaked at 630,194,176 bytes with zero swap and zero OOM kills. All 22 withdrawal package tests passed. | Stock SP1 derived the program key from the independently pinned guest, verified the recursion root, and regenerated the downloaded compressed proof byte for byte. It rejected a rehashed compressed-proof substitution, a wrong shard count, a foreign root supplied with the exact raw Cashu statement, and an unpinned executable. | The recipient publication launcher checks the compressed proof before releasing the funded preview. Tool commit `bc2885c`. Control ZIP SHA-256 `8cb9c2ce6ffa11be643cd9cf1e61306cd8fae63b79d1855fdf8c22b126fa4b14`. | The fresh Cashu compressed proof and Bitcoin payout verification remain pending. |
 | Four-worker independent Core verification | On the same 128 raw Cashu shards, two workers measured 7.88 checks per second across two runs. Three workers reached 10.08 and four reached 11.20. The benchmark cgroup peaked at 273,031,168 bytes with zero swap or OOM kills. | All worker counts reproduced the independently verified 27-shard archive index byte for byte. The four-worker verifier rejected its mutated or reordered proofs. The raw sample passed the individual STARK checks and reached the incomplete-chain rejection. | The queued verifier selects four workers from the pinned benchmark admission. At the sampled pace, 38,863 shard checks would take 24.4 minutes less than the paired verifier. Archive I/O and final public-chain checks have separate costs. Evidence ZIP SHA-256 `2a462bbbe6854d73b58f50082cd6173426c53fb4c42ef5dd7b33c15a509bb1a2`. | Whole-archive verification and funded payout remain pending. |
 | Online checkpoint expansion after legacy tape retirement | The approved retirement reclaimed 15,685,750,784 bytes on E:. The same RTX worker and mounted Btrfs filesystem continued through the expansion from 80 to 96 GiB, with zero OOM kills and zero GPU cgroup swap. The projection now supports up to 512 settled shards. Twelve archive tests passed. | The resize checked the exact run manifest, a retained shard digest, the filesystem identity and the worker's process identity. The archived legacy rejection receipt and both pinned fanout recovery copies were preserved. | The 512-shard estimate left 18.05 GB on Btrfs after projected Core and recursion peaks. The heavier 64-shard scenario left 4.36 GB. These scenarios use the measured archive compression pilot. Evidence ZIP SHA-256 `6fe159adfddc1d2b6a462aa338804ea6d1594b1414c7ffdcffe34ab14da49780`. | The storage selector found an M14 placement in both scenarios with the tape on D:. D: had 468,951,040 bytes above the M13 admission budget. |

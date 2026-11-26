@@ -36,6 +36,43 @@ class RecoveryEvidenceTests(unittest.TestCase):
                     case: {'file': self.zip.name, 'sha256': hashlib.sha256(self.zip.read_bytes()).hexdigest()} | (pins or {})}
         self.publication.write_text(json.dumps(manifest | changes), encoding='utf-8')
 
+    def test_historical_redemption_binds_evidence_and_limits_the_chain_claim(self):
+        member = 'verification/verification.json'
+        statement = b'historical Cairo statement'
+        proof = b'archived Shinigami STARK'
+        audit = {'schema': 'proof-grove/exact-melt-bitcoin-transaction-audit/v1', 'payout_sats': 23750,
+                 'funding_outpoint': self.claim + ':0', 'payout_txid': self.txid,
+                 'holder_signature_verified': True, 'canonical_chain_and_network_verified_offline': False}
+        encoded_audit = json.dumps(audit).encode()
+        members = {'proof/redemption-proof.json': proof, 'case/statement.json': statement,
+                   'verification/bitcoin-transaction-audit.json': encoded_audit}
+        pins = {'proof_sha256': hashlib.sha256(proof).hexdigest(),
+                'statement_sha256': hashlib.sha256(statement).hexdigest(),
+                'transaction_audit_sha256': hashlib.sha256(encoded_audit).hexdigest()}
+        receipt = {'schema': 'rbzk/cashu-independent-verification/v1', 'verified': True,
+                   'chain_context_observed': False, 'payout_txid': self.txid, 'funding_outpoint': audit['funding_outpoint'],
+                   'cairo_public_memory_output': ['0x1'] * 24,
+                   'verified_mutated_cells': [{'index': index, 'exit_code': 1} for index in range(24)],
+                   'proof_sha256': pins['proof_sha256'], 'statement_sha256': pins['statement_sha256']}
+        pins['receipt_sha256'] = hashlib.sha256(json.dumps(receipt).encode()).hexdigest()
+        self.publish('historical', member, receipt, members=members, pins=pins)
+        checked = checked_archive(self.publication, 'historical')
+        self.assertEqual(checked.summary['holder_sats'], 23750)
+        self.assertFalse(checked.summary['chain_context_observed'])
+        self.assertEqual(json.loads(checked.verification), receipt)
+        for changes in ({'chain_context_observed': True}, {'verified_mutated_cells': receipt['verified_mutated_cells'][:-1]}):
+            with self.subTest(changes=changes):
+                changed = receipt | changes
+                repinned = pins | {'receipt_sha256': hashlib.sha256(json.dumps(changed).encode()).hexdigest()}
+                self.publish('historical', member, changed, members=members, pins=repinned)
+                with self.assertRaisesRegex(Refused, 'recovery_evidence_unverified'):
+                    checked_archive(self.publication, 'historical')
+        for path in members:
+            with self.subTest(path=path):
+                self.publish('historical', member, receipt, members=members | {path: encoded_audit + b' '}, pins=pins)
+                with self.assertRaisesRegex(Refused, 'recovery_evidence_unverified'):
+                    checked_archive(self.publication, 'historical')
+
     def test_registry_accounting_requires_the_proof_and_external_chain_pins(self):
         # The structural fixture supplies one linked header and a native receipt.
         block = b'\x01\0\0\0' + bytes.fromhex(GENESIS)[::-1] + bytes(45)
