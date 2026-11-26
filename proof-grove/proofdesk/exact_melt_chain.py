@@ -1,10 +1,13 @@
-"""Combine the archived Cairo payout statement with a pinned Core regtest chain."""
+"""Audit the archived Cairo payout's exact witness and pinned Core regtest chain."""
 
+from dataclasses import replace
 import hashlib
 
 from .domain import Refused, hash32
 from .protected_chain_archive import MAX_BLOCKS
-from .protected_payout_evidence import CHAIN_SCHEMA, _hash256, _raw, _transaction, _verify_inclusion, capture
+from .protected_payout_evidence import (
+    CHAIN_SCHEMA, _hash256, _p2wsh_sighash_all, _raw, _transaction, _verify_inclusion, _verify_signature, capture,
+)
 from .protected_reserve import GENESIS, HEX, _chain, _sats, _stable_tip
 
 
@@ -88,6 +91,58 @@ def _opening(receipt, expected):
                        "amount_sats": payout_sats, "script": payout_script},
             "wallet_melt_commitment": melt_commitment, "relative_delay_blocks": delay,
             "fee_sats": fee_sats, "change_sats": 0}
+
+
+def audit_holder_transaction(arguments, receipt, expected, openssl):
+    """Open the STARK's exact payout wtxid and independently check its holder signature."""
+    opening = _opening(receipt, expected)
+    prevout, paid = opening["funding"], opening["payout"]
+    if len(arguments) < 18 or arguments[:15] != expected[4:19]:
+        raise ValueError("Cairo transaction arguments differ from the public statement")
+    tx = _transaction(_script(arguments[15:], arguments[15]))
+    previous = bytes.fromhex(prevout["txid"])[::-1] + prevout["outpoint_vout"].to_bytes(4, "little")
+    delay = opening["relative_delay_blocks"]
+    sequence = delay.to_bytes(4, "little")
+    reserve, amount, destination = prevout["amount_sats"], paid["amount_sats"], bytes.fromhex(paid["script"])
+    if ((tx.txid, tx.wtxid) != (paid["txid"], paid["wtxid"])
+            or tx.version != b"\x02\0\0\0" or tx.locktime != bytes(4)
+            or tx.inputs != [(previous, b"", sequence)] or tx.outputs != [(amount, destination)]
+            or len(tx.witnesses) != 1 or len(tx.witnesses[0]) != 3):
+        raise ValueError("archived holder transaction does not open the Cairo payout")
+    branch, signature, script = tx.witnesses[0]
+    holder, mint = script[1:34], script[37:70]
+    if (branch or len(signature) < 2 or signature[-1] != 1 or delay != 6
+            or len(holder) != 33 or len(mint) != 33 or holder[0] not in (2, 3) or mint[0] not in (2, 3)
+            or script != b"\x21" + holder + b"\xad\x63\x21" + mint + b"\xac\x67\x56\xb2\x68"
+            or b"\x00\x20" + hashlib.sha256(script).digest() != bytes.fromhex(prevout["script"])):
+        raise ValueError("archived holder witness differs from the pinned reserve script or delay")
+
+    fields = dict(tx=tx, previous=previous, sequence=sequence, script=script, reserve=reserve)
+    sighash = _p2wsh_sighash_all(**fields)
+    der = signature[:-1]
+    _verify_signature(openssl, holder, der, sighash)
+    outputs = tx.output_bytes
+    changed_fields = {
+        "funding_txid": {"previous": bytes([previous[0] ^ 1]) + previous[1:]},
+        "funding_vout": {"previous": previous[:-1] + bytes([previous[-1] ^ 1])},
+        "sequence": {"sequence": (delay - 1).to_bytes(4, "little")},
+        "reserve_script": {"script": script[:-1] + b"\x61"},
+        "reserve_amount": {"reserve": reserve - 1},
+        "payout_amount_and_fee": {"tx": replace(tx, output_bytes=(amount - 1).to_bytes(8, "little") + outputs[8:])},
+        "beneficiary": {"tx": replace(tx, output_bytes=outputs[:-1] + bytes([outputs[-1] ^ 1]))},
+    }
+    changes = {name: (_p2wsh_sighash_all(**(fields | fields_changed)), der)
+               for name, fields_changed in changed_fields.items()}
+    changes["signature"] = (sighash, der[:-1] + bytes([der[-1] ^ 1]))
+    for field, (message, candidate) in changes.items():
+        try:
+            _verify_signature(openssl, holder, candidate, message)
+        except ValueError:
+            continue
+        raise ValueError(f"holder signature accepted a changed {field}")
+    return {"schema": "proof-grove/exact-melt-holder-audit/v1", "statement_sha256": receipt["statement_sha256"],
+            **opening, "holder_pubkey": holder.hex(), "bip143_sighash_all": sighash.hex(),
+            "holder_signature_verified": True, "signature_mutations_rejected": list(changes)}
 
 
 def observe(core, receipt, expected, anchor_height, anchor_hash):

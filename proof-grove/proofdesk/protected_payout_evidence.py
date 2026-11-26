@@ -183,6 +183,12 @@ def _verify_signature(openssl, pubkey, signature, sighash):
         raise ValueError("holder BIP143 signature verification failed")
 
 
+def _p2wsh_sighash_all(tx, previous, sequence, script, reserve):
+    return _hash256(b"".join((tx.version, _hash256(previous), _hash256(sequence), previous,
+                             bytes([len(script)]), script, reserve.to_bytes(8, "little"), sequence,
+                             _hash256(tx.output_bytes), tx.locktime, b"\x01\0\0\0")))
+
+
 def _verify_holder_witness(tx, previous, plan, openssl):
     sequence = positive(plan["delay_blocks"], "delay_blocks", 65535).to_bytes(4, "little")
     reserve = positive(plan["reserve_sats"], "reserve_sats")
@@ -194,9 +200,7 @@ def _verify_holder_witness(tx, previous, plan, openssl):
     branch, signature, preimage, witness_script = tx.witnesses[0]
     if branch or signature[-1:] != b"\x01" or preimage.hex() != plan["issuance_preimage"] or witness_script != script:
         raise ValueError("protected payout witness or SIGHASH_ALL mismatch")
-    sighash = _hash256(b"".join((tx.version, _hash256(previous), _hash256(sequence), previous,
-                                 bytes([len(script)]), script, reserve.to_bytes(8, "little"), sequence,
-                                 _hash256(tx.output_bytes), tx.locktime, b"\x01\0\0\0")))
+    sighash = _p2wsh_sighash_all(tx, previous, sequence, script, reserve)
     _verify_signature(openssl, _raw(plan["holder_pubkey"], 33, 33), signature[:-1], sighash)
 
 

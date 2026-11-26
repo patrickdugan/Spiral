@@ -199,6 +199,8 @@ def main():
     mode.add_argument('--check-only', action='store_true')
     mode.add_argument('--execute-only', action='store_true', help='replay Cairo without starting the prover')
     parser.add_argument('--verifier-cwd', type=Path)
+    parser.add_argument('--holder-openssl', nargs='?', const='openssl',
+                        help='independently check the exact payout witness with OpenSSL')
     chain_source = parser.add_mutually_exclusive_group()
     chain_source.add_argument('--core-config', type=Path, help='Proof Grove config for a separate local Core observer')
     chain_source.add_argument('--chain-context', type=Path, help='archived Bitcoin witness context to verify offline')
@@ -229,9 +231,18 @@ def main():
         check(verifier, receipt['input_sha256']['bin/scarb-verify'])
     if args.existing_proof:
         pinned_proof_profile(json.loads(read(args.existing_proof, MAX_RAW_PROOF)), profile)
+    if args.holder_openssl or args.core_config or args.chain_context:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    holder_audit = None
+    if args.holder_openssl:
+        from proofdesk.exact_melt_chain import audit_holder_transaction
+
+        words = json.loads(read(case / 'honest.args.json', 64 * 1024))
+        if not isinstance(words, list) or any(not isinstance(word, str) or not FELT_HEX.fullmatch(word) for word in words):
+            raise ValueError('invalid Cairo transaction argument encoding')
+        holder_audit = audit_holder_transaction([int(word, 16) for word in words], receipt, expected, args.holder_openssl)
     chain_observation = None
     if args.core_config or args.chain_context:
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
         from proofdesk.exact_melt_chain import observe_witness_context, verify_witness_context
 
         if args.core_config:
@@ -243,21 +254,26 @@ def main():
             chain_observation = json.loads(read(args.chain_context, 2 * 1024 * 1024))
             chain_observation['witness_verification'] = verify_witness_context(
                 chain_observation, receipt, expected, args.anchor_height, args.anchor_hash)
-    chain_status = {'chain_context_observed': bool(args.core_config),
-                    'chain_context_witness_verified': chain_observation is not None}
+    evidence_status = {'chain_context_observed': bool(args.core_config),
+                       'chain_context_witness_verified': chain_observation is not None,
+                       'holder_signature_verified': holder_audit is not None}
     if args.check_only:
         print(json.dumps({'status': 'exact_case_available', 'outpoint': receipt['funding_outpoint'],
-                          'expected_public_output_words': len(expected), **chain_status}))
+                          'expected_public_output_words': len(expected), **evidence_status}))
         return
 
     result = args.out.resolve()
     result.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(case / 'statement.json', result / 'statement.json')
+    if holder_audit is not None:
+        holder_file = result / 'holder-transaction-audit.json'
+        holder_file.write_text(json.dumps(holder_audit, indent=2) + '\n', encoding='utf-8')
+        evidence_status['holder_transaction_audit_sha256'] = sha256(holder_file)
     report = run_kit(runner, case, result, args, expected) if runner else {'phases': {}}
     if args.execute_only:
         if chain_observation is not None:
             (result / 'chain-context.json').write_text(json.dumps(chain_observation, indent=2) + '\n', encoding='utf-8')
-        print(json.dumps({'status': report['status'], 'public_words_matched': len(expected), **chain_status,
+        print(json.dumps({'status': report['status'], 'public_words_matched': len(expected), **evidence_status,
                           'execution': report['phases']['execute']}))
         return
     proof = result / 'redemption-proof.json'
@@ -274,7 +290,7 @@ def main():
     verification = {
         'schema': 'rbzk/cashu-independent-verification/v1',
         'verified': True, 'proof_sha256': digest, 'statement_sha256': receipt['statement_sha256'],
-        **chain_status,
+        **evidence_status,
         'verifier_id': receipt['input_sha256']['bin/scarb-verify'], 'program': receipt['program'],
         'proof_profile_sha256': receipt['input_sha256']['profile.json'], 'verified_proof_profile': verified_profile,
         'funding_outpoint': receipt['funding_outpoint'], 'payout_txid': receipt['confirmed_spend'],

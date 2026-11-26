@@ -1,16 +1,18 @@
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import unittest
 
 from proofdesk.domain import Refused
-from proofdesk.exact_melt_chain import WITNESS_CONTEXT_SCHEMA, observe, verify_witness_context
+from proofdesk.exact_melt_chain import WITNESS_CONTEXT_SCHEMA, audit_holder_transaction, observe, verify_witness_context
 from proofdesk.protected_payout_evidence import _transaction
 from proofdesk.protected_reserve import GENESIS
 from test_protected_payout_evidence import fixture, hash256, little
 
 
 FIXTURE = Path(__file__).resolve().parents[2] / "codex-campaign-2026-11-23" / "outputs"
+OPENSSL = shutil.which("openssl")
 RESERVE = "002059e8332f9a24f42a628572cfdfe3fd4822ad1c3f708ec73648de8531d2b10c58"
 DESTINATION = "0014f52d0a091f630149ef614456e5bf58d831ad6b67"
 PAYOUT = (
@@ -85,6 +87,25 @@ class ExactMeltChainTest(unittest.TestCase):
 
     def observe(self):
         return observe(self.core, self.receipt, self.words, 111, "ff" * 32)
+
+    @unittest.skipUnless(OPENSSL, "OpenSSL is required for the independent holder signature test")
+    def test_opens_the_exact_stark_witness_and_rejects_signature_mutations(self):
+        def arguments(raw):
+            full, tail = divmod(len(raw), 31)
+            words = [int.from_bytes(raw[offset:offset + 31], "big") for offset in range(0, 31 * full, 31)]
+            return self.words[4:19] + [full, *words, int.from_bytes(raw[31 * full:], "big"), tail]
+
+        raw = bytearray.fromhex(PAYOUT)
+        observed = audit_holder_transaction(arguments(raw), self.receipt, self.words, OPENSSL)
+        self.assertTrue(observed["holder_signature_verified"])
+        self.assertEqual(observed["bip143_sighash_all"], "0010ae6e931db779179d4e5fce2ae560201dbb9d3f2e6f0b7dae40d7cb23590b")
+        self.assertEqual(observed["signature_mutations_rejected"], ["funding_txid", "funding_vout", "sequence", "reserve_script",
+                                                                "reserve_amount", "payout_amount_and_fee", "beneficiary", "signature"])
+        txid = _transaction(raw.hex()).txid
+        raw[-5] ^= 1
+        self.assertEqual(_transaction(raw.hex()).txid, txid)
+        with self.assertRaisesRegex(ValueError, "does not open the Cairo payout"):
+            audit_holder_transaction(arguments(raw), self.receipt, self.words, OPENSSL)
 
     def test_records_both_inclusions_and_the_exact_witness_transaction(self):
         result = self.observe()

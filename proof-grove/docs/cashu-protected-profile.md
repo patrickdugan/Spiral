@@ -27,15 +27,15 @@ python3.11 proof-grove/scripts/audit-exact-melt-stark.py \
 
 A pre-existing candidate can be supplied with `--existing-proof`. Omitting both modes starts a fresh proof. The gate compares all 24 public output words against the archived statement and program hash before it accepts an independently verified proof. It then reruns the pinned verifier with one mutation per public word and archives the statement, proof, transcript and timings.
 
-The compact verifier download includes the pinned Scarb binary, the original
-execution receipt, exact case and proof profile. Run standalone verification
-from the extracted directory on x86-64 Linux or WSL.
+The integrated verifier download includes the pinned Scarb binary, the original
+execution receipt, exact case, proof profile and holder-witness audit. Run it
+from the extracted directory on x86-64 Linux or WSL with OpenSSL installed.
 
 ```sh
 chmod +x bin/scarb-verify
 python3 -B proof-grove/scripts/audit-exact-melt-stark.py \
   --case case --verifier bin/scarb-verify --profile profile.json \
-  --existing-proof proof/redemption-proof.json --out verification-recheck
+  --existing-proof proof/redemption-proof.json --holder-openssl --out verification-recheck
 ```
 
 The same download includes the paired historical benchmark receipt. The
@@ -50,6 +50,8 @@ The verification ZIP SHA-256 is
 The recovered 21-word payload carries the funding txid and index, reserve amount and script, funding and spend heights, claim commitment, destination script, payout amount, transaction ID and witness transaction ID. Bitcoin network, block inclusion and canonical chain selection require a separate header or Core observer binding. The exact case spends one reserve input to one payout output. Their value difference is 250 sats. Cashu melt change belongs to the cooperative funding step and requires separate evidence.
 
 An offline transaction audit decoded the payout, recomputed both transaction IDs, matched the reserve script hash and independently verified the holder's BIP143 signature with OpenSSL. The verifier rejected substitutions of the funding txid, output index, sequence, reserve script and amount, payout amount, destination and signature. The heights remain statements from the historical observer. [BIP143](https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki)
+
+The integrated run checks that the raw witness opens the same txid and wtxid authenticated by the STARK. It recorded the 24 public-word rejections and eight BIP143 controls in 10.15 seconds with 83,860 KiB peak RSS. The main verification receipt pins `holder-transaction-audit.json`. The integrated download SHA-256 is `c15d99e8505e0949cb7c0988b2c82774bffc940df3b37a173ab1513bbecfdd1e`.
 
 To bind the exact Cairo statement to the historical chain, supply the original blocks to a separate local regtest Core node. Pass its Proof Grove config and a trusted checkpoint at or after the payout height using `--core-config CONFIG --anchor-height HEIGHT --anchor-hash HASH`. The audit checks regtest genesis, the independently pinned active checkpoint, both transaction inclusions, the precise mined payout witness, the funding and beneficiary scripts, amounts and CSV maturity. It archives the header chain, raw funding and payout transactions, ordered Merkle leaves and payout coinbase in `chain-context.json` and commits the file digest in the verification receipt. Pass that download back with `--chain-context PATH --anchor-height HEIGHT --anchor-hash HASH` to independently check the BIP141 witness commitment and the header chain offline. The offline chain check takes the active checkpoint from an independent observer. The recovered case has no original chain snapshot or block artifacts, so the historical chain observation remains outstanding. [Bitcoin Core transaction lookup](https://bitcoincore.org/en/doc/31.0.0/rpc/rawtransactions/getrawtransaction/), [Bitcoin Core inclusion verification](https://bitcoincore.org/en/doc/31.0.0/rpc/blockchain/verifytxoutproof/)
 
