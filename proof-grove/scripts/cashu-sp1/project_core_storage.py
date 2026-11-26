@@ -69,17 +69,22 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         raise ValueError('a sampled durable shard is missing')
     config = manifest['config']
     nonce = tuple(config['nonce']) if config.get('controller_nonce') is True else (0, 0, 0, 0)
-    ranges, sizes, accounted_sizes, link_counts = [], [], [], []
-    for event in sample:
+    ranges, execution_indexes, sizes, accounted_sizes, link_counts = [], [], [], [], []
+    for index, event in enumerate(sample):
         with locations[event['key']].open('rb') as proof:
             interval = execution_interval(proof.read(CORE_HEADER_SIZE), nonce)
             size = os.fstat(proof.fileno())
-        if interval is None or interval[1] > trace_clock + 1:
-            raise ValueError('the sampled suffix is not execution-clock work')
-        ranges.append(interval)
+        if interval is not None:
+            if interval[1] > trace_clock + 1:
+                raise ValueError('the sampled execution interval exceeds the trace clock')
+            ranges.append(interval)
+            execution_indexes.append(index)
         sizes.append(size.st_size)
         accounted_sizes.append(size.st_blocks * 512)
         link_counts.append(size.st_nlink)
+    ranges.sort()
+    if len(ranges) < 2:
+        raise ValueError('the storage sample needs at least two execution shards')
     if any(left[1] != right[0] for left, right in zip(ranges, ranges[1:])):
         raise ValueError('the measured execution shards do not form a contiguous suffix')
 
@@ -89,11 +94,11 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
     if used <= baseline_bytes or baseline_bytes < 0:
         raise ValueError('filesystem occupancy did not advance from its supplied baseline')
     growth = (used - baseline_bytes) / (len(events) - baseline_shards)
-    ticks_per_shard = (ranges[-1][1] - ranges[0][0]) / sample_count
+    ticks_per_shard = (ranges[-1][1] - ranges[0][0]) / len(ranges)
     remaining = math.ceil((trace_clock - (ranges[-1][1] - 1)) / ticks_per_shard)
-    total_execution_estimate = len(events) + remaining
     average_logical = sum(sizes) / sample_count
-    archive_logical = math.ceil(total_execution_estimate * average_logical)
+    average_execution_logical = sum(sizes[index] for index in execution_indexes) / len(ranges)
+    archive_logical = math.ceil(len(events) * average_logical + remaining * average_execution_logical)
     pilot_data = pilot['compressed_data_bytes']
     pilot_logical = pilot['logical_shard_bytes']
     if not 0 < pilot_data <= pilot_logical:
@@ -110,10 +115,13 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         'baseline_saved_shards': baseline_shards,
         'saved_shards': len(events),
         'sampled_shards': sample_count,
+        'sampled_execution_shards': len(ranges),
+        'sampled_non_execution_shards': sample_count - len(ranges),
         'sampled_at_unix': sampled_at,
         'sample_latest_event_unix': sample[-1]['t'],
         'sample_minimum_age_seconds': minimum_age,
         'sampled_average_logical_bytes': average_logical,
+        'sampled_average_execution_logical_bytes': average_execution_logical,
         'sampled_average_inode_accounted_bytes': sum(accounted_sizes) / sample_count,
         'observed_filesystem_growth_bytes_per_shard': growth,
         'execution_clock_pct': 100 * (ranges[-1][1] - 1) / trace_clock,
@@ -132,10 +140,12 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         extents = [usage(locations[event['key']]) for event in sample]
         if any(extent['logical_bytes'] != size for extent, size in zip(extents, sizes, strict=True)):
             raise ValueError('a sampled shard changed during extent measurement')
-        average_physical = sum(extent['physical_extent_bytes'] for extent in extents) / sample_count
-        projected_memos = math.ceil(remaining * average_physical)
+        physical_sizes = [extent['physical_extent_bytes'] for extent in extents]
+        average_execution_physical = sum(physical_sizes[index] for index in execution_indexes) / len(ranges)
+        projected_memos = math.ceil(remaining * average_execution_physical)
         result.update({
-            'sampled_average_memo_extent_bytes': average_physical,
+            'sampled_average_memo_extent_bytes': sum(physical_sizes) / sample_count,
+            'sampled_average_execution_memo_extent_bytes': average_execution_physical,
             'sampled_memos_with_multiple_links': sum(count > 1 for count in link_counts),
             'estimated_additional_memo_extent_bytes': projected_memos,
             'headroom_after_memo_extents_and_archive_bytes': available - projected_memos - archive_pilot,

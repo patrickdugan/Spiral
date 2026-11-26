@@ -1,11 +1,16 @@
+import json
+import os
+from pathlib import Path
 import struct
+from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 import index_archive as index
 from core_progress import clock_frontier, execution_interval, execution_reference
 from measure_core_window import compare_reference_clock
 from plan_prefix import candidate_path
-from project_core_storage import storage_sample
+from project_core_storage import project, storage_sample
 from verify_prefix import check_chain
 
 
@@ -51,6 +56,45 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual(storage_sample(events, 2, now=320, minimum_age=0), events[-2:])
         with self.assertRaisesRegex(ValueError, 'not enough settled'):
             storage_sample(events, 2, now=250, minimum_age=120)
+
+    @unittest.skipUnless(hasattr(os, 'statvfs'), 'requires POSIX filesystem accounting')
+    def test_storage_projection_skips_non_execution_shards_only_for_the_clock_and_future_sizes(self):
+        with TemporaryDirectory() as directory:
+            run = Path(directory)
+            elf, public = 'aa' * 32, 'bb' * 32
+            (run / 'run.json').write_text(json.dumps({
+                'schema': 'nb3-prover/core-run/v1', 'expected_public_sha256': public,
+                'config': {'sp1_version': '6.9.0', 'elf_sha256': elf},
+            }))
+            receipt = run / 'receipt.json'
+            receipt.write_text(json.dumps({
+                'executor': 'sp1-minimal-untraced', 'stage': 'guest_execution', 'elf_sha256': elf,
+                'committed_values_sha256': public, 'exit_code': 0, 'instruction_count': 5,
+                'trace_clock': 40, 'trace_clock_domain': 'sp1_core_timestamp',
+            }))
+            samples = ((11, 21, 1600), (11, 11, 2000), (1, 11, 1200))
+            events = []
+            for ordinal, (start, end, size) in enumerate(samples, 1):
+                key = f'{ordinal:016x}'
+                memo = run / 'memo/shard' / (key + '0' * 48)
+                memo.mkdir(parents=True)
+                words = [0] * 187
+                words[88], words[150] = int(start != end), int(start == 1)
+                words[116], words[120] = start, end
+                header = struct.pack('<Q187I', 187, *words)
+                (memo / 'out0').write_bytes(header + bytes(size - len(header)))
+                events.append(json.dumps({'key': key, 'kind': 'shard', 'replayed': False, 't': ordinal}))
+            (run / 'progress.jsonl').write_text('\n'.join(events) + '\n')
+            extents = [{'logical_bytes': size, 'physical_extent_bytes': size // 2} for _, _, size in samples]
+            with patch('btrfs_extent_usage.usage', side_effect=extents):
+                result = project(run, receipt, run, {'compressed_data_bytes': 1, 'logical_shard_bytes': 2},
+                                 0, 0, 3, btrfs_extents=True)
+            self.assertEqual((result['sampled_execution_shards'], result['sampled_non_execution_shards']), (2, 1))
+            self.assertEqual(result['estimated_remaining_execution_shards'], 2)
+            self.assertEqual(result['estimated_uncompressed_archive_bytes'], 7600)
+            self.assertEqual(result['sampled_average_memo_extent_bytes'], 800)
+            self.assertEqual(result['sampled_average_execution_memo_extent_bytes'], 700)
+            self.assertEqual(result['estimated_additional_memo_extent_bytes'], 1400)
 
     def test_live_clock_overrun_supersedes_the_reference_estimate(self):
         missing = compare_reference_clock(11, None, 2)
