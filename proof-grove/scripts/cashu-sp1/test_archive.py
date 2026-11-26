@@ -3,18 +3,43 @@ import os
 from pathlib import Path
 import struct
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 import index_archive as index
 from core_progress import clock_frontier, execution_interval, execution_reference
-from measure_core_window import compare_reference_clock
+from measure_core_window import compare_reference_clock, follow, publish_window
 from plan_prefix import candidate_path
 from project_core_storage import project, storage_sample
 from verify_prefix import check_chain
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_published_clock_advances_for_the_same_withdrawal_and_reference(self):
+        window = {'run_manifest_sha256': 'run', 'execution_receipt_sha256': 'reference',
+                  'last_execution_clock': 100, 'window_ended_unix': 900}
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'window.json'
+            self.assertTrue(publish_window(path, window))
+            self.assertFalse(publish_window(path, {**window, 'last_execution_clock': 99, 'window_ended_unix': 901}))
+            self.assertFalse(publish_window(path, {**window, 'last_execution_clock': 101, 'window_ended_unix': 899}))
+            with self.assertRaisesRegex(ValueError, 'different withdrawal or execution receipt'):
+                publish_window(path, {**window, 'execution_receipt_sha256': 'substitute'})
+            self.assertTrue(publish_window(path, {**window, 'last_execution_clock': 101, 'window_ended_unix': 901}))
+            self.assertEqual(json.loads(path.read_bytes())['last_execution_clock'], 101)
+            self.assertTrue(publish_window(path, window, require_advance=False))
+            self.assertEqual(json.loads(path.read_bytes()), window)
+
+    def test_clock_follower_stops_without_publishing_if_worker_identity_changes(self):
+        args = SimpleNamespace(follow_worker=(79, 4563), run=None, report=None,
+                               previous_coverage=None, execution_receipt=None)
+        with (patch('measure_core_window.worker_start_ticks', side_effect=[4563, 4563, 9999]),
+              patch('measure_core_window.measure', return_value={'reference_clock_status': 'within_reference'}),
+              patch('measure_core_window.publish_window') as publish):
+            follow(args)
+        publish.assert_not_called()
+
     def test_timestamp_uses_sp1_mixed_limb_widths(self):
         self.assertEqual(index.timestamp((1, 2, 3, 4)), 0x1_0203_0004)
         self.assertEqual(index.timestamp((0, 0, 59, 53937)), 3920561)
