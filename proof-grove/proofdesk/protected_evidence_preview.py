@@ -1,4 +1,4 @@
-"""Serve pinned issuance and refusal evidence from the local recovery demo."""
+"""Serve pinned protected Cashu evidence from the local recovery demo."""
 
 import hashlib
 from io import BytesIO
@@ -6,12 +6,17 @@ import json
 from typing import NamedTuple
 from zipfile import BadZipFile, ZipFile
 
-from .domain import Refused, hash32, positive
+from .domain import MAX_SATS, Refused, digest, hash32, positive
+from .protected_accounting import JOURNAL_SCHEMA, MAX_EVENTS, REGISTRY_CATALOG_SCHEMA
+from .protected_chain_archive import inspect_headers
 from .protected_funded_preview import local_artifact
+from .protected_registry import SCHEMA as REGISTRY_SCHEMA
+from .protected_reserve import GENESIS
 from .verifier import read_bounded
 
 
-RECEIPTS = {'issuance': 'verification.json', 'refusal': 'refusal-receipt.json'}
+RECEIPTS = {'issuance': 'verification.json', 'refusal': 'refusal-receipt.json',
+            'accounting': 'evidence/nova-registry-verification.json'}
 REFUSAL_STATEMENT = 'withdrawal/final-statement.json'
 
 
@@ -92,6 +97,58 @@ def refusal_verification(manifest, descriptor, archive_pin, statement, claim, pr
                  'refusal_timeout_height': positive(bitcoin['height'], 'timeout height', 4096)}
 
 
+def read_member(source, name, limit):
+    with source.open(name) as member:
+        raw = member.read(limit + 1)
+    if not 0 < len(raw) <= limit:
+        raise Refused('recovery_evidence_invalid_publication')
+    return raw
+
+
+def accounting_summary(source, receipt, descriptor):
+    root = json.loads(read_member(source, 'evidence/registry-root.json', 4096))
+    catalog_raw = read_member(source, 'evidence/catalog.json', 128 * 1024)
+    journal_raw = read_member(source, 'evidence/journal.json', 128 * 1024)
+    catalog, journal = json.loads(catalog_raw), json.loads(journal_raw)
+    proof = read_member(source, 'evidence/nova-proof/nova-proof.bin', 128 * 1024)
+    blocks = read_member(source, 'evidence/registry-blocks.hex', 1024 * 1024)
+    registry, nova = receipt['registry'], receipt['nova']
+    root_pin = hash32(descriptor['registry_sha256'], 'registry root')
+    tip_hash = hash32(descriptor['tip_hash'], 'registry tip')
+    tip_height = positive(descriptor['tip_height'], 'registry height', 4096)
+    key_pin = hash32(descriptor['nova_verifier_key_sha256'], 'Nova verifier')
+    blocks_pin = hash32(descriptor['blocks_sha256'], 'registry blocks')
+    fields = ('declared_reserve_sats', 'outstanding_claims_sats', 'pending_issuance_sats')
+    totals = tuple(receipt[field] for field in fields)
+    if (receipt['schema'] != 'proof-grove/protected-ledger-audit/v1'
+            or (receipt['tip_hash'], receipt['tip_height']) != (tip_hash, tip_height)
+            or (root['schema'], root['genesis']) != (REGISTRY_SCHEMA, GENESIS)
+            or (catalog['schema'], catalog['genesis'], catalog['tip_hash'], catalog['tip_height']) != (
+                REGISTRY_CATALOG_SCHEMA, GENESIS, tip_hash, tip_height)
+            or (journal['schema'], journal['genesis']) != (JOURNAL_SCHEMA, GENESIS)
+            or not root_pin == digest(root) == catalog['registry_sha256'] == registry['root_sha256']
+            or receipt['catalog_sha256'] != hashlib.sha256(catalog_raw).hexdigest()
+            or not receipt['journal_sha256'] == hashlib.sha256(journal_raw).hexdigest() == nova['journal_sha256']
+            or hashlib.sha256(blocks).hexdigest() != blocks_pin
+            or nova['schema'] != 'proof-grove/cashu-nova-regtest-accounting/v1'
+            or nova['mode'] != 'verify-journal' or nova['verified'] is not True
+            or positive(nova['steps'], 'Nova steps', MAX_EVENTS) != len(journal['events'])
+            or nova['proof_bytes'] != len(proof) or hashlib.sha256(proof).hexdigest() != nova['proof_sha256']
+            or key_pin != nova['verifier_key_sha256']
+            or any(type(value) is not int or not 0 <= value <= MAX_SATS for value in totals)
+            or sum(totals[1:]) > totals[0]
+            or totals[:2] != (nova['declared_reserve_sats'], nova['outstanding_claims_sats'])
+            or len(nova['zn']) != 10 or totals != tuple(int(hash32(word, 'Nova total'), 16) for word in nova['zn'][4:7])
+            or not receipt['catalog_reserves'] == registry['registered_reserves'] == len(catalog['bundles'])):
+        raise Refused('recovery_evidence_unverified')
+    inspect_headers(blocks, tip_height, tip_hash)
+    return dict(zip(fields, totals, strict=True)) | {
+        'tip_height': tip_height, 'tip_hash': tip_hash, 'registry_sha256': root_pin,
+        'registered_reserves': positive(registry['registered_reserves'], 'enrolled reserves', MAX_EVENTS),
+        'nova_proof_sha256': nova['proof_sha256'], 'nova_verifier_key_sha256': key_pin,
+    }
+
+
 def checked_archive(manifest, case):
     if manifest is None:
         raise Refused('recovery_evidence_not_configured')
@@ -102,6 +159,8 @@ def checked_archive(manifest, case):
         if publication['schema'] != 'proof-grove/protected-recovery-evidence/v1':
             raise Refused('recovery_evidence_invalid_publication')
         claim, txid, wtxid = (hash32(publication[field], field) for field in ('claim_id', 'holder_txid', 'holder_wtxid'))
+        if case == 'accounting' and case not in publication:
+            raise Refused('recovery_accounting_not_configured')
         archive = publication[case]
         pin = hash32(archive['sha256'], 'evidence archive')
         path = local_artifact(manifest, archive['file'], '.zip')
@@ -112,16 +171,12 @@ def checked_archive(manifest, case):
         if verification_fields and (len(verification_fields) != 2 or case != 'refusal'):
             raise Refused('recovery_evidence_invalid_publication')
         with ZipFile(BytesIO(raw)) as source:
-            with source.open(RECEIPTS[case]) as member:
-                receipt = member.read(128 * 1024 + 1)
-            if verification_fields:
-                with source.open(REFUSAL_STATEMENT) as member:
-                    statement = member.read(64 * 1024 + 1)
-                if not 0 < len(statement) <= 64 * 1024:
-                    raise Refused('recovery_evidence_invalid_publication')
-        if len(receipt) > 128 * 1024:
-            raise Refused('recovery_evidence_invalid_publication')
-        report = json.loads(receipt)
+            receipt = read_member(source, RECEIPTS[case], 128 * 1024)
+            report = json.loads(receipt)
+            if case == 'accounting':
+                summary = accounting_summary(source, report, archive)
+                return CheckedEvidence({'network': 'regtest', 'archive_sha256': pin, **summary}, raw, receipt)
+            statement = read_member(source, REFUSAL_STATEMENT, 64 * 1024) if verification_fields else None
         summarize = issuance_summary if case == 'issuance' else refusal_summary
         summary = {'network': 'regtest', 'holder_txid': txid, 'archive_sha256': pin, **summarize(report, claim, txid, wtxid)}
         verification = None

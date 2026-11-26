@@ -62,13 +62,12 @@ def capture(rpc, path, height, anchor):
             "archive_bytes": len(archive)}
 
 
-def replay(rpc, path, archive_sha256, height, anchor, *, before_final=None):
+def inspect_headers(archive, height, anchor):
+    """Check the archived headers through an independently supplied checkpoint."""
     positive(height, "height", MAX_BLOCKS)
     hash32(anchor, "anchor")
-    hash32(archive_sha256, "archive_sha256")
-    archive = read_bounded(path, MAX_ARCHIVE_BYTES)
-    if hashlib.sha256(archive).hexdigest() != archive_sha256 or not archive.endswith(b"\n"):
-        raise ValueError("regtest archive differs from the independent byte pin")
+    if not archive.endswith(b"\n"):
+        raise ValueError("regtest archive does not have a complete final block")
     blocks = archive[:-1].split(b"\n")
     if len(blocks) != height:
         raise ValueError("regtest archive does not end at the pinned height")
@@ -77,6 +76,15 @@ def replay(rpc, path, archive_sha256, height, anchor, *, before_final=None):
         hashes.append(_block(line, hashes[-1]))
     if hashes[-1] != anchor:
         raise ValueError("regtest archive does not open the pinned checkpoint")
+    return blocks, hashes
+
+
+def replay(rpc, path, archive_sha256, height, anchor, *, before_final=None):
+    hash32(archive_sha256, "archive_sha256")
+    archive = read_bounded(path, MAX_ARCHIVE_BYTES)
+    if hashlib.sha256(archive).hexdigest() != archive_sha256 or not archive.endswith(b"\n"):
+        raise ValueError("regtest archive differs from the independent byte pin")
+    blocks, hashes = inspect_headers(archive, height, anchor)
 
     tip = _regtest_tip(rpc)
     current = tip["blocks"]

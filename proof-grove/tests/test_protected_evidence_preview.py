@@ -8,8 +8,11 @@ from urllib.error import HTTPError
 from urllib.request import urlopen
 from zipfile import ZipFile
 
-from proofdesk.domain import Refused
+from proofdesk.domain import Refused, digest
+from proofdesk.protected_accounting import JOURNAL_SCHEMA, REGISTRY_CATALOG_SCHEMA
 from proofdesk.protected_evidence_preview import REFUSAL_STATEMENT, checked_archive
+from proofdesk.protected_registry import SCHEMA as REGISTRY_SCHEMA
+from proofdesk.protected_reserve import GENESIS
 from proofdesk.server import Desk, make_server
 
 
@@ -21,15 +24,67 @@ class RecoveryEvidenceTests(unittest.TestCase):
         self.zip = self.publication.with_name('archive.zip')
         self.claim, self.txid, self.wtxid = ('11' * 32, '22' * 32, '33' * 32)
 
-    def publish(self, case, member, receipt, *, statement=None, **changes):
+    def publish(self, case, member, receipt, *, statement=None, members=None, pins=None, **changes):
         with ZipFile(self.zip, 'w') as source:
             source.writestr(member, json.dumps(receipt))
             if statement is not None:
                 source.writestr(REFUSAL_STATEMENT, statement)
+            for name, raw in (members or {}).items():
+                source.writestr(name, raw)
         manifest = {'schema': 'proof-grove/protected-recovery-evidence/v1', 'claim_id': self.claim,
                     'holder_txid': self.txid, 'holder_wtxid': self.wtxid,
-                    case: {'file': self.zip.name, 'sha256': hashlib.sha256(self.zip.read_bytes()).hexdigest()}}
+                    case: {'file': self.zip.name, 'sha256': hashlib.sha256(self.zip.read_bytes()).hexdigest()} | (pins or {})}
         self.publication.write_text(json.dumps(manifest | changes), encoding='utf-8')
+
+    def test_registry_accounting_requires_the_proof_and_external_chain_pins(self):
+        # The structural fixture supplies one linked header and a native receipt.
+        block = b'\x01\0\0\0' + bytes.fromhex(GENESIS)[::-1] + bytes(45)
+        tip = hashlib.sha256(hashlib.sha256(block[:80]).digest()).digest()[::-1].hex()
+        blocks = block.hex().encode() + b'\n'
+        root = {'schema': REGISTRY_SCHEMA, 'genesis': GENESIS}
+        catalog = json.dumps({'schema': REGISTRY_CATALOG_SCHEMA, 'genesis': GENESIS, 'registry_sha256': digest(root),
+                              'tip_hash': tip, 'tip_height': 1, 'bundles': [{}]}).encode()
+        journal = json.dumps({'schema': JOURNAL_SCHEMA, 'genesis': GENESIS, 'events': [{}]}).encode()
+        proof = b'compressed accounting fixture'
+        journal_pin = hashlib.sha256(journal).hexdigest()
+        key_pin = '44' * 32
+        final = ['00' * 32] * 10
+        final[4:7] = [f'{value:064x}' for value in (25_000, 24_000, 1_000)]
+        nova = {'schema': 'proof-grove/cashu-nova-regtest-accounting/v1', 'mode': 'verify-journal', 'steps': 1,
+                'verified': True, 'journal_sha256': journal_pin, 'proof_bytes': len(proof), 'zn': final,
+                'proof_sha256': hashlib.sha256(proof).hexdigest(), 'verifier_key_sha256': key_pin,
+                'declared_reserve_sats': 25_000, 'outstanding_claims_sats': 24_000}
+        receipt = {'schema': 'proof-grove/protected-ledger-audit/v1', 'tip_hash': tip, 'tip_height': 1,
+                   'catalog_sha256': hashlib.sha256(catalog).hexdigest(), 'journal_sha256': journal_pin,
+                   'registry': {'root_sha256': digest(root), 'registered_reserves': 1}, 'catalog_reserves': 1,
+                   'declared_reserve_sats': 25_000, 'outstanding_claims_sats': 24_000,
+                   'pending_issuance_sats': 1_000, 'nova': nova}
+        member = 'evidence/nova-registry-verification.json'
+        proof_member = 'evidence/nova-proof/nova-proof.bin'
+        members = {'evidence/registry-root.json': json.dumps(root), 'evidence/catalog.json': catalog,
+                   'evidence/journal.json': journal, proof_member: proof, 'evidence/registry-blocks.hex': blocks}
+        pins = {'registry_sha256': digest(root), 'tip_hash': tip, 'tip_height': 1,
+                'nova_verifier_key_sha256': key_pin, 'blocks_sha256': hashlib.sha256(blocks).hexdigest()}
+        self.publish('accounting', member, receipt, members=members, pins=pins)
+        item, raw, verified = checked_archive(self.publication, 'accounting')
+        self.assertEqual((item['declared_reserve_sats'], item['outstanding_claims_sats'], item['pending_issuance_sats']),
+                         (25_000, 24_000, 1_000))
+        self.assertEqual((item['network'], item['tip_hash'], json.loads(verified)), ('regtest', tip, receipt))
+        self.assertEqual(raw, self.zip.read_bytes())
+        for field in ('registry_sha256', 'tip_hash', 'nova_verifier_key_sha256', 'blocks_sha256'):
+            with self.subTest(field=field), self.assertRaisesRegex(Refused, 'recovery_evidence_unverified'):
+                self.publish('accounting', member, receipt, members=members, pins=pins | {field: '99' * 32})
+                checked_archive(self.publication, 'accounting')
+        for changed_members, changed_receipt in (
+            (members | {proof_member: b'x' * len(proof)}, receipt),
+            (members, receipt | {'pending_issuance_sats': 999}),
+        ):
+            self.publish('accounting', member, changed_receipt, members=changed_members, pins=pins)
+            with self.assertRaisesRegex(Refused, 'recovery_evidence_unverified'):
+                checked_archive(self.publication, 'accounting')
+        self.publish('refusal', 'refusal-receipt.json', self.refusal_fixture())
+        with self.assertRaisesRegex(Refused, 'recovery_accounting_not_configured'):
+            checked_archive(self.publication, 'accounting')
 
     def test_issuance_archive_matches_the_holder_and_offline_verifiers(self):
         issuer = {'dleq_verified': True, 'batch_bound': True, 'offline_keyset_audit': True,

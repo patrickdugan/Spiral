@@ -70,6 +70,15 @@ manifest. The preview checks the receipt against the claim, withdrawal statement
 archive and replay results before displaying the block count and offering
 the original receipt for download.
 
+To show a registry accounting snapshot, add an `accounting` object with
+`file`, `sha256`, `registry_sha256`, `blocks_sha256`, `tip_hash`, `tip_height`
+and `nova_verifier_key_sha256`. Use the independently verified registry ZIP
+from the evidence matrix. The registry pin is the canonical root digest
+from its audit. The block pin is the byte digest from the walletless replay.
+Cashu Recovery shows the archived regtest checkpoint and the audited reserve,
+outstanding claim and pending issuance totals. The download includes the
+Nova proof and materials for repeating the native verification and block replay.
+
 ```powershell
 python -m unittest discover -s tests -q
 node --check web/app.js

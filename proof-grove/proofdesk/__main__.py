@@ -40,7 +40,7 @@ def main():
     serve.add_argument("--protected-funded-preview", type=Path,
                        help="Watch a pinned, independently verified joint payout publication in the local demo")
     serve.add_argument("--protected-evidence-preview", type=Path,
-                       help="Load pinned issuance and refusal downloads for local Cashu recovery")
+                       help="Load pinned issuance, refusal and optional registry downloads for local Cashu recovery")
     serve.add_argument('--hosted',action='store_true',help='Require bearer authentication and exact configured HTTPS origins behind a TLS proxy')
     serve.add_argument('--bind',default='127.0.0.1',choices=['127.0.0.1','0.0.0.0'])
     check = commands.add_parser("verify", help="Verify M16 proof bytes; does not authorize or settle a payment")

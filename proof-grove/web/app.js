@@ -43,19 +43,23 @@ function loadRecoveryEvidence() {
     refusal: item => item.independent_replay_verified
       ? `Independent walletless replay checked ${sats(item.blocks_replayed)} blocks. The holder received ${sats(item.holder_sats)} sats at block ${sats(item.refusal_holder_height)} and the challenger received ${sats(item.challenger_sats)} sats at block ${sats(item.refusal_timeout_height)} after the ${item.timeout_blocks}-block collateral delay.`
       : `The archive records ${sats(item.holder_sats)} sats to the holder during refusal and ${sats(item.challenger_sats)} sats to the challenger after the ${item.timeout_blocks}-block collateral delay.`,
+    accounting: item => `Archived regtest audit at block ${sats(item.tip_height)}. ${sats(item.declared_reserve_sats)} sats in ${sats(item.registered_reserves)} enrolled reserves, ${sats(item.outstanding_claims_sats)} sats in outstanding claims and ${sats(item.pending_issuance_sats)} sats pending issuance.`,
   };
   for (const [caseName, summarize] of Object.entries(summaries)) {
     const display = $(`recovery-${caseName}-result`);
     const download = $(`recovery-${caseName}-export`);
     const verification = caseName === 'refusal' ? $('recovery-refusal-verification') : null;
+    const optional = caseName === 'accounting' ? $('recovery-accounting') : null;
     display.textContent = 'Checking archived evidence…';
     download.hidden = true;
     if (verification) verification.hidden = true;
     api(`/api/protected/preview/evidence/${caseName}`).then(item => {
       display.textContent = summarize(item);
       download.hidden = false;
+      if (optional) optional.hidden = false;
       if (verification) verification.hidden = !item.independent_replay_verified;
-    }).catch(() => {
+    }).catch(failure => {
+      if (optional) optional.hidden = failure.message === 'recovery_accounting_not_configured';
       display.textContent = 'The pinned archive could not be checked.';
     });
   }
