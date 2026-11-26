@@ -110,6 +110,13 @@ The Windows NTFS control reserved the logical size of a freshly compressed
 file in addition to its allocated extents. New M14 attempts select Btrfs for
 compressed scratch. Saved NTFS packages remain readable.
 
+The raw M13 wrap uses a dedicated 16.5 GiB ext4 spill image on D:. The
+launcher prepares a regular image before attaching it to WSL and pins the
+mounted filesystem UUID. The wrap worker checks that UUID and the 16 GiB
+allocator capacity. The launcher waits for the wrap worker to exit before
+unmounting, detaching and exclusively opening the disposable image to reclaim
+its backing capacity. M14 measures D: again before choosing its tape location.
+
 ## Audit saved Core shards during proving
 
 Use `audit_core_prefix.py` with the pinned streaming verifier and independently

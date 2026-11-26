@@ -117,20 +117,27 @@ if ($Archive -and $RawWithdrawal) {
     ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $report 'host-memory-policy.json')
 function Record-CashuAvailableMemory {
     $available = [ProofGroveHostMemory]::AvailableBytes()
-    $backingFree = if ($nativeBackingD) { (Get-PSDrive D).Free } else { 0 }
+    $backingFree = if ($nativeBackingD -or $M13Wrap) { (Get-PSDrive D).Free } else { 0 }
     $archiveFree = if ($Archive -and $RawWithdrawal) { [long](Get-PSDrive E -ErrorAction SilentlyContinue).Free } else { 0 }
     "$([DateTimeOffset]::UtcNow.ToString('o')),$available,$backingFree,$archiveFree" | Add-Content -LiteralPath $memoryLog
     return $available
 }
-[void](Record-CashuAvailableMemory)
 $linuxRoot = '/mnt/c' + $cashuRoot.Substring(2).Replace('\', '/')
 $launchArgs = @(
     '-d','ProofGroveCashuRegtest','--user','root','--cd',"`"$linuxRoot`"",'--exec','/bin/bash',
     "$name/launch/run-cashu-capped-wsl.sh"
 ) + $linuxMode
-$worker = Start-Process -FilePath wsl.exe -ArgumentList $launchArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $report 'supervisor.log') `
-    -RedirectStandardError (Join-Path $report 'supervisor.stderr')
+$spill = $null
+$worker = $null
 try {
+    if ($M13Wrap -and $RawWithdrawal) {
+        . "$PSScriptRoot/m13-spill-volume.ps1"
+        $spill = New-CashuM13SpillVolume $report
+    }
+    [void](Record-CashuAvailableMemory)
+    $worker = Start-Process -FilePath wsl.exe -ArgumentList $launchArgs -WindowStyle Hidden -PassThru `
+        -RedirectStandardOutput (Join-Path $report 'supervisor.log') `
+        -RedirectStandardError (Join-Path $report 'supervisor.stderr')
     while (!$worker.HasExited) {
         if ((Record-CashuAvailableMemory) -lt $floor) {
             'Windows memory fell below the 1 GiB reserve.' | Set-Content -LiteralPath $stop
@@ -143,11 +150,12 @@ try {
         Start-Sleep -Seconds 2
     }
 } finally {
-    if (!$worker.HasExited -and !(Test-Path -LiteralPath $stop)) {
-        'The Windows proving worker guard ended.' | Set-Content -LiteralPath $stop
+    if ($worker -and !$worker.HasExited) {
+        if (!(Test-Path -LiteralPath $stop)) { 'The Windows proving worker guard ended.' | Set-Content -LiteralPath $stop }
+        if (!$worker.WaitForExit(25000)) { throw 'The bounded proving worker has yet to acknowledge the host stop.' }
     }
+    if ($spill) { Remove-CashuM13SpillVolume $spill }
 }
-if (!$worker.WaitForExit(25000)) { throw 'The bounded proving worker has yet to acknowledge the host stop.' }
 Get-Content -LiteralPath (Join-Path $report 'supervisor.log') -Tail 18
 Get-Content -LiteralPath (Join-Path $report 'supervisor.stderr') -Tail 10
 if ($worker.ExitCode -ne 0) { exit $worker.ExitCode }
