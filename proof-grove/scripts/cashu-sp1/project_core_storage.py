@@ -28,7 +28,7 @@ def memo_events(progress):
     return events
 
 
-def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, sample_count):
+def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, sample_count, *, btrfs_extents=False):
     manifest_data, manifest = load_metadata(run / 'run.json')
     execution_data, receipt = load_metadata(execution)
     _, trace_clock = execution_reference(manifest, receipt)
@@ -51,7 +51,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         raise ValueError('a sampled durable shard is missing')
     config = manifest['config']
     nonce = tuple(config['nonce']) if config.get('controller_nonce') is True else (0, 0, 0, 0)
-    ranges, sizes, accounted_sizes = [], [], []
+    ranges, sizes, accounted_sizes, link_counts = [], [], [], []
     for event in sample:
         with locations[event['key']].open('rb') as proof:
             interval = execution_interval(proof.read(CORE_HEADER_SIZE), nonce)
@@ -61,6 +61,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         ranges.append(interval)
         sizes.append(size.st_size)
         accounted_sizes.append(size.st_blocks * 512)
+        link_counts.append(size.st_nlink)
     if any(left[1] != right[0] for left, right in zip(ranges, ranges[1:])):
         raise ValueError('the measured execution shards do not form a contiguous suffix')
 
@@ -81,7 +82,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         raise ValueError('invalid independent filesystem compression measurement')
     archive_pilot = math.ceil(archive_logical * pilot_data / pilot_logical)
     projected_growth = math.ceil(remaining * growth)
-    return {
+    result = {
         'schema': 'proof-grove/cashu-core-storage-projection/v1',
         'scope': ('Execution-shard storage projection. Future non-execution shards, filesystem metadata, '
                   'archive compression differences, and recursive artifacts are additional work.'),
@@ -104,6 +105,22 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         'estimated_headroom_at_pilot_ratio_bytes': available - projected_growth - archive_pilot,
         'estimated_headroom_without_archive_compression_bytes': available - projected_growth - archive_logical,
     }
+    if btrfs_extents:
+        from btrfs_extent_usage import usage
+
+        extents = [usage(locations[event['key']]) for event in sample]
+        if any(extent['logical_bytes'] != size for extent, size in zip(extents, sizes, strict=True)):
+            raise ValueError('a sampled shard changed during extent measurement')
+        average_physical = sum(extent['physical_extent_bytes'] for extent in extents) / sample_count
+        projected_memos = math.ceil(remaining * average_physical)
+        result.update({
+            'sampled_average_memo_extent_bytes': average_physical,
+            'sampled_memos_with_multiple_links': sum(count > 1 for count in link_counts),
+            'estimated_additional_memo_extent_bytes': projected_memos,
+            'headroom_after_memo_extents_and_archive_bytes': available - projected_memos - archive_pilot,
+            'memo_extent_scope': 'Data extents only, before other live artifacts and filesystem overhead.',
+        })
+    return result
 
 
 def main():
@@ -115,11 +132,12 @@ def main():
     parser.add_argument('--baseline-used-bytes', type=int, required=True)
     parser.add_argument('--baseline-shards', type=int, required=True)
     parser.add_argument('--sample', type=int, default=32)
+    parser.add_argument('--measure-btrfs-extents', action='store_true', help='read each sampled memo’s Btrfs extent metadata')
     args = parser.parse_args()
     try:
         pilot_data, pilot = load_metadata(args.compression_pilot)
         result = project(args.run, args.execution, args.filesystem, pilot, args.baseline_used_bytes,
-                         args.baseline_shards, args.sample)
+                         args.baseline_shards, args.sample, btrfs_extents=args.measure_btrfs_extents)
     except (OSError, ValueError, TypeError, KeyError) as error:
         parser.exit(1, f'Core storage projection unavailable: {error}\n')
     result['compression_sample_sha256'] = hashlib.sha256(pilot_data).hexdigest()
