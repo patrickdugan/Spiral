@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from audit_core_prefix import MAX_EVENT_BYTES, PREFIX_REJECTION, stage_prefix, verify_starks
+from audit_core_prefix import CHAIN_REJECTION, MAX_EVENT_BYTES, PREFIX_REJECTION, stage_prefix, verify_starks
 
 
 class CorePrefixAuditTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class CorePrefixAuditTests(unittest.TestCase):
 
     def write_shard(self, digit, start, end):
         row = [0] * 187
-        row[88], row[116], row[120], row[150] = 1, start, end, int(start == 1)
+        row[88], row[116], row[120], row[150] = int(start != end), start, end, int(start == 1 and start != end)
         data = struct.pack("<Q187I", len(row), *row) + b"fake proof bytes"
         memo = self.memos / (digit * 64)
         memo.mkdir()
@@ -70,6 +70,18 @@ class CorePrefixAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exceeds its byte limit"):
             self.stage()
 
+    def test_recent_sample_takes_fresh_tail_at_a_journal_boundary(self):
+        self.write_events("a", "b", "c", "d")
+        with (self.run / "progress.jsonl").open("rb") as journal:
+            offset = len(journal.readline())
+        self.write_shard("c", 9, 9)
+        self.write_shard("d", 21, 31)
+        with self.assertRaisesRegex(ValueError, "does not end at a complete event"):
+            stage_prefix(self.run, self.archive, 2, (0, 0, 0, 0), 0, offset - 1)
+        clipped = stage_prefix(self.run, self.archive, 2, (0, 0, 0, 0), 0, offset)
+        self.assertEqual([row["memo"] for row in clipped], ["c" * 64, "d" * 64])
+        self.assertEqual([row["clock_interval"] for row in clipped], [None, (21, 31)])
+
     def test_only_the_explicit_incomplete_chain_rejection_counts(self):
         args = SimpleNamespace(verifier=Path("verifier"), elf=Path("elf"), core_key=Path("key"),
                                count=2, core_key_sha256="11" * 32, program_vk_digest="22" * 32)
@@ -82,3 +94,16 @@ class CorePrefixAuditTests(unittest.TestCase):
             with self.subTest(bad=bad), patch("audit_core_prefix.subprocess.run", return_value=bad):
                 with self.assertRaisesRegex(ValueError, "did not reach its incomplete-chain check"):
                     verify_starks(args, self.archive, "33" * 32)
+
+    def test_recent_sample_still_requires_the_chain_check_after_shard_verification(self):
+        args = SimpleNamespace(verifier=Path("verifier"), elf=Path("elf"), core_key=Path("key"),
+                               count=2, core_key_sha256="11" * 32, program_vk_digest="22" * 32)
+        failure = f"Verifying 2 Core shards{CHAIN_REJECTION}disconnected sample"
+        good = subprocess.CompletedProcess([], 1, "", failure)
+        with patch("audit_core_prefix.subprocess.run", return_value=good):
+            self.assertEqual(verify_starks(args, self.archive, "33" * 32, sampled=True)[0], failure)
+        bad = subprocess.CompletedProcess([], 1, "", f"Verifying 2 Core shards\nError: verifying Core shard 2/2{CHAIN_REJECTION}later text")
+        for result in (bad, subprocess.CompletedProcess([], 0, "", failure)):
+            with self.subTest(result=result), patch("audit_core_prefix.subprocess.run", return_value=result):
+                with self.assertRaisesRegex(ValueError, "did not reach its incomplete-chain check"):
+                    verify_starks(args, self.archive, "33" * 32, sampled=True)

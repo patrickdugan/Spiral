@@ -126,6 +126,11 @@ verification. The streaming verifier must reach its incomplete-chain rejection
 after checking each shard. The separate whole-archive verifier remains the gate
 for the complete public transition and final committed output.
 
+Use `--after-offset` with the resumed worker's saved journal offset to audit
+the latest fresh completions from that attempt. This mode includes execution
+and non-execution shards. It records the sampled digests and checks that a
+changed public word fails the native shard check on a disposable copy.
+
 ```bash
 python3 -B "$TOOLS/audit_core_prefix.py" --run "$RUN_DIR" --manifest-sha256 "$RUN_SHA256" \
   --execution-receipt "$NATIVE_RECEIPT" --elf "$ELF" \
