@@ -12,6 +12,7 @@ from core_progress import CORE_HEADER_SIZE, SHA256, execution_interval, executio
 
 
 BTRFS_EXTENT_SETTLE_SECONDS = 120
+MAX_SAMPLE_SHARDS = 512
 
 
 def memo_events(progress):
@@ -51,7 +52,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
     if trace_clock is None:
         raise ValueError('an independently measured SP1 trace clock is required')
     events = memo_events(run / 'progress.jsonl')
-    if not 2 <= sample_count <= 64 or len(events) < sample_count or not 0 <= baseline_shards < len(events):
+    if not 2 <= sample_count <= MAX_SAMPLE_SHARDS or len(events) < sample_count or not 0 <= baseline_shards < len(events):
         raise ValueError('expected a bounded shard sample and an earlier filesystem baseline')
     sampled_at = time.time()
     minimum_age = BTRFS_EXTENT_SETTLE_SECONDS if btrfs_extents else 0
@@ -188,7 +189,7 @@ def main():
     parser.add_argument('compression_pilot', type=Path)
     parser.add_argument('--baseline-used-bytes', type=int, required=True)
     parser.add_argument('--baseline-shards', type=int, required=True)
-    parser.add_argument('--sample', type=int, default=32)
+    parser.add_argument('--sample', type=int, default=32, help=f'settled shards to measure (up to {MAX_SAMPLE_SHARDS})')
     parser.add_argument('--measure-btrfs-extents', action='store_true', help='read each sampled memo’s Btrfs extent metadata')
     args = parser.parse_args()
     try:
