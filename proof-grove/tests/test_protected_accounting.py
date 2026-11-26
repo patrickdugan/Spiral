@@ -69,15 +69,39 @@ class ProtectedAccountingTest(unittest.TestCase):
                     "fee_sats": 250, "delay_blocks": 6, "script": plan["payout_script"]},
             })
 
-    def audit(self, *, registry=None):
+    def audit(self, *, registry=None, live_receipt=None):
         with patch.object(accounting, "spending_observation", side_effect=lambda core, bundle, pin: self.observations[pin]):
-            return accounting.audit(self.core, self.catalog, self.journal, self.records, registry=registry)
+            return accounting.audit(self.core, self.catalog, self.journal, self.records, registry=registry,
+                                    live_receipt=live_receipt)
 
     def test_reconciles_pending_issued_and_redeemed_at_one_tip(self):
         result = self.audit()
         self.assertEqual(result, {"declared_reserve_sats": 50000, "outstanding_claims_sats": 25000,
                                   "pending_issuance_sats": 25000, "catalog_reserves": 3, "tip_hash": TIP,
                                   "tip_height": 120})
+
+    def test_wallet_admission_requires_the_exact_live_registry_receipt(self):
+        bundle = self.catalog["bundles"][1]
+        pin = "e1" * 32
+        self.records[2]["issuance_receipt_sha256"] = pin
+        self.records[2]["independent_verifier"]["keysets_sha256"] = "e2" * 32
+        self.journal["events"][2]["evidence_sha256"] = digest(self.records[2])
+        with self.assertRaisesRegex(Refused, "live_issuance_requires_registry"):
+            self.audit(live_receipt=(bundle["bundle_id"], pin))
+        registry = {"trusted": "root"}
+        self.catalog.update(schema=accounting.REGISTRY_CATALOG_SCHEMA, registry_sha256=digest(registry))
+        registered = {accounting.outpoint(bundle["funding"]) for bundle in self.catalog["bundles"]}
+        with patch.object(accounting, "discover", return_value=(registered, {"registered_reserves": len(registered)})):
+            claim = self.audit(registry=registry, live_receipt=(bundle["bundle_id"], pin))["live_issuance"]
+            self.assertEqual(claim["claim_id"], accounting.bound_claim(accounting.outpoint(bundle["funding"])))
+            self.assertEqual((claim["issuance_receipt_sha256"], claim["amount_sats"]), (pin, 25000))
+            for selected, reason in ((self.catalog["bundles"][0]["bundle_id"], "issuance_not_live"),
+                                     (self.catalog["bundles"][2]["bundle_id"], "issuance_not_live"),
+                                     ("e3" * 32, "issuance_bundle_not_registered")):
+                with self.subTest(reason=reason), self.assertRaisesRegex(Refused, reason):
+                    self.audit(registry=registry, live_receipt=(selected, pin))
+            with self.assertRaisesRegex(Refused, "issuance_receipt_mismatch"):
+                self.audit(registry=registry, live_receipt=(bundle["bundle_id"], "e4" * 32))
 
     def test_prewithdrawal_requires_live_issuance_and_one_tip(self):
         bundle = self.catalog['bundles'][1]

@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 
 from .adapters import CoreClient
 from .domain import digest, hash32, positive, Refused
@@ -91,7 +92,7 @@ def check_payout(core, plan, receipt, observation):
         raise Refused("protected_accounting_payout_mismatch")
 
 
-def audit(core, catalog, journal, records, *, registry=None):
+def audit(core, catalog, journal, records, *, registry=None, live_receipt=None):
     """Check completeness relative to the supplied independent catalog and journal pins."""
     mint = catalog["mint"]
     profile = digest({"schema": "proof-grove/protected-accounting-mint/v3", "mint_url": mint})
@@ -105,6 +106,8 @@ def audit(core, catalog, journal, records, *, registry=None):
     uses_registry = catalog["schema"] == REGISTRY_CATALOG_SCHEMA
     if uses_registry != (registry is not None):
         raise Refused("protected_accounting_registry_profile_mismatch")
+    if live_receipt is not None and not uses_registry:
+        raise Refused("protected_accounting_live_issuance_requires_registry")
     if uses_registry and catalog.get("registry_sha256") != digest(registry):
         raise Refused("protected_accounting_registry_root_mismatch")
     by_coin = {}
@@ -201,9 +204,27 @@ def audit(core, catalog, journal, records, *, registry=None):
             field = "outstanding_claims_sats" if kind == "issue" else "pending_issuance_sats"
             totals[field] += plan["reserve_sats"]
             totals["declared_reserve_sats"] += plan["reserve_sats"]
+    claim_result = {}
+    if live_receipt is not None:
+        bundle_id = hash32(live_receipt[0], "live_bundle_id")
+        receipt_pin = hash32(live_receipt[1], "issuance_receipt_sha256")
+        candidates = [coin for coin, bundle in by_coin.items() if bundle["bundle_id"] == bundle_id]
+        if len(candidates) != 1:
+            raise Refused("protected_accounting_issuance_bundle_not_registered")
+        coin, = candidates
+        kind, record = phases[coin]
+        if kind != "issue" or record.get("kind") != "verified-cdk-protected-v3-batch":
+            raise Refused("protected_accounting_issuance_not_live")
+        if record.get("issuance_receipt_sha256") != receipt_pin:
+            raise Refused("protected_accounting_issuance_receipt_mismatch")
+        claim_result["live_issuance"] = {
+            "bundle_id": bundle_id, "claim_id": bound_claim(coin), "funding_txid": coin[0], "funding_vout": coin[1],
+            "amount_sats": record["amount_sats"], "issuance_receipt_sha256": receipt_pin, "mint": mint,
+            "keysets_sha256": hash32(record["independent_verifier"].get("keysets_sha256"), "keysets_sha256"),
+        }
     _stable_tip(core, tip)
     return totals | {"catalog_reserves": len(by_coin), "tip_hash": tip["bestblockhash"],
-                     "tip_height": tip["blocks"]} | registry_result
+                     "tip_height": tip["blocks"]} | registry_result | claim_result
 
 
 def main():
@@ -214,9 +235,14 @@ def main():
         parser.add_argument("--" + field, required=True)
     parser.add_argument("--registry", type=Path)
     parser.add_argument("--registry-sha256")
+    parser.add_argument("--live-bundle-id")
+    parser.add_argument("--issuance-receipt-sha256")
     args = parser.parse_args()
     if bool(args.registry) != bool(args.registry_sha256):
         parser.error("--registry and --registry-sha256 must be supplied together")
+    if bool(args.live_bundle_id) != bool(args.issuance_receipt_sha256):
+        parser.error("--live-bundle-id and --issuance-receipt-sha256 must be supplied together")
+    live_receipt = (args.live_bundle_id, args.issuance_receipt_sha256) if args.live_bundle_id else None
     core = CoreClient.from_config(json.loads(read_bounded(args.config, 32768))["core"])
     catalog = pinned_json(args.catalog, args.catalog_sha256, 2 * 1024 * 1024)
     journal = pinned_json(args.journal, args.journal_sha256, 256 * 1024)
@@ -231,7 +257,7 @@ def main():
             or proof.get("verified") is not True or proof.get("journal_sha256") != args.journal_sha256
             or proof.get("verifier_key_sha256") != key_pin or proof.get("steps") != len(journal["events"])):
         raise Refused("protected_accounting_nova_mismatch")
-    result = audit(core, catalog, journal, records, registry=registry)
+    result = audit(core, catalog, journal, records, registry=registry, live_receipt=live_receipt)
     if any(proof.get(field) != result[field] for field in ("declared_reserve_sats", "outstanding_claims_sats")):
         raise Refused("protected_accounting_nova_mismatch")
     print(json.dumps(result | {"schema": "proof-grove/protected-ledger-audit/v1",
@@ -240,4 +266,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Refused as error:
+        print(json.dumps({"error": error.code}), file=sys.stderr)
+        raise SystemExit(1) from None

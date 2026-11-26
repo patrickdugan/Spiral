@@ -240,6 +240,42 @@ export async function verifyProtectedReceipt(receipt, {mint, bundleId, keysetsSh
     batch_bound: batchBound, ...pin};
 }
 
+export function verifyLedgerAdmission(verification, receiptSha256, config, configRoot, python = 'python3') {
+  if (!verification.batch_bound || config?.schema !== 'proof-grove/protected-ledger-audit-config/v1') {
+    throw new Error('Ledger admission requires a V3 issuance receipt and an independent ledger audit config');
+  }
+  const args = ['-B', '-m', 'proofdesk.protected_accounting', '--live-bundle-id', verification.bundle_id,
+    '--issuance-receipt-sha256', receiptSha256];
+  for (const name of ['config', 'catalog', 'journal', 'admission', 'proof-dir', 'nova-verifier', 'registry']) {
+    const path = config[name];
+    if (typeof path !== 'string' || !path) throw new Error(`Expected ledger audit path ${name}`);
+    args.push(`--${name}`, resolve(configRoot, path));
+  }
+  for (const name of ['catalog-sha256', 'journal-sha256', 'nova-key-sha256', 'registry-sha256']) {
+    const pin = config[name];
+    if (!SHA256.test(pin ?? '')) throw new Error(`Expected independent ledger pin ${name}`);
+    args.push(`--${name}`, pin);
+  }
+  let audit;
+  try {
+    audit = JSON.parse(execFileSync(python, args, {cwd: appRoot, encoding: 'utf8', timeout: 120_000,
+      maxBuffer: 128 * 1024, stdio: ['ignore', 'pipe', 'pipe']}));
+  } catch (error) {
+    const refusal = error.stderr?.toString().match(/^\s*\{"error"\s*:\s*"([a-z_]+)"\}\s*$/)?.[1];
+    throw new Error(refusal ?? 'Independent ledger audit failed');
+  }
+  const claim = audit.live_issuance;
+  if (audit?.schema !== 'proof-grove/protected-ledger-audit/v1' || audit.nova?.verified !== true || !audit.registry ||
+      claim?.bundle_id !== verification.bundle_id || claim.issuance_receipt_sha256 !== receiptSha256 ||
+      claim.amount_sats !== verification.amount_sats || claim.mint !== verification.mint ||
+      claim.keysets_sha256 !== verification.keysets_sha256) {
+    throw new Error('Ledger admission differs from the independently verified issuance receipt');
+  }
+  return {state: 'registered-live', claim, tip_hash: audit.tip_hash, tip_height: audit.tip_height,
+    catalog_sha256: audit.catalog_sha256, journal_sha256: audit.journal_sha256,
+    registry: audit.registry, nova: audit.nova};
+}
+
 export async function auditProtected(operation, mintUrl) {
   if (operation.state !== 'protected-issued' || !operation.protection || !operation.protectedMintCache) {
     throw new Error('No protected issuance receipt for this operation');

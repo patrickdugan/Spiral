@@ -1,10 +1,10 @@
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { closeSync, fstatSync, openSync, readFileSync, readSync, statSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { sumProofs } from '@cashu/cashu-ts';
 import { Vault } from './vault.mjs';
 import { ProofWallet } from './client.mjs';
-import { exportCooperativePsbt, pinProtectedMint, verifyProtectedReceipt } from './protected.mjs';
+import { exportCooperativePsbt, pinProtectedMint, verifyLedgerAdmission, verifyProtectedReceipt } from './protected.mjs';
 
 const [command,...argv]=process.argv.slice(2),options={};
 for(let i=0;i<argv.length;i+=2){if(!argv[i]?.startsWith('--')||argv[i+1]===undefined)throw new Error('Expected --option value');options[argv[i].slice(2)]=argv[i+1];}
@@ -24,7 +24,8 @@ function readProtectedReceipt(path, limit = 2 * 1024 * 1024) {
     }
     if (length > limit) throw new Error('Protected receipt is too large');
     try {
-      return JSON.parse(buffer.toString('utf8', 0, length));
+      const bytes = buffer.subarray(0, length);
+      return {value: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex')};
     } catch {
       throw new Error('Invalid protected issuance receipt JSON');
     }
@@ -44,10 +45,16 @@ try {
   if (command === 'protected-pin-mint') {
     result = await pinProtectedMint(options.mint, (options.keysets ?? '').split(','));
   } else if (command === 'protected-verify-receipt') {
-    result = await verifyProtectedReceipt(readProtectedReceipt(options.receipt), {
+    const receipt = readProtectedReceipt(options.receipt);
+    result = await verifyProtectedReceipt(receipt.value, {
       mint: options.mint, bundleId: options['bundle-id'], keysetsSha256: options['keysets-sha256'],
-      amount: Number(options.amount), bundle: options.bundle ? readProtectedReceipt(options.bundle, 32_768) : undefined,
+      amount: Number(options.amount), bundle: options.bundle ? readProtectedReceipt(options.bundle, 32_768).value : undefined,
     });
+    if (options['ledger-audit']) {
+      const path = resolve(options['ledger-audit']);
+      result.admission = verifyLedgerAdmission(result, receipt.sha256, readProtectedReceipt(path, 16_384).value,
+        dirname(path), options.python);
+    }
   } else if (command === 'protected-export-receipt') {
     if (!options.output) throw new Error('Export requires --output FILE');
     const {receipt, pin} = await wallet.protectedReceipt(options.id);

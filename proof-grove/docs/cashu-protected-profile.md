@@ -206,6 +206,14 @@ liabilities signed outside the protected registry remain outside the
 auditor's visibility, and a protected wallet requires enrollment before
 accepting a reserve as part of this profile.
 
+`protected-verify-receipt --ledger-audit LEDGER.json` checks the wallet's exact
+receipt against the live issuance entry under the independently pinned registry,
+catalog, Nova proof and Core tip. A fresh walletless replay at height 216 admitted
+the 25,000-sat CDK batch after independently checking all six DLEQ proofs. The
+same command refused a valid receipt from another reserve, a re-encoded copy
+of the enrolled receipt and its old checkpoint after a new block. The
+admission evidence ZIP SHA-256 is `e0507cae6a5188aeb0ee65fa3c3417d539c64e0659737274f3acfc5ae65eef97`.
+
 Run the native Core reconciliation fixture with `python3 tests/protected-reserve-regtest.py --bitcoind /path/to/bitcoind --profile v3` from `proof-grove/`. It moves a 25,000-sat reserve from pending to issued, refuses to count the coin while its spend is pending, and reconciles the confirmed holder exit to zero outstanding sats. Invalidating the payout block revokes the old audit tip. The standalone run uses a synthetic issuance record. It exercises the live Core observer without generating a fresh Nova proof. Its report includes the chain data for the separate `proofdesk.protected_payout_evidence` verifier.
 
 Run the fresh CDK and Nova reconciliation from `proof-grove/` with Bitcoin Core 31.0, CDK 0.18.3, the wallet's installed Node dependencies, and the compiled `proof-grove-cashu-nova` binary.
