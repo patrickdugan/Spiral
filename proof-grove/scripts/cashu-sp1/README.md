@@ -81,4 +81,21 @@ Supply `--execution-receipt RECEIPT` to update the reference for a saved
 window. The sampler checks the new receipt against the same ELF and public
 digest. Finished attempts can use their archived `progress.jsonl` snapshot.
 
+## Audit saved Core shards during proving
+
+Use `audit_core_prefix.py` with the pinned streaming verifier and independently
+derived Core key. It copies only a bounded prefix to a disposable archive and
+compares the memo digests and execution timestamps before running native STARK
+verification. The streaming verifier must reach its incomplete-chain rejection
+after checking each shard. The separate whole-archive verifier remains the gate
+for the complete public transition and final committed output.
+
+```bash
+python3 -B "$TOOLS/audit_core_prefix.py" --run "$RUN_DIR" --manifest-sha256 "$RUN_SHA256" \
+  --execution-receipt "$NATIVE_RECEIPT" --elf "$ELF" \
+  --core-key "$CORE_KEY" --core-key-sha256 "$CORE_KEY_SHA256" --program-vk-digest "$PROGRAM_VK_DIGEST" \
+  --verifier "$VERIFIER" --verifier-sha256 "$VERIFIER_SHA256" --count 512 \
+  --scratch "$SCRATCH" --scratch-reserve-bytes "$SCRATCH_RESERVE_BYTES" --out "$AUDIT_RECEIPT"
+```
+
 [Pinned SP1 Core public values](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/air/public_values.rs) · [Pinned SP1 shard proof encoding](https://github.com/succinctlabs/sp1/blob/b8387fa61e1361d90ee7de49f551863418ca0f08/crates/hypercube/src/verifier/proof.rs)
