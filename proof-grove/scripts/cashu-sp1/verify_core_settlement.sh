@@ -10,6 +10,9 @@ indexed="$PWD/work/cashu-indexed-verifier-cached-build/verify-cashu-core-cached"
 index_ready="$PWD/outputs/cashu-core-shard-index-control/production-ready.sha256"
 parallel="$PWD/outputs/cashu-parallel-core-verifier-build/verify-cashu-core-cached"
 parallel_ready="$PWD/outputs/cashu-parallel-core-verifier-control/production-ready.sha256"
+wider_dir="$PWD/outputs/cashu-four-worker-core-verifier-build"
+wider="$wider_dir/verify-cashu-core-cached"
+wider_ready="$wider_dir/production-ready.sha256"
 index_options=()
 verifier_options=()
 verification_limit=43200s
@@ -66,7 +69,15 @@ if [[ $profile == withdrawal-v4-raw && -s $parallel_ready ]] &&
     verifier="$parallel"
     verifier_options=(--parallel-shards)
 fi
-if [[ $verifier == "$indexed" || $verifier == "$parallel" ]]; then
+if [[ $profile == withdrawal-v4-raw && -s $wider_ready && -s "$wider_dir/verified-worker-count.txt" ]] &&
+        (cd "$wider_dir" && sha256sum -c "$wider_ready" >&2); then
+    workers=$(<"$wider_dir/verified-worker-count.txt")
+    if [[ $workers =~ ^[34]$ ]]; then
+        verifier="$wider"
+        verifier_options=(--shard-workers "$workers")
+    fi
+fi
+if [[ $verifier == "$indexed" || $verifier == "$parallel" || $verifier == "$wider" ]]; then
     index_options=(--shard-index "$report/shard-index.json")
 fi
 mkdir "$report"
@@ -110,7 +121,7 @@ if verify_archive; then
     :
 else
     result=$?
-    if [[ $profile != withdrawal-v4-raw || ${#verifier_options[@]} != 1 || -e "$report/shard-index.json" ]] ||
+    if [[ $profile != withdrawal-v4-raw || ${#verifier_options[@]} == 0 || -e "$report/shard-index.json" ]] ||
             ! can_retry_core_verifier "$result" "$report/stop-reason.txt" "$CASHU_CGROUP/memory.events" "$proof" "$archive_identity"; then
         exit "$result"
     fi
