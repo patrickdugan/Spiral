@@ -89,6 +89,13 @@ The extent estimate covers memo data and projected archive bytes. Use the
 filesystem-growth estimate to account for the other allocations observed
 between the storage baseline and the sample.
 
+The raw recursion launcher budgets group storage using the verified shard
+index. It checks the Btrfs free space together with the Windows free space
+behind the virtual disk. Allocation on E: preserves the 8 GiB host reserve and
+the 2 GiB filesystem reserve. The D:-backed ext4 fallback preserves 32 GiB on
+D: for the later wrap. The placement receipt pins the selected site to the
+archive index. Resuming uses the same site and rechecks its reserves.
+
 ## Audit saved Core shards during proving
 
 Use `audit_core_prefix.py` with the pinned streaming verifier and independently

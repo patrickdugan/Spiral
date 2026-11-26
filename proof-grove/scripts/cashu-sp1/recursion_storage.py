@@ -13,6 +13,7 @@ MIB = 1024 ** 2
 GROUP_SIZE = 128
 LINUX_RESERVE = 2 * GIB
 BACKING_RESERVE = 32 * GIB
+CHECKPOINT_HOST_RESERVE = 8 * GIB
 
 
 def required_scratch(shards, group_size=GROUP_SIZE):
@@ -26,12 +27,18 @@ def required_scratch(shards, group_size=GROUP_SIZE):
     return max(during_group, final_tree) * (3 * MIB // 2) + 192 * MIB
 
 
-def select(shards, index_sha256, filesystem_free, backing_linux_free, backing_host_free, prior=None):
+def select(shards, index_sha256, filesystem_free, backing_linux_free, backing_host_free, prior=None, *, checkpoint_host_free):
     if re.fullmatch('[0-9a-f]{64}', index_sha256) is None:
         raise ValueError('expected the independently verified shard index digest')
-    if any(type(value) is not int or value < 0 for value in (filesystem_free, backing_linux_free, backing_host_free)):
+    if any(type(value) is not int or value < 0 for value in (
+        filesystem_free, checkpoint_host_free, backing_linux_free, backing_host_free,
+    )):
         raise ValueError('invalid recursion storage measurements')
     needed = required_scratch(shards)
+    headroom = {
+        'checkpoint': min(filesystem_free - LINUX_RESERVE, checkpoint_host_free - CHECKPOINT_HOST_RESERVE),
+        'backing': min(backing_linux_free - LINUX_RESERVE, backing_host_free - BACKING_RESERVE),
+    }
     common = {
         'schema': 'proof-grove/cashu-recursion-storage/v1', 'shard_index_sha256': index_sha256,
         'shards': shards, 'group_size': GROUP_SIZE, 'scratch_budget_bytes': needed,
@@ -41,16 +48,13 @@ def select(shards, index_sha256, filesystem_free, backing_linux_free, backing_ho
         if site not in ('checkpoint', 'backing') or prior != {**common, 'site': site}:
             raise ValueError('recorded recursion storage differs from the verified archive')
         # Completed groups already occupy space on the recorded device.
-        enough = (filesystem_free >= LINUX_RESERVE if site == 'checkpoint'
-                  else backing_host_free >= BACKING_RESERVE and backing_linux_free >= LINUX_RESERVE)
-        if not enough:
+        if headroom[site] < 0:
             raise ValueError('recorded recursion workspace is below its disk reserve')
         return prior
 
-    if filesystem_free >= LINUX_RESERVE + needed:
-        return {**common, 'site': 'checkpoint'}
-    if backing_host_free >= BACKING_RESERVE + needed and backing_linux_free >= LINUX_RESERVE + needed:
-        return {**common, 'site': 'backing'}
+    for site, available in headroom.items():
+        if available >= needed:
+            return {**common, 'site': site}
     raise ValueError('neither recursion workspace fits the proof budget and disk reserve')
 
 
@@ -62,6 +66,7 @@ def main():
     parser.add_argument('filesystem_free', type=int)
     parser.add_argument('backing_linux_free', type=int)
     parser.add_argument('backing_host_free', type=int)
+    parser.add_argument('--checkpoint-host-free', type=int, required=True)
     args = parser.parse_args()
     path = args.receipt
     try:
@@ -77,7 +82,7 @@ def main():
             if not isinstance(prior, dict):
                 raise ValueError('invalid recursion storage receipt')
         result = select(args.shards, args.index_sha256, args.filesystem_free, args.backing_linux_free,
-                        args.backing_host_free, prior)
+                        args.backing_host_free, prior, checkpoint_host_free=args.checkpoint_host_free)
         if prior is None:
             # The caller holds the pinned Core job lock across selection and recursion.
             with tempfile.TemporaryDirectory(dir=path.parent) as temporary:
