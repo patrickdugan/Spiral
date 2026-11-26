@@ -8,7 +8,7 @@ from pathlib import Path
 
 from . import demo
 from .adapters import CoreClient
-from .domain import Intent, Ledger, Refused, plan_vtxo
+from .domain import Intent, Ledger, Refused, hash32, plan_vtxo
 from .server import Desk, make_server
 from .verifier import M16Gate, NativeFinalGate, PROOF_LIMIT, STATEMENT_SIZE, read_bounded
 from . import protected_cli, recovery_cli
@@ -39,6 +39,8 @@ def main():
     serve.add_argument("--protected-preview", type=Path, help="Load a pinned archived V3 regtest payout for the local demo")
     serve.add_argument("--protected-funded-preview", type=Path,
                        help="Watch a pinned, independently verified joint payout publication in the local demo")
+    serve.add_argument("--protected-funded-statement-sha256",
+                       help="Require the observer's exact withdrawal statement in the funded preview")
     serve.add_argument("--protected-evidence-preview", type=Path,
                        help="Load pinned issuance, refusal and optional registry downloads for local Cashu recovery")
     serve.add_argument('--hosted',action='store_true',help='Require bearer authentication and exact configured HTTPS origins behind a TLS proxy')
@@ -74,6 +76,8 @@ def main():
                 raise Refused('protected_preview_requires_local_demo')
             if args.protected_funded_preview and not args.protected_preview:
                 raise Refused('funded_preview_requires_protected_preview')
+            if args.protected_funded_statement_sha256 is not None and not args.protected_funded_preview:
+                raise Refused('funded_statement_requires_funded_preview')
             if args.protected_evidence_preview and not args.protected_preview:
                 raise Refused('recovery_evidence_requires_protected_preview')
             if args.hosted and not args.config:raise Refused('hosted_configuration_required')
@@ -99,6 +103,9 @@ def main():
                 preview = {"protected_preview": args.protected_preview.resolve()} if args.protected_preview else {}
                 if args.protected_funded_preview:
                     preview["protected_funded_preview"] = args.protected_funded_preview.resolve()
+                    if args.protected_funded_statement_sha256 is not None:
+                        preview["protected_funded_statement_sha256"] = hash32(
+                            args.protected_funded_statement_sha256, "withdrawal statement")
                 if args.protected_evidence_preview:
                     preview["protected_evidence_preview"] = args.protected_evidence_preview.resolve()
                 desk = Desk(config=preview)

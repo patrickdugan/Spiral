@@ -35,7 +35,8 @@ three fields come from the independently observed reserve and Core checkpoint.
 The verifier calls OpenSSL on the original payout. Set `PROOF_GROVE_OPENSSL`
 to the executable path if OpenSSL is outside `PATH`. Open **Cashu recovery**
 to verify the recorded holder signature and mined witness or try the two
-substitutions. After verifying the original payout, download the evidence ZIP.
+substitutions. Append `#protected-preview` to open Cashu recovery directly.
+After verifying the original payout, download the evidence ZIP.
 It contains the exact receipt and the recorded pins. To replay it, extract the
 files and point `--protected-preview` at the extracted `preview.json`. For an
 independent check, compare the bundle ID and checkpoint in that manifest with
@@ -44,7 +45,10 @@ your own observations. Live protected issuance and recovery use the
 
 To show the proof-backed payout alongside the holder-only exit, add
 `--protected-funded-preview /path/to/funded-preview.json`. The status stays
-pending until a publication arrives. Create the descriptor after the
+pending until a publication arrives. With
+`--protected-funded-statement-sha256 SHA256`, the desk also requires the exact
+withdrawal statement chosen by the observer before it offers any downloads.
+Create the descriptor after the
 recipient's `verify_withdrawal_evidence.py` in the ZK Rusto repository accepts
 the ZIP and replays the payout in walletless Core. Use schema
 `proof-grove/funded-preview/v1` and the fields `archive`, `archive_sha256`,

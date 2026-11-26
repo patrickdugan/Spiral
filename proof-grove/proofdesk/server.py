@@ -240,7 +240,8 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
 
         def _funded_preview(self, path):
             publication = desk.config.get('protected_funded_preview') if desk.mode == 'demo' else None
-            with protected_funded_preview.verified_archive(publication) as checked:
+            expected_statement = desk.config.get('protected_funded_statement_sha256')
+            with protected_funded_preview.verified_archive(publication, expected_statement) as checked:
                 if path == '/api/protected/preview/funded':
                     value = {'status': 'pending'} if checked is None else checked[0]
                     self._send(200, canonical(value))

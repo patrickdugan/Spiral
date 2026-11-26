@@ -10,7 +10,8 @@ const errors = {
   payment_reorged: 'The payment block is no longer on the observed active chain. Authorization is blocked.',
   chain_view_stale: 'The chain observation is too old. Refresh it before accepting the payment.',
   demo_namespace_required: 'An operator report cannot be promoted into verified payment evidence.',
-  live_verifier_not_configured: 'Configure the native verifier and local Bitcoin Core before importing live evidence.'
+  live_verifier_not_configured: 'Configure the native verifier and local Bitcoin Core before importing live evidence.',
+  funded_preview_statement_mismatch: 'The published payout belongs to a different withdrawal statement.'
 };
 function element(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; }
 async function api(path, body) {
@@ -83,8 +84,9 @@ async function loadFundedPreview() {
       $('funded-preview-json').textContent = JSON.stringify(check, null, 2);
       details.hidden = downloads.hidden = false;
     }
-  } catch {
-    result.textContent = 'Funded evidence could not be verified.';
+  } catch (failure) {
+    result.textContent = failure.message === errors.funded_preview_statement_mismatch
+      ? failure.message : 'Funded evidence could not be verified.';
   } finally {
     button.disabled = false;
   }
@@ -398,6 +400,7 @@ async function initialize() {
     left.append(link); if (item.pin) left.append(element('small', '', item.pin)); row.append(left, element('p', '', item.use)); return row;
   }));
   if(globalThis.ProofGroveConnection)tab('payments');
+  else if (status.protected_preview_configured && location.hash === '#protected-preview') tab('protected-preview');
   else if (location.hash === '#evidence') tab('evidence');
   if(status.mode!=='demo'){
     await loadChainstate();

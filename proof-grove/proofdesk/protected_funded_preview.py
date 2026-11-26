@@ -25,7 +25,7 @@ def local_artifact(manifest, name, suffix):
 
 
 @contextmanager
-def verified_archive(manifest):
+def verified_archive(manifest, expected_statement=None):
     """Yield the checked file and receipt once the operator's atomic publication arrives."""
     if manifest is None:
         raise Refused("funded_preview_not_configured")
@@ -43,6 +43,8 @@ def verified_archive(manifest):
         archive_pin = hash32(publication["archive_sha256"], "archive")
         receipt_pin = hash32(publication["verification_sha256"], "verification receipt")
         statement_pin = hash32(publication["statement_sha256"], "withdrawal statement")
+        if expected_statement is not None and statement_pin != expected_statement:
+            raise Refused("funded_preview_statement_mismatch")
         receipt_path = local_artifact(manifest, publication["verification"], ".json")
         receipt_raw = read_bounded(receipt_path, 128 * 1024)
         if hashlib.sha256(receipt_raw).hexdigest() != receipt_pin:

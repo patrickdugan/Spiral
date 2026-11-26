@@ -28,7 +28,8 @@ class FundedPreviewTests(unittest.TestCase):
                       "proof_sha256": "14" * 32, "verifier_sha256": "15" * 32}
         self.chain = {"schema": "proof-grove/protected-regtest-block-replay/v1", "network": "regtest",
                       "wallets_loaded": 0, "txid": "17" * 32, "wtxid": "18" * 32, "height": 212}
-        desk = Desk(config={"protected_funded_preview": self.publication})
+        desk = Desk(config={"protected_funded_preview": self.publication,
+                            "protected_funded_statement_sha256": self.statement})
         self.server = make_server(desk, 0)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
@@ -92,5 +93,13 @@ class FundedPreviewTests(unittest.TestCase):
     def test_refuses_path_substitution_and_a_receipt_for_a_different_statement(self):
         self.publish(archive="../outside.zip")
         self.assertEqual(self.refused("/archive"), "funded_preview_invalid_artifact")
-        self.publish(statement_sha256="ff" * 32)
+        self.proof["statement_sha256"] = "ff" * 32
+        self.publish()
         self.assertEqual(self.refused(""), "funded_preview_unverified")
+
+    def test_refuses_a_consistent_publication_for_a_different_configured_withdrawal(self):
+        self.statement = self.proof["statement_sha256"] = "ff" * 32
+        self.publish()
+        for suffix in ("", "/archive", "/verification"):
+            with self.subTest(suffix=suffix):
+                self.assertEqual(self.refused(suffix), "funded_preview_statement_mismatch")
