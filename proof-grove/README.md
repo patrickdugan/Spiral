@@ -64,6 +64,12 @@ archive from the evidence matrix. The demo verifies the archive pins and
 checks that the enclosed receipts refer to the same holder transaction. The
 downloads include instructions to repeat the underlying verification.
 
+The `refusal` object can also carry `verification` and
+`verification_sha256` for the independent recipient receipt beside the
+manifest. The preview checks the receipt against the claim, withdrawal statement,
+archive and replay results before displaying the block count and offering
+the original receipt for download.
+
 ```powershell
 python -m unittest discover -s tests -q
 node --check web/app.js

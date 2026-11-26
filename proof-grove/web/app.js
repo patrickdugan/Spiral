@@ -40,16 +40,21 @@ function loadRecoveryEvidence() {
   const sats = count => count.toLocaleString('en-US');
   const summaries = {
     issuance: item => `${sats(item.issued_sats)} sats issued. ${item.proof_count} Cashu signatures and the Nova accounting proof verified.`,
-    refusal: item => `Walletless Bitcoin replay verified ${sats(item.holder_sats)} sats to the holder with no verdict. The challenger received ${sats(item.challenger_sats)} sats after the ${item.timeout_blocks}-block collateral delay.`,
+    refusal: item => item.independent_replay_verified
+      ? `Independent walletless replay checked ${sats(item.blocks_replayed)} blocks. The holder received ${sats(item.holder_sats)} sats at block ${sats(item.refusal_holder_height)} and the challenger received ${sats(item.challenger_sats)} sats at block ${sats(item.refusal_timeout_height)} after the ${item.timeout_blocks}-block collateral delay.`
+      : `The archive records ${sats(item.holder_sats)} sats to the holder during refusal and ${sats(item.challenger_sats)} sats to the challenger after the ${item.timeout_blocks}-block collateral delay.`,
   };
   for (const [caseName, summarize] of Object.entries(summaries)) {
     const display = $(`recovery-${caseName}-result`);
     const download = $(`recovery-${caseName}-export`);
+    const verification = caseName === 'refusal' ? $('recovery-refusal-verification') : null;
     display.textContent = 'Checking archived evidence…';
     download.hidden = true;
+    if (verification) verification.hidden = true;
     api(`/api/protected/preview/evidence/${caseName}`).then(item => {
       display.textContent = summarize(item);
       download.hidden = false;
+      if (verification) verification.hidden = !item.independent_replay_verified;
     }).catch(() => {
       display.textContent = 'The pinned archive could not be checked.';
     });

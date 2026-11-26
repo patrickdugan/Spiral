@@ -277,14 +277,18 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                 evidence_prefix = '/api/protected/preview/evidence/'
                 if path.startswith(evidence_prefix):
                     case, _, suffix = path.removeprefix(evidence_prefix).partition('/')
-                    if path.endswith('/') or suffix not in ('', 'archive'):
+                    if path.endswith('/') or suffix not in ('', 'archive', 'verification'):
                         raise Refused('recovery_evidence_unknown_case')
                     manifest = desk.config.get('protected_evidence_preview') if desk.mode == 'demo' else None
-                    summary, archive = protected_evidence_preview.checked_archive(manifest, case)
+                    evidence = protected_evidence_preview.checked_archive(manifest, case)
                     if suffix == 'archive':
-                        self._send(200, archive, 'application/zip')
+                        self._send(200, evidence.archive, 'application/zip')
+                    elif suffix == 'verification':
+                        if evidence.verification is None:
+                            raise Refused('recovery_evidence_verification_not_configured')
+                        self._send(200, evidence.verification)
                     else:
-                        self._send(200, canonical(summary))
+                        self._send(200, canonical(evidence.summary))
                     return
                 with desk.lock:
                     if path == "/api/status":
