@@ -199,7 +199,9 @@ def main():
     mode.add_argument('--check-only', action='store_true')
     mode.add_argument('--execute-only', action='store_true', help='replay Cairo without starting the prover')
     parser.add_argument('--verifier-cwd', type=Path)
-    parser.add_argument('--core-config', type=Path, help='Proof Grove config for a separate local Core observer')
+    chain_source = parser.add_mutually_exclusive_group()
+    chain_source.add_argument('--core-config', type=Path, help='Proof Grove config for a separate local Core observer')
+    chain_source.add_argument('--chain-context', type=Path, help='archived Bitcoin witness context to verify offline')
     parser.add_argument('--anchor-height', type=int, help='height of an independently pinned block at or after payout')
     parser.add_argument('--anchor-hash', help='hash of the independently pinned block')
     parser.add_argument('--threads', type=int, default=4)
@@ -213,9 +215,9 @@ def main():
         parser.error('--out is required except with --check-only')
     if args.threads < 1 or args.max_seconds < 1:
         parser.error('threads and time limit must be positive')
-    chain_options = (args.core_config, args.anchor_height, args.anchor_hash)
+    chain_options = (args.core_config or args.chain_context, args.anchor_height, args.anchor_hash)
     if any(option is not None for option in chain_options) and any(option is None for option in chain_options):
-        parser.error('Core chain observation requires --core-config, --anchor-height and --anchor-hash')
+        parser.error('Bitcoin chain verification requires a chain source, --anchor-height and --anchor-hash')
     case = args.case.resolve()
     runner = args.runner.resolve() if args.runner else None
     if runner:
@@ -227,17 +229,25 @@ def main():
         check(verifier, receipt['input_sha256']['bin/scarb-verify'])
     if args.existing_proof:
         pinned_proof_profile(json.loads(read(args.existing_proof, MAX_RAW_PROOF)), profile)
-    if args.core_config:
+    chain_observation = None
+    if args.core_config or args.chain_context:
         sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-        from proofdesk.adapters import CoreClient
-        from proofdesk.exact_melt_chain import observe
+        from proofdesk.exact_melt_chain import observe_witness_context, verify_witness_context
 
-        core = CoreClient.from_config(json.loads(read(args.core_config, 32768))['core'])
-        chain_observation = observe(core, receipt, expected, args.anchor_height, args.anchor_hash)
+        if args.core_config:
+            from proofdesk.adapters import CoreClient
+
+            core = CoreClient.from_config(json.loads(read(args.core_config, 32768))['core'])
+            chain_observation = observe_witness_context(core, receipt, expected, args.anchor_height, args.anchor_hash)
+        else:
+            chain_observation = json.loads(read(args.chain_context, 2 * 1024 * 1024))
+            chain_observation['witness_verification'] = verify_witness_context(
+                chain_observation, receipt, expected, args.anchor_height, args.anchor_hash)
+    chain_status = {'chain_context_observed': bool(args.core_config),
+                    'chain_context_witness_verified': chain_observation is not None}
     if args.check_only:
         print(json.dumps({'status': 'exact_case_available', 'outpoint': receipt['funding_outpoint'],
-                          'expected_public_output_words': len(expected),
-                          'chain_context_observed': bool(args.core_config)}))
+                          'expected_public_output_words': len(expected), **chain_status}))
         return
 
     result = args.out.resolve()
@@ -245,10 +255,9 @@ def main():
     shutil.copyfile(case / 'statement.json', result / 'statement.json')
     report = run_kit(runner, case, result, args, expected) if runner else {'phases': {}}
     if args.execute_only:
-        if args.core_config:
+        if chain_observation is not None:
             (result / 'chain-context.json').write_text(json.dumps(chain_observation, indent=2) + '\n', encoding='utf-8')
-        print(json.dumps({'status': report['status'], 'public_words_matched': len(expected),
-                          'chain_context_observed': bool(args.core_config),
+        print(json.dumps({'status': report['status'], 'public_words_matched': len(expected), **chain_status,
                           'execution': report['phases']['execute']}))
         return
     proof = result / 'redemption-proof.json'
@@ -265,7 +274,7 @@ def main():
     verification = {
         'schema': 'rbzk/cashu-independent-verification/v1',
         'verified': True, 'proof_sha256': digest, 'statement_sha256': receipt['statement_sha256'],
-        'chain_context_observed': bool(args.core_config),
+        **chain_status,
         'verifier_id': receipt['input_sha256']['bin/scarb-verify'], 'program': receipt['program'],
         'proof_profile_sha256': receipt['input_sha256']['profile.json'], 'verified_proof_profile': verified_profile,
         'funding_outpoint': receipt['funding_outpoint'], 'payout_txid': receipt['confirmed_spend'],
@@ -273,11 +282,13 @@ def main():
         'verified_mutated_cells': controls, 'verify_seconds': seconds, 'stages': report['phases'],
     }
     if args.core_config:
-        latest = observe(core, receipt, expected, args.anchor_height, args.anchor_hash)
+        latest = observe_witness_context(core, receipt, expected, args.anchor_height, args.anchor_hash)
         if any(chain_observation[name] != latest[name] for name in ('funding', 'payout')):
             raise ValueError('Core changed the exact settlement blocks during proof verification')
+        chain_observation = latest
+    if chain_observation is not None:
         chain_file = result / 'chain-context.json'
-        chain_file.write_text(json.dumps(latest, indent=2) + '\n', encoding='utf-8')
+        chain_file.write_text(json.dumps(chain_observation, indent=2) + '\n', encoding='utf-8')
         verification['chain_context_sha256'] = sha256(chain_file)
     (result / 'verification.json').write_text(json.dumps(verification, indent=2) + '\n', encoding='utf-8')
 

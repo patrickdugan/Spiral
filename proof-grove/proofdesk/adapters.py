@@ -70,7 +70,7 @@ class CoreClient:
 
     def rpc(self, method: str, params: list) -> object:
         # This explicit list cannot sign or broadcast.
-        if method not in ("getblockchaininfo", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
+        if method not in ("getblockchaininfo", "getblock", "getblockhash", "getblockheader", "getrawtransaction", "validateaddress",
                           "decoderawtransaction", "gettxout", "getmempoolentry", "testmempoolaccept",
                           "getdescriptorinfo", "deriveaddresses", "createpsbt", "utxoupdatepsbt", "decodepsbt",
                           "gettxspendingprevout", "getindexinfo", "gettxoutproof", "verifytxoutproof"):

@@ -3,7 +3,12 @@
 import hashlib
 
 from .domain import Refused, hash32
+from .protected_chain_archive import MAX_BLOCKS
+from .protected_payout_evidence import CHAIN_SCHEMA, _hash256, _raw, _transaction, _verify_inclusion, capture
 from .protected_reserve import GENESIS, HEX, _chain, _sats, _stable_tip
+
+
+WITNESS_CONTEXT_SCHEMA = "proof-grove/exact-melt-witness-context/v1"
 
 
 def _bitcoin_hash(raw):
@@ -53,8 +58,7 @@ def _match_output(outputs, index, sats, script):
         raise Refused("exact_melt_output_mismatch")
 
 
-def observe(core, receipt, expected, anchor_height, anchor_hash):
-    """Check the exact verified statement against an independently pinned active checkpoint."""
+def _opening(receipt, expected):
     marker = int.from_bytes(b"PROOFDESK_CSV_REDEEM_V1", "big")
     if len(expected) != 24 or expected[3] != marker or receipt["network"] != "regtest":
         raise Refused("exact_melt_invalid_statement")
@@ -78,31 +82,111 @@ def observe(core, receipt, expected, anchor_height, anchor_hash):
             or not 0 < delay <= 65535 or payout_height - funding_height < delay):
         raise Refused("exact_melt_receipt_mismatch")
 
+    return {"funding": {"txid": funding_txid, "height": funding_height, "outpoint_vout": vout,
+                        "amount_sats": reserve_sats, "script": funding_script},
+            "payout": {"txid": payout_txid, "height": payout_height, "wtxid": payout_wtxid,
+                       "amount_sats": payout_sats, "script": payout_script},
+            "wallet_melt_commitment": melt_commitment, "relative_delay_blocks": delay,
+            "fee_sats": fee_sats, "change_sats": 0}
+
+
+def observe(core, receipt, expected, anchor_height, anchor_hash):
+    """Check the exact verified statement against an independently pinned active checkpoint."""
+    opening = _opening(receipt, expected)
+    prevout, paid = opening["funding"], opening["payout"]
+    delay = opening["relative_delay_blocks"]
     before = _chain(core)
     hash32(anchor_hash, "exact_melt_chain_anchor")
-    if (type(anchor_height) is not int or not 0 < funding_height < payout_height <= anchor_height <= before["blocks"]
+    if (type(anchor_height) is not int or not 0 < prevout["height"] < paid["height"] <= anchor_height <= before["blocks"]
             or core.rpc("getblockhash", [anchor_height]) != anchor_hash):
         raise Refused("exact_melt_chain_anchor_mismatch")
 
-    funding, funding_evidence = _mined(core, funding_height, funding_txid)
-    _match_output(funding.get("vout", []), vout, reserve_sats, funding_script)
-    payout, payout_evidence = _mined(core, payout_height, payout_txid)
+    funding, funding_evidence = _mined(core, prevout["height"], prevout["txid"])
+    _match_output(funding.get("vout", []), prevout["outpoint_vout"], prevout["amount_sats"], prevout["script"])
+    payout, payout_evidence = _mined(core, paid["height"], paid["txid"])
     inputs, outputs = payout.get("vin", []), payout.get("vout", [])
-    if (payout.get("hash") != payout_wtxid or _bitcoin_hash(bytes.fromhex(payout["hex"])) != payout_wtxid
+    if (payout.get("hash") != paid["wtxid"] or _bitcoin_hash(bytes.fromhex(payout["hex"])) != paid["wtxid"]
             or payout.get("version") != 2 or payout.get("locktime") != 0
-            or len(inputs) != 1 or len(outputs) != 1 or inputs[0].get("txid") != funding_txid
-            or inputs[0].get("vout") != vout or inputs[0].get("sequence") != delay):
+            or len(inputs) != 1 or len(outputs) != 1 or inputs[0].get("txid") != prevout["txid"]
+            or inputs[0].get("vout") != prevout["outpoint_vout"] or inputs[0].get("sequence") != delay):
         raise Refused("exact_melt_payout_mismatch")
-    _match_output(outputs, 0, payout_sats, payout_script)
+    _match_output(outputs, 0, paid["amount_sats"], paid["script"])
     _stable_tip(core, before)
     return {
         "schema": "proof-grove/exact-melt-chain-observation/v1",
         "evidence_level": "independent-bitcoin-core-regtest",
         "network": "regtest", "genesis": GENESIS, "statement_sha256": receipt["statement_sha256"],
-        "wallet_melt_commitment": melt_commitment,
+        **opening,
         "anchor_height": anchor_height, "anchor_hash": anchor_hash,
         "observed_tip_height": before["blocks"], "observed_tip_hash": before["bestblockhash"],
-        "funding": funding_evidence | {"outpoint_vout": vout, "amount_sats": reserve_sats, "script": funding_script},
-        "payout": payout_evidence | {"wtxid": payout_wtxid, "amount_sats": payout_sats, "script": payout_script},
-        "relative_delay_blocks": delay, "change_sats": 0, "fee_sats": fee_sats,
+        "funding": funding_evidence | prevout,
+        "payout": payout_evidence | paid,
     }
+
+
+def verify_witness_context(context, receipt, expected, anchor_height, anchor_hash):
+    """Check raw transactions, regtest headers and the BIP141 witness commitment offline."""
+    opening = _opening(receipt, expected)
+    prevout, paid = opening["funding"], opening["payout"]
+    if (context.get("schema"), context.get("network"), context.get("genesis"), context.get("statement_sha256"),
+            context.get("anchor_height"), context.get("anchor_hash")) != (
+            WITNESS_CONTEXT_SCHEMA, "regtest", GENESIS, receipt["statement_sha256"], anchor_height, anchor_hash):
+        raise ValueError("exact Cashu chain context differs from the independent pins")
+    hash32(anchor_hash, "exact_melt_chain_anchor")
+    if type(anchor_height) is not int or not 0 < prevout["height"] < paid["height"] <= anchor_height <= MAX_BLOCKS:
+        raise ValueError("invalid exact Cashu chain context heights")
+    for name, field in opening.items():
+        if name in ("funding", "payout"):
+            if any(context[name].get(key) != value for key, value in field.items()):
+                raise ValueError(f"exact Cashu {name} metadata differs from the pinned statement")
+        elif context.get(name) != field:
+            raise ValueError(f"exact Cashu {name} differs from the pinned statement")
+    witness = context["bitcoin_chain_evidence"]
+    raw_headers = witness["headers"]
+    if witness.get("schema") != CHAIN_SCHEMA or not isinstance(raw_headers, list) or len(raw_headers) != anchor_height + 1:
+        raise ValueError("invalid exact Cashu regtest header chain length")
+    headers = [_raw(header, 80, 80) for header in raw_headers]
+    hashes = [_hash256(header) for header in headers]
+    if (hashes[0][::-1].hex() != GENESIS or hashes[-1][::-1].hex() != anchor_hash
+            or any(header[4:36] != parent for header, parent in zip(headers[1:], hashes))):
+        raise ValueError("exact Cashu headers do not connect regtest genesis to the pinned checkpoint")
+    for entry in (context["funding"], context["payout"]):
+        if hashes[entry["height"]][::-1].hex() != entry["block"]:
+            raise ValueError("exact Cashu transaction block differs from its pinned header")
+    funding = _transaction(context["funding"]["raw_transaction"])
+    payout = _transaction(context["payout"]["raw_transaction"])
+    vout = prevout["outpoint_vout"]
+    if (funding.txid != prevout["txid"] or not 0 <= vout < len(funding.outputs)
+            or funding.outputs[vout] != (prevout["amount_sats"], bytes.fromhex(prevout["script"]))):
+        raise ValueError("exact Cashu funding transaction differs from the pinned reserve")
+    previous = bytes.fromhex(prevout["txid"])[::-1] + vout.to_bytes(4, "little")
+    sequence = opening["relative_delay_blocks"].to_bytes(4, "little")
+    if ((payout.txid, payout.wtxid) != (paid["txid"], paid["wtxid"])
+            or payout.version != b"\x02\0\0\0" or payout.locktime != bytes(4)
+            or payout.inputs != [(previous, b"", sequence)]
+            or payout.outputs != [(paid["amount_sats"], bytes.fromhex(paid["script"]))]):
+        raise ValueError("exact Cashu payout bytes differ from the pinned withdrawal")
+    _verify_inclusion(witness, headers[prevout["height"]:], funding, payout,
+                      payout_index=paid["height"] - prevout["height"])
+    return {"funding_txid": funding.txid, "payout_txid": payout.txid, "payout_wtxid": payout.wtxid,
+            "anchor_height": anchor_height, "anchor_hash": anchor_hash, "witness_inclusion_verified": True}
+
+
+def observe_witness_context(core, receipt, expected, anchor_height, anchor_hash):
+    context = observe(core, receipt, expected, anchor_height, anchor_hash)
+    if anchor_height > MAX_BLOCKS:
+        raise ValueError("exact Cashu witness context exceeds the regtest archive height bound")
+    funding, payout = context["funding"], context["payout"]
+    evidence = capture(core.rpc, funding["height"], payout["height"], funding["block"], payout["block"])
+
+    def headers(start, end):
+        for height in range(start, end):
+            block = core.rpc("getblockhash", [height])
+            yield core.rpc("getblockheader", [block, False])
+
+    evidence["headers"] = [*headers(0, funding["height"]), *evidence["headers"],
+                           *headers(payout["height"] + 1, anchor_height + 1)]
+    context.update(schema=WITNESS_CONTEXT_SCHEMA, bitcoin_chain_evidence=evidence)
+    context["witness_verification"] = verify_witness_context(context, receipt, expected, anchor_height, anchor_hash)
+    _stable_tip(core, {"blocks": context["observed_tip_height"], "bestblockhash": context["observed_tip_hash"]})
+    return context

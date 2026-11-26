@@ -147,12 +147,12 @@ def capture(rpc, funding_height, payout_height, funding_block, payout_block):
             "payout_coinbase": payout["tx"][0]["hex"]}
 
 
-def _verify_inclusion(evidence, headers, funding, payout):
+def _verify_inclusion(evidence, headers, funding, payout, *, payout_index=-1):
     funding_ids, payout_ids, witness_ids = (evidence[name] for name in ("funding_txids", "payout_txids", "payout_wtxids"))
     funding_leaves, payout_leaves, witness_leaves = map(_leaves, (funding_ids, payout_ids, witness_ids))
     if (funding.txid not in funding_ids[1:] or payout.txid not in payout_ids[1:]
             or _merkle_root(funding_leaves) != headers[0][36:68]
-            or _merkle_root(payout_leaves) != headers[-1][36:68]):
+            or _merkle_root(payout_leaves) != headers[payout_index][36:68]):
         raise ValueError("funding or payout txid is outside the pinned headers")
     index = payout_ids.index(payout.txid)
     if (len(witness_ids) != len(payout_ids) or witness_leaves[0] != bytes(32)

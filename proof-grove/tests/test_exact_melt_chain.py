@@ -4,8 +4,10 @@ from pathlib import Path
 import unittest
 
 from proofdesk.domain import Refused
-from proofdesk.exact_melt_chain import observe
+from proofdesk.exact_melt_chain import WITNESS_CONTEXT_SCHEMA, observe, verify_witness_context
+from proofdesk.protected_payout_evidence import _transaction
 from proofdesk.protected_reserve import GENESIS
+from test_protected_payout_evidence import fixture, hash256, little
 
 
 FIXTURE = Path(__file__).resolve().parents[2] / "codex-campaign-2026-11-23" / "outputs"
@@ -125,3 +127,74 @@ class ExactMeltChainTest(unittest.TestCase):
                 mutate()
                 with self.assertRaisesRegex(Refused, reason):
                     self.observe()
+
+
+class ExactMeltWitnessContextTest(unittest.TestCase):
+    def setUp(self):
+        payout_fixture, _, _, _ = fixture()
+        funding, payout = (payout_fixture["public_transactions"][key] for key in ("funding", "payout"))
+        prevout, paid = payout_fixture["reserve"], payout_fixture["payout"]
+        self.receipt = {"network": "regtest", "statement_sha256": "12" * 32,
+                        "funding_outpoint": f"{prevout['txid']}:0", "confirmed_spend": paid["txid"],
+                        "confirmed_spend_wtxid": paid["wtxid"], "wallet_melt_commitment": "31" * 32,
+                        "reserve_sats": 25000, "payout_sats": 24750, "payout_fee_sats": 250,
+                        "relative_delay_blocks": 6}
+        melt = int(self.receipt["wallet_melt_commitment"], 16)
+        self.words = [1, 23, 0, int.from_bytes(b"PROOFDESK_CSV_REDEEM_V1", "big"), *hash_words(prevout["txid"]),
+                      0, 25000, 1, int(prevout["script"][:62], 16), int(prevout["script"][62:], 16), 3, 104, 110,
+                      melt % 2**128, melt >> 128, 0, int(paid["script"], 16), 22, 24750,
+                      *hash_words(paid["txid"]), *hash_words(paid["wtxid"])]
+        witness = payout_fixture["bitcoin_chain_evidence"]
+        payout_roots = {index: bytes.fromhex(header)[36:68] for index, header in enumerate(witness["headers"], 104)}
+        genesis = bytes.fromhex("01000000" + "00" * 32 + "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
+                                + "dae5494dffff7f2002000000")
+        self.assertEqual(hash256(genesis)[::-1].hex(), GENESIS)
+        headers = [genesis]
+        for height in range(1, 112):
+            headers.append(little(4) + hash256(headers[-1]) + payout_roots.get(height, bytes(32)) + bytes(12))
+        self.anchor = hash256(headers[-1])[::-1].hex()
+        self.context = {"schema": WITNESS_CONTEXT_SCHEMA, "network": "regtest", "genesis": GENESIS,
+                        "statement_sha256": self.receipt["statement_sha256"], "anchor_height": 111,
+                        "anchor_hash": self.anchor, "wallet_melt_commitment": self.receipt["wallet_melt_commitment"],
+                        "relative_delay_blocks": 6, "fee_sats": 250, "change_sats": 0,
+                        "funding": {"txid": prevout["txid"], "height": 104, "outpoint_vout": 0, "amount_sats": 25000,
+                                    "block": hash256(headers[104])[::-1].hex(), "script": prevout["script"],
+                                    "raw_transaction": funding},
+                        "payout": {"txid": paid["txid"], "wtxid": paid["wtxid"], "height": 110, "amount_sats": 24750,
+                                   "block": hash256(headers[110])[::-1].hex(), "script": paid["script"],
+                                   "raw_transaction": payout},
+                        "bitcoin_chain_evidence": witness | {"headers": [header.hex() for header in headers]}}
+
+    def verify(self, *, anchor=None):
+        return verify_witness_context(self.context, self.receipt, self.words, 111,
+                                      self.anchor if anchor is None else anchor)
+
+    def test_checks_mined_witness_with_a_later_pinned_checkpoint(self):
+        result = self.verify()
+        self.assertTrue(result["witness_inclusion_verified"])
+        self.assertEqual(result["payout_wtxid"], self.receipt["confirmed_spend_wtxid"])
+        with self.assertRaisesRegex(ValueError, "independent pins"):
+            self.verify(anchor="89" * 32)
+
+    def test_refuses_changed_bridge_header(self):
+        self.context["bitcoin_chain_evidence"]["headers"][105] = "00" * 80
+        with self.assertRaisesRegex(ValueError, "do not connect regtest genesis"):
+            self.verify()
+
+    def test_refuses_changed_coinbase_witness_with_same_txid(self):
+        chain = self.context["bitcoin_chain_evidence"]
+        raw = bytearray.fromhex(chain["payout_coinbase"])
+        raw[-5] ^= 1
+        self.assertEqual(_transaction(raw.hex()).txid, _transaction(chain["payout_coinbase"]).txid)
+        chain["payout_coinbase"] = raw.hex()
+        with self.assertRaisesRegex(ValueError, "outside the pinned BIP141 commitment"):
+            self.verify()
+
+    def test_refuses_mutated_reserve_and_fee_metadata(self):
+        self.context["funding"]["amount_sats"] += 1
+        with self.assertRaisesRegex(ValueError, "funding metadata"):
+            self.verify()
+        self.context["funding"]["amount_sats"] -= 1
+        self.context["fee_sats"] -= 1
+        with self.assertRaisesRegex(ValueError, "fee_sats differs"):
+            self.verify()
