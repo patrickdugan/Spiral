@@ -288,6 +288,13 @@ compose_args=(
 if [[ "$workload" == withdrawal-v4-raw ]]; then
     bounded_mode=(--memory-shards)
     if (( ${#compose_mode[@]} )); then bounded_mode+=(--batch-reducer); fi
+    candidate_build="$PWD/outputs/cashu-core-cuda-normalizer-linked-batch-stock-setup"
+    if [[ -x "$candidate_build/normalize-core-cuda" && -s "$candidate_build/cpu-calibrated.sha256" ]]; then
+        candidate_pin=$(<"$candidate_build/cpu-calibrated.sha256")
+        if [[ $candidate_pin =~ ^[0-9a-f]{64}$ ]]; then
+            bounded_mode+=(--candidate-worker "$candidate_build/normalize-core-cuda" --candidate-worker-sha256 "$candidate_pin")
+        fi
+    fi
     run_stage bounded_recursion python3 -B "$src/compose_core_bounded.py" "$archive" "$verified/shard-index.json" "$index_pin" \
         "$job/run/run.json" "$manifest_pin" "$program_key" "$elf" "$key" "$key_pin" "$parents" \
         "$normalizer" "$reducer" "$checker" --group-size "$group_size" \

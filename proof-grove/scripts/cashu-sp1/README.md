@@ -107,6 +107,13 @@ D: plus the 16.5 GiB M13 spill image and 8 MiB of VHDX metadata. The placement
 receipt pins the selected site to the archive index. Resuming uses the same
 site and rechecks its reserves.
 
+The raw archive runner can try the CPU-calibrated CUDA normalizer from
+`outputs/cashu-core-cuda-normalizer-linked-batch-stock-setup`. It reads
+`cpu-calibrated.sha256` as the executable pin. Before using the candidate for
+any group, it gives the first unfinished group's indexed shard one bounded
+CUDA attempt and independently verifies the leaf with the stock CPU checker.
+The runner logs the measured check or the fallback to its installed worker.
+
 The raw M14 release uses raw scratch when both outputs fit. Its fallback
 writes the original fanout format through the Windows WSL share into the
 pinned zstd-compressed Btrfs checkpoint volume. Ciphertexts and labels stay
