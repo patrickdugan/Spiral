@@ -166,6 +166,42 @@ python3 -m proofdesk.protected_accounting \
 
 After verifying the Nova proof, the auditor observes Core at the pinned tip and compares independently reconciled reserves and liabilities with the proof totals. Core checks unspent funding for pending and live claims and the exact confirmed spender for redeemed claims. A pending mempool spend makes a reserve unavailable. For redeemed claims Core needs its transaction-output spender index. The auditor checks the tip again after observing all entries. The catalog covers the observer's published V3 reserve set. Its integrity and availability are required to detect omissions, and bearer notes issued outside that set remain invisible. Protected split and swap need funded outputs assigned to the new holders before the auditor can admit them.
 
+### Discoverable reserve enrollment
+
+The registry profile uses a `proof-grove/protected-reserve-catalog/v2` catalog
+at a pinned regtest tip. The catalog's `registry_sha256` is the canonical
+JSON digest of a `proof-grove/protected-reserve-registry/v1` root document.
+That root records `genesis`, `mint`, the confirmed `txid`, `vout`,
+`block` and `height`, and the coin's native SegWit `script` and `sats`.
+Obtain the root and its file SHA-256 through an independent channel.
+
+Each enrollment spends the current registry coin and creates one
+continuation output with the same script and amount. Its zero-value
+OP_RETURN uses the payload returned by `protected_registry.registration_payload`.
+The payload contains `PGCR`, version byte 1, the 32-byte funding transaction
+ID in display order, and one to nine ascending, four-byte big-endian output
+indices. The registration can reference an already funded reserve or the
+funded outputs created by a rollover. The holder's CSV payout continues to
+spend the reserve itself.
+
+Add `--registry ROOT.json --registry-sha256 ROOT_FILE_SHA256` to the
+accounting audit or to `protected-withdrawal`. The auditor uses
+`txospenderindex` to follow confirmed, active-chain registry spends from the
+root to the current head. The catalog must include every enrolled outpoint,
+including consumed reserves. Unregistered catalog entries, repeated
+registrations, reuse of a registry coin as a reserve, and stale tips fail
+admission. The withdrawal statement
+commits to the catalog digest, which in this profile includes the registry
+root digest.
+
+The registry signer authorizes enrollment. Wallets need the catalog and
+admission witnesses to validate the funded claims. The Nova proof verifies
+the journal transitions and totals for that observed set. Duplicate checks
+cover the pinned registry. Cashu bearer
+liabilities signed outside the protected registry remain outside the
+auditor's visibility, and a protected wallet requires enrollment before
+accepting a reserve as part of this profile.
+
 Run the native Core reconciliation fixture with `python3 tests/protected-reserve-regtest.py --bitcoind /path/to/bitcoind --profile v3` from `proof-grove/`. It moves a 25,000-sat reserve from pending to issued, refuses to count the coin while its spend is pending, and reconciles the confirmed holder exit to zero outstanding sats. Invalidating the payout block revokes the old audit tip. The standalone run uses a synthetic issuance record. It exercises the live Core observer without generating a fresh Nova proof. Its report includes the chain data for the separate `proofdesk.protected_payout_evidence` verifier.
 
 Run the fresh CDK and Nova reconciliation from `proof-grove/` with Bitcoin Core 31.0, CDK 0.18.3, the wallet's installed Node dependencies, and the compiled `proof-grove-cashu-nova` binary.
@@ -408,6 +444,7 @@ ZK Rusto's disk-backed sharder supports CUDA and CPU workers for SP1. The pinned
 | Protected cooperative melt | Proof Grove wallet, desk, and Bitcoin Core 31.0 | Exact holder `SIGHASH_ALL` plus mint co-signature, verified by Core | Both branches compete for one issued outpoint. Status follows active confirmations and replay. | Cooperative and holder payouts were confirmed on competing regtest histories |
 | Nova accounting fixtures | Native journal replay and constraint tests | Compressed Nova proofs with a separate verifier | Authenticated accounting, canonical outpoints and replay checks | Funding and payout linked to Core records, with a separately verified CDK issuance certificate in the protected journal |
 | V3 CDK-to-Nova accounting | Register, issue, and redeem from the protected holder fixture | Separate offline V3 mint and reserve pin verification and independent Nova verification | Exact receipt and batch committed at issuance. The same quote cannot register a second outpoint in the pinned journal. | Funded holder exit confirmed by Core. The accompanying M14 record was evaluated off-chain. |
+| Discoverable protected reserve registry | Two fresh walletless Core instances replayed 216 regtest blocks. The audit followed the root coin to two enrolled reserves. It rejected omissions from both files, duplicate enrollment, off-registry entries and stale tips. | A separate verifier accepted the 11,504-byte Nova proof and its pinned verification key. Proving took 167.6 seconds at 404.3 MiB peak commit. The separate verification and Core replay took 76.3 seconds. | The three-event journal matches 50,000 sats of reserves and 25,000 sats of outstanding claims. The live observer reports 25,000 sats awaiting issuance. Thirty-three protected tests passed. Evidence ZIP SHA-256 is `07389b5c5e1d02b0678b93a9fdf51546148d61cc0046d851341b6a71245eb3c2`. | The registered holder's signed withdrawal passed admission at the pinned tip. This registry run leaves both reserve outputs unspent. |
 | SP1 CUDA digest benchmark | 1,432 Core shards on the RTX 3050 over the 16 MiB corpus | Whole Core proof outstanding after the RAM guard stopped the worker | SHA-256 of the pinned corpus | — |
 | SP1 CUDA archive control | 27 disk-backed Core shards for the 64 KiB corpus prefix | Stock LightProver accepted the complete archived proof and rejected two mutations | SHA-256 of the pinned prefix | — |
 | RTX A6000 SP1 CUDA control | 1 MiB pinned digest guest, 25 core and eight recursion tasks | Worker verified its compressed proof and matched the independent public digest | Digest benchmark | — |

@@ -69,9 +69,9 @@ class ProtectedAccountingTest(unittest.TestCase):
                     "fee_sats": 250, "delay_blocks": 6, "script": plan["payout_script"]},
             })
 
-    def audit(self):
+    def audit(self, *, registry=None):
         with patch.object(accounting, "spending_observation", side_effect=lambda core, bundle, pin: self.observations[pin]):
-            return accounting.audit(self.core, self.catalog, self.journal, self.records)
+            return accounting.audit(self.core, self.catalog, self.journal, self.records, registry=registry)
 
     def test_reconciles_pending_issued_and_redeemed_at_one_tip(self):
         result = self.audit()
@@ -119,6 +119,30 @@ class ProtectedAccountingTest(unittest.TestCase):
         del self.records[0]
         with self.assertRaisesRegex(Refused, "catalog_omission"):
             self.audit()
+
+    def test_registry_detects_a_reserve_omitted_from_both_catalog_and_journal(self):
+        registry = {"independent": "root"}
+        registered = {accounting.outpoint(bundle["funding"]) for bundle in self.catalog["bundles"]}
+        enrollment = {"registered_reserves": len(registered), "head_txid": TIP, "head_vout": 0}
+        with self.assertRaisesRegex(Refused, "registry_profile_mismatch"):
+            self.audit(registry=registry)
+        self.catalog.update(schema=accounting.REGISTRY_CATALOG_SCHEMA, registry_sha256=digest(registry))
+        with self.assertRaisesRegex(Refused, "registry_profile_mismatch"):
+            self.audit()
+        with self.assertRaisesRegex(Refused, "registry_root_mismatch"):
+            self.audit(registry={"independent": "substitute"})
+        with patch.object(accounting, "discover", return_value=(registered, enrollment)) as discover:
+            result = self.audit(registry=registry)
+            self.assertEqual(result["registry"], enrollment | {"root_sha256": digest(registry)})
+            self.catalog["bundles"].pop(0)
+            self.journal["events"].pop(0)
+            self.records.pop(0)
+            with self.assertRaisesRegex(Refused, "registered_reserve_omitted"):
+                self.audit(registry=registry)
+            with patch.object(accounting, "discover", return_value=(set(), enrollment)):
+                with self.assertRaisesRegex(Refused, "unregistered_reserve"):
+                    self.audit(registry=registry)
+            self.assertEqual(discover.call_count, 2)
 
     def test_liability_without_spendable_coin_and_stale_tip_are_refused(self):
         pin = self.catalog["bundles"][1]["bundle_id"]

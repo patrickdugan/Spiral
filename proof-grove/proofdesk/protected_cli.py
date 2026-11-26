@@ -25,6 +25,8 @@ def configure(commands):
                 "records", "records-sha256"):
         withdrawal.add_argument("--" + key, required=True)
     withdrawal.add_argument("--candidate", help="Readmit an existing candidate against the pinned live prefix")
+    withdrawal.add_argument("--registry", type=Path)
+    withdrawal.add_argument("--registry-sha256")
 
     attach = commands.add_parser("protected-attach", help="Verify funding and save the exact coin and plan")
     attach.add_argument("--config", required=True)
@@ -134,15 +136,18 @@ def run(args):
         _write(args.output, json.dumps(result, indent=2))
         return {"bundle_id": result["bundle_id"], "funding": result["funding"]}
     if args.command == "protected-withdrawal":
+        if bool(args.registry) != bool(args.registry_sha256):
+            raise Refused("protected_accounting_registry_pin_required")
         limits = (("catalog", 2 * 1024 * 1024), ("journal", 256 * 1024), ("records", 2 * 1024 * 1024))
         inputs = [protected_accounting.pinned_json(getattr(args, key), getattr(args, key + "_sha256"), limit)
                   for key, limit in limits]
+        registry = protected_accounting.pinned_json(args.registry, args.registry_sha256, 4096) if args.registry else None
         tx = read_bounded(args.tx_file, 16002).decode("ascii").strip()
         if args.candidate:
             candidate = json.loads(read_bounded(args.candidate, 256 * 1024))
-            result = protected_withdrawal.verify_candidate(core, *inputs, args.bundle_id, tx, candidate)
+            result = protected_withdrawal.verify_candidate(core, *inputs, args.bundle_id, tx, candidate, registry=registry)
         else:
-            result = protected_withdrawal.prepare(core, *inputs, args.bundle_id, tx)
+            result = protected_withdrawal.prepare(core, *inputs, args.bundle_id, tx, registry=registry)
         _write(args.output, json.dumps(result, indent=2))
         return {"withdrawal_id": result["withdrawal_id"], "steps": len(result["journal"]["events"])}
     bundle = _load(args.bundle)

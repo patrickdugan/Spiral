@@ -9,12 +9,14 @@ import subprocess
 
 from .adapters import CoreClient
 from .domain import digest, hash32, positive, Refused
+from .protected_registry import discover
 from .protected_reserve import GENESIS, SUCCESSOR_BUNDLE_SCHEMA, V3_BUNDLE_SCHEMA, _chain, _stable_tip, spending_observation
 from .protected_rollover import verify_confirmed
 from .verifier import read_bounded
 
 
 CATALOG_SCHEMA = "proof-grove/protected-reserve-catalog/v1"
+REGISTRY_CATALOG_SCHEMA = "proof-grove/protected-reserve-catalog/v2"
 JOURNAL_SCHEMA = "proof-grove/cashu-nova-journal/v1"
 MAX_EVENTS = 256
 
@@ -89,17 +91,22 @@ def check_payout(core, plan, receipt, observation):
         raise Refused("protected_accounting_payout_mismatch")
 
 
-def audit(core, catalog, journal, records):
+def audit(core, catalog, journal, records, *, registry=None):
     """Check completeness relative to the supplied independent catalog and journal pins."""
     mint = catalog["mint"]
     profile = digest({"schema": "proof-grove/protected-accounting-mint/v3", "mint_url": mint})
     events, bundles = journal["events"], catalog["bundles"]
-    if (catalog.get("schema") != CATALOG_SCHEMA or catalog.get("genesis") != GENESIS
+    if (catalog.get("schema") not in (CATALOG_SCHEMA, REGISTRY_CATALOG_SCHEMA) or catalog.get("genesis") != GENESIS
             or journal.get("schema") != JOURNAL_SCHEMA or journal.get("genesis") != GENESIS
             or journal["mint_profile_sha256"] != profile or not isinstance(mint, str) or not mint
             or not all(isinstance(items, list) for items in (bundles, events, records))
             or not 1 <= len(bundles) <= len(events) <= MAX_EVENTS or len(records) != len(events)):
         raise Refused("protected_accounting_invalid_catalog")
+    uses_registry = catalog["schema"] == REGISTRY_CATALOG_SCHEMA
+    if uses_registry != (registry is not None):
+        raise Refused("protected_accounting_registry_profile_mismatch")
+    if uses_registry and catalog.get("registry_sha256") != digest(registry):
+        raise Refused("protected_accounting_registry_root_mismatch")
     by_coin = {}
     for bundle in bundles:
         coin = outpoint(bundle["funding"])
@@ -111,6 +118,14 @@ def audit(core, catalog, journal, records):
     if (hash32(catalog["tip_hash"], "tip_hash") != tip["bestblockhash"]
             or positive(catalog["tip_height"], "tip_height", 2**31 - 1) != tip["blocks"]):
         raise Refused("protected_accounting_stale_catalog")
+    registry_result = {}
+    if registry is not None:
+        registered, enrollment = discover(core, registry, mint, tip, max_reserves=MAX_EVENTS)
+        if registered - by_coin.keys():
+            raise Refused("protected_accounting_registered_reserve_omitted")
+        if by_coin.keys() - registered:
+            raise Refused("protected_accounting_unregistered_reserve")
+        registry_result = {"registry": enrollment | {"root_sha256": digest(registry)}}
 
     # A confirmed rollover authorizes exactly four successive child events.
     intents, phases = {}, {}
@@ -187,7 +202,8 @@ def audit(core, catalog, journal, records):
             totals[field] += plan["reserve_sats"]
             totals["declared_reserve_sats"] += plan["reserve_sats"]
     _stable_tip(core, tip)
-    return totals | {"catalog_reserves": len(by_coin), "tip_hash": tip["bestblockhash"], "tip_height": tip["blocks"]}
+    return totals | {"catalog_reserves": len(by_coin), "tip_hash": tip["bestblockhash"],
+                     "tip_height": tip["blocks"]} | registry_result
 
 
 def main():
@@ -196,11 +212,16 @@ def main():
         parser.add_argument("--" + field, required=True, type=Path)
     for field in ("catalog-sha256", "journal-sha256", "nova-key-sha256"):
         parser.add_argument("--" + field, required=True)
+    parser.add_argument("--registry", type=Path)
+    parser.add_argument("--registry-sha256")
     args = parser.parse_args()
+    if bool(args.registry) != bool(args.registry_sha256):
+        parser.error("--registry and --registry-sha256 must be supplied together")
     core = CoreClient.from_config(json.loads(read_bounded(args.config, 32768))["core"])
     catalog = pinned_json(args.catalog, args.catalog_sha256, 2 * 1024 * 1024)
     journal = pinned_json(args.journal, args.journal_sha256, 256 * 1024)
     records = json.loads(read_bounded(args.admission, 2 * 1024 * 1024))
+    registry = pinned_json(args.registry, args.registry_sha256, 4096) if args.registry else None
     key_pin = hash32(args.nova_key_sha256, "nova_key_sha256")
     checked = subprocess.run([str(args.nova_verifier.resolve()), "verify-journal", str(args.proof_dir),
                               str(args.journal), args.journal_sha256], stdin=subprocess.DEVNULL,
@@ -210,7 +231,7 @@ def main():
             or proof.get("verified") is not True or proof.get("journal_sha256") != args.journal_sha256
             or proof.get("verifier_key_sha256") != key_pin or proof.get("steps") != len(journal["events"])):
         raise Refused("protected_accounting_nova_mismatch")
-    result = audit(core, catalog, journal, records)
+    result = audit(core, catalog, journal, records, registry=registry)
     if any(proof.get(field) != result[field] for field in ("declared_reserve_sats", "outstanding_claims_sats")):
         raise Refused("protected_accounting_nova_mismatch")
     print(json.dumps(result | {"schema": "proof-grove/protected-ledger-audit/v1",

@@ -11,10 +11,10 @@ SCHEMA = "proof-grove/protected-withdrawal-candidate/v1"
 STATEMENT = "proof-grove/protected-withdrawal-authorization/v1"
 
 
-def prepare(core, catalog, journal, records, bundle_id, raw):
+def prepare(core, catalog, journal, records, bundle_id, raw, *, registry=None):
     """Check the live confirmed prefix and return one provisional consumption event."""
     hash32(bundle_id, "bundle_id")
-    totals = audit(core, catalog, journal, records)
+    totals = audit(core, catalog, journal, records, registry=registry)
     if len(journal["events"]) >= MAX_EVENTS:
         raise Refused("protected_withdrawal_journal_full")
     matches = [bundle for bundle in catalog["bundles"] if bundle["bundle_id"] == bundle_id]
@@ -61,9 +61,9 @@ def prepare(core, catalog, journal, records, bundle_id, raw):
             "journal": journal | {"events": [*journal["events"], event]}}
 
 
-def verify_candidate(core, catalog, journal, records, bundle_id, raw, candidate):
+def verify_candidate(core, catalog, journal, records, bundle_id, raw, candidate, *, registry=None):
     """Readmit against the pinned live prefix, then check all bytes used by the prover."""
-    expected = prepare(core, catalog, journal, records, bundle_id, raw)
+    expected = prepare(core, catalog, journal, records, bundle_id, raw, registry=registry)
     if digest(candidate) != digest(expected):
         raise Refused("protected_withdrawal_candidate_mismatch")
     return expected
