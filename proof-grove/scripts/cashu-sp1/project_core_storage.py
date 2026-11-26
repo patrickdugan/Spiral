@@ -105,6 +105,21 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         raise ValueError('invalid independent filesystem compression measurement')
     archive_pilot = math.ceil(archive_logical * pilot_data / pilot_logical)
     projected_growth = math.ceil(remaining * growth)
+    non_execution_count = sample_count - len(ranges)
+    remaining_non_execution = math.ceil(remaining * non_execution_count / len(ranges))
+    average_non_execution_logical = ((sum(sizes) - sum(sizes[index] for index in execution_indexes)) / non_execution_count
+                                     if non_execution_count else 0)
+    mixed_archive_logical = archive_logical + math.ceil(remaining_non_execution * average_non_execution_logical)
+    mixed_archive = math.ceil(mixed_archive_logical * pilot_data / pilot_logical)
+    mixed_growth = math.ceil((remaining + remaining_non_execution) * growth)
+    same_mix = {
+        'scope': 'Illustrative remaining workload at the settled sample mix and measured filesystem growth.',
+        'estimated_remaining_non_execution_shards': remaining_non_execution,
+        'estimated_additional_live_bytes': mixed_growth,
+        'estimated_uncompressed_archive_bytes': mixed_archive_logical,
+        'estimated_archive_bytes_at_pilot_ratio': mixed_archive,
+        'estimated_headroom_at_pilot_ratio_bytes': available - mixed_growth - mixed_archive,
+    }
     result = {
         'schema': 'proof-grove/cashu-core-storage-projection/v1',
         'scope': ('Execution-shard storage projection. Future non-execution shards, filesystem metadata, '
@@ -116,7 +131,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         'saved_shards': len(events),
         'sampled_shards': sample_count,
         'sampled_execution_shards': len(ranges),
-        'sampled_non_execution_shards': sample_count - len(ranges),
+        'sampled_non_execution_shards': non_execution_count,
         'sampled_at_unix': sampled_at,
         'sample_latest_event_unix': sample[-1]['t'],
         'sample_minimum_age_seconds': minimum_age,
@@ -133,6 +148,7 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         'estimated_archive_bytes_at_pilot_ratio': archive_pilot,
         'estimated_headroom_at_pilot_ratio_bytes': available - projected_growth - archive_pilot,
         'estimated_headroom_without_archive_compression_bytes': available - projected_growth - archive_logical,
+        'same_sample_mix': same_mix,
     }
     if btrfs_extents:
         from btrfs_extent_usage import usage
@@ -143,6 +159,15 @@ def project(run, execution, filesystem, pilot, baseline_bytes, baseline_shards, 
         physical_sizes = [extent['physical_extent_bytes'] for extent in extents]
         average_execution_physical = sum(physical_sizes[index] for index in execution_indexes) / len(ranges)
         projected_memos = math.ceil(remaining * average_execution_physical)
+        average_non_execution_physical = (
+            (sum(physical_sizes) - sum(physical_sizes[index] for index in execution_indexes)) / non_execution_count
+            if non_execution_count else 0
+        )
+        mixed_memos = projected_memos + math.ceil(remaining_non_execution * average_non_execution_physical)
+        same_mix.update({
+            'estimated_additional_memo_extent_bytes': mixed_memos,
+            'headroom_after_memo_extents_and_archive_bytes': available - mixed_memos - mixed_archive,
+        })
         result.update({
             'sampled_average_memo_extent_bytes': sum(physical_sizes) / sample_count,
             'sampled_average_execution_memo_extent_bytes': average_execution_physical,

@@ -95,6 +95,11 @@ class ArchiveTests(unittest.TestCase):
             self.assertEqual(result['sampled_average_memo_extent_bytes'], 800)
             self.assertEqual(result['sampled_average_execution_memo_extent_bytes'], 700)
             self.assertEqual(result['estimated_additional_memo_extent_bytes'], 1400)
+            mixed = result['same_sample_mix']
+            self.assertEqual(mixed['estimated_remaining_non_execution_shards'], 1)
+            self.assertEqual(mixed['estimated_uncompressed_archive_bytes'], 9600)
+            self.assertEqual(mixed['estimated_archive_bytes_at_pilot_ratio'], 4800)
+            self.assertEqual(mixed['estimated_additional_memo_extent_bytes'], 2400)
 
     def test_live_clock_overrun_supersedes_the_reference_estimate(self):
         missing = compare_reference_clock(11, None, 2)

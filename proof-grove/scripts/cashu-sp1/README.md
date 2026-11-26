@@ -90,7 +90,9 @@ filesystem-growth estimate to account for the other allocations observed
 between the storage baseline and the sample. The archive estimate sizes saved
 shards from the sampled mix and sizes remaining execution work from execution
 shards. The sample must contain at least two contiguous execution intervals.
-Future non-execution shards and recursive artifacts require additional space.
+The `same_sample_mix` scenario also projects future non-execution work at
+the sampled proportions. These proportions can vary as proving advances.
+Recursive artifacts require additional space.
 
 The raw recursion launcher budgets group storage using the verified shard
 index. It checks the Btrfs free space together with the Windows free space
