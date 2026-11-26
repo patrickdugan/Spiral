@@ -126,4 +126,13 @@ SSD and WSL-installed copies. The run directory and archive stay on the
 separately mounted checkpoint volume. The resume attempt records its actual
 binary path in `input-pins.log` and retains the launcher it ran.
 
+After archive publication, `verify_core_settlement.sh` holds the Core worker
+lock while it checks the staged archive. If the raw parallel verifier times
+out after 300 seconds without output, the runner retains that attempt's logs
+and tries the same pinned verifier in serial mode once. The retry requires
+the same archive identity, zero OOM events and no published index. A native
+verification error propagates its original exit status. The full archive
+receipt is published only after the program, public output and index checks.
+
+Run `bash test_core_verify_watchdog.sh` for the subprocess and retry controls.
 Run `test-core-continuation.ps1` to exercise the exit classification.
