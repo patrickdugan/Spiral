@@ -50,9 +50,11 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(json.loads(body)['error'],'live_verifier_not_configured')
 
     def test_demo_cannot_download_unconfigured_protected_evidence(self):
-        status, body, _ = self.request('/api/protected/preview/archive')
-        self.assertEqual(status, 400)
-        self.assertEqual(json.loads(body)['error'], 'protected_preview_not_configured')
+        for name in ('archive', 'transaction'):
+            with self.subTest(name=name):
+                status, body, _ = self.request(f'/api/protected/preview/{name}')
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(body)['error'], 'protected_preview_not_configured')
 
     def test_blocks_cross_origin_posts_dns_rebinding_and_missing_custom_header(self):
         for headers in ({'Origin':'https://attacker.example'},{'Host':'attacker.example'},{'X-Proof-Grove':''}):

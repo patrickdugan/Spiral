@@ -93,10 +93,18 @@ class Desk:
             return {'case': case, 'verified': False, 'detail': str(exc)}
         return {'case': case, 'verified': True, 'payout': verified}
 
-    def protected_preview_archive(self) -> bytes:
+    def _verified_protected_preview_input(self) -> tuple[dict, bytes]:
         manifest, raw = self._protected_preview_input()
         if not self._verify_protected_preview(manifest, raw, 'original')['verified']:
             raise Refused('protected_preview_unverified')
+        return manifest, raw
+
+    def protected_preview_transaction(self) -> bytes:
+        _, raw = self._verified_protected_preview_input()
+        return (json.loads(raw)['public_transactions']['payout'] + '\n').encode('ascii')
+
+    def protected_preview_archive(self) -> bytes:
+        manifest, raw = self._verified_protected_preview_input()
         receipt_name = 'holder-receipt.json'
         pins = {key: manifest[key] for key in ('receipt_sha256', 'bundle_id', 'anchor_height', 'anchor_hash')}
         stream = io.BytesIO()
@@ -299,6 +307,9 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                         value = desk.check_protected_preview(parse_qs(url.query).get('case', ['original'])[0])
                     elif path == '/api/protected/preview/archive':
                         self._send(200, desk.protected_preview_archive(), 'application/zip')
+                        return
+                    elif path == '/api/protected/preview/transaction':
+                        self._send(200, desk.protected_preview_transaction(), 'text/plain; charset=utf-8')
                         return
                     elif path == '/api/chainstate':
                         value=desk.chainstate()

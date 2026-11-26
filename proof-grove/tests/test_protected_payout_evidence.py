@@ -157,25 +157,31 @@ class ProtectedPayoutEvidenceTest(unittest.TestCase):
             with make_server(desk, 0) as server:
                 thread = threading.Thread(target=server.serve_forever, daemon=True)
                 thread.start()
-                url = f'http://127.0.0.1:{server.server_port}/api/protected/preview/archive'
+                preview = f'http://127.0.0.1:{server.server_port}/api/protected/preview'
+                archive_url, transaction_url = (f'{preview}/{name}' for name in ('archive', 'transaction'))
                 try:
-                    with urlopen(url, timeout=5) as response:
+                    with urlopen(archive_url, timeout=5) as response:
                         self.assertEqual(response.headers.get_content_type(), 'application/zip')
                         with ZipFile(io.BytesIO(response.read())) as archive:
                             self.assertEqual(set(archive.namelist()), {'preview.json', 'holder-receipt.json'})
                             self.assertEqual(json.loads(archive.read('preview.json')), {'receipt': 'holder-receipt.json', **pins})
                             self.assertEqual(archive.read('holder-receipt.json'), raw)
-                    signature.assert_called_once()
+                    with urlopen(transaction_url, timeout=5) as response:
+                        self.assertEqual(response.headers.get_content_type(), 'text/plain')
+                        self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
+                        self.assertEqual(response.read(), (self.receipt['public_transactions']['payout'] + '\n').encode('ascii'))
                     receipt_path.write_bytes(raw + b' ')
-                    with self.assertRaises(HTTPError) as refused:
-                        urlopen(url, timeout=5)
-                    self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_receipt_changed')
+                    for url in (archive_url, transaction_url):
+                        with self.assertRaises(HTTPError) as refused:
+                            urlopen(url, timeout=5)
+                        self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_receipt_changed')
                     receipt_path.write_bytes(raw)
                     manifest_path.write_text(json.dumps(manifest | {'anchor_hash': '33' * 32}), encoding='utf-8')
-                    with self.assertRaises(HTTPError) as refused:
-                        urlopen(url, timeout=5)
-                    self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_unverified')
-                    signature.assert_called_once()
+                    for url in (archive_url, transaction_url):
+                        with self.assertRaises(HTTPError) as refused:
+                            urlopen(url, timeout=5)
+                        self.assertEqual(json.loads(refused.exception.read())['error'], 'protected_preview_unverified')
+                    self.assertEqual(signature.call_count, 2)
                 finally:
                     server.shutdown()
                     thread.join(timeout=5)
