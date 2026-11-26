@@ -286,7 +286,7 @@ compose_args=(
 )
 if [[ "$workload" == withdrawal-v4-raw ]]; then
     bounded_mode=(--memory-shards)
-    if (( ${#compose_mode[@]} )); then bounded_mode=(--batch-reducer); fi
+    if (( ${#compose_mode[@]} )); then bounded_mode+=(--batch-reducer); fi
     run_stage bounded_recursion python3 -B "$src/compose_core_bounded.py" "$archive" "$verified/shard-index.json" "$index_pin" \
         "$job/run/run.json" "$manifest_pin" "$program_key" "$elf" "$key" "$key_pin" "$parents" \
         "$normalizer" "$reducer" "$checker" --group-size "$group_size" \
