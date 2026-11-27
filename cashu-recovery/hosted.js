@@ -24,6 +24,7 @@
     if(path==='/api/archive/manifest')return clone(data.archives[current].manifest);
     if(path==='/api/ark/exits')return {exits:[],broadcast_enabled:false};
     if(['/api/cashu/info','/api/bark/history','/api/ark/wallet'].includes(path))return {evidence_level:'not-connected'};
+    if(path==='/api/stablecoin/status')return {status:'not_connected',adapter:'NotConnectedAdapter',detail:'No RGB/Utexo SDK is installed. Nothing was quoted, issued or redeemed.'};
     if(path==='/api/cashu/operations')return {operations:[]};
     throw new Error('This hosted fixture demo cannot sign, verify a native proof or connect to a wallet. Run the local app from GitHub.');
   }
