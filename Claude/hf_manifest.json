@@ -1,0 +1,2414 @@
+{
+  "dataset_repo": "AlephFunk/spiral-claude-chats",
+  "dataset_url": "https://huggingface.co/datasets/AlephFunk/spiral-claude-chats",
+  "private": true,
+  "session_count": 267,
+  "raw_bytes": 2178407949,
+  "compressed_bytes": 719466716,
+  "index_uri": "https://huggingface.co/datasets/AlephFunk/spiral-claude-chats/resolve/main/index.jsonl",
+  "sessions": [
+    {
+      "session_id": "ec464567-46c0-464d-b886-30f69a477b2e",
+      "month": "2026-11",
+      "title": "Lightninger agent/algo API + RPC, IronClaw integration",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/ec464567-46c0-464d-b886-30f69a477b2e.jsonl.gz",
+      "raw_bytes": 2216181,
+      "gz_bytes": 534397
+    },
+    {
+      "session_id": "2b87abc0-2672-4120-bc50-6adea00b5d17",
+      "month": "2026-11",
+      "title": "Bitcoin DeFi Bench evaluation suite",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/2b87abc0-2672-4120-bc50-6adea00b5d17.jsonl.gz",
+      "raw_bytes": 42819070,
+      "gz_bytes": 11971527
+    },
+    {
+      "session_id": "2ae30031-2822-4645-ac63-cadd6dce416b",
+      "month": "2026-11",
+      "title": "Taiwan AI conference strategy",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/2ae30031-2822-4645-ac63-cadd6dce416b.jsonl.gz",
+      "raw_bytes": 724400,
+      "gz_bytes": 195365
+    },
+    {
+      "session_id": "f7fb12a1-55b3-48a4-878d-6c726f7bc15d",
+      "month": "2026-11",
+      "title": "Storyworld-driven continual learning pipeline",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/f7fb12a1-55b3-48a4-878d-6c726f7bc15d.jsonl.gz",
+      "raw_bytes": 12032117,
+      "gz_bytes": 3176689
+    },
+    {
+      "session_id": "6fd6b1e7-c249-4ce0-a067-d1a90c60b08e",
+      "month": "2026-11",
+      "title": "Lightninger Nova circuits: V3 clearing + in-circuit TapSighash",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/6fd6b1e7-c249-4ce0-a067-d1a90c60b08e.jsonl.gz",
+      "raw_bytes": 3433851,
+      "gz_bytes": 912643
+    },
+    {
+      "session_id": "954aaa4c-0c98-4c5a-9bc6-62472d1b1795",
+      "month": "2026-11",
+      "title": "Adaptive mechanistic memory curriculum hill-climbing",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/954aaa4c-0c98-4c5a-9bc6-62472d1b1795.jsonl.gz",
+      "raw_bytes": 4839388,
+      "gz_bytes": 1105159
+    },
+    {
+      "session_id": "7a0c4eaf-4d33-467b-b935-d7a114e32758",
+      "month": "2026-11",
+      "title": "SatsHedgeZero HFT-06 Oracle infrastructure",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/7a0c4eaf-4d33-467b-b935-d7a114e32758.jsonl.gz",
+      "raw_bytes": 35850158,
+      "gz_bytes": 11320005
+    },
+    {
+      "session_id": "1b198a72-b7a2-46f2-b479-6da3a20416fb",
+      "month": "2026-11",
+      "title": "SHZ venue multilateral clearing: audit + implement",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/1b198a72-b7a2-46f2-b479-6da3a20416fb.jsonl.gz",
+      "raw_bytes": 5604253,
+      "gz_bytes": 1385937
+    },
+    {
+      "session_id": "7bcff840-f2cd-4185-88d7-7b404db69328",
+      "month": "2026-11",
+      "title": "Bonsai 2 27B adapter training on BitcoinDefiBench",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/7bcff840-f2cd-4185-88d7-7b404db69328.jsonl.gz",
+      "raw_bytes": 13893768,
+      "gz_bytes": 3175607
+    },
+    {
+      "session_id": "a3d1e5d2-bba6-4060-a023-85c793dbcf25",
+      "month": "2026-11",
+      "title": "Port FROST oracle member signer from Python to Rust",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/a3d1e5d2-bba6-4060-a023-85c793dbcf25.jsonl.gz",
+      "raw_bytes": 3061667,
+      "gz_bytes": 776726
+    },
+    {
+      "session_id": "c28de44e-b702-4288-98be-a1471a0e4f29",
+      "month": "2026-11",
+      "title": "Lightninger BTC/USDT spot swap market",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/c28de44e-b702-4288-98be-a1471a0e4f29.jsonl.gz",
+      "raw_bytes": 4540369,
+      "gz_bytes": 1252590
+    },
+    {
+      "session_id": "fa94fe93-ad19-48f7-a91c-08d1136a3575",
+      "month": "2026-11",
+      "title": "Tradelayer.org website redesign",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/fa94fe93-ad19-48f7-a91c-08d1136a3575.jsonl.gz",
+      "raw_bytes": 2767709,
+      "gz_bytes": 867866
+    },
+    {
+      "session_id": "522eb55d-950a-4e1b-9efd-06eef85d340a",
+      "month": "2026-11",
+      "title": "Native TRM curriculum hill-climbing pilot",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/522eb55d-950a-4e1b-9efd-06eef85d340a.jsonl.gz",
+      "raw_bytes": 3274973,
+      "gz_bytes": 701490
+    },
+    {
+      "session_id": "8d971c12-5d05-481a-8025-de0d258f7f64",
+      "month": "2026-11",
+      "title": "Security review: TL Rust",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/8d971c12-5d05-481a-8025-de0d258f7f64.jsonl.gz",
+      "raw_bytes": 3971766,
+      "gz_bytes": 906471
+    },
+    {
+      "session_id": "792de405-c0c7-4a47-864a-414a7dc60db1",
+      "month": "2026-11",
+      "title": "Adaptive mechanistic memory curriculum hill-climbing",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/792de405-c0c7-4a47-864a-414a7dc60db1.jsonl.gz",
+      "raw_bytes": 3946940,
+      "gz_bytes": 895822
+    },
+    {
+      "session_id": "ca92ef03-b145-47c3-a8c0-24a5aca07678",
+      "month": "2026-11",
+      "title": "TL Wallet Rust security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/ca92ef03-b145-47c3-a8c0-24a5aca07678.jsonl.gz",
+      "raw_bytes": 3575851,
+      "gz_bytes": 850648
+    },
+    {
+      "session_id": "78208943-fb4f-44e7-b281-22569ec16972",
+      "month": "2026-11",
+      "title": "Obligation Ledger Reasoner CPU experiment",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/78208943-fb4f-44e7-b281-22569ec16972.jsonl.gz",
+      "raw_bytes": 8929620,
+      "gz_bytes": 2067388
+    },
+    {
+      "session_id": "fc2bac21-8cfe-4b5b-91e6-256edeb52280",
+      "month": "2026-11",
+      "title": "Decision-Directed Compactification and LDT Execution",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/fc2bac21-8cfe-4b5b-91e6-256edeb52280.jsonl.gz",
+      "raw_bytes": 7182734,
+      "gz_bytes": 1672816
+    },
+    {
+      "session_id": "65d571a9-5d9d-431d-aa26-ac72b5d6f059",
+      "month": "2026-11",
+      "title": "Macroscopic interpretability theory for AI control",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/65d571a9-5d9d-431d-aa26-ac72b5d6f059.jsonl.gz",
+      "raw_bytes": 3550902,
+      "gz_bytes": 1078240
+    },
+    {
+      "session_id": "d91c6c81-4b6c-4782-bcab-a4c34c47c51f",
+      "month": "2026-11",
+      "title": "GDK app with Pocket Goblin",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/d91c6c81-4b6c-4782-bcab-a4c34c47c51f.jsonl.gz",
+      "raw_bytes": 7225111,
+      "gz_bytes": 1709889
+    },
+    {
+      "session_id": "e608b868-1b5a-45ea-acaf-786313b901ef",
+      "month": "2026-11",
+      "title": "Lightninger options/combos/dual collateral + router F1 fix",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/e608b868-1b5a-45ea-acaf-786313b901ef.jsonl.gz",
+      "raw_bytes": 3718350,
+      "gz_bytes": 896691
+    },
+    {
+      "session_id": "0cc64e2d-35f4-4825-ac27-d9a8b7fb46a3",
+      "month": "2026-11",
+      "title": "Lightninger venue + UI for DLC options (C2+C3 API)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/0cc64e2d-35f4-4825-ac27-d9a8b7fb46a3.jsonl.gz",
+      "raw_bytes": 5087394,
+      "gz_bytes": 1355222
+    },
+    {
+      "session_id": "194f87de-bac0-4680-8604-fdc3a981816f",
+      "month": "2026-11",
+      "title": "Quantum operational identifiability research",
+      "project": "tensor-lab",
+      "hf_path": "sessions/2026-11/194f87de-bac0-4680-8604-fdc3a981816f.jsonl.gz",
+      "raw_bytes": 2582295,
+      "gz_bytes": 577856
+    },
+    {
+      "session_id": "cb287573-6d9b-47b0-a582-7eeaa490346a",
+      "month": "2026-11",
+      "title": "RGB/Utexo: unblock live regtest gates (RGB-01b/c/e, RGB-02)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/cb287573-6d9b-47b0-a582-7eeaa490346a.jsonl.gz",
+      "raw_bytes": 3278029,
+      "gz_bytes": 660498
+    },
+    {
+      "session_id": "3c6547b8-3ca3-4ecb-b8b6-e460e93d674a",
+      "month": "2026-11",
+      "title": "Lightninger real settlement: LDK regtest channel adapter (G-LN-1)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/3c6547b8-3ca3-4ecb-b8b6-e460e93d674a.jsonl.gz",
+      "raw_bytes": 3808019,
+      "gz_bytes": 948653
+    },
+    {
+      "session_id": "ff3eb73f-ded5-46a4-b05a-a12c71da7c5a",
+      "month": "2026-11",
+      "title": "Update Lightninger architecture docs",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/ff3eb73f-ded5-46a4-b05a-a12c71da7c5a.jsonl.gz",
+      "raw_bytes": 1142936,
+      "gz_bytes": 284182
+    },
+    {
+      "session_id": "aa7ff487-9cea-41c3-b3a2-af5b1a16063e",
+      "month": "2026-11",
+      "title": "Port browser signing to Rust/WASM (k256)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/aa7ff487-9cea-41c3-b3a2-af5b1a16063e.jsonl.gz",
+      "raw_bytes": 1511238,
+      "gz_bytes": 387109
+    },
+    {
+      "session_id": "32791e3a-1fec-4279-89b0-356d6e457763",
+      "month": "2026-11",
+      "title": "Relay hardening: fix review findings F-11 and F-12",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/32791e3a-1fec-4279-89b0-356d6e457763.jsonl.gz",
+      "raw_bytes": 1953980,
+      "gz_bytes": 438565
+    },
+    {
+      "session_id": "aab87b59-c27a-4c39-a0d3-18fea382a603",
+      "month": "2026-11",
+      "title": "Lightninger liquidation drill with a scripted price path",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/aab87b59-c27a-4c39-a0d3-18fea382a603.jsonl.gz",
+      "raw_bytes": 4393858,
+      "gz_bytes": 966038
+    },
+    {
+      "session_id": "8663f125-ae37-42b8-bf77-559fa58b33f4",
+      "month": "2026-11",
+      "title": "SatsHedgeZero market microstructure research",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/8663f125-ae37-42b8-bf77-559fa58b33f4.jsonl.gz",
+      "raw_bytes": 13905039,
+      "gz_bytes": 4608334
+    },
+    {
+      "session_id": "32a96076-4c2a-49c7-bd41-99f2753479cc",
+      "month": "2026-11",
+      "title": "Rebrand venue UI to Lightninger (black/white/gold)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/32a96076-4c2a-49c7-bd41-99f2753479cc.jsonl.gz",
+      "raw_bytes": 10356239,
+      "gz_bytes": 5932577
+    },
+    {
+      "session_id": "f312d0df-4c5f-4ec8-b96c-be7df1f2c877",
+      "month": "2026-11",
+      "title": "Rewrite Lightninger roadmap to match what is live",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/f312d0df-4c5f-4ec8-b96c-be7df1f2c877.jsonl.gz",
+      "raw_bytes": 1398704,
+      "gz_bytes": 345879
+    },
+    {
+      "session_id": "98d5a912-e0a3-4de0-9706-0329a1055114",
+      "month": "2026-11",
+      "title": "SHZ max-loss margin engine: perps, options, dual collateral",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/98d5a912-e0a3-4de0-9706-0329a1055114.jsonl.gz",
+      "raw_bytes": 1173333,
+      "gz_bytes": 347270
+    },
+    {
+      "session_id": "9f96215a-85d4-4974-9b99-ea3a65390281",
+      "month": "2026-11",
+      "title": "LBF-20M gym reproducible report",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/9f96215a-85d4-4974-9b99-ea3a65390281.jsonl.gz",
+      "raw_bytes": 7284666,
+      "gz_bytes": 1666655
+    },
+    {
+      "session_id": "21c94c94-7dff-4fe1-9c09-0de056fcd72d",
+      "month": "2026-11",
+      "title": "Pocket Goblin port to Titan",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/21c94c94-7dff-4fe1-9c09-0de056fcd72d.jsonl.gz",
+      "raw_bytes": 3098110,
+      "gz_bytes": 784972
+    },
+    {
+      "session_id": "0267a420-3af6-4729-aa13-057669709a5b",
+      "month": "2026-11",
+      "title": "Expose Pocket Goblin repair sessions over ACP",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/0267a420-3af6-4729-aa13-057669709a5b.jsonl.gz",
+      "raw_bytes": 3187475,
+      "gz_bytes": 794239
+    },
+    {
+      "session_id": "d91e7d1f-94cb-478c-89da-0fe3dc19b22e",
+      "month": "2026-11",
+      "title": "Aleph 10M pretraining run on Colab",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/d91e7d1f-94cb-478c-89da-0fe3dc19b22e.jsonl.gz",
+      "raw_bytes": 9292459,
+      "gz_bytes": 2154018
+    },
+    {
+      "session_id": "e7125982-b34b-4ad7-b8e3-1f14d15404d2",
+      "month": "2026-11",
+      "title": "Attest SHZ DLC events before setting up new ones",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/e7125982-b34b-4ad7-b8e3-1f14d15404d2.jsonl.gz",
+      "raw_bytes": 1264792,
+      "gz_bytes": 313243
+    },
+    {
+      "session_id": "f0930b3e-c44f-4565-8e40-5f3e287dd334",
+      "month": "2026-11",
+      "title": "Offload C to Google Drive",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/f0930b3e-c44f-4565-8e40-5f3e287dd334.jsonl.gz",
+      "raw_bytes": 5597655,
+      "gz_bytes": 1290465
+    },
+    {
+      "session_id": "d774a60c-70b7-4993-a321-df678da32199",
+      "month": "2026-11",
+      "title": "Release committed margin when SHZ positions net out",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/d774a60c-70b7-4993-a321-df678da32199.jsonl.gz",
+      "raw_bytes": 2531549,
+      "gz_bytes": 595423
+    },
+    {
+      "session_id": "09ec16a2-3479-4d08-81fe-13c7ca4f9d7a",
+      "month": "2026-11",
+      "title": "Stop FROST/public relay OOM restarts on witness VPS",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/09ec16a2-3479-4d08-81fe-13c7ca4f9d7a.jsonl.gz",
+      "raw_bytes": 1491142,
+      "gz_bytes": 361819
+    },
+    {
+      "session_id": "27930b06-c95d-4ead-8d16-bdd05b332ea5",
+      "month": "2026-11",
+      "title": "VAD research program recovery and completion",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/27930b06-c95d-4ead-8d16-bdd05b332ea5.jsonl.gz",
+      "raw_bytes": 4408279,
+      "gz_bytes": 1058181
+    },
+    {
+      "session_id": "ef79970f-fd39-4de9-92d2-cd1f66726531",
+      "month": "2026-11",
+      "title": "Port to 5080",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/ef79970f-fd39-4de9-92d2-cd1f66726531.jsonl.gz",
+      "raw_bytes": 8111360,
+      "gz_bytes": 2133067
+    },
+    {
+      "session_id": "ba531e91-296a-4b85-8d9f-17aa5f53a953",
+      "month": "2026-11",
+      "title": "SatsHedgeZero HFT-06 security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/ba531e91-296a-4b85-8d9f-17aa5f53a953.jsonl.gz",
+      "raw_bytes": 4120481,
+      "gz_bytes": 1146403
+    },
+    {
+      "session_id": "64cb45c2-0f63-4896-a3b5-faacb3883179",
+      "month": "2026-11",
+      "title": "AHR-01 quantum experiment push",
+      "project": "tensor-lab",
+      "hf_path": "sessions/2026-11/64cb45c2-0f63-4896-a3b5-faacb3883179.jsonl.gz",
+      "raw_bytes": 3208815,
+      "gz_bytes": 721494
+    },
+    {
+      "session_id": "c7090a45-506b-4653-9c98-7706ac223e76",
+      "month": "2026-11",
+      "title": "Translation representation irreducibility bound",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/c7090a45-506b-4653-9c98-7706ac223e76.jsonl.gz",
+      "raw_bytes": 1700957,
+      "gz_bytes": 805051
+    },
+    {
+      "session_id": "6a9aee4d-2a69-4d04-9dc6-70bca7d8c966",
+      "month": "2026-11",
+      "title": "Genus-one curve addition and function space rigidity",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/6a9aee4d-2a69-4d04-9dc6-70bca7d8c966.jsonl.gz",
+      "raw_bytes": 1120794,
+      "gz_bytes": 457120
+    },
+    {
+      "session_id": "e78bfdf9-ec2d-4ae0-b8b5-66deb7bce78a",
+      "month": "2026-11",
+      "title": "Genus-one curve addition and function space rigidity",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/e78bfdf9-ec2d-4ae0-b8b5-66deb7bce78a.jsonl.gz",
+      "raw_bytes": 440269,
+      "gz_bytes": 133766
+    },
+    {
+      "session_id": "f60a508c-6a6c-4e8f-ae59-a52d9008847f",
+      "month": "2026-11",
+      "title": "ChatGPT threads Chrome automation",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/f60a508c-6a6c-4e8f-ae59-a52d9008847f.jsonl.gz",
+      "raw_bytes": 3108228,
+      "gz_bytes": 1198424
+    },
+    {
+      "session_id": "3b7c7983-12c8-4864-bf21-10ebb3590d71",
+      "month": "2026-11",
+      "title": "Mathematical Instrument Transfer MIT-09",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/3b7c7983-12c8-4864-bf21-10ebb3590d71.jsonl.gz",
+      "raw_bytes": 3888612,
+      "gz_bytes": 975119
+    },
+    {
+      "session_id": "1a702cc6-bceb-47cf-929f-7acd41c12e12",
+      "month": "2026-11",
+      "title": "CPU core usage",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/1a702cc6-bceb-47cf-929f-7acd41c12e12.jsonl.gz",
+      "raw_bytes": 665663,
+      "gz_bytes": 183229
+    },
+    {
+      "session_id": "8befbc79-e68b-4286-92a1-24932150c04d",
+      "month": "2026-11",
+      "title": "EvalMath CPF-01–06 verification and execution",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/8befbc79-e68b-4286-92a1-24932150c04d.jsonl.gz",
+      "raw_bytes": 5638855,
+      "gz_bytes": 1316713
+    },
+    {
+      "session_id": "e3456b3d-b424-4c95-8526-975598e09cd7",
+      "month": "2026-11",
+      "title": "Model Atlas collection for Aleph 1B",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-11/e3456b3d-b424-4c95-8526-975598e09cd7.jsonl.gz",
+      "raw_bytes": 2875694,
+      "gz_bytes": 693441
+    },
+    {
+      "session_id": "42e2d46e-8886-4b79-8e7c-adc04a7a6cd2",
+      "month": "2026-11",
+      "title": "BitVM Arena protocol integration",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/42e2d46e-8886-4b79-8e7c-adc04a7a6cd2.jsonl.gz",
+      "raw_bytes": 29280968,
+      "gz_bytes": 7445351
+    },
+    {
+      "session_id": "8a29eb98-3453-4f8e-b8dd-426263106466",
+      "month": "2026-11",
+      "title": "Activation steering controller research",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/8a29eb98-3453-4f8e-b8dd-426263106466.jsonl.gz",
+      "raw_bytes": 4939489,
+      "gz_bytes": 1909169
+    },
+    {
+      "session_id": "9865ea7a-9c38-462a-9cbd-2748684ca553",
+      "month": "2026-11",
+      "title": "TradeLayer–NEAR bridge security audit",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/9865ea7a-9c38-462a-9cbd-2748684ca553.jsonl.gz",
+      "raw_bytes": 4944634,
+      "gz_bytes": 1243247
+    },
+    {
+      "session_id": "a42d9e23-c454-4c3d-b9f4-6c1c640df266",
+      "month": "2026-11",
+      "title": "Security review: UTXORef and ZK Rusto",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/a42d9e23-c454-4c3d-b9f4-6c1c640df266.jsonl.gz",
+      "raw_bytes": 8182855,
+      "gz_bytes": 1897397
+    },
+    {
+      "session_id": "b9b9bd43-660a-4bdc-9a3e-427c5674b277",
+      "month": "2026-11",
+      "title": "BitVM3 setup compromise: distributed colluding agents + stego",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/b9b9bd43-660a-4bdc-9a3e-427c5674b277.jsonl.gz",
+      "raw_bytes": 4877845,
+      "gz_bytes": 1403874
+    },
+    {
+      "session_id": "9c2fa7a8-e167-4e10-bfb3-e7b3e16f4968",
+      "month": "2026-11",
+      "title": "BIP 2297 security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/9c2fa7a8-e167-4e10-bfb3-e7b3e16f4968.jsonl.gz",
+      "raw_bytes": 1888386,
+      "gz_bytes": 489551
+    },
+    {
+      "session_id": "f67f5038-7347-48c0-8e10-e6285c2afe0c",
+      "month": "2026-11",
+      "title": "Keyless BitVM fraud-proof settlement",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/f67f5038-7347-48c0-8e10-e6285c2afe0c.jsonl.gz",
+      "raw_bytes": 15171331,
+      "gz_bytes": 4029400
+    },
+    {
+      "session_id": "8910663c-89a0-475c-9a75-ac81daba1a70",
+      "month": "2026-11",
+      "title": "Ground-truth pilot for macrostate closure tests",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/8910663c-89a0-475c-9a75-ac81daba1a70.jsonl.gz",
+      "raw_bytes": 19959263,
+      "gz_bytes": 9882698
+    },
+    {
+      "session_id": "19aee3c6-22f6-41d8-bd70-403fc283503c",
+      "month": "2026-11",
+      "title": "Ark × NestedMuSig2 × Nova on Bitcoin testnet4",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/19aee3c6-22f6-41d8-bd70-403fc283503c.jsonl.gz",
+      "raw_bytes": 8104199,
+      "gz_bytes": 2105266
+    },
+    {
+      "session_id": "9077dd33-5b8f-44a8-82de-dda6fd40a525",
+      "month": "2026-11",
+      "title": "MCP Gym learned routing policies",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/9077dd33-5b8f-44a8-82de-dda6fd40a525.jsonl.gz",
+      "raw_bytes": 23190634,
+      "gz_bytes": 6143538
+    },
+    {
+      "session_id": "b646d834-1a38-4254-9007-5080497aaea1",
+      "month": "2026-11",
+      "title": "Capital Bound Revisted",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/b646d834-1a38-4254-9007-5080497aaea1.jsonl.gz",
+      "raw_bytes": 3565395,
+      "gz_bytes": 740429
+    },
+    {
+      "session_id": "722a4bcf-bfce-4caf-9d1f-9e375cfc0b94",
+      "month": "2026-11",
+      "title": "Lean-CGRT HRM audit and setup",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/722a4bcf-bfce-4caf-9d1f-9e375cfc0b94.jsonl.gz",
+      "raw_bytes": 26545888,
+      "gz_bytes": 6514393
+    },
+    {
+      "session_id": "649b2f67-fcff-447c-b9c4-4b100ab41471",
+      "month": "2026-11",
+      "title": "RHC-03 local RTX 5080 experiment",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/649b2f67-fcff-447c-b9c4-4b100ab41471.jsonl.gz",
+      "raw_bytes": 4115695,
+      "gz_bytes": 1042147
+    },
+    {
+      "session_id": "f3ca21e7-86e1-476c-8e94-d2c4df14ac7e",
+      "month": "2026-11",
+      "title": "BitAgent control harness evals",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/f3ca21e7-86e1-476c-8e94-d2c4df14ac7e.jsonl.gz",
+      "raw_bytes": 3241540,
+      "gz_bytes": 715519
+    },
+    {
+      "session_id": "25e036cf-9344-4b2e-8db0-2b62794493e2",
+      "month": "2026-11",
+      "title": "Bells of the Black Chrysanthemum completeness",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/25e036cf-9344-4b2e-8db0-2b62794493e2.jsonl.gz",
+      "raw_bytes": 8856502,
+      "gz_bytes": 2883352
+    },
+    {
+      "session_id": "85712136-8dba-4cd9-a545-84478db4cad6",
+      "month": "2026-11",
+      "title": "BPD CUDA BF16 closure audit and online SVD evaluation",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/85712136-8dba-4cd9-a545-84478db4cad6.jsonl.gz",
+      "raw_bytes": 6032256,
+      "gz_bytes": 1459956
+    },
+    {
+      "session_id": "0b677570-f134-4b55-9406-e63479c781b2",
+      "month": "2026-11",
+      "title": "SAE causal transfer mechanistic interpretability",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/0b677570-f134-4b55-9406-e63479c781b2.jsonl.gz",
+      "raw_bytes": 8587537,
+      "gz_bytes": 2062203
+    },
+    {
+      "session_id": "d08628c0-85bc-48cf-b5ce-e998bddc0af9",
+      "month": "2026-11",
+      "title": "BitAgent authorization receipt",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/d08628c0-85bc-48cf-b5ce-e998bddc0af9.jsonl.gz",
+      "raw_bytes": 4364108,
+      "gz_bytes": 1249680
+    },
+    {
+      "session_id": "b1c230b9-f5c8-4c1f-8c12-8cdf43bbf093",
+      "month": "2026-11",
+      "title": "Sharded Math Engine",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/b1c230b9-f5c8-4c1f-8c12-8cdf43bbf093.jsonl.gz",
+      "raw_bytes": 10682922,
+      "gz_bytes": 2867178
+    },
+    {
+      "session_id": "40187be5-af11-4a92-abb8-b38f95cf9e42",
+      "month": "2026-11",
+      "title": "32 GB box handoff and tower configuration",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/40187be5-af11-4a92-abb8-b38f95cf9e42.jsonl.gz",
+      "raw_bytes": 6511041,
+      "gz_bytes": 1460743
+    },
+    {
+      "session_id": "5ef3d52c-58cd-4bff-9e1b-e68141258879",
+      "month": "2026-11",
+      "title": "Three.js Minecraft castle",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/5ef3d52c-58cd-4bff-9e1b-e68141258879.jsonl.gz",
+      "raw_bytes": 912509,
+      "gz_bytes": 405385
+    },
+    {
+      "session_id": "36729221-85e2-443e-be63-64bebb0823de",
+      "month": "2026-11",
+      "title": "SlaveBench v0.3 recursion-track pilot",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/36729221-85e2-443e-be63-64bebb0823de.jsonl.gz",
+      "raw_bytes": 3854214,
+      "gz_bytes": 977881
+    },
+    {
+      "session_id": "279393b4-58c4-45f5-99df-233d89c6da63",
+      "month": "2026-11",
+      "title": "SEM-ECHO-01 semantic state experiment",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/279393b4-58c4-45f5-99df-233d89c6da63.jsonl.gz",
+      "raw_bytes": 2449425,
+      "gz_bytes": 564161
+    },
+    {
+      "session_id": "ffd6d9e7-4296-4942-99be-4bf56405898c",
+      "month": "2026-11",
+      "title": "ARG-02 Algernon evaluation with Qwen",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/ffd6d9e7-4296-4942-99be-4bf56405898c.jsonl.gz",
+      "raw_bytes": 6502990,
+      "gz_bytes": 1603513
+    },
+    {
+      "session_id": "3579165a-726b-4add-9383-5c92ed9c8409",
+      "month": "2026-11",
+      "title": "In-and-Out-Burger: proven order with the real M16 proof",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/3579165a-726b-4add-9383-5c92ed9c8409.jsonl.gz",
+      "raw_bytes": 11336756,
+      "gz_bytes": 2908265
+    },
+    {
+      "session_id": "54fd89f8-5145-477d-ad99-6bda4750f71f",
+      "month": "2026-11",
+      "title": "IOB BitVM3 testnet4 demo: finish claims + payout",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/54fd89f8-5145-477d-ad99-6bda4750f71f.jsonl.gz",
+      "raw_bytes": 12598035,
+      "gz_bytes": 3466889
+    },
+    {
+      "session_id": "3402dbd0-f3bf-49ea-9686-e02035b4a1b1",
+      "month": "2026-11",
+      "title": "Usage increase investigation",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/3402dbd0-f3bf-49ea-9686-e02035b4a1b1.jsonl.gz",
+      "raw_bytes": 1599791,
+      "gz_bytes": 504347
+    },
+    {
+      "session_id": "f5a9a62d-c4e0-4ec9-86d0-2612a268e467",
+      "month": "2026-11",
+      "title": "Mechanistic interpretability in recurrent language models",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/f5a9a62d-c4e0-4ec9-86d0-2612a268e467.jsonl.gz",
+      "raw_bytes": 56741814,
+      "gz_bytes": 17823716
+    },
+    {
+      "session_id": "a4d080e0-a092-4006-b6dc-74831563ce8f",
+      "month": "2026-11",
+      "title": "LOTUS circuit mirror verification",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/a4d080e0-a092-4006-b6dc-74831563ce8f.jsonl.gz",
+      "raw_bytes": 27913398,
+      "gz_bytes": 6515053
+    },
+    {
+      "session_id": "b5dc8739-fbda-4634-b17b-fbf23a714460",
+      "month": "2026-11",
+      "title": "Rust Bitcoin Shinigami/Raito integration benchmark",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/b5dc8739-fbda-4634-b17b-fbf23a714460.jsonl.gz",
+      "raw_bytes": 86226539,
+      "gz_bytes": 24681661
+    },
+    {
+      "session_id": "d33ed20f-847b-44ab-ac92-4c68b9cd36be",
+      "month": "2026-11",
+      "title": "Nova verifier light wallet for Sparrow",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/d33ed20f-847b-44ab-ac92-4c68b9cd36be.jsonl.gz",
+      "raw_bytes": 5482537,
+      "gz_bytes": 1300002
+    },
+    {
+      "session_id": "1adc6f76-e148-4a9c-816f-860c0468a9f9",
+      "month": "2026-11",
+      "title": "Draft Raito issue for the Shinigami soundness findings",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/1adc6f76-e148-4a9c-816f-860c0468a9f9.jsonl.gz",
+      "raw_bytes": 17492235,
+      "gz_bytes": 4518075
+    },
+    {
+      "session_id": "8a03d061-0d34-4be7-9928-8d0c70f0c0ae",
+      "month": "2026-11",
+      "title": "BM-44 live model collection and evaluation",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/8a03d061-0d34-4be7-9928-8d0c70f0c0ae.jsonl.gz",
+      "raw_bytes": 2103507,
+      "gz_bytes": 488250
+    },
+    {
+      "session_id": "417e2763-fc53-4907-8c7b-ce2e043b3444",
+      "month": "2026-11",
+      "title": "KeyAgentNet Gate 5: run payment scenarios on real M16",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/417e2763-fc53-4907-8c7b-ce2e043b3444.jsonl.gz",
+      "raw_bytes": 2106592,
+      "gz_bytes": 473549
+    },
+    {
+      "session_id": "9e8af6dc-7323-4cc1-a7d8-bc8f22d21d2b",
+      "month": "2026-11",
+      "title": "FlatCheck FC03 BitVM3 Bitcoin integration",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/9e8af6dc-7323-4cc1-a7d8-bc8f22d21d2b.jsonl.gz",
+      "raw_bytes": 5583372,
+      "gz_bytes": 1487420
+    },
+    {
+      "session_id": "5ccafdd9-9f27-4f1e-bf17-113ce0d1c535",
+      "month": "2026-11",
+      "title": "In-and-Out-Burger BitVM3 verifier app",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/5ccafdd9-9f27-4f1e-bf17-113ce0d1c535.jsonl.gz",
+      "raw_bytes": 2067742,
+      "gz_bytes": 581532
+    },
+    {
+      "session_id": "3bd2b3be-7925-4a1f-b49f-db918a8f5824",
+      "month": "2026-11",
+      "title": "QC-23 IBM Quantum hardware validation",
+      "project": "tensor-lab",
+      "hf_path": "sessions/2026-11/3bd2b3be-7925-4a1f-b49f-db918a8f5824.jsonl.gz",
+      "raw_bytes": 2653733,
+      "gz_bytes": 753720
+    },
+    {
+      "session_id": "65470d1b-aa03-42a8-9811-b05558b6fe3f",
+      "month": "2026-11",
+      "title": "Algernon learning-computer scaffold",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/65470d1b-aa03-42a8-9811-b05558b6fe3f.jsonl.gz",
+      "raw_bytes": 4631241,
+      "gz_bytes": 1141950
+    },
+    {
+      "session_id": "3c16702f-ec0e-4268-9d51-b404cff20a5d",
+      "month": "2026-11",
+      "title": "Claude app GitHub access guide",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/3c16702f-ec0e-4268-9d51-b404cff20a5d.jsonl.gz",
+      "raw_bytes": 646346,
+      "gz_bytes": 159694
+    },
+    {
+      "session_id": "323f7c53-9df2-4565-b2e1-72bf5bb1213a",
+      "month": "2026-11",
+      "title": "Bitcoin-native Filecoin alternative",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/323f7c53-9df2-4565-b2e1-72bf5bb1213a.jsonl.gz",
+      "raw_bytes": 31096175,
+      "gz_bytes": 9876902
+    },
+    {
+      "session_id": "55cd7e97-6095-4a00-8d10-55e261a411ab",
+      "month": "2026-11",
+      "title": "TradeLayer Rust handoff",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/55cd7e97-6095-4a00-8d10-55e261a411ab.jsonl.gz",
+      "raw_bytes": 43511943,
+      "gz_bytes": 9920823
+    },
+    {
+      "session_id": "36af0751-6ea5-4cc5-8209-b52f65b0384a",
+      "month": "2026-11",
+      "title": "Offload to Hugging Face",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/36af0751-6ea5-4cc5-8209-b52f65b0384a.jsonl.gz",
+      "raw_bytes": 2647336,
+      "gz_bytes": 709109
+    },
+    {
+      "session_id": "09ea6d63-4d07-4169-816e-8aa0ff37da2f",
+      "month": "2026-11",
+      "title": "Rust ports and Lean verification for TradeLayer-Wallet",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/09ea6d63-4d07-4169-816e-8aa0ff37da2f.jsonl.gz",
+      "raw_bytes": 13789527,
+      "gz_bytes": 2817682
+    },
+    {
+      "session_id": "b271efa0-b712-49ef-92e8-fb6e4304271e",
+      "month": "2026-11",
+      "title": "Fork: BitVM3 SNARKs in Bisq trade logic",
+      "project": "bisq",
+      "hf_path": "sessions/2026-11/b271efa0-b712-49ef-92e8-fb6e4304271e.jsonl.gz",
+      "raw_bytes": 2463664,
+      "gz_bytes": 509482
+    },
+    {
+      "session_id": "115964ff-e5f6-41c1-8b44-81aa48bdbf3a",
+      "month": "2026-11",
+      "title": "UTXORef security assessment for testnet",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/115964ff-e5f6-41c1-8b44-81aa48bdbf3a.jsonl.gz",
+      "raw_bytes": 47400747,
+      "gz_bytes": 10359709
+    },
+    {
+      "session_id": "873feb14-fdd9-4d64-9556-8066b539e730",
+      "month": "2026-11",
+      "title": "OSS contributions page",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/873feb14-fdd9-4d64-9556-8066b539e730.jsonl.gz",
+      "raw_bytes": 1432798,
+      "gz_bytes": 371221
+    },
+    {
+      "session_id": "3c7a1e6a-0ef0-4a63-b0ee-d9c441ba832f",
+      "month": "2026-11",
+      "title": "p2poolv2",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/3c7a1e6a-0ef0-4a63-b0ee-d9c441ba832f.jsonl.gz",
+      "raw_bytes": 29329768,
+      "gz_bytes": 6939539
+    },
+    {
+      "session_id": "07cce658-b7df-45db-b9c8-b960ab5b64dc",
+      "month": "2026-11",
+      "title": "CashApp Global",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/07cce658-b7df-45db-b9c8-b960ab5b64dc.jsonl.gz",
+      "raw_bytes": 6148812,
+      "gz_bytes": 1666058
+    },
+    {
+      "session_id": "f07803b1-fac7-4cad-8be9-607d58170c15",
+      "month": "2026-11",
+      "title": "Bisq2 trade status API review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/f07803b1-fac7-4cad-8be9-607d58170c15.jsonl.gz",
+      "raw_bytes": 1902765,
+      "gz_bytes": 454932
+    },
+    {
+      "session_id": "d713032d-c369-4863-b6aa-4f16ddd053ef",
+      "month": "2026-11",
+      "title": "ChatGPT automation in Chrome",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-11/d713032d-c369-4863-b6aa-4f16ddd053ef.jsonl.gz",
+      "raw_bytes": 602927,
+      "gz_bytes": 156820
+    },
+    {
+      "session_id": "28761bae-0b77-4803-9b5b-f86999d6dfe3",
+      "month": "2026-11",
+      "title": "Jev-style model research with Qwen3.5-4B",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/28761bae-0b77-4803-9b5b-f86999d6dfe3.jsonl.gz",
+      "raw_bytes": 33096854,
+      "gz_bytes": 7940309
+    },
+    {
+      "session_id": "f6ce8e8c-68d2-4db1-a5a9-b788a33f9954",
+      "month": "2026-11",
+      "title": "BitVM2 Nova Verifier",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/f6ce8e8c-68d2-4db1-a5a9-b788a33f9954.jsonl.gz",
+      "raw_bytes": 8117115,
+      "gz_bytes": 2061718
+    },
+    {
+      "session_id": "761102ac-cd43-400f-9126-57751a433bcd",
+      "month": "2026-11",
+      "title": "Security review for issue 75",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/761102ac-cd43-400f-9126-57751a433bcd.jsonl.gz",
+      "raw_bytes": 3369158,
+      "gz_bytes": 847558
+    },
+    {
+      "session_id": "d7e3604f-ba9c-4f56-a78a-ace85b06e033",
+      "month": "2026-11",
+      "title": "Resume tradelayer-wallet FE stack Rust port",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/d7e3604f-ba9c-4f56-a78a-ace85b06e033.jsonl.gz",
+      "raw_bytes": 16852207,
+      "gz_bytes": 4706574
+    },
+    {
+      "session_id": "f9fafcd9-9f2a-4ae6-8d32-1dc4949e2262",
+      "month": "2026-11",
+      "title": "OpenSilico",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/f9fafcd9-9f2a-4ae6-8d32-1dc4949e2262.jsonl.gz",
+      "raw_bytes": 61936923,
+      "gz_bytes": 22975774
+    },
+    {
+      "session_id": "188a2ef5-2508-4628-903e-9217c3386a67",
+      "month": "2026-11",
+      "title": "They Are Trillions fan sequel",
+      "project": "D--Codex-archive-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-11/188a2ef5-2508-4628-903e-9217c3386a67.jsonl.gz",
+      "raw_bytes": 61996155,
+      "gz_bytes": 35610239
+    },
+    {
+      "session_id": "3b412614-074f-4d5d-8d12-005a973a9dc2",
+      "month": "2026-11",
+      "title": "Jinn-or-Beast paper review",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/3b412614-074f-4d5d-8d12-005a973a9dc2.jsonl.gz",
+      "raw_bytes": 38901634,
+      "gz_bytes": 12959588
+    },
+    {
+      "session_id": "5df45064-2096-44b4-9217-50ca6a11bcc5",
+      "month": "2026-11",
+      "title": "Digesting Silico Artifacts",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/5df45064-2096-44b4-9217-50ca6a11bcc5.jsonl.gz",
+      "raw_bytes": 703616,
+      "gz_bytes": 201306
+    },
+    {
+      "session_id": "cb1574ad-aa93-4f6e-98cd-da47b31a2e8e",
+      "month": "2026-11",
+      "title": "Ontological Transfer Benchmark recovery",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/cb1574ad-aa93-4f6e-98cd-da47b31a2e8e.jsonl.gz",
+      "raw_bytes": 3131423,
+      "gz_bytes": 738377
+    },
+    {
+      "session_id": "2a162fb2-47b8-4788-8183-6badd31ccae6",
+      "month": "2026-11",
+      "title": "D6 two-sided scan handoff",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/2a162fb2-47b8-4788-8183-6badd31ccae6.jsonl.gz",
+      "raw_bytes": 926961,
+      "gz_bytes": 238048
+    },
+    {
+      "session_id": "dfdfa3e2-4dcd-4a09-8713-05b2c7b91e65",
+      "month": "2026-11",
+      "title": "Coarse Grained Mechinterp",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/dfdfa3e2-4dcd-4a09-8713-05b2c7b91e65.jsonl.gz",
+      "raw_bytes": 2095180,
+      "gz_bytes": 539899
+    },
+    {
+      "session_id": "1404e236-dc99-4a1a-8173-af03bb4d4e31",
+      "month": "2026-11",
+      "title": "Qwen causal pilot on RTX 5080",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/1404e236-dc99-4a1a-8173-af03bb4d4e31.jsonl.gz",
+      "raw_bytes": 10891337,
+      "gz_bytes": 2591931
+    },
+    {
+      "session_id": "7b92879c-0845-4f4c-b002-a782b1c6a098",
+      "month": "2026-11",
+      "title": "Draft local fix patches for p2poolv2 F1/F3/S1/S2",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/7b92879c-0845-4f4c-b002-a782b1c6a098.jsonl.gz",
+      "raw_bytes": 5831942,
+      "gz_bytes": 1422594
+    },
+    {
+      "session_id": "d1594b5e-4940-476c-ac9f-9c18604af677",
+      "month": "2026-11",
+      "title": "p2poolv2 consensus/P2P security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-11/d1594b5e-4940-476c-ac9f-9c18604af677.jsonl.gz",
+      "raw_bytes": 6346648,
+      "gz_bytes": 1611374
+    },
+    {
+      "session_id": "4af591c7-7c07-49da-9e02-fde8cbc11534",
+      "month": "2026-11",
+      "title": "RTX 5080 GPU research queue",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/4af591c7-7c07-49da-9e02-fde8cbc11534.jsonl.gz",
+      "raw_bytes": 8187032,
+      "gz_bytes": 1769672
+    },
+    {
+      "session_id": "1abae663-3a2b-4069-ae79-916e2fbf6b27",
+      "month": "2026-11",
+      "title": "Bonsai 1-Bit Adapter Training Gym",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-11/1abae663-3a2b-4069-ae79-916e2fbf6b27.jsonl.gz",
+      "raw_bytes": 3176721,
+      "gz_bytes": 747385
+    },
+    {
+      "session_id": "6eef63ba-728e-433d-a068-67c7bb5de953",
+      "month": "2026-11",
+      "title": "OCA-SW-02R Runner Integration",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/6eef63ba-728e-433d-a068-67c7bb5de953.jsonl.gz",
+      "raw_bytes": 2254142,
+      "gz_bytes": 578976
+    },
+    {
+      "session_id": "2dd5d959-f7f9-40d0-b2b3-32cc5e49a7f4",
+      "month": "2026-11",
+      "title": "Distributed agency constitutional control",
+      "project": "Adict",
+      "hf_path": "sessions/2026-11/2dd5d959-f7f9-40d0-b2b3-32cc5e49a7f4.jsonl.gz",
+      "raw_bytes": 1350149,
+      "gz_bytes": 369117
+    },
+    {
+      "session_id": "a5cb5e4f-982b-4967-9f66-8a50d96617f7",
+      "month": "2026-10",
+      "title": "p2poolv2 zk clearing: BitVM M1 on regtest",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/a5cb5e4f-982b-4967-9f66-8a50d96617f7.jsonl.gz",
+      "raw_bytes": 7379162,
+      "gz_bytes": 1850594
+    },
+    {
+      "session_id": "3c3c4ed8-3690-4c93-ac82-e02c10e49791",
+      "month": "2026-10",
+      "title": "p2poolv2 zk clearing: M2 optimistic BitVM2 graph",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/3c3c4ed8-3690-4c93-ac82-e02c10e49791.jsonl.gz",
+      "raw_bytes": 3429960,
+      "gz_bytes": 982981
+    },
+    {
+      "session_id": "297fc991-c5f4-4987-81b8-171da8efd1a7",
+      "month": "2026-10",
+      "title": "BrokenVerifier-Gym v0.3 handoff",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/297fc991-c5f4-4987-81b8-171da8efd1a7.jsonl.gz",
+      "raw_bytes": 1355991,
+      "gz_bytes": 313366
+    },
+    {
+      "session_id": "188a2ef5-2508-4628-903e-9217c3386a67",
+      "month": "2026-10",
+      "title": "They Are Trillions fan sequel",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/188a2ef5-2508-4628-903e-9217c3386a67.jsonl.gz",
+      "raw_bytes": 61996155,
+      "gz_bytes": 35610239
+    },
+    {
+      "session_id": "4f7c3b8d-9d2c-448d-8265-4acfa6198c8a",
+      "month": "2026-10",
+      "title": "BAN cashout: real regtest funding evidence (G.5)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/4f7c3b8d-9d2c-448d-8265-4acfa6198c8a.jsonl.gz",
+      "raw_bytes": 4203865,
+      "gz_bytes": 1131127
+    },
+    {
+      "session_id": "6cec3190-d824-41b2-b90f-02edcdae24b8",
+      "month": "2026-10",
+      "title": "Arena cashout profiles (P2P-Settlement-Arena G.12)",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6cec3190-d824-41b2-b90f-02edcdae24b8.jsonl.gz",
+      "raw_bytes": 3139428,
+      "gz_bytes": 921296
+    },
+    {
+      "session_id": "c6f960a9-2fea-47d1-88c8-0c8f974ab405",
+      "month": "2026-10",
+      "title": "BAN cashout slice v0: alias, intent, BUY-side quote",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/c6f960a9-2fea-47d1-88c8-0c8f974ab405.jsonl.gz",
+      "raw_bytes": 5247477,
+      "gz_bytes": 1247045
+    },
+    {
+      "session_id": "33dea6a6-a2e4-4d5a-8a9b-4d1998d6a1af",
+      "month": "2026-10",
+      "title": "Crypto hive swarm eval frontend",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/33dea6a6-a2e4-4d5a-8a9b-4d1998d6a1af.jsonl.gz",
+      "raw_bytes": 40185660,
+      "gz_bytes": 20323501
+    },
+    {
+      "session_id": "db5f32bd-0659-4aea-af97-b8812e949191",
+      "month": "2026-10",
+      "title": "Crypto hive swarm eval",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/db5f32bd-0659-4aea-af97-b8812e949191.jsonl.gz",
+      "raw_bytes": 23632359,
+      "gz_bytes": 6571583
+    },
+    {
+      "session_id": "f131e124-d8d2-4c58-995f-472a873d9eb2",
+      "month": "2026-10",
+      "title": "Separate-UID broker for statement verifiers",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/f131e124-d8d2-4c58-995f-472a873d9eb2.jsonl.gz",
+      "raw_bytes": 2121278,
+      "gz_bytes": 441077
+    },
+    {
+      "session_id": "aed1be1d-0691-4c8d-b375-1ee0d694e5d4",
+      "month": "2026-10",
+      "title": "Mechanistic interpretability in recurrent language models (fork)",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/aed1be1d-0691-4c8d-b375-1ee0d694e5d4.jsonl.gz",
+      "raw_bytes": 28437534,
+      "gz_bytes": 6150150
+    },
+    {
+      "session_id": "2582edf5-c319-4c6c-9b0e-6a903e2b3f7b",
+      "month": "2026-10",
+      "title": "Inner War Mathematics Program rewrite",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/2582edf5-c319-4c6c-9b0e-6a903e2b3f7b.jsonl.gz",
+      "raw_bytes": 10132630,
+      "gz_bytes": 5891233
+    },
+    {
+      "session_id": "28b2d2f3-e7d1-412c-bd40-25efc28c451e",
+      "month": "2026-10",
+      "title": "Inner War Mathematics Program rewrite",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/28b2d2f3-e7d1-412c-bd40-25efc28c451e.jsonl.gz",
+      "raw_bytes": 10077192,
+      "gz_bytes": 5889278
+    },
+    {
+      "session_id": "5bb09a17-e6de-4167-8f63-c0a1440f4ae7",
+      "month": "2026-10",
+      "title": "Raito-Scrypt VPS proving setup",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/5bb09a17-e6de-4167-8f63-c0a1440f4ae7.jsonl.gz",
+      "raw_bytes": 16655288,
+      "gz_bytes": 4229614
+    },
+    {
+      "session_id": "444f06e9-3eef-48da-93cd-2d5f3d5139d4",
+      "month": "2026-10",
+      "title": "Freeing up disk space",
+      "project": "vramorama",
+      "hf_path": "sessions/2026-10/444f06e9-3eef-48da-93cd-2d5f3d5139d4.jsonl.gz",
+      "raw_bytes": 5720992,
+      "gz_bytes": 1408555
+    },
+    {
+      "session_id": "cf1bfc9b-599b-4e79-8d4a-3314019603d2",
+      "month": "2026-10",
+      "title": "Ducat audit scope",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/cf1bfc9b-599b-4e79-8d4a-3314019603d2.jsonl.gz",
+      "raw_bytes": 5625112,
+      "gz_bytes": 2537436
+    },
+    {
+      "session_id": "33f5f124-6dec-4bf7-b17e-3ac67ce55d92",
+      "month": "2026-10",
+      "title": "Hermes/Goose agent framework comparison",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/33f5f124-6dec-4bf7-b17e-3ac67ce55d92.jsonl.gz",
+      "raw_bytes": 30948987,
+      "gz_bytes": 7374367
+    },
+    {
+      "session_id": "3571cf4e-7975-49e0-b0ed-e66ee07f4ba0",
+      "month": "2026-10",
+      "title": "SaplingOS genuine common-root recovery",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/3571cf4e-7975-49e0-b0ed-e66ee07f4ba0.jsonl.gz",
+      "raw_bytes": 4942375,
+      "gz_bytes": 1069146
+    },
+    {
+      "session_id": "1f619fcc-8fbd-40a4-8207-4c94c323d77f",
+      "month": "2026-10",
+      "title": "TradeLayer candidate rollout",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/1f619fcc-8fbd-40a4-8207-4c94c323d77f.jsonl.gz",
+      "raw_bytes": 1328094,
+      "gz_bytes": 341976
+    },
+    {
+      "session_id": "e65d1326-6403-4207-bead-45396cddaf30",
+      "month": "2026-10",
+      "title": "Persona-Holonmy-Bench v0.13 Qwen pilot",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/e65d1326-6403-4207-bead-45396cddaf30.jsonl.gz",
+      "raw_bytes": 1444379,
+      "gz_bytes": 400401
+    },
+    {
+      "session_id": "f6d9ec3b-90fd-4367-919b-1dc3ab2abed4",
+      "month": "2026-10",
+      "title": "Signet readiness for blossom-storage-bonds",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/f6d9ec3b-90fd-4367-919b-1dc3ab2abed4.jsonl.gz",
+      "raw_bytes": 10371310,
+      "gz_bytes": 2389283
+    },
+    {
+      "session_id": "4962080e-1670-4b89-9a69-cd4c747426c9",
+      "month": "2026-10",
+      "title": "Storage market: Lightning instead of per-pair channels",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/4962080e-1670-4b89-9a69-cd4c747426c9.jsonl.gz",
+      "raw_bytes": 4196321,
+      "gz_bytes": 977238
+    },
+    {
+      "session_id": "22e5bf6e-3709-45b7-8da3-134706c0426e",
+      "month": "2026-10",
+      "title": "Complicency Bench v0.2 multiagent framework",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/22e5bf6e-3709-45b7-8da3-134706c0426e.jsonl.gz",
+      "raw_bytes": 7979674,
+      "gz_bytes": 2422104
+    },
+    {
+      "session_id": "8282618b-1ca0-4eed-9996-2818e771dfac",
+      "month": "2026-10",
+      "title": "lnmath.pdf",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/8282618b-1ca0-4eed-9996-2818e771dfac.jsonl.gz",
+      "raw_bytes": 29330883,
+      "gz_bytes": 16088473
+    },
+    {
+      "session_id": "9fe795ef-7e55-4a23-9f84-240281d7fdc1",
+      "month": "2026-10",
+      "title": "Storage market: on-chain payments with ZK inclusion proofs",
+      "project": "blossom-storage-bonds",
+      "hf_path": "sessions/2026-10/9fe795ef-7e55-4a23-9f84-240281d7fdc1.jsonl.gz",
+      "raw_bytes": 2612514,
+      "gz_bytes": 587428
+    },
+    {
+      "session_id": "ecd4c273-3f79-4145-806b-83d20354f0f1",
+      "month": "2026-10",
+      "title": "Recurrent recovery from transformer pruning",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/ecd4c273-3f79-4145-806b-83d20354f0f1.jsonl.gz",
+      "raw_bytes": 5698405,
+      "gz_bytes": 2229114
+    },
+    {
+      "session_id": "ecd4c273-3f79-4145-806b-83d20354f0f1",
+      "month": "2026-10",
+      "title": "Recurrent recovery from transformer pruning",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/ecd4c273-3f79-4145-806b-83d20354f0f1.jsonl.gz",
+      "raw_bytes": 5698405,
+      "gz_bytes": 2229114
+    },
+    {
+      "session_id": "6481cb7e-9720-4f57-bda9-9ed9c66ac21d",
+      "month": "2026-10",
+      "title": "LocalBitcoins for Agents",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6481cb7e-9720-4f57-bda9-9ed9c66ac21d.jsonl.gz",
+      "raw_bytes": 8297126,
+      "gz_bytes": 2479119
+    },
+    {
+      "session_id": "5b0151ad-1c7d-4f9f-a8a1-e2dd61f7a07d",
+      "month": "2026-10",
+      "title": "Percolation theory for mechanistic interpretability",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/5b0151ad-1c7d-4f9f-a8a1-e2dd61f7a07d.jsonl.gz",
+      "raw_bytes": 21434196,
+      "gz_bytes": 7909366
+    },
+    {
+      "session_id": "3c16702f-ec0e-4268-9d51-b404cff20a5d",
+      "month": "2026-10",
+      "title": "Claude app GitHub access guide",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/3c16702f-ec0e-4268-9d51-b404cff20a5d.jsonl.gz",
+      "raw_bytes": 646346,
+      "gz_bytes": 159694
+    },
+    {
+      "session_id": "93457f16-9393-4d5a-a216-3ca7610fc430",
+      "month": "2026-10",
+      "title": "LoopedTransformers repository",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/93457f16-9393-4d5a-a216-3ca7610fc430.jsonl.gz",
+      "raw_bytes": 3584494,
+      "gz_bytes": 986526
+    },
+    {
+      "session_id": "e44833bb-99f7-4dff-9735-a1b75a604978",
+      "month": "2026-10",
+      "title": "Post-quantum conditional disclosure for Bitcoin bridges",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/e44833bb-99f7-4dff-9735-a1b75a604978.jsonl.gz",
+      "raw_bytes": 4029589,
+      "gz_bytes": 1181672
+    },
+    {
+      "session_id": "ab2a85ab-1fcb-4e72-b144-0098d33d2f25",
+      "month": "2026-10",
+      "title": "Quantum Bridge Arena implementation",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/ab2a85ab-1fcb-4e72-b144-0098d33d2f25.jsonl.gz",
+      "raw_bytes": 2181139,
+      "gz_bytes": 525740
+    },
+    {
+      "session_id": "76a5a5c1-a8ba-4aa1-bf64-ee42b95bb188",
+      "month": "2026-10",
+      "title": "Capability per parameter with weight reuse",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/76a5a5c1-a8ba-4aa1-bf64-ee42b95bb188.jsonl.gz",
+      "raw_bytes": 10868702,
+      "gz_bytes": 5033167
+    },
+    {
+      "session_id": "0eb846b7-fd24-488b-8466-b113d070f2a3",
+      "month": "2026-10",
+      "title": "Fix 15 pre-existing hash-registration test failures",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/0eb846b7-fd24-488b-8466-b113d070f2a3.jsonl.gz",
+      "raw_bytes": 1172279,
+      "gz_bytes": 234400
+    },
+    {
+      "session_id": "9917dd4c-8cec-4e4f-a8c9-9936574b49dd",
+      "month": "2026-10",
+      "title": "Repo hygiene: strays, dependencies, duplicated data",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/9917dd4c-8cec-4e4f-a8c9-9936574b49dd.jsonl.gz",
+      "raw_bytes": 765483,
+      "gz_bytes": 176491
+    },
+    {
+      "session_id": "5b875133-7f19-481f-b7dd-1e1b9385d84e",
+      "month": "2026-10",
+      "title": "Synthesis of the three DRAM AI recurrence studies",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/5b875133-7f19-481f-b7dd-1e1b9385d84e.jsonl.gz",
+      "raw_bytes": 1442611,
+      "gz_bytes": 285918
+    },
+    {
+      "session_id": "444f06e9-3eef-48da-93cd-2d5f3d5139d4",
+      "month": "2026-10",
+      "title": "Freeing up disk space",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/444f06e9-3eef-48da-93cd-2d5f3d5139d4.jsonl.gz",
+      "raw_bytes": 5720992,
+      "gz_bytes": 1408555
+    },
+    {
+      "session_id": "316d2747-3737-491d-9577-c6ce563228d2",
+      "month": "2026-10",
+      "title": "Post-quantum STARK verification for Bitcoin bridge",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/316d2747-3737-491d-9577-c6ce563228d2.jsonl.gz",
+      "raw_bytes": 5031174,
+      "gz_bytes": 1203596
+    },
+    {
+      "session_id": "178c32ee-bcb0-4b60-9e03-c5af4daad81b",
+      "month": "2026-10",
+      "title": "BitVM bridge research laboratory",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/178c32ee-bcb0-4b60-9e03-c5af4daad81b.jsonl.gz",
+      "raw_bytes": 3399812,
+      "gz_bytes": 778070
+    },
+    {
+      "session_id": "dc4947c3-8a67-453c-a28e-1d1c1adbf512",
+      "month": "2026-10",
+      "title": "K12 job on Ubuntu",
+      "project": "k12-result",
+      "hf_path": "sessions/2026-10/dc4947c3-8a67-453c-a28e-1d1c1adbf512.jsonl.gz",
+      "raw_bytes": 1619295,
+      "gz_bytes": 371454
+    },
+    {
+      "session_id": "d51f551d-2cfb-4a00-b02d-6401d510a135",
+      "month": "2026-10",
+      "title": "Model a 1M-kill Trillions flow curve",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/d51f551d-2cfb-4a00-b02d-6401d510a135.jsonl.gz",
+      "raw_bytes": 3559694,
+      "gz_bytes": 913197
+    },
+    {
+      "session_id": "edfde5f7-c3d8-48e8-9471-99085e54ebb2",
+      "month": "2026-10",
+      "title": "Qwen3-8B LaCo compression experiment",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/edfde5f7-c3d8-48e8-9471-99085e54ebb2.jsonl.gz",
+      "raw_bytes": 5776268,
+      "gz_bytes": 1394221
+    },
+    {
+      "session_id": "b804b7b9-65fa-4816-a658-9bb66e784d4b",
+      "month": "2026-10",
+      "title": "Storage proofs as an aggregated Stwo STARK",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/b804b7b9-65fa-4816-a658-9bb66e784d4b.jsonl.gz",
+      "raw_bytes": 3052472,
+      "gz_bytes": 665194
+    },
+    {
+      "session_id": "f8b5c4fb-cdae-4ab1-8af0-c3ddc8a59bf3",
+      "month": "2026-10",
+      "title": "Baseline GPU VRAM utilization",
+      "project": "vramorama",
+      "hf_path": "sessions/2026-10/f8b5c4fb-cdae-4ab1-8af0-c3ddc8a59bf3.jsonl.gz",
+      "raw_bytes": 1842801,
+      "gz_bytes": 417951
+    },
+    {
+      "session_id": "db390f59-a378-4586-b901-fde0e561bbcf",
+      "month": "2026-10",
+      "title": "Scott's modal ontology proof",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/db390f59-a378-4586-b901-fde0e561bbcf.jsonl.gz",
+      "raw_bytes": 2836457,
+      "gz_bytes": 742746
+    },
+    {
+      "session_id": "6e9f2daa-f323-4e79-a365-8026ccd3fa73",
+      "month": "2026-10",
+      "title": "Recurrent-recovery experiment with adaptive controller",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/6e9f2daa-f323-4e79-a365-8026ccd3fa73.jsonl.gz",
+      "raw_bytes": 8395904,
+      "gz_bytes": 4428165
+    },
+    {
+      "session_id": "0770f721-3684-4b64-9e34-486ab1119236",
+      "month": "2026-10",
+      "title": "Recurrent transformer hidden-state interpretability",
+      "project": "LoopedTransformers",
+      "hf_path": "sessions/2026-10/0770f721-3684-4b64-9e34-486ab1119236.jsonl.gz",
+      "raw_bytes": 6807969,
+      "gz_bytes": 2581508
+    },
+    {
+      "session_id": "6bb0b060-a7cb-4a54-a8e4-87f9b2b78518",
+      "month": "2026-10",
+      "title": "Storage bonds 1b: Blossom sidecar + pay-per-proof client",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6bb0b060-a7cb-4a54-a8e4-87f9b2b78518.jsonl.gz",
+      "raw_bytes": 1156596,
+      "gz_bytes": 253316
+    },
+    {
+      "session_id": "63f18a7a-e688-452f-a8c7-3a240acc6053",
+      "month": "2026-10",
+      "title": "Pirateface account setup",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/63f18a7a-e688-452f-a8c7-3a240acc6053.jsonl.gz",
+      "raw_bytes": 557545,
+      "gz_bytes": 126496
+    },
+    {
+      "session_id": "847042cf-630c-4324-9e77-3cbd6fd05d84",
+      "month": "2026-10",
+      "title": "Nvidia driver updates and weight tampering",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/847042cf-630c-4324-9e77-3cbd6fd05d84.jsonl.gz",
+      "raw_bytes": 432612,
+      "gz_bytes": 103163
+    },
+    {
+      "session_id": "3431e509-0eac-462c-b94c-35209e80aab5",
+      "month": "2026-10",
+      "title": "Mechanistic interpretability of behavioral drives",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/3431e509-0eac-462c-b94c-35209e80aab5.jsonl.gz",
+      "raw_bytes": 8873953,
+      "gz_bytes": 1967700
+    },
+    {
+      "session_id": "35564c41-4f53-4209-8d04-23d46307b5a1",
+      "month": "2026-10",
+      "title": "LoRA requantization to 1-bit",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/35564c41-4f53-4209-8d04-23d46307b5a1.jsonl.gz",
+      "raw_bytes": 16618259,
+      "gz_bytes": 5773308
+    },
+    {
+      "session_id": "de59cfd9-227d-4ae1-8d3e-087c3fff8859",
+      "month": "2026-10",
+      "title": "Side chat",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/de59cfd9-227d-4ae1-8d3e-087c3fff8859.jsonl.gz",
+      "raw_bytes": 16528635,
+      "gz_bytes": 5747454
+    },
+    {
+      "session_id": "b1aa83a3-c154-46f1-8e4b-09f720b018cc",
+      "month": "2026-10",
+      "title": "Add StarCraft-style hotkeys",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/b1aa83a3-c154-46f1-8e4b-09f720b018cc.jsonl.gz",
+      "raw_bytes": 1529605,
+      "gz_bytes": 319905
+    },
+    {
+      "session_id": "10eed6ea-2b34-418c-99bb-1918de1ef3eb",
+      "month": "2026-10",
+      "title": "Integrate Cortex HUD with tooltips and selection panels",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/10eed6ea-2b34-418c-99bb-1918de1ef3eb.jsonl.gz",
+      "raw_bytes": 5828773,
+      "gz_bytes": 3071483
+    },
+    {
+      "session_id": "51fd7aad-2ae8-41a3-8d24-5ac4756395b6",
+      "month": "2026-10",
+      "title": "Integrate the Cyborg Cluster as a native unit",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/51fd7aad-2ae8-41a3-8d24-5ac4756395b6.jsonl.gz",
+      "raw_bytes": 18145573,
+      "gz_bytes": 11555608
+    },
+    {
+      "session_id": "f4d5db3a-1733-405e-aefc-122429565707",
+      "month": "2026-10",
+      "title": "Fix units stuck running in place (invisible quicksand)",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/f4d5db3a-1733-405e-aefc-122429565707.jsonl.gz",
+      "raw_bytes": 3793463,
+      "gz_bytes": 1543775
+    },
+    {
+      "session_id": "2fd4d5c0-a632-4344-ba9f-521a2ba2b43a",
+      "month": "2026-10",
+      "title": "Fix towers ignoring abandoned former targets",
+      "project": "Codex-2026-10-14-ca-outputs-TheyAreBillions2",
+      "hf_path": "sessions/2026-10/2fd4d5c0-a632-4344-ba9f-521a2ba2b43a.jsonl.gz",
+      "raw_bytes": 1872157,
+      "gz_bytes": 419492
+    },
+    {
+      "session_id": "dce61e2e-80d2-4f79-957e-83dd8c6358d6",
+      "month": "2026-10",
+      "title": "FBAR worksheets PDF preparation",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/dce61e2e-80d2-4f79-957e-83dd8c6358d6.jsonl.gz",
+      "raw_bytes": 14534418,
+      "gz_bytes": 6065966
+    },
+    {
+      "session_id": "116e858c-eee6-49da-b895-c9e54cc5aaf5",
+      "month": "2026-10",
+      "title": "Side chat",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/116e858c-eee6-49da-b895-c9e54cc5aaf5.jsonl.gz",
+      "raw_bytes": 14529008,
+      "gz_bytes": 6064322
+    },
+    {
+      "session_id": "354da577-25d0-47d0-bef2-eb6e3c77abf0",
+      "month": "2026-10",
+      "title": "LoRA training on 1-bit LLM",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/354da577-25d0-47d0-bef2-eb6e3c77abf0.jsonl.gz",
+      "raw_bytes": 5805486,
+      "gz_bytes": 1435876
+    },
+    {
+      "session_id": "809cd08a-c42d-4ed8-bcd8-2508e451db53",
+      "month": "2026-10",
+      "title": "TrustedInstaller scheduled restarts prevention",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/809cd08a-c42d-4ed8-bcd8-2508e451db53.jsonl.gz",
+      "raw_bytes": 358557,
+      "gz_bytes": 87822
+    },
+    {
+      "session_id": "ab142ea4-085a-45cf-b067-ad276bd63cc8",
+      "month": "2026-10",
+      "title": "Llama server memory usage",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/ab142ea4-085a-45cf-b067-ad276bd63cc8.jsonl.gz",
+      "raw_bytes": 1215148,
+      "gz_bytes": 270948
+    },
+    {
+      "session_id": "86a993cf-3a52-4e70-8780-01dee722893f",
+      "month": "2026-10",
+      "title": "Hyperliquid security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/86a993cf-3a52-4e70-8780-01dee722893f.jsonl.gz",
+      "raw_bytes": 5461337,
+      "gz_bytes": 2494681
+    },
+    {
+      "session_id": "632cf516-4759-4b03-aa19-0b7373daed17",
+      "month": "2026-10",
+      "title": "Hyperliquid testnet CoreWriter/system-address campaign",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/632cf516-4759-4b03-aa19-0b7373daed17.jsonl.gz",
+      "raw_bytes": 1576567,
+      "gz_bytes": 318826
+    },
+    {
+      "session_id": "c2988763-15e1-4c81-b968-3b082a0a9a81",
+      "month": "2026-10",
+      "title": "PrincipalGuard for Goose implementation",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/c2988763-15e1-4c81-b968-3b082a0a9a81.jsonl.gz",
+      "raw_bytes": 4271437,
+      "gz_bytes": 961484
+    },
+    {
+      "session_id": "128db066-aa41-4575-b058-75bf0be3163c",
+      "month": "2026-10",
+      "title": "FBAR filing service payment options",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/128db066-aa41-4575-b058-75bf0be3163c.jsonl.gz",
+      "raw_bytes": 1276790,
+      "gz_bytes": 616105
+    },
+    {
+      "session_id": "e279a519-61a4-418f-b871-8c9685c0e5c4",
+      "month": "2026-10",
+      "title": "Extend zk-bench to segwit and taproot blocks",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/e279a519-61a4-418f-b871-8c9685c0e5c4.jsonl.gz",
+      "raw_bytes": 2247152,
+      "gz_bytes": 538064
+    },
+    {
+      "session_id": "ece2d66a-da8e-43e8-aa0f-904199d5248c",
+      "month": "2026-10",
+      "title": "p2poolv2 swap timelocks + rich-list design note",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/ece2d66a-da8e-43e8-aa0f-904199d5248c.jsonl.gz",
+      "raw_bytes": 2301177,
+      "gz_bytes": 742331
+    },
+    {
+      "session_id": "b3da4d2a-81fd-44b0-bb5d-e2f439b114f2",
+      "month": "2026-10",
+      "title": "Goose Reentrant Control Bench research",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/b3da4d2a-81fd-44b0-bb5d-e2f439b114f2.jsonl.gz",
+      "raw_bytes": 22682696,
+      "gz_bytes": 6199119
+    },
+    {
+      "session_id": "eb078785-7bda-438b-a013-b3f6800a7eff",
+      "month": "2026-10",
+      "title": "Rust Bitcoin exploration",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/eb078785-7bda-438b-a013-b3f6800a7eff.jsonl.gz",
+      "raw_bytes": 1229912,
+      "gz_bytes": 252515
+    },
+    {
+      "session_id": "690db3c3-f53f-4f1a-973a-d179c98cb910",
+      "month": "2026-10",
+      "title": "Client taxes completion",
+      "project": "Downloads-Ben-Basche-2025-Complete-Return-Assembly-REVIEW",
+      "hf_path": "sessions/2026-10/690db3c3-f53f-4f1a-973a-d179c98cb910.jsonl.gz",
+      "raw_bytes": 26356591,
+      "gz_bytes": 17446737
+    },
+    {
+      "session_id": "859e4eac-ce0c-4b9e-854a-5ddee0faca09",
+      "month": "2026-10",
+      "title": "Orderbook VPS SSH key setup",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/859e4eac-ce0c-4b9e-854a-5ddee0faca09.jsonl.gz",
+      "raw_bytes": 516045,
+      "gz_bytes": 129732
+    },
+    {
+      "session_id": "4ec3b84a-f997-4970-9e0a-49030ac3fa97",
+      "month": "2026-10",
+      "title": "Checkpoint migration to new pod",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/4ec3b84a-f997-4970-9e0a-49030ac3fa97.jsonl.gz",
+      "raw_bytes": 1046738,
+      "gz_bytes": 238741
+    },
+    {
+      "session_id": "a6383def-3cd9-473c-89a3-d665ca60c1cc",
+      "month": "2026-10",
+      "title": "PC restart and job loss",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/a6383def-3cd9-473c-89a3-d665ca60c1cc.jsonl.gz",
+      "raw_bytes": 439744,
+      "gz_bytes": 99403
+    },
+    {
+      "session_id": "ba0fe13e-14e7-47bf-9086-c34fc5e1b6e8",
+      "month": "2026-10",
+      "title": "BitAgent README rewrite",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/ba0fe13e-14e7-47bf-9086-c34fc5e1b6e8.jsonl.gz",
+      "raw_bytes": 605664,
+      "gz_bytes": 123894
+    },
+    {
+      "session_id": "814b1194-8593-4e45-b342-715b40418a9f",
+      "month": "2026-10",
+      "title": "Fix request",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/814b1194-8593-4e45-b342-715b40418a9f.jsonl.gz",
+      "raw_bytes": 543890,
+      "gz_bytes": 233130
+    },
+    {
+      "session_id": "65a3fee9-7d29-486c-a651-94a631970144",
+      "month": "2026-10",
+      "title": "OSS contributions table",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/65a3fee9-7d29-486c-a651-94a631970144.jsonl.gz",
+      "raw_bytes": 1991078,
+      "gz_bytes": 547832
+    },
+    {
+      "session_id": "986aab4f-a2a7-40d5-9a26-68ec887dcf45",
+      "month": "2026-10",
+      "title": "Tensor degeneration discovery lab",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/986aab4f-a2a7-40d5-9a26-68ec887dcf45.jsonl.gz",
+      "raw_bytes": 13104290,
+      "gz_bytes": 5009481
+    },
+    {
+      "session_id": "da6d39c2-7a58-4949-94bc-3a8952da893d",
+      "month": "2026-10",
+      "title": "Security review for pl-website",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/da6d39c2-7a58-4949-94bc-3a8952da893d.jsonl.gz",
+      "raw_bytes": 1787830,
+      "gz_bytes": 469138
+    },
+    {
+      "session_id": "02fdfb03-fbb2-4327-96cc-4e37d32c355a",
+      "month": "2026-10",
+      "title": "Stego Bench self-replication research",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/02fdfb03-fbb2-4327-96cc-4e37d32c355a.jsonl.gz",
+      "raw_bytes": 5115630,
+      "gz_bytes": 1211824
+    },
+    {
+      "session_id": "ccc7a00c-2cb1-4e47-be37-e3a1562b171f",
+      "month": "2026-10",
+      "title": "Unicorn husbandry Harvest Moon game",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/ccc7a00c-2cb1-4e47-be37-e3a1562b171f.jsonl.gz",
+      "raw_bytes": 5977499,
+      "gz_bytes": 2878657
+    },
+    {
+      "session_id": "90e457c6-bfab-4dd4-af70-bf4b88b3374e",
+      "month": "2026-10",
+      "title": "Paper updates for morality-lab-site",
+      "project": "MoralityLabAI-morality-lab-site",
+      "hf_path": "sessions/2026-10/90e457c6-bfab-4dd4-af70-bf4b88b3374e.jsonl.gz",
+      "raw_bytes": 370785,
+      "gz_bytes": 75899
+    },
+    {
+      "session_id": "af5af8c1-0184-44ad-ab52-2aae8f4d54ac",
+      "month": "2026-10",
+      "title": "Eval Notation Math",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/af5af8c1-0184-44ad-ab52-2aae8f4d54ac.jsonl.gz",
+      "raw_bytes": 14640619,
+      "gz_bytes": 3414342
+    },
+    {
+      "session_id": "7d8e53be-dda5-43b2-8af0-2e015628b8f5",
+      "month": "2026-10",
+      "title": "ECDSA safety proof via index calculus",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/7d8e53be-dda5-43b2-8af0-2e015628b8f5.jsonl.gz",
+      "raw_bytes": 11933171,
+      "gz_bytes": 3415558
+    },
+    {
+      "session_id": "5ef3d52c-58cd-4bff-9e1b-e68141258879",
+      "month": "2026-10",
+      "title": "Three.js Minecraft castle",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/5ef3d52c-58cd-4bff-9e1b-e68141258879.jsonl.gz",
+      "raw_bytes": 912509,
+      "gz_bytes": 405385
+    },
+    {
+      "session_id": "956a532c-ab8c-4616-9f48-4ee17df0d8a1",
+      "month": "2026-10",
+      "title": "Red-team-gladiatorics animation",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/956a532c-ab8c-4616-9f48-4ee17df0d8a1.jsonl.gz",
+      "raw_bytes": 35840604,
+      "gz_bytes": 23451411
+    },
+    {
+      "session_id": "6a6b1eb8-1fb9-4dee-b1de-4b9fca63818c",
+      "month": "2026-10",
+      "title": "Keyscrambler cryptography audit",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6a6b1eb8-1fb9-4dee-b1de-4b9fca63818c.jsonl.gz",
+      "raw_bytes": 3638857,
+      "gz_bytes": 970828
+    },
+    {
+      "session_id": "ab50a4aa-9708-4e07-a57f-795760f5c0ff",
+      "month": "2026-10",
+      "title": "RSI-Topology critique notes",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/ab50a4aa-9708-4e07-a57f-795760f5c0ff.jsonl.gz",
+      "raw_bytes": 7567336,
+      "gz_bytes": 2035697
+    },
+    {
+      "session_id": "11c3da1f-27ba-4f8f-866d-53532eb4ca8c",
+      "month": "2026-10",
+      "title": "USB airgap signing app for Linux",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/11c3da1f-27ba-4f8f-866d-53532eb4ca8c.jsonl.gz",
+      "raw_bytes": 14464131,
+      "gz_bytes": 3598872
+    },
+    {
+      "session_id": "25e036cf-9344-4b2e-8db0-2b62794493e2",
+      "month": "2026-10",
+      "title": "Bells of the Black Chrysanthemum completeness",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/25e036cf-9344-4b2e-8db0-2b62794493e2.jsonl.gz",
+      "raw_bytes": 8856502,
+      "gz_bytes": 2883352
+    },
+    {
+      "session_id": "791457c4-f8d1-42ee-8a56-6a8c75a01833",
+      "month": "2026-10",
+      "title": "Agent session allocation tracking UI",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/791457c4-f8d1-42ee-8a56-6a8c75a01833.jsonl.gz",
+      "raw_bytes": 7684633,
+      "gz_bytes": 2302632
+    },
+    {
+      "session_id": "67586b8e-f95b-4e59-baf2-368714c19856",
+      "month": "2026-10",
+      "title": "Cryptanalytic discovery laboratory",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/67586b8e-f95b-4e59-baf2-368714c19856.jsonl.gz",
+      "raw_bytes": 3632760,
+      "gz_bytes": 752230
+    },
+    {
+      "session_id": "7a3906de-b558-4ebb-a1a0-a73bfedf26dd",
+      "month": "2026-10",
+      "title": "Sparrow Wallet security testing",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/7a3906de-b558-4ebb-a1a0-a73bfedf26dd.jsonl.gz",
+      "raw_bytes": 4545717,
+      "gz_bytes": 1378230
+    },
+    {
+      "session_id": "dce22ad5-7ec9-40a9-91ba-6ee901e69718",
+      "month": "2026-10",
+      "title": "Second Ark exploit forensics and patch validation",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/dce22ad5-7ec9-40a9-91ba-6ee901e69718.jsonl.gz",
+      "raw_bytes": 3395546,
+      "gz_bytes": 806157
+    },
+    {
+      "session_id": "80d200d7-7dc3-434a-8567-acfa5b83b808",
+      "month": "2026-10",
+      "title": "ECDSA/Schnorr algebraic separations on secp256k1",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/80d200d7-7dc3-434a-8567-acfa5b83b808.jsonl.gz",
+      "raw_bytes": 533174,
+      "gz_bytes": 162176
+    },
+    {
+      "session_id": "6c080c59-9f36-456d-bfee-4ebb4021499b",
+      "month": "2026-10",
+      "title": "Neural network per-parameter capability bounds",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/6c080c59-9f36-456d-bfee-4ebb4021499b.jsonl.gz",
+      "raw_bytes": 8996225,
+      "gz_bytes": 4676042
+    },
+    {
+      "session_id": "cd278d4c-6ef1-4882-b80f-5fb86f77cf62",
+      "month": "2026-10",
+      "title": "Jurassic Bitcoin paper",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/cd278d4c-6ef1-4882-b80f-5fb86f77cf62.jsonl.gz",
+      "raw_bytes": 3459871,
+      "gz_bytes": 888301
+    },
+    {
+      "session_id": "3d973809-659d-4b90-8351-6f776559ffb0",
+      "month": "2026-10",
+      "title": "Fedimint Android app security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/3d973809-659d-4b90-8351-6f776559ffb0.jsonl.gz",
+      "raw_bytes": 2853047,
+      "gz_bytes": 816444
+    },
+    {
+      "session_id": "fd3f15c1-6bf0-43b3-94cd-b865bc55e666",
+      "month": "2026-10",
+      "title": "Personal Context Exploitation Benchmark",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/fd3f15c1-6bf0-43b3-94cd-b865bc55e666.jsonl.gz",
+      "raw_bytes": 7015939,
+      "gz_bytes": 1408364
+    },
+    {
+      "session_id": "ad5910ed-bc22-45e7-91a7-bde272511619",
+      "month": "2026-10",
+      "title": "Reply with exactly the word OK.",
+      "project": "AppData-Local-Temp",
+      "hf_path": "sessions/2026-10/ad5910ed-bc22-45e7-91a7-bde272511619.jsonl.gz",
+      "raw_bytes": 32681,
+      "gz_bytes": 8341
+    },
+    {
+      "session_id": "a00c4388-2299-4952-80be-79c27382a29f",
+      "month": "2026-10",
+      "title": "Gradient-trained networks vs stable approximation",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/a00c4388-2299-4952-80be-79c27382a29f.jsonl.gz",
+      "raw_bytes": 10473037,
+      "gz_bytes": 4846307
+    },
+    {
+      "session_id": "2f92d6f7-3b6b-4b61-87c2-5625b59bbb86",
+      "month": "2026-10",
+      "title": "Red Team Gladiatorics safety platform",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/2f92d6f7-3b6b-4b61-87c2-5625b59bbb86.jsonl.gz",
+      "raw_bytes": 2733646,
+      "gz_bytes": 626974
+    },
+    {
+      "session_id": "6648dcbb-6fcb-476d-843d-c399c0fc80d8",
+      "month": "2026-10",
+      "title": "Blue Wallet security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6648dcbb-6fcb-476d-843d-c399c0fc80d8.jsonl.gz",
+      "raw_bytes": 3913320,
+      "gz_bytes": 980077
+    },
+    {
+      "session_id": "8434eeeb-0826-4a7b-9362-3c9b776dea29",
+      "month": "2026-10",
+      "title": "Green monster trash game",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/8434eeeb-0826-4a7b-9362-3c9b776dea29.jsonl.gz",
+      "raw_bytes": 835763,
+      "gz_bytes": 227123
+    },
+    {
+      "session_id": "87698c34-18e6-4789-ab40-94731af8e156",
+      "month": "2026-10",
+      "title": "TRM infused skills paper review",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/87698c34-18e6-4789-ab40-94731af8e156.jsonl.gz",
+      "raw_bytes": 20211531,
+      "gz_bytes": 9599882
+    },
+    {
+      "session_id": "0e6aa434-1729-4a59-9ea8-42975379297d",
+      "month": "2026-10",
+      "title": "SAE protocol revision in BlueBeam",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/0e6aa434-1729-4a59-9ea8-42975379297d.jsonl.gz",
+      "raw_bytes": 14487022,
+      "gz_bytes": 3442005
+    },
+    {
+      "session_id": "e675600e-f8cf-4f9b-8c54-49148362c073",
+      "month": "2026-10",
+      "title": "Security review of BIP 2297",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/e675600e-f8cf-4f9b-8c54-49148362c073.jsonl.gz",
+      "raw_bytes": 7333381,
+      "gz_bytes": 3964811
+    },
+    {
+      "session_id": "c309c1e9-bc18-4714-b08f-154cf34ef01d",
+      "month": "2026-10",
+      "title": "Lygos security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/c309c1e9-bc18-4714-b08f-154cf34ef01d.jsonl.gz",
+      "raw_bytes": 4771893,
+      "gz_bytes": 1053261
+    },
+    {
+      "session_id": "866bd73c-e262-4eb4-988d-7ca834811062",
+      "month": "2026-10",
+      "title": "IbisWallet security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/866bd73c-e262-4eb4-988d-7ca834811062.jsonl.gz",
+      "raw_bytes": 4828236,
+      "gz_bytes": 1102617
+    },
+    {
+      "session_id": "5d9eb430-4c56-43ce-a15b-f362f4658ff2",
+      "month": "2026-10",
+      "title": "Fix solver rails ignoring selectedVtxos",
+      "project": "ts-sdk",
+      "hf_path": "sessions/2026-10/5d9eb430-4c56-43ce-a15b-f362f4658ff2.jsonl.gz",
+      "raw_bytes": 1424758,
+      "gz_bytes": 274295
+    },
+    {
+      "session_id": "ae610f6d-3d12-444f-a4dd-0d9966c102e3",
+      "month": "2026-10",
+      "title": "Handle selectedVtxos in the v2 swap rails",
+      "project": "ts-sdk",
+      "hf_path": "sessions/2026-10/ae610f6d-3d12-444f-a4dd-0d9966c102e3.jsonl.gz",
+      "raw_bytes": 892836,
+      "gz_bytes": 174434
+    },
+    {
+      "session_id": "b4d9f557-e33c-425c-8bed-d0da0db368ee",
+      "month": "2026-10",
+      "title": "Shinigami zk proofs for BARK VTXOs",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/b4d9f557-e33c-425c-8bed-d0da0db368ee.jsonl.gz",
+      "raw_bytes": 8130649,
+      "gz_bytes": 1952711
+    },
+    {
+      "session_id": "66936a18-b500-4c28-89ed-e8b8869f40cb",
+      "month": "2026-10",
+      "title": "Ark-Lightning interop module design",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/66936a18-b500-4c28-89ed-e8b8869f40cb.jsonl.gz",
+      "raw_bytes": 2723728,
+      "gz_bytes": 642345
+    },
+    {
+      "session_id": "66616e0d-b553-48e8-89a1-63e735932f40",
+      "month": "2026-10",
+      "title": "Semaev summation polynomials and index-calculus",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/66616e0d-b553-48e8-89a1-63e735932f40.jsonl.gz",
+      "raw_bytes": 4003260,
+      "gz_bytes": 1434480
+    },
+    {
+      "session_id": "9cf27a3c-b757-411e-9062-ddaf2a7393f8",
+      "month": "2026-10",
+      "title": "Arke security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/9cf27a3c-b757-411e-9062-ddaf2a7393f8.jsonl.gz",
+      "raw_bytes": 5115870,
+      "gz_bytes": 1264207
+    },
+    {
+      "session_id": "b102fbab-d5a4-46e5-a7a3-70199cae390a",
+      "month": "2026-10",
+      "title": "Tax package, documentation, and FBAR e-filing",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/b102fbab-d5a4-46e5-a7a3-70199cae390a.jsonl.gz",
+      "raw_bytes": 11330251,
+      "gz_bytes": 6428478
+    },
+    {
+      "session_id": "5dfae317-1a23-4a7c-82aa-0f2ac0da7027",
+      "month": "2026-10",
+      "title": "Bitcoin DeFi Bench Nostr capability",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/5dfae317-1a23-4a7c-82aa-0f2ac0da7027.jsonl.gz",
+      "raw_bytes": 5047880,
+      "gz_bytes": 1188904
+    },
+    {
+      "session_id": "8fd963ec-e321-4148-bc37-bed28304a35b",
+      "month": "2026-10",
+      "title": "CoupBench eval simulation",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/8fd963ec-e321-4148-bc37-bed28304a35b.jsonl.gz",
+      "raw_bytes": 6391220,
+      "gz_bytes": 1628911
+    },
+    {
+      "session_id": "eb138d22-fc6e-4695-9676-8cb08dc1cf63",
+      "month": "2026-10",
+      "title": "GPU usage manager for local devices",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/eb138d22-fc6e-4695-9676-8cb08dc1cf63.jsonl.gz",
+      "raw_bytes": 5919370,
+      "gz_bytes": 1686853
+    },
+    {
+      "session_id": "25b66f22-07b8-4039-bf82-0564328ebb57",
+      "month": "2026-10",
+      "title": "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP configuration",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/25b66f22-07b8-4039-bf82-0564328ebb57.jsonl.gz",
+      "raw_bytes": 669469,
+      "gz_bytes": 128416
+    },
+    {
+      "session_id": "d9ed7e81-c832-48eb-a35f-5c3fede9419f",
+      "month": "2026-10",
+      "title": "ZK proof face lift for Fedimint/Cashu",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/d9ed7e81-c832-48eb-a35f-5c3fede9419f.jsonl.gz",
+      "raw_bytes": 1622606,
+      "gz_bytes": 459450
+    },
+    {
+      "session_id": "5f0035d7-9e60-41b9-a068-13f2cb5ad576",
+      "month": "2026-10",
+      "title": "Lean Riemann zeta formalization verification",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/5f0035d7-9e60-41b9-a068-13f2cb5ad576.jsonl.gz",
+      "raw_bytes": 1489549,
+      "gz_bytes": 348491
+    },
+    {
+      "session_id": "6e47e270-a9a9-46b7-b4b5-052c803262ff",
+      "month": "2026-10",
+      "title": "BitAgent research architecture",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/6e47e270-a9a9-46b7-b4b5-052c803262ff.jsonl.gz",
+      "raw_bytes": 7133861,
+      "gz_bytes": 1711985
+    },
+    {
+      "session_id": "22da328b-0848-40ac-92fa-2003a779ee35",
+      "month": "2026-10",
+      "title": "Exodus Wallet security review",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/22da328b-0848-40ac-92fa-2003a779ee35.jsonl.gz",
+      "raw_bytes": 1584073,
+      "gz_bytes": 461876
+    },
+    {
+      "session_id": "5cd5d5e1-52cf-4a09-aa7e-4bf36acbf0d5",
+      "month": "2026-10",
+      "title": "Morality Lab paper links",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/5cd5d5e1-52cf-4a09-aa7e-4bf36acbf0d5.jsonl.gz",
+      "raw_bytes": 6156291,
+      "gz_bytes": 3928007
+    },
+    {
+      "session_id": "9b0e8de4-8bcd-4df5-93dc-9c988608531c",
+      "month": "2026-10",
+      "title": "Control-Harness research framework",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/9b0e8de4-8bcd-4df5-93dc-9c988608531c.jsonl.gz",
+      "raw_bytes": 4598617,
+      "gz_bytes": 1112357
+    },
+    {
+      "session_id": "e88a2246-00e4-43e0-9b74-ed10b834845f",
+      "month": "2026-10",
+      "title": "Git on PATH",
+      "project": "Adict",
+      "hf_path": "sessions/2026-10/e88a2246-00e4-43e0-9b74-ed10b834845f.jsonl.gz",
+      "raw_bytes": 324370,
+      "gz_bytes": 70449
+    },
+    {
+      "session_id": "a379439e-1e67-4750-b051-db5ffa8898eb",
+      "month": "2026-10",
+      "title": "Arkd operator/ASP threat model",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/a379439e-1e67-4750-b051-db5ffa8898eb.jsonl.gz",
+      "raw_bytes": 1672183,
+      "gz_bytes": 388476
+    },
+    {
+      "session_id": "b6c9035f-c0af-45fe-8c1c-f5c83ac52211",
+      "month": "2026-10",
+      "title": "Mechinterp strategy for red team eval detection",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/b6c9035f-c0af-45fe-8c1c-f5c83ac52211.jsonl.gz",
+      "raw_bytes": 3671080,
+      "gz_bytes": 1539141
+    },
+    {
+      "session_id": "1a7734df-a9e5-4b7e-b1c9-7cbd72a6c2ae",
+      "month": "2026-10",
+      "title": "Lightning BOLT message test coverage",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/1a7734df-a9e5-4b7e-b1c9-7cbd72a6c2ae.jsonl.gz",
+      "raw_bytes": 3314736,
+      "gz_bytes": 763873
+    },
+    {
+      "session_id": "40ad0a0e-a791-4d50-91d6-3ba65c3fca7e",
+      "month": "2026-10",
+      "title": "Model weight containment research",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/40ad0a0e-a791-4d50-91d6-3ba65c3fca7e.jsonl.gz",
+      "raw_bytes": 4941545,
+      "gz_bytes": 1800923
+    },
+    {
+      "session_id": "80506bbc-002f-4495-bd7f-e96c63ec4552",
+      "month": "2026-10",
+      "title": "ZK registry settlement object",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/80506bbc-002f-4495-bd7f-e96c63ec4552.jsonl.gz",
+      "raw_bytes": 989620,
+      "gz_bytes": 289758
+    },
+    {
+      "session_id": "451451d7-ab40-44cb-8c7d-358dbc812caf",
+      "month": "2026-10",
+      "title": "Recurrent transformer architectures for small agents",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/451451d7-ab40-44cb-8c7d-358dbc812caf.jsonl.gz",
+      "raw_bytes": 5085083,
+      "gz_bytes": 1148074
+    },
+    {
+      "session_id": "6bbab199-ec9e-4139-b038-1e2c9e3de1d2",
+      "month": "2026-10",
+      "title": "Spiral monthly check-in",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/6bbab199-ec9e-4139-b038-1e2c9e3de1d2.jsonl.gz",
+      "raw_bytes": 634941,
+      "gz_bytes": 158454
+    },
+    {
+      "session_id": "f9723f31-e972-4fec-b98c-1232b392bd6e",
+      "month": "2026-10",
+      "title": "Sparrow Wallet security testing",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/f9723f31-e972-4fec-b98c-1232b392bd6e.jsonl.gz",
+      "raw_bytes": 93565,
+      "gz_bytes": 22360
+    },
+    {
+      "session_id": "50709ecd-92ed-4482-a486-8ec3f68c8c50",
+      "month": "2026-10",
+      "title": "Mechanistic interpretability project: SAE trajectories",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/50709ecd-92ed-4482-a486-8ec3f68c8c50.jsonl.gz",
+      "raw_bytes": 5708092,
+      "gz_bytes": 1319102
+    },
+    {
+      "session_id": "71ab3183-da84-4597-a6f3-56eb06e01e68",
+      "month": "2026-10",
+      "title": "DAG Harness",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/71ab3183-da84-4597-a6f3-56eb06e01e68.jsonl.gz",
+      "raw_bytes": 3001847,
+      "gz_bytes": 798411
+    },
+    {
+      "session_id": "7d7bc296-e8f7-4f92-a7ce-e83677704ece",
+      "month": "2026-10",
+      "title": "BitAgent codex session",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/7d7bc296-e8f7-4f92-a7ce-e83677704ece.jsonl.gz",
+      "raw_bytes": 3891107,
+      "gz_bytes": 842137
+    },
+    {
+      "session_id": "3ea63e2c-4adc-4069-93da-a1350baf646d",
+      "month": "2026-10",
+      "title": "DenialBench evaluation benchmark",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/3ea63e2c-4adc-4069-93da-a1350baf646d.jsonl.gz",
+      "raw_bytes": 1273589,
+      "gz_bytes": 504841
+    },
+    {
+      "session_id": "47ace8ab-b6db-42b7-864d-a21bf12b807a",
+      "month": "2026-10",
+      "title": "AI control degradation formalism",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-10/47ace8ab-b6db-42b7-864d-a21bf12b807a.jsonl.gz",
+      "raw_bytes": 360511,
+      "gz_bytes": 119102
+    },
+    {
+      "session_id": "22788052-acc1-42f5-a322-426c0f7d8652",
+      "month": "2026-10",
+      "title": "BitVM Arena development",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/22788052-acc1-42f5-a322-426c0f7d8652.jsonl.gz",
+      "raw_bytes": 489282,
+      "gz_bytes": 104489
+    },
+    {
+      "session_id": "a91ca475-6085-47cb-959f-156d211f8422",
+      "month": "2026-10",
+      "title": "Red Team Gladiatorics safety platform",
+      "project": "Spiral",
+      "hf_path": "sessions/2026-10/a91ca475-6085-47cb-959f-156d211f8422.jsonl.gz",
+      "raw_bytes": 713123,
+      "gz_bytes": 231755
+    },
+    {
+      "session_id": "7758cfe3-4c26-4f6c-97fb-f0dcb6f5865a",
+      "month": "2026-10",
+      "title": "BitAgent ChatGPT plugin",
+      "project": "BitAgent",
+      "hf_path": "sessions/2026-10/7758cfe3-4c26-4f6c-97fb-f0dcb6f5865a.jsonl.gz",
+      "raw_bytes": 4371291,
+      "gz_bytes": 1608975
+    },
+    {
+      "session_id": "fc601532-122d-49e1-ae56-0be402125909",
+      "month": "2026-09",
+      "title": "MoralityLab repos setup",
+      "project": "claude-desktop-scratch",
+      "hf_path": "sessions/2026-09/fc601532-122d-49e1-ae56-0be402125909.jsonl.gz",
+      "raw_bytes": 784652,
+      "gz_bytes": 152220
+    }
+  ]
+}
