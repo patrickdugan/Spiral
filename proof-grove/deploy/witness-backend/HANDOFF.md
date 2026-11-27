@@ -70,7 +70,7 @@ Python 3.12+ is enough to serve. Ask the user for the domain/subdomain.
 - Testnet4 holder-only CSV exit (same reserve script, no mint signature): txid
   `380aff2486d2b5654473fd33e1b971089604204e8e0c05995e4dd9bb2c0fc8d2`.
 
-## Deployed (2026-11-27, from rev 1339774)
+## Deployed (2026-11-27, first from rev 1339774; now rev 94e60e5)
 
 Live at **https://cashu-recovery.170-75-168-145.sslip.io/#protected-preview**.
 
@@ -92,3 +92,16 @@ The bundled evidence manifest covers `issuance` and `refusal` only. The page als
 `historical`, which answer 400 `recovery_accounting_not_configured` / `recovery_historical_not_configured`; adding
 `evidence/nova-registry-verification.json` and the historical `verification/verification.json` entries to the manifest
 would enable them.
+
+Redeployed 2026-11-27 15:51 UTC at rev 94e60e5 (only the Cashu recovery tab when the preview is configured). Checked over
+HTTPS: the page shows a single visible tab "Cashu recovery" (Payment gate, Ark caretaker, Evidence & sources hidden),
+`/api/protected/preview?case=original` returns `verified: true`, and the form verifies the original (24,750 sats) and
+rejects the substitute beneficiary. `install.sh` now restarts the unit explicitly on every install.
+
+`accounting` and `historical` still answer 400: their source archives (the Nova registry bundle with
+`evidence/nova-registry-verification.json`, and the historical STARK bundle with `verification/verification.json`,
+`proof/redemption-proof.json`, `case/statement.json`, `verification/bitcoin-transaction-audit.json`) exist only on the
+proving PC. To enable them, add the two zips to `data/` and these manifest entries, then redeploy:
+`"accounting": {"file", "sha256", "registry_sha256", "tip_hash", "tip_height", "nova_verifier_key_sha256", "blocks_sha256"}`
+and `"historical": {"file", "sha256", "receipt_sha256", "proof_sha256", "statement_sha256", "transaction_audit_sha256"}`
+(fields as read by `proofdesk/protected_evidence_preview.py`).

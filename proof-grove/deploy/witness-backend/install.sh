@@ -7,7 +7,6 @@ DOMAIN=cashu-recovery.170-75-168-145.sslip.io
 ROOT=/opt/proof-grove-cashu-recovery
 TS=$(date -u +%Y%m%dT%H%M%SZ)
 
-pkill -f 'proofdesk serve --port 8769' || true
 
 id pgcashu >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin pgcashu
 
@@ -55,7 +54,8 @@ WantedBy=multi-user.target
 UNIT
 
 systemctl daemon-reload
-systemctl enable --now proof-grove-cashu-recovery.service
+systemctl enable proof-grove-cashu-recovery.service
+systemctl restart proof-grove-cashu-recovery.service
 
 if ! grep -q "^$DOMAIN " /etc/caddy/Caddyfile; then
   cp -p /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak-$TS"
