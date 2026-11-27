@@ -74,7 +74,7 @@ For $J$ a subset of destinations write $U_v(J)=\sum_{j\in J}u_{vj}$ and
 \[
  \Delta=\max_J\left\{\sum_{j\in J}d_j-\sum_v\min(C_v,U_v(J))\right\}.
 \]
-The maximal delivery equals $\sum_jd_j-\Delta$; in particular the full family of cut inequalities is sufficient for this graph. The empty subset ensures $\Delta\ge0$. For integer satoshi capacities, increasing $C_v$ by one sat reduces $\Delta$ by one if and only if $U_v(J)>C_v$ for every maximizing $J$.
+The maximal delivery equals $\sum_jd_j-\Delta$; in particular the full family of cut inequalities is sufficient for this graph. The empty subset ensures $\Delta\ge0$. For integer satoshi capacities, increasing $C_v$ by one sat with fixed route capacities reduces $\Delta$ by one if and only if $U_v(J)>C_v$ for every maximizing $J$.
 \end{proposition}
 \begin{proof}
 Build a source--vault--destination--sink network, with capacities $C_v,u_{vj},d_j$ in the respective layers. For fixed sink-side destination set $J$, each vault independently contributes either $C_v$ or $U_v(J)$ to the cut; the other cut contribution is $\sum_{j\notin J}d_j$. Minimizing over cuts and applying max-flow/min-cut proves the identity; integrality follows from integer-capacity augmentations. Each cut deficit decreases by zero or one under a one-sat injection. A nonmaximal integer deficit starts at least one below the maximum. The maximum therefore falls by one precisely when every previous maximizer falls by one.
@@ -100,6 +100,33 @@ An increase on $e$ must be matched by a reverse residual flow from $j$ to $v$, b
 \paragraph{Finite verification and physical settlement.} The independent SHZ-CG-01 reference oracle (\texttt{research/capital\_graph/}, SHZ PR~34) passed exhaustive enumeration of 6{,}561 two-vault/two-destination networks with budgets, demands and capacities in $\{0,1,2\}$, 13{,}122 unit-budget perturbations, and 1{,}296 route-coordinate range checks on capacity-constrained fibres, plus parallel-edge and exact-integer cases. The JavaScript function bodies were evaluated in isolation; repository CI, Rust parity and chain integration were not run for this extension. These are finite checks of the preceding mathematical proofs, not a new Lean formalization or measured capital saving.
 
 The dynamic transaction packer has additional atomic constraints (input-specific signatures, pinned outputs, anchor and fee); the V3 venue ledger has a distinct default waterfall and deferred claims. Its identity is $\text{cash}-\text{claims}-\text{fund}+\text{carry}=\text{book}$. A haircut changes service; it cannot count as a capital saving at fixed claims. A time-expanded graph must gate carry and release by authorization, maturity, oracle, confirmation, recovery and reorg state. A simple flow relaxation that splits a jointly gated transaction gives only an optimistic bound. Track each physical satoshi once per interval, including replacement LP and bond stock, and distinguish settlement confirmation from actual spendability. The testnet MNR-03 evidence in the SHZ repository is an example of pinned offline-counterparty settlement at maturity, not general pre-maturity release.
+
+\subsection{Robust placement of settlement capital}
+\label{sec:rent-placement}
+
+Let $\mathcal S$ be a finite family of alternative, admissible settlement scenarios. Preplace integer additional stock $z_v\ge0$ at vaults with initial budgets $C_v$ and minimize $\sum_v w_v z_v$ for positive funding weights $w_v$. Each scenario $s$ has its own fixed route capacities $u^s_{vj}$ and mandatory demands $d^s_j$. Allocations may adapt after the scenario is realized, but the placement must serve every scenario. When an injection itself adds authorized retention capacity, that rule must be included in the graph model; below the route capacities are held fixed.
+
+\begin{proposition}[robust capital covering]
+\label{prop:shz-robust-placement}
+A placement is feasible if and only if, for every $s\in\mathcal S$, destination subset $J$ and vault subset $L$,
+\[
+ \sum_{v\in L} z_v \ge
+ \sum_{j\in J}d^s_j-\sum_{v\in L}C_v
+ -\sum_{v\notin L}\sum_{j\in J}u^s_{vj}.
+\]
+The real-valued relaxation supplies a lower bound on integer capital cost and need not have an integer optimum.
+\end{proposition}
+\begin{proof}
+Proposition~\ref{prop:shz-exact-cut} requires $\sum_jd^s_j$ to be delivered in each scenario. For every $J$ its cut contribution is a sum of independent minima over the vaults, which equals the minimum over $L$ of the budget contributions from $L$ and route contributions from its complement. Requiring the minimum to cover $d^s(J)$ is equivalent to requiring every such sum to cover it. For the integrality counterexample, take three vaults, zero initial budget and three scenarios of unit demand, with available routes from pairs $\{1,2\},\{1,3\},\{2,3\}$ respectively, each edge of capacity at least one. The constraints reduce to the three pair sums of $z$ being at least one. Adding the inequalities gives $\sum_v z_v\ge3/2$, attained by $z_v=1/2$. Integer stock requires two units, which suffice.
+\end{proof}
+
+A min-cut oracle supplies a violated constraint for a candidate placement in each scenario, so the family need not be enumerated in a cutting-plane implementation. The triangle also defeats hill climbing on the worst deficit: from zero stock, every single-unit injection leaves one scenario uncovered. Complementary placements can have value even when the immediate marginal improvement of every individual unit is zero. Uniform integer provisioning costs three units in that example.
+
+The CBM-SHZ-03 bounded reference check (\texttt{research/capital\_graph/placement.mjs}, SHZ PR~34) exhaustively optimizes 364 triples drawn from 14 synthetic one-target scenarios (seven nonempty subsets of three vaults, demand one or two units, route capacity two). All optima agree with a separate one-target exhaustive calculation; in 331 of the 364 families the optimum uses fewer units than uniform integer provisioning. The maximum reduction is four units. In a separate transcription of the existing Rust worked fixture, removal of a permitted retained-vault route causes a 6,000-sat deficit. Adding 6,000 sats to the loser vault leaves the deficit unchanged; adding that stock to the winner, with authorized self-retention, eliminates it. This is an accounting-graph calculation, not an observed chain transfer.
+
+The accompanying Rust patch adds a read-only \texttt{analyze\_pnl\_batch\_graph} method to the validated allocator. It emits primal and cut witnesses on feasible and deficient snapshots, with the latter remaining rejected by the settlement API. It also requires the confirmation snapshot to match the reserved snapshot and rejects reuse of an outpoint in the persisted book even if the caller omits the replay list. Tests are committed; Rust compilation and chain replay have not yet been verified in this campaign. The graph verifier checks the stated graph, not its authenticity, and the book's confirmation adapter remains an external authority boundary.
+
+For simultaneous obligations the scenario must contain all of them together; a placement covering separate alternatives cannot spend the same stock twice. A temporal implementation must account for physical stock, authorized carry and recovery events before interpreting the placement objective as BTC-time. No new duration or rent estimate follows from the synthetic experiment.
 
 \subsection{Release, authentication and enforceable claims}
 \label{sec:rent-release}
