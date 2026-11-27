@@ -12,5 +12,22 @@
     "file": "cashu-v4-funded-withheld-verdict-evidence.zip",
     "verification": "cashu-v4-refusal-verification.json",
     "verification_sha256": "ecf5b59fd1eaa53335a24bd0420775016bfe62e57fd55f8bc976a6f50ef04655"
+  },
+  "accounting": {
+    "file": "cashu-v4-registry-and-nova-evidence.zip",
+    "sha256": "07389b5c5e1d02b0678b93a9fdf51546148d61cc0046d851341b6a71245eb3c2",
+    "registry_sha256": "79e5daff5d9b42786bec9da221b84a3cbe62fb5abc5f7f95f12e2326c27e75ce",
+    "tip_hash": "349f5195532f4b0f4b123dba9c8a46773d59d98a68d7f56c6e60d75043d3603f",
+    "tip_height": 216,
+    "nova_verifier_key_sha256": "e472ec73e400c2d88b4e398741596765024fab4ee22ed7b6c600e8753df1034d",
+    "blocks_sha256": "c816643099e34832f27cb18039879220526a009d7dc3ec700524454de14edc4f"
+  },
+  "historical": {
+    "file": "cashu-historical-23750-stark-verification.zip",
+    "sha256": "c8e188876da146546a3f617afa35819e3b209d9eaaef0816b61efcf447ce4d9c",
+    "receipt_sha256": "58d1c2468b35c61281ece46e71ea15fa165bf5da31ef28d2e81f05c785a4afe8",
+    "proof_sha256": "d2340cf3c6f3c71f33268cc5b097e001ffbafb1ade96ab12ab3fa477ef1ef328",
+    "statement_sha256": "f4dd55f29dcef204a7469ef9c338f5e51a74e4c0b3be995207cf2a28f7b4a849",
+    "transaction_audit_sha256": "6312977f33ef21199ccf07cbd826615932ebf9223f27103f8059c110794100f2"
   }
 }
