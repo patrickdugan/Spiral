@@ -1,0 +1,16 @@
+{
+  "schema": "proof-grove/protected-recovery-evidence/v1",
+  "claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+  "holder_txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+  "holder_wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+  "issuance": {
+    "sha256": "de062f2ae0bbe7ced84cae491aeeb4fe25919510e1b65e9df10f70722f3a42d9",
+    "file": "cashu-v4-issuance-and-holder-payout.zip"
+  },
+  "refusal": {
+    "sha256": "e411a5a836e17d71d32ca8d4dcea2f4bfae1dc7686d34e0fef1e9f4f4f044106",
+    "file": "cashu-v4-funded-withheld-verdict-evidence.zip",
+    "verification": "cashu-v4-refusal-verification.json",
+    "verification_sha256": "ecf5b59fd1eaa53335a24bd0420775016bfe62e57fd55f8bc976a6f50ef04655"
+  }
+}

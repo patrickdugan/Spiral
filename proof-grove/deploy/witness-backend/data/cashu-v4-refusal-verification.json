@@ -1,0 +1,40 @@
+{
+  "schema": "proof-grove/m14/independent-refusal-verification/v1",
+  "network": "regtest",
+  "archive_sha256": "e411a5a836e17d71d32ca8d4dcea2f4bfae1dc7686d34e0fef1e9f4f4f044106",
+  "claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+  "statement_sha256": "86ce691d58ba7bc21c39221e0a64857b4750165eb58b1d770b408d86fc876085",
+  "bitcoin": {
+    "schema": "proof-grove/protected-regtest-block-replay/v1",
+    "network": "regtest",
+    "height": 219,
+    "anchor": "048db1a60a8f4c2c48dea33fd72ffbaf36680ca9e913813d4fad6a2e83a3f5c3",
+    "archive_sha256": "34d25bf5ea13b9bb80c8b6dafd52d08797af1aa5991d3c2861240b3746e4ba17",
+    "blocks_submitted": 219
+  },
+  "wallets_loaded": 0,
+  "verdict_supplied": false,
+  "holder_payout": {
+    "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+    "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+    "sats": 24750,
+    "script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+    "fee_sats": 250,
+    "block": "7ccc007004ca6a0ce4e9a236425304aa1942ac55dcc9f796a65721a17a409989",
+    "height": 212,
+    "inclusion_proof_hex": "00000030afd760d38e431480f992545e874a40a330cd500d6dcd77614ad22c6255d7c70fbe658d06f479520cc8263396acb153d4a04ecc7a5967db4236427599e2443a4dda59076bffff7f20020000000200000002f68c933f9fbcbd6af948acc3d1919bd6069220f655644df52bff63b0fe4bd8a1e5c9425cf4b40b3d2f9ac9e62ae67c4d6bcce4074fc00aebf84553d5bd1043080105"
+  },
+  "collateral_timeout": {
+    "txid": "bf1ae7535d3c5f1b2dc15bebbf87cb11311789334df65c922c97d74bb1f802b4",
+    "wtxid": "f4b308282b6001c4ddaa669c217772e7398bea2dc90f7512f1a19a8046457bce",
+    "sats": 24750,
+    "script": "001457ed41c8d8072391ae46057aee8616718b6b1687",
+    "fee_sats": 500,
+    "block": "048db1a60a8f4c2c48dea33fd72ffbaf36680ca9e913813d4fad6a2e83a3f5c3",
+    "height": 219,
+    "inclusion_proof_hex": "00000030c33209915ea97a8b5636583ef2222365bce7f1702c6423699a1ad7589c499548adf867c4b897eacd4d2ca41a69a4825b898334e52ea8d194766da84bf1c5d9cedb59076bffff7f20000000000200000002d9601eb3ab7f65c8c028d764f45e563f9b57edc447fe399d1496e76c174044c0b402f8b14bd7972c925cf64d3389173111cb87bfeb5bc12d1b5f3c5d53e71abf0105"
+  },
+  "early_timeout_rejected": true,
+  "substituted_beneficiary_rejected": true,
+  "timeout_reorg_restored_only_collateral": true
+}

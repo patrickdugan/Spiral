@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from . import demo, protected_evidence_preview, protected_funded_preview, protected_payout_evidence
+from . import demo, protected_evidence_preview, protected_funded_preview, protected_payout_evidence, stablecoin_adapter
 from .adapters import BarkClient, CashuClient
 from .archive import bundle
 from .cashu import CashuBridge
@@ -304,6 +304,8 @@ def make_server(desk: Desk, port: int = 8765, *, access: HostedAccess | None = N
                         value = desk.status()
                         value['hosted_access']={'enabled':bool(access),'mutations':bool(access and access.mutations),
                                                 'private_bundles':bool(access and access.private_bundles)}
+                    elif path == '/api/stablecoin/status':
+                        value = stablecoin_adapter.status()
                     elif path == '/api/protected/preview':
                         value = desk.check_protected_preview(parse_qs(url.query).get('case', ['original'])[0])
                     elif path == '/api/protected/preview/archive':

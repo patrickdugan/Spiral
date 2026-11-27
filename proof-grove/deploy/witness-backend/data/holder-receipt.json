@@ -1,0 +1,255 @@
+{
+  "schema": "proof-grove/protected-reserve-regtest/v1",
+  "network": "regtest",
+  "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+  "app_bundle": {
+    "schema": "proof-grove/protected-reserve-bundle/v3",
+    "plan": {
+      "schema": "proof-grove/protected-reserve-plan/v3",
+      "network": "regtest",
+      "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "holder_pubkey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+      "mint_pubkey": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+      "claim_commitment": "5fc81c8473fa655f2f52c381b4bc04d00381f40e297851a258fa8f0075962787",
+      "reserve_sats": 25000,
+      "fee_sats": 250,
+      "delay_blocks": 6,
+      "min_confirmations": 2,
+      "payout_address": "bcrt1qg66vttkt02uelv07aqkg9j72jth0reule5qq2j",
+      "payout_script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+      "descriptor": "wsh(and_v(v:sha256(9f5b0f986f9311cc266ebb1b73cab7ac81de3bcaad86255076b94f382b76d697),and_v(v:pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),or_i(pk(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5),older(6)))))#nq3kqhld",
+      "funding_address": "bcrt1q3shythmr4mu3y6np3v3stva0ufdudy2kvm3whh9v4zcxpvwv9dyqaqx5pg",
+      "funding_script": "00208c2e45df63aef9126a618b2305b3afe25bc6915666e2ebdcaca8b060b1cc2b48",
+      "witness_script": "82012088a8209f5b0f986f9311cc266ebb1b73cab7ac81de3bcaad86255076b94f382b76d69788210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ad632102c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ac6756b268",
+      "payout_sats": 24750,
+      "change_sats": 0,
+      "issuance_preimage": "3975d40d1e70b71a8a964abea5e9855ded7f15f15e18ce58bb7a4d12dadf7487",
+      "issuance_hash": "9f5b0f986f9311cc266ebb1b73cab7ac81de3bcaad86255076b94f382b76d697",
+      "plan_id": "3ae905a7660a0f9356432995a51b40174c9fde0e70088b84876d42eb63513e16"
+    },
+    "funding": {
+      "txid": "a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb",
+      "vout": 1,
+      "block": "07468e1531c47ff419fbd57c02be84f0a8de238c57610770fdb9842365111b9f"
+    },
+    "bundle_id": "42fb52c2efd0649e3122a8e683cf6f0f7f894fefc079fbb4b968392342e7ed17"
+  },
+  "mature_holder_check": {
+    "bundle_id": "42fb52c2efd0649e3122a8e683cf6f0f7f894fefc079fbb4b968392342e7ed17",
+    "route": "holder",
+    "mempool_eligible": true,
+    "reject_reason": null,
+    "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+    "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+    "payout_sats": 24750,
+    "fee_sats": 250,
+    "change_sats": 0,
+    "observation": {
+      "state": "unspent",
+      "tip": "2e18a47dc6dd0942f48c009be25df6b88971803d51b8ee39b30cedf0f3a0ed53",
+      "height": 109,
+      "funding_height": 104,
+      "confirmations": 6,
+      "eligible_in_next_block": true,
+      "holder_only_earliest_height": 110
+    }
+  },
+  "reserve": {
+    "txid": "a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb",
+    "vout": 1,
+    "block": "07468e1531c47ff419fbd57c02be84f0a8de238c57610770fdb9842365111b9f",
+    "sats": 25000,
+    "script": "00208c2e45df63aef9126a618b2305b3afe25bc6915666e2ebdcaca8b060b1cc2b48"
+  },
+  "payout": {
+    "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+    "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+    "block": "581bbe122433e9e2360850d9e34b6339a7550c97462a44bee810b21d60f9af98",
+    "height": 110,
+    "script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+    "sats": 24750,
+    "fee_sats": 250,
+    "delay_blocks": 6
+  },
+  "cdk_issuance": {
+    "state": "protected-issued",
+    "evidence_level": "core-regtest",
+    "amount_sats": 25000,
+    "proof_count": 6,
+    "bundle_id": "42fb52c2efd0649e3122a8e683cf6f0f7f894fefc079fbb4b968392342e7ed17",
+    "lock_key": "02f064763a68e72a976e68eb73f9d1e3033b262d435550f12d8d659b91d2626288",
+    "request_sha256": "a6a3a20e1a32e17e465a55e1a03d04c300e974a32b9554cbde8549d2f71ec60b",
+    "proofs_sha256": "ba56033db9f62c5bed8876cf5450196afd8a112cfce4db6c53b40221dd82debf",
+    "dleq_verified": true,
+    "offline_keyset_audit": true,
+    "certificate_sha256": "6881d781afb1a02fd71f362bfb8d6d7b2ee2dd476f546fe8a676e616fb292551",
+    "changed_secret_rejected": true,
+    "portable_audit": {
+      "keysets_sha256": "312e4f94ab5b266632361f688ba91fbe9a23a01865997147fabe0e207d12150e",
+      "proof_count": 6,
+      "batch_bound": true,
+      "receipt_sha256": "0390b313a4fa9fdcc803d4d756c079bdde36a6f3968ec74382407519d93e152a",
+      "rejected": [
+        "key-substitution",
+        "wrong-amount",
+        "wrong-bundle",
+        "wrong-mint",
+        "repeated-note",
+        "profile-downgrade",
+        "missing-v3-bundle",
+        "reordered-blinded-outputs",
+        "substituted-blinding-factor",
+        "valid-alternate-synthetic-batch"
+      ]
+    }
+  },
+  "legacy_cdk_melt": {
+    "http_status": 400,
+    "code": 20008,
+    "refused_protected_inputs": true,
+    "unspent_after_rejection": true,
+    "certificate_sha256": "6881d781afb1a02fd71f362bfb8d6d7b2ee2dd476f546fe8a676e616fb292551"
+  },
+  "controls": {
+    "mint_process_stopped": true,
+    "offline_dleq_reverified": true,
+    "reserve_consumed": true,
+    "replayed_exit": "txn-already-known"
+  },
+  "public_transactions": {
+    "funding": "0200000000010183c89c51d786bda109f5b3ce05118fb40f4255c2c87367b6ed253bbaa5a4c9d90000000000fdffffff027e2d052a01000000225120a8d63478ba541719695d8e3b29872e14fa2b97986404202f950e2715497ce3f9a8610000000000002200208c2e45df63aef9126a618b2305b3afe25bc6915666e2ebdcaca8b060b1cc2b48024730440220243518b82a6f2ad261de7d361ca1c63f03fee30d45553636d1d75cdf86d29f8d0220215e03d929a753d49199c89e42c8708299677661e989c9379968f2a745b64b70012102a831e056f48ed5bafd4455ef0f36955ca35d7f917009915abe1f53941020f59367000000",
+    "payout": "02000000000101fb6743eb822a1ecca3cbdb6075dd40bfc01ba863814a9510edca9f727cdb47a101000000000600000001ae6000000000000016001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f0400473044022040495ffe79660e543dd3aed81278edd1b5838c8ec30428be33e2b728a1aca645022027181318cc1ac7fdbfa36eb42df6492c4be281b9ca3cc54f160f922c3b35462f01203975d40d1e70b71a8a964abea5e9855ded7f15f15e18ce58bb7a4d12dadf74877282012088a8209f5b0f986f9311cc266ebb1b73cab7ac81de3bcaad86255076b94f382b76d69788210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ad632102c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ac6756b26800000000"
+  },
+  "public_headers": {
+    "funding": "000000204c78c1efcc53fd5f32e2fe7054079312384346ad4252f2505a9d3252741a3d6c7ba2046d05ff8e9051b517a5137a4042c9f32463a6352cb81c6a3a846f4dd600ccf0066bffff7f2000000000",
+    "payout": "0000002053eda0f3f0ed0cb339eeb8513d807189b8f65de29b008cf44209ddc67da4182e43d3a00f60d748d667bb6b2a413e49ef9784a000595947ecc396f07b9a91ffb468f1066bffff7f2000000000"
+  },
+  "evidence": "bitcoin-core-regtest-consensus",
+  "bitcoin_chain_evidence": {
+    "schema": "proof-grove/protected-payout-chain/v1",
+    "headers": [
+      "000000204c78c1efcc53fd5f32e2fe7054079312384346ad4252f2505a9d3252741a3d6c7ba2046d05ff8e9051b517a5137a4042c9f32463a6352cb81c6a3a846f4dd600ccf0066bffff7f2000000000",
+      "000000209f1b11652384b9fd700761578c23dea8f084be027cd5fb19f47fc431158e4607ed82e6ace9dce122cb5489901baa0105155e100ec2e57cca3a2e19d3b19f6013ccf0066bffff7f2002000000",
+      "0000002049be58e8734f844145401b7feb6cec2ca2b05e31fd37e79ad52d099e9ca80812d5f8b0d7735427e6a01c51ab5f8775933e78eb143a2a6e79b890e6cf845aead4eff0066bffff7f2000000000",
+      "000000203f311b9001a6a87ce288cb1b7c07c1d9ddbbbade695b90670197f08dcd9dc10d9daf08ee234b9d203be84afe841e307f5f30fd92564ed136701c2219365e7cd2eff0066bffff7f2000000000",
+      "00000020c52efcb0be7c9e955215ef4e53639e280204924db21d96377d37b9142d09553eb87db776243370edb98888c5cd9c67c15176ad9f93a501e89a06f21e14719bcfeff0066bffff7f2003000000",
+      "000000208112163b917a6cd3fab3d71aa6bd75a0797becab09c6ee8b3e99849396f6577a882989e40708dc299e1194ca5950facee49aa522370f07039f7a0f7f1bffe9b3eff0066bffff7f2000000000",
+      "0000002053eda0f3f0ed0cb339eeb8513d807189b8f65de29b008cf44209ddc67da4182e43d3a00f60d748d667bb6b2a413e49ef9784a000595947ecc396f07b9a91ffb468f1066bffff7f2000000000"
+    ],
+    "funding_txids": [
+      "9c850c9084ff4e6352e1e431a5dfc49803d0e49f4ea6af9f8be2fed3e7ea68cf",
+      "a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb"
+    ],
+    "payout_txids": [
+      "bf6568d673e11f6e725c315c42a200ce0fd93ff0d5f3af2792e95b83e6312436",
+      "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5"
+    ],
+    "payout_wtxids": [
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d"
+    ],
+    "payout_coinbase": "020000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff03016e00feffffff02faf2052a010000001600147e1cd2ab76c78fbc3ce8af72a0a2b797f01d874c0000000000000000266a24aa21a9ed5511e683a343d9ae4c4ea8494284f16ff195c6c6c76e0256e76ed1d00bd06074012000000000000000000000000000000000000000000000000000000000000000006d000000"
+  },
+  "withdrawal_authorization": {
+    "confirmed_prefix": {
+      "declared_reserve_sats": 25000,
+      "outstanding_claims_sats": 25000,
+      "pending_issuance_sats": 0,
+      "catalog_reserves": 1,
+      "tip_hash": "2e18a47dc6dd0942f48c009be25df6b88971803d51b8ee39b30cedf0f3a0ed53",
+      "tip_height": 109
+    },
+    "candidate_withdrawal": {
+      "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+      "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+      "signed_tx_sha256": "d74ce70073570e53650aa49f1672bb8f5e6bfa281ae4a837e8b6503a4fe6ae83",
+      "script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+      "sats": 24750,
+      "fee_sats": 250,
+      "change_sats": 0,
+      "sequence": 6,
+      "earliest_height": 110
+    },
+    "nova": {
+      "before_final_journal_root": "2faedea2aaf6cfa9e74ac3b017f2e0d636ca78989790c8cd31c828ae831c4524",
+      "compress_seconds": null,
+      "constraints_per_step": 42043,
+      "declared_reserve_sats": 0,
+      "fold_seconds": null,
+      "journal_sha256": "3292b20dc760cb46890384256ff31bef851663c353940c665943f1b61ea69d0a",
+      "mode": "verify-journal",
+      "operations": [
+        "register",
+        "issue",
+        "redeem"
+      ],
+      "outstanding_claims_sats": 0,
+      "peak_rss_kib": null,
+      "proof_bytes": 11504,
+      "proof_sha256": "3f96e1df528d1fc6648aaaba04a91d2dc99e14ab67a9bc98f2d5f80005f2d5bf",
+      "rejected": [
+        "different_context_anchor",
+        "wrong_step_count"
+      ],
+      "schema": "proof-grove/cashu-nova-regtest-accounting/v1",
+      "scope": "declared accounting, with external admission evidence commitments",
+      "setup_seconds": 35.1073292,
+      "steps": 3,
+      "verified": true,
+      "verifier_key_sha256": "e472ec73e400c2d88b4e398741596765024fab4ee22ed7b6c600e8753df1034d",
+      "verify_seconds": 0.4798311,
+      "z0": [
+        "05aa953b81bf4f4e5031e20cfdef142c01d2bb16bf99340a51515cd2f5983585",
+        "15d7f444ca1126090b38383d45ab216ed42ccdbf565b62b5d66184b41791953d",
+        "38666de725780a9f07f37b4d6032bf8e0fc3bc8669b08f430b925414a3aaa63b",
+        "39a37d98e6718a6ca0a031e4d96a736a7a6e65f631c2bb532b747b70e5f631cc",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "3f71dc0d9afb52fa7d7432822c1d6c335e689d8e636747828f84646d5b3e69c3"
+      ],
+      "zn": [
+        "1cff568681e4040c5cd045b17cec44ff7d7ef9be24873eabec99cbd44999f3d8",
+        "2b32c4c4bf409d4c04d7d4cdf34d5ffffabffe34ef8da90751c8c686ecf5698e",
+        "38666de725780a9f07f37b4d6032bf8e0fc3bc8669b08f430b925414a3aaa63b",
+        "0c7fbc51958ac9f7b996b90d26b644ab6eebbd9668f0ad3a2341fbbb42896cf3",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000003",
+        "127d9ad30a50ab6b2ecafec0dbdee78108b5f98e5fec61cd1867ceedfa285070",
+        "3f71dc0d9afb52fa7d7432822c1d6c335e689d8e636747828f84646d5b3e69c3"
+      ]
+    },
+    "proved_before_broadcast": true,
+    "anchor_invalidation_rejected": true,
+    "substituted_witness_rejected": true,
+    "candidate_as_confirmed_rejected": true,
+    "pending_readmission_refused": "protected_accounting_reserve_unavailable",
+    "confirmed_exact_witness": true
+  },
+  "issuance_flow": {
+    "status": "passed",
+    "tested_at": "2026-11-25T14:29:52.186116+00:00",
+    "network": "regtest",
+    "payment_evidence": "core-regtest",
+    "zk_verified": false,
+    "mint": "CDK 0.18.3 with real BDK/Bitcoin Core backend",
+    "cashu_sdk": "4.13.1",
+    "amount_sats": 25000,
+    "proof_count": 6,
+    "dleq_verified": true,
+    "wallet_restarted_between_attempts": true,
+    "no_second_issuance": true,
+    "counts": {
+      "mint_requests": 1,
+      "restore_requests": 1,
+      "dropped_replies": 1
+    },
+    "seconds": 38.068,
+    "meaning": "Actual regtest deposit issued real Cashu cryptographic proofs. Test coins have no monetary value. No Ark transfer or mainnet issuance tested."
+  }
+}

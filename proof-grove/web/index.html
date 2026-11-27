@@ -40,49 +40,156 @@
       </div>
       <div class="section-foot"><span><span class="dot"></span> Proof facts, wallet reports, and settlement states stay distinct.</span><span>BUILT ON NOVA / BITVM + BARK / CDK</span></div>
     </section>
-    <section class="page" id="protected-preview" hidden>
-      <div class="heading-row"><div><h1>Cashu recovery</h1><p class="lede">Verify regtest withdrawals and download their evidence.</p></div><div class="network-tag"><span class="dot"></span>Recorded regtest</div></div>
-      <section class="panel" aria-labelledby="protected-preview-heading">
-        <div class="panel-head"><h2 id="protected-preview-heading">Holder-only exit</h2></div>
-        <form id="protected-preview-form">
-          <label for="protected-preview-case">Evidence to check</label>
-          <div class="case-controls"><select id="protected-preview-case"><option value="original">Original payout</option><option value="beneficiary">Substitute beneficiary</option><option value="checkpoint">Substitute checkpoint</option></select><button class="primary" type="submit">Verify payout</button></div>
-        </form>
-        <p class="help" id="protected-preview-result" role="status"></p>
-        <div class="provider-controls help" id="protected-preview-export" hidden>
-          <a href="./api/protected/preview/archive" download="proof-grove-cashu-payout.zip">Download payout evidence</a>
-          <a href="./api/protected/preview/transaction" download="proof-grove-cashu-payout.hex">Download signed transaction</a>
-        </div>
-        <details id="protected-preview-details" hidden><summary>Inspect verification evidence</summary><pre id="protected-preview-json"></pre></details>
+    <section class="page rx" id="protected-preview" hidden>
+      <header class="rx-hero">
+        <p class="rx-kicker">Protected Cashu · Bitcoin regtest</p>
+        <h1 class="rx-title">Ecash that doesn’t need a trusted mint admin.</h1>
+        <p class="rx-sub">Cashu keeps its privacy. Each protected note is issued against a Bitcoin reserve the holder can reach on their own. If the mint operator goes rogue or disappears, the holder proves the claim with zero knowledge and settles on Bitcoin.</p>
+        <dl class="rx-facts">
+          <div><dt>Holder-only exit</dt><dd class="rx-fig">24,750 <small>sats</small></dd><dd><span class="rx-tag proven">Proven</span> CSV release on regtest</dd></div>
+          <div><dt>Redemption STARK</dt><dd class="rx-fig">23,750 <small>sats</small></dd><dd><span class="rx-tag proven">Proven</span> Historical cooperative melt</dd></div>
+          <div><dt>Proof-backed release</dt><dd class="rx-fig rx-fig-text" id="rx-fact-settle">SP1 → BitVM3</dd><dd><span class="rx-tag progress" id="rx-fact-settle-tag">In progress</span> 24,750-sat withdrawal</dd></div>
+        </dl>
+      </header>
+
+      <section class="rx-section" aria-labelledby="rx-flow-heading">
+        <div class="rx-head"><span class="rx-num">01</span><h2 id="rx-flow-heading">How the holder exits</h2></div>
+        <ol class="rx-flow">
+          <li>
+            <span class="rx-step" aria-hidden="true">1</span>
+            <div class="rx-step-body"><h3>Issue against a Bitcoin reserve</h3>
+              <p>Before accepting ecash, the wallet checks that a confirmed reserve outpoint pays a holder-controlled script. The exact blinded batch is bound to that outpoint.</p>
+              <p class="rx-line"><span class="rx-tag proven">Proven</span> V3 protected issuance and Nova registry replay</p></div>
+          </li>
+          <li>
+            <span class="rx-step" aria-hidden="true">2</span>
+            <div class="rx-step-body"><h3>Hold private ecash</h3>
+              <p>The holder keeps ordinary blinded Cashu proofs. The mint can’t link them to the holder. The Nova accounting state records each live claim once.</p>
+              <p class="rx-line"><span class="rx-tag proven">Proven</span> Same V3 issuance and registry evidence</p></div>
+          </li>
+          <li class="rx-break">
+            <span class="rx-step" aria-hidden="true">3</span>
+            <div class="rx-step-body"><h3>The mint refuses or goes offline</h3>
+              <p>Normally the holder would melt through the mint and trust the operator to pay out. Here the exit doesn’t need the mint’s signature or the mint’s cooperation.</p>
+              <p class="rx-line"><span class="rx-tag scenario">Scenario</span> The holder-only exit in section 02 needs no mint signature</p></div>
+          </li>
+          <li>
+            <span class="rx-step" aria-hidden="true">4</span>
+            <div class="rx-step-body"><h3>Prove the reserve claim in zero knowledge</h3>
+              <p>The Nova proof consumes the live claim exactly once. An SP1 guest verifies it and commits the settlement record: network, checkpoint, outpoint, scripts, amount, fee and delay. The wrapped proof feeds the BitVM3 M14 verifier.</p>
+              <p class="rx-line"><span class="rx-tag progress" id="rx-prove-tag">In progress</span> <span id="rx-prove-text">Core proof finished. Recursion, wrap, M14 assertion and payout are still running.</span></p></div>
+          </li>
+          <li>
+            <span class="rx-step" aria-hidden="true">5</span>
+            <div class="rx-step-body"><h3>Get paid on Bitcoin</h3>
+              <p>Bitcoin enforces the exact outputs and beneficiary. The holder’s own timelocked route stays available as a fallback.</p>
+              <p class="rx-line"><span class="rx-tag proven">Proven</span> Holder-only CSV release of 24,750 sats on regtest</p>
+              <p class="rx-line"><span class="rx-tag progress" id="rx-settle-tag">In progress</span> <span id="rx-settle-text">Proof-backed BitVM3 release of the same withdrawal</span></p></div>
+          </li>
+        </ol>
       </section>
-      <section class="panel" id="recovery-evidence" aria-labelledby="recovery-evidence-heading" hidden>
-        <div class="panel-head"><h2 id="recovery-evidence-heading">Cashu evidence</h2></div>
-        <h3>Cashu issuance</h3>
-        <p class="help" id="recovery-issuance-result" role="status"></p>
-        <p class="help" id="recovery-issuance-export" hidden><a href="./api/protected/preview/evidence/issuance/archive" download="proof-grove-cashu-issuance.zip">Download issuance and Nova proof</a></p>
-        <h3>Funded refusal</h3>
-        <p class="help" id="recovery-refusal-result" role="status"></p>
-        <p class="help" id="recovery-refusal-export" hidden><a href="./api/protected/preview/evidence/refusal/archive" download="proof-grove-cashu-refusal.zip">Download refusal and timeout evidence</a></p>
-        <p class="help" id="recovery-refusal-verification" hidden><a href="./api/protected/preview/evidence/refusal/verification" download="proof-grove-cashu-refusal-verification.json">Download independent refusal verification</a></p>
-        <div id="recovery-accounting" hidden>
-          <h3>Reserve accounting</h3>
-          <p class="help" id="recovery-accounting-result" role="status"></p>
-          <p class="help" id="recovery-accounting-export" hidden><a href="./api/protected/preview/evidence/accounting/archive" download="proof-grove-cashu-accounting.zip">Download registry audit and Nova proof</a></p>
-        </div>
-        <div id="recovery-historical" hidden>
-          <h3>Historical melt-funded redemption</h3>
-          <p class="help" id="recovery-historical-result" role="status"></p>
-          <p class="help" id="recovery-historical-export" hidden><a href="./api/protected/preview/evidence/historical/archive" download="proof-grove-historical-redemption-stark.zip">Download STARK and verifier</a></p>
+
+      <section class="rx-section" aria-labelledby="protected-preview-heading">
+        <div class="rx-head"><span class="rx-num">02</span><h2 id="protected-preview-heading">Check the holder-only exit</h2></div>
+        <div class="rx-split">
+          <div class="rx-copy">
+            <p>This verifies the recorded regtest payout offline. It checks the holder signature, witness inclusion under the pinned chain anchor, and the exact amounts and scripts.</p>
+            <p>The two substitutes change the beneficiary or the checkpoint. They should be rejected.</p>
+          </div>
+          <div class="rx-verify">
+            <form id="protected-preview-form">
+              <label for="protected-preview-case">Evidence to check</label>
+              <div class="case-controls"><select id="protected-preview-case"><option value="original">Original payout</option><option value="beneficiary">Substitute beneficiary</option><option value="checkpoint">Substitute checkpoint</option></select><button class="primary" type="submit">Verify payout</button></div>
+            </form>
+            <p class="rx-result" id="protected-preview-result" role="status"></p>
+            <dl class="rx-receipt" id="rx-receipt" hidden></dl>
+            <div class="rx-downloads" id="protected-preview-export" hidden>
+              <a href="./api/protected/preview/archive" download="proof-grove-cashu-payout.zip">Payout evidence <small>.zip</small></a>
+              <a href="./api/protected/preview/transaction" download="proof-grove-cashu-payout.hex">Signed transaction <small>.hex</small></a>
+            </div>
+            <details id="protected-preview-details" hidden><summary>Raw verification output</summary><pre id="protected-preview-json"></pre></details>
+          </div>
         </div>
       </section>
-      <section class="panel" id="funded-preview" aria-labelledby="funded-preview-heading" hidden>
-        <div class="panel-head"><h2 id="funded-preview-heading">Proof-backed payout</h2><button class="secondary" id="refresh-funded-preview" type="button">Check status</button></div>
-        <p class="help" id="funded-preview-result" role="status"></p>
-        <div class="provider-controls" id="funded-preview-export" hidden>
-          <a href="./api/protected/preview/funded/archive" download="proof-grove-cashu-funded-payout.zip">Download funded evidence</a>
-          <a href="./api/protected/preview/funded/verification" download="proof-grove-cashu-verification.json">Download verification receipt</a>
+
+      <section class="rx-section" aria-labelledby="rx-ledger-heading">
+        <div class="rx-head"><span class="rx-num">03</span><h2 id="rx-ledger-heading">Evidence on file</h2></div>
+        <p class="rx-intro">Only results with artifacts on disk are marked proven. Everything else is labeled with its current state.</p>
+        <div class="rx-ledger">
+          <article class="rx-row">
+            <span class="rx-tag proven">Proven</span>
+            <div><h3>Historical melt-funded redemption · 23,750 sats</h3>
+              <p>A STARK for the exact cooperative-melt payout. Scarb verified it, and all 24 public-word mutations were rejected.</p>
+              <p class="rx-hash">proof sha256 701389f3f058d0d06ef4fa21402bf309ffcae54a1ee184bc27fb278c29a3dee7</p></div>
+          </article>
+          <article class="rx-row">
+            <span class="rx-tag proven">Proven</span>
+            <div><h3>V3 protected issuance and Nova registry replay</h3>
+              <p>The issued batch is bound to its reserve outpoint. The Nova proof replays the registry so each claim is consumed once.</p></div>
+          </article>
+          <article class="rx-row">
+            <span class="rx-tag proven">Proven</span>
+            <div><h3>Holder-only CSV release · 24,750 sats</h3>
+              <p>A 25,000-sat reserve paid the holder after a 6-block relative delay with a 250-sat fee, on regtest. Section 02 rechecks it.</p>
+              <p class="rx-links"><a href="./api/protected/preview/archive" download="proof-grove-cashu-payout.zip">Payout evidence</a><a href="./api/protected/preview/transaction" download="proof-grove-cashu-payout.hex">Signed transaction</a></p></div>
+          </article>
+          <article class="rx-row" id="rx-row-settle">
+            <span class="rx-tag progress" id="rx-row-settle-tag">In progress</span>
+            <div><h3>Proof-backed BitVM3 release · 24,750 sats</h3>
+              <p id="rx-row-settle-text">SP1 Core proof finished. Recursion, wrap, M14 assertion and the funded payout are still pending. No settlement artifact has been published yet.</p></div>
+          </article>
         </div>
-        <details id="funded-preview-details" hidden><summary>Inspect payout and proof pins</summary><pre id="funded-preview-json"></pre></details>
+
+        <section class="rx-sub-block" id="funded-preview" aria-labelledby="funded-preview-heading" hidden>
+          <div class="rx-sub-head"><h3 id="funded-preview-heading">Published proof-backed payout</h3><button class="secondary" id="refresh-funded-preview" type="button">Check status</button></div>
+          <p class="rx-result" id="funded-preview-result" role="status"></p>
+          <div class="rx-downloads" id="funded-preview-export" hidden>
+            <a href="./api/protected/preview/funded/archive" download="proof-grove-cashu-funded-payout.zip">Funded evidence <small>.zip</small></a>
+            <a href="./api/protected/preview/funded/verification" download="proof-grove-cashu-verification.json">Verification receipt <small>.json</small></a>
+          </div>
+          <details id="funded-preview-details" hidden><summary>Payout and proof pins</summary><pre id="funded-preview-json"></pre></details>
+        </section>
+
+        <section class="rx-sub-block" id="recovery-evidence" aria-labelledby="recovery-evidence-heading" hidden>
+          <div class="rx-sub-head"><h3 id="recovery-evidence-heading">Archived evidence checks</h3></div>
+          <div class="rx-check"><h4>Cashu issuance</h4>
+            <p class="rx-result" id="recovery-issuance-result" role="status"></p>
+            <p class="rx-links" id="recovery-issuance-export" hidden><a href="./api/protected/preview/evidence/issuance/archive" download="proof-grove-cashu-issuance.zip">Issuance and Nova proof</a></p></div>
+          <div class="rx-check"><h4>Funded refusal</h4>
+            <p class="rx-result" id="recovery-refusal-result" role="status"></p>
+            <p class="rx-links" id="recovery-refusal-export" hidden><a href="./api/protected/preview/evidence/refusal/archive" download="proof-grove-cashu-refusal.zip">Refusal and timeout evidence</a></p>
+            <p class="rx-links" id="recovery-refusal-verification" hidden><a href="./api/protected/preview/evidence/refusal/verification" download="proof-grove-cashu-refusal-verification.json">Independent refusal verification</a></p></div>
+          <div class="rx-check" id="recovery-accounting" hidden><h4>Reserve accounting</h4>
+            <p class="rx-result" id="recovery-accounting-result" role="status"></p>
+            <p class="rx-links" id="recovery-accounting-export" hidden><a href="./api/protected/preview/evidence/accounting/archive" download="proof-grove-cashu-accounting.zip">Registry audit and Nova proof</a></p></div>
+          <div class="rx-check" id="recovery-historical" hidden><h4>Historical melt-funded redemption</h4>
+            <p class="rx-result" id="recovery-historical-result" role="status"></p>
+            <p class="rx-links" id="recovery-historical-export" hidden><a href="./api/protected/preview/evidence/historical/archive" download="proof-grove-historical-redemption-stark.zip">STARK and verifier</a></p></div>
+        </section>
+      </section>
+
+      <section class="rx-section rx-roadmap" aria-labelledby="rx-stable-heading">
+        <div class="rx-head"><span class="rx-num">04</span><h2 id="rx-stable-heading">Next: a dollar on the same reserve</h2><span class="rx-tag roadmap">Roadmap · design only</span></div>
+        <p class="rx-intro">A Liquity-style USD stablecoin minted against protected Cashu claims, settled in USDT on RGB through Utexo. Nothing here is live. No RGB or Utexo SDK is installed in this workspace, so the panel shows no prices, balances or transactions.</p>
+        <div class="rx-split">
+          <dl class="rx-params">
+            <div><dt>Collateral</dt><dd>Protected Cashu claims, each backed by a holder-exitable BTC reserve</dd></div>
+            <div><dt>Mint</dt><dd>Lock a claim in a trove and draw USD debt up to the collateral ratio</dd></div>
+            <div><dt>Redeem</dt><dd>Burn USD at face value for BTC from the lowest-ratio troves</dd></div>
+            <div><dt>Collateral ratio</dt><dd>Design target: a minimum ratio and a higher system-wide recovery ratio, as in Liquity. Values aren’t set.</dd></div>
+            <div><dt>Liquidation</dt><dd>Troves below the minimum ratio are absorbed by a stability pool. The reserve exit still protects the underlying holder.</dd></div>
+            <div><dt>Settlement asset</dt><dd>USDT on RGB via Utexo</dd></div>
+          </dl>
+          <div class="rx-adapter">
+            <p class="rx-adapter-state"><span class="rx-tag scenario" id="rx-adapter-tag">Not connected</span> <code>proofdesk/stablecoin_adapter.py</code></p>
+            <pre class="rx-code">quote(collateral_sats, debt_usd_cents)
+open_trove(claim_id, collateral_sats,
+           debt_usd_cents, rgb_invoice)
+redeem(amount_usd_cents, btc_destination)
+  → AdapterResult(status="not_connected")</pre>
+            <p class="rx-result" id="rx-adapter-detail">Every call returns “not connected” without side effects.</p>
+          </div>
+        </div>
       </section>
     </section>
     <section class="page" id="caretaker" hidden>

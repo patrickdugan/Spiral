@@ -1,0 +1,7 @@
+{
+  "receipt": "holder-receipt.json",
+  "receipt_sha256": "781de3e8278cd7ce627e4511dda61a3bb9ab7750833b0357dea00f3d3e6f46f9",
+  "bundle_id": "42fb52c2efd0649e3122a8e683cf6f0f7f894fefc079fbb4b968392342e7ed17",
+  "anchor_height": 110,
+  "anchor_hash": "581bbe122433e9e2360850d9e34b6339a7550c97462a44bee810b21d60f9af98"
+}

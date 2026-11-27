@@ -33,7 +33,35 @@ function tab(id) {
   if (id === 'protected-preview') {
     loadFundedPreview();
     loadRecoveryEvidence();
+    loadStablecoinStatus();
   }
+}
+function loadStablecoinStatus() {
+  api('/api/stablecoin/status').then(value => {
+    $('rx-adapter-tag').textContent = value.status === 'not_connected' ? 'Not connected' : 'Unknown state';
+    $('rx-adapter-detail').textContent = `${value.adapter}: ${value.detail}`;
+  }).catch(() => { $('rx-adapter-tag').textContent = 'Not connected'; });
+}
+function markSettlementProven(check) {
+  const sats = count => count.toLocaleString('en-US');
+  for (const id of ['rx-prove-tag', 'rx-settle-tag', 'rx-row-settle-tag', 'rx-fact-settle-tag']) {
+    $(id).textContent = 'Proven';
+    $(id).className = 'rx-tag proven';
+  }
+  $('rx-prove-text').textContent = 'Published settlement proof verified by this server.';
+  $('rx-settle-text').textContent = `Proof-backed release verified at regtest block ${sats(check.height)}. Holder paid ${sats(check.holder_sats)} sats.`;
+  $('rx-row-settle-text').textContent = `Published funded payout verified at regtest block ${sats(check.height)}: ${sats(check.holder_sats)} sats to the holder, ${sats(check.refund_sats)} sats collateral refund, ${sats(check.fee_sats)} sats fee.`;
+}
+function renderReceipt(payout) {
+  const sats = count => `${count.toLocaleString('en-US')} sats`;
+  const rows = [
+    ['Paid to holder', sats(payout.payout_sats)], ['Reserve', sats(payout.reserve_sats)], ['Fee', sats(payout.fee_sats)],
+    ['Relative delay', `${payout.relative_delay_blocks} blocks`], ['Network', payout.network],
+    ['Payout txid', payout.payout_txid, true], ['Funding txid', payout.funding_txid, true],
+    ['Chain anchor', `block ${payout.anchor_height}`],
+  ];
+  $('rx-receipt').replaceChildren(...rows.flatMap(([name, value, mono]) => [element('dt', '', name), element('dd', mono ? 'mono' : '', String(value))]));
+  $('rx-receipt').hidden = false;
 }
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => tab(button.dataset.tab)));
 function loadRecoveryEvidence() {
@@ -84,6 +112,7 @@ async function loadFundedPreview() {
       result.textContent = `Verified on regtest at block ${sats(check.height)}. Holder paid ${sats(check.holder_sats)} sats. Collateral refund ${sats(check.refund_sats)} sats. Fee ${sats(check.fee_sats)} sats.`;
       $('funded-preview-json').textContent = JSON.stringify(check, null, 2);
       details.hidden = downloads.hidden = false;
+      markSettlementProven(check);
     }
   } catch (failure) {
     result.textContent = failure.message === errors.funded_preview_statement_mismatch
@@ -96,6 +125,7 @@ $('refresh-funded-preview').addEventListener('click', loadFundedPreview);
 $('protected-preview-case').addEventListener('change', () => {
   $('protected-preview-export').hidden = true;
   $('protected-preview-details').hidden = true;
+  $('rx-receipt').hidden = true;
   $('protected-preview-result').textContent = '';
 });
 $('protected-preview-form').addEventListener('submit', async event => {
@@ -110,6 +140,7 @@ $('protected-preview-form').addEventListener('submit', async event => {
   caseSelect.disabled = true;
   details.hidden = true;
   exportEvidence.hidden = true;
+  $('rx-receipt').hidden = true;
   result.textContent = 'Checking the recorded evidence…';
   try {
     const check = await api('/api/protected/preview?case=' + encodeURIComponent(variant));
@@ -119,6 +150,7 @@ $('protected-preview-form').addEventListener('submit', async event => {
     if (check.verified) {
       $('protected-preview-json').textContent = JSON.stringify(check.payout, null, 2);
       details.hidden = false;
+      renderReceipt(check.payout);
       exportEvidence.hidden = variant !== 'original';
     }
   } catch (err) {

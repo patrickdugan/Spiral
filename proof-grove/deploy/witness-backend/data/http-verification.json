@@ -1,0 +1,34 @@
+{
+  "original": {
+    "case": "original",
+    "payout": {
+      "anchor_hash": "581bbe122433e9e2360850d9e34b6339a7550c97462a44bee810b21d60f9af98",
+      "anchor_height": 110,
+      "bundle_id": "42fb52c2efd0649e3122a8e683cf6f0f7f894fefc079fbb4b968392342e7ed17",
+      "claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+      "fee_sats": 250,
+      "funding_height": 104,
+      "funding_txid": "a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb",
+      "holder_signature_verified": true,
+      "network": "regtest",
+      "payout_sats": 24750,
+      "payout_txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+      "payout_wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+      "relative_delay_blocks": 6,
+      "reserve_sats": 25000,
+      "schema": "proof-grove/protected-payout-offline-verification/v1",
+      "witness_inclusion_verified": true
+    },
+    "verified": true
+  },
+  "checkpoint": {
+    "case": "checkpoint",
+    "detail": "protected payout headers differ from the checkpoint",
+    "verified": false
+  },
+  "beneficiary": {
+    "case": "beneficiary",
+    "detail": "protected payout differs from the pinned amounts or scripts",
+    "verified": false
+  }
+}
