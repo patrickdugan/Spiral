@@ -1589,6 +1589,33 @@ The frozen manuscript contains no drive-letter paths. The companion documents (l
 
 \pagebreak
 
+# Exhibit D. Compute on the clearing critical path (CBM-CACHE-03, November 27, 2026)
+
+Added after the September draft. Source: SatsHedgeZero `research/utxoref_verification_cache/CBM_CACHE_03_RESULTS.md` on branch `research/utxoref-verification-cache` (commits `755342a`, `3de2752`), synthetic workloads only, one machine. Nothing here is a live measurement of locked collateral.
+
+**Question.** §3.3 defines the liquidity duration 𝒟_obj as locked capital-time per unit delivered. For a batch-netted UTXORef clearing, one component of the lock interval is computational: deciding which candidate batch is feasible against the vault-funding network before anything is signed. Does making that decision faster move capital-time, and through which term?
+
+**What was built.** The vault-funding feasibility problem (a capacitated network whose every feasible flow is a maximum flow) was given reusable certificates: flow witnesses and minimum cuts, exact transport checks across route, demand, fee, collateral and vault mutations, and residual repair from the previous feasible flow. All of them are re-verified on use, and the canonical settlement solver is unchanged. On 17,955 held-out candidates no certificate path gave a verdict different from the cold solver.
+
+**Measured.** Repair carries the gain; reusing a certificate as-is rarely helps, because every accepted obligation raises some vault's demand and a flow cannot absorb a demand increase.
+
+| accounts | screening, cold vs repair | 200 ms window met (p99), cold / repair | candidates cleared per 200 ms window, cold / repair | netting efficiency, cold / repair |
+|---:|---|---|---|---|
+| 512 | 6.9-7.9x faster | yes / yes | 4,727 / 6,905 (sparse); 2,265 / 3,611 (dense) | 0.11 / 0.15 (sparse); 0.07 / 0.12 (dense) |
+| 2,048 | 15-20x faster | no / yes on sparse routes, marginal on dense | 220 / 497 (sparse); 137 / 260 (dense) | 0 / 0 |
+
+At 2,048 accounts both arms are bound by building and validating each candidate network, not by solving it.
+
+**What moves.** Write the lock interval as compute t_c + confirmation t_f + cadence T, where T is the wait of an obligation that misses a window.
+
+* The compute term is negligible against confirmation. With t_c ≤ 0.2 s and t_f = 3,600 s for six confirmations, compute is at most 0.006% of a batch's advance capital-time, whatever the solver does. A faster feasibility check therefore does not shorten 𝒟_obj through t_c.
+* The cadence term can move. In a fixed window, faster feasibility clears larger batches. Larger batches net more (efficiency 0.11 to 0.15 at 512 accounts), and less volume waits for the next window. At 512 accounts, sparse routes, 200 ms windows: 16.9 Msat less deferred over 36 windows, so ΔC = 16.9 Msat × T. That is about 101 BTC·s at T = 600 s (one on-chain settlement per window) and about 0.03 BTC·s at T = 0.2 s (an LN netting window).
+* The conditions are restrictive. The arrival stream must saturate the window, the cadence must be fixed, and deferred obligations must stay collateralized. Maturity, confirmation depth, dispute windows, route liquidity and protected balances are untouched.
+
+**A side finding for §3.** The canonical Edmonds-Karp allocation routes 75-143 Msat across vaults even when a batch has no obligations, because a cross-vault route is as short as self-retention. Measured "advance" volumes from that solver overstate the transfers a batch requires. A min-cost canonical allocation would make them the requirement; it changes settlement roots and is not adopted.
+
+**Bearing on the paper.** This sharpens the paper's thesis without changing it: the binding constraint is the settlement object's clock, not intelligence or compute. Computation enters capital-time only through batch size per window, and only when demand saturates the window. The §7 experiment should record arrival rates against the clearing window before attributing any 𝒟 change to solver speed.
+
 # References
 
 [R1] Dugan. *Connector Calculus: Ghost-Node Rewrites, Bonded Liquidity, and Adversarial Agent Routing on the Lightning Network*. Spiral reconstructed draft, August 2026; baseline a0a3140; corrections in paper/manuscript_errata.md. Hive supplement: paper/hive_lab.md.
