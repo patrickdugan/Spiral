@@ -1,0 +1,2126 @@
+{
+  "dataset_repo": "AlephFunk/spiral-codex-chats",
+  "dataset_url": "https://huggingface.co/datasets/AlephFunk/spiral-codex-chats",
+  "private": true,
+  "session_count": 235,
+  "raw_bytes": 12461939422,
+  "compressed_bytes": 5395116267,
+  "index_uri": "https://huggingface.co/datasets/AlephFunk/spiral-codex-chats/resolve/main/index.jsonl",
+  "sessions": [
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a21ab9-770e-7bd3-b92d-8da3b539dfe4",
+      "month": "2026-11",
+      "title": "Monitor task-205 verification pipeline",
+      "project": "files-pasted-by-the-user-checked",
+      "hf_path": "sessions/2026-11/01a21ab9-770e-7bd3-b92d-8da3b539dfe4.jsonl.gz",
+      "raw_bytes": 1908351,
+      "gz_bytes": 505248
+    },
+    {
+      "session_id": "01a21ab9-770e-7bd3-b92d-8da3b539dfe4",
+      "month": "2026-11",
+      "title": "Monitor task-205 verification pipeline",
+      "project": "files-pasted-by-the-user-checked",
+      "hf_path": "sessions/2026-11/01a21ab9-770e-7bd3-b92d-8da3b539dfe4.jsonl.gz",
+      "raw_bytes": 1908351,
+      "gz_bytes": 505248
+    },
+    {
+      "session_id": "01a21ab9-770e-7bd3-b92d-8da3b539dfe4",
+      "month": "2026-11",
+      "title": "Monitor task-205 verification pipeline",
+      "project": "files-pasted-by-the-user-checked",
+      "hf_path": "sessions/2026-11/01a21ab9-770e-7bd3-b92d-8da3b539dfe4.jsonl.gz",
+      "raw_bytes": 1908351,
+      "gz_bytes": 505248
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20a48-a9fa-7392-b252-fe32bd1bd2a3",
+      "month": "2026-11",
+      "title": "Add margin-engine test family",
+      "project": "2-tradelayer-register-a-deterministic-onchain",
+      "hf_path": "sessions/2026-11/01a20a48-a9fa-7392-b252-fe32bd1bd2a3.jsonl.gz",
+      "raw_bytes": 3381186,
+      "gz_bytes": 981934
+    },
+    {
+      "session_id": "01a20a48-a9fa-7392-b252-fe32bd1bd2a3",
+      "month": "2026-11",
+      "title": "Add margin-engine test family",
+      "project": "2-tradelayer-register-a-deterministic-onchain",
+      "hf_path": "sessions/2026-11/01a20a48-a9fa-7392-b252-fe32bd1bd2a3.jsonl.gz",
+      "raw_bytes": 3381186,
+      "gz_bytes": 981934
+    },
+    {
+      "session_id": "01a20651-29e1-78f2-a1cf-964b9521a154",
+      "month": "2026-11",
+      "title": "Build AHR-01 quantum experiment",
+      "project": "build-ahr-01-an-arithmetic-holonomy",
+      "hf_path": "sessions/2026-11/01a20651-29e1-78f2-a1cf-964b9521a154.jsonl.gz",
+      "raw_bytes": 14477555,
+      "gz_bytes": 6238165
+    },
+    {
+      "session_id": "01a20651-29e1-78f2-a1cf-964b9521a154",
+      "month": "2026-11",
+      "title": "Build AHR-01 quantum experiment",
+      "project": "build-ahr-01-an-arithmetic-holonomy",
+      "hf_path": "sessions/2026-11/01a20651-29e1-78f2-a1cf-964b9521a154.jsonl.gz",
+      "raw_bytes": 14477555,
+      "gz_bytes": 6238165
+    },
+    {
+      "session_id": "01a2090a-6d7b-7dd2-a87f-8a02a4b56979",
+      "month": "2026-11",
+      "title": "MeTTa gym 2",
+      "project": "goal",
+      "hf_path": "sessions/2026-11/01a2090a-6d7b-7dd2-a87f-8a02a4b56979.jsonl.gz",
+      "raw_bytes": 6959109,
+      "gz_bytes": 2701532
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a17512-9455-7762-8a3a-667f7a260bc9",
+      "month": "2026-11",
+      "title": "Build TL-Rust roadmap",
+      "project": "go",
+      "hf_path": "sessions/2026-11/01a17512-9455-7762-8a3a-667f7a260bc9.jsonl.gz",
+      "raw_bytes": 268385495,
+      "gz_bytes": 115517769
+    },
+    {
+      "session_id": "01a17512-9455-7762-8a3a-667f7a260bc9",
+      "month": "2026-11",
+      "title": "Build TL-Rust roadmap",
+      "project": "go",
+      "hf_path": "sessions/2026-11/01a17512-9455-7762-8a3a-667f7a260bc9.jsonl.gz",
+      "raw_bytes": 268385495,
+      "gz_bytes": 115517769
+    },
+    {
+      "session_id": "01a188fc-0744-7b33-9236-77b68d99d122",
+      "month": "2026-11",
+      "title": "TL Wallet Rust",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a188fc-0744-7b33-9236-77b68d99d122.jsonl.gz",
+      "raw_bytes": 6278649,
+      "gz_bytes": 2556298
+    },
+    {
+      "session_id": "01a188fc-0744-7b33-9236-77b68d99d122",
+      "month": "2026-11",
+      "title": "TL Wallet Rust",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a188fc-0744-7b33-9236-77b68d99d122.jsonl.gz",
+      "raw_bytes": 6278649,
+      "gz_bytes": 2556298
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a2090a-6d7b-7dd2-a87f-8a02a4b56979",
+      "month": "2026-11",
+      "title": "MeTTa gym 2",
+      "project": "goal",
+      "hf_path": "sessions/2026-11/01a2090a-6d7b-7dd2-a87f-8a02a4b56979.jsonl.gz",
+      "raw_bytes": 6959109,
+      "gz_bytes": 2701532
+    },
+    {
+      "session_id": "01a20651-29e1-78f2-a1cf-964b9521a154",
+      "month": "2026-11",
+      "title": "Build AHR-01 quantum experiment",
+      "project": "build-ahr-01-an-arithmetic-holonomy",
+      "hf_path": "sessions/2026-11/01a20651-29e1-78f2-a1cf-964b9521a154.jsonl.gz",
+      "raw_bytes": 14477555,
+      "gz_bytes": 6238165
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2031f-c916-7593-be44-7df755f1b039",
+      "month": "2026-11",
+      "title": "Validate INK-ROUTE-01 routing",
+      "project": "work-in-moralitylabai-loopedtransformers-pr-311",
+      "hf_path": "sessions/2026-11/01a2031f-c916-7593-be44-7df755f1b039.jsonl.gz",
+      "raw_bytes": 10926791,
+      "gz_bytes": 4363742
+    },
+    {
+      "session_id": "01a2031f-c916-7593-be44-7df755f1b039",
+      "month": "2026-11",
+      "title": "Validate INK-ROUTE-01 routing",
+      "project": "work-in-moralitylabai-loopedtransformers-pr-311",
+      "hf_path": "sessions/2026-11/01a2031f-c916-7593-be44-7df755f1b039.jsonl.gz",
+      "raw_bytes": 10926791,
+      "gz_bytes": 4363742
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a20651-29e1-78f2-a1cf-964b9521a154",
+      "month": "2026-11",
+      "title": "Build AHR-01 quantum experiment",
+      "project": "build-ahr-01-an-arithmetic-holonomy",
+      "hf_path": "sessions/2026-11/01a20651-29e1-78f2-a1cf-964b9521a154.jsonl.gz",
+      "raw_bytes": 14477555,
+      "gz_bytes": 6238165
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a205a8-c769-7f63-be09-cac0f3e82155",
+      "month": "2026-11",
+      "title": "Preflight split-training pilot",
+      "project": "goose-titan-split-training-pilot-preflight",
+      "hf_path": "sessions/2026-11/01a205a8-c769-7f63-be09-cac0f3e82155.jsonl.gz",
+      "raw_bytes": 6372745,
+      "gz_bytes": 2098735
+    },
+    {
+      "session_id": "01a205a8-c769-7f63-be09-cac0f3e82155",
+      "month": "2026-11",
+      "title": "Preflight split-training pilot",
+      "project": "goose-titan-split-training-pilot-preflight",
+      "hf_path": "sessions/2026-11/01a205a8-c769-7f63-be09-cac0f3e82155.jsonl.gz",
+      "raw_bytes": 6372745,
+      "gz_bytes": 2098735
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a206fa-43ec-75c2-aae6-2deb9f6cea8c",
+      "month": "2026-11",
+      "title": "Estimate PC wattage with GPU active",
+      "project": "can-i-set",
+      "hf_path": "sessions/2026-11/01a206fa-43ec-75c2-aae6-2deb9f6cea8c.jsonl.gz",
+      "raw_bytes": 272144,
+      "gz_bytes": 64992
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a2065b-4f48-79f1-ad5c-69418b008d5c",
+      "month": "2026-11",
+      "title": "Resume Ark proof campaign",
+      "project": "the-goal-is-paused-at-the",
+      "hf_path": "sessions/2026-11/01a2065b-4f48-79f1-ad5c-69418b008d5c.jsonl.gz",
+      "raw_bytes": 51464050,
+      "gz_bytes": 21397576
+    },
+    {
+      "session_id": "01a20651-29e1-78f2-a1cf-964b9521a154",
+      "month": "2026-11",
+      "title": "Build AHR-01 quantum experiment",
+      "project": "build-ahr-01-an-arithmetic-holonomy",
+      "hf_path": "sessions/2026-11/01a20651-29e1-78f2-a1cf-964b9521a154.jsonl.gz",
+      "raw_bytes": 14477555,
+      "gz_bytes": 6238165
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a2031f-c916-7593-be44-7df755f1b039",
+      "month": "2026-11",
+      "title": "Validate INK-ROUTE-01 routing",
+      "project": "work-in-moralitylabai-loopedtransformers-pr-311",
+      "hf_path": "sessions/2026-11/01a2031f-c916-7593-be44-7df755f1b039.jsonl.gz",
+      "raw_bytes": 10926791,
+      "gz_bytes": 4363742
+    },
+    {
+      "session_id": "01a2038a-1606-7132-840b-63aa40f4a1d6",
+      "month": "2026-11",
+      "title": "Calibrate INK-ROUTE-02 confirmation",
+      "project": "work-in-moralitylabai-loopedtransformers-continuing-from",
+      "hf_path": "sessions/2026-11/01a2038a-1606-7132-840b-63aa40f4a1d6.jsonl.gz",
+      "raw_bytes": 5735093,
+      "gz_bytes": 2065796
+    },
+    {
+      "session_id": "01a2038a-1606-7132-840b-63aa40f4a1d6",
+      "month": "2026-11",
+      "title": "Calibrate INK-ROUTE-02 confirmation",
+      "project": "work-in-moralitylabai-loopedtransformers-continuing-from",
+      "hf_path": "sessions/2026-11/01a2038a-1606-7132-840b-63aa40f4a1d6.jsonl.gz",
+      "raw_bytes": 5735093,
+      "gz_bytes": 2065796
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a203c2-a5cf-7801-937f-31fea4476e27",
+      "month": "2026-11",
+      "title": "Plan Data Goblin training strategy",
+      "project": "reiv",
+      "hf_path": "sessions/2026-11/01a203c2-a5cf-7801-937f-31fea4476e27.jsonl.gz",
+      "raw_bytes": 2742262,
+      "gz_bytes": 810551
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a2031f-c916-7593-be44-7df755f1b039",
+      "month": "2026-11",
+      "title": "Validate INK-ROUTE-01 routing",
+      "project": "work-in-moralitylabai-loopedtransformers-pr-311",
+      "hf_path": "sessions/2026-11/01a2031f-c916-7593-be44-7df755f1b039.jsonl.gz",
+      "raw_bytes": 10926791,
+      "gz_bytes": 4363742
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a2038a-1606-7132-840b-63aa40f4a1d6",
+      "month": "2026-11",
+      "title": "Calibrate INK-ROUTE-02 confirmation",
+      "project": "work-in-moralitylabai-loopedtransformers-continuing-from",
+      "hf_path": "sessions/2026-11/01a2038a-1606-7132-840b-63aa40f4a1d6.jsonl.gz",
+      "raw_bytes": 5735093,
+      "gz_bytes": 2065796
+    },
+    {
+      "session_id": "01a2033f-5f6d-75f2-9dda-adb325912a2d",
+      "month": "2026-11",
+      "title": "Trading Systems",
+      "project": "it",
+      "hf_path": "sessions/2026-11/01a2033f-5f6d-75f2-9dda-adb325912a2d.jsonl.gz",
+      "raw_bytes": 32133548,
+      "gz_bytes": 12580922
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a2024c-5bee-7ab2-8f85-f3a78df2016d",
+      "month": "2026-11",
+      "title": "Build MeTTa-11 trajectory learner",
+      "project": "datagoblin-metta-11-cpu-only-trm",
+      "hf_path": "sessions/2026-11/01a2024c-5bee-7ab2-8f85-f3a78df2016d.jsonl.gz",
+      "raw_bytes": 22849458,
+      "gz_bytes": 8386115
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a20228-0898-7961-b5d0-473008252d4a",
+      "month": "2026-11",
+      "title": "Run Bonsai-8B Lean inference",
+      "project": "files-pasted-by-the-user-look",
+      "hf_path": "sessions/2026-11/01a20228-0898-7961-b5d0-473008252d4a.jsonl.gz",
+      "raw_bytes": 5925299,
+      "gz_bytes": 2120646
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a20228-0898-7961-b5d0-473008252d4a",
+      "month": "2026-11",
+      "title": "Run Bonsai-8B Lean inference",
+      "project": "files-pasted-by-the-user-look",
+      "hf_path": "sessions/2026-11/01a20228-0898-7961-b5d0-473008252d4a.jsonl.gz",
+      "raw_bytes": 5925299,
+      "gz_bytes": 2120646
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a2010e-8316-71a1-800d-d606ea80583d",
+      "month": "2026-11",
+      "title": "Ark / Nova BitVM GPU prover",
+      "project": "ark-nova-bitvm-gpu-prover",
+      "hf_path": "sessions/2026-11/01a2010e-8316-71a1-800d-d606ea80583d.jsonl.gz",
+      "raw_bytes": 333574,
+      "gz_bytes": 85813
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a20090-08ef-7d92-a293-71de85e2a1c9",
+      "month": "2026-11",
+      "title": "Build CPU-only Lean learning gym",
+      "project": "files-pasted-by-the-user-goal",
+      "hf_path": "sessions/2026-11/01a20090-08ef-7d92-a293-71de85e2a1c9.jsonl.gz",
+      "raw_bytes": 102389259,
+      "gz_bytes": 44087736
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1ff42-7e3f-7771-9d65-ccc272c22f2b",
+      "month": "2026-11",
+      "title": "Review Aleph hard-pool results",
+      "project": "pushed-99d411c-to-pr-6-https",
+      "hf_path": "sessions/2026-11/01a1ff42-7e3f-7771-9d65-ccc272c22f2b.jsonl.gz",
+      "raw_bytes": 191574,
+      "gz_bytes": 57602
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1ff3a-1d33-7513-90d9-629ae85ae7d8",
+      "month": "2026-11",
+      "title": "Build MCP-05 Pocket Goblin",
+      "project": "files-pasted-by-the-user-mcp",
+      "hf_path": "sessions/2026-11/01a1ff3a-1d33-7513-90d9-629ae85ae7d8.jsonl.gz",
+      "raw_bytes": 80291780,
+      "gz_bytes": 32806198
+    },
+    {
+      "session_id": "01a1ff39-8f22-7171-9417-b4a5ebc23cf0",
+      "month": "2026-11",
+      "title": "Prepare CUDA port upstream PR",
+      "project": "https-github-com-shinmegamiboson-lookatmyquant-https-2",
+      "hf_path": "sessions/2026-11/01a1ff39-8f22-7171-9417-b4a5ebc23cf0.jsonl.gz",
+      "raw_bytes": 12051526,
+      "gz_bytes": 4598955
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    },
+    {
+      "session_id": "01a1e2c1-da99-7500-adfe-935298bc6192",
+      "month": "2026-11",
+      "title": "Create Systemic Risk Bench",
+      "project": "star",
+      "hf_path": "sessions/2026-11/01a1e2c1-da99-7500-adfe-935298bc6192.jsonl.gz",
+      "raw_bytes": 4841616,
+      "gz_bytes": 1865599
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a184fd-6e5c-71b2-ab71-44d500d92bd0",
+      "month": "2026-11",
+      "title": "Run RC-01 GPU experiments",
+      "project": "luna-execute-the-rc-01-recurrent",
+      "hf_path": "sessions/2026-11/01a184fd-6e5c-71b2-ab71-44d500d92bd0.jsonl.gz",
+      "raw_bytes": 5450268,
+      "gz_bytes": 2011154
+    },
+    {
+      "session_id": "01a184fd-6e5c-71b2-ab71-44d500d92bd0",
+      "month": "2026-11",
+      "title": "Run RC-01 GPU experiments",
+      "project": "luna-execute-the-rc-01-recurrent",
+      "hf_path": "sessions/2026-11/01a184fd-6e5c-71b2-ab71-44d500d92bd0.jsonl.gz",
+      "raw_bytes": 5450268,
+      "gz_bytes": 2011154
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f703-aa4e-7fd1-9ba8-08e48325411c",
+      "month": "2026-11",
+      "title": "LNMarkets UTXO",
+      "project": "work-directly-in-patrickdugan-utxo-ref",
+      "hf_path": "sessions/2026-11/01a1f703-aa4e-7fd1-9ba8-08e48325411c.jsonl.gz",
+      "raw_bytes": 25971172,
+      "gz_bytes": 11064023
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1d7bb-eb9b-7e93-af93-48f453d33961",
+      "month": "2026-11",
+      "title": "Add RLT to HRM400 ablations",
+      "project": "3-4-rectified-looped-transformer-https",
+      "hf_path": "sessions/2026-11/01a1d7bb-eb9b-7e93-af93-48f453d33961.jsonl.gz",
+      "raw_bytes": 101457818,
+      "gz_bytes": 47983240
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f417-6dfa-7471-a31e-cbb76953596d",
+      "month": "2026-11",
+      "title": "Run HRM 1B textual evals",
+      "project": "start-x20",
+      "hf_path": "sessions/2026-11/01a1f417-6dfa-7471-a31e-cbb76953596d.jsonl.gz",
+      "raw_bytes": 51068443,
+      "gz_bytes": 20968461
+    },
+    {
+      "session_id": "01a1f40a-5a41-76b2-b44e-1b805f3f3573",
+      "month": "2026-11",
+      "title": "Free up space on D drive",
+      "project": "we-n",
+      "hf_path": "sessions/2026-11/01a1f40a-5a41-76b2-b44e-1b805f3f3573.jsonl.gz",
+      "raw_bytes": 9465341,
+      "gz_bytes": 2804911
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a1f33b-1fa0-79e3-a4bf-ce4effef1346",
+      "month": "2026-11",
+      "title": "BABE ZK Bench",
+      "project": "qww",
+      "hf_path": "sessions/2026-11/01a1f33b-1fa0-79e3-a4bf-ce4effef1346.jsonl.gz",
+      "raw_bytes": 41492208,
+      "gz_bytes": 18747177
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a15da6-7ddb-7150-9832-fe48f6ea5968",
+      "month": "2026-11",
+      "title": "Adict Percolation Interp run status",
+      "project": "adict-percolation-interp-status",
+      "hf_path": "sessions/2026-11/01a15da6-7ddb-7150-9832-fe48f6ea5968.jsonl.gz",
+      "raw_bytes": 24187061,
+      "gz_bytes": 7345325
+    },
+    {
+      "session_id": "01a1865f-d3ab-7132-9765-30c1cc330ae3",
+      "month": "2026-11",
+      "title": "Build Levinverse spoken corpus",
+      "project": "files-pasted-by-the-user-luna",
+      "hf_path": "sessions/2026-11/01a1865f-d3ab-7132-9765-30c1cc330ae3.jsonl.gz",
+      "raw_bytes": 32089979,
+      "gz_bytes": 7128382
+    },
+    {
+      "session_id": "01a1e979-6504-71b0-99a1-7c0450123e1f",
+      "month": "2026-11",
+      "title": "Evaluate HG-09 frontier models",
+      "project": "files-pasted-by-the-user-hg",
+      "hf_path": "sessions/2026-11/01a1e979-6504-71b0-99a1-7c0450123e1f.jsonl.gz",
+      "raw_bytes": 19423204,
+      "gz_bytes": 10089040
+    },
+    {
+      "session_id": "01a1e979-6504-71b0-99a1-7c0450123e1f",
+      "month": "2026-11",
+      "title": "Evaluate HG-09 frontier models",
+      "project": "files-pasted-by-the-user-hg",
+      "hf_path": "sessions/2026-11/01a1e979-6504-71b0-99a1-7c0450123e1f.jsonl.gz",
+      "raw_bytes": 19423204,
+      "gz_bytes": 10089040
+    },
+    {
+      "session_id": "01a1dfa0-6f59-7a90-abc2-ed755e0580e9",
+      "month": "2026-11",
+      "title": "Build Ark and Cashu app",
+      "project": "new-chat",
+      "hf_path": "sessions/2026-11/01a1dfa0-6f59-7a90-abc2-ed755e0580e9.jsonl.gz",
+      "raw_bytes": 125648623,
+      "gz_bytes": 60179572
+    }
+  ]
+}
