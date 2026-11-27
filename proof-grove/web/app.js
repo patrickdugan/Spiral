@@ -433,7 +433,12 @@ async function initialize() {
     left.append(link); if (item.pin) left.append(element('small', '', item.pin)); row.append(left, element('p', '', item.use)); return row;
   }));
   if(globalThis.ProofGroveConnection)tab('payments');
-  else if (status.protected_preview_configured && location.hash === '#protected-preview') tab('protected-preview');
+  else if (status.protected_preview_configured) {
+    // Cashu recovery deployments show only the recovery story; the payment-gate and Ark demos stay local.
+    document.querySelectorAll('[data-tab]').forEach(button => { button.hidden = button.dataset.tab !== 'protected-preview'; });
+    document.title = 'Proof Grove · Cashu recovery';
+    tab('protected-preview');
+  }
   else if (location.hash === '#evidence') tab('evidence');
   if(status.mode!=='demo'){
     await loadChainstate();
