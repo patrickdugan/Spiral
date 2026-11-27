@@ -128,6 +128,45 @@ The accompanying Rust patch adds a read-only \texttt{analyze\_pnl\_batch\_graph}
 
 For simultaneous obligations the scenario must contain all of them together; a placement covering separate alternatives cannot spend the same stock twice. A temporal implementation must account for physical stock, authorized carry and recovery events before interpreting the placement objective as BTC-time. No new duration or rent estimate follows from the synthetic experiment.
 
+\subsection{Temporal capital, persistent routes, and information}
+\label{sec:rent-temporal}
+
+Consider a bounded reusable-stock model. A job $j$ in scenario $s$ has reservation time $a^s_j$, first admissible reuse time $r^s_j>a^s_j$, required amount $d^s_j$, and permitted per-vault capacities $u^s_{vj}$. A single integer split $y^s_{vj}$ persists throughout the half-open occupancy interval $I^s_j=[a^s_j,r^s_j)$. For common preplaced stock $z_v$ impose
+\[
+ \sum_v y^s_{vj}=d^s_j,\quad
+ 0\le y^s_{vj}\le u^s_{vj},\quad
+ \sum_{j:t\in I^s_j}y^s_{vj}\le z_v\quad(s,v,t).
+\]
+Only interval endpoints need be checked. The model assumes full same-vault replenishment at reuse and omits losses, fees, migration and indivisible transaction groups. Such effects must be represented explicitly for backend settlement. Reimbursement and reusability are separate from execution acknowledgement.
+
+For permanently reserved inventory over a common horizon $H$, minimize $H\sum_v w_v z_v$ with positive funding weights $w_v$. Its unweighted stock-time is $H\sum_v z_v$. Busy stock-time in scenario $s$ is $\sum_j d^s_j(r^s_j-a^s_j)$, independent of the split. It is already included in the reserved-stock integral; the difference is idle reserved inventory. All jobs finish within $H$. Withdrawal or repositioning of idle stock requires additional authenticated transitions and a different objective.
+
+\begin{proposition}[temporal robust placement]
+\label{prop:shz-temporal}
+For each scenario $s$, let $P_s$ be the componentwise-minimal vectors of per-vault peak occupation attainable by integral persistent allocations. A common stock vector $z$ permits scenario-wise feasible allocations if and only if for every $s$ some $p_s\in P_s$ satisfies $p_s\le z$ componentwise. The optimum, when feasible, is
+\[
+ H\min_{p_s\in P_s\, (s\in\mathcal S)}\sum_v w_v\max_s p_{s,v}.
+\]
+Sequential merging by componentwise maximum and deletion of dominated vectors is exact. Increasing reuse times cannot decrease the optimum with other data fixed. Pointwise flow feasibility is necessary and need not be sufficient.
+\end{proposition}
+\begin{proof}
+Each persistent allocation has a peak vector, and each feasible stock dominates such a vector in every scenario. A finite set of attainable peaks contains a minimal vector below each member. Conversely domination guarantees the occupancy constraints. Taking maxima gives the least common stock supporting the selected allocations. Max is monotone, so deleting dominated vectors preserves the optimum under positive weights. Extending an interval increases or leaves unchanged its occupation at each time for a fixed allocation. For insufficiency of pointwise flow, take two vaults with one unit each and three unit jobs: $A$ on vault one during $[0,2)$, $B$ on either vault during $[1,3)$, and $C$ on vault two during $[2,4)$. Every instantaneous matching exists. Persistent $B$ must use vault two while overlapping $A$ and vault one while overlapping $C$, which is impossible. Three units suffice.
+\end{proof}
+
+The preceding optimum allows full scenario information when allocations are chosen. For a realizable policy, decisions belonging to a common observable history at reservation must coincide. Let $h(s,j)$ index this information set, with equal demand, reservation time and currently authorized route capacities within each set. Introduce one decision $q_{v,h}$ per set and impose $y^s_{vj}=q_{v,h(s,j)}$. Reuse times may differ across scenarios. The partition must be justified by observations available to the router.
+
+\begin{proposition}[information cost of capital]
+\label{prop:shz-nonanticipative}
+Adding nonanticipativity equalities weakly increases minimum stock cost; refining the information partition weakly decreases it. A strict gap occurs with two vaults and two unit jobs.
+\end{proposition}
+\begin{proof}
+Both monotonicities follow from inclusion of feasible sets. An initial job chooses either vault and overlaps a future job that can use only vault one in scenario one and only vault two in scenario two. With full future information, choose the opposite vault initially in each scenario: stock $(1,1)$ suffices. With indistinguishable histories at first reservation the choice is fixed. In one future it shares the required vault and needs two units there; the other vault still needs one for the other future. Three units are necessary and sufficient.
+\end{proof}
+
+The finite reference oracle \texttt{temporal.mjs} in SHZ PR~34 compares frontier merging with an independent fixed-stock unit-by-unit search over 180 deterministic two-scenario instances. All feasibility and optimal weighted-stock results agree (85 feasible and 95 infeasible). All 170 returned scenario witnesses and 180 reuse-delay monotonicity checks pass. One feasible case has a strict instantaneous-relaxation gap. The grouped-policy solver \texttt{policy.mjs} agrees with an independent four-choice enumeration on 343 three-vault/two-scenario route-mask families; 30 have a strict one-unit nonanticipativity gap. These are finite synthetic checks, not fitted participant behavior.
+
+For clock sensitivity, schedule six 1,000-sat replenishable jobs every 24 hours on one vault over a fixed 288-hour horizon. With common holding time $\tau$ hours, peak inventory is $1000\min(6,\lceil\tau/24\rceil)$ sats for the tested positive holding times. Increasing $\tau$ from 24 to 25 hours doubles reserved stock from 1,000 to 2,000 sats; 72 and 144 hours require 3,000 and 6,000 sats. Busy stock-time is $6000\tau$ sat-hours; reserved stock-time is peak stock times 288 hours. These are scenario clocks rather than measured dispute delays. An LP advance across a proof/challenge window can occupy additional collateral even when payout volume and fees are unchanged. A real deployment must supply authenticated recovery events, replacement stock and justified information sets.
+
 \subsection{Release, authentication and enforceable claims}
 \label{sec:rent-release}
 
