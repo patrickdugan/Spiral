@@ -1,0 +1,9 @@
+{"utc":"2026-11-27T12:28:04.2025347+00:00","stage":"independent_core","status":"reused"}
+{"utc":"2026-11-27T12:28:04.2351562+00:00","stage":"cuda_leaf","status":"reused"}
+{"utc":"2026-11-27T12:28:04.2605160+00:00","stage":"cuda_archive","status":"running"}
+{"utc":"2026-11-27T21:10:37.3332864+00:00","stage":"cuda_archive","status":"finished"}
+{"utc":"2026-11-27T21:10:37.4159091+00:00","stage":"compressed_proof","status":"ready_for_m13"}
+{"utc":"2026-11-27T21:10:37.4360766+00:00","stage":"m13_shrink","status":"running"}
+{"utc":"2026-11-27T21:12:18.1472131+00:00","stage":"m13_shrink","status":"finished"}
+{"utc":"2026-11-27T21:12:18.2985360+00:00","stage":"m13_wrap","status":"running"}
+{"utc":"2026-11-27T21:12:26.8960826+00:00","stage":"m13_wrap","status":"failed"}

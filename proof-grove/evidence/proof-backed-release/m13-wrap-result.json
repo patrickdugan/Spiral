@@ -1,0 +1,18 @@
+{
+  "file_backed_peak_bytes": 9462167296,
+  "shrink_receipt_sha256": "0543c2f81b254a38a173a2fb98ce4c68bc373e208df162275523ac20de7a0954",
+  "statement_sha256": "8fd9bc7f9340d1e969d2d4d22b2fdc23a5ba7a7701d94894d88355fb8ef4e33f",
+  "status": "pinned_wrap_v2_verified",
+  "times": {
+    "shrink_execute_s": 0.0,
+    "shrink_program_build_s": 0.0,
+    "shrink_prove_s": 0.0,
+    "shrink_setup_s": 0.0,
+    "wrap_execute_s": 0.607034527,
+    "wrap_program_build_s": 1.85959432,
+    "wrap_prove_s": 864.605230929,
+    "wrap_setup_s": 46.521366913,
+    "wrap_verify_s": 0.015554013
+  },
+  "wrap_sha256": "94a403fac59a4922131fc84aa1b3c438f0212cbec30b95b483e1d6336b7b2188"
+}

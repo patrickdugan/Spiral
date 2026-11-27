@@ -1,0 +1,350 @@
+{
+  "schema": "proof-grove/m14/funded-cashu-joint-withdrawal/v1",
+  "network": "regtest",
+  "restore": {
+    "schema": "proof-grove/protected-regtest-block-replay/v1",
+    "network": "regtest",
+    "height": 109,
+    "anchor": "2e18a47dc6dd0942f48c009be25df6b88971803d51b8ee39b30cedf0f3a0ed53",
+    "archive_sha256": "49408ac588247383d52b6b2b3adc549cd621fbde507bc42b60878f2a4c3977ed",
+    "blocks_submitted": 109
+  },
+  "collateral": {
+    "schema": "proof-grove/m14/bitcoin-wrap-assertion/v1",
+    "network": "regtest",
+    "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+    "assertion_sha256": "fa350ca252f7ef046dbe0e31dacd463eacf98c21ee0b3bd8891f103938927649",
+    "block": "0d06fcf78d2e9bb8fb88f9ba74643b06af1f5b3fafed1af7b8bd35a4f862b726",
+    "height": 211,
+    "txid": "2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29",
+    "vout": 0,
+    "raw_tx_hex": "020000000001016cf4ad678730e9df53e4ec83e62e2fd901fb74becaae02cfe2d1f6530af7fa300000000000fdffffff030000000000000000226a20fa350ca252f7ef046dbe0e31dacd463eacf98c21ee0b3bd8891f103938927649a26200000000000022002055586b9f3f4e18cd43600bff480b2c8f717fb6537105f5ba3a3fd7a5555528051e7f052a0100000022512087304f205f5d32d0e3c919be3e54aa9138af67a3d03c6311893ced362fdf1b7902473044022041f7440c52321b6353dc4885349a2b687f970c2e5ebb00ac5e30fd723716bcad022010533fbb1b7ef3d02ce98e62d63f21e4638bd608fe4c8d8e1ed59f14b953080601210352d7e222de9135f123e520dde3d24263224cc710c77036171b497ce3f210956900000000",
+    "inclusion_proof_hex": "00000030bd5916e3a3e1d52b492cbe9a96dddede10abdf340fffa3ee630052655a89711e1db7359dfce48899b741a65e17ec9230716512b88fba94758f43aa0404e0a67ce1050a6bffff7f2000000000020000000275da46c65cec1edb31f73f41ecee0125cd1010bc6fce6b5ae7f0a5dec662d74e294f22daaf25a71de0855fd0ec5200f917ba34da0fb8b58cb6c1e238f400a42b0105"
+  },
+  "joint_package": {
+    "schema": "proof-grove/m14/joint-withdrawal-package/v1",
+    "reserve_funding_hex": "0200000000010183c89c51d786bda109f5b3ce05118fb40f4255c2c87367b6ed253bbaa5a4c9d90000000000fdffffff027e2d052a01000000225120a8d63478ba541719695d8e3b29872e14fa2b97986404202f950e2715497ce3f9a8610000000000002200208c2e45df63aef9126a618b2305b3afe25bc6915666e2ebdcaca8b060b1cc2b48024730440220243518b82a6f2ad261de7d361ca1c63f03fee30d45553636d1d75cdf86d29f8d0220215e03d929a753d49199c89e42c8708299677661e989c9379968f2a745b64b70012102a831e056f48ed5bafd4455ef0f36955ca35d7f917009915abe1f53941020f59367000000",
+    "refund_script": "0014f9d71f9832b3d2200e8f43c89f1924fcbbda938f",
+    "challenger_pubkey": "03a83edd0f3068548432c481e465ac8e788818cde35d8cab69adb84abc19de1705",
+    "timeout_blocks": 8,
+    "collateral_funding_hex": "020000000001016cf4ad678730e9df53e4ec83e62e2fd901fb74becaae02cfe2d1f6530af7fa300000000000fdffffff030000000000000000226a20fa350ca252f7ef046dbe0e31dacd463eacf98c21ee0b3bd8891f103938927649a26200000000000022002055586b9f3f4e18cd43600bff480b2c8f717fb6537105f5ba3a3fd7a5555528051e7f052a0100000022512087304f205f5d32d0e3c919be3e54aa9138af67a3d03c6311893ced362fdf1b7902473044022041f7440c52321b6353dc4885349a2b687f970c2e5ebb00ac5e30fd723716bcad022010533fbb1b7ef3d02ce98e62d63f21e4638bd608fe4c8d8e1ed59f14b953080601210352d7e222de9135f123e520dde3d24263224cc710c77036171b497ce3f210956900000000",
+    "collateral_vout": 1,
+    "authorization": {
+      "schema": "proof-grove/m14/cashu-joint-release/v2",
+      "manifest_sha256": "16a1edc6243802774ea9c5069ce7d420ed65273ee1944e6424968295ce5a91d3",
+      "funding_txid": "2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29",
+      "funding_vout": 1,
+      "funding_sats": 25250,
+      "fee_sats": 500,
+      "payout_sats": 24750,
+      "timeout_blocks": 8,
+      "challenger_pubkey": "03a83edd0f3068548432c481e465ac8e788818cde35d8cab69adb84abc19de1705",
+      "holder_script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+      "cashu_claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+      "cashu_record_sha256": "e5a7bb50eaf1130f8823bdbf7dc3f232d71931633137b4428ce57781a9a7f270",
+      "reserve_txid": "a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb",
+      "reserve_vout": 1,
+      "reserve_sats": 25000,
+      "reserve_sequence": 6,
+      "reserve_witness_script_sha256": "8c2e45df63aef9126a618b2305b3afe25bc6915666e2ebdcaca8b060b1cc2b48",
+      "holder_pubkey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+      "collateral_refund_script": "0014f9d71f9832b3d2200e8f43c89f1924fcbbda938f",
+      "collateral_refund_sats": 24750,
+      "accept_fee_sats": 750,
+      "signers": {
+        "accept": "027bca7bed47f0c83d1212bd89c0a060e5c7fc10064245d5792d02928674fc7e27",
+        "reject": "03cc236055f8f151002dd7d9cf001f9a4132845e2ad11c4d11d4abbc14ac35589b",
+        "timeout": "033745dbfb44fddadd315e9531ae2d9ec3aab5b2340498e11abc5b857086ab4a5e"
+      },
+      "signatures": {
+        "accept": "304402203a237da4cc01f14fe79369169bc083563b0e46c6345d19f2071d781682a9948802207d5de480139010e7408adc9782917310226a3eb4d529877e98751d554e89258c01",
+        "reject": "3044022060f0becdd6b7c9125ca896360b471db41fced3d1d4567e94773e492c9fc8c6f602204b3d0987c8f6577f8ff8e94b13ba6af9c2bc9107390e8350c87e0770e00ff51801",
+        "timeout": "3044022028fdc1696384a69212f240d2f3450e4d15a8bdbf66e1616bf6be1d49c4709ef5022009142294e0ae6b77fb597460d3ae3e37165def566b7e9a29cd3a81338e18cc0c01"
+      },
+      "participant_signatures": {
+        "holder": {
+          "accept": "3045022100da61f7b167e12662bb2e6fb55276ba3573d7a9feeac1cc262a084b811334af6b02203584e5abe5d30045520e7cd4ae65a362ab67b4e993851a422e55858df65e9d0001",
+          "reject": "30440220760546d540e7488893c2a2730d2a0fb9e6fc442e422ce9c69f39d29487b7da95022034adcfdfcc036a8040a514baee9dc34212fe5bc9e2883f7519947c89ed3d42e101",
+          "timeout": "304402202b793d4c3dbc83a1551d33363085742f622ce03a4958080e5b98718c0a66848b02200ff37b482a6f4c8437b48b176c1b49d0ea8a34e6d09d6f732808835c8253516a01"
+        },
+        "challenger": {
+          "accept": "30450221008182b5ca464f0cddf3f24218e9086d08c87ad5b118912648ccf0d06ec716433802205b05ead61714034530becbf27c4c496f4b4e594e99be4b3c4b1d9c73e1f13b9a01",
+          "reject": "3044022074779de7173d5259197084a2d41c8ac2c7fd6a3c4f11fbb55cf071fc373113b9022020ab51633fc9adcd76c9d4d5d964e33a5ec3bb555aea99eefa6b9319dd9acda401",
+          "timeout": "3045022100ad7fb9ec4af3794e69daf61a74dee28006cb2b34f3cdd04eac61aa232054b597022038060e831be63dbef3e36efc2b252b08cabe9c074a16fa9be6ac59b1cf462bf601"
+        }
+      }
+    },
+    "holder_signature": "3045022100b4aeb8f362b4aef490413bf2a08a9af5d63b9c5a8add9f07d5256795e21ea3ad02201d2cc89ea9a6da62408576eb6436357349fc7877b8f4269c5f9d745e4d3bf7d601"
+  },
+  "assembly": {
+    "schema": "proof-grove/m14/joint-withdrawal-assembly/v1",
+    "claim_id": "a311ad201e1bb18f88b261c6d5b16b92023cafb83adb32cc05d4c4e61eb75ee6",
+    "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+    "wtxid": "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01",
+    "raw_tx_hex": "02000000000102fb6743eb822a1ecca3cbdb6075dd40bfc01ba863814a9510edca9f727cdb47a1010000000006000000294f22daaf25a71de0855fd0ec5200f917ba34da0fb8b58cb6c1e238f400a42b0100000000fdffffff02ae6000000000000016001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79fae60000000000000160014f9d71f9832b3d2200e8f43c89f1924fcbbda938f0400483045022100b4aeb8f362b4aef490413bf2a08a9af5d63b9c5a8add9f07d5256795e21ea3ad02201d2cc89ea9a6da62408576eb6436357349fc7877b8f4269c5f9d745e4d3bf7d601203975d40d1e70b71a8a964abea5e9855ded7f15f15e18ce58bb7a4d12dadf74877282012088a8209f5b0f986f9311cc266ebb1b73cab7ac81de3bcaad86255076b94f382b76d69788210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ad632102c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ac6756b268064830450221008182b5ca464f0cddf3f24218e9086d08c87ad5b118912648ccf0d06ec716433802205b05ead61714034530becbf27c4c496f4b4e594e99be4b3c4b1d9c73e1f13b9a01483045022100da61f7b167e12662bb2e6fb55276ba3573d7a9feeac1cc262a084b811334af6b02203584e5abe5d30045520e7cd4ae65a362ab67b4e993851a422e55858df65e9d000147304402203a237da4cc01f14fe79369169bc083563b0e46c6345d19f2071d781682a9948802207d5de480139010e7408adc9782917310226a3eb4d529877e98751d554e89258c0110ad807cb72d66637235d1de168cb455d90101fd27012002934d758df64de43bd4f91d6b9715a94e2c5c721e4a0e558e0d434cf76d37ce7563826088a8209be3b02b3f0dea66e37e32dccb3f665d0e07481777b62c642da9d6dae2da9c188821027bca7bed47f0c83d1212bd89c0a060e5c7fc10064245d5792d02928674fc7e27ac6763826088a820dced7c6b11d301e7eae29e6d83e758ab24436b2e3cb90ad48e83b3b315c07b1b882103cc236055f8f151002dd7d9cf001f9a4132845e2ad11c4d11d4abbc14ac35589bac6758b27521033745dbfb44fddadd315e9531ae2d9ec3aab5b2340498e11abc5b857086ab4a5eac686869210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ad2103a83edd0f3068548432c481e465ac8e788818cde35d8cab69adb84abc19de1705ac00000000",
+    "m13_verification": {
+      "blake3": {
+        "merkle_leaf": {
+          "bytes": 78200,
+          "calls": 2187,
+          "compressions": 2283
+        },
+        "merkle_node": {
+          "bytes": 1932736,
+          "calls": 30199,
+          "compressions": 30199
+        },
+        "transcript": {
+          "bytes": 56778,
+          "calls": 537,
+          "compressions": 1177
+        }
+      },
+      "blake3_compressions_total": 33659,
+      "koalabear_ops": null,
+      "public_values_len": 187,
+      "seconds": 0.0143215,
+      "statement": {
+        "committed_values_sha256": "8c7cb7deb0650a46dbaa6eefd55ac9b7760ca14133b97a6f5970feee57898d6b",
+        "exit_code": 0,
+        "is_complete": 1,
+        "program_vk_digest": "97195718ad97a73de1c48f454d41a336a3bb11446a9c8d00b31f701bd333cf49",
+        "recursion_vk_root": "7487c2175bd3256619ca0118094b8150d6df0246a1b41979a081642e5253f257",
+        "wrap_vk_sha256": "d42c63e3c873b35576b4c95fa8c41770a8c6b8a9f16ba74732c5b52a43b0b0d7"
+      },
+      "status": "verified",
+      "wrap_file_bytes": 1099173,
+      "wrap_proof_bytes": 1099069,
+      "verifier_sha256": "f01531736e8d248f6a555179f177dd2b31e5c3cc23fef63c558aa107316492d2",
+      "proof_sha256": "94a403fac59a4922131fc84aa1b3c438f0212cbec30b95b483e1d6336b7b2188",
+      "statement_sha256": "8fd9bc7f9340d1e969d2d4d22b2fdc23a5ba7a7701d94894d88355fb8ef4e33f"
+    },
+    "timeout_raw_tx_hex": "02000000000101294f22daaf25a71de0855fd0ec5200f917ba34da0fb8b58cb6c1e238f400a42b01000000000800000001ae6000000000000016001412d089f25335f8a676e2a42424e4dc86347197f806483045022100ad7fb9ec4af3794e69daf61a74dee28006cb2b34f3cdd04eac61aa232054b597022038060e831be63dbef3e36efc2b252b08cabe9c074a16fa9be6ac59b1cf462bf60147304402202b793d4c3dbc83a1551d33363085742f622ce03a4958080e5b98718c0a66848b02200ff37b482a6f4c8437b48b176c1b49d0ea8a34e6d09d6f732808835c8253516a01473044022028fdc1696384a69212f240d2f3450e4d15a8bdbf66e1616bf6be1d49c4709ef5022009142294e0ae6b77fb597460d3ae3e37165def566b7e9a29cd3a81338e18cc0c010000fd27012002934d758df64de43bd4f91d6b9715a94e2c5c721e4a0e558e0d434cf76d37ce7563826088a8209be3b02b3f0dea66e37e32dccb3f665d0e07481777b62c642da9d6dae2da9c188821027bca7bed47f0c83d1212bd89c0a060e5c7fc10064245d5792d02928674fc7e27ac6763826088a820dced7c6b11d301e7eae29e6d83e758ab24436b2e3cb90ad48e83b3b315c07b1b882103cc236055f8f151002dd7d9cf001f9a4132845e2ad11c4d11d4abbc14ac35589bac6758b27521033745dbfb44fddadd315e9531ae2d9ec3aab5b2340498e11abc5b857086ab4a5eac686869210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ad2103a83edd0f3068548432c481e465ac8e788818cde35d8cab69adb84abc19de1705ac00000000",
+    "package_sha256": "32e3facd46b94a92a97d97bb67787a6c0c5e417bb0add2b7a072e4b9254f2fac",
+    "collateral_authorization": "proof-grove/m14/cashu-joint-release/v2",
+    "active_chain": {
+      "network": "regtest",
+      "tip_height": 211,
+      "tip_hash": "0d06fcf78d2e9bb8fb88f9ba74643b06af1f5b3fafed1af7b8bd35a4f862b726",
+      "withdrawal_anchor": "2e18a47dc6dd0942f48c009be25df6b88971803d51b8ee39b30cedf0f3a0ed53",
+      "confirmations": {
+        "reserve": 108,
+        "collateral": 1
+      },
+      "mempool_acceptance": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01",
+        "allowed": true,
+        "vsize": 345,
+        "fees": {
+          "base": 7.5e-06,
+          "effective-feerate": 2.173e-05,
+          "effective-includes": [
+            "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01"
+          ]
+        }
+      }
+    }
+  },
+  "proof_input_sha256": "955ba8e709c2945dc0e478ed62a52f556937586a480f90c717cc6fa89e98f04e",
+  "setup_sha256": "dd041853e7755facb96c55044187f75c0264284b6af575aac74c3490104803f4",
+  "evaluation_sha256": "fae1cb6abbe20434ba7c291e7f44ebf3d240627de1caab27bc4d97ebc94578a5",
+  "withdrawal_record_sha256": "e5a7bb50eaf1130f8823bdbf7dc3f232d71931633137b4428ce57781a9a7f270",
+  "wallets_loaded_during_relay": 0,
+  "paid": {
+    "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+    "wtxid": "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01",
+    "block": "60434f6b92d0d50ff7ccfb5693bac57eaa5f8ad8733f977c5f0d10971871e60f",
+    "inclusion_proof_hex": "0000003026b762f8a435bdb8f71aedaf3f5b1faf063b6474baf988fbb89b2e8df7fc060d24301650c423388b8a4cb39a9d23995a74d13723d64156a5f79aaa29dcd62ed0e2050a6bffff7f2000000000020000000282b6eb1b3917b710f611e1f260985992f1515b2ffae1e5e60763785496f550f764f58418c72c0818f6714f1fc15c7f5bfaca7b4282467b68f06c7ff51d95e9320105",
+    "holder_sats": 24750,
+    "holder_script": "001446b4c5aecb7ab99fb1fee82c82cbca92eef1e79f",
+    "refund_sats": 24750,
+    "refund_script": "0014f9d71f9832b3d2200e8f43c89f1924fcbbda938f",
+    "fee_sats": 750,
+    "controls": {
+      "substituted_beneficiary": {
+        "txid": "5c2c0587bb21a2674296bc5b7835e1af76506c0722ee08fd2eca68e1a8379617",
+        "wtxid": "f53ae5772b6a7b038f0214bc682fa9e3429d8e3ef864422fe52331aec3cfff04",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 0 of 5c2c0587bb21a2674296bc5b7835e1af76506c0722ee08fd2eca68e1a8379617 (wtxid f53ae5772b6a7b038f0214bc682fa9e3429d8e3ef864422fe52331aec3cfff04), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "holder_fallback_before_release": {
+        "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+        "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+        "allowed": true,
+        "vsize": 138,
+        "fees": {
+          "base": 2.5e-06,
+          "effective-feerate": 1.811e-05,
+          "effective-includes": [
+            "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d"
+          ]
+        }
+      },
+      "substituted_accept_label": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "9bf0adf32719543dd5d7be9be091e33092731189167666eff4a7cc11d666ed85",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid 9bf0adf32719543dd5d7be9be091e33092731189167666eff4a7cc11d666ed85), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      },
+      "substituted_holder_signature": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d4b8b7a6500c1f3860e1a0edc2f650dc761e52c30768c37fd9e3a15999fe58b6",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 0 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d4b8b7a6500c1f3860e1a0edc2f650dc761e52c30768c37fd9e3a15999fe58b6), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "substituted_issuance_preimage": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d15b4a654a84dc11de41227a7563ad5f34807b5da7cbe1704c3b849f235a966c",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 0 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d15b4a654a84dc11de41227a7563ad5f34807b5da7cbe1704c3b849f235a966c), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "substituted_challenger_approval": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "184d72ca7d1cf2e8d1929eeade9bc195f22b44b2ff24336087872d4898b85a10",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid 184d72ca7d1cf2e8d1929eeade9bc195f22b44b2ff24336087872d4898b85a10), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      },
+      "substituted_holder_approval": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d924cd8588e3c8270bbd1277143256942ae6919c2935b64d5971ce78e7dafb45",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d924cd8588e3c8270bbd1277143256942ae6919c2935b64d5971ce78e7dafb45), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      },
+      "holder_fallback_after_release": {
+        "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+        "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      },
+      "payout_reorg_restored_both_inputs": true
+    }
+  },
+  "published_chain": {
+    "schema": "proof-grove/protected-regtest-block-archive/v1",
+    "network": "regtest",
+    "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+    "height": 212,
+    "anchor": "60434f6b92d0d50ff7ccfb5693bac57eaa5f8ad8733f977c5f0d10971871e60f",
+    "archive_sha256": "35dcb0c563638ce3783fdf59521db992e908eea0f9e285e84a7dd7e86873e524",
+    "archive_bytes": 109270
+  },
+  "independent_chain_replay": {
+    "schema": "proof-grove/protected-regtest-block-replay/v1",
+    "network": "regtest",
+    "height": 212,
+    "anchor": "60434f6b92d0d50ff7ccfb5693bac57eaa5f8ad8733f977c5f0d10971871e60f",
+    "archive_sha256": "35dcb0c563638ce3783fdf59521db992e908eea0f9e285e84a7dd7e86873e524",
+    "blocks_submitted": 212,
+    "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+    "wtxid": "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01",
+    "wallets_loaded": 0,
+    "witness_controls": {
+      "substituted_accept_label": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "9bf0adf32719543dd5d7be9be091e33092731189167666eff4a7cc11d666ed85",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid 9bf0adf32719543dd5d7be9be091e33092731189167666eff4a7cc11d666ed85), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      },
+      "substituted_holder_signature": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d4b8b7a6500c1f3860e1a0edc2f650dc761e52c30768c37fd9e3a15999fe58b6",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 0 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d4b8b7a6500c1f3860e1a0edc2f650dc761e52c30768c37fd9e3a15999fe58b6), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "substituted_issuance_preimage": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d15b4a654a84dc11de41227a7563ad5f34807b5da7cbe1704c3b849f235a966c",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation), input 0 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d15b4a654a84dc11de41227a7563ad5f34807b5da7cbe1704c3b849f235a966c), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "substituted_challenger_approval": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "184d72ca7d1cf2e8d1929eeade9bc195f22b44b2ff24336087872d4898b85a10",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid 184d72ca7d1cf2e8d1929eeade9bc195f22b44b2ff24336087872d4898b85a10), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      },
+      "substituted_holder_approval": {
+        "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+        "wtxid": "d924cd8588e3c8270bbd1277143256942ae6919c2935b64d5971ce78e7dafb45",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 1 of 32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564 (wtxid d924cd8588e3c8270bbd1277143256942ae6919c2935b64d5971ce78e7dafb45), spending 2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29:1"
+      }
+    },
+    "collateral_assertion": {
+      "schema": "proof-grove/m14/bitcoin-wrap-assertion/v1",
+      "network": "regtest",
+      "genesis": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+      "assertion_sha256": "fa350ca252f7ef046dbe0e31dacd463eacf98c21ee0b3bd8891f103938927649",
+      "block": "0d06fcf78d2e9bb8fb88f9ba74643b06af1f5b3fafed1af7b8bd35a4f862b726",
+      "height": 211,
+      "txid": "2ba400f438e2c1b68cb5b80fda34ba17f90052ecd05f85e01da725afda224f29",
+      "vout": 0,
+      "raw_tx_hex": "020000000001016cf4ad678730e9df53e4ec83e62e2fd901fb74becaae02cfe2d1f6530af7fa300000000000fdffffff030000000000000000226a20fa350ca252f7ef046dbe0e31dacd463eacf98c21ee0b3bd8891f103938927649a26200000000000022002055586b9f3f4e18cd43600bff480b2c8f717fb6537105f5ba3a3fd7a5555528051e7f052a0100000022512087304f205f5d32d0e3c919be3e54aa9138af67a3d03c6311893ced362fdf1b7902473044022041f7440c52321b6353dc4885349a2b687f970c2e5ebb00ac5e30fd723716bcad022010533fbb1b7ef3d02ce98e62d63f21e4638bd608fe4c8d8e1ed59f14b953080601210352d7e222de9135f123e520dde3d24263224cc710c77036171b497ce3f210956900000000",
+      "inclusion_proof_hex": "00000030bd5916e3a3e1d52b492cbe9a96dddede10abdf340fffa3ee630052655a89711e1db7359dfce48899b741a65e17ec9230716512b88fba94758f43aa0404e0a67ce1050a6bffff7f2000000000020000000275da46c65cec1edb31f73f41ecee0125cd1010bc6fce6b5ae7f0a5dec662d74e294f22daaf25a71de0855fd0ec5200f917ba34da0fb8b58cb6c1e238f400a42b0105"
+    },
+    "settlement_controls": {
+      "substituted_beneficiary": {
+        "txid": "5c2c0587bb21a2674296bc5b7835e1af76506c0722ee08fd2eca68e1a8379617",
+        "wtxid": "f53ae5772b6a7b038f0214bc682fa9e3429d8e3ef864422fe52331aec3cfff04",
+        "allowed": false,
+        "reject-reason": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
+        "reject-details": "mempool-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation), input 0 of 5c2c0587bb21a2674296bc5b7835e1af76506c0722ee08fd2eca68e1a8379617 (wtxid f53ae5772b6a7b038f0214bc682fa9e3429d8e3ef864422fe52331aec3cfff04), spending a147db7c729fcaed10954a8163a81bc0bf40dd7560dbcba3cc1e2a82eb4367fb:1"
+      },
+      "holder_fallback_before_release": {
+        "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+        "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+        "allowed": true,
+        "vsize": 138,
+        "fees": {
+          "base": 2.5e-06,
+          "effective-feerate": 1.811e-05,
+          "effective-includes": [
+            "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d"
+          ]
+        }
+      },
+      "holder_fallback_after_release": {
+        "txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+        "wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+        "allowed": false,
+        "reject-reason": "missing-inputs"
+      },
+      "payout_reorg_restored_both_inputs": true,
+      "same_collateral_timeout_fork": {
+        "status": "verified",
+        "wallets_loaded": 0,
+        "height": 219,
+        "block": "3593b360ede2bbb574f21f4e006c9d9f93c2ee94d8980bdccbb14453f8b8a43c",
+        "timeout_eligible_height": 219,
+        "holder_txid": "084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5",
+        "holder_wtxid": "4e0b6794a3e0d05fd4bf2b960af4e558e2d7102b06c84ea8e21b6d58a74b0f9d",
+        "holder_sats": 24750,
+        "holder_fee_sats": 250,
+        "timeout_txid": "95dce0113ba61a12b43b36e4ea0b37fccd07f87ed43c1a76ea4978526c0afe25",
+        "timeout_wtxid": "8c38122f9c759b643c6871fd141a732ef3bf31dd417e0f0cd0fe55326c261692",
+        "challenger_sats": 24750,
+        "challenger_fee_sats": 500,
+        "joint_and_holder_block_rejected": "generateblock: {'code': -25, 'message': 'TestBlockValidity failed: bad-txns-inputs-missingorspent, CheckTxInputs: inputs missing/spent in transaction 084310bdd55345f8eb0ac04f07e4cc6b4d7ce62ae6c99a2f3d0bb4f45c42c9e5'}",
+        "joint_and_timeout_block_rejected": "generateblock: {'code': -25, 'message': 'TestBlockValidity failed: bad-txns-inputs-missingorspent, CheckTxInputs: inputs missing/spent in transaction 95dce0113ba61a12b43b36e4ea0b37fccd07f87ed43c1a76ea4978526c0afe25'}",
+        "joint_after_holder_and_timeout": {
+          "txid": "32e9951df57f6cf0687b4682427bcafa5b7f5cc11f4f71f618082cc71884f564",
+          "wtxid": "456fdc6d9c8527106986f07c26efe549dbbd959793c06bed5c15bd0dac996e01",
+          "allowed": false,
+          "reject-reason": "missing-inputs"
+        }
+      }
+    }
+  }
+}

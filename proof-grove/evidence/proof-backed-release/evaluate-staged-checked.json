@@ -1,0 +1,18 @@
+{
+  "schema": "proof-grove/m14/checked-evaluator-package/v1",
+  "status": "seedless_verdict_matches_pinned_package",
+  "setup_sha256": "dd041853e7755facb96c55044187f75c0264284b6af575aac74c3490104803f4",
+  "manifest_sha256": "16a1edc6243802774ea9c5069ce7d420ed65273ee1944e6424968295ce5a91d3",
+  "statement_sha256": "8fd9bc7f9340d1e969d2d4d22b2fdc23a5ba7a7701d94894d88355fb8ef4e33f",
+  "proof_sha256": "94a403fac59a4922131fc84aa1b3c438f0212cbec30b95b483e1d6336b7b2188",
+  "proof_input_blake3": "e48ae8c412844fd520ec08e0391161703defdb982a5e99df4679338881e14f3a",
+  "input_bits": 8635080,
+  "nonfree_gates": 971724042,
+  "total_gates": 4516102985,
+  "fanout_bytes": 9049476130,
+  "ciphertext_bytes": 15547584672,
+  "selected_label_bytes": 138161280,
+  "evaluation_sha256": "fae1cb6abbe20434ba7c291e7f44ebf3d240627de1caab27bc4d97ebc94578a5",
+  "verdict": "accept",
+  "output_label_sha256": "9be3b02b3f0dea66e37e32dccb3f665d0e07481777b62c642da9d6dae2da9c18"
+}

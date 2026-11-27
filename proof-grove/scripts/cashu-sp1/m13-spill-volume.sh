@@ -31,6 +31,9 @@ case "$action" in
         [[ "$device" =~ ^/dev/sd[a-z]+$ && -z $(lsblk -nro MOUNTPOINT "$device") ]]
         mkdir -- "$mount_dir"
         mount -t ext4 -o noatime -- "$device" "$mount_dir"
+        # A fresh ext4 root is root-owned; the bounded wrap worker runs as pgcashu and needs to create its spill dir.
+        chown pgcashu:pgcashu -- "$mount_dir"
+        chmod 0700 -- "$mount_dir"
         available=$(df -PB1 "$mount_dir" | awk 'NR == 2 {print $4}')
         [[ "$available" =~ ^[0-9]+$ ]] && ((available >= 17179869184))
         printf '%s %s %s\n' "$mount_dir" "$device" "$available"

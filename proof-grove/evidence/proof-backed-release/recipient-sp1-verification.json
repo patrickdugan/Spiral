@@ -1,0 +1,19 @@
+{
+  "schema": "proof-grove/sp1/independent-compressed-withdrawal/v1",
+  "archive_sha256": "5446141e6c12c5ce4681f9c07a82ad7f1607a7accaadc51726492350db556a9b",
+  "statement_sha256": "8fd9bc7f9340d1e969d2d4d22b2fdc23a5ba7a7701d94894d88355fb8ef4e33f",
+  "sealer_sha256": "d0f6382aad94db6de4f0b149a03b0533461c769a84fce6161db53bc7085f5b48",
+  "sp1": {
+    "archive_sha256": "bd35977f0f2bdd2e3efbcecb43b69ec990c2dc6adafa9d3f2196bcaca1be3031",
+    "archive_verifier": "sp1-sdk-light",
+    "committed_values_sha256": "8c7cb7deb0650a46dbaa6eefd55ac9b7760ca14133b97a6f5970feee57898d6b",
+    "elapsed_seconds": 9.974663339,
+    "elf_sha256": "677921c6d47784754fcf6f68d28425b9d423e82efe5b42c8a43e06bf6912d7eb",
+    "num_included_shards": 37309,
+    "program_vkey_bytes32": "0x0030ae332ef69e5eb62c7e270b6a3414d88237746023671a8db80fd9c9cf33d3",
+    "root_sha256": "d106b0e4bfec0e4ae4586ae1a29b9e9c556ce91c9c2a1e3943b6e65dda108666",
+    "setup_seconds": 9.820671484,
+    "status": "compressed_proof_verified",
+    "verify_seconds": 0.075519732
+  }
+}
