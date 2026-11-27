@@ -69,3 +69,26 @@ Python 3.12+ is enough to serve. Ask the user for the domain/subdomain.
   M13 → M14 → funded regtest release → evidence → recipient check.
 - Testnet4 holder-only CSV exit (same reserve script, no mint signature): txid
   `380aff2486d2b5654473fd33e1b971089604204e8e0c05995e4dd9bb2c0fc8d2`.
+
+## Deployed (2026-11-27, from rev 1339774)
+
+Live at **https://cashu-recovery.170-75-168-145.sslip.io/#protected-preview**.
+
+- Code: `/opt/proof-grove-cashu-recovery/releases/<rev>/proof-grove` (root-owned, read-only), `current` symlink;
+  evidence hashes recorded beside it in `evidence.sha256` and equal to the table above.
+- Service: `proof-grove-cashu-recovery` (system user `pgcashu`, 127.0.0.1:8769, MemoryMax 192M, ProtectSystem=strict).
+  Port 8768 was already taken by `proof-grove-regtest-api`.
+- Caddy: site block appended to `/etc/caddy/Caddyfile` (backup `Caddyfile.bak-<UTC>` beside it). The local-demo guard
+  in `server.py` is unchanged; Caddy sends `Host: 127.0.0.1:8769` and maps only this site's own `Origin` to
+  `http://127.0.0.1:8769`. Any other Origin reaches proofdesk unchanged and gets `invalid_origin`.
+- Redeploy a new rev: `git -c core.autocrlf=false archive --format=tar.gz -o pg-cashu-<rev>.tar.gz <rev> proof-grove`,
+  copy it to `/tmp` on the box, then `sudo bash install.sh <rev>` (this file's sibling).
+
+Checked after deploy: `/api/status`, `/api/protected/preview?case=original` (`verified: true`, 24,750 sats),
+`/api/stablecoin/status` (`not_connected`) all 200 over HTTPS; in a browser the original payout verifies and the
+substitute beneficiary is rejected; a POST with `Origin: https://evil.example` returns `invalid_origin`.
+
+The bundled evidence manifest covers `issuance` and `refusal` only. The page also requests `accounting` and
+`historical`, which answer 400 `recovery_accounting_not_configured` / `recovery_historical_not_configured`; adding
+`evidence/nova-registry-verification.json` and the historical `verification/verification.json` entries to the manifest
+would enable them.
