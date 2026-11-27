@@ -1,0 +1,249 @@
+{
+ "schema": "cbm-shz-01/commercial/v1",
+ "duals": [
+  {
+   "scenario": {
+    "vault_edge_density": 1.0,
+    "vault_budget_frac": 1.0,
+    "lp_rate": 0.05
+   },
+   "rounds": 48,
+   "competitive_rental_sat_per_btc_day": 13698.630136986303,
+   "by_substitute": {
+    "lp": {
+     "rounds_with_binding_vault": 0,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 0.0,
+      "max": 0.0
+     },
+     "total_deficit_btc": 0.0
+    },
+    "no_lp": {
+     "rounds_with_binding_vault": 0,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 0.0,
+      "max": 0.0
+     },
+     "total_deficit_btc": 0.0
+    }
+   }
+  },
+  {
+   "scenario": {
+    "vault_edge_density": 0.5,
+    "vault_budget_frac": 1.0,
+    "lp_rate": 0.05
+   },
+   "rounds": 48,
+   "competitive_rental_sat_per_btc_day": 13698.630136986303,
+   "by_substitute": {
+    "lp": {
+     "rounds_with_binding_vault": 42,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 13698.630136986303,
+      "max": 13698.630136986303
+     },
+     "total_deficit_btc": 1.4234856300113703
+    },
+    "no_lp": {
+     "rounds_with_binding_vault": 42,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 349315.0684931507,
+      "max": 349315.06849315076
+     },
+     "total_deficit_btc": 1.4234856300113703
+    }
+   }
+  },
+  {
+   "scenario": {
+    "vault_edge_density": 0.5,
+    "vault_budget_frac": 0.9,
+    "lp_rate": 0.05
+   },
+   "rounds": 48,
+   "competitive_rental_sat_per_btc_day": 13698.630136986303,
+   "by_substitute": {
+    "lp": {
+     "rounds_with_binding_vault": 48,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 13698.630136986301,
+      "max": 13698.630136986303
+     },
+     "total_deficit_btc": 5.674231181225402
+    },
+    "no_lp": {
+     "rounds_with_binding_vault": 48,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 349315.0684931507,
+      "max": 349315.06849315076
+     },
+     "total_deficit_btc": 5.674231181225402
+    }
+   }
+  },
+  {
+   "scenario": {
+    "vault_edge_density": 0.25,
+    "vault_budget_frac": 0.7,
+    "lp_rate": 0.05
+   },
+   "rounds": 48,
+   "competitive_rental_sat_per_btc_day": 13698.630136986303,
+   "by_substitute": {
+    "lp": {
+     "rounds_with_binding_vault": 48,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 13698.630136986303,
+      "max": 13698.630136986303
+     },
+     "total_deficit_btc": 16.61113457107535
+    },
+    "no_lp": {
+     "rounds_with_binding_vault": 48,
+     "vault_shadow_price_sat_per_btc_day": {
+      "mean": 349315.0684931507,
+      "max": 349315.06849315076
+     },
+     "total_deficit_btc": 16.61113457107535
+    }
+   }
+  }
+ ],
+ "pooling": {
+  "routers=1": {
+   "per_contract_margin_btc_days": 393.9976794838344,
+   "pm_per_router_btc_days": 57.248773907959254,
+   "pm_global_btc_days": 57.248773907959254,
+   "impaired_per_router_btc": 0.0,
+   "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
+   "V_btc": 1969.9883974191719
+  },
+  "routers=4": {
+   "per_contract_margin_btc_days": 393.9976794838344,
+   "pm_per_router_btc_days": 69.07195881301055,
+   "pm_global_btc_days": 57.248773907959254,
+   "impaired_per_router_btc": 0.00111101184653737,
+   "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
+   "V_btc": 1969.9883974191719
+  },
+  "routers=16": {
+   "per_contract_margin_btc_days": 393.9976794838344,
+   "pm_per_router_btc_days": 85.94029191940389,
+   "pm_global_btc_days": 57.248773907959254,
+   "impaired_per_router_btc": 0.0,
+   "impaired_global_btc": 0.0,
+   "pm_gapped_btc_days": 5.811550841168082,
+   "impaired_gapped_btc": 0.0,
+   "gapped_info": {
+    "defaults": 4,
+    "gap": 0.00793698203317393,
+    "moves_exceeding_gap": 0
+   },
+   "V_btc": 1969.9883974191719
+  }
+ },
+ "fragmentation": [
+  {
+   "pools": 1,
+   "net_flow_independent_btc": 2.8442086687133177,
+   "net_flow_interop_btc": 2.8442086687133177,
+   "sum_of_pool_bond_peaks_btc": 270.3251798463532,
+   "proof_btc": 0.00216,
+   "chain_vb_independent": 466244.5,
+   "chain_vb_interop": 466244.5,
+   "cost_independent_bps": 0.7410724976669016,
+   "cost_interoperable_bps": 0.7410724976669016,
+   "rent_cap_vs_independent_bps": 0.0,
+   "rent_cap_vs_interoperable_bps": 0.0
+  },
+  {
+   "pools": 2,
+   "net_flow_independent_btc": 3.0850036901458378,
+   "net_flow_interop_btc": 2.8442086687133177,
+   "sum_of_pool_bond_peaks_btc": 270.3251798463535,
+   "proof_btc": 0.00432,
+   "chain_vb_independent": 483598.5,
+   "chain_vb_interop": 474164.5,
+   "cost_independent_bps": 0.7608462181878111,
+   "cost_interoperable_bps": 0.7560573574958602,
+   "rent_cap_vs_independent_bps": 0.01977372052090942,
+   "rent_cap_vs_interoperable_bps": 0.014984859828958585
+  },
+  {
+   "pools": 4,
+   "net_flow_independent_btc": 3.354955501753968,
+   "net_flow_interop_btc": 2.8442086687133177,
+   "sum_of_pool_bond_peaks_btc": 270.32517984635285,
+   "proof_btc": 0.00864,
+   "chain_vb_independent": 518292.0,
+   "chain_vb_interop": 490004.5,
+   "cost_independent_bps": 0.8003862987801862,
+   "cost_interoperable_bps": 0.7860270771537753,
+   "rent_cap_vs_independent_bps": 0.05931380111328455,
+   "rent_cap_vs_interoperable_bps": 0.04495457948687365
+  },
+  {
+   "pools": 8,
+   "net_flow_independent_btc": 3.6746518055224913,
+   "net_flow_interop_btc": 2.8442086687133177,
+   "sum_of_pool_bond_peaks_btc": 270.3251798463534,
+   "proof_btc": 0.01728,
+   "chain_vb_independent": 587795.0,
+   "chain_vb_interop": 521684.5,
+   "cost_independent_bps": 0.8795253435604735,
+   "cost_interoperable_bps": 0.8459665164696086,
+   "rent_cap_vs_independent_bps": 0.13845284589357187,
+   "rent_cap_vs_interoperable_bps": 0.10489401880270699
+  }
+ ],
+ "services": {
+  "directional_liquidity_leasing": {
+   "capital_btc_days": 93.18068100175391,
+   "price_sat_per_btc_day": 13698.630136986303,
+   "bps_per_trade": 0.01865211863641456
+  },
+  "short_duration_settlement_credit": {
+   "lp_btc_days": 1728.6212317715706,
+   "bond_btc_days": 1370.9554936883037,
+   "breakeven_bps": 0.6204469873412786,
+   "customer_capital_btc_days_freed": 187.90112844381497,
+   "customer_value_bps_at_trader_rate": 0.03761245466304585,
+   "lp_annual_return_at_customer_value": 0.0030310772258095448
+  },
+  "capital_efficient_clearing": {
+   "fee_ceiling_bps": 0.6983594586113334,
+   "provider_cost_bps": 0.2862636706773309,
+   "surplus_bps": 0.4120957879340023,
+   "feasible": true
+  },
+  "proof_generation": {
+   "cost_btc": 0.00756,
+   "bps": 0.011047065896492762,
+   "batches": 168,
+   "usd_per_batch": 4.5
+  },
+  "oracle_attestation_breakeven_daily_volume_usd": {
+   "at_clearing_surplus": 20626272.4562506,
+   "at_1bp": 8500000.0,
+   "at_0.1bp": 85000000.0
+  },
+  "cross_router_execution": {
+   "note": "contestable: sustainable markup <= switching cost (Lean sustainable_markup); SHZ-LV measured ex-post latency value 0.004-0.04 bp per decision"
+  }
+ }
+}

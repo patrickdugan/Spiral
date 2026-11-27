@@ -1,0 +1,82 @@
+{
+ "schema": "cbm-shz-01/oracle-dlc-release/v1",
+ "prefix": "cbm-shz01-dlc01",
+ "chain": "testnet4",
+ "core_version": "/Satoshi:31.1.0/",
+ "contract": {
+  "margin_sat": 20000,
+  "leverage": 10,
+  "price0": 59363.205,
+  "price1": 59046.285,
+  "price_source": {
+   "url": "https://api.coinbase.com/v2/prices/BTC-USD/spot",
+   "sha256": "485a4b6e69c9eb57c158b8659e5b94af04c031c51c941dc46cd2d2a27b924897",
+   "fetched_utc": "2026-11-25T05:34:26Z"
+  },
+  "outcome": "flat",
+  "refund_blocks": 144
+ },
+ "oracle": {
+  "P": "50c70a14ad737a1703910feb9243430655d6841c9498e12bb2af25ea557813d1",
+  "R": "7f665ab45757767e01b594f355acc5c123561786942ae9ee89d0d9e9425a6cbf",
+  "S": {
+   "down": "b58fb31652244db710631710eae2395c3ef94a85ea467a4bd039222bf1fbc395",
+   "flat": "27822c9b87e41737d142f8ef4036e5bb382bee7b4dfe866d226780e7d923f5e5",
+   "up": "2457253821c497d6d5a5c70a65bee2175cbbbe757bd6b93f515f22f063fc8614"
+  },
+  "attestation_s": "0x1a78be1ee6f347bffce7aec12936ba9ba70e6424258a9a4aa9a140fcbeb253ac",
+  "event": "cbm-shz01-dlc01/btcusd-bucket"
+ },
+ "funding": {
+  "txid": "b48a848f23d0bded24dc0a4110d43aa76ec79c6b614c1beb888d6c54962b5852",
+  "vsize": 169,
+  "amount_sat": 40000,
+  "height": 163265
+ },
+ "cet": {
+  "txid": "326ab15c5ddb76c44e4f9be8ceecb0e43fd889147c3f69f52d4a71de4a3abd11",
+  "vsize": 238,
+  "witness_items": 5,
+  "outputs": {
+   "tb1pkxmu2l96c57vw968smjtmhmscjz47z3xua7n5udrg6sey47d984sjt3wld": 19700,
+   "tb1p0msaur8j05qck3c5ussxmhdac5tfvwpxla9yvd88plhhnpxjsluq5tftcr": 19700
+  },
+  "a_sat": 19700,
+  "lp_sat": 19700
+ },
+ "presigned_sigs_per_cet": {
+  "down": 2,
+  "flat": 2,
+  "up": 2
+ },
+ "lp_advance_txid": "906406357dd92178425e13b1dcdb0ac201758794b325f2c0a9be644bf08a3d4e",
+ "reuse": {
+  "a": "e98af92715c0034dd272bc932937069f43c0ea9fe031f22607ba470510e2c69d",
+  "b": "85ccea865e9218a0df17cb870cbd5dcb0aa797b7c2db19d3fb591495be881ebd",
+  "lp": "2c23368bd22b0bd30657a30917d155bab5616c806942f9ca5a6163c0d3187ecc"
+ },
+ "checks": {
+  "cets_and_refund_signed_before_funding": true,
+  "cets_incomplete_before_attestation": true,
+  "cets_presigned_only_on_own_leaf": true,
+  "refund_rejected_before_timelock": true,
+  "attestation_matches_announced_point": true,
+  "wrong_outcome_cets_stay_incomplete": true,
+  "cet_confirmed": true,
+  "lp_reimbursed_by_cet": true,
+  "released_outputs_reused": true
+ },
+ "timings_s": {
+  "attestation_to_cet_confirmed": 1180.187293767929,
+  "lp_advance_to_reimbursement_confirmed": 1174.4272780418396,
+  "cet_confirmed_to_reuse_confirmed": 2402.196717262268,
+  "funding_broadcast_to_reuse_confirmed": 7957.122861146927
+ },
+ "heights": {
+  "funding": 163265,
+  "maturity": 163267,
+  "attestation": 163267,
+  "cet": 163268
+ },
+ "passed": true
+}

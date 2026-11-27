@@ -1,0 +1,57 @@
+{
+  "schema": "cbm/shz-clearing-rent-scenarios/v1",
+  "status": "illustrative_only_not_measured",
+  "btc_annual_simple_funding_rate": 0.05,
+  "leverage_each_side": 10,
+  "combined_margin_per_matched_notional": 0.2,
+  "assumed_fraction_of_combined_margin_reusable_earlier": 0.9375,
+  "saved_margin_per_matched_notional": 0.1875,
+  "days_per_year": 365,
+  "assumes_zero_replacement_capital_and_equal_enforceable_claims": true,
+  "fee_target_bps": 2,
+  "break_even_days_before_other_costs": 7.786666666666667,
+  "scenarios": [
+    {
+      "interval": "100 ms",
+      "days": 0.0000011574074074074074,
+      "capital_carry_saving_bps": 2.9727929984779297e-7
+    },
+    {
+      "interval": "1 hour",
+      "days": 0.041666666666666664,
+      "capital_carry_saving_bps": 0.010702054794520547
+    },
+    {
+      "interval": "1 day",
+      "days": 1,
+      "capital_carry_saving_bps": 0.2568493150684932
+    },
+    {
+      "interval": "8 days",
+      "days": 8,
+      "capital_carry_saving_bps": 2.0547945205479454
+    },
+    {
+      "interval": "30 days",
+      "days": 30,
+      "capital_carry_saving_bps": 7.705479452054795
+    }
+  ],
+  "netting_counterexample": {
+    "gross_matured_obligations": [
+      {
+        "debtor": "A",
+        "creditor": "B",
+        "amount": 5
+      },
+      {
+        "debtor": "B",
+        "creditor": "A",
+        "amount": 5
+      }
+    ],
+    "gross_amount": 10,
+    "net_cash_flow": 0,
+    "pre_maturity_margin_release_implied": false
+  }
+}

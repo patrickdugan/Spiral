@@ -1,0 +1,104 @@
+name: CBM-SHZ-01
+
+on:
+  push:
+    paths:
+      - "experiments/cbm-shz-01/**"
+      - "formal-rent/**"
+      - ".github/workflows/cbm-shz-01.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r experiments/cbm-shz-01/requirements.txt
+      - name: Invariant tests
+        working-directory: experiments/cbm-shz-01
+        run: python -m pytest -q tests
+      - name: Re-run the base cell and compare with committed results
+        working-directory: experiments/cbm-shz-01
+        run: |
+          python verify.py | tee verify.txt
+          echo "::notice title=CBM-SHZ-01 verify::$(tail -1 verify.txt)"
+
+  regtest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bitcoin Core 31.1 (checked against the release SHA256SUMS)
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          base=https://bitcoincore.org/bin/bitcoin-core-31.1
+          curl -fsSLO "$base/bitcoin-31.1-x86_64-linux-gnu.tar.gz"
+          curl -fsSLO "$base/SHA256SUMS"
+          grep " bitcoin-31.1-x86_64-linux-gnu.tar.gz$" SHA256SUMS | sha256sum -c -
+          tar xzf bitcoin-31.1-x86_64-linux-gnu.tar.gz
+          echo "BITCOIND=$RUNNER_TEMP/bitcoin-31.1/bin/bitcoind" >> "$GITHUB_ENV"
+      - name: Verified clearing release, reuse and CSV exit on regtest
+        working-directory: experiments/cbm-shz-01
+        run: |
+          python regtest/clearing_release_regtest.py --bitcoind "$BITCOIND" --out "$RUNNER_TEMP/regtest_release.json"
+          python - <<'PY'
+          import json, os
+          r = json.load(open(os.path.join(os.environ["RUNNER_TEMP"], "regtest_release.json")))
+          c = json.load(open("results/regtest_release.json"))
+          assert r["passed"], r["checks"]
+          assert r["clearing"]["vsize"] == c["clearing"]["vsize"] and r["unilateral_exit"]["vsize"] == c["unilateral_exit"]["vsize"]
+          print(f"::notice title=regtest release::{sum(r['checks'].values())}/{len(r['checks'])} checks; clearing {r['clearing']['vsize']} vB; exit {r['unilateral_exit']['vsize']} vB; CSV rejected at {r['unilateral_exit']['rejected_at_confirmations']}, accepted at {r['unilateral_exit']['accepted_at_confirmations']}")
+          PY
+      - name: Oracle-attested DLC release with LP reimbursement on regtest
+        working-directory: experiments/cbm-shz-01
+        run: |
+          python dlc/run_regtest.py --bitcoind "$BITCOIND" --out "$RUNNER_TEMP/dlc.json"
+          python - <<'PY'
+          import json, os
+          r = json.load(open(os.path.join(os.environ["RUNNER_TEMP"], "dlc.json")))
+          assert r["passed"], r["checks"]
+          print(f"::notice title=regtest oracle DLC::{sum(r['checks'].values())}/{len(r['checks'])} checks; outcome {r['contract']['outcome']}; funding {r['funding']['vsize']} vB; CET {r['cet']['vsize']} vB; presigned sigs per CET {r['presigned_sigs_per_cet']}")
+          PY
+
+  lean:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lean toolchain
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Resolve pinned Mathlib
+        working-directory: formal-rent
+        run: lake update
+      - name: Mathlib cache
+        working-directory: formal-rent
+        run: lake exe cache get
+      - name: Build proofs
+        working-directory: formal-rent
+        run: lake build
+      - name: Axioms
+        working-directory: formal-rent
+        run: |
+          lake env lean SpiralRent/Audit.lean | tee axioms.txt
+          if grep -v "propext, Classical.choice, Quot.sound\]" axioms.txt | grep -q "depends on axioms"; then
+            echo "::error::unexpected axiom"; exit 1
+          fi
+          echo "::notice title=formal-rent::$(grep -c 'depends on axioms' axioms.txt) theorems, standard axioms only"
+      - name: Reject placeholders
+        run: |
+          if grep -REn '(^|[^[:alnum:]_])(sorry|admit)([^[:alnum:]_]|$)' formal-rent/SpiralRent/*.lean; then
+            echo "::error::proof placeholder"; exit 1
+          fi
