@@ -1,0 +1,257 @@
+{
+  "contributor_kit": {
+    "binaries_pinned": [
+      "normalize-core-cuda",
+      "replay-reduction-cuda"
+    ],
+    "hygiene_check_passed": true,
+    "manifest_sha256": "49584ccfc8549a71d257aa5bdfd020561c7b55a8aabaee3e015e7823e179b8d8",
+    "public_inputs_pinned": [
+      "cashu-withdrawal.elf",
+      "core-vk.bin",
+      "program-key.json",
+      "run.json"
+    ],
+    "wallet_or_keys_required": false
+  },
+  "coordinator_summary": {
+    "contributors": {
+      "a6000-01": {
+        "avg_cpu_verify_seconds": 0.1871,
+        "avg_group_seconds": 0.1795,
+        "groups_assigned": 74,
+        "groups_verified": 74,
+        "leases_expired": 0,
+        "rejection_reasons": {},
+        "roots_rejected": 0,
+        "shards_verified": 9472,
+        "throughput_groups_per_hour": 8341.16,
+        "throughput_shards_per_sec": 713.2,
+        "worker_id": "a6000-01"
+      },
+      "a6000-02": {
+        "avg_cpu_verify_seconds": 0.1888,
+        "avg_group_seconds": 0.179,
+        "groups_assigned": 75,
+        "groups_verified": 75,
+        "leases_expired": 0,
+        "rejection_reasons": {},
+        "roots_rejected": 0,
+        "shards_verified": 9600,
+        "throughput_groups_per_hour": 8445.68,
+        "throughput_shards_per_sec": 715.14,
+        "worker_id": "a6000-02"
+      },
+      "a6000-03": {
+        "avg_cpu_verify_seconds": 0.1898,
+        "avg_group_seconds": 0.1823,
+        "groups_assigned": 75,
+        "groups_verified": 75,
+        "leases_expired": 0,
+        "rejection_reasons": {},
+        "roots_rejected": 0,
+        "shards_verified": 9600,
+        "throughput_groups_per_hour": 8372.09,
+        "throughput_shards_per_sec": 702.06,
+        "worker_id": "a6000-03"
+      },
+      "dead-vm-01": {
+        "avg_cpu_verify_seconds": null,
+        "avg_group_seconds": null,
+        "groups_assigned": 3,
+        "groups_verified": 0,
+        "leases_expired": 3,
+        "rejection_reasons": {},
+        "roots_rejected": 0,
+        "shards_verified": 0,
+        "throughput_groups_per_hour": 0.0,
+        "throughput_shards_per_sec": 0.0,
+        "worker_id": "dead-vm-01"
+      },
+      "laptop-3050": {
+        "avg_cpu_verify_seconds": 0.19,
+        "avg_group_seconds": 0.1765,
+        "groups_assigned": 68,
+        "groups_verified": 68,
+        "leases_expired": 0,
+        "rejection_reasons": {},
+        "roots_rejected": 0,
+        "shards_verified": 8637,
+        "throughput_groups_per_hour": 7683.86,
+        "throughput_shards_per_sec": 719.57,
+        "worker_id": "laptop-3050"
+      },
+      "malicious-01": {
+        "avg_cpu_verify_seconds": null,
+        "avg_group_seconds": null,
+        "groups_assigned": 5,
+        "groups_verified": 0,
+        "leases_expired": 1,
+        "rejection_reasons": {
+          "bad_cuda_status": 1,
+          "cpu_verify_failed": 1,
+          "sha256_mismatch": 1,
+          "stale_or_expired_lease": 1,
+          "vk_or_manifest_mismatch": 1
+        },
+        "roots_rejected": 5,
+        "shards_verified": 0,
+        "throughput_groups_per_hour": 0.0,
+        "throughput_shards_per_sec": 0.0,
+        "worker_id": "malicious-01"
+      }
+    },
+    "direction": "backward",
+    "effective_groups_per_hour": 30264.29,
+    "leased_groups": 0,
+    "pending_groups": 0,
+    "reassignments_total": 8,
+    "rejected_roots": [
+      {
+        "group_id": "000288",
+        "lease_id": "d735b640ea314bdc95039583e435c3ad",
+        "reason": "sha256_mismatch",
+        "reduction_sha256": "4908de25d2429543e8c3c4fcd6abfc8502544ed1c6c6f360b8aa2856601ac118",
+        "worker_id": "malicious-01"
+      },
+      {
+        "group_id": "000288",
+        "lease_id": "a505f79b38ce48c49d105ac40c72c92f",
+        "reason": "bad_cuda_status",
+        "reduction_sha256": "6353752565dd0f05bc24e52e9a40b8996d791abaa615dfc8ea970ea8b8e3ba63",
+        "worker_id": "malicious-01"
+      },
+      {
+        "group_id": "000288",
+        "lease_id": "48386359fbe14c529060f48dc12ac0c9",
+        "reason": "vk_or_manifest_mismatch",
+        "reduction_sha256": "1abfb1ebcb242a5de06f0309b611f71678a480897afbb097c38cc1f92e084dab",
+        "worker_id": "malicious-01"
+      },
+      {
+        "group_id": "000288",
+        "lease_id": "876e5b42635640828edbd4f6318b5ab1",
+        "reason": "cpu_verify_failed",
+        "reduction_sha256": "a2d246796a927ac2dabc1008d8413f4cfbea959a269830cf06c8e4408d37861e",
+        "worker_id": "malicious-01"
+      },
+      {
+        "group_id": "000288",
+        "lease_id": "00000000000000000000000000000000",
+        "reason": "stale_or_expired_lease",
+        "reduction_sha256": "",
+        "worker_id": "malicious-01"
+      }
+    ],
+    "rejected_roots_total": 5,
+    "schema": "proof-grove/cashu-collab-telemetry/v1",
+    "total_groups": 292,
+    "total_shards": 37309,
+    "verified_groups": 292,
+    "verified_shards": 37309,
+    "verifying_groups": 0,
+    "wall_seconds": 34.734,
+    "wasted_dead_worker_seconds": 9.28
+  },
+  "dead_worker_recovery": {
+    "abandoned_groups": [
+      "000291",
+      "000290",
+      "000289"
+    ],
+    "all_abandoned_groups_recovered": true,
+    "dead_worker_leases_expired": 3,
+    "recovered": {
+      "000289": {
+        "reassignments": 1,
+        "status": "verified",
+        "verified_by": "a6000-02"
+      },
+      "000290": {
+        "reassignments": 1,
+        "status": "verified",
+        "verified_by": "a6000-03"
+      },
+      "000291": {
+        "reassignments": 1,
+        "status": "verified",
+        "verified_by": "laptop-3050"
+      }
+    }
+  },
+  "evidence_level": "regtest_protocol_calibration",
+  "honesty_boundary": "Measured live over localhost HTTP with real multi-threaded coordinator, lease reaping, independent subprocess CPU verification gate (--check-inputs), atomic groups/NNNNNN merge, and all real 292 group descriptors from the pinned 37,309-shard regtest core-shard-index.json. Deterministic Python calibration binaries stand in for the compiled CUDA/CPU SP1 binaries (which reside on the proving PC alongside the 54.3 GB raw shard archive); drop-in binary swap in kit-manifest.json runs the identical coordinator and contributor code on live A6000/3050 hardware.",
+  "live_reducer_merge": {
+    "all_slots_carry_reduction_cuda_and_cpu_receipts": true,
+    "expected_group_slots": 292,
+    "merged_group_slots": 292,
+    "slots_exact_match": true
+  },
+  "measurement_sha256": "197a8a28b2f16d117d9d19d3840977377c77e18df24bd4292cadf02962fb962b",
+  "pinned_regtest_source": {
+    "commit": "9cf56a56d02e8b63de91e435b9fcd7823a66bb9d",
+    "core_archive_sha256": "c6eee91f6372166cfc04018272d4b2cd07f555114f4cb251d43c5099563b9ac5",
+    "core_shards": 37309,
+    "evidence_archive_sha256": "5446141e6c12c5ce4681f9c07a82ad7f1607a7accaadc51726492350db556a9b",
+    "group_size": 128,
+    "program_vk_digest": "97195718ad97a73de1c48f454d41a336a3bb11446a9c8d00b31f701bd333cf49",
+    "public_output_sha256": "8c7cb7deb0650a46dbaa6eefd55ac9b7760ca14133b97a6f5970feee57898d6b",
+    "recorded_seal_status": "compressed_proof_verified",
+    "recorded_seal_verifier": "sp1-sdk-light",
+    "ref": "cashu/proof-backed-release-evidence",
+    "repository": "patrickdugan/Spiral",
+    "shard_index_sha256": "d22fc4a7ed17a40c300b2c5cff361a05b2618c65990394b72cfe1eff03dac449",
+    "total_groups": 292
+  },
+  "recorded_20261127_regtest_baseline": {
+    "local_group_median_seconds": 2120.08,
+    "local_laptop_groups": 13,
+    "recorded_bounded_groups": 292,
+    "reused_cloud_groups": 279,
+    "reused_group_median_verify_seconds": 0.4119,
+    "total_shards_covered": 37309
+  },
+  "schema": "proof-grove/cashu-collab-regtest-measurement/v1",
+  "untrusted_contributor_controls": {
+    "attacks_rejected": 5,
+    "attacks_submitted": 5,
+    "bad_roots_merged": 0,
+    "details": [
+      {
+        "accepted": false,
+        "attack": "sha256_mismatch",
+        "group_id": "000288",
+        "http_status": 422,
+        "reason": "sha256_mismatch"
+      },
+      {
+        "accepted": false,
+        "attack": "bad_cuda_status",
+        "group_id": "000288",
+        "http_status": 422,
+        "reason": "bad_cuda_status"
+      },
+      {
+        "accepted": false,
+        "attack": "vk_or_manifest_mismatch",
+        "group_id": "000288",
+        "http_status": 422,
+        "reason": "vk_or_manifest_mismatch"
+      },
+      {
+        "accepted": false,
+        "attack": "cpu_verify_failed",
+        "group_id": "000288",
+        "http_status": 422,
+        "reason": "cpu_verify_failed"
+      },
+      {
+        "accepted": false,
+        "attack": "stale_or_expired_lease",
+        "group_id": "000288",
+        "http_status": 422,
+        "reason": "stale_or_expired_lease"
+      }
+    ]
+  }
+}
