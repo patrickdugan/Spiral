@@ -1,0 +1,8 @@
+{
+  "schema": "proof-grove/funded-preview/v1",
+  "archive": "cashu-v4-raw-proof-backed-withdrawal-evidence-4.zip",
+  "archive_sha256": "5446141e6c12c5ce4681f9c07a82ad7f1607a7accaadc51726492350db556a9b",
+  "verification": "cashu-v4-raw-recipient-verification-4.json",
+  "verification_sha256": "dc52881db52923eb51a7aaa4187241e37878ffbcb0efca89491b97a959ef488f",
+  "statement_sha256": "8fd9bc7f9340d1e969d2d4d22b2fdc23a5ba7a7701d94894d88355fb8ef4e33f"
+}

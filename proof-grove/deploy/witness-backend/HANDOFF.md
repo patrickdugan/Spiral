@@ -105,3 +105,17 @@ proving PC. To enable them, add the two zips to `data/` and these manifest entri
 `"accounting": {"file", "sha256", "registry_sha256", "tip_hash", "tip_height", "nova_verifier_key_sha256", "blocks_sha256"}`
 and `"historical": {"file", "sha256", "receipt_sha256", "proof_sha256", "statement_sha256", "transaction_audit_sha256"}`
 (fields as read by `proofdesk/protected_evidence_preview.py`).
+
+## Proof-backed BitVM3 release (2026-11-28, rev after 18bd6f8)
+
+`data/` now carries the release evidence from `cashu/proof-backed-release-evidence` (9cf56a5), copied byte-exact:
+`cashu-v4-raw-proof-backed-withdrawal-evidence-4.zip` (sha256 `5446141e…6a9b`, 18.9 MB) and
+`cashu-v4-raw-recipient-verification-4.json` (`dc52881d…488f`), pinned by `data/funded-preview.json`
+(schema `proof-grove/funded-preview/v1`). `install.sh` passes `--protected-funded-preview` and pins the withdrawal
+statement with `--protected-funded-statement-sha256 8fd9bc7f…e33f`. On load the page calls
+`/api/protected/preview/funded`, which rechecks both pins and the receipt (M13 `verified`, M14
+`accept_opening_matches_pinned_setup`, walletless regtest replay) and flips the four "In progress" tags to "Proven".
+
+Checked on the box before install: `/api/protected/preview/funded` returned `verified`, block 212, holder 24,750 sats,
+refund 24,750, fee 750, txid `32e9951d…f564`; the archive and receipt downloads hash to the pinned values; the same
+server with a wrong statement pin returns `funded_preview_statement_mismatch`.
